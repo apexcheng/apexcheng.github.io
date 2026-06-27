@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clean Tech Journal UI Mockup</title>
+<style>
+  :root {
+    --bg: #f7f8fb;
+    --paper: #ffffff;
+    --paper-2: #f1f5f9;
+    --ink: #111827;
+    --muted: #64748b;
+    --soft: #94a3b8;
+    --line: #dbe3ee;
+    --line-strong: #cbd5e1;
+    --blue: #2563eb;
+    --cyan: #0e7490;
+    --green: #0f766e;
+    --violet: #6d28d9;
+    --code: #0f172a;
+    --code-line: #1e293b;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background:
+      linear-gradient(180deg, rgba(37, 99, 235, .045), transparent 360px),
+      radial-gradient(circle at 88% 120px, rgba(14, 116, 144, .09), transparent 300px),
+      var(--bg);
+    color: var(--ink);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    letter-spacing: 0;
+  }
+  .page { width: 1440px; min-height: 1600px; margin: 0 auto; }
+  .nav {
+    height: 78px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 92px;
+    border-bottom: 1px solid rgba(203, 213, 225, .72);
+    background: rgba(247, 248, 251, .82);
+    backdrop-filter: blur(18px);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 720; font-size: 18px; }
+  .mark {
+    width: 34px; height: 34px; border-radius: 8px;
+    display: grid; place-items: center;
+    color: white; font-size: 15px; font-weight: 760;
+    background: linear-gradient(135deg, #111827, #2563eb 60%, #0e7490);
+    box-shadow: 0 8px 26px rgba(37, 99, 235, .18);
+  }
+  .links { display: flex; align-items: center; gap: 30px; font-size: 14px; color: #475569; }
+  .links span:first-child { color: var(--ink); font-weight: 650; }
+  .mode { width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 8px; display: grid; place-items: center; color: #334155; background: white; }
+  .container { padding: 74px 92px 96px; }
+  .hero {
+    display: grid;
+    grid-template-columns: 1.06fr .94fr;
+    gap: 72px;
+    align-items: start;
+  }
+  .eyebrow { color: var(--cyan); font-weight: 760; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 18px; }
+  h1 { margin: 0; font-size: 64px; line-height: 1.04; letter-spacing: 0; max-width: 690px; }
+  .lead { margin: 26px 0 0; font-size: 19px; line-height: 1.82; color: #475569; max-width: 650px; }
+  .actions { display: flex; gap: 14px; margin-top: 34px; align-items: center; }
+  .btn { height: 44px; padding: 0 18px; display: inline-flex; align-items: center; gap: 9px; border-radius: 8px; font-size: 14px; font-weight: 680; }
+  .btn.primary { color: white; background: #111827; box-shadow: 0 14px 28px rgba(15, 23, 42, .16); }
+  .btn.secondary { color: #1e293b; background: white; border: 1px solid var(--line); }
+  .meta-row { display: flex; gap: 24px; margin-top: 40px; color: var(--muted); font-size: 13px; }
+  .meta-row b { display: block; color: var(--ink); font-size: 18px; margin-bottom: 3px; }
+  .terminal {
+    background: var(--code);
+    border-radius: 8px;
+    border: 1px solid #1e293b;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, .20);
+    overflow: hidden;
+  }
+  .terminal-head { height: 42px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid #243247; color: #94a3b8; font-size: 12px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #475569; }
+  .dot.a { background: #ef4444; } .dot.b { background: #f59e0b; } .dot.c { background: #22c55e; }
+  .terminal-body { padding: 24px; font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace; font-size: 14px; line-height: 1.72; color: #cbd5e1; }
+  .prompt { color: #5eead4; } .token { color: #93c5fd; } .comment { color: #64748b; } .string { color: #bef264; }
+  .diagram { margin-top: 22px; padding: 18px; border-radius: 8px; background: #111c2f; border: 1px solid #26354b; }
+  .flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+  .flow div { padding: 13px 10px; border-radius: 7px; background: #17243a; border: 1px solid #2d3d57; color: #dbeafe; text-align: center; font-size: 12px; }
+  .section { margin-top: 86px; }
+  .section-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 22px; }
+  .section h2 { margin: 0; font-size: 27px; letter-spacing: 0; }
+  .section p { margin: 8px 0 0; color: var(--muted); line-height: 1.7; }
+  .view-all { font-size: 14px; color: var(--blue); font-weight: 680; }
+  .topic-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .topic {
+    background: rgba(255,255,255,.82);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px;
+    min-height: 164px;
+  }
+  .topic-icon { width: 38px; height: 38px; border-radius: 8px; display: grid; place-items: center; font-weight: 780; margin-bottom: 18px; }
+  .topic:nth-child(1) .topic-icon { color: #1d4ed8; background: #dbeafe; }
+  .topic:nth-child(2) .topic-icon { color: #0f766e; background: #ccfbf1; }
+  .topic:nth-child(3) .topic-icon { color: #6d28d9; background: #ede9fe; }
+  .topic:nth-child(4) .topic-icon { color: #0e7490; background: #cffafe; }
+  .topic h3 { margin: 0 0 9px; font-size: 17px; }
+  .topic p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+  .content-grid { display: grid; grid-template-columns: 1.06fr .94fr; gap: 28px; }
+  .feature-card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 30px;
+    min-height: 390px;
+  }
+  .tag { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 999px; background: #eef6ff; color: #1d4ed8; font-size: 12px; font-weight: 720; }
+  .feature-card h3 { margin: 18px 0 14px; font-size: 31px; line-height: 1.2; letter-spacing: 0; max-width: 520px; }
+  .feature-card p { margin: 0; color: #475569; font-size: 15px; line-height: 1.78; }
+  .article-meta { display: flex; gap: 14px; color: #64748b; font-size: 13px; margin-top: 24px; }
+  .mini-code { margin-top: 28px; border-radius: 8px; background: #0f172a; border: 1px solid #26354b; padding: 18px; color: #cbd5e1; font-family: "JetBrains Mono", Consolas, monospace; font-size: 13px; line-height: 1.7; }
+  .list-surface { background: white; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .row { padding: 23px 26px; border-bottom: 1px solid #e7edf5; }
+  .row:last-child { border-bottom: 0; }
+  .row small { color: var(--cyan); font-weight: 740; font-size: 12px; }
+  .row h3 { margin: 8px 0 8px; font-size: 19px; line-height: 1.35; }
+  .row p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.62; }
+  .projects { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .project { background: white; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .project-top { height: 122px; padding: 20px; background: linear-gradient(135deg, #0f172a, #164e63); color: white; display: flex; justify-content: space-between; align-items: start; }
+  .project:nth-child(2) .project-top { background: linear-gradient(135deg, #111827, #4c1d95); }
+  .project:nth-child(3) .project-top { background: linear-gradient(135deg, #172554, #0f766e); }
+  .project-top span { font-size: 12px; opacity: .8; }
+  .project-glyph { width: 42px; height: 42px; border: 1px solid rgba(255,255,255,.26); border-radius: 8px; display: grid; place-items: center; font-weight: 800; }
+  .project-body { padding: 22px; }
+  .project-body h3 { margin: 0 0 10px; font-size: 18px; }
+  .project-body p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { border: 1px solid var(--line); background: #f8fafc; border-radius: 999px; padding: 5px 9px; font-size: 12px; color: #475569; }
+  .latest { display: grid; grid-template-columns: 280px 1fr; gap: 28px; }
+  .note-panel { border-radius: 8px; border: 1px solid var(--line); background: #f8fafc; padding: 24px; }
+  .note-panel h3 { margin: 0 0 12px; font-size: 17px; }
+  .note-panel p { font-size: 14px; }
+  .latest-list { background: white; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .latest-item { display: grid; grid-template-columns: 120px 1fr 90px; gap: 18px; padding: 21px 24px; align-items: center; border-bottom: 1px solid #e7edf5; }
+  .latest-item:last-child { border-bottom: 0; }
+  .date { color: var(--soft); font-size: 13px; }
+  .latest-title { font-size: 16px; font-weight: 690; }
+  .read { color: var(--muted); font-size: 13px; text-align: right; }
+  .footer { margin-top: 78px; padding-top: 30px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+  <main class="page">
+    <nav class="nav">
+      <div class="brand"><div class="mark">C</div><span>Cheng Notes</span></div>
+      <div class="links"><span>Home</span><span>AI / Agent</span><span>RPA</span><span>Projects</span><span>Guides</span><span>About</span><div class="mode">◐</div></div>
+    </nav>
+    <div class="container">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">AI Automation · RPA · Engineering Notes</div>
+          <h1>记录 AI、自动化与编程实践的个人技术博客</h1>
+          <p class="lead">这里不是企业官网，而是一张持续更新的工作台：沉淀文章、项目记录、架构图、流程图、代码片段，以及把复杂问题讲清楚的实践笔记。</p>
+          <div class="actions"><div class="btn primary">开始阅读 →</div><div class="btn secondary">查看项目记录</div></div>
+          <div class="meta-row"><div><b>68</b>技术文章</div><div><b>12</b>项目复盘</div><div><b>4</b>主要主题</div></div>
+        </div>
+        <aside class="terminal">
+          <div class="terminal-head"><i class="dot a"></i><i class="dot b"></i><i class="dot c"></i><span style="margin-left:8px">notes/workflow.md</span></div>
+          <div class="terminal-body">
+            <div><span class="prompt">$</span> build personal knowledge system</div>
+            <div><span class="token">focus</span>: <span class="string">reading, diagrams, code</span></div>
+            <div><span class="token">topics</span>: AI Agents · RPA · Python · MDX</div>
+            <div class="comment"># Mermaid / architecture / automation cases</div>
+            <div class="diagram">
+              <div style="color:#93c5fd;font-weight:700">Automation Pipeline</div>
+              <div class="flow"><div>Input</div><div>Agent</div><div>Result</div></div>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><div><h2>从这些方向开始</h2><p>按你的长期内容主题组织，避免首页变成杂乱文章流。</p></div><div class="view-all">全部主题</div></div>
+        <div class="topic-grid">
+          <div class="topic"><div class="topic-icon">AI</div><h3>AI / Agent</h3><p>Agent 工作流、提示词、工具调用、AI 应用实践。</p></div>
+          <div class="topic"><div class="topic-icon">RP</div><h3>RPA / 自动化</h3><p>网页自动化、流程编排、Excel 处理与效率工具。</p></div>
+          <div class="topic"><div class="topic-icon">PJ</div><h3>项目展示</h3><p>把真实项目拆成背景、方案、实现和复盘。</p></div>
+          <div class="topic"><div class="topic-icon">MD</div><h3>教程 / 指南</h3><p>可复用的开发笔记、配置经验和排错路线。</p></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><div><h2>精选文章</h2><p>用少量高质量内容建立第一印象。</p></div><div class="view-all">查看文章库</div></div>
+        <div class="content-grid">
+          <article class="feature-card">
+            <span class="tag">Featured · AI Agent</span>
+            <h3>如何设计一个可维护的自动化 Agent 工作流</h3>
+            <p>从任务拆解、工具边界、失败处理到日志记录，整理一套适合个人项目和小型业务自动化的实践方法。</p>
+            <div class="article-meta"><span>12 min read</span><span>2026.06.18</span><span>AI / Workflow</span></div>
+            <div class="mini-code"><span class="comment">// readable first, abstraction later</span><br/>agent.run(task)<br/>if result.needs_review:<br/>&nbsp;&nbsp;notify_user(result.summary)</div>
+          </article>
+          <div class="list-surface">
+            <div class="row"><small>RPA / Browser</small><h3>网页自动化里，什么时候该用选择器而不是坐标点击？</h3><p>把稳定性、可验证性和维护成本放在一起看。</p></div>
+            <div class="row"><small>Markdown / MDX</small><h3>让技术博客里的代码块、Callout 和图表更好读</h3><p>内容型网站最容易忽视的，是长文中的视觉节奏。</p></div>
+            <div class="row"><small>Architecture</small><h3>用 Mermaid 画清楚一个自动化系统的数据流</h3><p>流程图不只是装饰，它应该降低理解成本。</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><div><h2>项目记录</h2><p>用 case study 的方式展示能力，不做夸张作品集。</p></div><div class="view-all">全部项目</div></div>
+        <div class="projects">
+          <div class="project"><div class="project-top"><span>Automation</span><div class="project-glyph">01</div></div><div class="project-body"><h3>订单表格自动处理流程</h3><p>从数据清洗、校验到结果回写，减少重复人工操作。</p><div class="chips"><span class="chip">Python</span><span class="chip">Excel</span><span class="chip">RPA</span></div></div></div>
+          <div class="project"><div class="project-top"><span>AI Tooling</span><div class="project-glyph">02</div></div><div class="project-body"><h3>个人知识库 Agent</h3><p>围绕博客内容建立检索、总结和写作辅助工作流。</p><div class="chips"><span class="chip">AI</span><span class="chip">MDX</span><span class="chip">Search</span></div></div></div>
+          <div class="project"><div class="project-top"><span>Blog System</span><div class="project-glyph">03</div></div><div class="project-body"><h3>Markdown 图表展示系统</h3><p>让 Mermaid、架构图、代码块在文章页里稳定可读。</p><div class="chips"><span class="chip">Mermaid</span><span class="chip">Design</span><span class="chip">Docs</span></div></div></div>
+        </div>
+      </section>
+
+      <section class="section latest">
+        <aside class="note-panel"><h3>设计重点</h3><p>首页不追求花哨，而是快速建立：我是谁、我写什么、从哪里开始看。文章页后续应围绕阅读宽度、目录、代码块和图表容器继续打磨。</p></aside>
+        <div class="latest-list">
+          <div class="latest-item"><div class="date">Jun 26</div><div class="latest-title">Playwright 自动化脚本的失败重试应该放在哪里</div><div class="read">7 min</div></div>
+          <div class="latest-item"><div class="date">Jun 21</div><div class="latest-title">用最小抽象维护个人项目里的缓存逻辑</div><div class="read">9 min</div></div>
+          <div class="latest-item"><div class="date">Jun 14</div><div class="latest-title">AI 编程助手协作时，如何写清楚项目规则</div><div class="read">6 min</div></div>
+          <div class="latest-item"><div class="date">Jun 08</div><div class="latest-title">Mermaid 图表在静态博客中的样式边界</div><div class="read">5 min</div></div>
+        </div>
+      </section>
+      <footer class="footer"><span>Cheng Notes · Personal technical blog</span><span>RSS · GitHub · About</span></footer>
+    </div>
+  </main>
+</body>
+</html>
