@@ -9,9 +9,7 @@
 - [x] 配置 `site`，让 sitemap 构建不再因为缺少站点地址被跳过。
 - [x] 给自定义页面添加 Pagefind 索引入口。
 - [x] 清理 `.idea/` 的 Git 跟踪，保留本地 IDE 配置和 `.gitignore` 忽略规则。
-- [x] 补充 agent 发文流程，明确 Django 数据库为文章内容源。
-- [x] 增加 `upsert_post` 单篇文章入库命令。
-- [x] 给 `export_posts` 增加 `--clean`，只清理旧 `.md` / `.mdx` 导出文件。
+- [x] Django 数据库内容源版本已保存到 `version/django-content-source-v2`，`main` 不继续维护。
 - [x] 增加文章分类页、标签页和 `/search/` 搜索入口页。
 
 ## 待开发
@@ -30,27 +28,25 @@
 
 ## 下个版本：回归静态前端
 
-- [ ] 移除 Django 后端、数据库内容源、导入导出命令和相关后端文档。
-- [ ] 文章恢复为直接维护 `src/content/posts/` 下的 `.md` / `.mdx` 文件。
-- [ ] 更新 `BLOG_AGENT.md` / README，明确 Agent 发文只生成 MDX 文件，不走数据库。
-- [ ] 保留静态能力：RSS、Pagefind、分类 / 标签、`draft: true` / `private: true` 静态发布边界、`public/files/` 公开文件下载。
-- [ ] 构建验证回到前端静态站点：`npm run build` 和现有前端测试。
+- [x] 移除 Django 后端、数据库内容源、导入导出命令和相关后端文档。
+- [x] 文章恢复为直接维护 `src/content/posts/` 下的 `.md` / `.mdx` 文件。
+- [x] 更新 `BLOG_AGENT.md` / README，明确 Agent 发文只生成 MDX 文件，不走数据库。
+- [x] 保留静态能力：RSS、Pagefind、分类 / 标签、`draft: true` / `private: true` 静态发布边界、`public/files/` 公开文件下载。
+- [x] 构建验证回到前端静态站点：`npm run build` 和现有前端测试。
 
-## 后端 / 动态能力
+## 动态能力边界
 
-- [x] 第二版本内容源改造完成：Django 数据库存 MD / MDX 原文，发布前导出到 `src/content/posts/`，前端继续读取本地文件，不在运行时从 Django 获取内容。该版本已保存到分支 `version/django-content-source-v2`，后续 `main` 不继续维护这条路线。
-- [x] 二次重构已删除未接入前台的文章 JSON API 和运行时密码访问预留；当前后端只保留内容管理和构建前导入导出能力。
 - [ ] 文章密码访问暂不实现；当前项目定位为静态博客，`private: true` 仅表示“不发布”，不做运行时密码访问。
 - [ ] 私密文件下载需要后端能力支持；当前不做。
-- [ ] 后续暂不再评估 Astro 构建期接入 Django 数据；`main` 优先回归纯静态前端。
+- [x] `main` 回归纯静态前端，不再维护 Django 后端内容源。
 
 ## 当前未完成重点
 
 - [ ] 补充真实个人介绍、GitHub 链接和项目链接。
 - [ ] 替换真实站点信息：正式域名、GitHub 地址、作者名 / 昵称、个人介绍，并同步更新站点配置。
 - [x] 确认 Pagefind 搜索入口是否要覆盖整个博客，而不仅是文档区；当前先提供 `/search/` 入口页，沿用 Starlight / Pagefind 能力。
-- [ ] 回归静态前端后，重写 agent 发文流程：新文章直接生成 `.md` / `.mdx` 内容文件，不再写入 Django 数据库。
-- [ ] 文章密码访问暂不实现；当前只保留 `draft: true` 和 `private: true` 的静态发布边界。默认导出内容文件，但不会进入公开页面、RSS 和搜索索引；如需只导出公开文章，使用 `export_posts --public-only`。
+- [x] 回归静态前端后，重写 agent 发文流程：新文章直接生成 `.md` / `.mdx` 内容文件，不再写入数据库。
+- [ ] 文章密码访问暂不实现；当前只保留 `draft: true` 和 `private: true` 的静态发布边界。
 - [ ] 私密文件下载需要后端能力支持；当前不做。
 - [ ] 增加视觉回归或页面渲染测试，覆盖首页、文章详情页和移动端布局。
 - [ ] Mermaid 客户端 chunk 偏大；后续文章变多或首屏性能变差时，再考虑按需加载优化。

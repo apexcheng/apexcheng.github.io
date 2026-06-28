@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "build:content": "python3 backend/manage.py export_posts && npm run build",
     "preview": "astro preview",
     "test": "vitest run"
   },

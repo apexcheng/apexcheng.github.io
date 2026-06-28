@@ -27,10 +27,9 @@ describe('draft and private posts', () => {
     }
   });
 
-  it('does not fetch Django APIs from static Astro pages', () => {
+  it('does not fetch backend APIs from static Astro pages', () => {
     for (const source of pageSources) {
       expect(source).not.toContain('fetch(');
-      expect(source).not.toContain('Django');
     }
   });
 

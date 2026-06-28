@@ -4,15 +4,15 @@
 
 ## 内容源规则
 
-Django 数据库是当前文章内容源。`src/content/posts/*.md` / `*.mdx` 是从数据库导出的 Astro 构建产物，不应由 Agent 长期直接维护。
+`src/content/posts/*.md` / `*.mdx` 是当前文章内容源，由 Agent 或人工直接维护。
 
 新增或修改文章时，推荐流程是：
 
 ```text
-生成文章文件或草稿 -> upsert_post 入库 -> export_posts 导出 -> Astro build
+生成或修改 .md / .mdx 文件 -> Astro build
 ```
 
-也就是说：可以先生成临时 `.md` / `.mdx` 草稿文件，但正式内容要写入 Django 数据库，再导出到 `src/content/posts/`。
+不要写入数据库，不依赖 Django 后端，也不要新增导入 / 导出步骤。
 
 ## 文章文件
 
@@ -25,8 +25,7 @@ templates/post.mdx
 普通文章可以用 `.md`。需要使用组件时用 `.mdx`。新建文章时优先复制这个模板，确认后使用：
 
 ```bash
-python3 backend/manage.py upsert_post path/to/article.mdx
-python3 backend/manage.py export_posts
+cp templates/post.mdx src/content/posts/article-slug.mdx
 npm run build
 ```
 
