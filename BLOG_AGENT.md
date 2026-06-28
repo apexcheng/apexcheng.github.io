@@ -58,6 +58,16 @@ private: false
 - 发布文章时，把 `draft` 改成 `false`。
 - `private: true` 当前在 Astro 静态前台视为不公开发布，不会生成公开页面。不要在静态前台里实现假的密码输入页；真正密码访问后续需要后端能力支持。
 
+## 静态文件下载
+
+可下载文件放在 `public/files/`，文章里用 `/files/` 开头链接：
+
+```md
+[下载示例文件](/files/example.pdf)
+```
+
+`public/files/` 里的内容都是公开文件，会随静态站点发布。不能放私密资料、账号、token、公司内部文档。private 文章不等于 private 文件，只要文件在 `public/files/` 下就是公开可访问的。
+
 ## 当前可用组件
 
 ### Callout
@@ -112,3 +122,4 @@ import Mermaid from '../../components/Mermaid.astro';
 - 图片存放规范。
 - 新文章脚本。
 - 更多 MDX 组件。
+- 私密文件下载能力。

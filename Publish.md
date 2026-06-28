@@ -83,10 +83,12 @@ git status --short
 - RSS 和 sitemap 会使用 `site` 生成绝对地址，上线前需要确认域名正确。
 - GitHub 当前是占位链接，确认真实地址后再替换 `src/data/site.ts` 中的配置。
 - `private: true` 文章不会静态发布，也不会进入 RSS 或 Pagefind 搜索索引。
+- 确认 `public/files/` 中没有敏感文件；该目录内容会被静态发布。
 
 ## 当前边界
 
 - Astro 页面不直接请求 Django API。
 - `private: true` 文章在静态前台视为不公开发布，不做纯前端密码访问。
+- `public/files/` 只支持公开静态文件下载，不提供私密文件权限控制。
 - 不做评论、登录用户体系、复杂动态权限。
 - 不引入 Docker、Redis、Celery、Django REST Framework。
