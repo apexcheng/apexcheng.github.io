@@ -4,6 +4,6 @@ export const siteMeta = {
   authorName: '黄撑',
   githubUrl: 'https://github.com/apexcheng',
   githubIsPlaceholder: false,
-  projectUrl: 'https://github.com/apexcheng/personal-blog',
+  projectUrl: 'https://github.com/apexcheng/blog',
   rssPath: '/rss.xml',
 };

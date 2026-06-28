@@ -38,6 +38,29 @@ npm run build
 
 Windows 只作为浏览器预览环境使用，例如访问 `localhost`。
 
+## 部署
+
+当前通过 GitHub Actions 自动部署到 GitHub Pages：
+
+```text
+https://apexcheng.github.io/blog/
+```
+
+发布前在本地确认：
+
+```bash
+npm test
+npm run build
+```
+
+然后推送到 `main`：
+
+```bash
+git push origin main
+```
+
+GitHub 仓库 Settings → Pages 中 Source 需要选择 GitHub Actions。仓库名以后如果变化，需要同步修改 `astro.config.mjs` 的 `base` 和 `src/data/site.ts` 的项目仓库地址。
+
 ## 发文流程
 
 `src/content/posts/*.md` / `*.mdx` 是文章内容源。Agent 或人工直接在这个目录新增或修改文章文件，然后构建验证：

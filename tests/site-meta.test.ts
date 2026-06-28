@@ -2,7 +2,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const siteDataPath = 'src/data/site.ts';
+const workflowPath = '.github/workflows/deploy.yml';
 const astroConfigSource = readFileSync('astro.config.mjs', 'utf8');
+const siteDataSource = readFileSync(siteDataPath, 'utf8');
 const layoutSource = readFileSync('src/layouts/SiteLayout.astro', 'utf8');
 const aboutSource = readFileSync('src/pages/about.astro', 'utf8');
 const rssSource = readFileSync('src/pages/rss.xml.ts', 'utf8');
@@ -13,7 +15,6 @@ describe('site metadata', () => {
   it('keeps shared site metadata in one small data file', () => {
     expect(existsSync(siteDataPath)).toBe(true);
 
-    const siteDataSource = readFileSync(siteDataPath, 'utf8');
     for (const field of ['siteName', 'siteDescription', 'authorName', 'githubUrl', 'githubIsPlaceholder', 'projectUrl', 'rssPath']) {
       expect(siteDataSource).toContain(field);
     }
@@ -28,12 +29,29 @@ describe('site metadata', () => {
 
   it('documents GitHub Pages site metadata', () => {
     expect(astroConfigSource).toContain("site: 'https://apexcheng.github.io'");
-    expect(astroConfigSource).toContain("base: '/personal-blog'");
+    expect(astroConfigSource).toContain("base: '/blog'");
+    expect(siteDataSource).toContain("githubUrl: 'https://github.com/apexcheng'");
+    expect(siteDataSource).toContain("projectUrl: 'https://github.com/apexcheng/blog'");
     expect(publishSource).toContain('上线前检查');
     expect(publishSource).toContain('RSS 和 sitemap');
     expect(publishSource).toContain('GitHub Pages');
     expect(publishSource).toContain('private: true');
     expect(todoSource).toContain('GitHub Pages');
     expect(todoSource).toContain('GitHub');
+  });
+
+  it('keeps the GitHub Pages workflow on the official Astro path', () => {
+    expect(existsSync(workflowPath)).toBe(true);
+
+    const workflowSource = readFileSync(workflowPath, 'utf8');
+    expect(workflowSource).toContain('push:');
+    expect(workflowSource).toContain('branches: [main]');
+    expect(workflowSource).toContain('workflow_dispatch:');
+    expect(workflowSource).toContain('contents: read');
+    expect(workflowSource).toContain('pages: write');
+    expect(workflowSource).toContain('id-token: write');
+    expect(workflowSource).toContain('uses: withastro/action@v6');
+    expect(workflowSource).toContain('package-manager: npm');
+    expect(workflowSource).toContain('uses: actions/deploy-pages@v5');
   });
 });

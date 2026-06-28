@@ -19,7 +19,7 @@ export const projects = [
     description: '基于 Astro / Starlight / MDX 维护技术文章、项目记录、RSS 和静态搜索。',
     tags: ['Astro', 'MDX', 'GitHub Pages'],
     tone: 'blue',
-    url: 'https://github.com/apexcheng/personal-blog',
+    url: 'https://github.com/apexcheng/blog',
   },
   {
     title: '网页自动化稳定性实验',

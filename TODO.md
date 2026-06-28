@@ -11,6 +11,7 @@
 - [x] 清理 `.idea/` 的 Git 跟踪，保留本地 IDE 配置和 `.gitignore` 忽略规则。
 - [x] Django 数据库内容源版本已保存到 `version/django-content-source-v2`，`main` 不继续维护。
 - [x] 增加文章分类页、标签页和 `/search/` 搜索入口页。
+- [x] 增加 GitHub Pages 自动部署 workflow，并同步仓库名改为 `blog` 后的 base 配置。
 
 ## 待开发
 
@@ -25,6 +26,7 @@
 - [x] 集中维护基础站点元信息，并补充上线前配置检查说明。
 - [x] 文件下载第一版：使用 `public/files/` 支持公开静态文件链接。
 - [x] 增加视觉回归或页面渲染测试，覆盖首页、文章详情页和移动端布局。
+- [x] 增加 GitHub Pages 自动部署，推送 `main` 后由 GitHub Actions 发布静态站点。
 
 ## 下个版本：回归静态前端
 

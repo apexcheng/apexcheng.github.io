@@ -38,11 +38,25 @@ git status --short
 - `dist/`
 - `node_modules/`
 
-## 5. 上线前检查
+## 5. GitHub Pages 发布
 
-- 当前按 GitHub Pages 项目站点配置：`site: "https://apexcheng.github.io"`，`base: "/personal-blog"`。
-- RSS 和 sitemap 会使用 `site` / `base` 生成地址；如果仓库改名为 `blog`，需要同步把 `base` 改为 `/blog`。
+当前使用 GitHub Actions 自动部署 GitHub Pages。
+
+部署步骤：
+
+1. 本地确认 `npm test`。
+2. 本地确认 `npm run build`。
+3. 推送到 `main`：`git push origin main`。
+4. 打开 GitHub 仓库 Settings -> Pages。
+5. Source 选择 GitHub Actions。
+6. 等 Actions 完成后访问 `https://apexcheng.github.io/blog/`。
+
+## 6. 上线前检查
+
+- 当前按 GitHub Pages 项目站点配置：`site: "https://apexcheng.github.io"`，`base: "/blog"`。
+- RSS 和 sitemap 会使用 `site` / `base` 生成地址。
 - GitHub 主页和项目仓库地址维护在 `src/data/site.ts`。
+- 如果仓库名以后再次变化，需要同步修改 `astro.config.mjs` 的 `base` 和 `src/data/site.ts` 的项目仓库地址。
 - `private: true` 文章不会静态发布，也不会进入 RSS 或 Pagefind 搜索索引。
 - 确认 `public/files/` 中没有敏感文件；该目录内容会被静态发布。
 

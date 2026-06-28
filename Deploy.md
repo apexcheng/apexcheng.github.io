@@ -2,9 +2,13 @@
 
 ## 当前策略
 
-第一阶段只做本地开发和本地预览。
+当前使用 GitHub Pages 部署纯静态 Astro 站点。
 
-先让内容结构和 UI 成型，再考虑公网访问。
+目标访问地址：
+
+```text
+https://apexcheng.github.io/blog/
+```
 
 ## 本地预览
 
@@ -19,6 +23,7 @@ npm run dev
 ## 本地构建
 
 ```bash
+npm test
 npm run build
 ```
 
@@ -30,12 +35,44 @@ dist/
 
 `dist/` 是生成目录，不需要提交。
 
+## GitHub Pages 自动部署
+
+仓库推送到 `main` 后，`.github/workflows/deploy.yml` 会使用 GitHub Actions 构建并发布站点。
+
+发布前本地确认：
+
+```bash
+npm test
+npm run build
+git status --short
+```
+
+部署步骤：
+
+1. 本地确认 `npm test`。
+2. 本地确认 `npm run build`。
+3. 推送到 `main`：`git push origin main`。
+4. 打开 GitHub 仓库 Settings -> Pages。
+5. Source 选择 GitHub Actions。
+6. 等 Actions 完成后访问 `https://apexcheng.github.io/blog/`。
+
+当前 GitHub Pages 项目站点配置：
+
+```text
+site: "https://apexcheng.github.io"
+base: "/blog"
+```
+
+如果仓库名以后再次变化，需要同步修改：
+
+- `astro.config.mjs` 的 `base`
+- `src/data/site.ts` 的 `projectUrl`
+
 ## 后续部署候选
 
 优先考虑静态部署：
 
 - Cloudflare Pages
-- GitHub Pages
 - Vercel
 - 云服务器静态站点
 

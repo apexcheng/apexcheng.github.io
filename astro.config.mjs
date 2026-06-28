@@ -5,7 +5,7 @@ import { siteMeta } from './src/data/site';
 
 export default defineConfig({
   site: 'https://apexcheng.github.io',
-  base: '/personal-blog',
+  base: '/blog',
   devToolbar: {
     enabled: true,
   },
