@@ -1,5 +1,6 @@
 import rss from '@astrojs/rss';
 import { getCollection } from 'astro:content';
+import { siteMeta } from '../data/site';
 
 export async function GET(context) {
   const posts = (await getCollection('posts'))
@@ -7,8 +8,8 @@ export async function GET(context) {
     .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
   return rss({
-    title: 'Cheng Notes',
-    description: '记录 AI、自动化与编程实践的个人技术博客',
+    title: siteMeta.siteName,
+    description: siteMeta.siteDescription,
     site: context.site,
     customData: '<language>zh-CN</language>',
     items: posts.map((post) => ({

@@ -17,9 +17,9 @@ describe('front page structure', () => {
   });
 
   it('keeps about links honest while GitHub is still a placeholder', () => {
-    expect(aboutSource).toContain('https://github.com/');
+    expect(aboutSource).toContain('siteMeta.githubUrl');
     expect(aboutSource).toContain('GitHub 暂时使用占位链接');
-    expect(aboutSource).toContain('href="/rss.xml"');
+    expect(aboutSource).toContain('siteMeta.rssPath');
     expect(aboutSource).toContain('href="/projects/"');
   });
 

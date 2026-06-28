@@ -1,18 +1,19 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
+import { siteMeta } from '../data/site';
 ---
 
 <SiteLayout title="关于" active="home">
   <main class="page-content narrow-page">
     <p class="eyebrow">关于</p>
-    <h1 class="page-title">关于 Cheng Notes</h1>
+    <h1 class="page-title">关于 {siteMeta.siteName}</h1>
     <p class="page-lead">
       这是一个个人技术博客，用来记录 AI、RPA、自动化、编程笔记和项目复盘。第一版先把阅读体验、代码块和图表展示打磨清楚。
     </p>
     <p class="content-note">GitHub 暂时使用占位链接，后续替换为真实主页后再补充更完整的个人介绍。</p>
     <div class="hero-actions">
-      <a class="button" href="https://github.com/">GitHub</a>
-      <a class="button" href="/rss.xml">RSS 订阅</a>
+      <a class="button" href={siteMeta.githubUrl}>GitHub</a>
+      <a class="button" href={siteMeta.rssPath}>RSS 订阅</a>
       <a class="button" href="/projects/">项目记录</a>
     </div>
   </main>

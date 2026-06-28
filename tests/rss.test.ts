@@ -16,6 +16,6 @@ describe('rss feed', () => {
   });
 
   it('links rss from the main navigation', () => {
-    expect(layoutSource).toContain('href="/rss.xml"');
+    expect(layoutSource).toContain('href={siteMeta.rssPath}');
   });
 });

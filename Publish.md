@@ -77,6 +77,13 @@ git status --short
 - `dist/`
 - `node_modules/`
 
+## 7. 上线前检查
+
+- `astro.config.mjs` 里的 `site: "https://cheng-notes.local"` 仍是临时域名；未确定真实域名前不要替换。
+- RSS 和 sitemap 会使用 `site` 生成绝对地址，上线前需要确认域名正确。
+- GitHub 当前是占位链接，确认真实地址后再替换 `src/data/site.ts` 中的配置。
+- `private: true` 文章不会静态发布，也不会进入 RSS 或 Pagefind 搜索索引。
+
 ## 当前边界
 
 - Astro 页面不直接请求 Django API。
