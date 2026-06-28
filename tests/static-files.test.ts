@@ -18,8 +18,9 @@ describe('static file download convention', () => {
     expect(blogAgentSource).toContain('private 文章不等于 private 文件');
   });
 
-  it('keeps an article example for static file download links', () => {
-    expect(mdxExampleSource).toContain('[下载示例文件](/files/example.pdf)');
+  it('keeps an article code example for static file download links', () => {
+    expect(mdxExampleSource).toContain('/files/example.pdf');
+    expect(mdxExampleSource).not.toContain('[下载示例文件](/files/example.pdf)');
     expect(mdxExampleSource).toContain('public/files/');
   });
 

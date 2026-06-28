@@ -24,9 +24,13 @@ npm run build
 
 ## 文件下载链接
 
-文章可以链接到公开静态文件，例如：[下载示例文件](/files/example.pdf)。
+文章可以链接到 `/files/` 下的公开静态文件，例如：
 
-示例路径需要先把文件放入 `public/files/` 后才可下载；不要把私密资料放进这个目录。
+```md
+[下载文件](/files/example.pdf)
+```
+
+文件必须先放入 `public/files/` 后才可下载。`public/files/` 是公开目录，不能放敏感资料。
 
 ## 图表
 
