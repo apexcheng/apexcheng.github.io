@@ -1,0 +1,522 @@
+---
+title: "GitHub Pages 是什么，以及这个博客是怎么部署的"
+description: "先解释 GitHub Pages、GitHub Actions、Astro 构建、site 和 base 等概念，再按当前项目配置完整拆解发布流程。"
+date: 2026-06-28
+category: "Skill"
+tags:
+  - "GitHub Pages"
+  - "GitHub Actions"
+  - "Astro"
+  - "部署"
+  - "静态站点"
+minutes: 13
+featured: false
+draft: false
+private: false
+---
+
+import Callout from '../../components/Callout.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+这篇文章专门讲清楚两件事：第一，GitHub Pages 到底是什么；第二，这个博客项目当前是怎么从本地代码发布到线上地址的。
+
+这个博客目前不是部署在云服务器上，也没有 Nginx、数据库、后端进程。它是一个 Astro 静态站点，代码推送到 GitHub 后，由 GitHub Actions 自动构建，再发布到 GitHub Pages。
+
+<Callout title="一句话理解">
+GitHub Pages 负责托管最终生成的静态网页；GitHub Actions 负责把源码构建成这些静态网页；Astro 负责把文章、页面和组件编译成可部署的产物。
+</Callout>
+
+## 先解释几个名词
+
+### GitHub Pages
+
+GitHub Pages 是 GitHub 提供的静态网站托管服务。它适合放个人主页、项目文档、博客、作品集这类由 HTML、CSS、JavaScript 组成的网站。
+
+它有两个常见形态：
+
+- 用户站点：通常是 `用户名.github.io`。
+- 项目站点：通常是 `用户名.github.io/仓库名/`。
+
+这个博客属于项目站点，因为仓库名是 `blog`，所以访问路径不是根目录，而是 `/blog/`。
+
+### 静态站点
+
+静态站点指的是部署后主要由 HTML、CSS、JavaScript、图片、字体等静态文件组成的网站。
+
+访问时不需要后端临时查数据库，也不需要服务端实时渲染页面。浏览器请求一个地址，GitHub Pages 返回已经构建好的文件。
+
+这类站点的优点是简单、稳定、便宜，缺点是运行时动态能力弱。对个人技术博客来说，静态站点通常足够。
+
+### Astro
+
+Astro 是当前博客使用的静态站点框架。它负责读取 `src/content/posts/` 里的文章，结合页面模板、组件和样式，构建出最终的静态页面。
+
+本项目里，Astro 主要负责这些事情：
+
+- 读取 Markdown / MDX 文章。
+- 生成首页、文章列表页、文章详情页、分类页、标签页。
+- 生成 RSS、搜索索引相关页面。
+- 把站点构建到 `dist/` 目录。
+
+### GitHub Actions
+
+GitHub Actions 是 GitHub 的自动化执行环境。它可以在代码 push 后自动运行一组步骤，比如安装依赖、执行测试、构建项目、上传产物、发布页面。
+
+这个项目里，GitHub Actions 的工作就是：
+
+1. 检出仓库代码。
+2. 使用 Astro 官方 Action 安装依赖并构建站点。
+3. 把构建产物交给 GitHub Pages 发布。
+
+### workflow
+
+workflow 是 GitHub Actions 的流程配置文件，通常放在 `.github/workflows/` 目录下。
+
+当前项目的部署 workflow 是：
+
+```text
+.github/workflows/deploy.yml
+```
+
+它定义了什么时候触发、需要哪些权限、有哪些任务、每个任务执行什么步骤。
+
+### site 和 base
+
+Astro 里有两个部署到 GitHub Pages 时很关键的配置：`site` 和 `base`。
+
+当前项目配置是：
+
+```js
+site: 'https://apexcheng.github.io',
+base: '/blog',
+```
+
+这两个配置组合起来，对应最终站点地址：
+
+```text
+https://apexcheng.github.io/blog/
+```
+
+`site` 表示站点域名，`base` 表示项目站点挂载的子路径。因为这个仓库叫 `blog`，所以 GitHub Pages 的项目站点路径就是 `/blog/`。
+
+<Callout title="为什么 base 很重要？">
+如果不配置 `base: '/blog'`，Astro 可能会把资源路径当成根目录 `/`。部署到项目站点后，CSS、JS、文章链接就可能出现 404。
+</Callout>
+
+### dist
+
+`dist/` 是 Astro 构建后的输出目录。运行 `npm run build` 后，Astro 会把所有页面和资源生成到这里。
+
+需要注意的是，这个项目不需要把 `dist/` 手动提交到 Git。GitHub Actions 会在云端重新构建并上传产物。
+
+## 本项目部署架构
+
+先看整体链路。
+
+<Mermaid
+  title="本项目部署架构"
+  chart={`flowchart LR
+  A[本地项目源码] --> B[Git commit]
+  B --> C[Push 到 GitHub main]
+  C --> D[GitHub Actions 触发]
+  D --> E[withastro/action 构建 Astro]
+  E --> F[生成静态产物]
+  F --> G[actions/deploy-pages 发布]
+  G --> H[GitHub Pages 线上站点]
+  H --> I[访问 /blog 路径]`}
+/>
+
+这个流程里，本地电脑不直接把 `dist/` 上传到服务器。真正发布发生在 GitHub Actions 里。
+
+你本地只需要保证代码没问题，然后把代码 push 到远端。GitHub 收到 main 分支的新提交后，会自动执行部署 workflow。
+
+## 当前项目关键文件
+
+本项目和部署相关的关键文件有三个。
+
+### astro.config.mjs
+
+这个文件决定 Astro 如何构建站点。当前部署相关配置是：
+
+```js
+export default defineConfig({
+  site: 'https://apexcheng.github.io',
+  base: '/blog',
+  integrations: [
+    starlight({
+      title: siteMeta.siteName,
+      customCss: ['./src/styles/global.css'],
+    }),
+    mdx(),
+  ],
+});
+```
+
+其中最关键的是：
+
+- `site`：GitHub 用户 Pages 域名。
+- `base`：项目仓库名对应的子路径。
+- `integrations`：启用 Starlight 和 MDX。
+
+### .github/workflows/deploy.yml
+
+这是自动部署流程。当前配置可以简化理解成：
+
+```yaml
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v6
+      - uses: withastro/action@v6
+        with:
+          package-manager: npm
+
+  deploy:
+    needs: build
+    steps:
+      - uses: actions/deploy-pages@v5
+```
+
+这段配置表达了几个关键信息：
+
+- push 到 `main` 分支时自动部署。
+- 也可以在 GitHub Actions 页面手动触发。
+- `build` 任务负责构建和上传产物。
+- `deploy` 任务依赖 `build`，构建成功后才发布。
+- 发布动作使用 GitHub 官方 Pages 部署 Action。
+
+### package.json
+
+`package.json` 里定义了本地和云端都会用到的命令：
+
+```json
+{
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "vitest run"
+  }
+}
+```
+
+其中部署最关键的是：
+
+```bash
+npm run build
+```
+
+GitHub Actions 使用 Astro Action 构建项目时，最终也是围绕构建命令生成静态产物。
+
+## 从写文章到线上发布
+
+这个博客的发布流程可以分成两段：本地内容更新，远端自动部署。
+
+<Mermaid
+  title="从文章到线上页面的完整流程"
+  chart={`flowchart TD
+  A[新增或修改 MDX 文章] --> B[填写 frontmatter]
+  B --> C[本地运行 npm test]
+  C --> D[本地运行 npm run build]
+  D --> E[git add]
+  E --> F[git commit]
+  F --> G[git push origin main]
+  G --> H[GitHub Actions 开始运行]
+  H --> I[Checkout 仓库]
+  I --> J[安装依赖并构建 Astro]
+  J --> K[上传 Pages artifact]
+  K --> L[Deploy Pages]
+  L --> M[线上 /blog 地址更新]`}
+/>
+
+### 第一步：写文章
+
+文章放在：
+
+```text
+src/content/posts/
+```
+
+普通文章可以用 `.md`，需要组件、Callout 或 Mermaid 图表时用 `.mdx`。
+
+每篇文章都需要 frontmatter，例如：
+
+```yaml
+---
+title: "GitHub Pages 是什么，以及这个博客是怎么部署的"
+description: "先解释 GitHub Pages、GitHub Actions、Astro 构建、site 和 base 等概念，再按当前项目配置完整拆解发布流程。"
+date: 2026-06-28
+category: "Skill"
+tags:
+  - "GitHub Pages"
+  - "GitHub Actions"
+  - "Astro"
+minutes: 13
+featured: false
+draft: false
+private: false
+---
+```
+
+这里的 `draft: false` 和 `private: false` 很重要。当前项目的文章列表、详情页、分类页、标签页、RSS 都会过滤草稿和私密文章。
+
+### 第二步：本地验证
+
+发布前建议先运行：
+
+```bash
+npm test
+npm run build
+```
+
+`npm test` 用来验证已有测试。`npm run build` 用来确认 Astro 可以完整生成静态站点。
+
+如果构建失败，就不要提交发布。先修文章语法、frontmatter、MDX 组件或 Mermaid 写法。
+
+### 第三步：提交代码
+
+本地确认没问题后，提交：
+
+```bash
+git add src/content/posts/xxx.mdx
+git commit -m "新增 GitHub Pages 部署说明文章"
+```
+
+这个项目用 Git 管理内容，所以文章新增、分类调整、页面修改都会留下提交记录。
+
+### 第四步：推送到 GitHub
+
+提交后推送到 main：
+
+```bash
+git push origin main
+```
+
+因为 workflow 里写了：
+
+```yaml
+on:
+  push:
+    branches: [main]
+```
+
+所以只要 main 分支收到新提交，GitHub Actions 就会自动开始部署。
+
+### 第五步：GitHub Actions 构建
+
+Actions 先运行 build job。
+
+<Mermaid
+  title="GitHub Actions 内部任务关系"
+  chart={`flowchart LR
+  A[push main] --> B[build job]
+  B --> C[actions/checkout]
+  C --> D[withastro/action]
+  D --> E[install dependencies]
+  E --> F[astro build]
+  F --> G[upload Pages artifact]
+  G --> H[deploy job]
+  H --> I[actions/deploy-pages]
+  I --> J[GitHub Pages updated]`}
+/>
+
+当前 build job 里使用的是：
+
+```yaml
+- name: Build and upload
+  uses: withastro/action@v6
+  with:
+    package-manager: npm
+```
+
+这说明部署时使用 npm 作为包管理器，并由 Astro 官方 Action 处理安装、构建和上传产物。
+
+### 第六步：GitHub Pages 发布
+
+build 成功后，deploy job 会执行：
+
+```yaml
+- name: Deploy to GitHub Pages
+  id: deployment
+  uses: actions/deploy-pages@v5
+```
+
+它会把上一步生成并上传的 Pages artifact 发布到 GitHub Pages。发布完成后，站点地址会更新。
+
+当前博客线上地址对应的是：
+
+```text
+https://apexcheng.github.io/blog/
+```
+
+## 为什么这个项目必须配置 base
+
+GitHub Pages 的项目站点和普通根站点不一样。
+
+如果仓库名是 `blog`，项目站点默认路径就是：
+
+```text
+/blog/
+```
+
+Astro 默认会认为站点部署在根路径 `/`。但当前博客实际部署在 `/blog/`，所以需要：
+
+```js
+base: '/blog'
+```
+
+这样构建出来的 CSS、JS、文章链接、RSS 链接等资源，才会带上正确的 `/blog` 前缀。
+
+本项目里还封装了一个 `withBase()` 方法，用来生成带 base 的内部链接：
+
+```ts
+export function withBase(path: string) {
+  const base = import.meta.env.BASE_URL.endsWith('/')
+    ? import.meta.env.BASE_URL.slice(0, -1)
+    : import.meta.env.BASE_URL;
+
+  if (path === '/') {
+    return `${base}/`;
+  }
+
+  return `${base}${path}`;
+}
+```
+
+这就是为什么页面里很多链接不是直接写 `/articles/`，而是写：
+
+```astro
+<a href={withBase('/articles/')}>开始阅读</a>
+```
+
+这样本地和线上都能尽量保持路径正确。
+
+<Callout title="项目改名时要注意">
+如果远端仓库名从 `blog` 改成别的名字，除了 GitHub 仓库地址要变，`astro.config.mjs` 里的 `base` 也要同步改。否则线上资源路径容易错。
+</Callout>
+
+## GitHub Pages 设置里要选什么
+
+这个项目使用 GitHub Actions 发布，所以 GitHub 仓库设置里，Pages 的 Source 应该选择 GitHub Actions，而不是从某个分支目录直接发布。
+
+两种方式区别是：
+
+- 分支目录发布：GitHub 直接拿某个分支或目录里的静态文件发布。
+- GitHub Actions 发布：先运行 workflow 构建，再把构建产物发布。
+
+Astro 项目更适合第二种。因为源码不是最终网页，必须先构建。
+
+## 如何判断部署是否成功
+
+一次部署是否成功，可以看三个位置。
+
+### 1. 本地构建是否成功
+
+```bash
+npm run build
+```
+
+如果本地都构建失败，远端大概率也会失败。
+
+### 2. GitHub Actions 是否绿色
+
+推送后进入 GitHub 仓库的 Actions 页面，查看 `Deploy to GitHub Pages` workflow 是否成功。
+
+如果失败，先看 build job 还是 deploy job 失败：
+
+- build 失败：多半是依赖、代码、MDX、frontmatter、构建配置问题。
+- deploy 失败：多半是 Pages 权限、Pages Source、artifact 或 GitHub 配置问题。
+
+### 3. 线上页面是否更新
+
+部署成功后，访问线上地址，看首页、文章页、分类页是否更新。
+
+新文章通常会生成类似这样的路径：
+
+```text
+/articles/github-pages-deployment-guide/
+```
+
+由于项目有 `base: '/blog'`，线上完整访问路径会挂在 `/blog/` 下。
+
+## 常见问题
+
+### 页面能打开，但样式丢了
+
+优先检查 `base` 是否正确。如果仓库名是 `blog`，就应该是：
+
+```js
+base: '/blog'
+```
+
+样式丢失通常说明 CSS 或 JS 资源路径不对。
+
+### 首页能打开，文章页 404
+
+先确认文章不是 `draft: true` 或 `private: true`。当前项目会过滤这些文章，不会生成公开页面。
+
+再确认文章文件名和访问路径是否一致。例如：
+
+```text
+src/content/posts/github-pages-deployment-guide.mdx
+```
+
+对应文章 slug 通常是：
+
+```text
+github-pages-deployment-guide
+```
+
+### GitHub Actions 没有触发
+
+检查 workflow 是否监听 main 分支：
+
+```yaml
+on:
+  push:
+    branches: [main]
+```
+
+也要确认当前提交确实 push 到了 main，而不是其他分支。
+
+### Actions 成功了，但页面还是旧的
+
+可能是浏览器缓存，也可能是 GitHub Pages 更新需要一点时间。可以刷新页面、换无痕窗口，或者直接访问新文章路径确认。
+
+## 当前项目部署流程总结
+
+这个博客现在的部署流程可以压缩成一条链：
+
+```text
+写文章 -> npm test -> npm run build -> git commit -> git push origin main -> GitHub Actions -> GitHub Pages
+```
+
+对应项目文件是：
+
+- 文章内容：`src/content/posts/`
+- Astro 配置：`astro.config.mjs`
+- 自动部署：`.github/workflows/deploy.yml`
+- 构建命令：`package.json` 里的 `npm run build`
+- 线上路径：`/blog/`
+
+<Callout title="最终理解">
+这个项目不是把本地文件手动上传到服务器，而是把源码推到 GitHub，让 GitHub Actions 在远端构建，再把构建结果交给 GitHub Pages 托管。
+</Callout>
+
+## 小结
+
+GitHub Pages 解决的是“静态网站放在哪里访问”的问题，GitHub Actions 解决的是“怎么自动构建和发布”的问题，Astro 解决的是“怎么把文章和组件变成静态网站”的问题。
+
+本项目的部署方式很适合个人博客：不需要服务器，不需要后端进程，不需要手动上传文件。只要本地文章写好、构建通过、提交并推送到 main，后面的构建和发布就由 GitHub 自动完成。
+
+这套流程的维护成本低，失败点少，也方便回滚。对当前阶段的个人技术博客来说，这就是最实用的部署方式。
