@@ -29,6 +29,7 @@ describe('site layout', () => {
     expect(globalCssSource).toMatch(/\.article-shell\s*\{[^}]*grid-template-columns:\s*1fr;/s);
     expect(globalCssSource).toContain('@media (max-width: 760px)');
     expect(globalCssSource).toMatch(/\.site-nav\s*\{[^}]*display:\s*none;/s);
+    expect(globalCssSource).toMatch(/\.article-info\s*\{[^}]*display:\s*none;/s);
     expect(globalCssSource).toMatch(/\.hero-grid h1,\s*\.page-title,\s*\.article-content h1\s*\{[^}]*font-size:\s*36px;/s);
     expect(globalCssSource).toMatch(/\.topic-grid,\s*\.project-grid,\s*\.project-page-grid\s*\{[^}]*grid-template-columns:\s*1fr;/s);
   });
