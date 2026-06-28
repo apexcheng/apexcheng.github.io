@@ -60,7 +60,7 @@ describe('front page structure', () => {
   });
 
   it('renders article detail metadata, tags, and table of contents structure', () => {
-    expect(articleDetailSource).toContain('class="article-info"');
+    expect(articleDetailSource).toContain('class="article-info desktop-article-info"');
     expect(articleDetailSource).toContain('文章信息');
     expect(articleDetailSource).toContain('{post.data.category}');
     expect(articleDetailSource).toContain('post.data.tags.map');

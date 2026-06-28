@@ -17,7 +17,7 @@ const { Content, headings } = await render(post);
 
 <SiteLayout title={post.data.title} active="articles" description={post.data.description}>
   <main class="page-content article-shell">
-    <aside class="article-info">
+    <aside class="article-info desktop-article-info">
       <h2>文章信息</h2>
       <p>{post.data.category}</p>
       <p>{post.data.date.toISOString().slice(0, 10)}</p>
