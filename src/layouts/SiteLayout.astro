@@ -24,6 +24,17 @@ const pageTitle = title === siteMeta.siteName ? title : `${title} | ${siteMeta.s
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <script is:inline>
+      (function () {
+        try {
+          var savedTheme = localStorage.getItem('theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.dataset.theme = savedTheme || (prefersDark ? 'dark' : 'light');
+        } catch (error) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
     <title>{pageTitle}</title>
   </head>
   <body>
@@ -43,11 +54,36 @@ const pageTitle = title === siteMeta.siteName ? title : `${title} | ${siteMeta.s
           <a href={withBase('/about/')}>关于</a>
           <a href={withBase(siteMeta.rssPath)}>RSS</a>
         </nav>
-        <button class="theme-button" type="button" aria-label="主题切换占位">◐</button>
+        <button class="theme-button" type="button" aria-label="切换到深色主题" data-theme-toggle>◐</button>
       </header>
       <div data-pagefind-body>
         <slot />
       </div>
     </div>
+    <script is:inline>
+      (function () {
+        var button = document.querySelector('[data-theme-toggle]');
+        if (!button) return;
+
+        function currentTheme() {
+          return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+        }
+
+        function updateButton(theme) {
+          button.textContent = theme === 'dark' ? '☀' : '◐';
+          button.setAttribute('aria-label', theme === 'dark' ? '切换到浅色主题' : '切换到深色主题');
+        }
+
+        updateButton(currentTheme());
+        button.addEventListener('click', function () {
+          var nextTheme = currentTheme() === 'dark' ? 'light' : 'dark';
+          document.documentElement.dataset.theme = nextTheme;
+          updateButton(nextTheme);
+          try {
+            localStorage.setItem('theme', nextTheme);
+          } catch (error) {}
+        });
+      })();
+    </script>
   </body>
 </html>
