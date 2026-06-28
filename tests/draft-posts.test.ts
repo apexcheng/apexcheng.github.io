@@ -5,6 +5,8 @@ const schemaSource = readFileSync('src/content.config.ts', 'utf8');
 const homeSource = readFileSync('src/pages/index.astro', 'utf8');
 const articlesSource = readFileSync('src/pages/articles/index.astro', 'utf8');
 const articleDetailSource = readFileSync('src/pages/articles/[...slug].astro', 'utf8');
+const rssSource = readFileSync('src/pages/rss.xml.ts', 'utf8');
+const pageSources = [homeSource, articlesSource, articleDetailSource, rssSource];
 const templateSource = readFileSync('templates/post.mdx', 'utf8');
 
 describe('draft and private posts', () => {
@@ -14,8 +16,21 @@ describe('draft and private posts', () => {
   });
 
   it('filters draft posts from public article entry points', () => {
-    for (const source of [homeSource, articlesSource, articleDetailSource]) {
-      expect(source).toContain('.filter((post) => !post.data.draft)');
+    for (const source of pageSources) {
+      expect(source).toContain('!post.data.draft');
+    }
+  });
+
+  it('filters private posts from public article entry points', () => {
+    for (const source of pageSources) {
+      expect(source).toContain('!post.data.private');
+    }
+  });
+
+  it('does not fetch Django APIs from static Astro pages', () => {
+    for (const source of pageSources) {
+      expect(source).not.toContain('fetch(');
+      expect(source).not.toContain('Django');
     }
   });
 

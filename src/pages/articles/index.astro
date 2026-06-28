@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 
 const posts = (await getCollection('posts'))
-  .filter((post) => !post.data.draft)
+  .filter((post) => !post.data.draft && !post.data.private)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const categories = Array.from(new Set(posts.map((post) => post.data.category)));
 const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags))).sort((a, b) => a.localeCompare(b));

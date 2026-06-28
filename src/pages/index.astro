@@ -5,7 +5,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 import { projects } from '../data/projects';
 
 const posts = (await getCollection('posts'))
-  .filter((post) => !post.data.draft)
+  .filter((post) => !post.data.draft && !post.data.private)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const featuredPost = posts.find((post) => post.data.featured) ?? posts[0];
 const sidePosts = posts.filter((post) => post.id !== featuredPost.id).slice(0, 3);

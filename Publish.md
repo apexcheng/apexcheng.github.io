@@ -43,7 +43,7 @@ python3 backend/manage.py runserver
 python3 backend/manage.py export_posts
 ```
 
-默认只导出非 draft 文章。需要导出草稿时：
+默认只导出非 draft 文章。`private: true` 的文章即使存在于 Astro 内容目录，也不会进入静态前台页面、RSS 或 Pagefind 搜索索引。需要导出草稿时：
 
 ```bash
 python3 backend/manage.py export_posts --include-drafts
@@ -80,5 +80,6 @@ git status --short
 ## 当前边界
 
 - Astro 页面不直接请求 Django API。
+- `private: true` 文章在静态前台视为不公开发布，不做纯前端密码访问。
 - 不做评论、登录用户体系、复杂动态权限。
 - 不引入 Docker、Redis、Celery、Django REST Framework。

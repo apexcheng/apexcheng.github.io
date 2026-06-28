@@ -3,7 +3,7 @@ import { getCollection, render } from 'astro:content';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 
 export async function getStaticPaths() {
-  const posts = (await getCollection('posts')).filter((post) => !post.data.draft);
+  const posts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private);
   return posts.map((post) => ({
     params: { slug: post.slug },
     props: { post },
