@@ -5,6 +5,12 @@ dist/
 .env
 .env.*
 
+backend/db.sqlite3
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
