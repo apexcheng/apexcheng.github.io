@@ -1,0 +1,303 @@
+---
+title: "这个博客是怎么搭起来的：架构、内容流程与发布方式"
+description: "从选型、内容组织、页面结构到 GitHub Pages 发布，完整记录这个个人博客项目的设计思路与实现框架。"
+date: 2026-06-28
+category: "Skill"
+tags:
+  - "Astro"
+  - "MDX"
+  - "博客"
+  - "架构"
+  - "GitHub Pages"
+minutes: 12
+featured: true
+draft: false
+private: false
+---
+
+import Callout from '../../components/Callout.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+这个博客不是一开始就想做成一个“完整系统”。它更像是一个长期写作的工作台：把平时关于 AI Agent、影刀 RPA、数据处理、自动化脚本和项目复盘的内容，放在一个结构稳定、发布简单、自己能持续维护的地方。
+
+这篇文章记录博客项目本身是怎么搭起来的。重点不在炫技术，而是说明几个朴素的选择：为什么先做静态博客、内容怎么组织、页面怎么由 frontmatter 驱动、MDX 和 Mermaid 在什么场景下有用，以及现在的 GitHub Pages 发布链路是怎么跑通的。
+
+<Callout title="为什么不先做复杂后端？">
+前期最重要的不是后台管理系统，而是先把内容结构、页面体验和发布链路跑通。只要文章能稳定写、稳定构建、稳定发布，这个博客就已经能承担长期记录的核心任务。
+</Callout>
+
+## 项目目标
+
+这个博客要解决的是“长期沉淀”的问题，而不是一次性展示。
+
+我希望它能承载几类内容：
+
+- 日常技术笔记：比如某个脚本、某段自动化流程、一次工具排错。
+- 项目复盘：把一个真实项目拆成背景、方案、实现过程和后续改进。
+- 架构说明：用图表把流程、模块、数据流说清楚。
+- 写作入口：以后不需要打开复杂后台，只要新增 Markdown 或 MDX 文件即可发文。
+
+所以项目目标可以概括成三句话：内容维护要直接，站点结构要清楚，发布流程要稳定。
+
+这也决定了它不会先走传统 CMS 或动态博客路线。当前阶段没有登录、评论、数据库、后台权限，也没有运行时渲染。文章就是仓库里的内容文件，站点就是一次构建后的静态资源。
+
+## 整体架构说明
+
+当前博客是一个 Astro / Starlight / MDX 静态站点。内容放在 `src/content/posts/`，页面从内容集合读取文章数据，构建后生成 `dist/`，再通过 GitHub Actions 发布到 GitHub Pages。
+
+<Mermaid
+  title="整体架构：从内容文件到 GitHub Pages"
+  chart={`flowchart LR
+  A[MD / MDX 文章文件] --> B[Astro Content Collection]
+  B --> C[页面模板与组件]
+  C --> D[Astro 静态构建]
+  D --> E[dist 静态产物]
+  E --> F[GitHub Actions]
+  F --> G[GitHub Pages]
+  G --> H[读者访问博客]`}
+/>
+
+这个结构的好处是简单：写作、构建、发布之间没有太多中间层。
+
+文章数据由 Astro 内容集合读取，页面只关心“有哪些公开文章、每篇文章的标题和标签是什么、详情页要渲染哪篇内容”。GitHub Pages 只负责托管构建后的静态文件，不需要服务器常驻进程，也不需要数据库连接。
+
+<Callout title="静态不是功能少，而是把复杂度放在构建期">
+分类页、标签页、RSS、搜索索引和文章详情页都可以在构建时生成。只要内容更新后重新构建，线上访问仍然是普通静态文件。
+</Callout>
+
+## 页面结构说明
+
+博客现在不是单页应用，也不是后台驱动的动态站。它由几个明确的静态页面组成：首页负责建立入口，文章列表负责浏览内容，详情页负责阅读，分类和标签页负责聚合，项目页和关于页补充个人与项目背景。
+
+<Mermaid
+  title="页面结构：站点的主要入口"
+  chart={`flowchart TD
+  Home[首页] --> Articles[文章列表页]
+  Home --> Projects[项目页]
+  Home --> About[关于页]
+  Articles --> Detail[文章详情页]
+  Articles --> Category[分类页]
+  Articles --> Tag[标签页]
+  Detail --> RSS[RSS]
+  Home --> Search[搜索页]
+  Home --> RSS
+  Search --> Detail`}
+/>
+
+首页更像一个“内容导航板”，会展示主题方向、精选文章和项目记录。文章列表页是完整内容索引，读者可以通过分类、标签和标题进入文章。文章详情页包含标题、描述、作者、更新时间、标签、正文和目录区域。
+
+分类页和标签页不是额外维护的手写页面，而是根据文章 frontmatter 自动生成。只要文章里填了 `category` 和 `tags`，构建时就能生成对应的聚合入口。
+
+RSS 用于订阅，搜索页目前沿用 Starlight / Pagefind 的能力，让站点在保持静态的前提下具备基础检索入口。
+
+## 内容模型说明
+
+内容模型的核心是 frontmatter。每篇文章开头的一段 YAML 决定了它如何进入站点。
+
+当前文章需要包含这些字段：
+
+- `title`：文章标题，用于列表页、详情页和 RSS。
+- `description`：摘要，用于卡片、详情页描述和元信息。
+- `date`：发布日期，用于排序和展示。
+- `category`：主分类，用于分类页聚合。
+- `tags`：标签数组，用于标签页聚合。
+- `minutes`：预计阅读时间。
+- `featured`：是否可以作为首页精选候选。
+- `draft`：草稿，不进入公开页面。
+- `private`：私密内容边界，当前静态方案里表示“不发布”。
+
+<Mermaid
+  title="内容模型：frontmatter 驱动页面生成"
+  chart={`classDiagram
+  class Post {
+    string title
+    string description
+    Date date
+    string category
+    string[] tags
+    number minutes
+    boolean featured
+    boolean draft
+    boolean private
+  }
+
+  class ArticleList {
+    show public posts
+    sort by date
+  }
+
+  class ArticleDetail {
+    render MDX content
+    show metadata
+  }
+
+  class TaxonomyPage {
+    group by category or tag
+  }
+
+  Post --> ArticleList
+  Post --> ArticleDetail
+  Post --> TaxonomyPage`}
+/>
+
+这个模型不复杂，但足够支撑当前博客。它把“内容”和“页面生成规则”连接起来：文章作者只需要认真填好 frontmatter，页面就能自动使用这些信息。
+
+## 技术选型说明
+
+当前技术栈主要是 Astro、Starlight、MDX、Mermaid 和 GitHub Pages。
+
+Astro 负责静态站点构建。它适合这种以内容为主、交互不复杂的博客场景。文章详情页、列表页、分类页、标签页都可以在构建期生成。
+
+Starlight 原本更偏文档站，但它提供了成熟的内容和搜索基础能力。这个博客保留了 Starlight 指南页，同时自定义了首页、文章页和项目页，让它既能写文章，也能放一些偏文档化的内容。
+
+MDX 用于需要组件的文章。普通文章用 Markdown 就够了；如果要插入 Callout、Mermaid 图表或后续自定义组件，就使用 MDX。
+
+Mermaid 用于图表化表达。很多流程、架构、页面关系用纯文字写会很绕，用图能减少读者的理解成本。
+
+GitHub Pages 负责托管静态产物。配合 GitHub Actions 后，发布链路变成：提交代码、推送仓库、等待构建、访问线上地址。
+
+## Markdown / MDX / Mermaid 的作用
+
+这三个东西在博客里分工很明确。
+
+Markdown 是默认写作格式，适合普通技术笔记、复盘和教程。它轻、直观，不需要额外组件。
+
+MDX 是增强格式，适合需要插入 Astro 组件的文章。例如这篇文章使用了 `Callout` 和 `Mermaid`，所以使用 `.mdx`。
+
+Mermaid 是图表表达层。它不取代正文，而是在正文里补上结构关系。比如整体架构、页面关系、发布流程，用图可以更快建立全局认识。
+
+<Callout title="什么时候用 MDX？">
+如果一篇文章只是标题、段落、列表和代码块，用 Markdown 更直接。只有需要组件、图表容器或更强表达能力时，再使用 MDX。
+</Callout>
+
+## 分类、标签与 frontmatter 如何驱动页面
+
+博客的页面不是手工维护每个链接。分类、标签和精选文章都从文章元信息里来。
+
+文章列表页会读取所有公开文章，过滤掉 `draft: true` 和 `private: true` 的内容，然后按日期排序。分类页会根据 `category` 生成聚合，标签页会根据 `tags` 生成聚合。首页精选文章则优先使用 `featured: true` 的文章。
+
+这带来一个很直接的写作流程：新增文章时，只要选择正确分类、填好标签、确认是否发布，页面结构会跟着更新。
+
+当前四个主要分类是：
+
+- **AI Agent**：记录 Agent 工作流、提示词、工具调用、AI 辅助写作和自动化实践。
+- **影刀RPA**：记录影刀相关的页面自动化、选择器、流程编排和业务操作经验。
+- **Skill**：沉淀可复用的方法论、项目复盘、工具使用方式和写作框架。
+- **数据处理**：记录 Excel、CSV、缓存、清洗、校验和批量处理相关内容。
+
+分类偏“主线主题”，标签偏“细粒度索引”。例如一篇文章可以属于 `Skill`，同时带上 `Astro`、`MDX`、`架构` 等标签。
+
+## 内容发布流程
+
+内容发布流程保持简单：写文件，本地验证，提交推送，等待 GitHub Pages 发布。
+
+<Mermaid
+  title="内容发布流程：从草稿到线上页面"
+  chart={`flowchart LR
+  A[草稿构思] --> B[编写 frontmatter]
+  B --> C[写 Markdown / MDX 正文]
+  C --> D[本地预览]
+  D --> E[npm test]
+  E --> F[npm run build]
+  F --> G[Git 提交]
+  G --> H[推送 GitHub]
+  H --> I[GitHub Actions 构建]
+  I --> J[GitHub Pages 发布]`}
+/>
+
+实际操作里，最关键的是两步验证：
+
+```bash
+npm test
+npm run build
+```
+
+`npm test` 负责检查内容发布边界、页面结构和站点配置。`npm run build` 负责确认 Astro 能把内容完整构建成静态站点。
+
+当前 GitHub Pages 地址是：
+
+```text
+https://apexcheng.github.io/blog/
+```
+
+仓库推送到 `main` 后，GitHub Actions 会使用 Astro 官方部署动作构建并发布。只要 Pages 设置里选择 GitHub Actions 作为来源，后续发布就不需要手动上传 `dist/`。
+
+## 静态博客与动态博客对比
+
+传统动态博客通常有数据库、后台管理、用户系统、服务端渲染和运行时权限。它的优点是在线编辑方便、权限模型更强、适合多人协作或复杂业务。
+
+当前这个博客是静态方案。文章以文件形式存在仓库中，构建时生成页面，线上托管的是静态文件。
+
+两者的差异大概是这样：
+
+- 动态博客适合频繁后台编辑、多人角色、评论系统、会员权限和复杂查询。
+- 静态博客适合个人写作、版本管理、低维护成本、稳定访问和简单部署。
+- 动态博客的复杂度在运行时，需要维护服务、数据库和权限。
+- 静态博客的复杂度在构建期，构建通过后线上访问链路很短。
+
+这个项目现在选择静态方案，是因为当前核心问题不是“怎么在线管理内容”，而是“怎么长期稳定地写内容”。对个人博客来说，文件化内容加 Git 版本记录已经足够可靠。
+
+## 站点能力拆解
+
+现在站点已经具备几个基础能力：
+
+- 内容写作：支持 Markdown 和 MDX。
+- 图表表达：支持 Mermaid 架构图、流程图、类图和其他图表。
+- 页面展示：首页、文章列表、文章详情、分类页、标签页、项目页、关于页、搜索页。
+- 内容聚合：通过 frontmatter 自动生成分类和标签入口。
+- 发布边界：`draft: true` 和 `private: true` 不进入公开页面。
+- 订阅能力：生成 RSS。
+- 搜索入口：使用 Pagefind / Starlight 相关能力提供静态搜索。
+- 自动部署：推送到 GitHub 后由 GitHub Actions 发布到 GitHub Pages。
+
+<Mermaid
+  title="博客能力拆解"
+  chart={`mindmap
+  root((个人博客))
+    内容
+      Markdown
+      MDX
+      Frontmatter
+    页面
+      首页
+      文章详情
+      分类与标签
+      项目页
+    表达
+      Callout
+      Mermaid
+      代码块
+    发布
+      npm test
+      Astro build
+      GitHub Actions
+      GitHub Pages
+    边界
+      draft
+      private
+      静态文件`}
+/>
+
+这些能力都不是很复杂，但组合起来已经能覆盖一个个人技术博客的第一阶段需求。
+
+## 后续演进方向
+
+后续可以优化的方向主要有几类。
+
+第一类是性能优化。当前 Mermaid 客户端 chunk 偏大，文章数量和图表数量继续增加后，可以考虑按需加载 Mermaid，或者只在含图表文章中加载相关脚本。
+
+第二类是内容组织优化。项目记录现在还放在普通数据文件里，后续项目数量变多后，可以考虑迁移成内容集合，让项目也像文章一样拥有独立页面和 frontmatter。
+
+第三类是阅读体验优化。比如深色模式、移动端目录、文章系列、相关文章推荐，都可以逐步加入。但这些都不应该打断当前写作主线。
+
+第四类是发布体验优化。现在已经有 GitHub Actions 自动部署，后续可以补充更细的发布检查，例如构建前检查链接、检查图片资源、检查 frontmatter 字段是否规范。
+
+第五类是内容生产流程优化。未来可以继续完善 Agent 发文流程，让新文章从选题、草稿、frontmatter 到构建验证都更顺。
+
+## 小结
+
+这个博客当前的核心思路很简单：用文件管理内容，用 Astro 生成页面，用 GitHub Actions 发布到 GitHub Pages。
+
+它没有复杂后台，也没有数据库和运行时权限。这样做不是因为这些能力没价值，而是因为当前阶段最重要的是稳定写作、结构清晰和维护成本低。
+
+等内容真正积累起来，再去优化搜索、性能、项目集合、主题能力和发布检查，会比一开始就做一个庞大的系统更稳妥。对个人技术博客来说，能长期写下去，才是最重要的架构目标。
