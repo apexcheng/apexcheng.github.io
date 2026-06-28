@@ -41,7 +41,7 @@ const sidePosts = posts.filter((post) => post.id !== featuredPost.id).slice(0, 3
         <div class="terminal-body">
           <p><span class="prompt">$</span> build personal knowledge system</p>
           <p><span class="token">focus</span>: <span class="string">reading, diagrams, code</span></p>
-          <p><span class="token">topics</span>: AI Agents · RPA · Python · MDX</p>
+          <p><span class="token">topics</span>: AI Agent · 影刀RPA · Skill · 数据处理</p>
           <p class="comment"># Mermaid / architecture / automation notes</p>
           <div class="mini-diagram">
             <b>自动化流程</b>
@@ -64,10 +64,10 @@ const sidePosts = posts.filter((post) => post.id !== featuredPost.id).slice(0, 3
         <a href={withBase('/articles/')}>全部主题</a>
       </div>
       <div class="topic-grid">
-        <a class="topic-card" href={withBase('/articles/')}><span>AI</span><h3>AI / Agent</h3><p>Agent 工作流、提示词、工具调用、AI 应用实践。</p></a>
-        <a class="topic-card" href={withBase('/articles/')}><span>RP</span><h3>RPA / 自动化</h3><p>网页自动化、流程编排、Excel 处理与效率工具。</p></a>
-        <a class="topic-card" href={withBase('/projects/')}><span>PJ</span><h3>项目展示</h3><p>把真实项目拆成背景、方案、实现和复盘。</p></a>
-        <a class="topic-card" href={withBase('/guides/mdx-content/')}><span>MD</span><h3>教程 / 指南</h3><p>可复用的开发笔记、配置经验和排错路线。</p></a>
+        <a class="topic-card" href={withBase('/articles/category/AI%20Agent/')}><span>AI</span><h3>AI Agent</h3><p>Agent 工作流、提示词、工具调用和 AI 应用实践。</p></a>
+        <a class="topic-card" href={withBase('/articles/category/%E5%BD%B1%E5%88%80RPA/')}><span>RP</span><h3>影刀RPA</h3><p>影刀流程、网页自动化、选择器定位和效率工具。</p></a>
+        <a class="topic-card" href={withBase('/articles/category/Skill/')}><span>SK</span><h3>Skill</h3><p>可复用的开发技能、提示词规范和内容编写方法。</p></a>
+        <a class="topic-card" href={withBase('/articles/category/%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86/')}><span>DT</span><h3>数据处理</h3><p>Excel、WPS、Python 和表格报表自动化实践。</p></a>
       </div>
     </section>
 

@@ -2,7 +2,7 @@
 title: "用最小抽象维护个人项目里的缓存逻辑"
 description: "可读、显式、少工程化的代码组织方式。"
 date: 2026-05-28
-category: "Python"
+category: "数据处理"
 tags:
   - "Python"
   - "缓存"

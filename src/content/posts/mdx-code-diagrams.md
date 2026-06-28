@@ -2,7 +2,7 @@
 title: "让技术博客里的代码块、Callout 和图表更好读"
 description: "长文中的视觉节奏、代码块样式和图表容器。"
 date: 2026-06-08
-category: "Markdown / MDX"
+category: "Skill"
 tags:
   - "MDX"
   - "Mermaid"
