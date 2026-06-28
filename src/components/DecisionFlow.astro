@@ -1,0 +1,87 @@
+---
+interface DecisionItem {
+  title: string;
+  description: string;
+  label?: string;
+}
+
+interface Props {
+  title?: string;
+  items: DecisionItem[];
+}
+
+const { title, items } = Astro.props;
+---
+
+<section class="decision-flow">
+  {title && <h3>{title}</h3>}
+  <div class="flow-items">
+    {items.map((item, index) => (
+      <article>
+        <span>{item.label ?? `Step ${index + 1}`}</span>
+        <strong>{item.title}</strong>
+        <p>{item.description}</p>
+      </article>
+    ))}
+  </div>
+</section>
+
+<style>
+  .decision-flow {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin: 28px 0;
+    padding: 24px;
+  }
+
+  .decision-flow h3 {
+    font-size: 24px;
+    margin: 0 0 20px;
+  }
+
+  .flow-items {
+    display: grid;
+    gap: 14px;
+  }
+
+  .flow-items article {
+    background:
+      linear-gradient(var(--paper-soft), var(--paper-soft)) padding-box,
+      linear-gradient(135deg, rgba(37, 99, 235, 0.34), rgba(14, 116, 144, 0.14)) border-box;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    padding: 18px;
+    position: relative;
+  }
+
+  .flow-items article + article::before {
+    background: linear-gradient(180deg, var(--blue), var(--cyan));
+    content: "";
+    height: 14px;
+    left: 28px;
+    position: absolute;
+    top: -15px;
+    width: 2px;
+  }
+
+  .flow-items span {
+    color: var(--cyan);
+    display: block;
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .flow-items strong {
+    color: var(--ink);
+    display: block;
+    font-size: 18px;
+    line-height: 1.35;
+  }
+
+  .flow-items p {
+    font-size: 14px;
+    margin: 8px 0 0;
+  }
+</style>

@@ -1,0 +1,59 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  meta?: string;
+}
+
+const { title, description, meta } = Astro.props;
+---
+
+<article class="feature-card">
+  {meta && <span>{meta}</span>}
+  <h3>{title}</h3>
+  <p>{description}</p>
+  <slot />
+</article>
+
+<style>
+  .feature-card {
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(241, 245, 249, 0.74)) padding-box,
+      linear-gradient(135deg, rgba(37, 99, 235, 0.42), rgba(14, 116, 144, 0.18)) border-box;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    min-height: 190px;
+    padding: 24px;
+  }
+
+  html[data-theme='dark'] .feature-card {
+    background:
+      linear-gradient(145deg, rgba(17, 24, 39, 0.92), rgba(24, 34, 53, 0.82)) padding-box,
+      linear-gradient(135deg, rgba(122, 167, 255, 0.44), rgba(94, 234, 212, 0.18)) border-box;
+  }
+
+  .feature-card span {
+    color: var(--cyan);
+    display: block;
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 14px;
+  }
+
+  .feature-card h3 {
+    font-size: 21px;
+    line-height: 1.25;
+    margin: 0 0 10px;
+  }
+
+  .feature-card p {
+    font-size: 15px;
+    margin: 0;
+  }
+
+  .feature-card :global(ul) {
+    color: var(--muted);
+    margin: 16px 0 0;
+    padding-left: 20px;
+  }
+</style>

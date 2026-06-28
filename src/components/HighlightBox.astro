@@ -1,0 +1,55 @@
+---
+interface Props {
+  title: string;
+  eyebrow?: string;
+}
+
+const { title, eyebrow } = Astro.props;
+---
+
+<aside class="highlight-box">
+  {eyebrow && <span>{eyebrow}</span>}
+  <h3>{title}</h3>
+  <slot />
+</aside>
+
+<style>
+  .highlight-box {
+    background:
+      linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(14, 116, 144, 0.08)),
+      var(--paper);
+    border: 1px solid rgba(37, 99, 235, 0.22);
+    border-radius: var(--radius);
+    margin: 28px 0;
+    padding: 26px;
+    position: relative;
+  }
+
+  .highlight-box::before {
+    background: linear-gradient(90deg, var(--blue), var(--cyan), var(--violet));
+    border-radius: 999px;
+    content: "";
+    display: block;
+    height: 3px;
+    margin-bottom: 18px;
+    width: 124px;
+  }
+
+  .highlight-box span {
+    color: var(--cyan);
+    display: block;
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
+
+  .highlight-box h3 {
+    font-size: 25px;
+    line-height: 1.25;
+    margin: 0 0 12px;
+  }
+
+  .highlight-box :global(p:last-child) {
+    margin-bottom: 0;
+  }
+</style>
