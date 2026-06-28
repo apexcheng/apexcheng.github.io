@@ -44,8 +44,6 @@ class Command(BaseCommand):
                 "source_format": file_path.suffix.lstrip("."),
                 "body": body,
             }
-            if "password" in frontmatter:
-                defaults["password"] = frontmatter["password"]
 
             post, _created = Post.objects.update_or_create(
                 slug=file_path.stem,

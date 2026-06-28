@@ -43,17 +43,8 @@ python3 backend/manage.py runserver
 常用地址：
 
 - Admin: `http://127.0.0.1:8000/admin/`
-- 文章列表 API: `http://127.0.0.1:8000/api/posts/`
-- 分类 API: `http://127.0.0.1:8000/api/categories/`
-- 标签 API: `http://127.0.0.1:8000/api/tags/`
 
-## 当前 API
-
-- `GET /api/posts/`：返回非 draft 文章列表，不返回正文。
-- `GET /api/posts/<slug>/`：返回单篇非 draft 文章；private 文章未验证密码时返回 403，且不返回正文。
-- `POST /api/posts/<slug>/verify-password/`：验证单篇文章密码，密码正确时返回正文。
-- `GET /api/categories/`：返回分类列表。
-- `GET /api/tags/`：返回标签列表。
+当前后端只作为内容管理后台和构建前内容源使用，不提供给 Astro 前台运行时调用的文章 API。
 
 ## 导入现有文章
 
@@ -137,4 +128,4 @@ cd /home/cheng/projects/personal-blog
 python3 backend/manage.py test posts
 ```
 
-测试覆盖公开文章列表过滤 draft、private 文章未验证密码不返回正文、正确密码可获取正文。
+测试覆盖 Markdown / MDX 导入、数据库导出、source_format、draft/private 静态发布边界等内容源能力。

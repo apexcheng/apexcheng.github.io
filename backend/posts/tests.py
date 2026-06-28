@@ -2,86 +2,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from django.core.management import call_command
-from django.test import Client, TestCase
+from django.test import TestCase
 
 from .models import Category, Post, Tag
-
-
-class PostApiTests(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.category = Category.objects.create(name="技术", slug="tech")
-        self.tag = Tag.objects.create(name="Astro", slug="astro")
-
-    def test_draft_post_is_not_in_public_list(self):
-        public_post = Post.objects.create(
-            title="公开文章",
-            slug="public-post",
-            description="公开文章摘要",
-            date="2026-06-28",
-            category=self.category,
-            minutes=5,
-            body="公开正文",
-        )
-        public_post.tags.add(self.tag)
-
-        Post.objects.create(
-            title="草稿文章",
-            slug="draft-post",
-            description="草稿文章摘要",
-            date="2026-06-28",
-            category=self.category,
-            minutes=3,
-            draft=True,
-            body="草稿正文",
-        )
-
-        response = self.client.get("/api/posts/")
-
-        self.assertEqual(response.status_code, 200)
-        slugs = [item["slug"] for item in response.json()["posts"]]
-        self.assertEqual(slugs, ["public-post"])
-
-    def test_private_post_detail_does_not_return_body_without_password(self):
-        Post.objects.create(
-            title="私密文章",
-            slug="private-post",
-            description="私密文章摘要",
-            date="2026-06-28",
-            category=self.category,
-            minutes=8,
-            private=True,
-            password="secret",
-            body="私密正文",
-        )
-
-        response = self.client.get("/api/posts/private-post/")
-
-        self.assertEqual(response.status_code, 403)
-        self.assertNotIn("body", response.json()["post"])
-
-    def test_correct_password_returns_private_post_body(self):
-        Post.objects.create(
-            title="私密文章",
-            slug="private-post",
-            description="私密文章摘要",
-            date="2026-06-28",
-            category=self.category,
-            minutes=8,
-            private=True,
-            password="secret",
-            body="私密正文",
-        )
-
-        response = self.client.post(
-            "/api/posts/private-post/verify-password/",
-            {"password": "secret"},
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.json()["ok"])
-        self.assertEqual(response.json()["post"]["body"], "私密正文")
 
 
 class ImportPostsCommandTests(TestCase):
@@ -356,7 +279,7 @@ class ExportPostsCommandTests(TestCase):
 
             self.assertFalse(Path(posts_dir, "draft-post.md").exists())
 
-    def test_private_post_export_does_not_include_password(self):
+    def test_exports_private_post_as_non_public_content(self):
         Post.objects.create(
             title="私密文章",
             slug="private-post",
@@ -365,7 +288,6 @@ class ExportPostsCommandTests(TestCase):
             category=self.category,
             minutes=8,
             private=True,
-            password="secret",
             body="私密正文",
         )
 
@@ -374,8 +296,7 @@ class ExportPostsCommandTests(TestCase):
             text = Path(posts_dir, "private-post.md").read_text(encoding="utf-8")
 
         self.assertIn("private: true", text)
-        self.assertNotIn("password", text)
-        self.assertNotIn("secret", text)
+        self.assertIn("私密正文", text)
 
     def test_exports_frontmatter_with_quoted_strings(self):
         post = Post.objects.create(

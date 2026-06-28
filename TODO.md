@@ -28,7 +28,9 @@
 - [x] 后端第一阶段闭环完成：保留 Astro 静态前台，Django 提供 Admin、文章/分类/标签模型、简单 JSON API、`import_posts` 和 `export_posts`，通过导入/编辑/导出/静态构建发布内容。
 - [x] 文章权限第一阶段已在模型和 API 层预留单篇密码访问能力；当前不做登录用户体系、评论或复杂动态权限。
 - [x] 第二版本内容源改造完成：Django 数据库存 MD / MDX 原文，发布前导出到 `src/content/posts/`，前端继续读取本地文件，不在运行时从 Django 获取内容。
-- [ ] 真正的私密文章密码访问需要后端能力支持；当前不在 Astro 静态前台做假实现。
+- [ ] 明确 agent 发布文章流程：以 Django 数据库作为唯一内容源，agent 新增或修改文章时应先入库，再运行 `export_posts` 和静态构建，避免直接改 `src/content/posts/` 造成数据库不同步。
+- [ ] 增加一个简单的 agent 入库命令，例如 `upsert_post path/to/article.mdx`，用于读取 MD / MDX frontmatter 和正文后写入 Django 数据库；不要做复杂双向自动同步。
+- [ ] 文章密码访问暂不实现；当前项目定位为静态博客，`private: true` 仅表示“不发布”，不做运行时密码访问。
 - [ ] 私密文件下载需要后端能力支持；当前不做。
 - [ ] 后续再评估是否需要让 Astro 构建期接入 Django 数据；暂时不要让 Astro 页面直接请求 Django API。
 
@@ -37,7 +39,8 @@
 - [ ] 补充真实个人介绍、GitHub 链接和项目链接。
 - [ ] 替换正式域名，更新 `astro.config.mjs` 中的临时 `site: "https://cheng-notes.local"`。
 - [ ] 确认 Pagefind 搜索入口是否要覆盖整个博客，而不仅是文档区。
-- [ ] 实现真正的私密文章密码访问；当前 Django API 已预留能力，Astro 静态前台未接入。
+- [ ] 补充 agent 发文流程，保证新文章先写入 Django 数据库，再导出为 Astro 内容文件。
+- [ ] 文章密码访问暂不实现；当前只保留 `draft: true` 和 `private: true` 的静态发布边界，私密文章不导出、不发布、不进入 RSS 和搜索。
 - [ ] 私密文件下载需要后端能力支持；当前不做。
 - [ ] 增加视觉回归或页面渲染测试，覆盖首页、文章详情页和移动端布局。
 - [ ] Mermaid 客户端 chunk 偏大；后续文章变多或首屏性能变差时，再考虑按需加载优化。

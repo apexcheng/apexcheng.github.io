@@ -1,4 +1,3 @@
-from django.contrib.auth.hashers import check_password, identify_hasher, make_password
 from django.db import models
 
 
@@ -44,7 +43,6 @@ class Post(models.Model):
     featured = models.BooleanField(default=False)
     draft = models.BooleanField(default=False)
     private = models.BooleanField(default=False)
-    password = models.CharField(max_length=128, blank=True)
     source_format = models.CharField(max_length=3, choices=SOURCE_FORMAT_CHOICES, default="md")
     body = models.TextField()
 
@@ -55,16 +53,3 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
-
-    def save(self, *args, **kwargs):
-        if self.password:
-            try:
-                identify_hasher(self.password)
-            except ValueError:
-                self.password = make_password(self.password)
-        super().save(*args, **kwargs)
-
-    def password_matches(self, raw_password):
-        if not self.password:
-            return False
-        return check_password(raw_password, self.password)

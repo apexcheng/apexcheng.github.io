@@ -26,6 +26,6 @@ class PostAdmin(admin.ModelAdmin):
     filter_horizontal = ("tags",)
     fieldsets = (
         ("基础信息", {"fields": ("title", "slug", "description", "date", "category", "tags", "minutes", "source_format")}),
-        ("发布状态", {"fields": ("featured", "draft", "private", "password")}),
+        ("发布状态", {"fields": ("featured", "draft", "private")}),
         ("Markdown / MDX 原文", {"fields": ("body",)}),
     )
