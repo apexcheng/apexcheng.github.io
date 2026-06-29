@@ -47,9 +47,10 @@ describe('front page structure', () => {
     expect(articlesSource).not.toContain('暂不支持点击筛选');
   });
 
-  it('adds a static search page for the Pagefind entry point', () => {
-    expect(searchSource).toContain('Pagefind');
-    expect(searchSource).toContain('/guides/mdx-content/');
+  it('keeps the static search page aligned with the header search entry', () => {
+    expect(searchSource).toContain('顶部导航');
+    expect(searchSource).toContain('文章和项目');
+    expect(searchSource).not.toContain('/guides/mdx-content/');
     expect(searchSource).not.toContain('fetch(');
   });
 

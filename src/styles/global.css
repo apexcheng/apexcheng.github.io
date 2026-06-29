@@ -117,6 +117,129 @@ p {
   font-weight: 720;
 }
 
+.nav-search {
+  align-items: center;
+  display: inline-flex;
+  height: 34px;
+  position: relative;
+}
+
+.nav-search.active .nav-search-trigger,
+.nav-search.open .nav-search-trigger,
+.nav-search:hover .nav-search-trigger,
+.nav-search:focus-within .nav-search-trigger {
+  color: var(--ink);
+  font-weight: 720;
+}
+
+.nav-search-trigger {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+.nav-search-panel {
+  background: var(--paper);
+  background-clip: content-box;
+  border: 0;
+  border-radius: var(--radius);
+  filter: drop-shadow(0 24px 34px rgba(15, 23, 42, 0.16));
+  min-width: 320px;
+  opacity: 0;
+  padding: 4px 0 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  transform: translateY(-4px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  visibility: hidden;
+  z-index: 20;
+}
+
+.nav-search-panel::before {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  content: "";
+  inset: 4px 0 0;
+  position: absolute;
+  z-index: -1;
+}
+
+.nav-search.open .nav-search-panel,
+.nav-search:hover .nav-search-panel,
+.nav-search:focus-within .nav-search-panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.nav-search-panel input {
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font: inherit;
+  height: 38px;
+  margin: 12px 12px 0;
+  outline: 0;
+  padding: 0 12px;
+  width: calc(100% - 24px);
+}
+
+.nav-search-panel input:focus {
+  border-color: var(--blue);
+}
+
+.nav-search-results {
+  display: grid;
+  gap: 8px;
+  margin: 10px 12px 12px;
+}
+
+.nav-search-result {
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+}
+
+.nav-search-result:hover,
+.nav-search-result:focus {
+  background: var(--paper-soft);
+  border-color: var(--line);
+}
+
+.nav-search-result span {
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.nav-search-result b {
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.nav-search-result small,
+.nav-search-empty {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.nav-search-empty {
+  margin: 0;
+  padding: 10px;
+}
+
 .theme-button {
   align-items: center;
   background: var(--paper);
