@@ -17,15 +17,23 @@ const { Content, headings } = await render(post);
 
 <SiteLayout title={post.data.title} active="articles" description={post.data.description}>
   <main class="page-content article-shell">
-    <aside class="article-info desktop-article-info">
-      <h2>文章信息</h2>
-      <p>{post.data.category}</p>
-      <p>{post.data.date.toISOString().slice(0, 10)}</p>
-      <p>{post.data.minutes} 分钟阅读</p>
-      <div class="chips">
-        {post.data.tags.map((tag) => <span>{tag}</span>)}
-      </div>
-    </aside>
+    <div class="article-sidebar">
+      <aside class="article-info desktop-article-info">
+        <h2>文章信息</h2>
+        <p>{post.data.category}</p>
+        <p>{post.data.date.toISOString().slice(0, 10)}</p>
+        <p>{post.data.minutes} 分钟阅读</p>
+        <div class="chips">
+          {post.data.tags.map((tag) => <span>{tag}</span>)}
+        </div>
+      </aside>
+      <aside class="toc-panel">
+        <h2>本文目录</h2>
+        {headings.filter((heading) => heading.depth === 2).map((heading) => (
+          <a href={`#${heading.slug}`}>{heading.text}</a>
+        ))}
+      </aside>
+    </div>
     <article class="article-content">
       <span class="pill">{post.data.category}</span>
       <h1>{post.data.title}</h1>
@@ -36,11 +44,5 @@ const { Content, headings } = await render(post);
       </div>
       <Content />
     </article>
-    <aside class="toc-panel">
-      <h2>本文目录</h2>
-      {headings.filter((heading) => heading.depth === 2).map((heading) => (
-        <a href={`#${heading.slug}`}>{heading.text}</a>
-      ))}
-    </aside>
   </main>
 </SiteLayout>

@@ -686,14 +686,19 @@ h3 {
   align-items: start;
   display: grid;
   gap: 44px;
-  grid-template-columns: 190px minmax(0, 740px) 220px;
+  grid-template-columns: 260px minmax(0, 920px);
+}
+
+.article-sidebar {
+  display: grid;
+  gap: 18px;
+  position: sticky;
+  top: 24px;
 }
 
 .article-info,
 .toc-panel {
   padding: 20px;
-  position: sticky;
-  top: 24px;
 }
 
 .article-info h2,
@@ -831,7 +836,7 @@ h3 {
     display: none;
   }
 
-  .toc-panel {
+  .article-sidebar {
     position: static;
   }
 
