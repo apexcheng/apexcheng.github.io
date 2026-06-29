@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import { getCollection } from 'astro:content';
+import { projects } from '../data/projects';
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
 
@@ -16,6 +18,27 @@ const {
 } = Astro.props;
 
 const pageTitle = title === siteMeta.siteName ? title : `${title} | ${siteMeta.siteName}`;
+
+const posts = (await getCollection('posts'))
+  .filter((post) => !post.data.draft && !post.data.private)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const searchItems = [
+  ...posts.map((post) => ({
+    type: '文章',
+    title: post.data.title,
+    description: post.data.description,
+    href: withBase(`/articles/${post.slug}/`),
+    keywords: [post.data.category, ...post.data.tags],
+  })),
+  ...projects.map((project) => ({
+    type: '项目',
+    title: project.title,
+    description: project.description,
+    href: project.url ?? withBase('/projects/'),
+    keywords: [project.type, ...project.tags],
+  })),
+];
 ---
 
 <!doctype html>
@@ -49,7 +72,13 @@ const pageTitle = title === siteMeta.siteName ? title : `${title} | ${siteMeta.s
           <a class:list={[active === 'articles' && 'active']} href={withBase('/articles/')}>文章</a>
           <a class:list={[active === 'projects' && 'active']} href={withBase('/projects/')}>项目</a>
           <a class:list={[active === 'guides' && 'active']} href={withBase('/guides/mdx-content/')}>指南</a>
-          <a class:list={[active === 'search' && 'active']} href={withBase('/search/')}>搜索</a>
+          <div class:list={['nav-search', active === 'search' && 'active']} data-site-search data-search-items={JSON.stringify(searchItems)}>
+            <button class="nav-search-trigger" type="button" aria-label="搜索文章和项目" aria-expanded="false" data-search-toggle>搜索</button>
+            <div class="nav-search-panel">
+              <input data-search-input type="search" placeholder="搜索文章 / 项目" autocomplete="off" aria-label="搜索文章和项目" />
+              <div class="nav-search-results" data-search-results aria-live="polite"></div>
+            </div>
+          </div>
           <a href={withBase(siteMeta.rssPath)}>RSS</a>
           <a href={withBase('/about/')}>关于</a>
         </nav>
@@ -81,6 +110,91 @@ const pageTitle = title === siteMeta.siteName ? title : `${title} | ${siteMeta.s
           try {
             localStorage.setItem('theme', nextTheme);
           } catch (error) {}
+        });
+      })();
+    </script>
+    <script is:inline>
+      (function () {
+        var search = document.querySelector('[data-site-search]');
+        if (!search) return;
+
+        var toggle = search.querySelector('[data-search-toggle]');
+        var input = search.querySelector('[data-search-input]');
+        var results = search.querySelector('[data-search-results]');
+        var items = [];
+
+        try {
+          items = JSON.parse(search.getAttribute('data-search-items') || '[]');
+        } catch (error) {}
+
+        function itemText(item) {
+          return [item.title, item.description].concat(item.keywords || []).join(' ').toLowerCase();
+        }
+
+        function escapeHtml(value) {
+          return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+        }
+
+        function setOpen(isOpen) {
+          search.classList.toggle('open', isOpen);
+          toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+
+        function render(query) {
+          var normalizedQuery = query.trim().toLowerCase();
+          var matches = items
+            .filter(function (item) {
+              return !normalizedQuery || itemText(item).includes(normalizedQuery);
+            })
+            .slice(0, 6);
+
+          if (!matches.length) {
+            results.innerHTML = '<p class="nav-search-empty">没有找到匹配内容</p>';
+            return;
+          }
+
+          results.innerHTML = matches.map(function (item) {
+            return [
+              '<a class="nav-search-result" href="' + escapeHtml(item.href) + '">',
+              '<span>' + escapeHtml(item.type) + '</span>',
+              '<b>' + escapeHtml(item.title) + '</b>',
+              '<small>' + escapeHtml(item.description) + '</small>',
+              '</a>',
+            ].join('');
+          }).join('');
+        }
+
+        render('');
+
+        toggle.addEventListener('click', function () {
+          setOpen(true);
+          input.focus();
+        });
+
+        input.addEventListener('focus', function () {
+          setOpen(true);
+        });
+
+        input.addEventListener('input', function () {
+          render(input.value);
+        });
+
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') {
+            setOpen(false);
+            input.blur();
+          }
+        });
+
+        document.addEventListener('click', function (event) {
+          if (!search.contains(event.target)) {
+            setOpen(false);
+          }
         });
       })();
     </script>

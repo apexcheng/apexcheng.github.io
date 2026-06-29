@@ -12,9 +12,23 @@ describe('site layout', () => {
 
   it('links the primary static pages from the main navigation', () => {
     expect(layoutSource).toContain("withBase('/articles/')");
-    expect(layoutSource).toContain("withBase('/search/')");
     expect(layoutSource).toContain("withBase('/projects/')");
     expect(layoutSource).toContain("withBase('/guides/mdx-content/')");
+  });
+
+  it('renders the inline search data and controls in the header', () => {
+    expect(layoutSource).toContain("getCollection('posts')");
+    expect(layoutSource).toContain('projects.map((project)');
+    expect(layoutSource).toContain('data-site-search');
+    expect(layoutSource).toContain('data-search-input');
+    expect(layoutSource).toContain('data-search-results');
+  });
+
+  it('keeps the hover path connected between the search button and panel', () => {
+    expect(globalCssSource).toMatch(/\.nav-search\s*\{[^}]*height:\s*34px;/s);
+    expect(globalCssSource).toMatch(/\.nav-search-panel\s*\{[^}]*top:\s*100%;/s);
+    expect(globalCssSource).toMatch(/\.nav-search-panel\s*\{[^}]*padding:\s*4px 0 0;/s);
+    expect(globalCssSource).toContain('.nav-search-panel::before');
   });
 
   it('keeps navigation compatible with the GitHub Pages base path', () => {
