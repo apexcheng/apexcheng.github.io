@@ -10,7 +10,7 @@ export async function getStaticPaths() {
     .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
   const categories = Array.from(new Set(allPosts.map((post) => post.data.category)));
   return categories.map((category) => ({
-    params: { category: encodeURIComponent(category) },
+    params: { category },
     props: { category, posts: allPosts.filter((post) => post.data.category === category) },
   }));
 }
