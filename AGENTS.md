@@ -43,7 +43,7 @@
 3. 需要参考旧文章时，必须先读 `docs/writing/CONTENT_INDEX.md`，只打开 1 到 3 篇相关正文。
 4. 正式文章放在 `src/content/posts/`。
 5. 视觉实验 / Demo 文章放在 `src/content/posts/visual-lab/`。
-6. 新文章默认 `draft: true`，只有用户明确确认发布，才允许改成 `draft: false`。
+6. 新文章默认 `draft: false`、公开发布；只有用户明确要求草稿、暂不发布或私密时，才设置为 `draft: true` 或 `private: true`。
 7. 默认使用专业风格；只有用户明确要求大众风格时，才使用大众风格。
 8. 新增或迁移文章后，必须同步更新 `docs/writing/CONTENT_INDEX.md`。
 
