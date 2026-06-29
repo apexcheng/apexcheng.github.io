@@ -277,20 +277,33 @@ const searchItems = [
       }
 
       .copy-code-button {
+        align-items: center;
         background: rgba(15, 23, 42, 0.72);
         border: 1px solid rgba(148, 163, 184, 0.42);
         border-radius: 999px;
         color: #cbd5e1;
         cursor: pointer;
-        font: 12px/1 var(--body-font);
-        padding: 6px 10px;
+        display: inline-flex;
+        height: 30px;
+        justify-content: center;
+        padding: 0;
         position: absolute;
         right: 12px;
         top: 10px;
+        width: 30px;
+      }
+
+      .copy-code-button svg {
+        height: 15px;
+        width: 15px;
       }
 
       .copy-code-button:hover {
         background: rgba(30, 41, 59, 0.88);
+        color: #ffffff;
+      }
+
+      .copy-code-button.is-copied {
         color: #ffffff;
       }
     </style>
@@ -305,14 +318,23 @@ const searchItems = [
           button.type = 'button';
           button.className = 'copy-code-button';
           button.dataset.copyCode = '';
-          button.textContent = '复制';
+          var copyIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+          var copiedIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>';
+          button.innerHTML = copyIcon;
           button.setAttribute('aria-label', '复制代码');
+          button.setAttribute('title', '复制代码');
 
           button.addEventListener('click', function () {
             navigator.clipboard.writeText(code.innerText).then(function () {
-              button.textContent = '已复制';
+              button.innerHTML = copiedIcon;
+              button.classList.add('is-copied');
+              button.setAttribute('aria-label', '已复制');
+              button.setAttribute('title', '已复制');
               window.setTimeout(function () {
-                button.textContent = '复制';
+                button.innerHTML = copyIcon;
+                button.classList.remove('is-copied');
+                button.setAttribute('aria-label', '复制代码');
+                button.setAttribute('title', '复制代码');
               }, 1400);
             });
           });
