@@ -1,0 +1,315 @@
+---
+title: "从代码看这个博客：项目结构与运行流程"
+description: "从项目目录、页面入口、文章读取、组件渲染、本地运行和 GitHub Pages 发布链路，拆解这个 Astro 博客是怎么跑起来的。"
+date: 2026-06-29
+category: "Skill"
+tags:
+  - "Astro"
+  - "MDX"
+  - "代码结构"
+  - "静态博客"
+minutes: 10
+featured: false
+draft: false
+private: false
+---
+
+import MetricCard from '../../components/MetricCard.astro';
+import FeatureCard from '../../components/FeatureCard.astro';
+import VisualGrid from '../../components/VisualGrid.astro';
+import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+本文结论：这个博客不是传统后端网站，也不是 Vue 那种纯前端应用。它是一个 Astro 静态博客项目，代码在构建阶段把文章、页面、组件和样式组合起来，最后生成可以直接部署到 GitHub Pages 的静态文件。
+
+理解这个项目，不需要先看所有代码。先抓住四个核心目录就够了：页面在 `src/pages`，文章在 `src/content/posts`，组件在 `src/components`，整体布局和样式在 `src/layouts` 与 `src/styles`。
+
+## 概览
+
+<VisualGrid columns={4}>
+  <MetricCard label="页面入口" value="pages" detail="文件路径决定网站路由。" />
+  <MetricCard label="内容来源" value="posts" detail="文章统一放在内容集合里。" tone="cyan" />
+  <MetricCard label="展示能力" value="MDX" detail="正文可以插入 Astro 组件。" tone="violet" />
+  <MetricCard label="发布形态" value="Static" detail="构建后发布静态文件。" tone="green" />
+</VisualGrid>
+
+<HighlightBox eyebrow="KEY" title="先理解运行链路">
+  这个项目的重点不是线上跑一个后端服务，而是本地写代码和文章，构建时生成页面，推送后由 GitHub Actions 发布到 GitHub Pages。
+</HighlightBox>
+
+## 项目结构
+
+核心目录可以压缩成一张图：
+
+<Mermaid
+  title="项目结构"
+  caption="看懂这些目录，基本就能理解这个博客的代码如何组织。"
+  chart={`flowchart TD
+    Root[personal-blog] --> Src[src]
+    Root --> Templates[templates]
+    Root --> Public[public]
+    Root --> Config[astro.config.mjs]
+    Root --> Package[package.json]
+    Root --> Workflow[.github/workflows]
+    Src --> Pages[pages 页面入口]
+    Src --> Content[content 文章内容]
+    Src --> Components[components 展示组件]
+    Src --> Layouts[layouts 页面外壳]
+    Src --> Styles[styles 全局样式]
+    Src --> Data[data 站点数据]
+    Src --> Utils[utils 工具函数]`}
+/>
+
+<VisualGrid columns={2}>
+  <FeatureCard title="src/pages" meta="Routes" description="页面入口目录，决定首页、文章列表、详情页、项目页、关于页和搜索页。">
+    <ul>
+      <li><code>index.astro</code> 是首页</li>
+      <li><code>articles/[...slug].astro</code> 是文章详情</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="src/content" meta="Content" description="内容集合目录，主要存放博客文章和 Starlight 指南内容。">
+    <ul>
+      <li><code>posts/</code> 存文章</li>
+      <li><code>content.config.ts</code> 定义字段规则</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="src/components" meta="UI" description="可复用展示组件，文章和页面都可以调用。">
+    <ul>
+      <li>卡片、网格、高亮框</li>
+      <li>Mermaid 图表组件</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="src/styles" meta="Theme" description="全局样式目录，控制整体视觉、文章样式、代码块和主题效果。">
+    <ul>
+      <li><code>global.css</code> 是主要样式入口</li>
+      <li>代码块字体也在全局样式中维护</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
+
+如果只从写文章的角度看，最常接触的是 `src/content/posts` 和 `templates/post.mdx`。如果要改页面和视觉，就会进入 `src/pages`、`src/components` 和 `src/styles`。
+
+## 代码怎么运行
+
+本地运行入口在 `package.json`。它没有复杂脚本，核心命令很少：
+
+```json
+{
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "vitest run"
+  }
+}
+```
+
+<DecisionFlow
+  title="本地开发顺序"
+  items={[
+    {
+      label: 'Dev',
+      title: '先启动本地预览',
+      description: '运行 npm run dev，Astro 会启动开发服务，适合边改边看。',
+    },
+    {
+      label: 'Test',
+      title: '再跑项目测试',
+      description: '运行 npm test，确认现有测试没有被文章或代码改动破坏。',
+    },
+    {
+      label: 'Build',
+      title: '最后执行静态构建',
+      description: '运行 npm run build，确认文章、MDX 组件和页面都能被正常生成。',
+    },
+  ]}
+/>
+
+这里要注意一点：`npm run dev` 只是本地预览，真正上线前更关键的是 `npm run build`。因为 GitHub Pages 托管的是构建后的静态文件，不是开发服务。
+
+## 页面入口
+
+Astro 的路由来自 `src/pages` 文件路径。这个项目没有单独维护一份复杂路由表，页面文件本身就是入口。
+
+```text
+src/pages/index.astro
+src/pages/articles/index.astro
+src/pages/articles/[...slug].astro
+src/pages/projects.astro
+src/pages/about.astro
+src/pages/search.astro
+src/pages/rss.xml.ts
+```
+
+<VisualGrid columns={3}>
+  <FeatureCard title="首页" meta="/" description="读取公开文章和项目数据，展示首页导览、精选文章和项目记录。" />
+  <FeatureCard title="文章列表" meta="/articles/" description="读取公开文章，生成分类、标签和文章卡片列表。" />
+  <FeatureCard title="文章详情" meta="/articles/[slug]/" description="根据文章 slug 生成详情页，并渲染正文和目录。" />
+</VisualGrid>
+
+这种结构的好处是直观：想找某个页面从哪里来，直接按 URL 去 `src/pages` 找对应文件。
+
+## 文章怎么读取
+
+文章放在 `src/content/posts/`，每篇文章开头都有 frontmatter。字段规则由 `src/content.config.ts` 定义：
+
+```ts
+const posts = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    date: z.coerce.date(),
+    category: z.enum(['AI Agent', '影刀RPA', 'Skill', '数据处理']),
+    tags: z.array(z.string()),
+    minutes: z.number(),
+    featured: z.boolean().default(false),
+    draft: z.boolean().default(false),
+    private: z.boolean().default(false),
+  }),
+});
+```
+
+这段代码相当于文章的入库规则。标题、摘要、分类、标签、阅读时间这些字段不是随便写的，构建时会按 schema 检查。
+
+<HighlightBox eyebrow="BOUNDARY" title="公开边界由字段控制">
+  新文章是否进入公开页面，不靠手动维护链接，而是靠 <code>draft</code> 和 <code>private</code> 控制。确认发布后，文章才应该设为 <code>draft: false</code>。
+</HighlightBox>
+
+## 文章怎么展示
+
+文章列表页的核心逻辑很短：
+
+```ts
+const posts = (await getCollection('posts'))
+  .filter((post) => !post.data.draft && !post.data.private)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+```
+
+它做了三件事：读取文章集合，过滤草稿和私密文章，再按日期倒序排列。
+
+<Mermaid
+  title="文章展示流程"
+  caption="文章公开后，会进入列表、详情、分类、标签和 RSS 等入口。"
+  chart={`flowchart LR
+    A[MDX 文章] --> B[frontmatter]
+    B --> C[content.config.ts 校验]
+    C --> D[getCollection 读取]
+    D --> E{是否公开}
+    E -->|draft/private| F[不进入公开页面]
+    E -->|公开| G[文章列表]
+    G --> H[文章详情]
+    G --> I[分类页]
+    G --> J[标签页]
+    G --> K[RSS]`}
+/>
+
+所以新增文章的流程很稳定：创建 MDX 文件，填好 frontmatter，确认发布后设为公开，再让页面代码自动读取。
+
+## 详情页怎么生成
+
+文章详情页在 `src/pages/articles/[...slug].astro`。这个文件使用 `getStaticPaths()` 为每篇公开文章生成静态路径：
+
+```ts
+export async function getStaticPaths() {
+  const posts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private);
+
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+```
+
+然后详情页再渲染正文：
+
+```ts
+const { Content, headings } = await render(post);
+```
+
+这里的 `Content` 是文章正文，`headings` 是文章目录。也就是说，文章页并不是访问时再去数据库查询，而是在构建阶段提前生成。
+
+## 组件怎么工作
+
+这个博客支持 MDX，所以文章不是只能写普通 Markdown。需要视觉笔记效果时，可以在文章顶部引入 Astro 组件：
+
+```mdx
+import MetricCard from '../../components/MetricCard.astro';
+import VisualGrid from '../../components/VisualGrid.astro';
+import Mermaid from '../../components/Mermaid.astro';
+```
+
+<VisualGrid columns={3}>
+  <FeatureCard title="MetricCard" meta="指标" description="展示场景、输入、输出、风险、耗时等高扫描信息。" />
+  <FeatureCard title="FeatureCard" meta="模块" description="解释一个功能、目录、步骤或能力边界。" />
+  <FeatureCard title="Mermaid" meta="图表" description="把架构、流程和决策关系画成图，减少大段文字。" />
+</VisualGrid>
+
+这也是这个博客文章风格的关键：内容还是文件，展示可以组件化。文章能被 Git 管理，也能被 Agent 修改和审查。
+
+## 布局和样式
+
+页面整体外壳在 `src/layouts/SiteLayout.astro`，全局样式在 `src/styles/global.css`。
+
+可以这样理解：
+
+```text
+页面负责放什么
+布局负责包一层什么结构
+样式负责看起来是什么风格
+组件负责复用局部展示能力
+```
+
+例如导航、页面宽度、文章容器、代码块、卡片视觉、明暗主题和字体规则，都不是写在每篇文章里，而是尽量沉到布局和全局样式里。
+
+## 发布流程
+
+本地和线上是两条链路。
+
+<Mermaid
+  title="运行与发布流程"
+  caption="本地用于预览和验证，线上由 GitHub Actions 构建并发布。"
+  chart={`flowchart TD
+    A[修改文章或代码] --> B[npm run dev]
+    B --> C[本地预览]
+    A --> D[npm test]
+    D --> E[npm run build]
+    E --> F[git commit]
+    F --> G[git push main]
+    G --> H[GitHub Actions]
+    H --> I[Astro 静态构建]
+    I --> J[GitHub Pages]
+    J --> K[线上博客]`}
+/>
+
+线上访问时，不需要 Node 服务一直运行。GitHub Actions 会把源码构建成静态产物，再交给 GitHub Pages 托管。
+
+## 为什么适合 Agent 协作
+
+这个项目对 Agent 友好，不是因为它复杂，而是因为规则显式、文件位置固定、验证命令明确。
+
+<VisualGrid columns={2}>
+  <FeatureCard title="入口明确" meta="Read" description="Agent 先读 llms.txt，再根据任务读 BLOG_AGENT.md、索引和模板。">
+    <ul>
+      <li>不用默认通读所有文章</li>
+      <li>减少上下文浪费</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="边界明确" meta="Write" description="文章字段、分类、草稿状态和发布规则都写在项目里。">
+    <ul>
+      <li>新增文章可审查</li>
+      <li>发布前可验证</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
+
+对个人博客来说，这种结构比一开始就做动态后台更轻。文章变更有 Git 记录，页面生成能构建验证，发布链路也足够简单。
+
+## 检查清单
+
+<HighlightBox eyebrow="CHECK" title="看代码时抓住这条主线">
+  <code>src/pages</code> 决定路径，<code>src/content/posts</code> 保存文章，<code>src/components</code> 提供展示能力，<code>src/layouts</code> 和 <code>src/styles</code> 控制整体视觉，最后由 Astro 构建成静态站点。
+</HighlightBox>
+
+总结成一句话：Astro 读取文章和页面代码，在构建阶段生成静态网站，再由 GitHub Pages 托管。这个博客的代码重点不是功能堆叠，而是结构清楚、运行链路短、发布边界明确。
