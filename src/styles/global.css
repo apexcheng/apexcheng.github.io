@@ -687,6 +687,7 @@ h3 {
   display: grid;
   gap: 44px;
   grid-template-columns: 260px minmax(0, 1040px);
+  max-width: 1680px;
 }
 
 .article-sidebar {
