@@ -86,14 +86,35 @@ const searchItems = [
         </nav>
         <div class="theme-menu" data-theme-menu>
           <button class="theme-button" type="button" aria-label="选择主题" title="选择主题" aria-expanded="false" data-theme-menu-toggle>
-            <span aria-hidden="true">◐</span>
+            <span class="theme-current-icon" aria-hidden="true" data-current-theme-icon>
+              <svg data-theme-button-icon="index" viewBox="0 0 24 24" hidden><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+              <svg data-theme-button-icon="classic" viewBox="0 0 24 24" hidden><path d="M12 7v14"></path><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 0 4 18.5z"></path><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 1 2.5-2.5z"></path></svg>
+              <svg data-theme-button-icon="index-gradient" viewBox="0 0 24 24"><path d="M4 18h16"></path><path d="M6 18a6 6 0 0 1 12 0"></path><path d="M12 4v3"></path><path d="m5.64 7.64 2.12 2.12"></path><path d="m18.36 7.64-2.12 2.12"></path><path d="M2 13h3"></path><path d="M19 13h3"></path></svg>
+              <svg data-theme-button-icon="classic-gradient" viewBox="0 0 24 24" hidden><path d="M12 3 3 8l9 5 9-5z"></path><path d="m3 13 9 5 9-5"></path><path d="m3 18 9 5 9-5"></path></svg>
+              <svg data-theme-button-icon="dark" viewBox="0 0 24 24" hidden><path d="M20 14.5A7.5 7.5 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+            </span>
           </button>
           <div class="theme-menu-panel" role="menu">
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="index" data-theme-value="light">晨曦手札</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="light">素笺经典</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="index-gradient" data-theme-value="light">晨曦渐变</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic-gradient" data-theme-value="light">素笺渐变</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="dark">玄墨经典</button>
+            <button type="button" role="menuitem" data-theme-option data-style-theme-value="index" data-theme-value="light">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+              <span>晨曦手札</span>
+            </button>
+            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="light">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 0 4 18.5z"></path><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 1 2.5-2.5z"></path></svg>
+              <span>素笺经典</span>
+            </button>
+            <button type="button" role="menuitem" data-theme-option data-style-theme-value="index-gradient" data-theme-value="light">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 18h16"></path><path d="M6 18a6 6 0 0 1 12 0"></path><path d="M12 4v3"></path><path d="m5.64 7.64 2.12 2.12"></path><path d="m18.36 7.64-2.12 2.12"></path><path d="M2 13h3"></path><path d="M19 13h3"></path></svg>
+              <span>晨曦渐变</span>
+            </button>
+            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic-gradient" data-theme-value="light">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5z"></path><path d="m3 13 9 5 9-5"></path><path d="m3 18 9 5 9-5"></path></svg>
+              <span>素笺渐变</span>
+            </button>
+            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="dark">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 14.5A7.5 7.5 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+              <span>玄墨经典</span>
+            </button>
           </div>
         </div>
       </header>
@@ -131,9 +152,14 @@ const searchItems = [
             classic: '素笺经典',
             'index-gradient': '晨曦渐变',
             'classic-gradient': '素笺渐变',
+            dark: '玄墨经典',
           };
-          var label = themeLabels[currentStyleTheme()] || '晨曦渐变';
+          var iconKey = currentTheme() === 'dark' ? 'dark' : currentStyleTheme();
+          var label = themeLabels[iconKey] || '晨曦渐变';
           var mode = currentTheme() === 'dark' ? '深色' : '浅色';
+          themeButton.querySelectorAll('[data-theme-button-icon]').forEach(function (icon) {
+            icon.hidden = icon.getAttribute('data-theme-button-icon') !== iconKey;
+          });
           themeButton.setAttribute('aria-label', '当前主题：' + label + ' ' + mode + '，点击选择主题');
           themeButton.setAttribute('title', '当前主题：' + label + ' ' + mode);
         }
