@@ -25,7 +25,7 @@ describe('site layout', () => {
   });
 
   it('keeps mobile layout rules for the main navigation and article page', () => {
-    expect(globalCssSource).toMatch(/\.article-shell\s*\{[^}]*grid-template-columns:\s*260px minmax\(0,\s*920px\);/s);
+    expect(globalCssSource).toMatch(/\.article-shell\s*\{[^}]*grid-template-columns:\s*260px minmax\(0,\s*1040px\);/s);
     expect(globalCssSource).toMatch(/\.article-sidebar\s*\{[^}]*display:\s*grid;[^}]*gap:\s*18px;/s);
     expect(globalCssSource).toContain('@media (max-width: 1100px)');
     expect(globalCssSource).toMatch(/\.article-shell\s*\{[^}]*grid-template-columns:\s*1fr;/s);
