@@ -253,5 +253,60 @@ const searchItems = [
         });
       })();
     </script>
+    <style is:inline>
+      .has-copy-code {
+        padding-top: 42px;
+        position: relative;
+      }
+
+      .hero-code.has-copy-code {
+        padding-top: 32px;
+      }
+
+      .copy-code-button {
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(148, 163, 184, 0.42);
+        border-radius: 999px;
+        color: #cbd5e1;
+        cursor: pointer;
+        font: 12px/1 var(--body-font);
+        padding: 6px 10px;
+        position: absolute;
+        right: 12px;
+        top: 10px;
+      }
+
+      .copy-code-button:hover {
+        background: rgba(30, 41, 59, 0.88);
+        color: #ffffff;
+      }
+    </style>
+    <script is:inline>
+      (function () {
+        document.querySelectorAll('pre > code').forEach(function (code) {
+          var pre = code.parentElement;
+          if (!pre || pre.closest('.mermaid-card') || pre.querySelector('[data-copy-code]')) return;
+          pre.classList.add('has-copy-code');
+
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'copy-code-button';
+          button.dataset.copyCode = '';
+          button.textContent = '复制';
+          button.setAttribute('aria-label', '复制代码');
+
+          button.addEventListener('click', function () {
+            navigator.clipboard.writeText(code.innerText).then(function () {
+              button.textContent = '已复制';
+              window.setTimeout(function () {
+                button.textContent = '复制';
+              }, 1400);
+            });
+          });
+
+          pre.appendChild(button);
+        });
+      })();
+    </script>
   </body>
 </html>
