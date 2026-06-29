@@ -38,13 +38,14 @@ describe('site layout', () => {
 
   it('keeps the classic theme and adds a switchable index journal theme', () => {
     expect(layoutSource).toContain("localStorage.getItem('styleTheme')");
-    expect(layoutSource).toContain("document.documentElement.dataset.styleTheme = savedStyleTheme === 'index' ? 'index' : 'classic'");
+    expect(layoutSource).toContain("document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light'");
+    expect(layoutSource).toContain("document.documentElement.dataset.styleTheme = savedStyleTheme === 'classic' ? 'classic' : 'index'");
     expect(layoutSource).toContain('data-theme-menu-toggle');
     expect(layoutSource).toContain('data-theme-option');
-    expect(layoutSource).toContain('Classic Light');
-    expect(layoutSource).toContain('Classic Dark');
-    expect(layoutSource).toContain('Index Light');
-    expect(layoutSource).toContain('Index Dark');
+    expect(layoutSource).toContain('主题');
+    expect(layoutSource.indexOf('Index 浅色')).toBeLessThan(layoutSource.indexOf('Classic 浅色'));
+    expect(layoutSource.indexOf('Classic 浅色')).toBeLessThan(layoutSource.indexOf('Index 深色'));
+    expect(layoutSource.indexOf('Index 深色')).toBeLessThan(layoutSource.indexOf('Classic 深色'));
     expect(layoutSource).not.toContain('data-style-toggle');
     expect(layoutSource).not.toContain('data-theme-toggle');
     expect(globalCssSource).toContain("html[data-style-theme='index']");

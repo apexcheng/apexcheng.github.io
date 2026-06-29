@@ -52,12 +52,11 @@ const searchItems = [
         try {
           var savedTheme = localStorage.getItem('theme');
           var savedStyleTheme = localStorage.getItem('styleTheme');
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          document.documentElement.dataset.theme = savedTheme || (prefersDark ? 'dark' : 'light');
-          document.documentElement.dataset.styleTheme = savedStyleTheme === 'index' ? 'index' : 'classic';
+          document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';
+          document.documentElement.dataset.styleTheme = savedStyleTheme === 'classic' ? 'classic' : 'index';
         } catch (error) {
           document.documentElement.dataset.theme = 'light';
-          document.documentElement.dataset.styleTheme = 'classic';
+          document.documentElement.dataset.styleTheme = 'index';
         }
       })();
     </script>
@@ -85,12 +84,14 @@ const searchItems = [
           <a href={withBase('/about/')}>关于</a>
         </nav>
         <div class="theme-menu" data-theme-menu>
-          <button class="theme-button" type="button" aria-label="选择主题" aria-expanded="false" data-theme-menu-toggle>Classic</button>
+          <button class="theme-button" type="button" aria-label="选择主题" title="选择主题" aria-expanded="false" data-theme-menu-toggle>
+            <span aria-hidden="true">◐</span>
+          </button>
           <div class="theme-menu-panel" role="menu">
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="light">Classic Light</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="dark">Classic Dark</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="index" data-theme-value="light">Index Light</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="index" data-theme-value="dark">Index Dark</button>
+            <button type="button" role="menuitem" data-theme-option data-style-theme-value="index" data-theme-value="light">Index 浅色</button>
+            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="light">Classic 浅色</button>
+            <button type="button" role="menuitem" data-theme-option data-style-theme-value="index" data-theme-value="dark">Index 深色</button>
+            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="dark">Classic 深色</button>
           </div>
         </div>
       </header>
@@ -123,8 +124,9 @@ const searchItems = [
         function updateThemeButton() {
           if (!themeButton) return;
           var label = currentStyleTheme() === 'index' ? 'Index' : 'Classic';
-          var mode = currentTheme() === 'dark' ? ' Dark' : '';
-          themeButton.textContent = label + mode;
+          var mode = currentTheme() === 'dark' ? '深色' : '浅色';
+          themeButton.setAttribute('aria-label', '当前主题：' + label + ' ' + mode + '，点击选择主题');
+          themeButton.setAttribute('title', '当前主题：' + label + ' ' + mode);
         }
 
         updateThemeButton();

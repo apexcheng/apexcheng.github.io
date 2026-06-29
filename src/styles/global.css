@@ -301,8 +301,11 @@ p {
   font-weight: 800;
   height: 34px;
   justify-content: center;
-  min-width: 70px;
-  padding: 0 10px;
+  width: 34px;
+}
+
+.theme-button span {
+  line-height: 1;
 }
 
 .theme-menu-panel {
