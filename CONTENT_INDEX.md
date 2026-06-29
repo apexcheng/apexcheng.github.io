@@ -14,4 +14,4 @@
 | `src/content/posts/mdx-code-diagrams.md` | `Skill` | 代码块、Callout、图表可读性 | 写展示型技术文章、图表说明、下载链接规范时参考 |
 | `src/content/posts/minimal-cache-logic.md` | `数据处理` | 最小抽象、缓存读写、保存时机 | 写数据处理、缓存、显式数据流文章时参考 |
 | `src/content/posts/visual-notes-components.mdx` | `Skill` | VisualGrid、MetricCard、FeatureCard、DecisionFlow 示例 | 写视觉笔记、MDX 组件化文章时优先参考 |
-| `src/content/posts/context-flow-demo.mdx` | `Demo` | 上下文流程图、ContextFlow 组件、MDX 教学型视觉图 | 写 Demo、组件展示、AI 基础概念说明时参考 |
+| `src/content/posts/context-flow-demo.mdx` | `视觉实验室` | 上下文流程图、ContextFlow 组件、MDX 教学型视觉图 | 写视觉实验、组件展示、AI 基础概念说明时参考 |
