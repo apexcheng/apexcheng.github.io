@@ -1,0 +1,93 @@
+---
+title: "胃酸多时，不要把苏打水当成养胃饮料"
+description: "一次关于幽门螺杆菌、胃酸过多和气泡饮料的判断笔记。"
+date: 2026-06-30
+category: "Skill"
+tags:
+  - "健康笔记"
+  - "判断清单"
+  - "饮食"
+minutes: 4
+featured: false
+draft: true
+private: false
+---
+
+import MetricCard from '../../components/MetricCard.astro';
+import FeatureCard from '../../components/FeatureCard.astro';
+import VisualGrid from '../../components/VisualGrid.astro';
+import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
+
+结论：**有幽门螺杆菌、胃酸过多、反酸或烧心时，不建议喝青柠味苏打水 / 气泡水。**
+
+它不是胃药，也不能解决幽门螺杆菌。喝完打嗝、感觉轻松，不等于对胃病有帮助。
+
+<HighlightBox eyebrow="NOTE" title="只是个人判断记录">
+  这篇不是医疗建议。幽门螺杆菌和长期胃酸问题，应该以消化科医生的检查、用药和复查为准。
+</HighlightBox>
+
+## 快速判断
+
+<VisualGrid columns={3}>
+  <MetricCard label="饮料" value="气泡 / 苏打" detail="有碳酸气体，可能增加胃内压力。" />
+  <MetricCard label="状态" value="胃酸多" detail="反酸、烧心、胃胀时更要谨慎。" tone="cyan" />
+  <MetricCard label="选择" value="温水" detail="胃不舒服时更稳。" tone="green" />
+</VisualGrid>
+
+## 为什么不推荐
+
+<VisualGrid columns={2}>
+  <FeatureCard title="碳酸不是治疗" meta="Reason" description="苏打水或气泡水不能替代药物治疗。">
+    <ul>
+      <li>气体可能让胃胀和打嗝更明显</li>
+      <li>胃内压力增加时，部分人更容易反酸</li>
+      <li>短暂舒服不等于真正改善胃病</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="青柠风味要谨慎" meta="Boundary" description="酸味饮料对胃酸多的人不一定友好。">
+    <ul>
+      <li>青柠、柠檬、橙味都不要默认养胃</li>
+      <li>胃正不舒服时，先避开刺激性饮品</li>
+      <li>不要把风味饮料当成养胃方案</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
+
+## 真正该关注什么
+
+幽门螺杆菌的重点不是喝哪种饮料，而是是否需要规范处理、是否按疗程完成、是否复查确认。
+
+NIDDK 说明，医生治疗幽门螺杆菌相关问题时，常见会使用组合药物，例如抗生素、PPI，有时还会用铋剂；Mayo Clinic 也提到，幽门螺杆菌治疗通常会同时使用至少两种抗生素，并配合帮助胃部恢复的药物。
+
+- 参考：[NIDDK：消化性溃疡治疗](https://www.niddk.nih.gov/health-information/digestive-diseases/peptic-ulcers-stomach-ulcers/treatment)
+- 参考：[Mayo Clinic：H. pylori diagnosis & treatment](https://www.mayoclinic.org/diseases-conditions/h-pylori/diagnosis-treatment/drc-20356177)
+
+## 我的判断流程
+
+<DecisionFlow
+  title="看到类似饮料时怎么判断"
+  items={[
+    {
+      label: 'Step 1',
+      title: '先看有没有气',
+      description: '有气泡、碳酸、苏打字样时，胃酸多和反酸人群先谨慎。',
+    },
+    {
+      label: 'Step 2',
+      title: '再看是不是酸味',
+      description: '青柠、柠檬、橙味这类酸味饮料，不要默认对胃友好。',
+    },
+    {
+      label: 'Step 3',
+      title: '最后看当前症状',
+      description: '如果正在反酸、烧心、胃胀、胃痛，就不喝；想喝东西先选温水。',
+    },
+  ]}
+/>
+
+## 结论
+
+这类青柠味苏打水，对“幽门螺杆菌 + 胃酸过多”的情况，**不能说有帮助，更不能当成治疗。**
+
+胃正不舒服时：**不喝气泡酸味饮料，先喝温水；幽门螺杆菌按医生方案处理，并按要求复查。**
