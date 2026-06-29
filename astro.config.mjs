@@ -19,12 +19,6 @@ export default defineConfig({
         },
       },
       social: [{ icon: 'github', label: 'GitHub', href: siteMeta.githubUrl }],
-      sidebar: [
-        {
-          label: '指南',
-          items: [{ label: 'MDX 内容展示', slug: 'guides/mdx-content' }],
-        },
-      ],
       customCss: ['./src/styles/global.css'],
     }),
     mdx(),

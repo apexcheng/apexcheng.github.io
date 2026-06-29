@@ -11,9 +11,14 @@ describe('site layout', () => {
   });
 
   it('links the primary static pages from the main navigation', () => {
+    expect(layoutSource).toContain("href={withBase('/')}>首页</a>");
     expect(layoutSource).toContain("withBase('/articles/')");
     expect(layoutSource).toContain("withBase('/projects/')");
-    expect(layoutSource).toContain("withBase('/guides/mdx-content/')");
+    expect(layoutSource).toContain('data-search-toggle>搜索</button>');
+    expect(layoutSource).toContain('href={withBase(siteMeta.rssPath)}>RSS</a>');
+    expect(layoutSource).toContain("href={withBase('/about/')}>关于</a>");
+    expect(layoutSource).not.toContain("withBase('/guides/mdx-content/')");
+    expect(layoutSource).not.toContain('>指南</a>');
   });
 
   it('renders the inline search data and controls in the header', () => {
