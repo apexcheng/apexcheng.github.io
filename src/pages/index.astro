@@ -41,26 +41,18 @@ const sidePosts = posts.filter((post) => post.id !== featuredPost.id).slice(0, 3
         <div class="terminal-body">
           <pre class="hero-code"><code><span class="comment"># automation/workbench.py</span>
 
-<span class="keyword">from</span> agent <span class="keyword">import</span> analyze_task
+<span class="keyword">from</span> agent <span class="keyword">import</span> run_agent
 <span class="keyword">from</span> rpa <span class="keyword">import</span> run_flow
-<span class="keyword">from</span> sheet <span class="keyword">import</span> update_report
-<span class="keyword">from</span> notify <span class="keyword">import</span> send_dingtalk
+<span class="keyword">from</span> notes <span class="keyword">import</span> publish
 
-WORKSPACE = {'{'}
-    <span class="string">"focus"</span>: [<span class="string">"AI Agent"</span>, <span class="string">"RPA"</span>, <span class="string">"data workflow"</span>],
-    <span class="string">"topics"</span>: [<span class="string">"pricing"</span>, <span class="string">"inventory"</span>, <span class="string">"reviews"</span>, <span class="string">"automation"</span>],
-{'}'}
+TODAY = [<span class="string">"pricing"</span>, <span class="string">"stock"</span>, <span class="string">"reviews"</span>]
 
-<span class="keyword">def</span> <span class="function">daily_pipeline</span>():
-    tasks = [<span class="string">"collect"</span>, <span class="string">"analyze"</span>, <span class="string">"execute"</span>, <span class="string">"sync"</span>]
+<span class="keyword">def</span> <span class="function">workbench</span>():
+    <span class="keyword">for</span> task <span class="keyword">in</span> TODAY:
+        result = run_agent(task)
+        publish(run_flow(result))
 
-    <span class="keyword">for</span> task <span class="keyword">in</span> tasks:
-        result = analyze_task(task)
-        run_flow(result)
-
-    update_report(<span class="string">"ops_dashboard"</span>)
-    send_dingtalk(<span class="string">"workflow synced"</span>)
-    <span class="keyword">return</span> <span class="string">"notes published"</span></code></pre>
+    <span class="keyword">return</span> <span class="string">"notes synced"</span></code></pre>
         </div>
       </aside>
     </section>

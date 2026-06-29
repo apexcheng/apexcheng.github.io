@@ -554,7 +554,7 @@ h3 {
 
 .terminal-body {
   color: #cbd5e1;
-  font: 14px/1.75 "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  font: 14px/1.75 "Cascadia Code", "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, monospace;
   padding: 24px;
 }
 
