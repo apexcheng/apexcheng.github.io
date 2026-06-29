@@ -45,9 +45,11 @@ describe('site layout', () => {
     expect(layoutSource).toContain('data-theme-option');
     expect(layoutSource).toContain('主题');
     expect(layoutSource.indexOf('晨曦手札')).toBeLessThan(layoutSource.indexOf('素笺经典'));
-    expect(layoutSource.indexOf('素笺经典')).toBeLessThan(layoutSource.indexOf('晨曦手札 · 渐变'));
-    expect(layoutSource.indexOf('晨曦手札 · 渐变')).toBeLessThan(layoutSource.indexOf('素笺经典 · 渐变'));
-    expect(layoutSource.indexOf('素笺经典 · 渐变')).toBeLessThan(layoutSource.indexOf('玄墨经典'));
+    expect(layoutSource.indexOf('素笺经典')).toBeLessThan(layoutSource.indexOf('晨曦渐变'));
+    expect(layoutSource.indexOf('晨曦渐变')).toBeLessThan(layoutSource.indexOf('素笺渐变'));
+    expect(layoutSource.indexOf('素笺渐变')).toBeLessThan(layoutSource.indexOf('玄墨经典'));
+    expect(layoutSource).not.toContain('晨曦手札 · 渐变');
+    expect(layoutSource).not.toContain('素笺经典 · 渐变');
     expect(layoutSource).not.toContain('秋夜手札');
     expect(layoutSource).not.toContain('data-style-toggle');
     expect(layoutSource).not.toContain('data-theme-toggle');

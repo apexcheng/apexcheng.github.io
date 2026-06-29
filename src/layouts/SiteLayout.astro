@@ -91,8 +91,8 @@ const searchItems = [
           <div class="theme-menu-panel" role="menu">
             <button type="button" role="menuitem" data-theme-option data-style-theme-value="index" data-theme-value="light">晨曦手札</button>
             <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="light">素笺经典</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="index-gradient" data-theme-value="light">晨曦手札 · 渐变</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic-gradient" data-theme-value="light">素笺经典 · 渐变</button>
+            <button type="button" role="menuitem" data-theme-option data-style-theme-value="index-gradient" data-theme-value="light">晨曦渐变</button>
+            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic-gradient" data-theme-value="light">素笺渐变</button>
             <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="dark">玄墨经典</button>
           </div>
         </div>
@@ -129,10 +129,10 @@ const searchItems = [
           var themeLabels = {
             index: '晨曦手札',
             classic: '素笺经典',
-            'index-gradient': '晨曦手札 · 渐变',
-            'classic-gradient': '素笺经典 · 渐变',
+            'index-gradient': '晨曦渐变',
+            'classic-gradient': '素笺渐变',
           };
-          var label = themeLabels[currentStyleTheme()] || '晨曦手札 · 渐变';
+          var label = themeLabels[currentStyleTheme()] || '晨曦渐变';
           var mode = currentTheme() === 'dark' ? '深色' : '浅色';
           themeButton.setAttribute('aria-label', '当前主题：' + label + ' ' + mode + '，点击选择主题');
           themeButton.setAttribute('title', '当前主题：' + label + ' ' + mode);
