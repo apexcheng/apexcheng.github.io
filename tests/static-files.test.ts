@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const blogAgentSource = readFileSync('BLOG_AGENT.md', 'utf8');
-const mdxExampleSource = readFileSync('src/content/posts/mdx-code-diagrams.md', 'utf8');
+const blogAgentSource = readFileSync('docs/writing/BLOG_AGENT.md', 'utf8');
+const mdxExampleSource = readFileSync('src/content/posts/visual-lab/mdx-code-diagrams.md', 'utf8');
 const readmeSource = readFileSync('README.md', 'utf8');
 
 describe('static file download convention', () => {

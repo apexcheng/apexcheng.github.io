@@ -9,7 +9,7 @@ const componentPaths = [
   'src/components/DecisionFlow.astro',
 ];
 
-const examplePath = 'src/content/posts/visual-notes-components.mdx';
+const examplePath = 'src/content/posts/visual-lab/visual-notes-components.mdx';
 
 describe('visual note components', () => {
   it('adds the visual note component files', () => {

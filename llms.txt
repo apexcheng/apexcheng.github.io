@@ -1,20 +1,45 @@
 # Agent 入口路由
 
-本文件是本博客给 Agent 使用的唯一任务路由入口。开始任务时先读本文件，再按任务类型读取必要文档；不要默认通读所有 Markdown。
+本文件用于帮助 Agent 快速判断本项目应该先读哪些规则文件。它只负责路由，不承载详细规则。
 
-## 读取顺序
+## 默认入口
 
-1. 写作、审查、发布文章：读 `BLOG_AGENT.md`；需要详细规则时再读 `docs/agent/blog-rules.md`。
-2. 需要参考旧文章：再读 `CONTENT_INDEX.md`，只选择 1 到 3 篇相关正文。
-3. 新增文章：再读 `templates/post.mdx`，复制模板后填写。
-4. 写作任务需要更细的 brief、prompt、审稿或 Skill 化参考时，可按需读 `docs/agent/blog-skills/` 下对应文件；不要默认通读整个目录。
-5. 修改代码、构建配置、测试或工程结构：读 `AGENTS.md`；需要详细规则时再读 `docs/agent/code-rules.md`。
-6. 普通仓库介绍或人工阅读：可读 `README.md`。
+1. 先读 `AGENTS.md`，确认项目定位、目录边界和任务路由。
+2. 再按任务类型读取 `docs/` 下的具体规则。
+3. 不默认通读 `src/content/posts/` 下全部文章。
+
+## 代码 / 工程任务
+
+适用场景：代码修改、样式调整、构建配置、测试、依赖、项目结构、Git 操作。
+
+读取：
+
+- `AGENTS.md`
+- `docs/DEV_RULES.md`
+
+## 文章任务
+
+适用场景：写文章、改文章、审查文章、发布文章、整理文章索引。
+
+读取：
+
+- `AGENTS.md`
+- `docs/writing/BLOG_AGENT.md`
+- `docs/writing/STYLE_GUIDE.md`
+- `docs/writing/CONTENT_INDEX.md`
+
+## 视觉实验 / Demo
+
+适用场景：先看效果、样式选型、代码块样式、MDX 组件展示、流程图和视觉笔记示例。
+
+读取：
+
+- `docs/writing/VISUAL_LAB.md`
+- `src/content/posts/visual-lab/`
 
 ## 边界
 
-- 不默认读取 `src/content/posts/` 下全部文章。
-- 不默认读取 `docs/agent/blog-skills/` 下全部参考材料。
-- 不把模板内容复制进规则文档。
-- 不修改业务代码，除非当前任务明确要求修代码。
-- 不引入新依赖，不做无关重构。
+- `src/content/posts/` 是正式正文文章目录。
+- `src/content/posts/visual-lab/` 是视觉实验和 Demo 文章目录。
+- `docs/` 是 Agent 知识库，不是正式文章目录。
+- 新文章默认不发布，除非用户明确确认发布。

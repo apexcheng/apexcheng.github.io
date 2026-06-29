@@ -290,7 +290,7 @@ import Mermaid from '../../components/Mermaid.astro';
 这个项目对 Agent 友好，不是因为它复杂，而是因为规则显式、文件位置固定、验证命令明确。
 
 <VisualGrid columns={2}>
-  <FeatureCard title="入口明确" meta="Read" description="Agent 先读 llms.txt，再根据任务读 BLOG_AGENT.md、索引和模板。">
+  <FeatureCard title="入口明确" meta="Read" description="Agent 先读 AGENTS.md 和 llms.txt，再根据任务读 docs/writing/ 下的规则、索引和模板。">
     <ul>
       <li>不用默认通读所有文章</li>
       <li>减少上下文浪费</li>

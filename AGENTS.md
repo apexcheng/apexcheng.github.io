@@ -1,34 +1,94 @@
 # AGENTS.md
 
-本文件是本项目的代码 / 工程协作入口，适用于 Codex、Claude Code、OpenClaw 等代码 Agent。
+本文件是本项目给 Codex、Claude Code、OpenClaw 等 Agent 使用的默认入口。
 
-处理代码修改、构建配置、测试、依赖、工程结构或自动化脚本时，先读本文件，再读 `docs/agent/code-rules.md`。
-
-文章写作、审查、发布任务不要从本文件展开；先读 `llms.txt`，再按路由读取 `BLOG_AGENT.md`。
+核心原则：**AGENTS.md 只做导航；docs 做知识库；正式文章和视觉实验文章分开维护。**
 
 ---
 
-## 核心原则
+## 项目定位
+
+这是一个个人博客项目。
+
+- 正式文章目录：`src/content/posts/`
+- 视觉实验 / Demo 文章目录：`src/content/posts/visual-lab/`
+- Agent 规则和索引目录：`docs/`
+- Agent 路由文件：`llms.txt`
+
+## 默认原则
 
 ```text
-最小改动 | 结构简单 | 流程显式 | 命名直白 | 少工程化 | 易审查 | 易维护
+最小改动 | 结构简单 | 只改相关文件 | 不做无关重构 | 规则单一来源 | 方便维护
 ```
 
-## 必读规则
+1. 修改前先读相关上下文，不要默认通读所有 Markdown。
+2. 只处理当前任务直接相关的文件和内容。
+3. 不确定的事实、页面行为、工具参数或构建结果必须标注“需运行验证”。
+4. 工作区可能已有用户改动；不要回滚、覆盖或清理不是本次任务产生的改动。
+5. 本项目默认在 `main` 分支开发和推送，除非用户明确要求新分支。
 
-1. 本项目位于 WSL Linux 文件系统中，项目命令优先在 WSL 项目目录内运行。
-2. 不要把 Windows PowerShell / CMD 中的路径、编码或引号问题直接判断为项目失败。
-3. 修改前先阅读相关上下文，只改当前需求直接相关的文件和内容。
-4. 不做无关重构、无关格式化、无关改名，不引入不必要依赖。
-5. 不确定的 API、页面行为、XPath、字段含义或工具参数必须标注“需运行验证”。
-6. 工作区可能已有用户改动；不要回滚、覆盖或清理不是本次任务产生的改动。
-7. 本项目只使用 `main` 分支；不要新建长期分支或推送非 `main` 分支，除非用户明确要求。
-8. 修改后最终回复需要说明修改内容、验证方式、未验证项和未完成事项。
+## 开发硬规则
 
-## 详细规则
+1. 修改代码、样式、构建配置、测试或工程结构前，必须先读 `docs/DEV_RULES.md`。
+2. 只改当前任务直接相关的文件和内容。
+3. 不做无关重构、无关格式化、无关改名。
+4. 不引入不必要依赖。
+5. 不覆盖、回滚、清理用户已有改动。
+6. 修改后必须说明验证方式；没运行测试就明确说未运行。
 
-详细协作规则见：
+## 文章硬规则
 
-- `docs/agent/code-rules.md`：开发环境、代码风格、函数 / 常量 / 类、异常、浏览器自动化、表格处理、验证与最终输出。
+1. 写作、审查、发布文章前，必须先读 `docs/writing/BLOG_AGENT.md`。
+2. 判断文章风格时，必须参考 `docs/writing/STYLE_GUIDE.md`。
+3. 需要参考旧文章时，必须先读 `docs/writing/CONTENT_INDEX.md`，只打开 1 到 3 篇相关正文。
+4. 正式文章放在 `src/content/posts/`。
+5. 视觉实验 / Demo 文章放在 `src/content/posts/visual-lab/`。
+6. 新文章默认 `draft: true`，只有用户明确确认发布，才允许改成 `draft: false`。
+7. 默认使用专业风格；只有用户明确要求大众风格时，才使用大众风格。
+8. 新增或迁移文章后，必须同步更新 `docs/writing/CONTENT_INDEX.md`。
 
-当本文件和 `docs/agent/code-rules.md` 都适用时，以更具体、更严格的规则为准。
+## 任务路由
+
+### 修改代码、样式、构建配置、测试或工程结构
+
+读取：
+
+- `docs/DEV_RULES.md`
+
+### 写作、审查、发布博客文章
+
+读取：
+
+- `docs/writing/BLOG_AGENT.md`
+- `docs/writing/STYLE_GUIDE.md`
+- `docs/writing/CONTENT_INDEX.md`
+
+### 需要参考视觉效果或 Demo
+
+读取：
+
+- `docs/writing/VISUAL_LAB.md`
+- `src/content/posts/visual-lab/`
+
+### 需要给 Agent 快速判断入口
+
+读取：
+
+- `llms.txt`
+
+## 内容边界
+
+1. `src/content/posts/` 是正式正文文章目录，不是示例专用目录。
+2. Demo、样式实验、组件展示、代码块样式对比统一放到 `src/content/posts/visual-lab/`。
+3. `docs/` 只放 Agent 规则、写作规范、索引和维护说明，不作为正式博客文章目录。
+4. `llms.txt` 给 Agent 看，用于快速理解项目入口和读取顺序。
+
+## 规则维护边界
+
+1. 更新规则前先判断规则类型：开发硬规则、文章硬规则、开发细则、写作细则、内容索引、视觉实验索引。
+2. `AGENTS.md` 只放最关键、不能违反的硬规则和路由，不承载详细说明、长示例或 prompt 库。
+3. 开发细则写入 `docs/DEV_RULES.md`，不要新建 `dev-docs/` 或恢复旧的 `docs/agent/` 结构。
+4. 写作细则写入 `docs/writing/`，不要把写作规则放回根目录 `BLOG_AGENT.md` 或 `CONTENT_INDEX.md`。
+5. 同一条规则只保留一个权威版本；其他文件只做简短引用，避免多处重复维护。
+6. 新增规则要优先合并到现有文件和章节，除非用户明确要求新增规则文件。
+7. 迁移或新增文章后，必须同步更新 `docs/writing/CONTENT_INDEX.md`；新增视觉实验文章还要同步更新 `docs/writing/VISUAL_LAB.md`。

@@ -13,11 +13,11 @@ draft: false
 private: false
 ---
 
-import MetricCard from '../../components/MetricCard.astro';
-import FeatureCard from '../../components/FeatureCard.astro';
-import VisualGrid from '../../components/VisualGrid.astro';
-import HighlightBox from '../../components/HighlightBox.astro';
-import DecisionFlow from '../../components/DecisionFlow.astro';
+import MetricCard from '../../../components/MetricCard.astro';
+import FeatureCard from '../../../components/FeatureCard.astro';
+import VisualGrid from '../../../components/VisualGrid.astro';
+import HighlightBox from '../../../components/HighlightBox.astro';
+import DecisionFlow from '../../../components/DecisionFlow.astro';
 
 这篇文章演示一组适合技术博客的 MDX 视觉笔记组件。它们都是静态 Astro 组件，可以直接插入文章正文，用来承载指标、功能说明、重点结论和决策过程。
 
@@ -78,8 +78,8 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 在文章顶部 import 组件，然后像普通标签一样组合使用：
 
 ```mdx
-import MetricCard from '../../components/MetricCard.astro';
-import VisualGrid from '../../components/VisualGrid.astro';
+import MetricCard from '../../../components/MetricCard.astro';
+import VisualGrid from '../../../components/VisualGrid.astro';
 
 <VisualGrid columns={2}>
   <MetricCard label="构建方式" value="Static" detail="Astro 构建期生成页面。" />
