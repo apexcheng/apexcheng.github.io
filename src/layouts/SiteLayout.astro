@@ -51,10 +51,13 @@ const searchItems = [
       (function () {
         try {
           var savedTheme = localStorage.getItem('theme');
+          var savedStyleTheme = localStorage.getItem('styleTheme');
           var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
           document.documentElement.dataset.theme = savedTheme || (prefersDark ? 'dark' : 'light');
+          document.documentElement.dataset.styleTheme = savedStyleTheme === 'index' ? 'index' : 'classic';
         } catch (error) {
           document.documentElement.dataset.theme = 'light';
+          document.documentElement.dataset.styleTheme = 'classic';
         }
       })();
     </script>
@@ -81,6 +84,7 @@ const searchItems = [
           <a href={withBase(siteMeta.rssPath)}>RSS</a>
           <a href={withBase('/about/')}>关于</a>
         </nav>
+        <button class="style-button" type="button" aria-label="切换到 Index Journal 主题" data-style-toggle>Index</button>
         <button class="theme-button" type="button" aria-label="切换到深色主题" data-theme-toggle>◐</button>
       </header>
       <div data-pagefind-body>
@@ -89,25 +93,50 @@ const searchItems = [
     </div>
     <script is:inline>
       (function () {
-        var button = document.querySelector('[data-theme-toggle]');
-        if (!button) return;
+        var themeButton = document.querySelector('[data-theme-toggle]');
+        var styleButton = document.querySelector('[data-style-toggle]');
 
         function currentTheme() {
           return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
         }
 
-        function updateButton(theme) {
-          button.textContent = theme === 'dark' ? '☀' : '◐';
-          button.setAttribute('aria-label', theme === 'dark' ? '切换到浅色主题' : '切换到深色主题');
+        function currentStyleTheme() {
+          return document.documentElement.dataset.styleTheme === 'index' ? 'index' : 'classic';
         }
 
-        updateButton(currentTheme());
-        button.addEventListener('click', function () {
+        function updateThemeButton(theme) {
+          if (!themeButton) return;
+          themeButton.textContent = theme === 'dark' ? '☀' : '◐';
+          themeButton.setAttribute('aria-label', theme === 'dark' ? '切换到浅色主题' : '切换到深色主题');
+        }
+
+        function updateStyleButton(styleTheme) {
+          if (!styleButton) return;
+          styleButton.textContent = styleTheme === 'index' ? 'Classic' : 'Index';
+          styleButton.setAttribute(
+            'aria-label',
+            styleTheme === 'index' ? '切换到 Classic 主题' : '切换到 Index Journal 主题'
+          );
+        }
+
+        updateThemeButton(currentTheme());
+        updateStyleButton(currentStyleTheme());
+
+        if (themeButton) themeButton.addEventListener('click', function () {
           var nextTheme = currentTheme() === 'dark' ? 'light' : 'dark';
           document.documentElement.dataset.theme = nextTheme;
-          updateButton(nextTheme);
+          updateThemeButton(nextTheme);
           try {
             localStorage.setItem('theme', nextTheme);
+          } catch (error) {}
+        });
+
+        if (styleButton) styleButton.addEventListener('click', function () {
+          var nextStyleTheme = currentStyleTheme() === 'index' ? 'classic' : 'index';
+          document.documentElement.dataset.styleTheme = nextStyleTheme;
+          updateStyleButton(nextStyleTheme);
+          try {
+            localStorage.setItem('styleTheme', nextStyleTheme);
           } catch (error) {}
         });
       })();

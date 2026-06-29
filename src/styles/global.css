@@ -1,4 +1,7 @@
 :root {
+  --body-font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+  --display-font: var(--body-font);
   --bg: #f7f8fb;
   --paper: #ffffff;
   --paper-soft: #f1f5f9;
@@ -16,6 +19,26 @@
   --radius: 8px;
   --shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
   color-scheme: light;
+}
+
+html[data-style-theme='index'] {
+  --body-font: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --display-font: "Noto Serif SC", "Songti SC", Georgia, serif;
+  --bg: #ece7d8;
+  --paper: #fbf6e8;
+  --paper-soft: #f4f0e3;
+  --ink: #191817;
+  --muted: #625b50;
+  --soft: #81786a;
+  --line: #d3cab8;
+  --line-soft: #ded6c6;
+  --blue: #776d5f;
+  --cyan: #555047;
+  --green: #59634f;
+  --violet: #6f665a;
+  --code: #25211c;
+  --code-line: #40392f;
+  --shadow: 0 20px 48px rgba(61, 51, 37, 0.12);
 }
 
 html[data-theme='dark'] {
@@ -37,6 +60,24 @@ html[data-theme='dark'] {
   color-scheme: dark;
 }
 
+html[data-theme='dark'][data-style-theme='index'] {
+  --bg: #171613;
+  --paper: #232019;
+  --paper-soft: #2c281f;
+  --ink: #f1eadb;
+  --muted: #c8bdab;
+  --soft: #a99d8c;
+  --line: #4a4236;
+  --line-soft: #383229;
+  --blue: #d2b783;
+  --cyan: #c6b99f;
+  --green: #b4c09d;
+  --violet: #d7c6aa;
+  --code: #0f0e0c;
+  --code-line: #312b22;
+  --shadow: 0 20px 48px rgba(0, 0, 0, 0.34);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -44,9 +85,7 @@ html[data-theme='dark'] {
 html {
   background: var(--bg);
   color: var(--ink);
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--body-font);
   letter-spacing: 0;
 }
 
@@ -57,6 +96,10 @@ body {
     linear-gradient(180deg, rgba(37, 99, 235, 0.05), transparent 360px),
     radial-gradient(circle at 88% 120px, rgba(14, 116, 144, 0.09), transparent 320px),
     var(--bg);
+}
+
+html[data-style-theme='index'] body {
+  background: var(--bg);
 }
 
 a {
@@ -240,7 +283,8 @@ p {
   padding: 10px;
 }
 
-.theme-button {
+.theme-button,
+.style-button {
   align-items: center;
   background: var(--paper);
   border: 1px solid var(--line);
@@ -253,10 +297,39 @@ p {
   width: 34px;
 }
 
+.style-button {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0 10px;
+  width: auto;
+}
+
 .page-content {
   margin: 0 auto;
   max-width: 1440px;
   padding: 68px 6.4vw 90px;
+}
+
+html[data-style-theme='index'] .site-header {
+  background: transparent;
+}
+
+html[data-style-theme='index'] .brand-mark {
+  background: transparent;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+}
+
+html[data-style-theme='index'] .button.primary {
+  box-shadow: none;
+}
+
+html[data-style-theme='index'] .topic-card span,
+html[data-style-theme='index'] .pill,
+html[data-style-theme='index'] .chips span,
+html[data-style-theme='index'] .chips a {
+  background: var(--paper-soft);
+  color: var(--blue);
 }
 
 .hero-grid {
@@ -279,6 +352,7 @@ h1,
 h2,
 h3 {
   color: var(--ink);
+  font-family: var(--display-font);
   letter-spacing: 0;
 }
 
