@@ -22,5 +22,6 @@
 | `src/content/posts/blog-project-architecture.mdx` | `实践` | 博客架构、内容流、发布链路、视觉笔记结构 | 写本博客说明、仓库结构、内容维护规则时参考 |
 | `src/content/posts/blog-code-structure-runtime.mdx` | `实践` | 项目结构、页面入口、文章读取、组件渲染、本地运行和发布流程 | 写本博客代码结构、运行流程、Astro 项目拆解时参考 |
 | `src/content/posts/browser-automation-selectors.md` | `实践` | 选择器优先于坐标点击的判断原则 | 写网页自动化、RPA、可验证操作规范时参考 |
+| `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
 | `src/content/posts/github-pages-deployment-guide.mdx` | `实践` | GitHub Pages、Astro、Actions 部署流程 | 写部署说明、构建发布、静态站点原理时参考 |
 | `src/content/posts/h-pylori-acid-drink-note.mdx` | `生活` | 幽门螺杆菌、胃酸过多和气泡饮料的个人判断笔记 | 写生活判断清单、风险边界提醒、个人健康记录类文章时参考 |
