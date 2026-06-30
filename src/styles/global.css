@@ -925,8 +925,10 @@ h3 {
 }
 
 .filter-panel .chips a {
+  border-bottom: 0;
   display: inline-flex;
   justify-content: center;
+  padding: 7px 12px;
 }
 
 .search-placeholder {
