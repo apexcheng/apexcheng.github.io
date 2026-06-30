@@ -1,0 +1,201 @@
+---
+title: "MDX 文章视觉模式 Gallery"
+description: "用影刀、电商看板、库存周转、退款率和 AI 工作流场景，展示 10 种适合个人博客文章的 MDX 视觉模式。"
+date: 2026-07-01
+category: "视觉实验室"
+tags:
+  - "MDX"
+  - "视觉笔记"
+  - "文章设计"
+  - "视觉实验室"
+minutes: 8
+featured: false
+draft: false
+private: false
+---
+
+import MetricCard from '../../../components/MetricCard.astro';
+import FeatureCard from '../../../components/FeatureCard.astro';
+import VisualGrid from '../../../components/VisualGrid.astro';
+import HighlightBox from '../../../components/HighlightBox.astro';
+import DecisionFlow from '../../../components/DecisionFlow.astro';
+import Mermaid from '../../../components/Mermaid.astro';
+
+这篇 Gallery 给后续 Agent 做参考：同样是写 MDX 文章，不必每次都退回表格和普通流程图。先判断内容关系，再选择视觉模式。
+
+<HighlightBox eyebrow="开头结论" title="视觉模式只解决阅读路径，不替代文章判断">
+  电商数据、影刀流程和 AI 工作流这类文章，最容易写成“表格加流程图”。更好的做法是把指标、对比、问题链路、案例和结论分开，让读者先看到文章骨架。
+</HighlightBox>
+
+## 1. Bento 信息宫格
+
+适合文章开头或章节概览。它表达的是并列模块，不是步骤。
+
+<VisualGrid columns={4}>
+  <FeatureCard title="采集" meta="影刀" description="把订单、售后、库存和推广数据拉到同一张明细表。" />
+  <FeatureCard title="清洗" meta="口径" description="统一店铺、链接、型号、日期和售后原因，避免同名不同义。" />
+  <FeatureCard title="看板" meta="经营" description="先看总览，再下钻到退款率、库存周转和推广消耗。" />
+  <FeatureCard title="复核" meta="人工" description="价格异常、缺货和高退款链接保留人工确认，不让自动化静默决策。" />
+</VisualGrid>
+
+## 2. 指标看板
+
+适合让读者先建立量感。数字少、状态明确时，用指标卡比表格更容易扫描。
+
+<VisualGrid columns={4}>
+  <MetricCard label="退款率" value="6.8%" detail="比上周高 1.4 个百分点，先拆链接和型号。" />
+  <MetricCard label="库存周转" value="42 天" detail="超过目标区间，优先处理滞销库存。" tone="cyan" />
+  <MetricCard label="异常链接" value="7 条" detail="集中在两个店铺和一个新批次。" tone="violet" />
+  <MetricCard label="人工复核" value="2 处" detail="价格和缺货仍需人工确认。" tone="green" />
+</VisualGrid>
+
+## 3. 左右对比面板
+
+适合两个方案的取舍。这里重点是边界，不是字段逐行对齐。
+
+<VisualGrid columns={2}>
+  <FeatureCard title="继续手工日报" meta="旧做法" description="适合数据量小、异常少、只需要记录结果的阶段。">
+    <ul>
+      <li>上手快，不需要改现有习惯。</li>
+      <li>异常发现慢，容易只看到总数。</li>
+      <li>跨店铺、跨型号分析成本高。</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="升级经营看板" meta="新做法" description="适合多店铺、多链接、需要持续追踪异常的阶段。">
+    <ul>
+      <li>退款、库存和推广可以放在同一页判断。</li>
+      <li>需要先统一字段和统计口径。</li>
+      <li>自动化只负责整理，不替代业务判断。</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
+
+## 4. 问题链路图
+
+适合展示异常如何一步步缩小范围。有分支和因果关系时，再用 Mermaid。
+
+<Mermaid
+  title="退款率异常排查链路"
+  caption="先缩小异常范围，再判断是商品、流量还是服务问题。"
+  chart={`flowchart LR
+    A[总退款率升高] --> B[拆店铺]
+    B --> C[拆链接]
+    C --> D[拆型号]
+    D --> E{异常集中吗}
+    E -->|集中| F[查批次和详情页]
+    E -->|分散| G[查流量和客服备注]
+    F --> H[暂停推广并复核库存]
+    G --> I[调整投放和话术]`}
+/>
+
+## 5. 时间线
+
+适合复盘一套方案如何演进。没有分支时，用 `DecisionFlow` 比流程图更轻。
+
+<DecisionFlow
+  title="从日报到经营看板"
+  items={[
+    {
+      label: '阶段 1',
+      title: '先把日报字段固定下来',
+      description: '店铺、链接、型号、日期、售后原因必须稳定，否则后面的自动化只会放大混乱。',
+    },
+    {
+      label: '阶段 2',
+      title: '再用影刀减少重复采集',
+      description: '下载、复制、合并这些重复动作交给流程；异常确认继续留给人。',
+    },
+    {
+      label: '阶段 3',
+      title: '把指标放进同一个看板',
+      description: '退款率、库存周转和推广消耗一起看，避免单一指标误导判断。',
+    },
+    {
+      label: '阶段 4',
+      title: '最后沉淀复盘规则',
+      description: '把每次异常处理后的判断写回规则，减少下次排查时间。',
+    },
+  ]}
+/>
+
+## 6. 案例拆解卡
+
+适合把一个案例拆成背景、动作、结果、复盘。它不是表格，因为每一块都需要一句业务解释。
+
+<VisualGrid columns={2}>
+  <FeatureCard title="背景" meta="CASE" description="某保护套链接退款率连续三天升高，但店铺总退款率只轻微波动。" />
+  <FeatureCard title="动作" meta="ACTION" description="按型号、颜色和客服备注拆开后，发现问题集中在一个新批次。" />
+  <FeatureCard title="结果" meta="RESULT" description="暂停该链接推广，优先处理库存批次，并补充详情页说明。" />
+  <FeatureCard title="复盘" meta="REVIEW" description="看板不能只保留总览，还要能快速下钻到链接、型号和批次。" />
+</VisualGrid>
+
+## 7. 决策树
+
+适合帮助读者选路径。条件明确、有分支时才画树；只有线性动作时用时间线。
+
+<Mermaid
+  title="电商异常先查什么"
+  caption="让读者沿条件走，而不是在一张大表里找答案。"
+  chart={`flowchart TD
+    A{异常来自哪里}
+    A -->|退款率升高| B{是否集中在少数链接}
+    A -->|库存周转变慢| C{是否集中在少数 SKU}
+    A -->|推广消耗升高| D{转化是否同步下降}
+    B -->|是| E[查商品批次和详情页]
+    B -->|否| F[查流量来源和客服备注]
+    C -->|是| G[清理滞销并调整补货]
+    C -->|否| H[复核整体备货策略]
+    D -->|是| I[调整投放和落地页]
+    D -->|否| J[观察退款和客单价]`}
+/>
+
+## 8. AI 工作流问题链路
+
+适合写 Agent 或自动化协作文章。它强调失败在哪里发生，不是为了画完整系统架构。
+
+<DecisionFlow
+  title="AI 工作流失败排查"
+  items={[
+    {
+      label: '输入',
+      title: '素材是否完整',
+      description: '缺少字段口径、样例数据或目标读者时，模型容易给出泛化方案。',
+    },
+    {
+      label: '上下文',
+      title: '规则是否被正确读取',
+      description: '写 MDX、改文章、做可视化前，要先读项目规则和相关示例。',
+    },
+    {
+      label: '工具',
+      title: '结果是否能运行验证',
+      description: '页面渲染、构建命令和测试结果要落到真实命令，不只看文本是否合理。',
+    },
+    {
+      label: '人工',
+      title: '判断是否需要回到作者',
+      description: '事实不确定、口径不确定、风格要改变时，先标注或询问。',
+    },
+  ]}
+/>
+
+## 9. 检查清单块
+
+适合发布前确认。它不是流程，因为这些项可以并行检查。
+
+<HighlightBox eyebrow="检查清单" title="经营看板文章发布前先确认">
+  <ul>
+    <li>指标口径是否说明清楚，尤其是退款率和库存周转。</li>
+    <li>视觉块是否服务文章结构，而不是替代正文。</li>
+    <li>异常链路是否能指导下一步排查。</li>
+    <li>自动化边界是否写明，避免读者误以为流程可以完全替代人工判断。</li>
+  </ul>
+</HighlightBox>
+
+## 10. 文章总结横幅
+
+适合收束全文，给读者带走一个可复用判断。
+
+<HighlightBox eyebrow="总结" title="别把所有结构都画成表格和流程图">
+  个人经验文章更常见的结构，是结论、指标、对比、链路、案例和复盘。表格适合查字段，流程图适合看分支；除此之外，优先选择更贴近文章语气的卡片、时间线和总结块。
+</HighlightBox>
