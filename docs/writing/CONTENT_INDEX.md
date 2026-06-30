@@ -17,6 +17,7 @@
 
 | 文件 | 分类 | 主题概览 | 适合什么时候参考 |
 | --- | --- | --- | --- |
+| `src/content/posts/yingdao-enterprise-rpa-flow-notes.mdx` | `实践` | 影刀企业案例、RPA业务流程、普通版与企业版决策、Mermaid流程图 | 写影刀RPA、企业自动化、普通版/企业版选型、流程图笔记时参考 |
 | `src/content/posts/automation-agent-workflow.mdx` | `实践` | Agent 工作流、失败边界、Mermaid 流程图 | 写 Agent 流程、自动化协作、可维护性文章时参考 |
 | `src/content/posts/blog-project-architecture.mdx` | `实践` | 博客架构、内容流、发布链路、视觉笔记结构 | 写本博客说明、仓库结构、内容维护规则时参考 |
 | `src/content/posts/blog-code-structure-runtime.mdx` | `实践` | 项目结构、页面入口、文章读取、组件渲染、本地运行和发布流程 | 写本博客代码结构、运行流程、Astro 项目拆解时参考 |
