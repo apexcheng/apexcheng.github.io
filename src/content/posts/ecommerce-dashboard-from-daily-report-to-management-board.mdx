@@ -18,9 +18,29 @@ import MetricCard from '../../components/MetricCard.astro';
 import FeatureCard from '../../components/FeatureCard.astro';
 import VisualGrid from '../../components/VisualGrid.astro';
 import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
 本文结论：以前我们把影刀更多用成了“日报机器人”，每天只是把不同日报发到群里；真正更有价值的方向，是把多个店铺、多个型号、多个链接的数据统一成一个电商经营看板，让数据能互相关联、能看趋势、能发现异常、能辅助决策。
+
+## 一眼看懂这次升级
+
+<VisualGrid columns={2}>
+  <FeatureCard title="旧方式：日报机器人" meta="MESSAGE" description="每天把销售、退款、推广、库存、评价等不同日报发到群里。">
+    <ul>
+      <li>数据分散，日报之间不关联</li>
+      <li>只能知道今天发生了什么</li>
+      <li>最后还是要人自己拼判断</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="新方式：经营看板" meta="SYSTEM" description="把多店铺、多型号、多链接、多维数据放进同一套经营口径。">
+    <ul>
+      <li>店铺、型号、链接、库存可以联动</li>
+      <li>能看到异常、趋势和风险</li>
+      <li>直接辅助下一步运营动作</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
 
 <HighlightBox eyebrow="核心变化" title="日报是消息，看板是系统">
   单个日报只能告诉我们“今天发生了什么”；经营看板要进一步回答“哪个店铺异常、哪个型号拖后腿、哪个链接退款高、库存还能卖几天、推广花费有没有带来成交”。
@@ -30,25 +50,35 @@ import Mermaid from '../../components/Mermaid.astro';
 
 最能体现问题的一点，是我们所有日报都发到群里，但每个日报不一样，日报之间也没有关联。
 
-比如：
+<Mermaid
+  title="以前的日报结构：每条线都有用，但互相不连接"
+  caption="问题不是日报没有价值，而是日报之间没有形成经营判断链路。"
+  chart={`flowchart LR
+    A[店铺销售日报] --> A1[只看销售]
+    B[退款日报] --> B1[只看退款]
+    C[推广日报] --> C1[只看花费 / ROI]
+    D[库存提醒] --> D1[只看库存够不够]
+    E[评价统计] --> E1[只看收集结果]
 
-- 店铺销售日报只看店铺当天销售。
-- 退款日报只看某个维度退款率。
-- 推广日报只看花费、点击、ROI。
-- 库存提醒只看库存是否不足。
-- 评价数据只停留在收集和统计。
+    A1 --> F[人工二次判断]
+    B1 --> F
+    C1 --> F
+    D1 --> F
+    E1 --> F`}
+/>
 
 这些日报本身都有用，但如果它们互相不关联，就会变成一堆碎片。最后人还是要自己判断：
 
-```text
-这个店铺销售下降，是推广少了，还是退款高了？
-这个型号退款率高，是全部店铺都高，还是某个店铺高？
-某个链接 ROI 低，是流量问题，还是商品退款/评价问题？
-库存预警是因为卖得快，还是因为发货数据没同步？
-保护套这个类目，到底是卖得好，还是退款风险高？
-```
+<VisualGrid columns={2}>
+  <FeatureCard title="店铺销售下降" meta="店铺问题" description="到底是推广少了，还是退款高了？" />
+  <FeatureCard title="型号退款率高" meta="商品问题" description="是全部店铺都高，还是某个店铺单独高？" />
+  <FeatureCard title="链接 ROI 低" meta="投放问题" description="是流量问题，还是商品退款和评价问题？" />
+  <FeatureCard title="库存出现预警" meta="供应问题" description="是真的卖得快，还是发货数据没有同步？" />
+</VisualGrid>
 
-这时候影刀只是把“人工发消息”换成了“机器人发消息”，还没有真正变成经营系统。
+<HighlightBox eyebrow="结论" title="影刀不应该只停留在自动发日报">
+  这时候影刀只是把“人工发消息”换成了“机器人发消息”，还没有真正变成经营系统。真正有价值的升级，是让数据之间产生关联，让系统辅助判断。
+</HighlightBox>
 
 ## 新看板的目标
 
@@ -99,7 +129,9 @@ import Mermaid from '../../components/Mermaid.astro';
 | 航世未来专卖店 | 中 | 中 | 中 | 正常 | 低 | 正常 | 低 | 正常 | 正常 |
 | 沐圣专卖店 | 低 | 中 | 中 | 正常 | 低 | 正常 | 中 | 关注 | 正常 |
 
-这张表的意义是：**所有店铺用同一套字段、同一套口径、同一套风险判断。**
+<HighlightBox eyebrow="看板价值" title="第一页要回答：今天哪个店铺最值得关注">
+  这张表的意义不是把数据列出来，而是让所有店铺用同一套字段、同一套口径、同一套风险判断。
+</HighlightBox>
 
 不是每个店铺自己发自己的日报，而是直接看：
 
@@ -113,8 +145,27 @@ import Mermaid from '../../components/Mermaid.astro';
 
 单看一个店铺，只能看到它自己的结果；把多个店铺放一起，才能看到关联。
 
+<Mermaid
+  title="销售额 vs 退款率：四象限判断"
+  caption="同一个页面里同时看销售额和退款率，避免只看销售不看售后风险。"
+  chart={`flowchart TB
+    subgraph H[退款率高]
+      A[销售高 + 退款高\n重点排查商品 / 详情页 / 客服话术]
+      B[销售低 + 退款高\n判断是否继续投入]
+    end
+
+    subgraph L[退款率低]
+      C[销售高 + 退款低\n优先放大]
+      D[销售低 + 退款低\n低优先级观察]
+    end
+
+    A --- B
+    C --- D
+    H --> L`}
+/>
+
 <VisualGrid columns={2}>
-  <FeatureCard title="销售额 vs 退款率" meta="店铺关联" description="同一个页面里同时看销售额和退款率，避免只看销售不看售后风险。">
+  <FeatureCard title="销售额 vs 退款率" meta="店铺关联" description="判断店铺是应该放大、排查、收缩，还是先观察。">
     <ul>
       <li>销售高、退款低：优先放大。</li>
       <li>销售高、退款高：重点排查商品和客服话术。</li>
@@ -136,6 +187,10 @@ import Mermaid from '../../components/Mermaid.astro';
 
 商品退款率不能只看单个店铺，也不能只看单个商品。更有价值的是做成“型号跨店退款率矩阵”。
 
+<HighlightBox eyebrow="矩阵视角" title="同一个型号，要横向看所有店铺">
+  只看单店商品退款率，很容易误判问题来源；把型号放到多个店铺里横向比较，才能判断是商品通病、店铺问题，还是链接承接问题。
+</HighlightBox>
+
 | 型号 | BOW外设旗舰店 | BOW数码旗舰店 | BOW电脑配件店 | 航世未来专卖店 | 沐圣专卖店 | 全店均值 | 风险 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | HB354 | 6.3% | 7.1% | 6.6% | 5.9% | 5.4% | 6.3% | 高风险 |
@@ -144,11 +199,11 @@ import Mermaid from '../../components/Mermaid.astro';
 | MB163 | 6.9% | 6.0% | 5.8% | 5.2% | 4.9% | 5.8% | 预警 |
 | 保护套 | 8.5% | 8.1% | 7.3% | 6.7% | 6.2% | 7.4% | 高风险 |
 
-这张表的价值非常大：
-
-- 如果某个型号所有店铺都高，可能是产品、详情页、预期管理或批次问题。
-- 如果某个型号只有一个店铺高，可能是店铺流量、推广人群、客服承接或链接页面问题。
-- 如果保护套这类商品长期高，应该单独拆成类目专题，而不是混在普通商品里看。
+<VisualGrid columns={3}>
+  <FeatureCard title="全店都高" meta="产品层" description="可能是产品、详情页、预期管理或批次问题。" />
+  <FeatureCard title="单店偏高" meta="店铺层" description="可能是店铺流量、推广人群、客服承接或链接页面问题。" />
+  <FeatureCard title="类目长期高" meta="专题层" description="比如保护套，就应该单独拆成类目专题，而不是混在普通商品里看。" />
+</VisualGrid>
 
 ## 第四层：链接退款率看板
 
@@ -170,12 +225,12 @@ import Mermaid from '../../components/Mermaid.astro';
 
 链接退款率要和推广数据放一起看，不能只看退款率。
 
-```text
-链接退款率高 + ROI 高：可以保留投放，但要处理详情页、客服话术和产品问题。
-链接退款率高 + ROI 低：优先降预算或暂停观察。
-链接退款率低 + ROI 高：适合加预算。
-链接退款率低 + 点击率低：可能是素材、标题或展示位置问题。
-```
+<VisualGrid columns={2}>
+  <FeatureCard title="退款高 + ROI 高" meta="保留投放" description="可以继续投，但要处理详情页、客服话术和产品问题。" />
+  <FeatureCard title="退款高 + ROI 低" meta="降预算" description="优先降预算或暂停观察，避免继续放大亏损。" />
+  <FeatureCard title="退款低 + ROI 高" meta="加预算" description="这是相对健康的链接，适合继续放大。" />
+  <FeatureCard title="退款低 + 点击率低" meta="改素材" description="可能是素材、标题或展示位置问题，不一定是商品问题。" />
+</VisualGrid>
 
 ## 第五层：店铺推广数据分析
 
@@ -208,11 +263,26 @@ import Mermaid from '../../components/Mermaid.astro';
   </FeatureCard>
 </VisualGrid>
 
-店铺推广数据看板可以按三层设计：
-
-1. **店铺推广总览**：每个店铺的花费、成交金额、ROI、退款率。
-2. **链接推广明细**：每个链接的点击率、转化率、ROI、每件花费、退款率。
-3. **推广异常提醒**：花费上升但成交不升、ROI 下降、退款率升高、点击率异常下降。
+<DecisionFlow
+  title="店铺推广数据看板的三层设计"
+  items={[
+    {
+      label: 'Overview',
+      title: '店铺推广总览',
+      description: '先看每个店铺的花费、成交金额、ROI、退款率，判断整体投放是否健康。',
+    },
+    {
+      label: 'Detail',
+      title: '链接推广明细',
+      description: '再看每个链接的点击率、转化率、ROI、每件花费和退款率。',
+    },
+    {
+      label: 'Alert',
+      title: '推广异常提醒',
+      description: '重点抓花费上升但成交不升、ROI 下降、退款率升高、点击率异常下降。',
+    },
+  ]}
+/>
 
 这样推广看板就不是“花费日报”，而是能帮助判断预算该加、该减，还是该排查商品问题。
 
@@ -235,11 +305,11 @@ import Mermaid from '../../components/Mermaid.astro';
 
 可以用这套简单规则先跑起来：
 
-```text
-可分配库存 = 可用库存 - 占用库存
-预计可售天数 = 可分配库存 / 近7天日均发货量
-库存周转天数 = 当前库存 / 近30天日均发货量
-```
+<VisualGrid columns={3}>
+  <FeatureCard title="可分配库存" meta="库存基础" description="可用库存 - 占用库存。" />
+  <FeatureCard title="预计可售天数" meta="断货风险" description="可分配库存 / 近7天日均发货量。" />
+  <FeatureCard title="库存周转天数" meta="积压风险" description="当前库存 / 近30天日均发货量。" />
+</VisualGrid>
 
 第一版不用做得太复杂，先把风险分层做出来：
 
@@ -250,7 +320,9 @@ import Mermaid from '../../components/Mermaid.astro';
 | 正常 | 预计可售天数 15 到 60 天 | 正常观察 |
 | 积压 | 库存周转天数大于 90 天 | 看是否需要清仓、降价或减少采购 |
 
-库存看板最重要的是和发货数据联动。因为只有知道各渠道真实发货情况，库存提醒才不会只是“库存数量提醒”，而是能判断“还能卖几天”。
+<HighlightBox eyebrow="库存看板重点" title="不要只提醒库存数量，要判断还能卖几天">
+  库存看板最重要的是和发货数据联动。因为只有知道各渠道真实发货情况，库存提醒才不会只是“库存数量提醒”，而是能判断“还能卖几天”。
+</HighlightBox>
 
 ## 第七层：评价数据和 AI 退款分析
 
@@ -268,14 +340,13 @@ import Mermaid from '../../components/Mermaid.astro';
 
 AI 分析应该直接展示在报表里，而不是单独发一段总结到群里。
 
-示例：
-
-```text
-AI洞察：
-近7天 HB354 和 MB163 在多个店铺退款率偏高，评价负面词集中在“连接不稳定”和“适配问题”。
-X55C 的负面评价主要集中在“包装破损”，建议优先检查包装材料和发货链路。
-保护套退款主要集中在“机型不匹配”，建议详情页增加机型对照表，并优化客服选购引导。
-```
+<HighlightBox eyebrow="AI 洞察示例" title="把评价和退款原因直接嵌进看板">
+  <ul>
+    <li>近 7 天 HB354 和 MB163 在多个店铺退款率偏高，评价负面词集中在“连接不稳定”和“适配问题”。</li>
+    <li>X55C 的负面评价主要集中在“包装破损”，建议优先检查包装材料和发货链路。</li>
+    <li>保护套退款主要集中在“机型不匹配”，建议详情页增加机型对照表，并优化客服选购引导。</li>
+  </ul>
+</HighlightBox>
 
 ## 第八层：保护套数据专题
 
