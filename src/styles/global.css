@@ -1047,6 +1047,13 @@ h3 {
   padding: 10px 0;
 }
 
+.toc-panel a.is-active {
+  border-left: 3px solid #b47a30;
+  color: var(--ink);
+  font-weight: 700;
+  padding-left: 10px;
+}
+
 .article-content {
   min-width: 0;
   overflow-wrap: break-word;

@@ -30,7 +30,7 @@ const { Content, headings } = await render(post);
       <aside class="toc-panel">
         <h2>本文目录</h2>
         {headings.filter((heading) => heading.depth === 2).map((heading) => (
-          <a href={`#${heading.slug}`}>{heading.text}</a>
+          <a class="toc-link" href={`#${heading.slug}`}>{heading.text}</a>
         ))}
       </aside>
     </div>
@@ -45,4 +45,5 @@ const { Content, headings } = await render(post);
       <Content />
     </article>
   </main>
+  <script src="/scripts/active-toc.js" defer></script>
 </SiteLayout>
