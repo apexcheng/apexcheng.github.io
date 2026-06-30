@@ -22,6 +22,7 @@ src/content/posts/visual-lab/
 | 文件 | 用途 |
 | --- | --- |
 | `src/content/posts/visual-lab/mdx-components-demo.mdx` | MDX 文章可视化综合示例，包含提示块、流程步骤、对比表、指标卡和总结块 |
+| `src/content/posts/visual-lab/table-style-demo.mdx` | 文章表格样式示例，包含边框表格、宽表格、业务判断表和字段说明表 |
 | `src/content/posts/visual-lab/code-block-style-lab.mdx` | 代码块样式对比和全局代码块风格选型 |
 | `src/content/posts/visual-lab/context-flow-demo.mdx` | 上下文流程图组件展示 |
 | `src/content/posts/visual-lab/visual-notes-components.mdx` | MetricCard、FeatureCard、VisualGrid、HighlightBox、DecisionFlow 组件示例 |

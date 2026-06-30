@@ -9,6 +9,7 @@
 | 文件 | 分类 | 主题概览 | 适合什么时候参考 |
 | --- | --- | --- | --- |
 | `src/content/posts/visual-lab/mdx-components-demo.mdx` | `视觉实验室` | 提示块、流程步骤、对比表、指标卡、总结块的 MDX 综合示例 | 写 MDX 文章、做文章可视化、给 Agent 学组件组合时优先参考 |
+| `src/content/posts/visual-lab/table-style-demo.mdx` | `视觉实验室` | Markdown 表格边框、表头、宽表格、业务判断表和字段说明表示例 | 写表格型文章、对比表、判断矩阵、字段说明和经营看板表格时参考 |
 | `src/content/posts/visual-lab/visual-notes-components.mdx` | `视觉实验室` | VisualGrid、MetricCard、FeatureCard、DecisionFlow 示例 | 写视觉笔记、MDX 组件化文章、卡片式信息组织时优先参考 |
 | `src/content/posts/visual-lab/mdx-code-diagrams.md` | `视觉实验室` | 代码块、Callout、图表和下载链接用法 | 写展示型技术文章、图表说明、代码块和静态文件链接时参考 |
 | `src/content/posts/visual-lab/context-flow-demo.mdx` | `视觉实验室` | 上下文流程图、ContextFlow 组件、MDX 教学型视觉图 | 写视觉实验、组件展示、AI 基础概念说明时参考 |
