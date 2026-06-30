@@ -42,6 +42,7 @@ describe('front page structure', () => {
   });
 
   it('keeps migrated about page content and assets', () => {
+    expect(aboutSource).toContain('<SiteLayout title="关于我" active="about">');
     expect(aboutSource).toContain('Automation Builder');
     expect(aboutSource).toContain('核心技能');
     expect(aboutSource).toContain('BrianBlog 博客系统');

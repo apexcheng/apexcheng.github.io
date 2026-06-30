@@ -7,7 +7,7 @@ import { withBase } from '../utils/paths';
 
 interface Props {
   title?: string;
-  active?: 'home' | 'articles' | 'projects' | 'search';
+  active?: 'home' | 'articles' | 'projects' | 'search' | 'about';
   description?: string;
 }
 
@@ -82,7 +82,7 @@ const searchItems = [
             </div>
           </div>
           <a href={withBase(siteMeta.rssPath)}>RSS</a>
-          <a href={withBase('/about/')}>关于我</a>
+          <a class:list={[active === 'about' && 'active']} href={withBase('/about/')}>关于我</a>
         </nav>
         <div class="theme-menu" data-theme-menu>
           <button class="theme-button" type="button" aria-label="选择主题" title="选择主题" aria-expanded="false" data-theme-menu-toggle>
