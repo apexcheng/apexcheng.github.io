@@ -1256,16 +1256,45 @@ h3 {
   padding: 30px 30px 12px;
 }
 
+.report-heading {
+  background:
+    radial-gradient(circle at 12% 20%, rgba(14, 165, 233, 0.16), transparent 34%),
+    linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(15, 118, 110, 0.08));
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  margin-bottom: 18px;
+  padding: 22px 24px 22px 76px;
+  position: relative;
+}
+
+.report-heading::before {
+  align-items: center;
+  background: linear-gradient(135deg, #2563eb, #14b8a6);
+  border-radius: 14px;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.18);
+  color: #fff;
+  content: "↳";
+  display: inline-flex;
+  font-size: 26px;
+  font-weight: 900;
+  height: 46px;
+  justify-content: center;
+  left: 20px;
+  position: absolute;
+  top: 22px;
+  width: 46px;
+}
+
 .report-heading h3 {
   color: var(--ink);
   font-size: clamp(21px, 3vw, 27px);
   letter-spacing: -0.04em;
   line-height: 1.2;
-  margin: 0 0 12px;
+  margin: 0 0 10px;
 }
 
 .report-heading p {
-  color: var(--soft);
+  color: var(--muted);
   font-size: 16px;
   line-height: 1.65;
   margin: 0;
@@ -1401,6 +1430,15 @@ html[data-theme='dark'] .report-dashboard {
 
   .report-layers {
     padding: 28px 20px 12px;
+  }
+
+  .report-heading {
+    padding: 76px 18px 20px;
+  }
+
+  .report-heading::before {
+    left: 18px;
+    top: 18px;
   }
 
   .report-layer {
