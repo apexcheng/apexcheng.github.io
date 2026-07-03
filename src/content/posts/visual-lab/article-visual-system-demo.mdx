@@ -1,0 +1,743 @@
+---
+title: "文章视觉系统 Demo：从文字草稿到视觉文章"
+description: "用一篇 Demo 验证新的文章视觉系统：先做视觉方案，再把流程、判断、风险和结论设计成可扫读的 MDX 页面。"
+date: 2026-07-04
+category: "视觉实验室"
+tags:
+  - "MDX"
+  - "文章设计"
+  - "视觉系统"
+  - "视觉实验室"
+minutes: 7
+featured: false
+draft: false
+private: false
+---
+
+这篇 Demo 用来验证一个新规则：**文章不是写完以后再套模板，而是写之前先做视觉编排。**
+
+这里故意不直接复用“功能矩阵、报告看板、决策树”三个现成骨架，而是学习它们的视觉气质：信息分层、标签化、产品界面感、低饱和背景和明确的阅读路径。
+
+<div class="avs-hero">
+  <div class="avs-hero__copy">
+    <span class="avs-kicker">ARTICLE VISUAL SYSTEM</span>
+    <h2>一篇文章，先被设计成一张可读的结构图</h2>
+    <p>读者不应该先进入大段文字，而是先看到：这篇文章讲什么、怎么读、重点在哪里、最后能得到什么。</p>
+  </div>
+  <div class="avs-hero__panel" aria-label="文章视觉设计总览">
+    <div class="avs-panel-row">
+      <span>文章类型</span>
+      <strong>流程 + 决策 Demo</strong>
+    </div>
+    <div class="avs-panel-row">
+      <span>核心关系</span>
+      <strong>草稿 → 视觉方案 → MDX → 审查</strong>
+    </div>
+    <div class="avs-panel-row">
+      <span>视觉重点</span>
+      <strong>总览、流程、路由、风险、检查</strong>
+    </div>
+  </div>
+</div>
+
+<div class="avs-metrics" aria-label="Demo 概览指标">
+  <div class="avs-metric">
+    <span>目标</span>
+    <strong>验证规则</strong>
+    <p>证明文章可以先做视觉方案，而不是后期套模板。</p>
+  </div>
+  <div class="avs-metric is-cyan">
+    <span>结构</span>
+    <strong>5 个锚点</strong>
+    <p>总览、流程、路由、风险、审查。</p>
+  </div>
+  <div class="avs-metric is-violet">
+    <span>方式</span>
+    <strong>专属设计</strong>
+    <p>按内容重做视觉块，不照搬三个模板。</p>
+  </div>
+  <div class="avs-metric is-green">
+    <span>结论</span>
+    <strong>可执行</strong>
+    <p>以后写文章可以按这套顺序检查。</p>
+  </div>
+</div>
+
+## 文章视觉方案
+
+这篇 Demo 本身先给出视觉方案，方便后面审查。
+
+<div class="avs-plan">
+  <div class="avs-plan__head">
+    <span>VISUAL BRIEF</span>
+    <h3>这篇文章最适合被看成一条“视觉编排生产线”</h3>
+    <p>它不是功能介绍，也不是普通教程，而是在展示一篇文章从文字草稿变成视觉文章的过程。</p>
+  </div>
+  <div class="avs-plan__grid">
+    <div>
+      <span class="avs-chip">开头</span>
+      <h4>总览面板</h4>
+      <p>先告诉读者：这篇文章验证什么规则，以及视觉重点是什么。</p>
+    </div>
+    <div>
+      <span class="avs-chip is-cyan">正文 1</span>
+      <h4>编排流水线</h4>
+      <p>展示从素材到 MDX 的五步过程，强调先设计再写正文。</p>
+    </div>
+    <div>
+      <span class="avs-chip is-violet">正文 2</span>
+      <h4>内容关系路由器</h4>
+      <p>说明不同信息关系应该选择不同视觉方式，而不是只套模板。</p>
+    </div>
+    <div>
+      <span class="avs-chip is-green">结尾</span>
+      <h4>审查看板</h4>
+      <p>用状态面板检查这篇 Demo 是否符合新规则。</p>
+    </div>
+  </div>
+</div>
+
+不适合的表达方式：只放一张 Mermaid 流程图，或者把文字塞进几个普通卡片。那样仍然是在“套结构”，没有真正设计阅读路径。
+
+## 1. 从草稿到视觉文章：先编排，再写 MDX
+
+如果一篇文章只有文字，Agent 很容易直接开始写段落。新的做法是先把文章看成一个页面：哪里给读者地图，哪里讲核心逻辑，哪里收束成行动。
+
+<div class="avs-flow" aria-label="文章视觉编排流水线">
+  <div class="avs-flow__item">
+    <span class="avs-flow__index">01</span>
+    <h3>理解素材</h3>
+    <p>先判断这篇文章到底是在讲经验、流程、决策、复盘还是教程。</p>
+    <em>输入：用户想法、旧文、规则</em>
+  </div>
+  <div class="avs-flow__arrow">→</div>
+  <div class="avs-flow__item">
+    <span class="avs-flow__index">02</span>
+    <h3>提炼关系</h3>
+    <p>把长文字拆成流程、判断、对比、分层、风险和结论。</p>
+    <em>输出：信息关系</em>
+  </div>
+  <div class="avs-flow__arrow">→</div>
+  <div class="avs-flow__item is-focus">
+    <span class="avs-flow__index">03</span>
+    <h3>设计视觉方案</h3>
+    <p>决定开头、正文、结尾分别用什么视觉块承载信息。</p>
+    <em>关键：先设计，不先写</em>
+  </div>
+  <div class="avs-flow__arrow">→</div>
+  <div class="avs-flow__item">
+    <span class="avs-flow__index">04</span>
+    <h3>写成 MDX</h3>
+    <p>用短段落承接视觉块，让页面有节奏，不把正文全部塞进组件。</p>
+    <em>输出：可读页面</em>
+  </div>
+  <div class="avs-flow__arrow">→</div>
+  <div class="avs-flow__item">
+    <span class="avs-flow__index">05</span>
+    <h3>视觉审查</h3>
+    <p>检查是否只是套模板，是否真的帮助读者理解文章。</p>
+    <em>输出：审查结论</em>
+  </div>
+</div>
+
+这个流程的重点不是多加几个组件，而是把“文章结构”先可视化出来。
+
+## 2. 内容关系路由器：不同关系用不同表达
+
+真正要固定的不是模板名，而是选择逻辑：**文章在表达什么关系，就用什么视觉表达。**
+
+<div class="avs-router" aria-label="内容关系和视觉方式对应表">
+  <div class="avs-router__main">
+    <span class="avs-kicker">CONTENT ROUTER</span>
+    <h3>先识别关系，再选择视觉块</h3>
+    <p>同一篇文章可以组合多种表达，但每个视觉块只表达一种核心关系。</p>
+  </div>
+  <div class="avs-router__grid">
+    <div class="avs-route-card">
+      <span>FLOW</span>
+      <h4>有先后顺序</h4>
+      <p>用流程轨道、步骤卡或 Pipeline，让读者按顺序走。</p>
+    </div>
+    <div class="avs-route-card">
+      <span>DECISION</span>
+      <h4>有判断条件</h4>
+      <p>用决策路径或分支卡，每条路径落到明确动作。</p>
+    </div>
+    <div class="avs-route-card">
+      <span>COMPARE</span>
+      <h4>有方案取舍</h4>
+      <p>用对比面板，重点写适用边界，而不是堆字段。</p>
+    </div>
+    <div class="avs-route-card">
+      <span>RISK</span>
+      <h4>有问题和风险</h4>
+      <p>用风险分层或状态看板，标出风险、影响和下一步。</p>
+    </div>
+    <div class="avs-route-card">
+      <span>LAYER</span>
+      <h4>有系统分层</h4>
+      <p>用架构面板或文件地图，说明每层职责和边界。</p>
+    </div>
+    <div class="avs-route-card">
+      <span>ACTION</span>
+      <h4>需要落地执行</h4>
+      <p>用行动清单或检查面板，把文章结论变成可操作动作。</p>
+    </div>
+  </div>
+</div>
+
+这就是“学习风格”，而不是“套骨架”：功能矩阵、报告看板和决策树只是三个样板间，真正要学的是这种关系识别能力。
+
+## 3. 失败样式：什么时候看起来好，但其实没遵守规则
+
+有些文章看起来有卡片、有图、有颜色，但仍然没有遵守视觉系统。常见问题是视觉块没有表达信息关系，只是在装饰。
+
+<div class="avs-risk-board" aria-label="视觉失败样式风险看板">
+  <div class="avs-risk-board__head">
+    <span>RISK BOARD</span>
+    <h3>视觉不是越多越好，关键是有没有帮读者理解</h3>
+  </div>
+  <div class="avs-risk-list">
+    <div class="avs-risk-item is-bad">
+      <span>R1</span>
+      <div>
+        <h4>直接套三个模板</h4>
+        <p>文章看起来高级，但每一节都像填空，没有根据主题重新设计。</p>
+      </div>
+      <strong>不合格</strong>
+    </div>
+    <div class="avs-risk-item is-warn">
+      <span>R2</span>
+      <div>
+        <h4>卡片太多，信息太散</h4>
+        <p>读者看到很多块，但不知道主线是什么，反而比纯文字更累。</p>
+      </div>
+      <strong>需改造</strong>
+    </div>
+    <div class="avs-risk-item is-warn">
+      <span>R3</span>
+      <div>
+        <h4>Mermaid 过小过密</h4>
+        <p>复杂关系全塞进一张图，移动端读不清，也没有分层说明。</p>
+      </div>
+      <strong>需拆分</strong>
+    </div>
+    <div class="avs-risk-item is-good">
+      <span>R4</span>
+      <div>
+        <h4>视觉块有明确任务</h4>
+        <p>总览负责建立地图，流程负责顺序，路由负责选择，审查负责结论。</p>
+      </div>
+      <strong>推荐</strong>
+    </div>
+  </div>
+</div>
+
+以后审查文章时，不能只问“有没有可视化”，还要问“这个可视化在表达什么关系”。
+
+## 4. 本篇 Demo 的自审结果
+
+下面直接按新规则审查这篇 Demo。
+
+<div class="avs-review" aria-label="文章视觉系统 Demo 自审结果">
+  <div class="avs-review__summary">
+    <span>SELF REVIEW</span>
+    <h3>结论：基本符合新规则，可以作为后续 Agent 写文章前的参考</h3>
+    <p>这篇文章不是把三个模板拼起来，而是围绕“文章如何视觉编排”重新设计了一套页面结构。</p>
+  </div>
+  <div class="avs-review__grid">
+    <div class="avs-review-card is-pass">
+      <span>PASS</span>
+      <h4>先给了视觉方案</h4>
+      <p>文章先说明类型、核心关系、开头、正文和结尾视觉块。</p>
+    </div>
+    <div class="avs-review-card is-pass">
+      <span>PASS</span>
+      <h4>有开头总览块</h4>
+      <p>开头 Hero 和指标卡让读者先看到文章目标和结构。</p>
+    </div>
+    <div class="avs-review-card is-pass">
+      <span>PASS</span>
+      <h4>有正文核心视觉块</h4>
+      <p>流程轨道、关系路由器和风险看板分别表达不同信息关系。</p>
+    </div>
+    <div class="avs-review-card is-pass">
+      <span>PASS</span>
+      <h4>有结尾审查块</h4>
+      <p>最后用自审面板把规则落到检查项，而不是只写一句总结。</p>
+    </div>
+    <div class="avs-review-card is-watch">
+      <span>WATCH</span>
+      <h4>视觉密度偏高</h4>
+      <p>作为 Demo 可以接受；正式文章要根据长度控制模块数量。</p>
+    </div>
+    <div class="avs-review-card is-pass">
+      <span>PASS</span>
+      <h4>没有照搬固定骨架</h4>
+      <p>学习了产品界面感和标签化表达，但没有直接复用三个现成模板。</p>
+    </div>
+  </div>
+</div>
+
+## 5. 可以沉淀给后续文章的规则
+
+这篇 Demo 最有价值的地方不是某个 HTML 结构，而是这套判断顺序：
+
+<div class="avs-final">
+  <span>FINAL RULE</span>
+  <h3>每篇文章先问：它最适合被看成什么图？</h3>
+  <ul>
+    <li>如果是流程，就设计成一条生产线。</li>
+    <li>如果是判断，就设计成一条决策路径。</li>
+    <li>如果是复盘，就设计成一个状态看板。</li>
+    <li>如果是教程，就设计成学习路线和检查清单。</li>
+    <li>如果是生活经验，就设计成情况、判断、边界和行动记录。</li>
+  </ul>
+</div>
+
+<style>{`
+.avs-hero,
+.avs-plan,
+.avs-router,
+.avs-risk-board,
+.avs-review,
+.avs-final {
+  margin: 1.4rem 0;
+  border: 1px solid rgba(96, 125, 139, 0.18);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(125, 211, 252, 0.22), transparent 34%),
+    radial-gradient(circle at 88% 12%, rgba(196, 181, 253, 0.2), transparent 30%),
+    linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.82));
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+}
+
+.avs-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 1rem;
+  padding: 1.4rem;
+  align-items: stretch;
+}
+
+.avs-kicker,
+.avs-plan__head span,
+.avs-router__main span,
+.avs-risk-board__head span,
+.avs-review__summary span,
+.avs-final span {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.22rem 0.62rem;
+  background: rgba(15, 23, 42, 0.06);
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.avs-hero h2,
+.avs-plan h3,
+.avs-router h3,
+.avs-risk-board h3,
+.avs-review h3,
+.avs-final h3 {
+  margin: 0.75rem 0 0.45rem;
+  color: #0f172a;
+  line-height: 1.18;
+}
+
+.avs-hero p,
+.avs-plan p,
+.avs-router p,
+.avs-risk-board p,
+.avs-review p,
+.avs-final p {
+  color: #475569;
+}
+
+.avs-hero__copy {
+  padding: 0.6rem;
+}
+
+.avs-hero__panel {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(10px);
+}
+
+.avs-panel-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 0.85rem;
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.88);
+}
+
+.avs-panel-row span {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.avs-panel-row strong {
+  color: #0f172a;
+  text-align: right;
+}
+
+.avs-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.avs-metric {
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 22px;
+  padding: 1rem;
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.96), rgba(255, 255, 255, 0.76));
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06);
+}
+
+.avs-metric.is-cyan {
+  border-color: rgba(6, 182, 212, 0.24);
+  background: linear-gradient(180deg, rgba(236, 254, 255, 0.96), rgba(255, 255, 255, 0.76));
+}
+
+.avs-metric.is-violet {
+  border-color: rgba(139, 92, 246, 0.22);
+  background: linear-gradient(180deg, rgba(245, 243, 255, 0.96), rgba(255, 255, 255, 0.76));
+}
+
+.avs-metric.is-green {
+  border-color: rgba(34, 197, 94, 0.24);
+  background: linear-gradient(180deg, rgba(240, 253, 244, 0.96), rgba(255, 255, 255, 0.76));
+}
+
+.avs-metric span,
+.avs-route-card span,
+.avs-review-card span {
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.avs-metric strong {
+  display: block;
+  margin: 0.4rem 0;
+  color: #0f172a;
+  font-size: 1.28rem;
+}
+
+.avs-metric p,
+.avs-route-card p,
+.avs-review-card p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.avs-plan,
+.avs-router,
+.avs-risk-board,
+.avs-review,
+.avs-final {
+  padding: 1.25rem;
+}
+
+.avs-plan__grid,
+.avs-router__grid,
+.avs-review__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.avs-plan__grid > div,
+.avs-route-card,
+.avs-review-card {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 20px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.avs-plan__grid h4,
+.avs-route-card h4,
+.avs-review-card h4 {
+  margin: 0.55rem 0 0.32rem;
+  color: #0f172a;
+}
+
+.avs-chip {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  color: #1d4ed8;
+  background: rgba(219, 234, 254, 0.8);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.avs-chip.is-cyan {
+  color: #0e7490;
+  background: rgba(207, 250, 254, 0.8);
+}
+
+.avs-chip.is-violet {
+  color: #6d28d9;
+  background: rgba(237, 233, 254, 0.85);
+}
+
+.avs-chip.is-green {
+  color: #15803d;
+  background: rgba(220, 252, 231, 0.85);
+}
+
+.avs-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr auto 1fr;
+  gap: 0.5rem;
+  align-items: stretch;
+  margin: 1.2rem 0;
+  padding: 1rem;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+
+.avs-flow__item {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 20px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.avs-flow__item.is-focus {
+  background: linear-gradient(180deg, rgba(129, 140, 248, 0.24), rgba(14, 165, 233, 0.12));
+  border-color: rgba(129, 140, 248, 0.5);
+}
+
+.avs-flow__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #bfdbfe;
+  font-weight: 900;
+  font-size: 0.78rem;
+}
+
+.avs-flow h3 {
+  margin: 0.7rem 0 0.4rem;
+  color: #f8fafc;
+  font-size: 1rem;
+}
+
+.avs-flow p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.88rem;
+}
+
+.avs-flow em {
+  display: block;
+  margin-top: 0.7rem;
+  color: #93c5fd;
+  font-size: 0.76rem;
+  font-style: normal;
+}
+
+.avs-flow__arrow {
+  display: flex;
+  align-items: center;
+  color: #93c5fd;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.avs-router {
+  background:
+    radial-gradient(circle at 6% 12%, rgba(14, 165, 233, 0.18), transparent 30%),
+    linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(239, 246, 255, 0.88));
+}
+
+.avs-router__grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.avs-route-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.avs-route-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #38bdf8, #8b5cf6);
+  opacity: 0.7;
+}
+
+.avs-risk-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.avs-risk-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.8rem;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  padding: 0.85rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.avs-risk-item > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 14px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.avs-risk-item h4 {
+  margin: 0 0 0.2rem;
+  color: #0f172a;
+}
+
+.avs-risk-item p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.avs-risk-item strong {
+  border-radius: 999px;
+  padding: 0.24rem 0.58rem;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+.avs-risk-item.is-bad > span,
+.avs-risk-item.is-bad strong {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.avs-risk-item.is-warn > span,
+.avs-risk-item.is-warn strong {
+  color: #a16207;
+  background: #fef3c7;
+}
+
+.avs-risk-item.is-good > span,
+.avs-risk-item.is-good strong {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.avs-review {
+  background:
+    radial-gradient(circle at 10% 10%, rgba(34, 197, 94, 0.14), transparent 30%),
+    linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(240, 253, 244, 0.82));
+}
+
+.avs-review-card.is-pass span {
+  color: #15803d;
+}
+
+.avs-review-card.is-watch span {
+  color: #a16207;
+}
+
+.avs-final {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.95));
+  color: #e2e8f0;
+}
+
+.avs-final span {
+  background: rgba(255, 255, 255, 0.08);
+  color: #bfdbfe;
+}
+
+.avs-final h3 {
+  color: #f8fafc;
+}
+
+.avs-final ul {
+  margin: 1rem 0 0;
+  padding-left: 1.2rem;
+  color: #cbd5e1;
+}
+
+.avs-final li + li {
+  margin-top: 0.45rem;
+}
+
+@media (max-width: 960px) {
+  .avs-hero,
+  .avs-metrics,
+  .avs-plan__grid,
+  .avs-router__grid,
+  .avs-review__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .avs-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .avs-flow__arrow {
+    justify-content: center;
+    transform: rotate(90deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .avs-hero,
+  .avs-plan,
+  .avs-router,
+  .avs-risk-board,
+  .avs-review,
+  .avs-final,
+  .avs-flow {
+    border-radius: 20px;
+    padding: 0.9rem;
+  }
+
+  .avs-risk-item {
+    grid-template-columns: 1fr;
+  }
+
+  .avs-risk-item strong {
+    width: fit-content;
+  }
+
+  .avs-panel-row {
+    display: grid;
+  }
+
+  .avs-panel-row strong {
+    text-align: left;
+  }
+}
+`}</style>
