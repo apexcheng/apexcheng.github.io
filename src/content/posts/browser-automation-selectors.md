@@ -45,13 +45,11 @@ private: false
       <p>无法稳定定位时再谨慎使用。</p>
     </div>
   </div>
-
   <div class="report-layers">
     <div class="report-heading">
       <h3>自动化点击的四层防线</h3>
       <p>目标不是“点一下”，而是让脚本知道自己点的是什么、点完发生了什么。</p>
     </div>
-
     <div class="report-layer">
       <span class="layer-index green">L1</span>
       <div>
