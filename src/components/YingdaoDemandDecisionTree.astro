@@ -1,0 +1,334 @@
+---
+const mobileSteps = [
+  ['01', '高频重复吗？', '不是高频，就先不做 RPA，手动、模板或表格规则更合适。'],
+  ['02', '规则清楚吗？', '规则不清楚，先整理 SOP，不急着开发应用。'],
+  ['03', '跨系统或多人协作吗？', '不复杂，可以先用普通版影刀小范围试跑。'],
+  ['04', '失败影响订单 / 售后 / 财务吗？', '影响核心业务，就必须有人工复核、异常通知和企业级兜底。'],
+];
+---
+
+<section class="yingdao-demand-tree" aria-label="影刀需求是否值得做的决策树">
+  <header class="tree-head">
+    <span>Decision Tree</span>
+    <h2>影刀需求是否值得做？</h2>
+    <p>先判断需求质量，再判断自动化方式；不要让影刀替业务承接不清楚、不稳定、没人维护的需求。</p>
+  </header>
+
+  <div class="tree-desktop" aria-hidden="true">
+    <div class="spine"></div>
+
+    <article class="node start">
+      <span>入口</span>
+      <strong>收到一个新自动化需求</strong>
+      <p>先别问“能不能做”，先问“值不值得做”。</p>
+    </article>
+
+    <article class="node question q1">
+      <span>Q1</span>
+      <strong>是不是高频重复？</strong>
+      <p>每天、每周反复出现，才值得进入自动化判断。</p>
+    </article>
+    <article class="result no r1">
+      <span>否</span>
+      <strong>先不做 RPA</strong>
+      <p>一次性、低频、临时需求，优先手动处理或做成表格模板。</p>
+    </article>
+
+    <article class="node question q2">
+      <span>Q2</span>
+      <strong>规则是否清楚？</strong>
+      <p>输入、输出、判断标准、异常场景都要说得清楚。</p>
+    </article>
+    <article class="result no r2">
+      <span>否</span>
+      <strong>先整理 SOP</strong>
+      <p>规则没跑通之前，不要急着开发，否则只是把混乱自动化。</p>
+    </article>
+
+    <article class="node question q3">
+      <span>Q3</span>
+      <strong>是否跨系统 / 多人协作？</strong>
+      <p>只在一个后台内重复操作，和跨平台、跨角色的复杂度不同。</p>
+    </article>
+    <article class="result yes r3">
+      <span>否</span>
+      <strong>普通版先试跑</strong>
+      <p>小范围、低风险、单人负责的流程，可以先用普通版验证价值。</p>
+    </article>
+
+    <article class="node question q4">
+      <span>Q4</span>
+      <strong>失败后风险高不高？</strong>
+      <p>是否影响订单、退款、发货、财务或客户体验。</p>
+    </article>
+    <article class="result warn r4-left">
+      <span>低</span>
+      <strong>试运行 + 负责人</strong>
+      <p>可以先小范围上线，但必须有人看结果、能回滚。</p>
+    </article>
+    <article class="result critical r4-right">
+      <span>高</span>
+      <strong>企业化兜底</strong>
+      <p>需要异常通知、日志、权限、人工复核，必要时评估企业版或接口化。</p>
+    </article>
+  </div>
+
+  <div class="mobile-flow">
+    {mobileSteps.map(([index, title, detail]) => (
+      <article>
+        <span>{index}</span>
+        <strong>{title}</strong>
+        <p>{detail}</p>
+      </article>
+    ))}
+  </div>
+</section>
+
+<style>
+  .yingdao-demand-tree {
+    container-type: inline-size;
+    background:
+      radial-gradient(circle at 50% 8%, rgba(34, 197, 94, 0.18), transparent 28%),
+      radial-gradient(circle at 8% 62%, rgba(245, 158, 11, 0.14), transparent 30%),
+      radial-gradient(circle at 96% 70%, rgba(59, 130, 246, 0.17), transparent 32%),
+      linear-gradient(135deg, #06111f 0%, #0f172a 52%, #080b14 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 24px;
+    box-shadow: 0 30px 72px rgba(15, 23, 42, 0.28);
+    color: #e5edf7;
+    margin: 30px 0;
+    overflow: hidden;
+    padding: clamp(22px, 4vw, 38px);
+  }
+
+  .tree-head {
+    margin: 0 auto 24px;
+    max-width: 760px;
+    text-align: center;
+  }
+
+  .tree-head span {
+    color: #86efac;
+    display: block;
+    font-size: 13px;
+    font-weight: 820;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .tree-head h2 {
+    color: #fff;
+    font-size: clamp(28px, 4vw, 42px);
+    letter-spacing: -0.06em;
+    line-height: 1.15;
+    margin: 0 0 12px;
+  }
+
+  .tree-head p {
+    color: #b7c4dc;
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  .tree-desktop {
+    height: 780px;
+    margin: 0 auto;
+    max-width: 1040px;
+    position: relative;
+  }
+
+  .tree-desktop::before,
+  .tree-desktop::after {
+    border-radius: 999px;
+    content: '';
+    height: 3px;
+    position: absolute;
+    z-index: 0;
+  }
+
+  .tree-desktop::before {
+    background: rgba(248, 113, 113, 0.75);
+    left: calc(50% - 230px);
+    top: 342px;
+    width: 230px;
+  }
+
+  .tree-desktop::after {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.75), rgba(34, 197, 94, 0.75));
+    left: 28%;
+    top: 704px;
+    width: 44%;
+  }
+
+  .spine {
+    background: linear-gradient(#60a5fa, #22c55e, #f59e0b);
+    border-radius: 999px;
+    height: 650px;
+    left: 50%;
+    opacity: 0.7;
+    position: absolute;
+    top: 78px;
+    transform: translateX(-50%);
+    width: 3px;
+  }
+
+  .spine::before,
+  .spine::after {
+    background: currentColor;
+    border-radius: 999px;
+    content: '';
+    height: 3px;
+    position: absolute;
+    width: 230px;
+  }
+
+  .spine::before {
+    color: rgba(248, 113, 113, 0.75);
+    left: -230px;
+    top: 104px;
+  }
+
+  .spine::after {
+    color: rgba(96, 165, 250, 0.75);
+    left: 0;
+    top: 444px;
+  }
+
+  .node,
+  .result {
+    backdrop-filter: blur(18px);
+    border-radius: 18px;
+    position: absolute;
+    z-index: 1;
+  }
+
+  .node {
+    background: rgba(15, 23, 42, 0.88);
+    border: 1px solid rgba(96, 165, 250, 0.34);
+    box-shadow: 0 0 34px rgba(96, 165, 250, 0.1);
+    left: 50%;
+    padding: 16px 20px;
+    text-align: center;
+    transform: translateX(-50%);
+    width: 300px;
+  }
+
+  .question {
+    background:
+      linear-gradient(rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.92)) padding-box,
+      linear-gradient(135deg, rgba(96, 165, 250, 0.65), rgba(34, 197, 94, 0.45)) border-box;
+    border: 2px solid transparent;
+    clip-path: polygon(9% 0, 91% 0, 100% 50%, 91% 100%, 9% 100%, 0 50%);
+    min-height: 94px;
+    padding: 20px 32px;
+    width: 330px;
+  }
+
+  .start { top: 0; }
+  .q1 { top: 132px; }
+  .q2 { top: 276px; }
+  .q3 { top: 420px; }
+  .q4 { top: 564px; }
+
+  .node span,
+  .result span {
+    color: #86efac;
+    display: block;
+    font-size: 12px;
+    font-weight: 860;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .node strong,
+  .result strong {
+    color: #fff;
+    display: block;
+    font-size: 18px;
+    letter-spacing: -0.03em;
+    line-height: 1.25;
+  }
+
+  .node p,
+  .result p {
+    color: #b7c4dc;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 8px 0 0;
+  }
+
+  .result {
+    background: rgba(15, 23, 42, 0.82);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    padding: 16px 18px;
+    width: 268px;
+  }
+
+  .result.no {
+    border-color: rgba(248, 113, 113, 0.38);
+    box-shadow: 0 0 28px rgba(248, 113, 113, 0.09);
+    left: 0;
+  }
+
+  .result.yes {
+    border-color: rgba(96, 165, 250, 0.42);
+    box-shadow: 0 0 28px rgba(96, 165, 250, 0.09);
+    right: 0;
+  }
+
+  .result.warn {
+    border-color: rgba(245, 158, 11, 0.42);
+    bottom: 0;
+    left: 13%;
+  }
+
+  .result.critical {
+    border-color: rgba(34, 197, 94, 0.44);
+    bottom: 0;
+    right: 13%;
+  }
+
+  .r1 { top: 144px; }
+  .r2 { top: 300px; }
+  .r3 { top: 432px; }
+
+  .mobile-flow { display: none; }
+
+  @container (max-width: 860px) {
+    .tree-desktop { display: none; }
+    .mobile-flow {
+      display: grid;
+      gap: 14px;
+      margin-top: 22px;
+    }
+    .mobile-flow article {
+      background: rgba(15, 23, 42, 0.84);
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 18px;
+      padding: 18px;
+    }
+    .mobile-flow span {
+      color: #86efac;
+      display: block;
+      font-size: 12px;
+      font-weight: 840;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .mobile-flow strong {
+      color: #fff;
+      display: block;
+      font-size: 19px;
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+    .mobile-flow p {
+      color: #b7c4dc;
+      font-size: 14px;
+      line-height: 1.75;
+      margin: 0;
+    }
+  }
+</style>
