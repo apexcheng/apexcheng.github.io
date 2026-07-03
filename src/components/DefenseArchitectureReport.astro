@@ -1,0 +1,326 @@
+---
+type Tone = 'default' | 'success' | 'danger';
+type LayerTone = 'green' | 'cyan' | 'blue' | 'violet';
+
+interface MetricItem {
+  label: string;
+  value: string;
+  detail: string;
+  tone?: Tone;
+}
+
+interface LayerItem {
+  level: string;
+  title: string;
+  description: string;
+  tag: string;
+  tone: LayerTone;
+}
+
+const metrics: MetricItem[] = [
+  { label: '综合评级', value: 'B+', detail: '85/100 · 防御良好' },
+  { label: '拦截率', value: '13/15', detail: '≈ 87% 威胁被阻断', tone: 'success' },
+  { label: '发现漏洞', value: '3', detail: '2 高危 · 1 中危', tone: 'danger' },
+  { label: '防御层级', value: '5', detail: '纵深架构验证' },
+];
+
+const layers: LayerItem[] = [
+  {
+    level: 'L1',
+    title: 'Tool-specific Guard',
+    description: 'SSH 私钥遮蔽 · .env key mask · sudo 密码屏障 · terminal stdout 过滤',
+    tag: 'T5b / T8 / T9',
+    tone: 'green',
+  },
+  {
+    level: 'L2',
+    title: 'Command Normalization',
+    description: 'ANSI strip + NFKC Unicode 归一化（防全角/同形字符混淆）',
+    tag: 'T10',
+    tone: 'cyan',
+  },
+  {
+    level: 'L3',
+    title: 'Pattern Matching',
+    description: '30+ 正则规则覆盖 rm -rf / fork bomb / curl|bash / chmod 777 / mkfs / dd / DROP TABLE 等',
+    tag: 'T1 / T3',
+    tone: 'blue',
+  },
+  {
+    level: 'L4',
+    title: 'Model Semantic Understanding',
+    description: 'LLM 理解意图，即使命令不在 pattern 列表也能识别危险（如 Python os.fork）',
+    tag: 'T2 / T15',
+    tone: 'violet',
+  },
+];
+---
+
+<section class="defense-report" aria-label="纵深防御架构报告">
+  <div class="defense-metrics">
+    {metrics.map((metric) => (
+      <article class:list={["defense-metric", `tone-${metric.tone ?? 'default'}`]}>
+        <span>{metric.label}</span>
+        <strong>{metric.value}</strong>
+        <p>{metric.detail}</p>
+      </article>
+    ))}
+  </div>
+
+  <div class="defense-body">
+    <header class="defense-heading">
+      <h3><span aria-hidden="true">🏛️</span> 纵深防御架构（实测验证）</h3>
+      <p>Hermes 部署了 5 层独立防御，攻击者需要同时绕过全部才能得手</p>
+    </header>
+
+    <div class="defense-layers">
+      {layers.map((layer) => (
+        <article class="defense-layer">
+          <span class:list={["layer-badge", `layer-${layer.tone}`]}>{layer.level}</span>
+          <div class="layer-main">
+            <h4>{layer.title}</h4>
+            <p>{layer.description}</p>
+          </div>
+          <span class="layer-tag">{layer.tag}</span>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .defense-report {
+    background: var(--paper);
+    border: 1px solid var(--line-soft);
+    border-radius: 18px;
+    box-shadow: 0 22px 54px rgba(15, 23, 42, 0.06);
+    margin: 30px 0;
+    overflow: hidden;
+  }
+
+  .defense-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 30px 36px;
+  }
+
+  .defense-metric {
+    border-right: 1px solid var(--line-soft);
+    min-height: 112px;
+    padding: 2px 34px;
+  }
+
+  .defense-metric:first-child {
+    padding-left: 0;
+  }
+
+  .defense-metric:last-child {
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .defense-metric span {
+    color: var(--soft);
+    display: block;
+    font-size: 15px;
+    font-weight: 720;
+    margin-bottom: 12px;
+  }
+
+  .defense-metric strong {
+    color: var(--ink);
+    display: block;
+    font-size: clamp(36px, 5vw, 50px);
+    letter-spacing: -0.06em;
+    line-height: 1;
+  }
+
+  .defense-metric p {
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.45;
+    margin: 14px 0 0;
+  }
+
+  .defense-metric.tone-success strong {
+    color: #16a34a;
+  }
+
+  .defense-metric.tone-danger strong {
+    color: #dc2626;
+  }
+
+  .defense-body {
+    border-top: 1px solid var(--line-soft);
+    padding: 34px 36px 18px;
+  }
+
+  .defense-heading h3 {
+    align-items: center;
+    color: var(--ink);
+    display: flex;
+    font-size: clamp(22px, 3vw, 28px);
+    gap: 10px;
+    letter-spacing: -0.04em;
+    line-height: 1.2;
+    margin: 0 0 16px;
+  }
+
+  .defense-heading p {
+    color: var(--soft);
+    font-size: 18px;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  .defense-layers {
+    margin-top: 34px;
+  }
+
+  .defense-layer {
+    align-items: center;
+    border-bottom: 1px solid var(--line-soft);
+    display: grid;
+    gap: 22px;
+    grid-template-columns: 74px minmax(0, 1fr) auto;
+    min-height: 108px;
+  }
+
+  .defense-layer:last-child {
+    border-bottom: 0;
+  }
+
+  .layer-badge {
+    align-items: center;
+    border-radius: 14px;
+    box-shadow: 0 14px 28px var(--badge-shadow);
+    color: #fff;
+    display: inline-flex;
+    font-size: 22px;
+    font-weight: 840;
+    height: 56px;
+    justify-content: center;
+    width: 56px;
+  }
+
+  .layer-green {
+    background: linear-gradient(135deg, #10b981, #0ea5a4);
+    --badge-shadow: rgba(16, 185, 129, 0.2);
+  }
+
+  .layer-cyan {
+    background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+    --badge-shadow: rgba(14, 165, 233, 0.2);
+  }
+
+  .layer-blue {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    --badge-shadow: rgba(37, 99, 235, 0.2);
+  }
+
+  .layer-violet {
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    --badge-shadow: rgba(124, 58, 237, 0.2);
+  }
+
+  .layer-main h4 {
+    color: var(--ink);
+    font-size: 20px;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+    margin: 0 0 10px;
+  }
+
+  .layer-main p {
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  .layer-tag {
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    border-radius: 999px;
+    color: #059669;
+    font-size: 15px;
+    font-weight: 780;
+    justify-self: end;
+    min-width: 78px;
+    padding: 7px 16px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  html[data-theme='dark'] .defense-report {
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.24);
+  }
+
+  @media (max-width: 980px) {
+    .defense-metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      padding: 28px;
+    }
+
+    .defense-metric {
+      border-bottom: 1px solid var(--line-soft);
+      min-height: 126px;
+      padding: 18px 24px;
+    }
+
+    .defense-metric:nth-child(2n) {
+      border-right: 0;
+    }
+
+    .defense-metric:nth-last-child(-n + 2) {
+      border-bottom: 0;
+    }
+
+    .defense-metric:first-child {
+      padding-left: 24px;
+    }
+
+    .defense-metric:last-child {
+      padding-right: 24px;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .defense-metrics {
+      grid-template-columns: 1fr;
+      padding: 20px;
+    }
+
+    .defense-metric,
+    .defense-metric:nth-child(2n),
+    .defense-metric:nth-last-child(-n + 2) {
+      border-bottom: 1px solid var(--line-soft);
+      border-right: 0;
+      padding: 18px 0;
+    }
+
+    .defense-metric:last-child {
+      border-bottom: 0;
+      padding-right: 0;
+    }
+
+    .defense-metric:first-child {
+      padding-left: 0;
+    }
+
+    .defense-body {
+      padding: 28px 20px 12px;
+    }
+
+    .defense-layer {
+      align-items: start;
+      gap: 14px;
+      grid-template-columns: 56px minmax(0, 1fr);
+      padding: 20px 0;
+    }
+
+    .layer-tag {
+      grid-column: 2;
+      justify-self: start;
+    }
+  }
+</style>

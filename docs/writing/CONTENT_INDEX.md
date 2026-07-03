@@ -9,6 +9,7 @@
 | 文件 | 分类 | 主题概览 | 适合什么时候参考 |
 | --- | --- | --- | --- |
 | `src/content/posts/visual-lab/mdx-design-patterns-gallery.mdx` | `视觉实验室` | 开头结论卡、Bento 宫格、指标看板、对比面板、问题链路、时间线、案例拆解卡、决策树等文章视觉模式 | 写 MDX 文章、做复杂排版、判断什么时候不用表格或流程图时优先参考 |
+| `src/content/posts/visual-lab/screenshot-mdx-replica-demo.mdx` | `视觉实验室` | 截图风格 MDX 复刻示例，包含 Agent 功能矩阵、安全防御报告和搜索工具决策树三类定制组件 | 需要复刻产品功能区、报告看板、安全验证页、深色信息图等高视觉密度内容时参考 |
 | `src/content/posts/visual-lab/mdx-components-demo.mdx` | `视觉实验室` | 提示块、流程步骤、对比表、指标卡、总结块的 MDX 综合示例 | 写 MDX 文章、做文章可视化、给 Agent 学组件组合时优先参考 |
 | `src/content/posts/visual-lab/table-style-demo.mdx` | `视觉实验室` | Markdown 表格边框、表头、宽表格、业务判断表和字段说明表示例 | 写表格型文章、对比表、判断矩阵、字段说明和经营看板表格时参考 |
 | `src/content/posts/visual-lab/visual-notes-components.mdx` | `视觉实验室` | VisualGrid、MetricCard、FeatureCard、DecisionFlow 示例 | 写视觉笔记、MDX 组件化文章、卡片式信息组织时优先参考 |

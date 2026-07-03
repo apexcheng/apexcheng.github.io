@@ -22,6 +22,7 @@ src/content/posts/visual-lab/
 | 文件 | 用途 |
 | --- | --- |
 | `src/content/posts/visual-lab/mdx-design-patterns-gallery.mdx` | MDX 文章视觉模式参考，展示结论卡、Bento、指标看板、对比面板、问题链路、时间线、案例拆解、决策树和总结横幅 |
+| `src/content/posts/visual-lab/screenshot-mdx-replica-demo.mdx` | 截图风格 MDX 复刻示例，展示 Agent 功能矩阵、安全防御报告和搜索工具决策树三类定制视觉组件 |
 | `src/content/posts/visual-lab/mdx-components-demo.mdx` | MDX 文章可视化综合示例，包含提示块、流程步骤、对比表、指标卡和总结块 |
 | `src/content/posts/visual-lab/table-style-demo.mdx` | 文章表格样式示例，包含边框表格、宽表格、业务判断表和字段说明表 |
 | `src/content/posts/visual-lab/code-block-style-lab.mdx` | 代码块样式对比和全局代码块风格选型 |

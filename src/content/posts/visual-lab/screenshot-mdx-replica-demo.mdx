@@ -1,0 +1,57 @@
+---
+title: "截图风格 MDX 复刻 Demo"
+description: "用 Astro 组件复刻功能矩阵、安全防御报告和搜索决策树三类截图视觉效果。"
+date: 2026-07-03
+category: "视觉实验室"
+tags:
+  - "MDX"
+  - "视觉实验室"
+  - "组件"
+  - "截图复刻"
+minutes: 6
+featured: false
+draft: false
+private: false
+---
+
+import AgentFeatureMatrix from '../../../components/AgentFeatureMatrix.astro';
+import DefenseArchitectureReport from '../../../components/DefenseArchitectureReport.astro';
+import SearchDecisionTree from '../../../components/SearchDecisionTree.astro';
+
+这篇 Demo 用来验证：不用直接放截图，也可以在博客 MDX 里做出接近产品页、报告页和信息图的视觉效果。
+
+## 图一：功能矩阵
+
+<AgentFeatureMatrix />
+
+## 图二：安全防御报告
+
+<DefenseArchitectureReport />
+
+## 图三：搜索工具决策树
+
+<SearchDecisionTree />
+
+## 使用方式
+
+正式文章里需要这些效果时，直接按文章层级导入组件：
+
+```mdx
+import AgentFeatureMatrix from '../../components/AgentFeatureMatrix.astro';
+import DefenseArchitectureReport from '../../components/DefenseArchitectureReport.astro';
+import SearchDecisionTree from '../../components/SearchDecisionTree.astro';
+
+<AgentFeatureMatrix />
+
+<DefenseArchitectureReport />
+
+<SearchDecisionTree />
+```
+
+如果文章位于 `src/content/posts/visual-lab/`，导入路径改成：
+
+```mdx
+import AgentFeatureMatrix from '../../../components/AgentFeatureMatrix.astro';
+import DefenseArchitectureReport from '../../../components/DefenseArchitectureReport.astro';
+import SearchDecisionTree from '../../../components/SearchDecisionTree.astro';
+```

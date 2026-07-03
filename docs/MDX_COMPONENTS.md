@@ -161,6 +161,58 @@ import ContextFlow from '../../../components/ContextFlow.astro';
 - 这是更具体的教学型组件，不适合作为通用流程图。
 - 使用前先确认主题确实和上下文机制有关。
 
+## AgentFeatureMatrix
+
+适合场景：复刻图一这种产品功能矩阵，用来展示 Agent 能力、模块能力或功能分组。
+
+文章用法：
+
+```mdx
+import AgentFeatureMatrix from '../../components/AgentFeatureMatrix.astro';
+
+<AgentFeatureMatrix />
+```
+
+注意事项：
+
+- 当前组件内置一组 Agent 功能文案，适合视觉实验或同主题文章直接使用。
+- 如果后续多篇文章都要改文案，再考虑把数据改成 props，不要提前复杂化。
+
+## DefenseArchitectureReport
+
+适合场景：复刻图二这种报告页，用指标行加分层列表展示安全防御、测试结果、流程校验或能力验证。
+
+文章用法：
+
+```mdx
+import DefenseArchitectureReport from '../../components/DefenseArchitectureReport.astro';
+
+<DefenseArchitectureReport />
+```
+
+注意事项：
+
+- 当前组件内置 Hermes 防御架构示例，用于视觉实验和同主题文章。
+- 它适合少量高价值指标，不适合承载大表格。
+
+## SearchDecisionTree
+
+适合场景：复刻图三这种深色信息图，用来展示搜索工具选择、Agent 工具路由或复杂决策树。
+
+文章用法：
+
+```mdx
+import SearchDecisionTree from '../../components/SearchDecisionTree.astro';
+
+<SearchDecisionTree />
+```
+
+注意事项：
+
+- 当前组件内置 OpenClaw 搜索工具决策树文案，适合视觉实验或同主题文章直接使用。
+- 桌面端按信息图排版，移动端会切换为纵向决策卡片，优先保证可读性。
+- 它是定制信息图组件，不建议改造成通用流程图组件。
+
 ## CodeBlockStyleShowcase
 
 适合场景：视觉实验室里的代码块样式对比。

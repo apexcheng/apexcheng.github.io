@@ -1,0 +1,750 @@
+---
+const coreScenes = [
+  '技术调研：对比 Vite vs Turbopack',
+  '生态分析：Rust GUI 框架现状',
+  '架构研究：NotebookLM 技术栈',
+  '深度新知：AI Agent 最新进展',
+];
+
+const triggerSignals = [
+  '“deep search ...”',
+  '“详细搜索 ... / 帮我查一下 ...”',
+  '“深入研究一下 ...”',
+  'Brave 结果太浅 → 自动升级',
+];
+---
+
+<section class="search-decision-tree" aria-label="OpenClaw 搜索工具决策树">
+  <header class="tree-header">
+    <h2>OpenClaw 搜索工具决策树 — 使用场景指南</h2>
+    <p>Brave Search · web_fetch · Codex CLI Deep Search · 何时用哪个？</p>
+  </header>
+
+  <div class="tree-canvas" aria-hidden="true">
+    <svg class="tree-lines" viewBox="0 0 1120 920" preserveAspectRatio="none">
+      <defs>
+        <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#60a5fa" />
+        </marker>
+        <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#34d399" />
+        </marker>
+        <marker id="arrow-red" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#fb7185" />
+        </marker>
+        <marker id="arrow-orange" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#f59e0b" />
+        </marker>
+        <marker id="arrow-purple" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#a78bfa" />
+        </marker>
+      </defs>
+      <path class="line-blue" d="M560 86 V142" marker-end="url(#arrow-blue)" />
+      <path class="line-green" d="M638 184 C760 184 790 142 870 142" marker-end="url(#arrow-green)" />
+      <path class="line-red" d="M560 230 V292" marker-end="url(#arrow-red)" />
+      <path class="line-green" d="M638 334 C760 334 792 326 870 326" marker-end="url(#arrow-green)" />
+      <path class="line-red" d="M560 380 V446" marker-end="url(#arrow-red)" />
+      <path class="line-red" d="M446 504 C350 504 310 512 245 536" marker-end="url(#arrow-red)" />
+      <path class="line-green" d="M560 548 V606" marker-end="url(#arrow-green)" />
+      <path class="line-purple dashed" d="M430 664 C380 664 365 666 322 676" marker-end="url(#arrow-purple)" />
+      <path class="line-purple dashed" d="M690 664 C742 664 760 666 802 676" marker-end="url(#arrow-purple)" />
+      <path class="line-purple" d="M560 736 V782" marker-end="url(#arrow-purple)" />
+      <path class="line-blue" d="M560 832 C486 832 444 840 386 864" marker-end="url(#arrow-blue)" />
+      <path class="line-orange" d="M560 832 C634 832 676 840 734 864" marker-end="url(#arrow-orange)" />
+    </svg>
+
+    <span class="line-label label-url-yes">是</span>
+    <span class="line-label label-url-no">否</span>
+    <span class="line-label label-simple-yes">是</span>
+    <span class="line-label label-simple-no">否</span>
+    <span class="line-label label-deep-yes">是</span>
+    <span class="line-label label-deep-no">否</span>
+
+    <article class="tree-node start-node">
+      <span class="node-icon">👤</span>
+      <strong>用户提出搜索需求</strong>
+      <p>“帮我查 ... / 搜一下 ...”</p>
+    </article>
+
+    <article class="tree-node decision-node url-node">
+      <strong>有明确 URL?</strong>
+      <p>用户给了链接 / 网址</p>
+    </article>
+
+    <article class="tool-card fetch-card">
+      <span class="tool-icon">🔗</span>
+      <h3>web_fetch</h3>
+      <p>直接获取页面，markdown</p>
+      <strong>秒级、精准获取页面内容</strong>
+    </article>
+
+    <article class="detail-card fetch-detail-card">
+      <strong>📄 智能读取“下载全文”</strong>
+      <p>▶ 总结这个 GitHub README</p>
+      <span>场景：单页、精准信息拉取</span>
+    </article>
+
+    <article class="tree-node decision-node simple-node">
+      <strong>简单事实查询?</strong>
+      <p>一条结果即可回答<br />需要快速响应</p>
+    </article>
+
+    <article class="tool-card brave-card">
+      <span class="tool-icon">🌐</span>
+      <h3>Brave Search</h3>
+      <p>web_search API · 搜索优化片段</p>
+      <strong>&lt;2s · 轻量 · 高并发</strong>
+    </article>
+
+    <article class="detail-card brave-detail-card">
+      <ul>
+        <li>今天美元兑人民币汇率</li>
+        <li>Python 3.14 发布日期</li>
+        <li>Next.js 最新版本</li>
+      </ul>
+      <span>场景：快速事实、时效信息、简单查询</span>
+    </article>
+
+    <article class="tree-node decision-node deep-node">
+      <strong>复杂 / 多源 / 深度研究?</strong>
+      <p>需要交叉验证 · 多个来源<br />deep search · 详细报告</p>
+    </article>
+
+    <article class="default-card">
+      <strong>😎 Brave（默认）</strong>
+      <p>不确定时先用 Brave</p>
+    </article>
+
+    <article class="codex-card">
+      <span class="tool-icon">🤖</span>
+      <h3>Codex CLI Deep Search</h3>
+      <p>codex exec · gpt-5.3-codex · 多轮搜索 · 报告输出</p>
+      <strong>1–2min · 综合调度 · Telegram 回执</strong>
+    </article>
+
+    <article class="side-card core-card">
+      <h3>🎯 核心场景</h3>
+      <ul>
+        {coreScenes.map((item) => <li>{item}</li>)}
+      </ul>
+      <span>场景：需要深度、多源分析的任务</span>
+    </article>
+
+    <article class="side-card signal-card">
+      <h3>⚡ 触发信号</h3>
+      <ul>
+        {triggerSignals.map((item) => <li>{item}</li>)}
+      </ul>
+      <span>场景：用户显式表达深度需求</span>
+    </article>
+
+    <article class="mode-choice-card">
+      <strong>执行模式选择</strong>
+    </article>
+
+    <article class="mode-card sync-card">
+      <h3>⚡ 同步模式</h3>
+      <p>短查询 · &lt;1min · 直接返回</p>
+      <span>可通过命令控制 Brave 兜底</span>
+    </article>
+
+    <article class="mode-card async-card">
+      <h3>🕒 自动调度模式</h3>
+      <p>长研究 · 1–2min · 结果通知</p>
+      <span>耗时任务 / 深度分析任务 → 异步更可靠</span>
+    </article>
+  </div>
+
+  <div class="mobile-flow">
+    <article>
+      <span>STEP 1</span>
+      <h3>有明确 URL?</h3>
+      <p>有链接就直接用 <strong>web_fetch</strong>，优先精准读取单页内容。</p>
+    </article>
+    <article>
+      <span>STEP 2</span>
+      <h3>只是简单事实查询?</h3>
+      <p>一条结果能回答、需要快速响应时，用 <strong>Brave Search</strong>。</p>
+    </article>
+    <article>
+      <span>STEP 3</span>
+      <h3>需要复杂 / 多源 / 深度研究?</h3>
+      <p>需要交叉验证、多个来源、详细报告时，用 <strong>Codex CLI Deep Search</strong>。</p>
+    </article>
+    <article>
+      <span>DEFAULT</span>
+      <h3>不确定时先用 Brave</h3>
+      <p>如果 Brave 结果太浅，再升级到 Deep Search。</p>
+    </article>
+  </div>
+</section>
+
+<style>
+  .search-decision-tree {
+    container-type: inline-size;
+    background:
+      radial-gradient(circle at 50% 6%, rgba(96, 165, 250, 0.18), transparent 26%),
+      radial-gradient(circle at 12% 64%, rgba(249, 115, 22, 0.14), transparent 30%),
+      radial-gradient(circle at 92% 72%, rgba(168, 85, 247, 0.16), transparent 32%),
+      linear-gradient(135deg, #070b18 0%, #10162c 48%, #090a16 100%);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 24px;
+    box-shadow: 0 30px 80px rgba(2, 6, 23, 0.34);
+    color: #e5edf7;
+    margin: 32px 0;
+    overflow: hidden;
+    padding: clamp(22px, 4vw, 42px);
+  }
+
+  .tree-header {
+    margin-bottom: 22px;
+    text-align: center;
+  }
+
+  .tree-header h2 {
+    color: #fff;
+    font-size: clamp(26px, 4.5vw, 44px);
+    letter-spacing: -0.06em;
+    line-height: 1.16;
+    margin: 0 0 12px;
+  }
+
+  .tree-header p {
+    color: #b7c4dc;
+    font-size: clamp(14px, 2vw, 17px);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .tree-canvas {
+    height: 920px;
+    margin: 0 auto;
+    max-width: 1120px;
+    position: relative;
+  }
+
+  .tree-lines {
+    height: 100%;
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    width: 100%;
+    z-index: 0;
+  }
+
+  .tree-lines path {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 3;
+  }
+
+  .dashed {
+    stroke-dasharray: 8 8;
+  }
+
+  .line-blue {
+    stroke: #60a5fa;
+  }
+
+  .line-green {
+    stroke: #34d399;
+  }
+
+  .line-red {
+    stroke: #fb7185;
+  }
+
+  .line-orange {
+    stroke: #f59e0b;
+  }
+
+  .line-purple {
+    stroke: #a78bfa;
+  }
+
+  .tree-node,
+  .tool-card,
+  .detail-card,
+  .default-card,
+  .codex-card,
+  .side-card,
+  .mode-choice-card,
+  .mode-card {
+    backdrop-filter: blur(18px);
+    position: absolute;
+    z-index: 1;
+  }
+
+  .tree-node,
+  .tool-card,
+  .detail-card,
+  .default-card,
+  .codex-card,
+  .side-card,
+  .mode-card {
+    border-radius: 18px;
+  }
+
+  .tree-node {
+    background: rgba(15, 23, 42, 0.86);
+    border: 1px solid rgba(96, 165, 250, 0.42);
+    box-shadow: 0 0 28px rgba(96, 165, 250, 0.1);
+    padding: 16px 20px;
+    text-align: center;
+  }
+
+  .start-node {
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    width: 300px;
+  }
+
+  .node-icon,
+  .tool-icon {
+    display: block;
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+
+  .tree-node strong {
+    color: #fff;
+    display: block;
+    font-size: 18px;
+    line-height: 1.25;
+  }
+
+  .tree-node p,
+  .tool-card p,
+  .detail-card p,
+  .default-card p,
+  .codex-card p,
+  .mode-card p {
+    color: #b7c4dc;
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 8px 0 0;
+  }
+
+  .decision-node {
+    background:
+      linear-gradient(rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.92)) padding-box,
+      linear-gradient(135deg, var(--decision-border), rgba(255, 255, 255, 0.08)) border-box;
+    border: 2px solid transparent;
+    box-shadow: 0 0 34px var(--decision-glow);
+    clip-path: polygon(9% 0, 91% 0, 100% 50%, 91% 100%, 9% 100%, 0 50%);
+    min-height: 86px;
+    padding: 20px 30px;
+    width: 300px;
+  }
+
+  .url-node {
+    --decision-border: #22d3ee;
+    --decision-glow: rgba(34, 211, 238, 0.13);
+    left: 50%;
+    top: 122px;
+    transform: translateX(-50%);
+  }
+
+  .simple-node {
+    --decision-border: #f59e0b;
+    --decision-glow: rgba(245, 158, 11, 0.14);
+    left: 50%;
+    top: 282px;
+    transform: translateX(-50%);
+  }
+
+  .deep-node {
+    --decision-border: #a78bfa;
+    --decision-glow: rgba(167, 139, 250, 0.16);
+    left: 50%;
+    top: 442px;
+    transform: translateX(-50%);
+    width: 332px;
+  }
+
+  .tool-card {
+    background: rgba(12, 24, 46, 0.9);
+    border: 1px solid var(--tool-border);
+    box-shadow: 0 0 34px var(--tool-glow);
+    padding: 18px 20px;
+    width: 280px;
+  }
+
+  .tool-card h3,
+  .codex-card h3,
+  .side-card h3,
+  .mode-card h3 {
+    color: #fff;
+    font-size: 20px;
+    letter-spacing: -0.04em;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .tool-card strong,
+  .codex-card strong,
+  .detail-card strong,
+  .default-card strong,
+  .mode-choice-card strong {
+    color: #dbeafe;
+    display: block;
+    font-size: 13px;
+    line-height: 1.45;
+    margin-top: 10px;
+  }
+
+  .fetch-card {
+    --tool-border: rgba(34, 211, 238, 0.55);
+    --tool-glow: rgba(34, 211, 238, 0.12);
+    right: 0;
+    top: 98px;
+  }
+
+  .brave-card {
+    --tool-border: rgba(249, 115, 22, 0.62);
+    --tool-glow: rgba(249, 115, 22, 0.14);
+    background: rgba(35, 21, 12, 0.9);
+    right: 0;
+    top: 278px;
+  }
+
+  .detail-card,
+  .default-card,
+  .side-card,
+  .mode-card,
+  .mode-choice-card {
+    background: rgba(15, 23, 42, 0.78);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    padding: 16px 18px;
+  }
+
+  .fetch-detail-card {
+    right: 0;
+    top: 230px;
+    width: 280px;
+  }
+
+  .brave-detail-card {
+    border-color: rgba(249, 115, 22, 0.34);
+    right: 0;
+    top: 422px;
+    width: 280px;
+  }
+
+  .detail-card ul,
+  .side-card ul {
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 0 0 10px;
+    padding-left: 18px;
+  }
+
+  .detail-card span,
+  .side-card span,
+  .mode-card span {
+    color: #94a3b8;
+    display: block;
+    font-size: 12px;
+    line-height: 1.45;
+    margin-top: 10px;
+  }
+
+  .default-card {
+    border-color: rgba(249, 115, 22, 0.46);
+    box-shadow: 0 0 28px rgba(249, 115, 22, 0.1);
+    left: 0;
+    top: 518px;
+    width: 245px;
+  }
+
+  .codex-card {
+    background:
+      linear-gradient(rgba(27, 20, 54, 0.94), rgba(15, 23, 42, 0.9)) padding-box,
+      linear-gradient(135deg, rgba(167, 139, 250, 0.8), rgba(96, 165, 250, 0.18)) border-box;
+    border: 1px solid transparent;
+    border-radius: 22px;
+    box-shadow: 0 0 42px rgba(167, 139, 250, 0.16);
+    left: 50%;
+    padding: 20px 24px;
+    text-align: center;
+    top: 602px;
+    transform: translateX(-50%);
+    width: 380px;
+  }
+
+  .side-card {
+    border-color: rgba(167, 139, 250, 0.36);
+    box-shadow: 0 0 30px rgba(167, 139, 250, 0.08);
+    top: 648px;
+    width: 315px;
+  }
+
+  .core-card {
+    left: 0;
+  }
+
+  .signal-card {
+    right: 0;
+  }
+
+  .mode-choice-card {
+    border-color: rgba(167, 139, 250, 0.36);
+    border-radius: 999px;
+    left: 50%;
+    padding: 10px 22px;
+    text-align: center;
+    top: 782px;
+    transform: translateX(-50%);
+    width: 180px;
+  }
+
+  .mode-choice-card strong {
+    margin: 0;
+  }
+
+  .mode-card {
+    bottom: 0;
+    width: 320px;
+  }
+
+  .sync-card {
+    border-color: rgba(96, 165, 250, 0.42);
+    left: 18%;
+  }
+
+  .async-card {
+    border-color: rgba(249, 115, 22, 0.42);
+    right: 18%;
+  }
+
+  .line-label {
+    border-radius: 999px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 820;
+    padding: 4px 8px;
+    position: absolute;
+    z-index: 2;
+  }
+
+  .label-url-yes,
+  .label-simple-yes,
+  .label-deep-yes {
+    background: rgba(16, 185, 129, 0.22);
+    color: #86efac;
+  }
+
+  .label-url-no,
+  .label-simple-no,
+  .label-deep-no {
+    background: rgba(244, 63, 94, 0.2);
+    color: #fda4af;
+  }
+
+  .label-url-yes {
+    right: 29%;
+    top: 144px;
+  }
+
+  .label-url-no {
+    left: 51%;
+    top: 254px;
+  }
+
+  .label-simple-yes {
+    right: 29%;
+    top: 320px;
+  }
+
+  .label-simple-no {
+    left: 51%;
+    top: 406px;
+  }
+
+  .label-deep-yes {
+    left: 51%;
+    top: 568px;
+  }
+
+  .label-deep-no {
+    left: 26%;
+    top: 508px;
+  }
+
+  .mobile-flow {
+    display: none;
+  }
+
+  @media (max-width: 1100px) {
+    .tree-canvas {
+      height: 1040px;
+    }
+
+    .tool-card,
+    .detail-card {
+      width: 255px;
+    }
+
+    .side-card {
+      top: 690px;
+      width: 285px;
+    }
+
+    .codex-card {
+      top: 604px;
+      width: 340px;
+    }
+
+    .mode-choice-card {
+      top: 848px;
+    }
+
+    .mode-card {
+      bottom: 0;
+      width: 285px;
+    }
+
+    .sync-card {
+      left: 13%;
+    }
+
+    .async-card {
+      right: 13%;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .tree-canvas {
+      display: none;
+    }
+
+    .mobile-flow {
+      display: grid;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .mobile-flow article {
+      background: rgba(15, 23, 42, 0.82);
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .mobile-flow span {
+      color: #67e8f9;
+      display: block;
+      font-size: 12px;
+      font-weight: 820;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    .mobile-flow h3 {
+      color: #fff;
+      font-size: 20px;
+      letter-spacing: -0.04em;
+      line-height: 1.25;
+      margin: 0 0 8px;
+    }
+
+    .mobile-flow p {
+      color: #b7c4dc;
+      font-size: 14px;
+      line-height: 1.75;
+      margin: 0;
+    }
+
+    .mobile-flow strong {
+      color: #fff;
+    }
+  }
+
+  @container (max-width: 1030px) {
+    .tree-canvas {
+      height: 1040px;
+    }
+
+    .tool-card,
+    .detail-card {
+      width: 255px;
+    }
+
+    .side-card {
+      top: 690px;
+      width: 285px;
+    }
+
+    .codex-card {
+      top: 604px;
+      width: 340px;
+    }
+
+    .mode-choice-card {
+      top: 848px;
+    }
+
+    .mode-card {
+      bottom: 0;
+      width: 285px;
+    }
+
+    .sync-card {
+      left: 13%;
+    }
+
+    .async-card {
+      right: 13%;
+    }
+  }
+
+  @container (max-width: 900px) {
+    .tree-canvas {
+      display: none;
+    }
+
+    .mobile-flow {
+      display: grid;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .mobile-flow article {
+      background: rgba(15, 23, 42, 0.82);
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .mobile-flow span {
+      color: #67e8f9;
+      display: block;
+      font-size: 12px;
+      font-weight: 820;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    .mobile-flow h3 {
+      color: #fff;
+      font-size: 20px;
+      letter-spacing: -0.04em;
+      line-height: 1.25;
+      margin: 0 0 8px;
+    }
+
+    .mobile-flow p {
+      color: #b7c4dc;
+      font-size: 14px;
+      line-height: 1.75;
+      margin: 0;
+    }
+
+    .mobile-flow strong {
+      color: #fff;
+    }
+  }
+</style>
