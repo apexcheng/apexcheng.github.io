@@ -54,10 +54,10 @@ const searchItems = [
           var savedStyleTheme = localStorage.getItem('styleTheme');
           if (!['index', 'classic', 'index-gradient', 'classic-gradient', 'visual-system'].includes(savedStyleTheme)) savedStyleTheme = '';
           document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';
-          document.documentElement.dataset.styleTheme = savedStyleTheme || 'index-gradient';
+          document.documentElement.dataset.styleTheme = savedStyleTheme || 'visual-system';
         } catch (error) {
           document.documentElement.dataset.theme = 'light';
-          document.documentElement.dataset.styleTheme = 'index-gradient';
+          document.documentElement.dataset.styleTheme = 'visual-system';
         }
       })();
     </script>
@@ -118,7 +118,7 @@ const searchItems = [
 
         function currentStyleTheme() {
           var styleTheme = document.documentElement.dataset.styleTheme;
-          return ['index', 'classic', 'index-gradient', 'classic-gradient', 'visual-system'].includes(styleTheme) ? styleTheme : 'index-gradient';
+          return ['index', 'classic', 'index-gradient', 'classic-gradient', 'visual-system'].includes(styleTheme) ? styleTheme : 'visual-system';
         }
 
         function setOpen(isOpen) {
@@ -146,10 +146,10 @@ const searchItems = [
             dark: '<svg viewBox="0 0 24 24"><path d="M20 14.5A7.5 7.5 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>',
           };
           var iconKey = currentTheme() === 'dark' ? 'dark' : currentStyleTheme();
-          var label = themeLabels[iconKey] || '晨曦渐变';
+          var label = themeLabels[iconKey] || '视觉晶蓝';
           var mode = currentTheme() === 'dark' ? '深色' : '浅色';
           var currentIcon = themeButton.querySelector('[data-current-theme-icon]');
-          if (currentIcon) currentIcon.innerHTML = themeIcons[iconKey] || themeIcons['index-gradient'];
+          if (currentIcon) currentIcon.innerHTML = themeIcons[iconKey] || themeIcons['visual-system'];
           themeButton.setAttribute('aria-label', '当前主题：' + label + ' ' + mode + '，点击选择主题');
           themeButton.setAttribute('title', '当前主题：' + label + ' ' + mode);
         }
