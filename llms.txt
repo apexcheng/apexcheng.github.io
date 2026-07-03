@@ -25,6 +25,7 @@
 
 - `AGENTS.md`
 - `docs/writing/BLOG_AGENT.md`
+- `docs/ARTICLE_VISUAL_SYSTEM.md`
 - `docs/writing/STYLE_GUIDE.md`
 - `docs/writing/CONTENT_INDEX.md`
 
@@ -42,4 +43,4 @@
 - `src/content/posts/` 是正式正文文章目录。
 - `src/content/posts/visual-lab/` 是视觉实验和 Demo 文章目录。
 - `docs/` 是 Agent 知识库，不是正式文章目录。
-- 新文章默认不发布，除非用户明确确认发布。
+- 新文章默认公开发布；只有用户明确要求草稿、暂不发布或私密时，才不公开。
