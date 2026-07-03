@@ -1,0 +1,502 @@
+---
+title: "【骨架】Ulike 客服售后 RPA 流程重设计"
+description: "用于重构 Ulike 客服售后自动化文章的 MDX 骨架，重点验证全宽流程图、双栏对照、后台剧本、判断矩阵和消息预览。"
+date: 2026-07-03
+category: "实践"
+tags:
+  - "影刀RPA"
+  - "客服售后"
+  - "MDX"
+minutes: 8
+featured: false
+draft: true
+private: true
+---
+
+import Callout from '../../components/Callout.astro';
+import MetricCard from '../../components/MetricCard.astro';
+import VisualGrid from '../../components/VisualGrid.astro';
+import HighlightBox from '../../components/HighlightBox.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+<Callout title="骨架说明">
+  这不是最终发布文章，而是 Ulike 客服售后 RPA 文章的新版 MDX 骨架。重点先验证版式：流程图要放大，正文主体不要继续堆卡片，改成“案例拆解页”。
+</Callout>
+
+<HighlightBox eyebrow="新版方向" title="把文章从说明文，改成三个 RPA 案例的可视化拆解页">
+  开头只做结论和导航；正文按三个案例展开。每个案例固定使用：场景目标、全宽流程图、人工/RPA 对照、后台操作剧本、判断矩阵或消息示例、案例小结。
+</HighlightBox>
+
+## 0. 场景导航
+
+<VisualGrid columns={3}>
+  <MetricCard label="案例一" value="静默单推送" detail="找未付款订单，查聊天记录，推送售前客服群。" />
+  <MetricCard label="案例二" value="已发货仅退款" detail="查售后单、ERP 和物流状态，再决定退款、备注或转人工。" tone="cyan" />
+  <MetricCard label="案例三" value="赠品发货留言" detail="从 ERP 获取赠品物流，再给买家留言并回写通知状态。" tone="green" />
+</VisualGrid>
+
+<div class="rpa-wide-diagram">
+
+<Mermaid
+  title="三个案例的共同动作链"
+  caption="先找到待处理数据，再补齐上下文，最后执行消息、退款或留言动作。"
+  chart={`flowchart LR
+    A[待处理数据] --> B[补齐上下文]
+    B --> C[规则判断]
+    C --> D[执行后台动作]
+    D --> E[记录结果]
+    E --> F{是否异常}
+    F -->|否| G[结束]
+    F -->|是| H[转人工]`}
+/>
+
+</div>
+
+---
+
+<section class="rpa-case-section">
+
+## 案例一：静默单推送
+
+<p class="rpa-case-lead">目标：RPA 自动筛出“未付款 + 没有明显人工跟进”的订单，推送给售前客服，减少漏跟进。</p>
+
+<div class="rpa-wide-diagram">
+
+<Mermaid
+  title="静默单推送：从未付款订单到售前群提醒"
+  caption="这个图要做成全宽，不再塞进窄卡片。"
+  chart={`flowchart LR
+    A[订单后台筛选未付款] --> B[读取订单字段]
+    B --> C[查已推送记录]
+    C --> D{是否已推送}
+    D -->|是| E[跳过]
+    D -->|否| F[进入客服后台查聊天]
+    F --> G{是否有人工跟进}
+    G -->|无| H[拼接售前群消息]
+    G -->|有| I[跳过或降级]
+    H --> J[发送群提醒]
+    J --> K[回写已推送]`}
+/>
+
+</div>
+
+<div class="rpa-split-panel">
+  <div>
+    <h3>人工原来怎么做</h3>
+    <ol>
+      <li>打开订单后台，筛选未付款订单。</li>
+      <li>复制订单号、买家、商品、金额。</li>
+      <li>切到客服后台，搜索买家聊天记录。</li>
+      <li>判断有没有客服跟进过。</li>
+      <li>手工整理订单信息，发到售前群。</li>
+    </ol>
+  </div>
+  <div>
+    <h3>RPA 实际怎么做</h3>
+    <ol>
+      <li>定时筛选最近未付款订单。</li>
+      <li>自动比对已推送记录，避免重复。</li>
+      <li>自动查询聊天记录和人工接待状态。</li>
+      <li>按规则判断是否属于静默单。</li>
+      <li>自动拼接群消息并回写推送结果。</li>
+    </ol>
+  </div>
+</div>
+
+### 后台操作剧本
+
+<div class="rpa-script">
+  <div class="rpa-script-row">
+    <span class="rpa-step">01</span>
+    <div><strong>平台订单后台</strong><p>筛选“未付款 / 待付款”订单，限定最近 30 分钟或最近 2 小时。</p><em>输出：订单号、买家、商品、金额、下单时间。</em></div>
+  </div>
+  <div class="rpa-script-row">
+    <span class="rpa-step">02</span>
+    <div><strong>本地记录 / 在线表格</strong><p>用订单号比对是否已经推送过。</p><em>输出：跳过或继续处理。</em></div>
+  </div>
+  <div class="rpa-script-row">
+    <span class="rpa-step">03</span>
+    <div><strong>客服后台</strong><p>搜索买家昵称或订单号，读取最近聊天记录。</p><em>输出：无记录、系统消息、人工跟进、明确放弃购买。</em></div>
+  </div>
+  <div class="rpa-script-row">
+    <span class="rpa-step">04</span>
+    <div><strong>群机器人 / 钉钉客户端</strong><p>拼接售前跟进消息，并发送到指定客服群。</p><em>输出：发送成功、发送失败、失败原因。</em></div>
+  </div>
+</div>
+
+### 静默单判定条件
+
+| 聊天情况 | RPA 判断 | 动作 |
+| --- | --- | --- |
+| 无聊天记录 | 可能是静默单 | 推送售前群 |
+| 只有系统消息 | 仍可能是静默单 | 推送售前群 |
+| 有人工客服跟进 | 已有人处理 | 跳过或降低优先级 |
+| 买家明确不买 | 不需要跟进 | 跳过 |
+| 咨询过优惠但未付款 | 高价值跟进单 | 优先推送 |
+
+<div class="rpa-message-preview">
+  <strong>售前群消息示例</strong>
+  <pre>{`【静默未付款订单提醒】
+平台：天猫
+店铺：Ulike 官方旗舰店
+买家：xxx
+订单号：123456789
+商品：Ulike 脱毛仪 xxx
+金额：1299 元
+未付款时长：28 分钟
+聊天记录：未发现人工跟进
+
+请售前客服及时跟进。`}</pre>
+</div>
+
+<details class="rpa-details">
+  <summary>这个案例后续迁移正文时要补充的内容</summary>
+  <ul>
+    <li>原文章里关于“高频、怕漏、避免重复推送”的解释。</li>
+    <li>RPA 运行失败时的处理方式，例如页面加载失败、群消息发送失败。</li>
+    <li>不要再追加大段说明，优先放到剧本或判断矩阵里。</li>
+  </ul>
+</details>
+
+</section>
+
+---
+
+<section class="rpa-case-section rpa-main-case">
+
+## 案例二：已发货仅退款
+
+<p class="rpa-case-lead">目标：RPA 自动核实售后单、ERP 发货状态和物流轨迹，避免“货已经发出却直接退款”的风险。</p>
+
+<div class="rpa-wide-diagram rpa-hero-diagram">
+
+<Mermaid
+  title="已发货仅退款：RPA 判断链"
+  caption="这是全文的主流程图，最终文章里要保证图足够大，必要时允许横向滚动。"
+  chart={`flowchart TD
+    A[售后后台筛选\n已发货 + 仅退款 + 待处理] --> B[读取售后单信息\n订单号 金额 原因 买家]
+    B --> C[ERP 查询订单\n发货状态 仓库 出库时间]
+    C --> D[获取物流信息\n快递公司 物流单号]
+    D --> E[查询物流轨迹]
+    E --> F{当前物流状态}
+    F -->|未揽收| G[备注可拦截\n部分场景可处理]
+    F -->|运输中 / 派送中| H[不直接退款\n备注或转人工]
+    F -->|已签收| I[不自动同意仅退款\n转人工核实]
+    F -->|拒收退回中| J[等待回仓\n保留跟进记录]
+    F -->|已退回仓库| K[可提交退款处理]
+    F -->|异常 / 查不到| L[转人工并记录原因]
+    G --> M[回写处理结果]
+    H --> M
+    I --> M
+    J --> M
+    K --> M
+    L --> M`}
+/>
+
+</div>
+
+<div class="rpa-split-panel">
+  <div>
+    <h3>人工售后</h3>
+    <ol>
+      <li>筛选待处理仅退款。</li>
+      <li>逐条点进售后详情。</li>
+      <li>复制订单号去 ERP 查询。</li>
+      <li>复制物流单号再查轨迹。</li>
+      <li>判断是否签收、拒收、退回。</li>
+      <li>回平台备注、拒绝、同意或转人工。</li>
+    </ol>
+  </div>
+  <div>
+    <h3>RPA 售后助理</h3>
+    <ol>
+      <li>批量筛选目标售后单。</li>
+      <li>自动跨系统查询订单和物流。</li>
+      <li>把物流状态转成处理分支。</li>
+      <li>标准单自动备注或处理。</li>
+      <li>风险单带原因进入人工清单。</li>
+      <li>每条单记录处理状态和失败原因。</li>
+    </ol>
+  </div>
+</div>
+
+### 后台操作剧本
+
+<div class="rpa-script">
+  <div class="rpa-script-row"><span class="rpa-step">01</span><div><strong>平台售后后台</strong><p>筛选“已发货 + 仅退款 + 待处理”。</p><em>输出：售后单号、订单号、退款金额、退款原因。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">02</span><div><strong>售后详情页</strong><p>读取买家申请原因，排除非仅退款、已处理、金额异常或高风险订单。</p><em>输出：继续处理 / 转人工。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">03</span><div><strong>ERP 订单查询</strong><p>输入平台订单号，读取发货状态、仓库、出库时间、物流公司和物流单号。</p><em>输出：物流查询所需字段。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">04</span><div><strong>物流轨迹页面</strong><p>查询最新轨迹，识别未揽收、运输中、已签收、拒收退回、已退回仓库等状态。</p><em>输出：物流状态。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">05</span><div><strong>平台售后后台</strong><p>根据物流状态执行同意退款、备注说明、转人工或等待回仓。</p><em>输出：平台处理结果。</em></div></div>
+</div>
+
+### 物流状态判断矩阵
+
+| 物流状态 | RPA 动作 | 是否自动处理 | 备注 |
+| --- | --- | --- | --- |
+| 未揽收 | 备注可拦截，部分场景可处理退款 | 可部分自动 | 风险较低，但仍要看店铺 SOP |
+| 运输中 | 填写备注或转人工 | 否 | 货还在路上，不直接退款 |
+| 派送中 | 转人工或等待更新 | 否 | 接近签收，风险较高 |
+| 已签收 | 转人工核实 | 否 | 可能需要改退货退款 |
+| 拒收退回中 | 备注等待回仓 | 否 | 货没回仓前不建议自动退 |
+| 已退回仓库 | 提交退款或进入退款处理 | 是 | 货已回仓，风险降低 |
+| 物流异常 | 记录异常并转人工 | 否 | 状态不清楚，不能自动决策 |
+
+<details class="rpa-details" open>
+  <summary>异常处理块</summary>
+  <ul>
+    <li>ERP 查不到订单：记录订单号和平台，进入人工清单。</li>
+    <li>物流单号为空：备注“ERP 未获取物流单号”，暂不处理退款。</li>
+    <li>平台状态和 ERP 状态冲突：截图并转人工。</li>
+    <li>页面提交失败：记录失败原因、重试次数和截图路径。</li>
+  </ul>
+</details>
+
+<div class="rpa-message-preview">
+  <strong>售后备注示例</strong>
+  <pre>{`订单已发货，物流显示运输中，当前不直接处理仅退款。
+建议等待商品拒收退回或仓库签收后，再进入退款处理。`}</pre>
+</div>
+
+</section>
+
+---
+
+<section class="rpa-case-section">
+
+## 案例三：留言赠品发货信息
+
+<p class="rpa-case-lead">目标：RPA 从 ERP 查询赠品名称、快递公司和物流单号，再自动给买家留言，减少客服复制单号的工作。</p>
+
+<div class="rpa-wide-diagram">
+
+<Mermaid
+  title="赠品发货留言：从 ERP 到买家消息"
+  caption="这个案例不需要复杂大图，重点放在线性步骤和消息模板。"
+  chart={`flowchart LR
+    A[ERP 筛选赠品已发货] --> B[检查赠品信息]
+    B --> C{信息完整吗}
+    C -->|否| D[记录异常]
+    C -->|是| E[平台后台搜索原订单]
+    E --> F[打开买家留言入口]
+    F --> G[拼接留言模板]
+    G --> H[发送留言]
+    H --> I[回写已通知]`}
+/>
+
+</div>
+
+<div class="rpa-split-panel">
+  <div>
+    <h3>人工客服</h3>
+    <ol>
+      <li>去 ERP 查赠品单。</li>
+      <li>复制赠品名称、快递、单号。</li>
+      <li>切到平台后台搜索订单。</li>
+      <li>打开留言窗口。</li>
+      <li>手动粘贴话术并标记已通知。</li>
+    </ol>
+  </div>
+  <div>
+    <h3>RPA</h3>
+    <ol>
+      <li>筛选已发货未通知赠品单。</li>
+      <li>校验赠品字段是否完整。</li>
+      <li>自动打开平台订单留言入口。</li>
+      <li>生成买家留言并发送。</li>
+      <li>回写通知状态和失败原因。</li>
+    </ol>
+  </div>
+</div>
+
+### 后台操作剧本
+
+<div class="rpa-script">
+  <div class="rpa-script-row"><span class="rpa-step">01</span><div><strong>ERP 赠品发货查询</strong><p>筛选“已发货 + 未通知买家”的赠品订单。</p><em>输出：原订单号、赠品名称、快递公司、物流单号。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">02</span><div><strong>字段校验</strong><p>判断赠品名称、物流公司、物流单号是否为空，已通知订单直接跳过。</p><em>输出：可留言 / 异常。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">03</span><div><strong>平台订单后台</strong><p>按原订单号搜索订单，进入买家留言入口。</p><em>输出：留言窗口。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">04</span><div><strong>买家留言窗口</strong><p>填入赠品发货话术，发送后判断页面是否出现成功提示。</p><em>输出：已通知 / 发送失败。</em></div></div>
+</div>
+
+<div class="rpa-message-preview">
+  <strong>买家留言模板</strong>
+  <pre>{`亲，您的赠品已为您发出，请注意查收～
+
+赠品：xxx
+快递：xxx
+单号：xxx
+
+赠品与主商品可能分开发出，如您先收到主商品，请不用担心。`}</pre>
+</div>
+
+### 哪些情况不能自动留言？
+
+| 情况 | RPA 动作 | 原因 |
+| --- | --- | --- |
+| 物流单号为空 | 跳过并记录 | 留言内容不完整 |
+| 赠品名称为空 | 跳过并记录 | 买家看不懂发的是什么 |
+| 订单已通知过 | 跳过 | 避免重复打扰买家 |
+| 平台订单查不到 | 转人工 | 订单号可能不一致或已关闭 |
+| 留言按钮不可用 | 转人工 | 平台限制或页面异常 |
+
+</section>
+
+---
+
+## 4. 三个案例最终收束
+
+<div class="rpa-final-grid">
+  <div><strong>真正被自动化的动作</strong><p>查订单、查聊天、查物流、查 ERP、复制字段、发群消息、写备注、给买家留言、回写结果。</p></div>
+  <div><strong>仍然要交给人工的动作</strong><p>状态冲突、金额异常、物流异常、买家强投诉、高风险退款和平台限制。</p></div>
+  <div><strong>这类流程为什么适合 RPA</strong><p>高频、规则明确、跨系统、人工动作重复，且异常可以被清晰地转人工。</p></div>
+</div>
+
+<HighlightBox eyebrow="迁移原则" title="最终正文应该围绕“动作”组织，而不是围绕概念解释组织">
+  每一节都要让读者看到：RPA 打开了哪个系统、筛选了什么条件、读取了哪些字段、按什么规则判断、最后做了什么动作。普通段落只负责连接，不再承担大段流程说明。
+</HighlightBox>
+
+<style>{`
+  .rpa-wide-diagram {
+    margin: 28px 0;
+    overflow-x: auto;
+  }
+
+  .rpa-wide-diagram .mermaid-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 760px;
+    box-sizing: border-box;
+  }
+
+  .rpa-wide-diagram .mermaid-card pre {
+    width: 100%;
+  }
+
+  .rpa-hero-diagram .mermaid-card {
+    min-width: 980px;
+    padding: 28px;
+  }
+
+  .rpa-case-section {
+    margin: 42px 0;
+  }
+
+  .rpa-case-lead {
+    border-left: 4px solid var(--blue);
+    color: var(--ink-soft);
+    margin: 14px 0 24px;
+    padding-left: 14px;
+  }
+
+  .rpa-split-panel {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 24px 0;
+  }
+
+  .rpa-split-panel > div,
+  .rpa-final-grid > div {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+  }
+
+  .rpa-split-panel h3 {
+    margin-top: 0;
+  }
+
+  .rpa-script {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    margin: 20px 0;
+    overflow: hidden;
+  }
+
+  .rpa-script-row {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 44px 1fr;
+    padding: 16px 18px;
+  }
+
+  .rpa-script-row + .rpa-script-row {
+    border-top: 1px solid var(--line);
+  }
+
+  .rpa-step {
+    align-items: center;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 13px;
+    font-weight: 760;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
+  }
+
+  .rpa-script-row p {
+    margin: 6px 0;
+  }
+
+  .rpa-script-row em {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .rpa-message-preview {
+    background: var(--code-bg);
+    border-radius: 14px;
+    color: var(--code-ink);
+    margin: 22px 0;
+    padding: 18px;
+  }
+
+  .rpa-message-preview strong {
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .rpa-message-preview pre {
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    white-space: pre-wrap;
+  }
+
+  .rpa-details {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin: 22px 0;
+    padding: 14px 18px;
+  }
+
+  .rpa-details summary {
+    cursor: pointer;
+    font-weight: 760;
+  }
+
+  .rpa-final-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 24px 0;
+  }
+
+  @media (max-width: 760px) {
+    .rpa-split-panel,
+    .rpa-final-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .rpa-wide-diagram .mermaid-card,
+    .rpa-hero-diagram .mermaid-card {
+      min-width: 720px;
+    }
+  }
+`}</style>
