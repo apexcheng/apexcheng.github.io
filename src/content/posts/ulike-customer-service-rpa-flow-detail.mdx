@@ -15,10 +15,8 @@ private: false
 
 import Callout from '../../components/Callout.astro';
 import MetricCard from '../../components/MetricCard.astro';
-import FeatureCard from '../../components/FeatureCard.astro';
 import VisualGrid from '../../components/VisualGrid.astro';
 import HighlightBox from '../../components/HighlightBox.astro';
-import DecisionFlow from '../../components/DecisionFlow.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
 很多人看到“客服售后自动化”，会先想到机器人自动聊天、AI 自动理解用户诉求、系统自动做售后决策。
@@ -29,11 +27,11 @@ import Mermaid from '../../components/Mermaid.astro';
   公开案例里明确提到了 Ulike 客服部门的三个应用：静默单推送、已发货仅退款、留言赠品发货信息。本文不是官方逐点击脚本，而是基于公开描述和电商客服常见流程，对 RPA 实际执行动作做的流程还原。参考来源：[影刀社区公开案例](https://www.yingdao.com/community/detaildiscuss?id=85640423-6663-4c89-9375-a50fea6421c7)。
 </Callout>
 
-## 一句话结论
-
 <HighlightBox eyebrow="结论" title="客服售后 RPA 的价值，不是替客服思考，而是替客服完成重复后台动作">
   这三个流程的共同点是：先找到待处理订单，再补齐聊天、物流、ERP 等上下文，最后按规则完成推送、退款辅助或买家留言。真正被自动化的，是查后台、复制字段、判断状态、发送消息和回写结果。
 </HighlightBox>
+
+## 0. 先看三个场景
 
 <VisualGrid columns={3}>
   <MetricCard label="静默单推送" value="催付前置" detail="自动找出未付款且未被客服跟进的订单，推送给售前客服。" tone="blue" />
@@ -41,11 +39,28 @@ import Mermaid from '../../components/Mermaid.astro';
   <MetricCard label="赠品发货留言" value="信息搬运" detail="从 ERP 取赠品物流，再自动留言给买家。" tone="green" />
 </VisualGrid>
 
-## 先把 RPA 想成一个“后台操作员”
-
 这类流程不要先想成 AI，也不要先想成系统架构。
 
 更准确的理解是：RPA 像一个人坐在电脑前，按固定步骤操作后台。
+
+<div class="rpa-wide-diagram">
+
+<Mermaid
+  title="客服售后 RPA 的共同动作链"
+  caption="不是先做大系统，而是把客服在多个后台里的重复动作串起来。"
+  chart={`flowchart LR
+    A[待处理数据] --> B[补齐上下文]
+    B --> C[规则判断]
+    C --> D[执行后台动作]
+    D --> E[记录结果]
+    E --> F{是否异常}
+    F -->|否| G[结束]
+    F -->|是| H[转人工]`}
+/>
+
+</div>
+
+人工每天重复的是这些动作：
 
 ```text
 打开平台后台
@@ -58,28 +73,15 @@ import Mermaid from '../../components/Mermaid.astro';
 把结果写回表格或系统
 ```
 
-人工每天重复这些动作，RPA 只是把它们固化成流程。
-
-<Mermaid
-  title="客服售后 RPA 的通用动作链"
-  caption="不是先做大系统，而是把客服在多个后台里的重复动作串起来。"
-  chart={`flowchart LR
-    A[找到待处理订单] --> B[补充上下文]
-    B --> C[按规则判断]
-    C --> D[执行后台动作]
-    D --> E[记录结果]
-    E --> F{是否异常}
-    F -->|否| G[流程结束]
-    F -->|是| H[转人工处理]`}
-/>
-
-下面按 Ulike 公开案例里的三个板块拆开看。
+RPA 做的不是替人理解所有问题，而是把这些固定步骤变成自动流程。
 
 ---
 
+<section class="rpa-case-section">
+
 ## 一、静默单推送：RPA 自动把未付款订单推给售前客服
 
-### 这个流程到底在做什么？
+<p class="rpa-case-lead">目标：RPA 自动筛出“未付款 + 没有明显人工跟进”的订单，推送给售前客服，减少漏跟进。</p>
 
 静默单推送不是自动退款，也不是自动回复用户。
 
@@ -87,138 +89,96 @@ import Mermaid from '../../components/Mermaid.astro';
 
 人工原来要不断刷新订单后台，看有没有新未付款订单，再去客服后台核实这个买家有没有咨询过。如果没有咨询，或者没人跟进，就复制订单信息发群，让售前客服去催付。
 
-RPA 做的就是这套重复动作。
+<div class="rpa-wide-diagram">
 
-### 人工动作还原
-
-一个售前客服原来可能这样做：
-
-```text
-1. 打开店铺订单后台
-2. 筛选未付款订单
-3. 按下单时间排序
-4. 复制订单号、买家、商品、金额
-5. 打开客服后台
-6. 搜索这个买家的聊天记录
-7. 判断是否有人跟进过
-8. 把订单信息发到客服群
-9. 标记这条订单已经提醒过
-```
-
-这些动作本身不难，但它们有两个特点：高频、怕漏。
-
-未付款订单如果过几个小时才跟进，买家可能已经放弃了；如果同一条订单重复推送，又会打扰客服群。
-
-### RPA 实际流程
-
-<DecisionFlow
-  title="静默单推送的执行路径"
-  items={[
-    {
-      label: 'Step 1',
-      title: '筛选未付款订单',
-      description: '进入订单后台，选择待付款或未付款状态，再限定最近一段时间的订单。',
-    },
-    {
-      label: 'Step 2',
-      title: '核实聊天记录',
-      description: '根据买家昵称、用户 ID 或订单号进入客服后台，判断是否有人工接待记录。',
-    },
-    {
-      label: 'Step 3',
-      title: '生成跟进消息',
-      description: '把店铺、买家、订单、商品、金额、下单时间和未付款时长拼成群消息。',
-    },
-    {
-      label: 'Step 4',
-      title: '推送并回写',
-      description: '把消息发到售前客服群，并记录订单号和推送时间，避免重复推送。',
-    },
-  ]}
+<Mermaid
+  title="静默单推送：从未付款订单到售前群提醒"
+  caption="这个流程重点不是自动成交，而是把值得跟进的订单及时送到售前面前。"
+  chart={`flowchart LR
+    A[订单后台筛选未付款] --> B[读取订单字段]
+    B --> C[查已推送记录]
+    C --> D{是否已推送}
+    D -->|是| E[跳过]
+    D -->|否| F[进入客服后台查聊天]
+    F --> G{是否有人工跟进}
+    G -->|无| H[拼接售前群消息]
+    G -->|有| I[跳过或降级]
+    H --> J[发送群提醒]
+    J --> K[回写已推送]`}
 />
 
-更细一点，RPA 会先进入订单后台：
+</div>
 
-```text
-打开商家后台
-进入订单管理
-选择订单状态：未付款
-选择时间范围：最近 30 分钟或最近 2 小时
-点击查询
-等待订单列表加载完成
-```
+<div class="rpa-split-panel">
+  <div>
+    <h3>人工原来怎么做</h3>
+    <ol>
+      <li>打开订单后台，筛选未付款订单。</li>
+      <li>复制订单号、买家、商品、金额。</li>
+      <li>切到客服后台，搜索买家聊天记录。</li>
+      <li>判断有没有客服跟进过。</li>
+      <li>手工整理订单信息，发到售前群。</li>
+      <li>手工记录这条订单已经提醒过。</li>
+    </ol>
+  </div>
+  <div>
+    <h3>RPA 实际怎么做</h3>
+    <ol>
+      <li>定时筛选最近未付款订单。</li>
+      <li>自动比对已推送记录，避免重复。</li>
+      <li>自动查询聊天记录和人工接待状态。</li>
+      <li>按规则判断是否属于静默单。</li>
+      <li>自动拼接群消息并发送。</li>
+      <li>回写推送状态、时间和失败原因。</li>
+    </ol>
+  </div>
+</div>
 
-然后逐行读取订单：
+### 后台操作剧本
 
-```text
-订单号
-买家昵称
-商品名称
-SKU
-订单金额
-下单时间
-付款状态
-店铺名称
-```
+<div class="rpa-script">
+  <div class="rpa-script-row">
+    <span class="rpa-step">01</span>
+    <div><strong>平台订单后台</strong><p>筛选“未付款 / 待付款”订单，限定最近 30 分钟或最近 2 小时。</p><em>输出：订单号、买家、商品、金额、下单时间。</em></div>
+  </div>
+  <div class="rpa-script-row">
+    <span class="rpa-step">02</span>
+    <div><strong>本地记录 / 在线表格</strong><p>用订单号比对是否已经推送过。</p><em>输出：跳过或继续处理。</em></div>
+  </div>
+  <div class="rpa-script-row">
+    <span class="rpa-step">03</span>
+    <div><strong>客服后台</strong><p>搜索买家昵称或订单号，读取最近聊天记录。</p><em>输出：无记录、系统消息、人工跟进、明确放弃购买。</em></div>
+  </div>
+  <div class="rpa-script-row">
+    <span class="rpa-step">04</span>
+    <div><strong>群机器人 / 钉钉客户端</strong><p>拼接售前跟进消息，并发送到指定客服群。</p><em>输出：发送成功、发送失败、失败原因。</em></div>
+  </div>
+</div>
 
-读到订单后，RPA 不能马上推送，还要先查这条订单有没有被处理过。
+### 静默单判定条件
 
-```text
-如果订单号已经存在于已推送记录：
-    跳过
-否则：
-    继续查聊天记录
-```
+| 聊天情况 | RPA 判断 | 动作 |
+| --- | --- | --- |
+| 无聊天记录 | 可能是静默单 | 推送售前群 |
+| 只有系统消息 | 仍可能是静默单 | 推送售前群 |
+| 有人工客服跟进 | 已有人处理 | 跳过或降低优先级 |
+| 买家明确不买 | 不需要跟进 | 跳过 |
+| 咨询过优惠但未付款 | 高价值跟进单 | 优先推送 |
 
-这一步很关键。没有去重记录，机器人每运行一次，就可能把同一批未付款订单重复发到群里。
-
-接着 RPA 打开客服后台，搜索买家聊天记录：
-
-```text
-进入客服工作台
-打开聊天记录查询
-输入买家昵称或订单号
-点击搜索
-读取最近聊天记录
-判断是否有人工客服跟进
-```
-
-判断逻辑通常可以很简单：
-
-| 聊天情况 | RPA 判断 |
-| --- | --- |
-| 没有聊天记录 | 可能是静默下单，推送售前跟进 |
-| 只有系统自动消息 | 可能仍算静默下单，推送售前跟进 |
-| 有人工客服沟通 | 说明有人跟进，可跳过或降低优先级 |
-| 买家明确表示不买了 | 跳过，不推送 |
-| 买家咨询过价格、赠品、优惠但未付款 | 可作为高价值跟进单推送 |
-
-最后 RPA 拼接消息，发送到售前客服群：
-
-```text
-【静默未付款订单提醒】
-
+<div class="rpa-message-preview">
+  <strong>售前群消息示例</strong>
+  <pre>{`【静默未付款订单提醒】
 平台：天猫
 店铺：Ulike 官方旗舰店
 买家：xxx
 订单号：123456789
 商品：Ulike 脱毛仪 xxx
 金额：1299 元
-下单时间：14:23
 未付款时长：28 分钟
 聊天记录：未发现人工跟进
 
-请售前客服及时跟进。
-```
-
-发送完成后，RPA 还要回写结果：
-
-```text
-订单号：123456789
-推送时间：2026-07-03 14:51
-推送状态：成功
-处理人：RPA
-```
+请售前客服及时跟进。`}</pre>
+</div>
 
 ### 这个流程真正省掉了什么？
 
@@ -235,11 +195,15 @@ SKU
 
 最终效果是：售前客服不用一直盯后台，RPA 会把需要跟进的未付款订单送到面前。
 
+</section>
+
 ---
+
+<section class="rpa-case-section rpa-main-case">
 
 ## 二、已发货仅退款：RPA 先查物流，再辅助处理售后
 
-### 这个流程到底在做什么？
+<p class="rpa-case-lead">目标：RPA 自动核实售后单、ERP 发货状态和物流轨迹，避免“货已经发出却直接退款”的风险。</p>
 
 已发货仅退款，比静默单复杂得多。
 
@@ -257,157 +221,96 @@ SKU
 
 RPA 的作用不是简单点“同意退款”，而是先跨系统核实订单和物流状态，再按 SOP 辅助处理。
 
-### 人工动作还原
-
-人工处理一条已发货仅退款，通常要这样做：
-
-```text
-1. 打开平台售后后台
-2. 筛选待处理的仅退款申请
-3. 点进售后详情
-4. 复制订单号
-5. 打开 ERP 查询订单
-6. 复制物流公司和物流单号
-7. 查询物流轨迹
-8. 判断当前物流状态
-9. 回到平台售后后台
-10. 同意退款、拒绝退款、留言说明或转人工
-11. 记录处理结果
-```
-
-一条售后单可能要在平台后台、ERP、物流页面、记录表之间来回切换。
-
-RPA 适合做的就是这种跨系统核实。
-
-### RPA 实际流程
+<div class="rpa-wide-diagram rpa-hero-diagram">
 
 <Mermaid
-  title="已发货仅退款的 RPA 判断链"
-  caption="核心不是自动退款，而是先查清物流状态，再决定能否处理。"
+  title="已发货仅退款：RPA 判断链"
+  caption="这是全文的主流程图。核心不是自动退款，而是先查清物流状态，再决定能否处理。"
   chart={`flowchart TD
-    A[售后后台筛选已发货仅退款] --> B[读取售后单和订单号]
-    B --> C[进入 ERP 查询发货信息]
-    C --> D[获取物流公司和单号]
+    A[售后后台筛选\n已发货 + 仅退款 + 待处理] --> B[读取售后单信息\n订单号 金额 原因 买家]
+    B --> C[ERP 查询订单\n发货状态 仓库 出库时间]
+    C --> D[获取物流信息\n快递公司 物流单号]
     D --> E[查询物流轨迹]
-    E --> F{物流状态}
-    F -->|未揽收| G[可尝试拦截或退款]
-    F -->|运输中| H[备注运输中或转人工]
-    F -->|已签收| I[不直接仅退款 转人工]
-    F -->|拒收退回| J[等待回仓或退款处理]
-    G --> K[回写处理结果]
-    H --> K
-    I --> K
-    J --> K`}
+    E --> F{当前物流状态}
+    F -->|未揽收| G[备注可拦截\n部分场景可处理]
+    F -->|运输中 / 派送中| H[不直接退款\n备注或转人工]
+    F -->|已签收| I[不自动同意仅退款\n转人工核实]
+    F -->|拒收退回中| J[等待回仓\n保留跟进记录]
+    F -->|已退回仓库| K[可提交退款处理]
+    F -->|异常 / 查不到| L[转人工并记录原因]
+    G --> M[回写处理结果]
+    H --> M
+    I --> M
+    J --> M
+    K --> M
+    L --> M`}
 />
 
-流程开始时，RPA 进入平台售后后台：
+</div>
 
-```text
-打开平台商家后台
-进入售后管理
-售后类型选择：仅退款
-订单状态选择：已发货
-处理状态选择：待处理
-点击查询
-```
+<div class="rpa-split-panel">
+  <div>
+    <h3>人工售后怎么做</h3>
+    <ol>
+      <li>筛选待处理仅退款。</li>
+      <li>逐条点进售后详情。</li>
+      <li>复制订单号去 ERP 查询。</li>
+      <li>复制物流单号再查轨迹。</li>
+      <li>判断是否签收、拒收、退回。</li>
+      <li>回平台备注、拒绝、同意或转人工。</li>
+      <li>再把结果记录到表格或系统。</li>
+    </ol>
+  </div>
+  <div>
+    <h3>RPA 售后助理怎么做</h3>
+    <ol>
+      <li>批量筛选目标售后单。</li>
+      <li>自动跨系统查询订单和物流。</li>
+      <li>把物流状态转成处理分支。</li>
+      <li>标准单自动备注或处理。</li>
+      <li>风险单带原因进入人工清单。</li>
+      <li>每条单记录处理状态和失败原因。</li>
+    </ol>
+  </div>
+</div>
 
-然后逐条读取售后单信息：
+### 后台操作剧本
 
-```text
-售后单号
-订单号
-买家昵称
-退款金额
-退款原因
-申请时间
-商品名称
-SKU
-平台售后状态
-```
+<div class="rpa-script">
+  <div class="rpa-script-row"><span class="rpa-step">01</span><div><strong>平台售后后台</strong><p>筛选“已发货 + 仅退款 + 待处理”。</p><em>输出：售后单号、订单号、退款金额、退款原因。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">02</span><div><strong>售后详情页</strong><p>读取买家申请原因，排除非仅退款、已处理、金额异常或高风险订单。</p><em>输出：继续处理 / 转人工。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">03</span><div><strong>ERP 订单查询</strong><p>输入平台订单号，读取发货状态、仓库、出库时间、物流公司和物流单号。</p><em>输出：物流查询所需字段。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">04</span><div><strong>物流轨迹页面</strong><p>查询最新轨迹，识别未揽收、运输中、已签收、拒收退回、已退回仓库等状态。</p><em>输出：物流状态。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">05</span><div><strong>平台售后后台</strong><p>根据物流状态执行同意退款、备注说明、转人工或等待回仓。</p><em>输出：平台处理结果。</em></div></div>
+</div>
 
-读取后先做基础过滤：
+### 物流状态判断矩阵
 
-```text
-如果不是仅退款：跳过
-如果不是已发货：跳过
-如果已被人工处理：跳过
-如果退款金额异常：转人工
-如果申请原因包含高风险词：转人工
-```
+| 物流状态 | RPA 动作 | 是否自动处理 | 备注 |
+| --- | --- | --- | --- |
+| 未揽收 | 备注可拦截，部分场景可处理退款 | 可部分自动 | 风险较低，但仍要看店铺 SOP |
+| 运输中 | 填写备注或转人工 | 否 | 货还在路上，不直接退款 |
+| 派送中 | 转人工或等待更新 | 否 | 接近签收，风险较高 |
+| 已签收 | 转人工核实 | 否 | 可能需要改退货退款 |
+| 拒收退回中 | 备注等待回仓 | 否 | 货没回仓前不建议自动退 |
+| 已退回仓库 | 提交退款或进入退款处理 | 是 | 货已回仓，风险降低 |
+| 物流异常 | 记录异常并转人工 | 否 | 状态不清楚，不能自动决策 |
 
-接着 RPA 复制订单号，进入 ERP 查询订单：
+<details class="rpa-details" open>
+  <summary>异常处理块</summary>
+  <ul>
+    <li>ERP 查不到订单：记录订单号和平台，进入人工清单。</li>
+    <li>物流单号为空：备注“ERP 未获取物流单号”，暂不处理退款。</li>
+    <li>平台状态和 ERP 状态冲突：截图并转人工。</li>
+    <li>页面提交失败：记录失败原因、重试次数和截图路径。</li>
+  </ul>
+</details>
 
-```text
-打开 ERP
-进入订单查询
-粘贴平台订单号
-点击搜索
-打开订单详情
-读取发货状态
-读取出库时间
-读取物流公司
-读取物流单号
-读取仓库状态
-```
-
-这一步是为了确认平台状态和 ERP 状态是否一致。
-
-例如平台显示已发货，但 ERP 可能只是生成了物流单，快递还没有揽收；也可能 ERP 已出库，但物流轨迹还没有同步。
-
-拿到物流单号后，RPA 继续查物流：
-
-```text
-复制物流单号
-打开物流轨迹页面
-粘贴单号
-点击查询
-等待轨迹加载
-读取最新物流状态
-读取最新更新时间
-```
-
-### 关键判断：不同物流状态对应不同动作
-
-这个流程最重要的是物流状态判断。
-
-| 物流状态 | RPA 可能动作 | 原因 |
-| --- | --- | --- |
-| 已发货但未揽收 | 备注可拦截，部分场景可退款 | 货可能还没真正交给快递 |
-| 已揽收运输中 | 不直接退款，备注运输中或转人工 | 货还在路上，直接退款风险较高 |
-| 派送中 | 转人工或等待更新 | 接近签收，不能轻易仅退款 |
-| 已签收 | 不自动同意仅退款 | 需要核实是否应改为退货退款 |
-| 拒收退回中 | 备注等待退回仓库 | 货还没回到商家手里 |
-| 已退回仓库 | 可进入退款处理 | 货已回仓，退款风险降低 |
-| 物流异常 | 转人工 | 状态不清楚，不能自动处理 |
-
-如果符合自动处理规则，RPA 会回到售后后台执行动作。
-
-例如：已退回仓库，可以处理退款：
-
-```text
-回到平台售后详情
-点击同意退款
-核对退款金额
-填写处理备注
-点击提交
-等待平台提示成功
-```
-
-如果物流运输中，RPA 可能只做备注或留言：
-
-```text
-填写售后备注：订单已发货，物流运输中，需等待商品退回后处理退款。
-点击保存备注
-转入人工跟进清单
-```
-
-如果物流显示已签收，RPA 不应该直接拒绝或退款，而是把信息带给人工：
-
-```text
-标记：物流已签收
-备注：买家申请仅退款，请人工核实是否改退货退款
-加入人工处理表
-```
+<div class="rpa-message-preview">
+  <strong>售后备注示例</strong>
+  <pre>{`订单已发货，物流显示运输中，当前不直接处理仅退款。
+建议等待商品拒收退回或仓库签收后，再进入退款处理。`}</pre>
+</div>
 
 ### 这个流程真正省掉了什么？
 
@@ -427,11 +330,15 @@ SKU
 
 售后人员不需要每一单都从头查一遍，而是先看 RPA 给出的结果：物流状态是什么、机器人做了什么、为什么转人工。
 
+</section>
+
 ---
+
+<section class="rpa-case-section">
 
 ## 三、留言赠品发货信息：RPA 自动把 ERP 里的赠品物流发给买家
 
-### 这个流程到底在做什么？
+<p class="rpa-case-lead">目标：RPA 从 ERP 查询赠品名称、快递公司和物流单号，再自动给买家留言，减少客服复制单号的工作。</p>
 
 电商活动里经常有赠品，比如下单赠、评价赠、直播间赠品、活动礼包。
 
@@ -441,149 +348,77 @@ SKU
 
 这个流程本质上是信息搬运：**ERP 里已经有赠品物流，但买家不知道，客服要把它搬到平台留言里。**
 
-### 人工动作还原
+<div class="rpa-wide-diagram">
 
-人工客服原来可能这样做：
-
-```text
-1. 打开 ERP
-2. 搜索原订单号
-3. 找到赠品发货单
-4. 复制赠品名称
-5. 复制快递公司
-6. 复制物流单号
-7. 打开平台订单后台
-8. 搜索买家订单
-9. 进入留言页面
-10. 粘贴固定话术
-11. 填入赠品名称和单号
-12. 点击发送
-13. 回到 ERP 或表格标记已通知
-```
-
-这类工作很典型：不难，但很碎，而且数量一多就耗时间。
-
-### RPA 实际流程
-
-<DecisionFlow
-  title="赠品发货留言的执行路径"
-  items={[
-    {
-      label: 'Step 1',
-      title: '找到待通知赠品单',
-      description: '进入 ERP 或待通知表，筛选已发货但未通知买家的赠品订单。',
-    },
-    {
-      label: 'Step 2',
-      title: '校验赠品信息',
-      description: '检查赠品名称、物流公司、物流单号是否完整，避免发送空内容。',
-    },
-    {
-      label: 'Step 3',
-      title: '进入平台留言',
-      description: '根据原订单号或买家昵称打开平台订单详情或客服会话。',
-    },
-    {
-      label: 'Step 4',
-      title: '发送并标记已通知',
-      description: '拼接固定话术发送给买家，再把通知状态写回 ERP 或表格。',
-    },
-  ]}
+<Mermaid
+  title="赠品发货留言：从 ERP 到买家消息"
+  caption="这个案例不需要复杂大图，重点放在线性步骤和消息模板。"
+  chart={`flowchart LR
+    A[ERP 筛选赠品已发货] --> B[检查赠品信息]
+    B --> C{信息完整吗}
+    C -->|否| D[记录异常]
+    C -->|是| E[平台后台搜索原订单]
+    E --> F[打开买家留言入口]
+    F --> G[拼接留言模板]
+    G --> H[发送留言]
+    H --> I[回写已通知]`}
 />
 
-RPA 首先从 ERP 或待通知表拿到赠品单：
+</div>
 
-```text
-打开 ERP
-进入赠品发货查询
-选择日期范围
-筛选状态：已发货
-筛选通知状态：未通知
-点击查询
-```
+<div class="rpa-split-panel">
+  <div>
+    <h3>人工客服怎么做</h3>
+    <ol>
+      <li>去 ERP 查赠品单。</li>
+      <li>复制赠品名称、快递、单号。</li>
+      <li>切到平台后台搜索订单。</li>
+      <li>打开留言窗口。</li>
+      <li>手动粘贴话术。</li>
+      <li>回到 ERP 或表格标记已通知。</li>
+    </ol>
+  </div>
+  <div>
+    <h3>RPA 怎么做</h3>
+    <ol>
+      <li>筛选已发货未通知赠品单。</li>
+      <li>校验赠品字段是否完整。</li>
+      <li>自动打开平台订单留言入口。</li>
+      <li>生成买家留言并发送。</li>
+      <li>回写通知状态和失败原因。</li>
+    </ol>
+  </div>
+</div>
 
-读取字段：
+### 后台操作剧本
 
-```text
-原订单号
-买家昵称
-赠品名称
-赠品数量
-快递公司
-物流单号
-发货时间
-通知状态
-```
+<div class="rpa-script">
+  <div class="rpa-script-row"><span class="rpa-step">01</span><div><strong>ERP 赠品发货查询</strong><p>筛选“已发货 + 未通知买家”的赠品订单。</p><em>输出：原订单号、赠品名称、快递公司、物流单号。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">02</span><div><strong>字段校验</strong><p>判断赠品名称、物流公司、物流单号是否为空，已通知订单直接跳过。</p><em>输出：可留言 / 异常。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">03</span><div><strong>平台订单后台</strong><p>按原订单号搜索订单，进入买家留言入口。</p><em>输出：留言窗口。</em></div></div>
+  <div class="rpa-script-row"><span class="rpa-step">04</span><div><strong>买家留言窗口</strong><p>填入赠品发货话术，发送后判断页面是否出现成功提示。</p><em>输出：已通知 / 发送失败。</em></div></div>
+</div>
 
-然后做完整性检查：
-
-```text
-如果物流单号为空：跳过，记录无物流单号
-如果赠品名称为空：跳过，记录赠品名称为空
-如果订单已经通知过：跳过，避免重复留言
-如果平台订单查不到：记录异常，转人工
-```
-
-确认信息完整后，RPA 进入平台订单后台：
-
-```text
-打开平台商家后台
-进入订单管理
-输入原订单号
-点击搜索
-打开订单详情
-点击联系买家或留言入口
-```
-
-接着拼接留言：
-
-```text
-亲，您的赠品已为您发出，请注意查收～
+<div class="rpa-message-preview">
+  <strong>买家留言模板</strong>
+  <pre>{`亲，您的赠品已为您发出，请注意查收～
 
 赠品：xxx
 快递：xxx
 单号：xxx
 
-赠品与主商品可能分开发出，如您先收到主商品，请不用担心。
-```
+赠品与主商品可能分开发出，如您先收到主商品，请不用担心。`}</pre>
+</div>
 
-如果一个订单有多个赠品，RPA 也可以合并成一条留言：
+### 哪些情况不能自动留言？
 
-```text
-亲，您的活动赠品已陆续发出：
-
-赠品1：xxx，快递：xxx，单号：xxx
-赠品2：xxx，快递：xxx，单号：xxx
-
-请注意查收。
-```
-
-发送后，RPA 要判断是否成功：
-
-```text
-消息窗口出现刚发送的内容
-或页面提示发送成功
-或留言记录中出现当前时间
-```
-
-成功后回写通知状态：
-
-```text
-通知状态：已通知
-通知时间：2026-07-03 15:20
-通知渠道：平台留言
-留言结果：成功
-```
-
-失败也要记录原因：
-
-```text
-订单未找到
-买家无法留言
-留言按钮不可点击
-物流单号为空
-平台页面加载失败
-```
+| 情况 | RPA 动作 | 原因 |
+| --- | --- | --- |
+| 物流单号为空 | 跳过并记录 | 留言内容不完整 |
+| 赠品名称为空 | 跳过并记录 | 买家看不懂发的是什么 |
+| 订单已通知过 | 跳过 | 避免重复打扰买家 |
+| 平台订单查不到 | 转人工 | 订单号可能不一致或已关闭 |
+| 留言按钮不可用 | 转人工 | 平台限制或页面异常 |
 
 ### 这个流程真正省掉了什么？
 
@@ -602,32 +437,19 @@ RPA 首先从 ERP 或待通知表拿到赠品单：
 
 这个流程看起来简单，但很适合 RPA，因为它的判断规则非常明确：有单号、有赠品、有对应订单，就可以留言；信息不完整，就转人工。
 
+</section>
+
 ---
 
-## 三条流程放在一起看，本质都是“找数据、补信息、做动作”
+## 4. 三个案例放在一起看
 
-<VisualGrid columns={3}>
-  <FeatureCard title="静默单推送" meta="售前" description="从订单后台找未付款订单，再去客服后台确认有没有人跟进。">
-    <ul>
-      <li>动作：筛订单、查聊天、发群消息</li>
-      <li>结果：售前客服及时跟进</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="已发货仅退款" meta="售后" description="从售后后台找退款申请，再去 ERP 和物流系统核实状态。">
-    <ul>
-      <li>动作：查订单、查物流、备注或退款</li>
-      <li>结果：标准单自动处理，异常单转人工</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="赠品发货留言" meta="服务" description="从 ERP 读取赠品物流，再到平台给买家发送留言。">
-    <ul>
-      <li>动作：取单号、拼话术、发留言</li>
-      <li>结果：买家及时收到赠品物流信息</li>
-    </ul>
-  </FeatureCard>
-</VisualGrid>
+<div class="rpa-final-grid">
+  <div><strong>真正被自动化的动作</strong><p>查订单、查聊天、查物流、查 ERP、复制字段、发群消息、写备注、给买家留言、回写结果。</p></div>
+  <div><strong>仍然要交给人工的动作</strong><p>状态冲突、金额异常、物流异常、买家强投诉、高风险退款和平台限制。</p></div>
+  <div><strong>这类流程为什么适合 RPA</strong><p>高频、规则明确、跨系统、人工动作重复，且异常可以被清晰地转人工。</p></div>
+</div>
 
-这三条流程可以抽象成同一个模板：
+这三个流程看起来处理的是不同业务，但底层逻辑非常一致。
 
 ```text
 1. 找到待处理数据
@@ -649,64 +471,7 @@ RPA 首先从 ERP 或待通知表拿到赠品单：
    状态冲突、信息缺失、平台限制、风险订单
 ```
 
-## 为什么这些流程适合 RPA？
-
-### 1. 规则清楚
-
-这三个场景都有明确判断条件。
-
-```text
-未付款 + 无人工跟进 → 推送售前
-已发货 + 仅退款 → 先查物流再处理
-赠品已发货 + 有单号 → 给买家留言
-```
-
-规则越清楚，RPA 越容易稳定落地。
-
-### 2. 操作重复
-
-这些工作不是偶尔发生，而是每天都会发生。
-
-客服和售后人员真正消耗时间的地方，往往不是“判断一次”，而是每天重复查很多次。
-
-```text
-每天查未付款订单
-每天查售后物流
-每天复制赠品单号
-每天给买家留言
-```
-
-### 3. 系统分散
-
-电商客服最烦的地方，是信息不在一个系统里。
-
-```text
-订单在平台后台
-售后在售后后台
-发货在 ERP
-物流在快递系统
-通知在群聊或买家留言
-```
-
-RPA 擅长的正是这种跨系统操作。
-
-### 4. 异常可以交给人工
-
-这些流程不需要一开始就追求 100% 自动化。
-
-更合理的做法是：
-
-```text
-标准单自动处理
-缺字段的跳过
-状态冲突的转人工
-风险高的转人工
-处理失败的记录原因
-```
-
-这比强行全自动更稳。
-
-## 对我自己的启发
+## 5. 对我自己的启发
 
 这个案例最有价值的地方，不是 Ulike 做了多高级的系统，而是它选择的切入点非常现实。
 
@@ -738,3 +503,149 @@ RPA 擅长的正是这种跨系统操作。
 <HighlightBox eyebrow="复盘" title="RPA 最适合先吃掉那些重复、明确、可回退的流程">
   客服售后自动化不要一开始追求替代人，而是先把人每天重复查、重复复制、重复提醒、重复记录的动作拿掉。能标准化的自动处理，不能标准化的带着原因交给人工，这样才更容易稳定落地。
 </HighlightBox>
+
+<style>{`
+  .rpa-wide-diagram {
+    margin: 28px 0;
+    overflow-x: auto;
+  }
+
+  .rpa-wide-diagram .mermaid-card {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 760px;
+    width: 100%;
+  }
+
+  .rpa-wide-diagram .mermaid-card pre {
+    width: 100%;
+  }
+
+  .rpa-hero-diagram .mermaid-card {
+    min-width: 980px;
+    padding: 28px;
+  }
+
+  .rpa-case-section {
+    margin: 42px 0;
+  }
+
+  .rpa-case-lead {
+    border-left: 4px solid var(--blue);
+    color: var(--ink-soft);
+    margin: 14px 0 24px;
+    padding-left: 14px;
+  }
+
+  .rpa-split-panel {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 24px 0;
+  }
+
+  .rpa-split-panel > div,
+  .rpa-final-grid > div {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+  }
+
+  .rpa-split-panel h3 {
+    margin-top: 0;
+  }
+
+  .rpa-script {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    margin: 20px 0;
+    overflow: hidden;
+  }
+
+  .rpa-script-row {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 44px 1fr;
+    padding: 16px 18px;
+  }
+
+  .rpa-script-row + .rpa-script-row {
+    border-top: 1px solid var(--line);
+  }
+
+  .rpa-step {
+    align-items: center;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 13px;
+    font-weight: 760;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
+  }
+
+  .rpa-script-row p {
+    margin: 6px 0;
+  }
+
+  .rpa-script-row em {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .rpa-message-preview {
+    background: var(--code-bg);
+    border-radius: 14px;
+    color: var(--code-ink);
+    margin: 22px 0;
+    padding: 18px;
+  }
+
+  .rpa-message-preview strong {
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .rpa-message-preview pre {
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    white-space: pre-wrap;
+  }
+
+  .rpa-details {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin: 22px 0;
+    padding: 14px 18px;
+  }
+
+  .rpa-details summary {
+    cursor: pointer;
+    font-weight: 760;
+  }
+
+  .rpa-final-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 24px 0;
+  }
+
+  @media (max-width: 760px) {
+    .rpa-split-panel,
+    .rpa-final-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .rpa-wide-diagram .mermaid-card,
+    .rpa-hero-diagram .mermaid-card {
+      min-width: 720px;
+    }
+  }
+`}</style>
