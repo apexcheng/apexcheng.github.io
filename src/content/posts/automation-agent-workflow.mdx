@@ -7,13 +7,14 @@ tags:
   - "Agent"
   - "MDX"
   - "自动化"
-minutes: 12
+minutes: 13
 featured: true
 draft: false
 private: false
 ---
 
 import Callout from '../../components/Callout.astro';
+import AgentWorkflowDecisionTree from '../../components/AgentWorkflowDecisionTree.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
 ## 任务拆解
@@ -27,6 +28,16 @@ import Mermaid from '../../components/Mermaid.astro';
 <Callout title="提示">
 先把流程画清楚，再决定是否需要抽函数或拆模块。
 </Callout>
+
+## 先判断任务应该走哪条路
+
+很多 Agent 工作流会变复杂，不是因为任务本身复杂，而是因为一开始没有判断任务类型。小改动被套上大流程，会拖慢执行；大任务没有状态文件，又会在中途丢上下文。
+
+所以我更推荐先做一次轻量判断：**能直接改就直接改，需要阶段状态才建立 `TASK.md`，会产生副作用的任务必须加日志、验证和人工确认。**
+
+<AgentWorkflowDecisionTree />
+
+这个决策树的价值，不是让所有任务都变正式，而是防止两种极端：一种是小事复杂化，另一种是大任务只靠对话记忆硬跑。
 
 ## 大任务用 TASK.md 管状态
 

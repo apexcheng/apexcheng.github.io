@@ -24,7 +24,7 @@
 | `src/content/posts/yingdao-enterprise-rpa-flow-notes.mdx` | `实践` | 影刀企业案例、RPA业务流程、普通版与企业版决策、Mermaid流程图 | 写影刀RPA、企业自动化、普通版/企业版选型、流程图笔记时参考 |
 | `src/content/posts/ulike-customer-service-rpa-flow-detail.mdx` | `实践` | Ulike 客服售后自动化细节拆解，覆盖静默单推送、已发货仅退款、赠品发货留言三条 RPA 实操流程 | 写电商客服售后RPA、订单/物流/ERP跨系统流程、客服自动化动作拆解时参考 |
 | `src/content/posts/how-to-use-yingdao-rpa-correctly.mdx` | `实践` | 从 40+ 个影刀小应用出发，复盘影刀正确用法、人机协作、经营看板、供应链预警和企业版判断，并用深色决策树风展示新需求是否值得做影刀 | 写影刀RPA复盘、正确使用影刀、日报升级经营看板、自动化治理、需求判断决策树时参考 |
-| `src/content/posts/automation-agent-workflow.mdx` | `实践` | Agent 工作流、失败边界、大任务 TASK.md 状态文件、Mermaid 流程图 | 写 Agent 流程、自动化协作、大任务阶段管理、可维护性文章时参考 |
+| `src/content/posts/automation-agent-workflow.mdx` | `实践` | Agent 工作流、任务类型判断、决策树、大任务 TASK.md 状态文件、失败边界、Mermaid 流程图 | 写 Agent 流程、自动化协作、任务拆解决策、大任务阶段管理、可维护性文章时参考 |
 | `src/content/posts/blog-project-architecture.mdx` | `实践` | 博客架构、内容流、发布链路、视觉笔记结构 | 写本博客说明、仓库结构、内容维护规则时参考 |
 | `src/content/posts/blog-code-structure-runtime.mdx` | `实践` | 项目结构、页面入口、文章读取、组件渲染、本地运行和发布流程 | 写本博客代码结构、运行流程、Astro 项目拆解时参考 |
 | `src/content/posts/browser-automation-selectors.md` | `实践` | 选择器优先于坐标点击的判断原则，并用报告仪表盘风展示网页自动化稳定性防线 | 写网页自动化、RPA、可验证操作规范、稳定性分层报告时参考 |

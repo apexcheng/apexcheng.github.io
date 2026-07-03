@@ -1,0 +1,368 @@
+---
+const taskSignals = [
+  '跨多个文件或目录',
+  '需要分阶段执行',
+  '涉及迁移、重构或规则调整',
+  '容易被上下文遗漏',
+];
+
+const lightweightSignals = [
+  '只改一处文案或样式',
+  '没有明显阶段状态',
+  '失败不会产生副作用',
+  '能快速验证清楚',
+];
+---
+
+<section class="agent-workflow-tree" aria-label="Agent 工作流选择决策树">
+  <header class="tree-header">
+    <span class="tree-eyebrow">DECISION TREE</span>
+    <h2>Agent 工作流怎么选？</h2>
+    <p>不是所有任务都要上复杂流程。先判断任务规模、状态风险和副作用，再决定直接做、写 brief，还是建立 TASK.md。</p>
+  </header>
+
+  <div class="tree-stage start-stage">
+    <article class="tree-card start-card">
+      <span class="card-icon" aria-hidden="true">👤</span>
+      <span class="card-kicker">START</span>
+      <h3>收到一个任务</h3>
+      <p>先不要急着抽象，先判断它到底是小改、流程任务，还是多阶段任务。</p>
+    </article>
+  </div>
+
+  <div class="tree-stage decision-stage">
+    <article class="tree-card question-card">
+      <span class="card-kicker">Q1</span>
+      <h3>只是小修小补？</h3>
+      <p>例如改一句话、调整一个样式、补一个小判断。</p>
+    </article>
+  </div>
+
+  <div class="branch-grid">
+    <article class="tree-card answer-card yes-card">
+      <span class="branch-label">是</span>
+      <h3>直接改，不引入 TASK.md</h3>
+      <p>保持最小改动，最后说明改了什么、怎么验证。</p>
+    </article>
+    <article class="tree-card answer-card no-card">
+      <span class="branch-label">否</span>
+      <h3>继续判断任务规模</h3>
+      <p>不要因为任务看起来复杂，就立刻上重流程。</p>
+    </article>
+  </div>
+
+  <div class="tree-stage decision-stage">
+    <article class="tree-card question-card">
+      <span class="card-kicker">Q2</span>
+      <h3>跨文件、跨阶段、容易丢状态？</h3>
+      <p>例如规则迁移、内容重构、组件改造、长任务分批执行。</p>
+    </article>
+  </div>
+
+  <div class="branch-grid">
+    <article class="tree-card answer-card yes-card strong-card">
+      <span class="branch-label">是</span>
+      <h3>先建立 TASK.md</h3>
+      <p>写清目标、阶段、验收标准、当前进度和风险点。</p>
+    </article>
+    <article class="tree-card answer-card no-card">
+      <span class="branch-label">否</span>
+      <h3>用轻量 brief 即可</h3>
+      <p>先写目标、边界和验证点，不额外制造维护文件。</p>
+    </article>
+  </div>
+
+  <div class="tree-stage decision-stage">
+    <article class="tree-card question-card">
+      <span class="card-kicker">Q3</span>
+      <h3>会产生副作用吗？</h3>
+      <p>例如写文件、删内容、发消息、推送、批量处理数据、操作页面后台。</p>
+    </article>
+  </div>
+
+  <div class="branch-grid final-branches">
+    <article class="tree-card answer-card danger-card">
+      <span class="branch-label">是</span>
+      <h3>加日志、验证和人工确认</h3>
+      <p>副作用必须可追踪，失败分支不能被隐藏。</p>
+    </article>
+    <article class="tree-card answer-card yes-card">
+      <span class="branch-label">否</span>
+      <h3>保持流程可读</h3>
+      <p>用普通正文、列表或 Mermaid 表达清楚即可。</p>
+    </article>
+  </div>
+
+  <div class="signal-grid">
+    <article class="signal-card task-card">
+      <h3>适合 TASK.md 的信号</h3>
+      <ul>
+        {taskSignals.map((item) => <li>{item}</li>)}
+      </ul>
+    </article>
+    <article class="signal-card light-card">
+      <h3>不该复杂化的信号</h3>
+      <ul>
+        {lightweightSignals.map((item) => <li>{item}</li>)}
+      </ul>
+    </article>
+  </div>
+
+  <footer class="tree-footer">
+    <strong>最终输出标准</strong>
+    <span>目标清楚 · 边界清楚 · 失败可见 · 验证可复现</span>
+  </footer>
+</section>
+
+<style>
+  .agent-workflow-tree {
+    background:
+      radial-gradient(circle at 50% 0%, rgba(96, 165, 250, 0.2), transparent 30%),
+      radial-gradient(circle at 8% 52%, rgba(16, 185, 129, 0.14), transparent 30%),
+      radial-gradient(circle at 94% 66%, rgba(168, 85, 247, 0.16), transparent 34%),
+      linear-gradient(135deg, #07111f 0%, #10162b 48%, #090b16 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 24px;
+    box-shadow: 0 30px 80px rgba(2, 6, 23, 0.3);
+    color: #e5edf7;
+    margin: 32px 0;
+    overflow: hidden;
+    padding: clamp(22px, 4vw, 42px);
+  }
+
+  .tree-header {
+    margin: 0 auto 28px;
+    max-width: 780px;
+    text-align: center;
+  }
+
+  .tree-eyebrow,
+  .card-kicker,
+  .branch-label {
+    color: #93c5fd;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 860;
+    letter-spacing: 0.08em;
+  }
+
+  .tree-header h2 {
+    color: #fff;
+    font-size: clamp(28px, 5vw, 48px);
+    letter-spacing: -0.06em;
+    line-height: 1.08;
+    margin: 10px 0 14px;
+  }
+
+  .tree-header p {
+    color: #b8c6dc;
+    font-size: clamp(15px, 2vw, 18px);
+    line-height: 1.75;
+    margin: 0;
+  }
+
+  .tree-stage {
+    display: flex;
+    justify-content: center;
+    position: relative;
+  }
+
+  .tree-stage::after {
+    background: linear-gradient(180deg, #60a5fa, rgba(96, 165, 250, 0.2));
+    content: '';
+    height: 34px;
+    left: 50%;
+    position: absolute;
+    top: 100%;
+    transform: translateX(-50%);
+    width: 2px;
+  }
+
+  .decision-stage {
+    margin-top: 34px;
+  }
+
+  .tree-card {
+    background: rgba(15, 23, 42, 0.78);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 18px;
+    box-shadow: 0 18px 48px rgba(2, 6, 23, 0.24);
+    position: relative;
+  }
+
+  .start-card,
+  .question-card {
+    max-width: 520px;
+    padding: 24px 28px;
+    text-align: center;
+    width: min(100%, 520px);
+  }
+
+  .start-card {
+    border-color: rgba(96, 165, 250, 0.38);
+  }
+
+  .card-icon {
+    display: block;
+    font-size: 30px;
+    margin-bottom: 10px;
+  }
+
+  .tree-card h3 {
+    color: #fff;
+    font-size: clamp(20px, 3vw, 26px);
+    letter-spacing: -0.04em;
+    line-height: 1.2;
+    margin: 10px 0 12px;
+  }
+
+  .tree-card p {
+    color: #bdc9da;
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  .branch-grid {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 34px auto 0;
+    max-width: 900px;
+    position: relative;
+  }
+
+  .branch-grid::before {
+    background: linear-gradient(90deg, rgba(52, 211, 153, 0.18), #60a5fa, rgba(251, 113, 133, 0.18));
+    content: '';
+    height: 2px;
+    left: 18%;
+    position: absolute;
+    right: 18%;
+    top: -18px;
+  }
+
+  .answer-card {
+    min-height: 158px;
+    padding: 22px;
+  }
+
+  .yes-card {
+    border-color: rgba(52, 211, 153, 0.35);
+  }
+
+  .yes-card .branch-label {
+    color: #34d399;
+  }
+
+  .no-card {
+    border-color: rgba(96, 165, 250, 0.32);
+  }
+
+  .strong-card {
+    background: linear-gradient(135deg, rgba(6, 95, 70, 0.72), rgba(15, 23, 42, 0.86));
+  }
+
+  .danger-card {
+    background: linear-gradient(135deg, rgba(127, 29, 29, 0.68), rgba(15, 23, 42, 0.86));
+    border-color: rgba(251, 113, 133, 0.36);
+  }
+
+  .danger-card .branch-label {
+    color: #fb7185;
+  }
+
+  .signal-grid {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 34px;
+  }
+
+  .signal-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 18px;
+    padding: 24px;
+  }
+
+  .signal-card h3 {
+    color: #fff;
+    font-size: 20px;
+    letter-spacing: -0.03em;
+    margin: 0 0 16px;
+  }
+
+  .signal-card ul {
+    color: #c8d3e2;
+    line-height: 1.9;
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  .task-card {
+    border-color: rgba(52, 211, 153, 0.26);
+  }
+
+  .light-card {
+    border-color: rgba(96, 165, 250, 0.24);
+  }
+
+  .tree-footer {
+    align-items: center;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 18px;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-top: 24px;
+    padding: 18px 22px;
+  }
+
+  .tree-footer strong {
+    color: #fff;
+    font-size: 18px;
+    white-space: nowrap;
+  }
+
+  .tree-footer span {
+    color: #b8c6dc;
+    line-height: 1.6;
+    text-align: right;
+  }
+
+  @media (max-width: 720px) {
+    .agent-workflow-tree {
+      border-radius: 18px;
+      padding: 22px;
+    }
+
+    .tree-stage::after,
+    .branch-grid::before {
+      display: none;
+    }
+
+    .branch-grid,
+    .signal-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .start-card,
+    .question-card,
+    .answer-card,
+    .signal-card {
+      padding: 20px;
+      text-align: left;
+    }
+
+    .tree-footer {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .tree-footer span {
+      text-align: left;
+    }
+  }
+</style>
