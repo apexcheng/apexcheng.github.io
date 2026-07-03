@@ -79,6 +79,27 @@ html[data-style-theme='classic-gradient'] {
   --shadow: 0 24px 56px rgba(42, 56, 57, 0.12);
 }
 
+html[data-style-theme='visual-system'] {
+  --body-font: Inter, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --display-font: Inter, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --bg: #eef5fb;
+  --paper: rgba(255, 255, 255, 0.86);
+  --paper-soft: rgba(239, 246, 255, 0.82);
+  --ink: #0f172a;
+  --muted: #475569;
+  --soft: #64748b;
+  --line: #cad7e6;
+  --line-soft: #e1eaf4;
+  --blue: #2563eb;
+  --cyan: #0891b2;
+  --green: #16a34a;
+  --violet: #7c3aed;
+  --code: #0f172a;
+  --code-line: #243247;
+  --radius: 16px;
+  --shadow: 0 24px 70px rgba(15, 23, 42, 0.1);
+}
+
 html[data-theme='dark'] {
   --bg: #0b1120;
   --paper: #111827;
@@ -155,6 +176,15 @@ html[data-style-theme='classic-gradient'] body {
     radial-gradient(circle at 14% 8%, rgba(225, 215, 190, 0.28), transparent 300px),
     radial-gradient(circle at 88% 12%, rgba(190, 218, 215, 0.24), transparent 340px),
     linear-gradient(135deg, #fbfaf5 0%, #f1f2ec 52%, #edf5f3 100%),
+    var(--bg);
+}
+
+html[data-style-theme='visual-system'] body {
+  background:
+    radial-gradient(circle at 14% 8%, rgba(125, 211, 252, 0.34), transparent 340px),
+    radial-gradient(circle at 88% 9%, rgba(196, 181, 253, 0.3), transparent 360px),
+    radial-gradient(circle at 72% 84%, rgba(134, 239, 172, 0.18), transparent 360px),
+    linear-gradient(135deg, #f8fbff 0%, #eef6fb 48%, #f7f3ff 100%),
     var(--bg);
 }
 
@@ -433,10 +463,21 @@ html[data-style-theme='index'] .site-header {
   background: transparent;
 }
 
+html[data-style-theme='visual-system'] .site-header {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(18px);
+}
+
 html[data-style-theme='index'] .brand-mark {
   background: transparent;
   border: 1px solid var(--ink);
   color: var(--ink);
+}
+
+html[data-style-theme='visual-system'] .brand-mark {
+  background: linear-gradient(135deg, #2563eb, #06b6d4 55%, #8b5cf6);
+  border-radius: 12px;
+  box-shadow: 0 14px 32px rgba(37, 99, 235, 0.24);
 }
 
 html[data-style-theme='index'] .button.primary {
@@ -449,6 +490,15 @@ html[data-style-theme='index'] .chips span,
 html[data-style-theme='index'] .chips a {
   background: var(--paper-soft);
   color: var(--blue);
+}
+
+html[data-style-theme='visual-system'] .topic-card span,
+html[data-style-theme='visual-system'] .pill,
+html[data-style-theme='visual-system'] .chips span,
+html[data-style-theme='visual-system'] .chips a {
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.92), rgba(237, 233, 254, 0.86));
+  border-color: rgba(147, 197, 253, 0.58);
+  color: #1d4ed8;
 }
 
 .hero-grid {

@@ -52,7 +52,7 @@ const searchItems = [
         try {
           var savedTheme = localStorage.getItem('theme');
           var savedStyleTheme = localStorage.getItem('styleTheme');
-          if (!['index', 'classic', 'index-gradient', 'classic-gradient'].includes(savedStyleTheme)) savedStyleTheme = '';
+          if (!['index', 'classic', 'index-gradient', 'classic-gradient', 'visual-system'].includes(savedStyleTheme)) savedStyleTheme = '';
           document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';
           document.documentElement.dataset.styleTheme = savedStyleTheme || 'index-gradient';
         } catch (error) {
@@ -95,6 +95,7 @@ const searchItems = [
             <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="light">素笺经典</button>
             <button type="button" role="menuitem" data-theme-option data-style-theme-value="index-gradient" data-theme-value="light">晨曦渐变</button>
             <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic-gradient" data-theme-value="light">素笺渐变</button>
+            <button type="button" role="menuitem" data-theme-option data-style-theme-value="visual-system" data-theme-value="light">视觉晶蓝</button>
             <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="dark">玄墨经典</button>
           </div>
         </div>
@@ -117,7 +118,7 @@ const searchItems = [
 
         function currentStyleTheme() {
           var styleTheme = document.documentElement.dataset.styleTheme;
-          return ['index', 'classic', 'index-gradient', 'classic-gradient'].includes(styleTheme) ? styleTheme : 'index-gradient';
+          return ['index', 'classic', 'index-gradient', 'classic-gradient', 'visual-system'].includes(styleTheme) ? styleTheme : 'index-gradient';
         }
 
         function setOpen(isOpen) {
@@ -133,6 +134,7 @@ const searchItems = [
             classic: '素笺经典',
             'index-gradient': '晨曦渐变',
             'classic-gradient': '素笺渐变',
+            'visual-system': '视觉晶蓝',
             dark: '玄墨经典',
           };
           var themeIcons = {
@@ -140,6 +142,7 @@ const searchItems = [
             classic: '<svg viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 0 4 18.5z"></path><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 1 2.5-2.5z"></path></svg>',
             'index-gradient': '<svg viewBox="0 0 24 24"><path d="M4 18h16"></path><path d="M6 18a6 6 0 0 1 12 0"></path><path d="M12 4v3"></path><path d="m5.64 7.64 2.12 2.12"></path><path d="m18.36 7.64-2.12 2.12"></path><path d="M2 13h3"></path><path d="M19 13h3"></path></svg>',
             'classic-gradient': '<svg viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5z"></path><path d="m3 13 9 5 9-5"></path><path d="m3 18 9 5 9-5"></path></svg>',
+            'visual-system': '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"></rect><rect x="13" y="4" width="7" height="7" rx="2"></rect><rect x="4" y="13" width="7" height="7" rx="2"></rect><path d="M14 17h6"></path><path d="M17 14v6"></path></svg>',
             dark: '<svg viewBox="0 0 24 24"><path d="M20 14.5A7.5 7.5 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>',
           };
           var iconKey = currentTheme() === 'dark' ? 'dark' : currentStyleTheme();
