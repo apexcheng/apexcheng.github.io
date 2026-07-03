@@ -27,7 +27,7 @@
 | `src/content/posts/automation-agent-workflow.mdx` | `实践` | Agent 工作流、失败边界、大任务 TASK.md 状态文件、Mermaid 流程图 | 写 Agent 流程、自动化协作、大任务阶段管理、可维护性文章时参考 |
 | `src/content/posts/blog-project-architecture.mdx` | `实践` | 博客架构、内容流、发布链路、视觉笔记结构 | 写本博客说明、仓库结构、内容维护规则时参考 |
 | `src/content/posts/blog-code-structure-runtime.mdx` | `实践` | 项目结构、页面入口、文章读取、组件渲染、本地运行和发布流程 | 写本博客代码结构、运行流程、Astro 项目拆解时参考 |
-| `src/content/posts/browser-automation-selectors.md` | `实践` | 选择器优先于坐标点击的判断原则 | 写网页自动化、RPA、可验证操作规范时参考 |
+| `src/content/posts/browser-automation-selectors.md` | `实践` | 选择器优先于坐标点击的判断原则，并用报告仪表盘风展示网页自动化稳定性防线 | 写网页自动化、RPA、可验证操作规范、稳定性分层报告时参考 |
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
 | `src/content/posts/ai-product-image-agent-workflow.mdx` | `实践` | AI 商品主图 / 详情图 Agent 工作流，覆盖竞品 OCR、卖点提炼、MD 计划文档、用户对话定稿和受控出图 | 写商品图生成、竞品视觉分析、电商 Agent 工作流、图片策划方案时参考 |
 | `src/content/posts/github-pages-deployment-guide.mdx` | `实践` | GitHub Pages、Astro、Actions 部署流程 | 写部署说明、构建发布、静态站点原理时参考 |
