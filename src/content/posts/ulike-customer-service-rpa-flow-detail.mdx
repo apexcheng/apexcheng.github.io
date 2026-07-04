@@ -1,6 +1,6 @@
 ---
 title: "Ulike 客服售后自动化拆解：RPA 实际在后台做了什么？"
-description: "基于 Ulike 公开案例里的静默单推送、已发货仅退款、留言赠品发货信息三个场景，拆解客服售后 RPA 的真实执行流程。"
+description: "基于 Ulike 公开案例里的静默单推送、已发货仅退款、留言赠品发货信息三个场景，拆解客服售后 RPA 在订单、聊天、ERP、物流和消息后台里的真实执行过程。"
 date: 2026-07-03
 category: "实践"
 tags:
@@ -13,737 +13,1936 @@ draft: false
 private: false
 ---
 
-import Callout from '../../components/Callout.astro';
-import MetricCard from '../../components/MetricCard.astro';
-import VisualGrid from '../../components/VisualGrid.astro';
-import HighlightBox from '../../components/HighlightBox.astro';
-import Mermaid from '../../components/Mermaid.astro';
+很多人看到“客服售后自动化”，第一反应是 AI 自动聊天、自动理解用户诉求，甚至自动替客服做售后判断。
 
-很多人看到“客服售后自动化”，会先想到机器人自动聊天、AI 自动理解用户诉求、系统自动做售后决策。
+但 Ulike 这个公开案例更值得看的地方，其实不是“机器人有多聪明”，而是另外一件更现实的事：
 
-但从 Ulike 这个公开案例来看，它更像是另一回事：**RPA 代替客服和售后人员，在多个后台之间反复查询、复制、判断、留言、备注、发群消息。**
+**RPA 代替客服和售后人员，在订单后台、客服后台、ERP、物流页面和群消息之间反复查询、复制、判断、留言、备注和回写。**
 
-<Callout title="资料边界">
-  公开案例里明确提到了 Ulike 客服部门的三个应用：静默单推送、已发货仅退款、留言赠品发货信息。本文不是官方逐点击脚本，而是基于公开描述和电商客服常见流程，对 RPA 实际执行动作做的流程还原。参考来源：[影刀社区公开案例](https://www.yingdao.com/community/detaildiscuss?id=85640423-6663-4c89-9375-a50fea6421c7)。
-</Callout>
-
-<HighlightBox eyebrow="结论" title="客服售后 RPA 的价值，不是替客服思考，而是替客服完成重复后台动作">
-  这三个流程的共同点是：先找到待处理订单，再补齐聊天、物流、ERP 等上下文，最后按规则完成推送、退款辅助或买家留言。真正被自动化的，是查后台、复制字段、判断状态、发送消息和回写结果。
-</HighlightBox>
-
-## 0. 先看三个场景
-
-<VisualGrid columns={3}>
-  <MetricCard label="静默单推送" value="催付前置" detail="自动找出未付款且未被客服跟进的订单，推送给售前客服。" tone="blue" />
-  <MetricCard label="已发货仅退款" value="售后核实" detail="自动查售后单、ERP 和物流状态，辅助判断能否退款。" tone="cyan" />
-  <MetricCard label="赠品发货留言" value="信息搬运" detail="从 ERP 取赠品物流，再自动留言给买家。" tone="green" />
-</VisualGrid>
-
-这类流程不要先想成 AI，也不要先想成系统架构。
-
-更准确的理解是：RPA 像一个人坐在电脑前，按固定步骤操作后台。
-
-<div class="rpa-wide-diagram">
-
-<Mermaid
-  title="客服售后 RPA 的共同动作链"
-  caption="不是先做大系统，而是把客服在多个后台里的重复动作串起来。"
-  chart={`flowchart LR
-    A[待处理数据] --> B[补齐上下文]
-    B --> C[规则判断]
-    C --> D[执行后台动作]
-    D --> E[记录结果]
-    E --> F{是否异常}
-    F -->|否| G[结束]
-    F -->|是| H[转人工]`}
-/>
-
+<div class="csr-source-note">
+  <span>资料边界</span>
+  <p>公开案例明确提到了三个应用：静默单推送、已发货仅退款、留言赠品发货信息。本文不是 Ulike 官方逐点击脚本，而是基于公开描述和电商客服常见流程，对 RPA 实际执行动作做的流程还原。参考来源：<a href="https://www.yingdao.com/community/detaildiscuss?id=85640423-6663-4c89-9375-a50fea6421c7">影刀社区公开案例</a>。</p>
 </div>
 
-人工每天重复的是这些动作：
+<div class="csr-hero">
+  <div class="csr-hero__copy">
+    <span class="csr-kicker">CUSTOMER SERVICE RPA</span>
+    <h2>它不是一个聊天机器人，而是一张跨后台执行工作台</h2>
+    <p>一条售后任务进来以后，RPA 做的事情很像一个人在电脑前操作：找到订单，补齐上下文，按规则判断，再去另一个后台执行动作。</p>
+    <div class="csr-hero__verdict">
+      <span>真正被自动化的</span>
+      <strong>查后台 · 搬字段 · 做规则判断 · 执行动作 · 回写结果</strong>
+    </div>
+  </div>
 
-```text
-打开平台后台
-筛选订单或售后单
-复制订单号
-打开 ERP 查询订单
-复制物流单号
-查询物流状态
-回到平台处理或留言
-把结果写回表格或系统
-```
-
-RPA 做的不是替人理解所有问题，而是把这些固定步骤变成自动流程。
-
----
-
-<section class="rpa-case-section">
-
-## 一、静默单推送：RPA 自动把未付款订单推给售前客服
-
-<p class="rpa-case-lead">目标：RPA 自动筛出“未付款 + 没有明显人工跟进”的订单，推送给售前客服，减少漏跟进。</p>
-
-静默单推送不是自动退款，也不是自动回复用户。
-
-它的核心是：**找到那些自己下单、还没付款、也没有明显客服跟进的订单，然后及时发到售前群。**
-
-人工原来要不断刷新订单后台，看有没有新未付款订单，再去客服后台核实这个买家有没有咨询过。如果没有咨询，或者没人跟进，就复制订单信息发群，让售前客服去催付。
-
-<div class="rpa-wide-diagram">
-
-<Mermaid
-  title="静默单推送：从未付款订单到售前群提醒"
-  caption="这个流程重点不是自动成交，而是把值得跟进的订单及时送到售前面前。"
-  chart={`flowchart LR
-    A[订单后台筛选未付款] --> B[读取订单字段]
-    B --> C[查已推送记录]
-    C --> D{是否已推送}
-    D -->|是| E[跳过]
-    D -->|否| F[进入客服后台查聊天]
-    F --> G{是否有人工跟进}
-    G -->|无| H[拼接售前群消息]
-    G -->|有| I[跳过或降级]
-    H --> J[发送群提醒]
-    J --> K[回写已推送]`}
-/>
-
+  <div class="csr-workdesk" aria-label="三个客服售后自动化场景">
+    <div class="csr-workdesk__head">
+      <span>RPA WORKDESK</span>
+      <strong>3 条业务任务</strong>
+    </div>
+    <div class="csr-desk-job is-blue">
+      <span class="csr-desk-job__id">01</span>
+      <div>
+        <small>售前跟进</small>
+        <h3>静默单推送</h3>
+        <p>找出未付款、未被跟进的订单，送到售前群。</p>
+      </div>
+      <em>群提醒</em>
+    </div>
+    <div class="csr-desk-job is-violet">
+      <span class="csr-desk-job__id">02</span>
+      <div>
+        <small>风险核实</small>
+        <h3>已发货仅退款</h3>
+        <p>跨 ERP 和物流查状态，再决定退款、等待或转人工。</p>
+      </div>
+      <em>主流程</em>
+    </div>
+    <div class="csr-desk-job is-cyan">
+      <span class="csr-desk-job__id">03</span>
+      <div>
+        <small>信息通知</small>
+        <h3>赠品发货留言</h3>
+        <p>把 ERP 中的赠品物流搬到买家留言。</p>
+      </div>
+      <em>自动留言</em>
+    </div>
+  </div>
 </div>
 
-<div class="rpa-split-panel">
+<div class="csr-loop" aria-label="客服售后 RPA 的共同执行循环">
+  <div class="csr-loop__intro">
+    <span>COMMON ENGINE</span>
+    <strong>三个流程，共用一套执行循环</strong>
+  </div>
+  <div class="csr-loop__track">
+    <div><span>01</span><strong>找到任务</strong><small>订单 / 售后单 / 赠品单</small></div>
+    <i>→</i>
+    <div><span>02</span><strong>补齐上下文</strong><small>聊天 / ERP / 物流</small></div>
+    <i>→</i>
+    <div><span>03</span><strong>按规则判断</strong><small>继续 / 跳过 / 转人工</small></div>
+    <i>→</i>
+    <div><span>04</span><strong>执行动作</strong><small>提醒 / 备注 / 留言</small></div>
+    <i>→</i>
+    <div><span>05</span><strong>验证并回写</strong><small>成功 / 失败原因</small></div>
+  </div>
+</div>
+
+这就是理解这三个案例最重要的入口：**不要先想“AI 客服”，先想“一个任务如何在多个后台之间被处理完”。**
+
+## 一、静默单推送：像雷达一样，把值得跟进的订单筛出来
+
+静默单不是所有未付款订单。
+
+真正有价值的是那些“已经下单，但没有明显人工跟进”的订单。人工原来要不断刷新订单后台，再逐个去客服后台查聊天记录，最后把值得跟进的订单复制到群里。
+
+RPA 把这件事变成了一套筛选雷达。
+
+<div class="csr-radar" aria-label="静默单筛选雷达">
+  <div class="csr-radar__head">
+    <div>
+      <span>ORDER RADAR</span>
+      <h3>一笔未付款订单，必须穿过 4 道筛选</h3>
+      <p>不是“看见未付款就发群”，而是不断排除已经处理过、不值得跟进或不应该重复提醒的订单。</p>
+    </div>
+    <div class="csr-live-badge"><i></i> 定时扫描</div>
+  </div>
+
+  <div class="csr-radar__body">
+    <div class="csr-order-sample">
+      <span>样例订单</span>
+      <strong>TM-20260703-0186</strong>
+      <dl>
+        <div><dt>金额</dt><dd>¥1,299</dd></div>
+        <div><dt>未付款</dt><dd>28 分钟</dd></div>
+        <div><dt>聊天</dt><dd>无人工跟进</dd></div>
+      </dl>
+    </div>
+
+    <div class="csr-radar__stages">
+      <div class="csr-radar-stage is-pass">
+        <span class="csr-radar-stage__num">01</span>
+        <div>
+          <small>订单后台</small>
+          <h4>先找到最近未付款订单</h4>
+          <p>读取订单号、买家、商品、金额和下单时间。</p>
+        </div>
+        <strong>通过</strong>
+      </div>
+      <div class="csr-radar-stage is-pass">
+        <span class="csr-radar-stage__num">02</span>
+        <div>
+          <small>推送记录</small>
+          <h4>检查是否已经提醒过</h4>
+          <p>订单号命中历史记录就直接跳过，避免重复刷群。</p>
+        </div>
+        <strong>未推送</strong>
+      </div>
+      <div class="csr-radar-stage is-focus">
+        <span class="csr-radar-stage__num">03</span>
+        <div>
+          <small>客服后台</small>
+          <h4>扫描最近聊天和人工接待状态</h4>
+          <p>无聊天、只有系统消息，或咨询优惠后未付款，才继续评估。</p>
+        </div>
+        <strong>核心判断</strong>
+      </div>
+      <div class="csr-radar-stage is-pass">
+        <span class="csr-radar-stage__num">04</span>
+        <div>
+          <small>售前群</small>
+          <h4>拼接订单信息并发送提醒</h4>
+          <p>发送成功后回写时间和状态；失败则记录原因。</p>
+        </div>
+        <strong>进入队列</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+这里最关键的后台动作，不是“自动催付”，而是**自动把订单送到正确的人面前**。
+
+<div class="csr-message-window">
+  <div class="csr-message-window__bar">
+    <div><i></i><i></i><i></i></div>
+    <span>售前跟进群 / 自动提醒</span>
+    <em>刚刚</em>
+  </div>
+  <div class="csr-message-window__content">
+    <span class="csr-bot-avatar">R</span>
+    <div class="csr-chat-bubble">
+      <strong>静默未付款订单提醒</strong>
+      <div class="csr-chat-grid">
+        <span>店铺 <b>Ulike 官方旗舰店</b></span>
+        <span>金额 <b>¥1,299</b></span>
+        <span>未付款 <b>28 分钟</b></span>
+        <span>聊天状态 <b>未发现人工跟进</b></span>
+      </div>
+      <p>请售前客服及时跟进。</p>
+    </div>
+  </div>
+</div>
+
+人工原来反复做的是：刷新未付款订单、复制订单信息、切客服后台查聊天、判断有没有人跟进、发群、再记一遍已经推送。
+
+RPA 的价值，就是把这串机械动作拿掉，让售前客服只看最终的待跟进队列。
+
+## 二、已发货仅退款：真正复杂的是先查清“货现在在哪”
+
+这是三个案例里最值得拆的流程。
+
+商品已经发出，买家却申请“仅退款”。这时最危险的做法，就是只看平台售后单，然后直接点退款。
+
+RPA 必须先跨系统回答一个问题：**货到底在哪？**
+
+<div class="csr-tower" aria-label="已发货仅退款售后控制塔">
+  <div class="csr-tower__head">
+    <div>
+      <span>REFUND CONTROL TOWER</span>
+      <h3>平台售后单只是入口，物流状态才决定下一步</h3>
+      <p>RPA 先从售后单拿订单号，再去 ERP 找物流单号，最后用物流轨迹把订单分流到不同处理动作。</p>
+    </div>
+    <div class="csr-tower__status">
+      <small>自动处理原则</small>
+      <strong>状态不清，不做高风险动作</strong>
+    </div>
+  </div>
+
+  <div class="csr-tower__layout">
+    <div class="csr-case-console">
+      <div class="csr-console-bar">
+        <span>CASE CONTEXT</span>
+        <em>待处理</em>
+      </div>
+      <div class="csr-console-main">
+        <small>售后单</small>
+        <strong>AS-20260703-0921</strong>
+        <dl>
+          <div><dt>类型</dt><dd>已发货 · 仅退款</dd></div>
+          <div><dt>退款金额</dt><dd>¥1,299</dd></div>
+          <div><dt>ERP 状态</dt><dd>已出库</dd></div>
+          <div><dt>物流单号</dt><dd>SF********86</dd></div>
+        </dl>
+      </div>
+      <div class="csr-console-steps">
+        <div><span>1</span><p>平台筛售后单</p></div>
+        <div><span>2</span><p>复制订单号查 ERP</p></div>
+        <div><span>3</span><p>读取快递和物流单号</p></div>
+        <div><span>4</span><p>查询最新物流轨迹</p></div>
+        <div><span>5</span><p>回平台执行动作并记录</p></div>
+      </div>
+    </div>
+
+    <div class="csr-state-rail">
+      <div class="csr-state-rail__title">
+        <span>LOGISTICS STATE ROUTER</span>
+        <strong>物流状态 → 处理动作</strong>
+      </div>
+
+      <div class="csr-state-item is-low">
+        <span class="csr-state-dot"></span>
+        <div><small>未揽收</small><h4>先确认能否拦截</h4><p>部分低风险场景可继续处理，但仍按店铺 SOP 执行。</p></div>
+        <strong>部分自动</strong>
+      </div>
+      <div class="csr-state-item is-stop">
+        <span class="csr-state-dot"></span>
+        <div><small>运输中 / 派送中</small><h4>不直接退款</h4><p>货还在途中，回写备注或进入人工清单。</p></div>
+        <strong>暂停</strong>
+      </div>
+      <div class="csr-state-item is-risk">
+        <span class="csr-state-dot"></span>
+        <div><small>已签收</small><h4>转人工核实</h4><p>可能需要改走退货退款，不能自动同意仅退款。</p></div>
+        <strong>高风险</strong>
+      </div>
+      <div class="csr-state-item is-wait">
+        <span class="csr-state-dot"></span>
+        <div><small>拒收退回中</small><h4>等待回仓</h4><p>保留跟进记录，货未回仓前不自动退款。</p></div>
+        <strong>等待</strong>
+      </div>
+      <div class="csr-state-item is-go">
+        <span class="csr-state-dot"></span>
+        <div><small>已退回仓库</small><h4>进入退款处理</h4><p>回仓状态明确后，风险降低，可按规则提交处理。</p></div>
+        <strong>可执行</strong>
+      </div>
+      <div class="csr-state-item is-error">
+        <span class="csr-state-dot"></span>
+        <div><small>查不到 / 状态冲突</small><h4>停止自动动作</h4><p>ERP 无订单、物流为空或平台与 ERP 状态冲突时，带原因转人工。</p></div>
+        <strong>异常</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+这个视觉路径比一张大流程图更接近 RPA 真正的执行过程：**先收集上下文，再让物流状态决定动作。**
+
+<div class="csr-action-log" aria-label="RPA 实际后台操作日志">
+  <div class="csr-action-log__head">
+    <div>
+      <span>EXECUTION LOG</span>
+      <h3>RPA 在后台实际做了哪些动作</h3>
+    </div>
+    <em>不是概念流程，而是操作顺序</em>
+  </div>
+
+  <div class="csr-action-row">
+    <span class="csr-action-row__index">01</span>
+    <div><small>平台售后后台</small><strong>筛选“已发货 + 仅退款 + 待处理”</strong><p>读取售后单号、订单号、金额、申请原因和当前状态。</p></div>
+    <code>输出：目标售后单</code>
+  </div>
+  <div class="csr-action-row">
+    <span class="csr-action-row__index">02</span>
+    <div><small>ERP 订单查询</small><strong>输入平台订单号，打开对应订单</strong><p>读取发货状态、仓库、出库时间、快递公司和物流单号。</p></div>
+    <code>输出：物流字段</code>
+  </div>
+  <div class="csr-action-row">
+    <span class="csr-action-row__index">03</span>
+    <div><small>物流查询页面</small><strong>查询最新轨迹并识别当前状态</strong><p>把轨迹归类为未揽收、运输中、签收、拒收退回、回仓或异常。</p></div>
+    <code>输出：处理分支</code>
+  </div>
+  <div class="csr-action-row">
+    <span class="csr-action-row__index">04</span>
+    <div><small>平台售后后台</small><strong>执行备注、等待、退款或转人工</strong><p>只有状态明确且符合 SOP 的订单才继续自动动作。</p></div>
+    <code>输出：平台结果</code>
+  </div>
+  <div class="csr-action-row">
+    <span class="csr-action-row__index">05</span>
+    <div><small>记录表 / 系统</small><strong>回写处理状态、时间和失败原因</strong><p>页面提交失败、物流缺失或状态冲突，都要留下可追踪记录。</p></div>
+    <code>输出：可审计结果</code>
+  </div>
+</div>
+
+<div class="csr-risk-strip">
   <div>
-    <h3>人工原来怎么做</h3>
-    <ol>
-      <li>打开订单后台，筛选未付款订单。</li>
-      <li>复制订单号、买家、商品、金额。</li>
-      <li>切到客服后台，搜索买家聊天记录。</li>
-      <li>判断有没有客服跟进过。</li>
-      <li>手工整理订单信息，发到售前群。</li>
-      <li>手工记录这条订单已经提醒过。</li>
-    </ol>
-  </div>
-  <div>
-    <h3>RPA 实际怎么做</h3>
-    <ol>
-      <li>定时筛选最近未付款订单。</li>
-      <li>自动比对已推送记录，避免重复。</li>
-      <li>自动查询聊天记录和人工接待状态。</li>
-      <li>按规则判断是否属于静默单。</li>
-      <li>自动拼接群消息并发送。</li>
-      <li>回写推送状态、时间和失败原因。</li>
-    </ol>
-  </div>
-</div>
-
-### 后台操作剧本
-
-<div class="rpa-script">
-  <div class="rpa-script-row">
-    <span class="rpa-step">01</span>
-    <div><strong>平台订单后台</strong><p>筛选“未付款 / 待付款”订单，限定最近 30 分钟或最近 2 小时。</p><em>输出：订单号、买家、商品、金额、下单时间。</em></div>
-  </div>
-  <div class="rpa-script-row">
-    <span class="rpa-step">02</span>
-    <div><strong>本地记录 / 在线表格</strong><p>用订单号比对是否已经推送过。</p><em>输出：跳过或继续处理。</em></div>
-  </div>
-  <div class="rpa-script-row">
-    <span class="rpa-step">03</span>
-    <div><strong>客服后台</strong><p>搜索买家昵称或订单号，读取最近聊天记录。</p><em>输出：无记录、系统消息、人工跟进、明确放弃购买。</em></div>
-  </div>
-  <div class="rpa-script-row">
-    <span class="rpa-step">04</span>
-    <div><strong>群机器人 / 钉钉客户端</strong><p>拼接售前跟进消息，并发送到指定客服群。</p><em>输出：发送成功、发送失败、失败原因。</em></div>
-  </div>
-</div>
-
-### 静默单判定条件
-
-| 聊天情况 | RPA 判断 | 动作 |
-| --- | --- | --- |
-| 无聊天记录 | 可能是静默单 | 推送售前群 |
-| 只有系统消息 | 仍可能是静默单 | 推送售前群 |
-| 有人工客服跟进 | 已有人处理 | 跳过或降低优先级 |
-| 买家明确不买 | 不需要跟进 | 跳过 |
-| 咨询过优惠但未付款 | 高价值跟进单 | 优先推送 |
-
-<div class="rpa-message-preview">
-  <div class="rpa-message-preview__head">
-    <strong>售前群消息示例</strong>
-    <span>群提醒</span>
-  </div>
-  <div class="rpa-message-preview__body">
-    <p>【静默未付款订单提醒】</p>
-    <p>平台：天猫</p>
-    <p>店铺：Ulike 官方旗舰店</p>
-    <p>买家：xxx</p>
-    <p>订单号：123456789</p>
-    <p>商品：Ulike 脱毛仪 xxx</p>
-    <p>金额：1299 元</p>
-    <p>未付款时长：28 分钟</p>
-    <p>聊天记录：未发现人工跟进</p>
-    <p class="rpa-message-preview__gap">请售前客服及时跟进。</p>
-  </div>
-</div>
-
-### 这个流程真正省掉了什么？
-
-它省掉的不是客服销售能力，而是这些机械动作：
-
-```text
-反复刷新未付款订单
-逐个复制订单信息
-来回搜索聊天记录
-手工判断是否跟进过
-手工发群提醒
-手工记录已推送
-```
-
-最终效果是：售前客服不用一直盯后台，RPA 会把需要跟进的未付款订单送到面前。
-
-</section>
-
----
-
-<section class="rpa-case-section rpa-main-case">
-
-## 二、已发货仅退款：RPA 先查物流，再辅助处理售后
-
-<p class="rpa-case-lead">目标：RPA 自动核实售后单、ERP 发货状态和物流轨迹，避免“货已经发出却直接退款”的风险。</p>
-
-已发货仅退款，比静默单复杂得多。
-
-因为商品已经发出去了，买家却申请“仅退款”。如果商家直接同意，可能出现货款两空：买家收到货，商家又退款。
-
-所以人工售后或退款财务必须先核实：货到底在哪？
-
-```text
-快递是否揽收？
-是否运输中？
-是否已签收？
-是否拒收？
-是否退回仓库？
-```
-
-RPA 的作用不是简单点“同意退款”，而是先跨系统核实订单和物流状态，再按 SOP 辅助处理。
-
-<div class="rpa-wide-diagram rpa-hero-diagram">
-
-<Mermaid
-  title="已发货仅退款：RPA 判断链"
-  caption="这是全文的主流程图。核心不是自动退款，而是先查清物流状态，再决定能否处理。"
-  chart={`flowchart TD
-    A[售后后台筛选\n已发货 + 仅退款 + 待处理] --> B[读取售后单信息\n订单号 金额 原因 买家]
-    B --> C[ERP 查询订单\n发货状态 仓库 出库时间]
-    C --> D[获取物流信息\n快递公司 物流单号]
-    D --> E[查询物流轨迹]
-    E --> F{当前物流状态}
-    F -->|未揽收| G[备注可拦截\n部分场景可处理]
-    F -->|运输中 / 派送中| H[不直接退款\n备注或转人工]
-    F -->|已签收| I[不自动同意仅退款\n转人工核实]
-    F -->|拒收退回中| J[等待回仓\n保留跟进记录]
-    F -->|已退回仓库| K[可提交退款处理]
-    F -->|异常 / 查不到| L[转人工并记录原因]
-    G --> M[回写处理结果]
-    H --> M
-    I --> M
-    J --> M
-    K --> M
-    L --> M`}
-/>
-
-</div>
-
-<div class="rpa-split-panel">
-  <div>
-    <h3>人工售后怎么做</h3>
-    <ol>
-      <li>筛选待处理仅退款。</li>
-      <li>逐条点进售后详情。</li>
-      <li>复制订单号去 ERP 查询。</li>
-      <li>复制物流单号再查轨迹。</li>
-      <li>判断是否签收、拒收、退回。</li>
-      <li>回平台备注、拒绝、同意或转人工。</li>
-      <li>再把结果记录到表格或系统。</li>
-    </ol>
-  </div>
-  <div>
-    <h3>RPA 售后助理怎么做</h3>
-    <ol>
-      <li>批量筛选目标售后单。</li>
-      <li>自动跨系统查询订单和物流。</li>
-      <li>把物流状态转成处理分支。</li>
-      <li>标准单自动备注或处理。</li>
-      <li>风险单带原因进入人工清单。</li>
-      <li>每条单记录处理状态和失败原因。</li>
-    </ol>
-  </div>
-</div>
-
-### 后台操作剧本
-
-<div class="rpa-script">
-  <div class="rpa-script-row"><span class="rpa-step">01</span><div><strong>平台售后后台</strong><p>筛选“已发货 + 仅退款 + 待处理”。</p><em>输出：售后单号、订单号、退款金额、退款原因。</em></div></div>
-  <div class="rpa-script-row"><span class="rpa-step">02</span><div><strong>售后详情页</strong><p>读取买家申请原因，排除非仅退款、已处理、金额异常或高风险订单。</p><em>输出：继续处理 / 转人工。</em></div></div>
-  <div class="rpa-script-row"><span class="rpa-step">03</span><div><strong>ERP 订单查询</strong><p>输入平台订单号，读取发货状态、仓库、出库时间、物流公司和物流单号。</p><em>输出：物流查询所需字段。</em></div></div>
-  <div class="rpa-script-row"><span class="rpa-step">04</span><div><strong>物流轨迹页面</strong><p>查询最新轨迹，识别未揽收、运输中、已签收、拒收退回、已退回仓库等状态。</p><em>输出：物流状态。</em></div></div>
-  <div class="rpa-script-row"><span class="rpa-step">05</span><div><strong>平台售后后台</strong><p>根据物流状态执行同意退款、备注说明、转人工或等待回仓。</p><em>输出：平台处理结果。</em></div></div>
-</div>
-
-### 物流状态判断矩阵
-
-| 物流状态 | RPA 动作 | 是否自动处理 | 备注 |
-| --- | --- | --- | --- |
-| 未揽收 | 备注可拦截，部分场景可处理退款 | 可部分自动 | 风险较低，但仍要看店铺 SOP |
-| 运输中 | 填写备注或转人工 | 否 | 货还在路上，不直接退款 |
-| 派送中 | 转人工或等待更新 | 否 | 接近签收，风险较高 |
-| 已签收 | 转人工核实 | 否 | 可能需要改退货退款 |
-| 拒收退回中 | 备注等待回仓 | 否 | 货没回仓前不建议自动退 |
-| 已退回仓库 | 提交退款或进入退款处理 | 是 | 货已回仓，风险降低 |
-| 物流异常 | 记录异常并转人工 | 否 | 状态不清楚，不能自动决策 |
-
-<details class="rpa-details" open>
-  <summary>异常处理块</summary>
-  <ul>
-    <li>ERP 查不到订单：记录订单号和平台，进入人工清单。</li>
-    <li>物流单号为空：备注“ERP 未获取物流单号”，暂不处理退款。</li>
-    <li>平台状态和 ERP 状态冲突：截图并转人工。</li>
-    <li>页面提交失败：记录失败原因、重试次数和截图路径。</li>
-  </ul>
-</details>
-
-<div class="rpa-message-preview rpa-message-preview--note">
-  <div class="rpa-message-preview__head">
-    <strong>售后备注示例</strong>
-    <span>售后备注</span>
-  </div>
-  <div class="rpa-message-preview__body">
-    <p>订单已发货，物流显示运输中，当前不直接处理仅退款。</p>
-    <p>建议等待商品拒收退回或仓库签收后，再进入退款处理。</p>
-  </div>
-</div>
-
-### 这个流程真正省掉了什么？
-
-它省掉的是售后人员最耗时的核实动作：
-
-```text
-复制订单号
-切换 ERP
-查发货状态
-复制物流单号
-查物流轨迹
-回到平台备注
-记录处理状态
-```
-
-同时它减少了漏查和误判。
-
-售后人员不需要每一单都从头查一遍，而是先看 RPA 给出的结果：物流状态是什么、机器人做了什么、为什么转人工。
-
-</section>
-
----
-
-<section class="rpa-case-section">
-
-## 三、留言赠品发货信息：RPA 自动把 ERP 里的赠品物流发给买家
-
-<p class="rpa-case-lead">目标：RPA 从 ERP 查询赠品名称、快递公司和物流单号，再自动给买家留言，减少客服复制单号的工作。</p>
-
-电商活动里经常有赠品，比如下单赠、评价赠、直播间赠品、活动礼包。
-
-赠品有时不会和主商品一起发货，而是后续单独发出。买家就会问：赠品发了吗？单号多少？为什么主商品到了，赠品还没到？
-
-人工客服要回答这个问题，就要去 ERP 查赠品发货信息，再回到平台给买家留言。
-
-这个流程本质上是信息搬运：**ERP 里已经有赠品物流，但买家不知道，客服要把它搬到平台留言里。**
-
-<div class="rpa-wide-diagram">
-
-<Mermaid
-  title="赠品发货留言：从 ERP 到买家消息"
-  caption="这个案例不需要复杂大图，重点放在线性步骤和消息模板。"
-  chart={`flowchart LR
-    A[ERP 筛选赠品已发货] --> B[检查赠品信息]
-    B --> C{信息完整吗}
-    C -->|否| D[记录异常]
-    C -->|是| E[平台后台搜索原订单]
-    E --> F[打开买家留言入口]
-    F --> G[拼接留言模板]
-    G --> H[发送留言]
-    H --> I[回写已通知]`}
-/>
-
-</div>
-
-<div class="rpa-split-panel">
-  <div>
-    <h3>人工客服怎么做</h3>
-    <ol>
-      <li>去 ERP 查赠品单。</li>
-      <li>复制赠品名称、快递、单号。</li>
-      <li>切到平台后台搜索订单。</li>
-      <li>打开留言窗口。</li>
-      <li>手动粘贴话术。</li>
-      <li>回到 ERP 或表格标记已通知。</li>
-    </ol>
+    <span>自动处理</span>
+    <strong>规则明确、状态可验证</strong>
+    <p>例如明确回仓，且符合店铺退款 SOP。</p>
   </div>
   <div>
-    <h3>RPA 怎么做</h3>
-    <ol>
-      <li>筛选已发货未通知赠品单。</li>
-      <li>校验赠品字段是否完整。</li>
-      <li>自动打开平台订单留言入口。</li>
-      <li>生成买家留言并发送。</li>
-      <li>回写通知状态和失败原因。</li>
-    </ol>
+    <span>等待</span>
+    <strong>状态正在变化</strong>
+    <p>例如拒收退回中，需要等下一次物流更新。</p>
+  </div>
+  <div>
+    <span>转人工</span>
+    <strong>风险高或上下文冲突</strong>
+    <p>例如已签收、金额异常、ERP 与平台状态冲突。</p>
   </div>
 </div>
 
-### 后台操作剧本
+这类流程最适合 RPA 的地方，不是它能“自动退款”，而是它能先替售后人员完成最耗时的核实动作。
 
-<div class="rpa-script">
-  <div class="rpa-script-row"><span class="rpa-step">01</span><div><strong>ERP 赠品发货查询</strong><p>筛选“已发货 + 未通知买家”的赠品订单。</p><em>输出：原订单号、赠品名称、快递公司、物流单号。</em></div></div>
-  <div class="rpa-script-row"><span class="rpa-step">02</span><div><strong>字段校验</strong><p>判断赠品名称、物流公司、物流单号是否为空，已通知订单直接跳过。</p><em>输出：可留言 / 异常。</em></div></div>
-  <div class="rpa-script-row"><span class="rpa-step">03</span><div><strong>平台订单后台</strong><p>按原订单号搜索订单，进入买家留言入口。</p><em>输出：留言窗口。</em></div></div>
-  <div class="rpa-script-row"><span class="rpa-step">04</span><div><strong>买家留言窗口</strong><p>填入赠品发货话术，发送后判断页面是否出现成功提示。</p><em>输出：已通知 / 发送失败。</em></div></div>
-</div>
+售后人员最终看到的应该不是一堆待处理单，而是：**物流状态是什么、RPA 做了什么、为什么没有自动处理。**
 
-<div class="rpa-message-preview rpa-message-preview--buyer">
-  <div class="rpa-message-preview__head">
-    <strong>买家留言模板</strong>
-    <span>买家留言</span>
+## 三、赠品发货留言：把 ERP 里的信息，沿着传送带送到买家面前
+
+赠品流程比退款流程简单很多，但非常适合 RPA。
+
+因为这里几乎没有复杂决策，核心就是一件事：**ERP 已经有赠品物流，买家还不知道。**
+
+人工客服原来要查赠品单、复制赠品名称、复制快递和单号，再切到平台后台搜索原订单、打开留言窗口、粘贴话术、发送，最后标记已经通知。
+
+RPA 可以把它做成一条很直观的信息传送带。
+
+<div class="csr-conveyor" aria-label="赠品发货信息传送带">
+  <div class="csr-conveyor__head">
+    <span>DATA CONVEYOR</span>
+    <h3>字段从 ERP 出发，经过校验，再进入买家留言</h3>
   </div>
-  <div class="rpa-message-preview__body">
-    <p>亲，您的赠品已为您发出，请注意查收～</p>
-    <p class="rpa-message-preview__gap">赠品：xxx</p>
-    <p>快递：xxx</p>
-    <p>单号：xxx</p>
-    <p class="rpa-message-preview__gap">赠品与主商品可能分开发出，如您先收到主商品，请不用担心。</p>
+
+  <div class="csr-conveyor__track">
+    <div class="csr-conveyor-node is-source">
+      <small>ERP</small>
+      <strong>赠品已发货</strong>
+      <div class="csr-field-stack">
+        <span>原订单号</span>
+        <span>赠品名称</span>
+        <span>快递公司</span>
+        <span>物流单号</span>
+      </div>
+    </div>
+
+    <div class="csr-conveyor-arrow"><span>→</span><small>搬运字段</small></div>
+
+    <div class="csr-conveyor-node is-gate">
+      <small>VALIDATION GATE</small>
+      <strong>信息完整吗？</strong>
+      <ul>
+        <li>物流单号非空</li>
+        <li>赠品名称非空</li>
+        <li>还没有通知过</li>
+      </ul>
+    </div>
+
+    <div class="csr-conveyor-arrow"><span>→</span><small>通过</small></div>
+
+    <div class="csr-conveyor-node is-platform">
+      <small>平台后台</small>
+      <strong>搜索原订单</strong>
+      <p>打开买家留言入口，填入模板，再判断是否出现发送成功提示。</p>
+    </div>
   </div>
-</div>
 
-### 哪些情况不能自动留言？
-
-| 情况 | RPA 动作 | 原因 |
-| --- | --- | --- |
-| 物流单号为空 | 跳过并记录 | 留言内容不完整 |
-| 赠品名称为空 | 跳过并记录 | 买家看不懂发的是什么 |
-| 订单已通知过 | 跳过 | 避免重复打扰买家 |
-| 平台订单查不到 | 转人工 | 订单号可能不一致或已关闭 |
-| 留言按钮不可用 | 转人工 | 平台限制或页面异常 |
-
-### 这个流程真正省掉了什么？
-
-它省掉的是“ERP 到平台”的人工搬运。
-
-```text
-查赠品单
-复制赠品名称
-复制快递单号
-切换平台后台
-搜索订单
-粘贴话术
-发送留言
-标记已通知
-```
-
-这个流程看起来简单，但很适合 RPA，因为它的判断规则非常明确：有单号、有赠品、有对应订单，就可以留言；信息不完整，就转人工。
-
-</section>
-
----
-
-## 4. 三个案例放在一起看
-
-<div class="rpa-final-grid">
-  <div><strong>真正被自动化的动作</strong><p>查订单、查聊天、查物流、查 ERP、复制字段、发群消息、写备注、给买家留言、回写结果。</p></div>
-  <div><strong>仍然要交给人工的动作</strong><p>状态冲突、金额异常、物流异常、买家强投诉、高风险退款和平台限制。</p></div>
-  <div><strong>这类流程为什么适合 RPA</strong><p>高频、规则明确、跨系统、人工动作重复，且异常可以被清晰地转人工。</p></div>
-</div>
-
-这三个流程看起来处理的是不同业务，但底层逻辑非常一致。
-
-<div class="rpa-process-summary">
-  <div class="rpa-process-summary__item">
-    <span class="rpa-process-summary__num">01</span>
-    <div><h3>找到待处理数据</h3><p>未付款订单、售后单、赠品发货单。</p></div>
-  </div>
-  <div class="rpa-process-summary__item">
-    <span class="rpa-process-summary__num">02</span>
-    <div><h3>补齐上下文</h3><p>聊天记录、ERP 订单、物流轨迹、赠品信息。</p></div>
-  </div>
-  <div class="rpa-process-summary__item">
-    <span class="rpa-process-summary__num">03</span>
-    <div><h3>按规则判断</h3><p>是否静默、是否可退款、是否可留言。</p></div>
-  </div>
-  <div class="rpa-process-summary__item">
-    <span class="rpa-process-summary__num">04</span>
-    <div><h3>执行动作</h3><p>发群消息、填写备注、同意退款、买家留言。</p></div>
-  </div>
-  <div class="rpa-process-summary__item">
-    <span class="rpa-process-summary__num">05</span>
-    <div><h3>记录结果</h3><p>已推送、已处理、已通知、失败原因。</p></div>
-  </div>
-  <div class="rpa-process-summary__item">
-    <span class="rpa-process-summary__num">06</span>
-    <div><h3>异常转人工</h3><p>状态冲突、信息缺失、平台限制、风险订单。</p></div>
+  <div class="csr-conveyor__fallback">
+    <span>校验失败时</span>
+    <p>物流单号为空、赠品名称为空、订单查不到、留言按钮不可用，都不强行继续，而是记录原因后转人工。</p>
   </div>
 </div>
 
-## 5. 对我自己的启发
+<div class="csr-buyer-message">
+  <div class="csr-buyer-message__meta">
+    <span>BUYER MESSAGE</span>
+    <strong>自动留言预览</strong>
+  </div>
+  <div class="csr-phone-chat">
+    <div class="csr-phone-chat__bar"><span>订单留言</span><em>发送成功</em></div>
+    <div class="csr-phone-chat__bubble">
+      <p>亲，您的赠品已为您发出，请注意查收～</p>
+      <dl>
+        <div><dt>赠品</dt><dd>活动礼包</dd></div>
+        <div><dt>快递</dt><dd>顺丰</dd></div>
+        <div><dt>单号</dt><dd>SF********86</dd></div>
+      </dl>
+      <p>赠品与主商品可能分开发出，如您先收到主商品，请不用担心。</p>
+    </div>
+  </div>
+</div>
 
-这个案例最有价值的地方，不是 Ulike 做了多高级的系统，而是它选择的切入点非常现实。
+这个流程看起来最简单，却很能说明 RPA 的价值：**系统里已经有答案，但需要有人把答案搬到另一个系统。**
 
-它没有一上来做“全自动客服”，而是先找客服部门最重复、最明确、最容易验证的动作：
+只要字段完整、目标订单明确、发送结果可验证，这种跨后台信息搬运就是非常典型的 RPA 场景。
 
-```text
-未付款订单提醒
-已发货仅退款核实
-赠品物流留言
-```
+## 四、三个案例放在一起，真正的共同点是什么？
 
-这也是做影刀流程时更稳的思路。
+表面上，它们一个在做催付前置，一个在处理退款风险，一个在发赠品物流。
 
-先不要问“能不能做一个完整智能客服”。
+底层却是同一套工作方式。
 
-应该先问：
+<div class="csr-kernel" aria-label="客服售后 RPA 共同执行内核">
+  <div class="csr-kernel__head">
+    <span>RPA EXECUTION KERNEL</span>
+    <h3>不是替人“思考所有问题”，而是把一个任务推进到明确结果</h3>
+  </div>
 
-```text
-客服每天有没有重复查后台？
-有没有固定判断规则？
-有没有大量复制粘贴？
-有没有固定话术？
-有没有需要发群或留言的动作？
-有没有失败后可以转人工的边界？
-```
+  <div class="csr-kernel__path">
+    <div class="csr-kernel-step">
+      <span>INPUT</span>
+      <strong>找到待处理数据</strong>
+      <p>未付款订单、售后单、赠品发货单。</p>
+    </div>
+    <i>→</i>
+    <div class="csr-kernel-step">
+      <span>CONTEXT</span>
+      <strong>补齐缺失上下文</strong>
+      <p>聊天记录、ERP 订单、物流轨迹、赠品字段。</p>
+    </div>
+    <i>→</i>
+    <div class="csr-kernel-step is-focus">
+      <span>RULE</span>
+      <strong>按明确规则判断</strong>
+      <p>是否静默、是否可退款、是否可以留言。</p>
+    </div>
+    <i>→</i>
+    <div class="csr-kernel-step">
+      <span>ACTION</span>
+      <strong>执行后台动作</strong>
+      <p>发群、备注、退款处理、买家留言。</p>
+    </div>
+    <i>→</i>
+    <div class="csr-kernel-step">
+      <span>VERIFY</span>
+      <strong>验证并留下结果</strong>
+      <p>已推送、已处理、已通知、失败原因。</p>
+    </div>
+  </div>
 
-如果这些问题答案都是“有”，那就很适合先做成 RPA。
+  <div class="csr-kernel__handoff">
+    <span>HUMAN HANDOFF</span>
+    <strong>状态冲突、信息缺失、金额异常、物流异常、平台限制 → 带着原因交给人工</strong>
+  </div>
+</div>
 
-<HighlightBox eyebrow="复盘" title="RPA 最适合先吃掉那些重复、明确、可回退的流程">
-  客服售后自动化不要一开始追求替代人，而是先把人每天重复查、重复复制、重复提醒、重复记录的动作拿掉。能标准化的自动处理，不能标准化的带着原因交给人工，这样才更容易稳定落地。
-</HighlightBox>
+这里有一个非常重要的边界：
+
+**RPA 不需要把所有异常都解决。它只需要把标准单处理完，把非标准单整理清楚。**
+
+真正好的客服售后自动化，不是“完全没人管”，而是让人工只处理那些确实需要判断的订单。
+
+## 五、对我自己的启发：先找重复动作，不要先做“全自动客服”
+
+这个案例最有价值的地方，是它选择的切入点很现实。
+
+它没有一上来做一个庞大的智能客服系统，而是先从客服部门最重复、最明确、最容易验证的动作开始：
+
+<div class="csr-fit-board" aria-label="客服流程是否适合做 RPA 的判断面板">
+  <div class="csr-fit-board__head">
+    <span>AUTOMATION FIT CHECK</span>
+    <h3>一个客服流程值不值得先做成 RPA，看这 6 个信号</h3>
+  </div>
+
+  <div class="csr-fit-list">
+    <div><span>01</span><strong>每天反复查后台</strong><p>订单、聊天、ERP、物流之间频繁切换。</p><em>强信号</em></div>
+    <div><span>02</span><strong>大量复制粘贴</strong><p>订单号、物流单号、商品信息和固定话术反复搬运。</p><em>强信号</em></div>
+    <div><span>03</span><strong>判断规则写得清楚</strong><p>能明确区分继续、跳过、等待和转人工。</p><em>必要条件</em></div>
+    <div><span>04</span><strong>执行结果可以验证</strong><p>能确认消息是否发出、备注是否成功、状态是否回写。</p><em>必要条件</em></div>
+    <div><span>05</span><strong>有固定消息或备注模板</strong><p>群提醒、售后备注和买家留言可以稳定生成。</p><em>适合自动</em></div>
+    <div><span>06</span><strong>异常可以清楚交给人</strong><p>失败时能说明原因，而不是静默卡住或继续误操作。</p><em>关键边界</em></div>
+  </div>
+</div>
+
+<div class="csr-final">
+  <span>FINAL TAKEAWAY</span>
+  <h3>RPA 最适合先吃掉那些重复、明确、可验证、可回退的后台动作</h3>
+  <p>客服售后自动化不必从“替代客服”开始。先把人每天重复查、重复复制、重复提醒、重复记录的动作拿掉；标准单自动推进，风险单带着上下文和原因交给人工，这样才更容易稳定落地。</p>
+</div>
 
 <style>{`
-  .rpa-wide-diagram {
-    margin: 28px 0;
-    overflow-x: auto;
+.csr-source-note,
+.csr-hero,
+.csr-loop,
+.csr-radar,
+.csr-message-window,
+.csr-tower,
+.csr-action-log,
+.csr-risk-strip,
+.csr-conveyor,
+.csr-buyer-message,
+.csr-kernel,
+.csr-fit-board,
+.csr-final {
+  margin: 1.4rem 0;
+}
+
+.csr-source-note {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.9rem;
+  align-items: start;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(14, 116, 144, 0.2);
+  border-radius: 18px;
+  background: rgba(236, 254, 255, 0.62);
+}
+
+.csr-source-note > span {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.24rem 0.62rem;
+  color: #0e7490;
+  background: rgba(207, 250, 254, 0.9);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.csr-source-note p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.csr-source-note a {
+  color: #0369a1;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.15rem;
+}
+
+.csr-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: 1rem;
+  padding: 1.35rem;
+  border: 1px solid rgba(96, 125, 139, 0.18);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 8% 8%, rgba(125, 211, 252, 0.3), transparent 32%),
+    radial-gradient(circle at 92% 12%, rgba(196, 181, 253, 0.26), transparent 30%),
+    linear-gradient(135deg, rgba(248, 251, 255, 0.98), rgba(238, 246, 251, 0.9) 54%, rgba(247, 243, 255, 0.9));
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.09);
+}
+
+.csr-hero__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.csr-kicker,
+.csr-radar__head > div > span,
+.csr-tower__head > div > span,
+.csr-action-log__head span,
+.csr-conveyor__head span,
+.csr-kernel__head span,
+.csr-fit-board__head span,
+.csr-final > span {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.22rem 0.62rem;
+  color: #475569;
+  background: rgba(15, 23, 42, 0.06);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.csr-hero h2,
+.csr-radar h3,
+.csr-tower h3,
+.csr-action-log h3,
+.csr-conveyor h3,
+.csr-kernel h3,
+.csr-fit-board h3,
+.csr-final h3 {
+  color: #0f172a;
+  line-height: 1.18;
+}
+
+.csr-hero h2 {
+  margin: 0.85rem 0 0.6rem;
+  font-size: clamp(1.8rem, 3vw, 2.75rem);
+}
+
+.csr-hero__copy > p {
+  margin: 0;
+  max-width: 42rem;
+  color: #475569;
+}
+
+.csr-hero__verdict {
+  display: grid;
+  gap: 0.24rem;
+  margin-top: 1.1rem;
+  padding: 0.95rem 1rem;
+  border-left: 4px solid #2563eb;
+  border-radius: 0 16px 16px 0;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.csr-hero__verdict span {
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.csr-hero__verdict strong {
+  color: #0f172a;
+}
+
+.csr-workdesk {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px);
+}
+
+.csr-workdesk__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.2rem 0.2rem 0.45rem;
+}
+
+.csr-workdesk__head span {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.csr-workdesk__head strong {
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.csr-desk-job {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.88);
+}
+
+.csr-desk-job__id {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 14px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.csr-desk-job.is-violet .csr-desk-job__id {
+  color: #6d28d9;
+  background: #ede9fe;
+}
+
+.csr-desk-job.is-cyan .csr-desk-job__id {
+  color: #0e7490;
+  background: #cffafe;
+}
+
+.csr-desk-job small,
+.csr-desk-job h3,
+.csr-desk-job p {
+  margin: 0;
+}
+
+.csr-desk-job small {
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.csr-desk-job h3 {
+  margin-top: 0.1rem;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.csr-desk-job p {
+  margin-top: 0.2rem;
+  color: #64748b;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.csr-desk-job em {
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  color: #475569;
+  background: rgba(15, 23, 42, 0.05);
+  font-size: 0.7rem;
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.csr-loop {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16px 44px rgba(15, 23, 42, 0.06);
+}
+
+.csr-loop__intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.csr-loop__intro span {
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.csr-loop__intro strong {
+  color: #0f172a;
+}
+
+.csr-loop__track {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr auto 1fr;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.csr-loop__track > div {
+  min-width: 0;
+  padding: 0.75rem;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.csr-loop__track > div > span {
+  color: #2563eb;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.csr-loop__track strong,
+.csr-loop__track small {
+  display: block;
+}
+
+.csr-loop__track strong {
+  margin: 0.18rem 0;
+  color: #0f172a;
+  font-size: 0.88rem;
+}
+
+.csr-loop__track small {
+  color: #64748b;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.csr-loop__track i,
+.csr-kernel__path > i {
+  color: #60a5fa;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.csr-radar,
+.csr-conveyor,
+.csr-kernel,
+.csr-fit-board {
+  padding: 1.25rem;
+  border: 1px solid rgba(96, 125, 139, 0.18);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 8% 6%, rgba(125, 211, 252, 0.2), transparent 30%),
+    linear-gradient(135deg, rgba(248, 251, 255, 0.98), rgba(241, 245, 249, 0.9));
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.07);
+}
+
+.csr-radar__head,
+.csr-tower__head,
+.csr-action-log__head,
+.csr-conveyor__head,
+.csr-kernel__head,
+.csr-fit-board__head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.csr-radar__head h3,
+.csr-tower__head h3,
+.csr-action-log__head h3,
+.csr-conveyor__head h3,
+.csr-kernel__head h3,
+.csr-fit-board__head h3 {
+  margin: 0.55rem 0 0.32rem;
+}
+
+.csr-radar__head p,
+.csr-tower__head p,
+.csr-kernel__head p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.csr-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.36rem 0.7rem;
+  border-radius: 999px;
+  color: #0369a1;
+  background: #e0f2fe;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.csr-live-badge i {
+  width: 0.48rem;
+  height: 0.48rem;
+  border-radius: 999px;
+  background: #0ea5e9;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
+}
+
+.csr-radar__body {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.68fr) minmax(0, 1.32fr);
+  gap: 1rem;
+}
+
+.csr-order-sample {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  padding: 1rem;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: 22px;
+  background: linear-gradient(180deg, #eff6ff, rgba(255, 255, 255, 0.88));
+}
+
+.csr-order-sample > span {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.csr-order-sample > strong {
+  display: block;
+  margin: 0.35rem 0 0.8rem;
+  color: #0f172a;
+  font-size: 1.05rem;
+}
+
+.csr-order-sample dl,
+.csr-console-main dl,
+.csr-phone-chat__bubble dl {
+  margin: 0;
+}
+
+.csr-order-sample dl > div,
+.csr-console-main dl > div,
+.csr-phone-chat__bubble dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.csr-order-sample dt,
+.csr-console-main dt,
+.csr-phone-chat__bubble dt {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.csr-order-sample dd,
+.csr-console-main dd,
+.csr-phone-chat__bubble dd {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-align: right;
+}
+
+.csr-radar__stages {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.csr-radar-stage {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.csr-radar-stage.is-focus {
+  border-color: rgba(37, 99, 235, 0.36);
+  background: linear-gradient(90deg, rgba(219, 234, 254, 0.9), rgba(255, 255, 255, 0.82));
+}
+
+.csr-radar-stage__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 14px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.csr-radar-stage small,
+.csr-radar-stage h4,
+.csr-radar-stage p {
+  margin: 0;
+}
+
+.csr-radar-stage small {
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.csr-radar-stage h4 {
+  margin-top: 0.12rem;
+  color: #0f172a;
+}
+
+.csr-radar-stage p {
+  margin-top: 0.18rem;
+  color: #64748b;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.csr-radar-stage > strong {
+  border-radius: 999px;
+  padding: 0.22rem 0.58rem;
+  color: #15803d;
+  background: #dcfce7;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.csr-radar-stage.is-focus > strong {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.csr-message-window {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+}
+
+.csr-message-window__bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.72rem 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  background: #f8fafc;
+}
+
+.csr-message-window__bar > div {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.csr-message-window__bar i {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: #cbd5e1;
+}
+
+.csr-message-window__bar i:first-child { background: #fca5a5; }
+.csr-message-window__bar i:nth-child(2) { background: #fde68a; }
+.csr-message-window__bar i:nth-child(3) { background: #86efac; }
+
+.csr-message-window__bar span {
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.csr-message-window__bar em {
+  justify-self: end;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-style: normal;
+}
+
+.csr-message-window__content {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.1rem;
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.7), rgba(248, 250, 252, 0.8));
+}
+
+.csr-bot-avatar {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb, #0891b2);
+  font-weight: 900;
+}
+
+.csr-chat-bubble {
+  max-width: 44rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 6px 18px 18px 18px;
+  background: #fff;
+}
+
+.csr-chat-bubble > strong {
+  color: #0f172a;
+}
+
+.csr-chat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 1rem;
+  margin: 0.7rem 0;
+}
+
+.csr-chat-grid span {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.csr-chat-grid b {
+  display: block;
+  margin-top: 0.08rem;
+  color: #0f172a;
+}
+
+.csr-chat-bubble p {
+  margin: 0;
+  color: #1d4ed8;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.csr-tower {
+  overflow: hidden;
+  padding: 1.2rem;
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  border-radius: 30px;
+  color: #e2e8f0;
+  background:
+    radial-gradient(circle at 10% 6%, rgba(14, 165, 233, 0.2), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(139, 92, 246, 0.18), transparent 28%),
+    linear-gradient(135deg, #0f172a, #172033 58%, #111827);
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.24);
+}
+
+.csr-tower__head h3,
+.csr-tower__head p {
+  color: inherit;
+}
+
+.csr-tower__head > div > span {
+  color: #bfdbfe;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.csr-tower__head p {
+  color: #b8c4d6;
+}
+
+.csr-tower__status {
+  max-width: 18rem;
+  padding: 0.8rem;
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  border-radius: 16px;
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.csr-tower__status small,
+.csr-tower__status strong {
+  display: block;
+}
+
+.csr-tower__status small {
+  color: #93c5fd;
+}
+
+.csr-tower__status strong {
+  margin-top: 0.2rem;
+  color: #f8fafc;
+  font-size: 0.88rem;
+}
+
+.csr-tower__layout {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.72fr) minmax(0, 1.28fr);
+  gap: 1rem;
+}
+
+.csr-case-console,
+.csr-state-rail {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.csr-case-console {
+  overflow: hidden;
+}
+
+.csr-console-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.72rem 0.85rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.csr-console-bar span {
+  color: #93c5fd;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.csr-console-bar em {
+  border-radius: 999px;
+  padding: 0.16rem 0.48rem;
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.14);
+  font-size: 0.68rem;
+  font-style: normal;
+}
+
+.csr-console-main {
+  padding: 1rem;
+}
+
+.csr-console-main > small {
+  color: #94a3b8;
+}
+
+.csr-console-main > strong {
+  display: block;
+  margin: 0.2rem 0 0.75rem;
+  color: #f8fafc;
+}
+
+.csr-console-main dl > div {
+  border-top-color: rgba(148, 163, 184, 0.16);
+}
+
+.csr-console-main dt {
+  color: #94a3b8;
+}
+
+.csr-console-main dd {
+  color: #e2e8f0;
+}
+
+.csr-console-steps {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0 1rem 1rem;
+}
+
+.csr-console-steps > div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.52rem 0.6rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.csr-console-steps span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 9px;
+  color: #bfdbfe;
+  background: rgba(59, 130, 246, 0.16);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.csr-console-steps p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.78rem;
+}
+
+.csr-state-rail {
+  padding: 0.9rem;
+}
+
+.csr-state-rail__title {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.65rem;
+  padding: 0.15rem 0.15rem 0.45rem;
+}
+
+.csr-state-rail__title span {
+  color: #93c5fd;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.csr-state-rail__title strong {
+  color: #f8fafc;
+  font-size: 0.84rem;
+}
+
+.csr-state-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.7rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.csr-state-dot {
+  width: 0.68rem;
+  height: 0.68rem;
+  border-radius: 999px;
+  background: #60a5fa;
+  box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.1);
+}
+
+.csr-state-item.is-stop .csr-state-dot,
+.csr-state-item.is-wait .csr-state-dot { background: #fbbf24; box-shadow: 0 0 0 5px rgba(251, 191, 36, 0.1); }
+.csr-state-item.is-risk .csr-state-dot,
+.csr-state-item.is-error .csr-state-dot { background: #fb7185; box-shadow: 0 0 0 5px rgba(251, 113, 133, 0.1); }
+.csr-state-item.is-go .csr-state-dot { background: #4ade80; box-shadow: 0 0 0 5px rgba(74, 222, 128, 0.1); }
+
+.csr-state-item small,
+.csr-state-item h4,
+.csr-state-item p {
+  margin: 0;
+}
+
+.csr-state-item small {
+  color: #93a4bb;
+  font-size: 0.7rem;
+}
+
+.csr-state-item h4 {
+  margin-top: 0.1rem;
+  color: #f8fafc;
+  font-size: 0.92rem;
+}
+
+.csr-state-item p {
+  margin-top: 0.14rem;
+  color: #aebbd0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.csr-state-item > strong {
+  border-radius: 999px;
+  padding: 0.22rem 0.55rem;
+  color: #bfdbfe;
+  background: rgba(59, 130, 246, 0.14);
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.csr-state-item.is-stop > strong,
+.csr-state-item.is-wait > strong { color: #fde68a; background: rgba(245, 158, 11, 0.14); }
+.csr-state-item.is-risk > strong,
+.csr-state-item.is-error > strong { color: #fecdd3; background: rgba(244, 63, 94, 0.14); }
+.csr-state-item.is-go > strong { color: #bbf7d0; background: rgba(34, 197, 94, 0.14); }
+
+.csr-action-log {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 18px 52px rgba(15, 23, 42, 0.07);
+}
+
+.csr-action-log__head {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  background: linear-gradient(90deg, rgba(239, 246, 255, 0.88), rgba(248, 250, 252, 0.8));
+}
+
+.csr-action-log__head em {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-style: normal;
+}
+
+.csr-action-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  align-items: center;
+  padding: 0.9rem 1.1rem;
+}
+
+.csr-action-row + .csr-action-row {
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.csr-action-row__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 14px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.csr-action-row small,
+.csr-action-row strong,
+.csr-action-row p {
+  display: block;
+  margin: 0;
+}
+
+.csr-action-row small {
+  color: #64748b;
+  font-size: 0.7rem;
+}
+
+.csr-action-row strong {
+  margin-top: 0.1rem;
+  color: #0f172a;
+}
+
+.csr-action-row p {
+  margin-top: 0.16rem;
+  color: #64748b;
+  font-size: 0.84rem;
+}
+
+.csr-action-row code {
+  border: 1px solid rgba(14, 116, 144, 0.16);
+  border-radius: 999px;
+  padding: 0.32rem 0.62rem;
+  color: #0e7490;
+  background: #ecfeff;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.csr-risk-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.csr-risk-strip > div {
+  padding: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.csr-risk-strip span {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.18rem 0.52rem;
+  color: #15803d;
+  background: #dcfce7;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.csr-risk-strip > div:nth-child(2) span {
+  color: #a16207;
+  background: #fef3c7;
+}
+
+.csr-risk-strip > div:nth-child(3) span {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.csr-risk-strip strong,
+.csr-risk-strip p {
+  display: block;
+}
+
+.csr-risk-strip strong {
+  margin: 0.55rem 0 0.3rem;
+  color: #0f172a;
+}
+
+.csr-risk-strip p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.84rem;
+}
+
+.csr-conveyor {
+  background:
+    radial-gradient(circle at 92% 10%, rgba(34, 211, 238, 0.18), transparent 28%),
+    linear-gradient(135deg, rgba(248, 251, 255, 0.98), rgba(236, 254, 255, 0.78));
+}
+
+.csr-conveyor__track {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  gap: 0.6rem;
+  align-items: stretch;
+}
+
+.csr-conveyor-node {
+  padding: 0.95rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.csr-conveyor-node small {
+  color: #0891b2;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.csr-conveyor-node > strong {
+  display: block;
+  margin: 0.25rem 0 0.65rem;
+  color: #0f172a;
+}
+
+.csr-field-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.csr-field-stack span {
+  border-radius: 999px;
+  padding: 0.22rem 0.5rem;
+  color: #0e7490;
+  background: #cffafe;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.csr-conveyor-node ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #475569;
+  font-size: 0.82rem;
+}
+
+.csr-conveyor-node li + li {
+  margin-top: 0.28rem;
+}
+
+.csr-conveyor-node p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.84rem;
+}
+
+.csr-conveyor-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  color: #0891b2;
+}
+
+.csr-conveyor-arrow span {
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.csr-conveyor-arrow small {
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.csr-conveyor__fallback {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  margin-top: 0.9rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px dashed rgba(217, 119, 6, 0.28);
+  border-radius: 16px;
+  background: rgba(255, 251, 235, 0.78);
+}
+
+.csr-conveyor__fallback span {
+  border-radius: 999px;
+  padding: 0.18rem 0.48rem;
+  color: #a16207;
+  background: #fef3c7;
+  font-size: 0.7rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.csr-conveyor__fallback p {
+  margin: 0;
+  color: #78350f;
+  font-size: 0.82rem;
+}
+
+.csr-buyer-message {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.42fr) minmax(0, 0.95fr);
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.96));
+  box-shadow: 0 22px 64px rgba(15, 23, 42, 0.18);
+}
+
+.csr-buyer-message__meta span,
+.csr-buyer-message__meta strong {
+  display: block;
+}
+
+.csr-buyer-message__meta span {
+  color: #67e8f9;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.csr-buyer-message__meta strong {
+  margin-top: 0.35rem;
+  color: #f8fafc;
+  font-size: 1.15rem;
+}
+
+.csr-phone-chat {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 20px;
+  background: #f8fafc;
+}
+
+.csr-phone-chat__bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.csr-phone-chat__bar span {
+  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.csr-phone-chat__bar em {
+  color: #15803d;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.csr-phone-chat__bubble {
+  margin: 0.9rem;
+  padding: 0.85rem;
+  border-radius: 16px 16px 4px 16px;
+  background: #dbeafe;
+}
+
+.csr-phone-chat__bubble p {
+  margin: 0;
+  color: #1e3a8a;
+  font-size: 0.84rem;
+}
+
+.csr-phone-chat__bubble p + p {
+  margin-top: 0.6rem;
+}
+
+.csr-phone-chat__bubble dl {
+  margin: 0.55rem 0;
+}
+
+.csr-phone-chat__bubble dl > div {
+  border-top-color: rgba(59, 130, 246, 0.18);
+}
+
+.csr-phone-chat__bubble dt {
+  color: #3b82f6;
+}
+
+.csr-phone-chat__bubble dd {
+  color: #1e3a8a;
+}
+
+.csr-kernel {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(196, 181, 253, 0.2), transparent 28%),
+    linear-gradient(135deg, rgba(248, 250, 252, 0.98), rgba(245, 243, 255, 0.82));
+}
+
+.csr-kernel__path {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr auto 1fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.csr-kernel-step {
+  min-width: 0;
+  padding: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.csr-kernel-step.is-focus {
+  border-color: rgba(124, 58, 237, 0.28);
+  background: linear-gradient(180deg, rgba(237, 233, 254, 0.88), rgba(255, 255, 255, 0.82));
+}
+
+.csr-kernel-step span,
+.csr-kernel-step strong,
+.csr-kernel-step p {
+  display: block;
+}
+
+.csr-kernel-step span {
+  color: #7c3aed;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.csr-kernel-step strong {
+  margin: 0.35rem 0 0.25rem;
+  color: #0f172a;
+  font-size: 0.88rem;
+}
+
+.csr-kernel-step p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.csr-kernel__handoff {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.9rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 16px;
+  color: #e2e8f0;
+  background: linear-gradient(90deg, #0f172a, #1e293b);
+}
+
+.csr-kernel__handoff span {
+  color: #fda4af;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+}
+
+.csr-kernel__handoff strong {
+  font-size: 0.84rem;
+}
+
+.csr-fit-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.csr-fit-list > div {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.csr-fit-list > div > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 13px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.csr-fit-list strong,
+.csr-fit-list p {
+  display: block;
+  margin: 0;
+}
+
+.csr-fit-list strong {
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.csr-fit-list p {
+  margin-top: 0.16rem;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.csr-fit-list em {
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  color: #0e7490;
+  background: #cffafe;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.csr-final {
+  padding: 1.25rem;
+  border-radius: 28px;
+  color: #e2e8f0;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(14, 165, 233, 0.18), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(139, 92, 246, 0.16), transparent 28%),
+    linear-gradient(135deg, #0f172a, #1e293b);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+
+.csr-final > span {
+  color: #bfdbfe;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.csr-final h3 {
+  margin: 0.7rem 0 0.5rem;
+  color: #f8fafc;
+}
+
+.csr-final p {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+@media (max-width: 980px) {
+  .csr-hero,
+  .csr-radar__body,
+  .csr-tower__layout,
+  .csr-buyer-message {
+    grid-template-columns: 1fr;
   }
 
-  .rpa-wide-diagram .mermaid-card {
-    box-sizing: border-box;
-    max-width: 100%;
-    min-width: 760px;
-    width: 100%;
+  .csr-order-sample {
+    position: static;
   }
 
-  .rpa-wide-diagram .mermaid-card pre {
-    width: 100%;
+  .csr-loop__track,
+  .csr-kernel__path,
+  .csr-conveyor__track {
+    grid-template-columns: 1fr;
   }
 
-  .rpa-hero-diagram .mermaid-card {
-    min-width: 980px;
-    padding: 28px;
+  .csr-loop__track > i,
+  .csr-kernel__path > i,
+  .csr-conveyor-arrow span {
+    text-align: center;
+    transform: rotate(90deg);
   }
 
-  .rpa-case-section {
-    margin: 42px 0;
+  .csr-conveyor-arrow {
+    min-height: 2.5rem;
   }
 
-  .rpa-case-lead {
-    border-left: 4px solid var(--blue);
-    color: var(--ink-soft);
-    margin: 14px 0 24px;
-    padding-left: 14px;
+  .csr-risk-strip,
+  .csr-fit-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .csr-source-note,
+  .csr-hero,
+  .csr-radar,
+  .csr-tower,
+  .csr-action-log__head,
+  .csr-conveyor,
+  .csr-buyer-message,
+  .csr-kernel,
+  .csr-fit-board,
+  .csr-final {
+    border-radius: 20px;
   }
 
-  .rpa-split-panel {
+  .csr-source-note {
+    grid-template-columns: 1fr;
+  }
+
+  .csr-hero,
+  .csr-radar,
+  .csr-tower,
+  .csr-conveyor,
+  .csr-kernel,
+  .csr-fit-board,
+  .csr-final {
+    padding: 0.9rem;
+  }
+
+  .csr-radar__head,
+  .csr-tower__head,
+  .csr-action-log__head,
+  .csr-conveyor__head,
+  .csr-kernel__head,
+  .csr-fit-board__head,
+  .csr-loop__intro {
     display: grid;
-    gap: 16px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin: 24px 0;
-  }
-
-  .rpa-split-panel > div,
-  .rpa-final-grid > div {
-    background: var(--paper-soft);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 18px;
-  }
-
-  .rpa-split-panel h3 {
-    margin-top: 0;
-  }
-
-  .rpa-script {
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    margin: 20px 0;
-    overflow: hidden;
-  }
-
-  .rpa-script-row {
-    display: grid;
-    gap: 14px;
-    grid-template-columns: 44px 1fr;
-    padding: 16px 18px;
-  }
-
-  .rpa-script-row + .rpa-script-row {
-    border-top: 1px solid var(--line);
-  }
-
-  .rpa-step {
-    align-items: center;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    display: inline-flex;
-    font-size: 13px;
-    font-weight: 760;
-    height: 34px;
-    justify-content: center;
-    width: 34px;
-  }
-
-  .rpa-script-row p {
-    margin: 6px 0;
-  }
-
-  .rpa-script-row em {
-    color: var(--muted);
-    font-size: 14px;
-  }
-
-  .rpa-message-preview {
-    background: #f7efe0;
-    border: 1px solid #d8ccb3;
-    border-radius: 16px;
-    box-shadow: 0 1px 0 rgba(80, 60, 30, 0.04);
-    color: #2f2418;
-    margin: 22px 0 28px;
-    padding: 18px 20px;
-  }
-
-  .rpa-message-preview--note {
-    background: #f3eee4;
-  }
-
-  .rpa-message-preview--buyer {
-    background: #f6f0e5;
-  }
-
-  .rpa-message-preview__head {
-    align-items: center;
-    display: flex;
-    gap: 12px;
-    justify-content: space-between;
-    margin-bottom: 14px;
-  }
-
-  .rpa-message-preview__head strong {
-    color: #20170f;
-    font-size: 18px;
-  }
-
-  .rpa-message-preview__head span {
-    background: #e8dcc5;
-    border: 1px solid #d5c3a2;
-    border-radius: 999px;
-    color: #5a4630;
-    flex-shrink: 0;
-    font-size: 12px;
-    line-height: 1;
-    padding: 6px 10px;
-  }
-
-  .rpa-message-preview__body {
-    color: #3a2d20;
-    font-size: 15px;
-    line-height: 1.8;
-  }
-
-  .rpa-message-preview__body p {
-    margin: 0;
-  }
-
-  .rpa-message-preview__gap {
-    margin-top: 12px !important;
-  }
-
-  .rpa-process-summary {
-    display: grid;
-    gap: 14px;
-    margin: 22px 0 30px;
-  }
-
-  .rpa-process-summary__item {
     align-items: start;
-    background: #f7f1e6;
-    border: 1px solid #dccfb8;
-    border-radius: 16px;
+  }
+
+  .csr-desk-job,
+  .csr-radar-stage,
+  .csr-state-item,
+  .csr-action-row,
+  .csr-fit-list > div {
+    grid-template-columns: auto 1fr;
+  }
+
+  .csr-desk-job em,
+  .csr-radar-stage > strong,
+  .csr-state-item > strong,
+  .csr-action-row code,
+  .csr-fit-list em {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .csr-message-window__bar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .csr-message-window__bar > div {
+    display: none;
+  }
+
+  .csr-chat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .csr-state-rail__title,
+  .csr-kernel__handoff,
+  .csr-conveyor__fallback {
+    grid-template-columns: 1fr;
     display: grid;
-    gap: 14px;
-    grid-template-columns: 52px 1fr;
-    padding: 16px 18px;
   }
 
-  .rpa-process-summary__num {
-    align-items: center;
-    background: #e9dcc3;
-    border: 1px solid #d1bea0;
-    border-radius: 999px;
-    color: #5a4329;
-    display: inline-flex;
-    font-size: 13px;
-    font-weight: 760;
-    height: 38px;
-    justify-content: center;
-    line-height: 1;
-    width: 38px;
+  .csr-state-rail__title {
+    justify-content: start;
   }
-
-  .rpa-process-summary__item h3 {
-    color: #22180f;
-    font-size: 17px;
-    margin: 0 0 6px;
-  }
-
-  .rpa-process-summary__item p {
-    color: #5b4b39;
-    line-height: 1.7;
-    margin: 0;
-  }
-
-  .rpa-details {
-    background: var(--paper-soft);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    margin: 22px 0;
-    padding: 14px 18px;
-  }
-
-  .rpa-details summary {
-    cursor: pointer;
-    font-weight: 760;
-  }
-
-  .rpa-final-grid {
-    display: grid;
-    gap: 16px;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin: 24px 0;
-  }
-
-  @media (max-width: 760px) {
-    .rpa-split-panel,
-    .rpa-final-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .rpa-wide-diagram .mermaid-card,
-    .rpa-hero-diagram .mermaid-card {
-      min-width: 720px;
-    }
-  }
+}
 `}</style>
