@@ -11,7 +11,7 @@
 | `src/content/posts/visual-lab/article-visual-system-demo.mdx` | `视觉实验室` | 文章视觉系统实战 Demo，展示从文字草稿到视觉文章的编排流程、内容关系路由、风险看板和自审面板 | 验证新文章是否遵守“先做视觉方案，再写 MDX”的规则，或需要学习三个高视觉模板的风格而不是骨架时参考 |
 | `src/content/posts/visual-lab/mdx-design-patterns-gallery.mdx` | `视觉实验室` | 开头结论卡、Bento 宫格、指标看板、对比面板、问题链路、时间线、案例拆解卡、决策树等文章视觉模式 | 写 MDX 文章、做复杂排版、判断什么时候不用表格或流程图时优先参考 |
 | `src/content/posts/visual-lab/screenshot-mdx-replica-demo.mdx` | `视觉实验室` | 截图风格 MDX 复刻示例，包含 Agent 功能矩阵、安全防御报告和搜索工具决策树三类定制组件 | 需要复刻产品功能区、报告看板、安全验证页、深色信息图等高视觉密度内容时参考 |
-| `src/content/posts/visual-lab/mdx-components-demo.mdx` | `视觉实验室` | 提示块、流程步骤、对比表、指标卡、总结块的 MDX 综合示例 | 写 MDX 文章、做文章可视化、给 Agent 学组件组合时优先参考 |
+| `src/content/posts/visual-lab/mdx-components-demo.mdx` | `视觉实验室` | 提示块、流程步骤、对比表、指标卡和总结块的 MDX 综合示例 | 写 MDX 文章、做文章可视化、给 Agent 学组件组合时优先参考 |
 | `src/content/posts/visual-lab/table-style-demo.mdx` | `视觉实验室` | Markdown 表格边框、表头、宽表格、业务判断表和字段说明表示例 | 写表格型文章、对比表、判断矩阵、字段说明和经营看板表格时参考 |
 | `src/content/posts/visual-lab/visual-notes-components.mdx` | `视觉实验室` | VisualGrid、MetricCard、FeatureCard、DecisionFlow 示例 | 写视觉笔记、MDX 组件化文章、卡片式信息组织时优先参考 |
 | `src/content/posts/visual-lab/mdx-code-diagrams.md` | `视觉实验室` | 代码块、Callout、图表和下载链接用法 | 写展示型技术文章、图表说明、代码块和静态文件链接时参考 |
@@ -32,4 +32,5 @@
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
 | `src/content/posts/ai-product-image-agent-workflow.mdx` | `实践` | AI 商品主图 / 详情图 Agent 工作流，覆盖竞品 OCR、卖点提炼、MD 计划文档、用户对话定稿和受控出图 | 写商品图生成、竞品视觉分析、电商 Agent 工作流、图片策划方案时参考 |
 | `src/content/posts/github-pages-deployment-guide.mdx` | `实践` | GitHub Pages、Astro、Actions 部署流程 | 写部署说明、构建发布、静态站点原理时参考 |
+| `src/content/posts/performance-review-should-recognize-talent.mdx` | `生活` | 从运营助理分级考核表出发，批评统一能力清单如何用短板限制长板，并提出共同底线加专项晋升路线 | 写职场观察、绩效考核、人才管理、专人专项和制度批评类文章时参考 |
 | `src/content/posts/h-pylori-acid-drink-note.mdx` | `生活` | 幽门螺杆菌、胃酸过多和气泡饮料的个人判断笔记 | 写生活判断清单、风险边界提醒、个人健康记录类文章时参考 |
