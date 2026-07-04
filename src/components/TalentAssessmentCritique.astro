@@ -1,0 +1,628 @@
+<section class="talent-review" aria-label="统一考核标准如何误判专项人才">
+  <header class="review-header">
+    <span class="eyebrow">VALUE DISTORTION</span>
+    <h2>一个人，如何被一张统一清单误判</h2>
+    <p>问题不在于能力要求多，而在于一旦制度变成“缺一项就卡级”，人的长板就会被短板覆盖。</p>
+  </header>
+
+  <div class="distortion-board">
+    <article class="ability-panel">
+      <div class="panel-heading">
+        <span class="panel-index">01</span>
+        <div>
+          <strong>真实能力结构</strong>
+          <span>这个人不是平均型选手，而是明显偏科</span>
+        </div>
+      </div>
+
+      <div class="ability-list">
+        <div class="ability-row">
+          <span>传统表格工具</span>
+          <div class="ability-track"><i style="--level: 38%"></i></div>
+          <b>一般</b>
+        </div>
+        <div class="ability-row">
+          <span>推广投放</span>
+          <div class="ability-track"><i style="--level: 30%"></i></div>
+          <b>较弱</b>
+        </div>
+        <div class="ability-row strong-row">
+          <span>AI 数据可视化</span>
+          <div class="ability-track"><i style="--level: 94%"></i></div>
+          <b>很强</b>
+        </div>
+        <div class="ability-row strong-row">
+          <span>自动化与流程</span>
+          <div class="ability-track"><i style="--level: 98%"></i></div>
+          <b>很强</b>
+        </div>
+        <div class="ability-row value-row">
+          <span>实际产出</span>
+          <div class="ability-track"><i style="--level: 96%"></i></div>
+          <b>高</b>
+        </div>
+      </div>
+    </article>
+
+    <div class="verdict-column" aria-label="制度误判路径">
+      <span class="verdict-chip">统一清单</span>
+      <span class="verdict-arrow" aria-hidden="true">↓</span>
+      <strong>缺项</strong>
+      <small>不会高级表格<br />不会推广</small>
+      <span class="verdict-arrow" aria-hidden="true">↓</span>
+      <div class="blocked-badge">卡在初级</div>
+    </div>
+
+    <article class="result-panel">
+      <div class="panel-heading">
+        <span class="panel-index">02</span>
+        <div>
+          <strong>制度给出的结论</strong>
+          <span>长板只算加分，短板却拥有否决权</span>
+        </div>
+      </div>
+
+      <div class="result-stack">
+        <div class="result-item danger">
+          <span>工资等级</span>
+          <strong>被基础项锁住</strong>
+        </div>
+        <div class="result-item">
+          <span>真实贡献</span>
+          <strong>一人可承担多人重复工作</strong>
+        </div>
+        <div class="result-item">
+          <span>成长方向</span>
+          <strong>被迫补齐平均线</strong>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <div class="loss-strip">
+    <div>
+      <span>制度看见的</span>
+      <strong>“你还有两项不会”</strong>
+    </div>
+    <div>
+      <span>公司真正拥有的</span>
+      <strong>一个高杠杆专项人才</strong>
+    </div>
+    <div class="loss-cell">
+      <span>最后被浪费的</span>
+      <strong>最可能形成竞争力的长板</strong>
+    </div>
+  </div>
+
+  <div class="career-model">
+    <header>
+      <span class="eyebrow">BETTER MODEL</span>
+      <h3>更合理的模型：一个底座，多条上升路线</h3>
+      <p>共同能力只设最低线。越过底线以后，允许人在不同方向继续变强，而不是要求所有人补成同一种形状。</p>
+    </header>
+
+    <div class="common-base">
+      <span>共同底线</span>
+      <strong>平台规则 · 基础数据理解 · 独立执行 · 基本协作</strong>
+    </div>
+
+    <div class="track-grid">
+      <article><span>经营</span><strong>推广投放</strong></article>
+      <article><span>分析</span><strong>数据洞察</strong></article>
+      <article class="focus-track"><span>杠杆</span><strong>AI / 自动化</strong></article>
+      <article><span>表达</span><strong>内容视觉</strong></article>
+      <article><span>业务</span><strong>商品供应链</strong></article>
+      <article><span>范围</span><strong>团队管理</strong></article>
+    </div>
+
+    <footer class="evaluation-logic">
+      <span>最终评价不再问“是否全部会”</span>
+      <div>
+        <strong>专业深度</strong>
+        <i>+</i>
+        <strong>实际产出</strong>
+        <i>+</i>
+        <strong>责任范围</strong>
+      </div>
+    </footer>
+  </div>
+</section>
+
+<style>
+  .talent-review {
+    --review-blue: #2563eb;
+    --review-cyan: #0891b2;
+    --review-violet: #7c3aed;
+    --review-green: #16a34a;
+    --review-red: #dc2626;
+    background:
+      radial-gradient(circle at 12% 0%, rgba(125, 211, 252, 0.34), transparent 32%),
+      radial-gradient(circle at 92% 8%, rgba(196, 181, 253, 0.28), transparent 34%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(239, 246, 255, 0.9));
+    border: 1px solid rgba(148, 163, 184, 0.34);
+    border-radius: 24px;
+    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.12);
+    color: var(--ink);
+    margin: 34px 0;
+    overflow: hidden;
+    padding: clamp(22px, 4vw, 42px);
+  }
+
+  .review-header {
+    max-width: 760px;
+  }
+
+  .eyebrow {
+    color: var(--review-blue);
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+  }
+
+  .review-header h2,
+  .career-model h3 {
+    color: var(--ink);
+    letter-spacing: -0.045em;
+    line-height: 1.12;
+  }
+
+  .review-header h2 {
+    font-size: clamp(28px, 5vw, 48px);
+    margin: 10px 0 14px;
+  }
+
+  .review-header p,
+  .career-model header p {
+    color: var(--muted);
+    font-size: clamp(15px, 2vw, 18px);
+    line-height: 1.75;
+    margin: 0;
+  }
+
+  .distortion-board {
+    align-items: stretch;
+    display: grid;
+    gap: 18px;
+    grid-template-columns: minmax(0, 1.15fr) 130px minmax(0, 0.85fr);
+    margin-top: 30px;
+  }
+
+  .ability-panel,
+  .result-panel {
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 20px;
+    box-shadow: 0 18px 48px rgba(15, 23, 42, 0.07);
+    padding: 22px;
+  }
+
+  .panel-heading {
+    align-items: center;
+    display: flex;
+    gap: 13px;
+  }
+
+  .panel-index {
+    align-items: center;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(8, 145, 178, 0.14));
+    border: 1px solid rgba(37, 99, 235, 0.18);
+    border-radius: 12px;
+    color: var(--review-blue);
+    display: inline-flex;
+    flex: 0 0 42px;
+    font-size: 13px;
+    font-weight: 850;
+    height: 42px;
+    justify-content: center;
+  }
+
+  .panel-heading div {
+    display: grid;
+    gap: 3px;
+  }
+
+  .panel-heading strong {
+    color: var(--ink);
+    font-size: 18px;
+  }
+
+  .panel-heading span:last-child {
+    color: var(--soft);
+    font-size: 13px;
+  }
+
+  .ability-list {
+    display: grid;
+    gap: 14px;
+    margin-top: 22px;
+  }
+
+  .ability-row {
+    align-items: center;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(92px, 0.85fr) minmax(110px, 1.6fr) 42px;
+  }
+
+  .ability-row > span,
+  .ability-row > b {
+    font-size: 13px;
+  }
+
+  .ability-row > span {
+    color: var(--muted);
+  }
+
+  .ability-row > b {
+    color: var(--soft);
+    text-align: right;
+  }
+
+  .ability-track {
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 999px;
+    height: 9px;
+    overflow: hidden;
+  }
+
+  .ability-track i {
+    background: linear-gradient(90deg, #94a3b8, #64748b);
+    border-radius: inherit;
+    display: block;
+    height: 100%;
+    width: var(--level);
+  }
+
+  .strong-row .ability-track i {
+    background: linear-gradient(90deg, var(--review-blue), var(--review-cyan));
+  }
+
+  .strong-row > b,
+  .value-row > b {
+    color: var(--review-blue);
+  }
+
+  .value-row .ability-track i {
+    background: linear-gradient(90deg, var(--review-violet), var(--review-blue));
+  }
+
+  .verdict-column {
+    align-items: center;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 270px;
+    text-align: center;
+  }
+
+  .verdict-chip {
+    background: rgba(37, 99, 235, 0.1);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: 999px;
+    color: var(--review-blue);
+    font-size: 12px;
+    font-weight: 800;
+    padding: 7px 12px;
+  }
+
+  .verdict-arrow {
+    color: #94a3b8;
+    font-size: 22px;
+    line-height: 1;
+    margin: 8px 0;
+  }
+
+  .verdict-column > strong {
+    color: var(--review-red);
+    font-size: 24px;
+    letter-spacing: -0.04em;
+  }
+
+  .verdict-column small {
+    color: var(--soft);
+    font-size: 12px;
+    line-height: 1.65;
+    margin-top: 4px;
+  }
+
+  .blocked-badge {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.12), rgba(249, 115, 22, 0.1));
+    border: 1px solid rgba(220, 38, 38, 0.24);
+    border-radius: 14px;
+    color: #b91c1c;
+    font-size: 15px;
+    font-weight: 850;
+    padding: 10px 14px;
+  }
+
+  .result-stack {
+    display: grid;
+    gap: 12px;
+    margin-top: 22px;
+  }
+
+  .result-item {
+    background: rgba(248, 250, 252, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 14px;
+    display: grid;
+    gap: 5px;
+    padding: 15px 16px;
+  }
+
+  .result-item span {
+    color: var(--soft);
+    font-size: 12px;
+  }
+
+  .result-item strong {
+    color: var(--ink);
+    font-size: 15px;
+  }
+
+  .result-item.danger {
+    background: rgba(254, 242, 242, 0.8);
+    border-color: rgba(220, 38, 38, 0.18);
+  }
+
+  .result-item.danger strong {
+    color: #b91c1c;
+  }
+
+  .loss-strip {
+    background: rgba(15, 23, 42, 0.94);
+    border-radius: 18px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 18px;
+    overflow: hidden;
+  }
+
+  .loss-strip div {
+    display: grid;
+    gap: 5px;
+    padding: 18px 20px;
+  }
+
+  .loss-strip div + div {
+    border-left: 1px solid rgba(148, 163, 184, 0.18);
+  }
+
+  .loss-strip span {
+    color: #94a3b8;
+    font-size: 12px;
+  }
+
+  .loss-strip strong {
+    color: #f8fafc;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .loss-strip .loss-cell strong {
+    color: #93c5fd;
+  }
+
+  .career-model {
+    border-top: 1px solid rgba(148, 163, 184, 0.28);
+    margin-top: 34px;
+    padding-top: 34px;
+  }
+
+  .career-model header {
+    max-width: 780px;
+  }
+
+  .career-model h3 {
+    font-size: clamp(24px, 4vw, 38px);
+    margin: 10px 0 12px;
+  }
+
+  .common-base {
+    align-items: center;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(8, 145, 178, 0.1));
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: 16px;
+    display: flex;
+    gap: 18px;
+    justify-content: space-between;
+    margin-top: 24px;
+    padding: 17px 20px;
+  }
+
+  .common-base span {
+    color: var(--review-blue);
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  .common-base strong {
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: right;
+  }
+
+  .track-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    margin-top: 14px;
+  }
+
+  .track-grid article {
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 15px;
+    display: grid;
+    gap: 18px;
+    min-height: 118px;
+    padding: 16px;
+    position: relative;
+  }
+
+  .track-grid article::before {
+    background: linear-gradient(180deg, var(--review-blue), rgba(8, 145, 178, 0.22));
+    border-radius: 99px;
+    content: '';
+    height: 4px;
+    left: 16px;
+    position: absolute;
+    right: 16px;
+    top: 0;
+  }
+
+  .track-grid span {
+    color: var(--soft);
+    font-size: 11px;
+  }
+
+  .track-grid strong {
+    align-self: end;
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.35;
+  }
+
+  .track-grid .focus-track {
+    background: linear-gradient(145deg, rgba(37, 99, 235, 0.14), rgba(255, 255, 255, 0.88));
+    border-color: rgba(37, 99, 235, 0.28);
+    box-shadow: 0 16px 36px rgba(37, 99, 235, 0.12);
+  }
+
+  .track-grid .focus-track::before {
+    background: linear-gradient(90deg, var(--review-violet), var(--review-blue), var(--review-cyan));
+  }
+
+  .evaluation-logic {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.64);
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 16px;
+    display: flex;
+    gap: 18px;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding: 17px 20px;
+  }
+
+  .evaluation-logic > span {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .evaluation-logic div {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .evaluation-logic strong {
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.14);
+    border-radius: 999px;
+    color: var(--review-blue);
+    font-size: 13px;
+    padding: 7px 10px;
+  }
+
+  .evaluation-logic i {
+    color: #94a3b8;
+    font-style: normal;
+  }
+
+  :global(html[data-theme='dark']) .talent-review {
+    background:
+      radial-gradient(circle at 12% 0%, rgba(37, 99, 235, 0.22), transparent 32%),
+      radial-gradient(circle at 92% 8%, rgba(124, 58, 237, 0.2), transparent 34%),
+      linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.96));
+    border-color: rgba(148, 163, 184, 0.2);
+  }
+
+  :global(html[data-theme='dark']) .ability-panel,
+  :global(html[data-theme='dark']) .result-panel,
+  :global(html[data-theme='dark']) .track-grid article,
+  :global(html[data-theme='dark']) .evaluation-logic {
+    background: rgba(15, 23, 42, 0.68);
+  }
+
+  :global(html[data-theme='dark']) .result-item {
+    background: rgba(30, 41, 59, 0.72);
+  }
+
+  :global(html[data-theme='dark']) .result-item.danger {
+    background: rgba(127, 29, 29, 0.24);
+  }
+
+  :global(html[data-theme='dark']) .track-grid .focus-track {
+    background: linear-gradient(145deg, rgba(37, 99, 235, 0.24), rgba(15, 23, 42, 0.86));
+  }
+
+  @media (max-width: 900px) {
+    .distortion-board {
+      grid-template-columns: 1fr;
+    }
+
+    .verdict-column {
+      flex-direction: row;
+      gap: 9px;
+      min-height: auto;
+      padding: 2px 0;
+    }
+
+    .verdict-arrow {
+      margin: 0;
+      transform: rotate(-90deg);
+    }
+
+    .verdict-column small {
+      display: none;
+    }
+
+    .track-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .talent-review {
+      border-radius: 18px;
+      padding: 20px;
+    }
+
+    .ability-row {
+      grid-template-columns: 88px minmax(90px, 1fr) 36px;
+    }
+
+    .loss-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .loss-strip div + div {
+      border-left: 0;
+      border-top: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .common-base,
+    .evaluation-logic {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .common-base strong,
+    .evaluation-logic div {
+      justify-content: flex-start;
+      text-align: left;
+    }
+
+    .track-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
