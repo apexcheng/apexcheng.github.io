@@ -42,6 +42,11 @@ const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags))).sort((
       <p class="eyebrow">文章</p>
       <h1 class="page-title">文章列表</h1>
       <p class="page-lead">按内容类型、标签和更新时间组织文章。列表页保持轻量，重点是快速扫描标题、摘要和分类。</p>
+      <div class="article-sort" aria-label="文章排序">
+        <span>排序</span>
+        <button class="active" type="button" data-sort-option data-sort-value="date" aria-pressed="true">发布时间</button>
+        <button type="button" data-sort-option data-sort-value="updated" aria-pressed="false">修改时间</button>
+      </div>
       <div class="search-placeholder">当前共有 {posts.length} 篇文章、{categoryMetaList.length} 个分类、{tags.length} 个标签；也可以使用顶部导航里的搜索查找内容。</div>
       <ArticleList posts={posts} />
       <p class="article-filter-empty" data-empty-state hidden>当前分类暂无公开文章，请切换到其他分类或查看全部文章。</p>
@@ -54,8 +59,10 @@ const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags))).sort((
 
       var filters = Array.prototype.slice.call(page.querySelectorAll('[data-category-filter]'));
       var items = Array.prototype.slice.call(page.querySelectorAll('[data-article-item]'));
+      var sortOptions = Array.prototype.slice.call(page.querySelectorAll('[data-sort-option]'));
       var list = page.querySelector('[data-article-list]');
       var emptyState = page.querySelector('[data-empty-state]');
+      var currentSort = 'date';
 
       function setActiveFilter(category) {
         var activeFilter = null;
@@ -78,13 +85,40 @@ const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags))).sort((
 
       function updateLastVisibleItem() {
         var lastVisibleItem = null;
+        var orderedItems = list ? Array.prototype.slice.call(list.querySelectorAll('[data-article-item]')) : items;
 
-        items.forEach(function (item) {
+        orderedItems.forEach(function (item) {
           item.classList.remove('is-filtered-last');
           if (!item.hidden) lastVisibleItem = item;
         });
 
         if (lastVisibleItem) lastVisibleItem.classList.add('is-filtered-last');
+      }
+
+      function setActiveSort(sortValue) {
+        sortOptions.forEach(function (sortOption) {
+          var isActive = sortOption.getAttribute('data-sort-value') === sortValue;
+          sortOption.classList.toggle('active', isActive);
+          sortOption.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+      }
+
+      function applySort(sortValue) {
+        if (!list) return;
+
+        setActiveSort(sortValue);
+
+        items
+          .slice()
+          .sort(function (a, b) {
+            var field = sortValue === 'updated' ? 'data-updated-at' : 'data-published-at';
+            return Number(b.getAttribute(field) || 0) - Number(a.getAttribute(field) || 0);
+          })
+          .forEach(function (item) {
+            list.appendChild(item);
+          });
+
+        updateLastVisibleItem();
       }
 
       function applyFilter(category, updateUrl) {
@@ -105,12 +139,21 @@ const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags))).sort((
         if (updateUrl && activeFilter) {
           history.replaceState(null, '', activeFilter.getAttribute('href') || window.location.pathname);
         }
+
+        applySort(currentSort);
       }
 
       filters.forEach(function (filter) {
         filter.addEventListener('click', function (event) {
           event.preventDefault();
           applyFilter(filter.getAttribute('data-category-value') || '', true);
+        });
+      });
+
+      sortOptions.forEach(function (sortOption) {
+        sortOption.addEventListener('click', function () {
+          currentSort = sortOption.getAttribute('data-sort-value') || 'date';
+          applySort(currentSort);
         });
       });
 

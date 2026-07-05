@@ -998,6 +998,37 @@ h3 {
   font-weight: 720;
 }
 
+.article-sort {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 -6px;
+}
+
+.article-sort span {
+  color: var(--soft);
+  font-size: 13px;
+}
+
+.article-sort button {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 720;
+  padding: 6px 12px;
+}
+
+.article-sort button.active {
+  background: color-mix(in srgb, var(--blue) 10%, var(--paper));
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
 .content-note {
   font-size: 14px;
   margin: -10px 0 24px;
