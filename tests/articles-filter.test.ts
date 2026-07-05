@@ -17,6 +17,10 @@ describe('articles page category filter', () => {
     expect(articleListSource).toContain('data-article-item');
     expect(articleListSource).toContain('data-category={post.data.category}');
     expect(categorySource).toContain('getStaticPaths');
+    expect(articlesSource).toContain("post.data.category !== '视觉实验室'");
+    expect(articlesSource).toContain("itemCategory !== '视觉实验室'");
+    expect(articlesSource).toContain('<ArticleList posts={posts} hideVisualLab />');
+    expect(articleListSource).toContain("hidden={hideVisualLab && post.data.category === '视觉实验室'}");
   });
 
   it('sorts visible articles by publish date or update date in place', () => {

@@ -1,7 +1,7 @@
 ---
 import { withBase } from '../utils/paths';
 
-const { posts } = Astro.props;
+const { posts, hideVisualLab = false } = Astro.props;
 ---
 
 <div class="article-list" data-article-list>
@@ -12,6 +12,7 @@ const { posts } = Astro.props;
       data-category={post.data.category}
       data-published-at={post.data.date.valueOf()}
       data-updated-at={(post.data.updated ?? post.data.date).valueOf()}
+      hidden={hideVisualLab && post.data.category === '视觉实验室'}
     >
       <div>
         <small><a href={withBase(`/articles/category/${encodeURIComponent(post.data.category)}/`)}>{post.data.category}</a></small>
