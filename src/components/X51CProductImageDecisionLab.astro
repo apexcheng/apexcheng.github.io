@@ -1,0 +1,1013 @@
+<section class="x51c-lab" aria-label="X51C AI 商品图决策工作台">
+  <header class="lab-hero">
+    <div class="hero-copy">
+      <span class="eyebrow">X51C CASE STUDY</span>
+      <h2>AI 最后才出图，前面先做 5 次判断</h2>
+      <p>
+        这次我没有把产品图和一句 Prompt 直接丢给模型，而是先把商品事实、竞品表达、卖点优先级、图片计划和人工确认逐层固定下来。
+      </p>
+    </div>
+
+    <div class="route-compare" aria-label="旧做法和新做法对比">
+      <div class="route-row route-old">
+        <span class="route-tag">旧做法</span>
+        <div class="route-line">
+          <span>商品资料</span><i>→</i><span>一句 Prompt</span><i>→</i><strong>AI 自己猜</strong>
+        </div>
+      </div>
+      <div class="route-row route-new">
+        <span class="route-tag">现在</span>
+        <div class="route-line route-line-new">
+          <span>事实</span><i>→</i><span>分析</span><i>→</i><span>判断</span><i>→</i><span>确认</span><i>→</i><strong>出图</strong>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="metric-strip" aria-label="X51C 工作流当前数据">
+    <div><span>信息来源</span><strong>3 类</strong><small>商品资料 · 竞品 · 用户反馈</small></div>
+    <div><span>决策中间件</span><strong>1 份</strong><small>商品图片生成计划.md</small></div>
+    <div><span>规划图片</span><strong>16 张</strong><small>6 张主图 · 10 屏详情图</small></div>
+    <div><span>已生成测试</span><strong>4 张</strong><small>3 张首图方向 · 1 张触控板图</small></div>
+  </div>
+
+  <section class="pipeline-panel">
+    <div class="section-heading">
+      <span class="eyebrow">DECISION PIPELINE</span>
+      <h3>真正的生产线，是把“画什么”先决定清楚</h3>
+      <p>每一站都要留下可检查的产出；上一站没有通过，下一站就不能自由发挥。</p>
+    </div>
+
+    <ol class="pipeline-rail">
+      <li>
+        <span class="stage-index">01</span>
+        <div class="stage-copy">
+          <small>FACT</small>
+          <strong>核对商品事实</strong>
+          <p>只接收已确认的参数、结构、接口、配件和真实产品图。</p>
+        </div>
+        <div class="stage-output">产出：已确认 / 缺失 / 禁止推测</div>
+      </li>
+      <li>
+        <span class="stage-index">02</span>
+        <div class="stage-copy">
+          <small>MARKET</small>
+          <strong>看竞品怎么表达</strong>
+          <p>分析首图钩子、主图分工、详情页顺序和视觉机会点。</p>
+        </div>
+        <div class="stage-output">产出：可借鉴点 / 不照搬点</div>
+      </li>
+      <li>
+        <span class="stage-index">03</span>
+        <div class="stage-copy">
+          <small>JUDGEMENT</small>
+          <strong>给卖点排优先级</strong>
+          <p>把卖点分成一级、二级、三级，决定什么先讲、什么后讲。</p>
+        </div>
+        <div class="stage-output">产出：主图与详情页说服顺序</div>
+      </li>
+      <li>
+        <span class="stage-index">04</span>
+        <div class="stage-copy">
+          <small>PLAN</small>
+          <strong>落盘整套图片计划</strong>
+          <p>每张图写清目标、文案、构图、真实依据、禁止项和审核标准。</p>
+        </div>
+        <div class="stage-output">产出：商品图片生成计划.md</div>
+      </li>
+      <li>
+        <span class="stage-index">05</span>
+        <div class="stage-copy">
+          <small>CONFIRM</small>
+          <strong>运营确认方向</strong>
+          <p>首图方向、最大卖点、视觉风格和表达边界先在计划阶段定稿。</p>
+        </div>
+        <div class="stage-output">产出：可执行的最终计划</div>
+      </li>
+      <li class="stage-final">
+        <span class="stage-index">06</span>
+        <div class="stage-copy">
+          <small>GENERATE</small>
+          <strong>拆成单图任务再生成</strong>
+          <p>真实产品图负责事实，单图任务负责目标，模型只负责完成画面。</p>
+        </div>
+        <div class="stage-output">产出：测试图 → 人工审核 → 上线</div>
+      </li>
+    </ol>
+  </section>
+
+  <div class="logic-grid">
+    <section class="role-board">
+      <div class="section-heading compact">
+        <span class="eyebrow">BUSINESS ROLES</span>
+        <h3>不是三个 Skill，而是三类业务判断</h3>
+      </div>
+
+      <div class="role-row">
+        <span class="role-mark role-main">总控</span>
+        <div>
+          <strong>把所有信息合成最终图片方案</strong>
+          <p>决定资料够不够、卖点怎么排、主图做什么、详情页怎么展开。</p>
+        </div>
+        <small>不能跳过计划和确认</small>
+      </div>
+      <div class="role-row">
+        <span class="role-mark role-market">看市场</span>
+        <div>
+          <strong>研究竞品为什么这样表达</strong>
+          <p>看点击钩子、图片分工、详情页节奏和没有讲清楚的机会点。</p>
+        </div>
+        <small>不能把竞品事实变成我方事实</small>
+      </div>
+      <div class="role-row">
+        <span class="role-mark role-user">听用户</span>
+        <div>
+          <strong>把评价问题映射成图片动作</strong>
+          <p>尺寸误解做尺寸图，套装误解做清单图；不适合图片解决的问题就不硬塞。</p>
+        </div>
+        <small>没有评价资料时直接跳过</small>
+      </div>
+    </section>
+
+    <section class="boundary-gate">
+      <div class="section-heading compact">
+        <span class="eyebrow">FACT GATE</span>
+        <h3>事实边界像一道闸门</h3>
+      </div>
+
+      <div class="gate-lane gate-pass">
+        <span class="gate-status">已确认</span>
+        <strong>可以进入图片计划</strong>
+        <p>触控板 · 单蓝牙 · Type-C · 280mAh · 多系统支持</p>
+      </div>
+      <div class="gate-lane gate-wait">
+        <span class="gate-status">待补充</span>
+        <strong>缺了就暂停对应任务</strong>
+        <p>尺寸重量 · 包装清单 · 部分标准角度 · SKU 颜色名称</p>
+      </div>
+      <div class="gate-lane gate-stop">
+        <span class="gate-status">禁止推测</span>
+        <strong>再好看也不能写进去</strong>
+        <p>三模 · 机械键盘 · 背光 · 防水 · 未确认续航天数</p>
+      </div>
+    </section>
+  </div>
+
+  <section class="trace-panel">
+    <div class="section-heading">
+      <span class="eyebrow">SINGLE IMAGE TRACE</span>
+      <h3>X51C 主图 2：一张触控板卖点图是怎么被决定出来的</h3>
+      <p>下面不是提示词拆解，而是一条从商品事实到最终执行的证据链。</p>
+    </div>
+
+    <div class="trace-layout">
+      <div class="evidence-chain">
+        <div class="evidence-node">
+          <span>商品事实</span>
+          <strong>X51C 带真实触控板</strong>
+          <p>这是已确认结构，不是根据竞品猜出来的功能。</p>
+        </div>
+        <div class="evidence-node">
+          <span>业务判断</span>
+          <strong>解释“为什么选触控款”</strong>
+          <p>重点不是炫技，而是减少输入时频繁抬手触屏。</p>
+        </div>
+        <div class="evidence-node">
+          <span>图片计划</span>
+          <strong>主图 2 只讲一个卖点</strong>
+          <p>标题定为“带触控板 操作更顺手”，视觉焦点锁定触控区域。</p>
+        </div>
+        <div class="evidence-node">
+          <span>单图任务</span>
+          <strong>45° 产品视角 + 局部放大</strong>
+          <p>允许加手指示意；禁止宣称替代鼠标、专业绘图或高级手势。</p>
+        </div>
+      </div>
+
+      <div class="execution-console">
+        <div class="console-head">
+          <span>STRUCTURE CONTROL</span>
+          <strong>真实图片分工，而不是让 AI 自己补结构</strong>
+        </div>
+
+        <div class="reference-pair">
+          <div>
+            <span>角度参考</span>
+            <strong>IMG_3292.jpg</strong>
+            <small>提供触控板可见的 45° 主视角</small>
+          </div>
+          <i>+</i>
+          <div>
+            <span>结构校准</span>
+            <strong>IMG_3281.jpg</strong>
+            <small>锁定键位、触控板位置和产品比例</small>
+          </div>
+        </div>
+
+        <div class="keyboard-schematic" aria-label="X51C 键盘结构示意">
+          <div class="keys" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div class="touchpad">
+            <small>真实触控板区域</small>
+          </div>
+        </div>
+
+        <div class="generation-path">
+          <span>两张实拍图</span><i>→</i><span>单图任务</span><i>→</i><span>GPT Image 2</span><i>→</i><strong>X51C-main-02-touchpad-v1.png</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="progress-panel">
+    <div class="progress-copy">
+      <span class="eyebrow">CURRENT STATUS</span>
+      <h3>这套流程已经跑到“单图测试”，还没有假装成完整闭环</h3>
+      <p>我更愿意把当前做到哪里写清楚，而不是把一个还在验证中的流程包装成成熟系统。</p>
+    </div>
+
+    <div class="progress-track" aria-label="X51C 工作流当前进度">
+      <div class="progress-item done"><span>01</span><strong>商品资料整理</strong><small>完成</small></div>
+      <div class="progress-item done"><span>02</span><strong>竞品与卖点分析</strong><small>完成</small></div>
+      <div class="progress-item done"><span>03</span><strong>图片计划定稿</strong><small>完成</small></div>
+      <div class="progress-item current"><span>04</span><strong>单图拆解与测试生成</strong><small>已跑到这里</small></div>
+      <div class="progress-item"><span>05</span><strong>整套主图 / 详情图</strong><small>待继续</small></div>
+      <div class="progress-item"><span>06</span><strong>人工审核与上线</strong><small>待验证</small></div>
+      <div class="progress-item"><span>07</span><strong>点击率 / 转化率迭代</strong><small>尚未闭环</small></div>
+    </div>
+  </section>
+
+  <footer class="lab-verdict">
+    <span>最终判断</span>
+    <strong>AI 图片生成只是最后一个执行节点。真正决定结果的，是前面的事实、判断、计划和确认。</strong>
+  </footer>
+</section>
+
+<style>
+  .x51c-lab {
+    --lab-blue: #2563eb;
+    --lab-cyan: #0891b2;
+    --lab-violet: #7c3aed;
+    --lab-green: #0f9f76;
+    --lab-amber: #d97706;
+    --lab-red: #dc2626;
+    background:
+      radial-gradient(circle at 8% 0%, rgba(56, 189, 248, 0.2), transparent 28%),
+      radial-gradient(circle at 92% 6%, rgba(124, 58, 237, 0.14), transparent 30%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.92));
+    border: 1px solid rgba(96, 165, 250, 0.24);
+    border-radius: 26px;
+    box-shadow: 0 30px 80px rgba(15, 23, 42, 0.11);
+    color: var(--ink);
+    margin: 34px 0;
+    overflow: hidden;
+  }
+
+  .lab-hero,
+  .pipeline-panel,
+  .logic-grid,
+  .trace-panel,
+  .progress-panel,
+  .lab-verdict {
+    padding-left: clamp(22px, 4vw, 42px);
+    padding-right: clamp(22px, 4vw, 42px);
+  }
+
+  .lab-hero {
+    align-items: center;
+    display: grid;
+    gap: 34px;
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+    padding-bottom: 34px;
+    padding-top: 40px;
+  }
+
+  .eyebrow {
+    color: var(--lab-blue);
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+  }
+
+  .hero-copy h2,
+  .section-heading h3,
+  .progress-copy h3 {
+    color: var(--ink);
+    letter-spacing: -0.045em;
+    line-height: 1.12;
+  }
+
+  .hero-copy h2 {
+    font-size: clamp(32px, 5.6vw, 58px);
+    margin: 10px 0 16px;
+  }
+
+  .hero-copy p,
+  .section-heading p,
+  .progress-copy p {
+    color: var(--muted);
+    line-height: 1.75;
+    margin: 0;
+  }
+
+  .route-compare {
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 22px;
+    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.2);
+    display: grid;
+    gap: 18px;
+    padding: 22px;
+  }
+
+  .route-row {
+    display: grid;
+    gap: 9px;
+  }
+
+  .route-tag {
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0.11em;
+  }
+
+  .route-line {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .route-line span,
+  .route-line strong {
+    border-radius: 999px;
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  .route-line span {
+    background: rgba(148, 163, 184, 0.11);
+    color: #cbd5e1;
+  }
+
+  .route-line strong {
+    background: rgba(239, 68, 68, 0.16);
+    color: #fca5a5;
+  }
+
+  .route-line i {
+    color: #64748b;
+    font-style: normal;
+  }
+
+  .route-new .route-tag {
+    color: #67e8f9;
+  }
+
+  .route-line-new span {
+    background: rgba(37, 99, 235, 0.18);
+    color: #bfdbfe;
+  }
+
+  .route-line-new strong {
+    background: rgba(16, 185, 129, 0.18);
+    color: #86efac;
+  }
+
+  .metric-strip {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .metric-strip > div {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    padding: 18px clamp(16px, 2.6vw, 28px);
+  }
+
+  .metric-strip > div + div {
+    border-left: 1px solid rgba(148, 163, 184, 0.2);
+  }
+
+  .metric-strip span,
+  .metric-strip small {
+    color: var(--soft);
+    font-size: 12px;
+  }
+
+  .metric-strip strong {
+    color: var(--lab-blue);
+    font-size: clamp(24px, 3vw, 34px);
+    letter-spacing: -0.05em;
+  }
+
+  .section-heading {
+    max-width: 760px;
+  }
+
+  .section-heading.compact {
+    max-width: none;
+  }
+
+  .section-heading h3,
+  .progress-copy h3 {
+    font-size: clamp(25px, 4vw, 40px);
+    margin: 9px 0 12px;
+  }
+
+  .section-heading.compact h3 {
+    font-size: clamp(23px, 3vw, 32px);
+  }
+
+  .pipeline-panel {
+    padding-bottom: 38px;
+    padding-top: 42px;
+  }
+
+  .pipeline-rail {
+    list-style: none;
+    margin: 30px 0 0;
+    padding: 0;
+  }
+
+  .pipeline-rail li {
+    align-items: center;
+    border-top: 1px solid rgba(148, 163, 184, 0.22);
+    display: grid;
+    gap: 18px;
+    grid-template-columns: 48px minmax(0, 1fr) minmax(190px, auto);
+    padding: 18px 0;
+    position: relative;
+  }
+
+  .pipeline-rail li::before {
+    background: linear-gradient(180deg, rgba(37, 99, 235, 0.2), rgba(124, 58, 237, 0.05));
+    content: '';
+    height: 100%;
+    left: 23px;
+    position: absolute;
+    top: 50%;
+    width: 1px;
+    z-index: 0;
+  }
+
+  .pipeline-rail li:last-child::before {
+    display: none;
+  }
+
+  .stage-index {
+    align-items: center;
+    background: #eff6ff;
+    border: 1px solid rgba(37, 99, 235, 0.24);
+    border-radius: 50%;
+    color: var(--lab-blue);
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 900;
+    height: 46px;
+    justify-content: center;
+    position: relative;
+    width: 46px;
+    z-index: 1;
+  }
+
+  .stage-copy small {
+    color: var(--lab-violet);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.13em;
+  }
+
+  .stage-copy strong {
+    display: block;
+    font-size: 18px;
+    margin-top: 4px;
+  }
+
+  .stage-copy p {
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 5px 0 0;
+  }
+
+  .stage-output {
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 999px;
+    color: var(--soft);
+    font-size: 12px;
+    justify-self: end;
+    padding: 9px 12px;
+  }
+
+  .stage-final .stage-index {
+    background: #ecfdf5;
+    border-color: rgba(15, 159, 118, 0.28);
+    color: var(--lab-green);
+  }
+
+  .logic-grid {
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+    display: grid;
+    gap: 28px;
+    grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+    padding-bottom: 42px;
+    padding-top: 42px;
+  }
+
+  .role-board,
+  .boundary-gate {
+    min-width: 0;
+  }
+
+  .role-row {
+    align-items: start;
+    border-top: 1px solid rgba(148, 163, 184, 0.22);
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 86px minmax(0, 1fr) minmax(150px, auto);
+    padding: 18px 0;
+  }
+
+  .role-row:first-of-type {
+    margin-top: 24px;
+  }
+
+  .role-mark {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 850;
+    justify-content: center;
+    padding: 8px 10px;
+  }
+
+  .role-main { background: rgba(124, 58, 237, 0.11); color: var(--lab-violet); }
+  .role-market { background: rgba(8, 145, 178, 0.11); color: var(--lab-cyan); }
+  .role-user { background: rgba(15, 159, 118, 0.11); color: var(--lab-green); }
+
+  .role-row strong {
+    display: block;
+    font-size: 16px;
+  }
+
+  .role-row p,
+  .role-row small {
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 5px 0 0;
+  }
+
+  .role-row small {
+    color: var(--soft);
+    font-size: 11px;
+    margin: 0;
+    text-align: right;
+  }
+
+  .boundary-gate {
+    background: rgba(255, 255, 255, 0.64);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 22px;
+    padding: 24px;
+  }
+
+  .gate-lane {
+    border-left: 4px solid currentColor;
+    display: grid;
+    gap: 5px;
+    margin-top: 18px;
+    padding: 4px 0 4px 15px;
+  }
+
+  .gate-pass { color: var(--lab-green); }
+  .gate-wait { color: var(--lab-amber); }
+  .gate-stop { color: var(--lab-red); }
+
+  .gate-status {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+  }
+
+  .gate-lane strong {
+    color: var(--ink);
+    font-size: 16px;
+  }
+
+  .gate-lane p {
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .trace-panel {
+    background:
+      radial-gradient(circle at 90% 10%, rgba(34, 211, 238, 0.12), transparent 34%),
+      linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+    color: white;
+    padding-bottom: 42px;
+    padding-top: 42px;
+  }
+
+  .trace-panel .eyebrow {
+    color: #67e8f9;
+  }
+
+  .trace-panel .section-heading h3 {
+    color: white;
+  }
+
+  .trace-panel .section-heading p {
+    color: #94a3b8;
+  }
+
+  .trace-layout {
+    display: grid;
+    gap: 28px;
+    grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+    margin-top: 30px;
+  }
+
+  .evidence-chain {
+    display: grid;
+    gap: 0;
+  }
+
+  .evidence-node {
+    border-left: 1px solid rgba(103, 232, 249, 0.28);
+    padding: 0 0 22px 22px;
+    position: relative;
+  }
+
+  .evidence-node::before {
+    background: #22d3ee;
+    border: 4px solid #0f172a;
+    border-radius: 50%;
+    content: '';
+    height: 11px;
+    left: -6px;
+    position: absolute;
+    top: 2px;
+    width: 11px;
+  }
+
+  .evidence-node:last-child {
+    border-left-color: transparent;
+    padding-bottom: 0;
+  }
+
+  .evidence-node span {
+    color: #67e8f9;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+  }
+
+  .evidence-node strong {
+    color: #f8fafc;
+    display: block;
+    font-size: 17px;
+    margin-top: 5px;
+  }
+
+  .evidence-node p {
+    color: #94a3b8;
+    line-height: 1.6;
+    margin: 6px 0 0;
+  }
+
+  .execution-console {
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(103, 232, 249, 0.2);
+    border-radius: 22px;
+    box-shadow: 0 22px 60px rgba(2, 6, 23, 0.32);
+    padding: 24px;
+  }
+
+  .console-head span {
+    color: #67e8f9;
+    display: block;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.13em;
+  }
+
+  .console-head strong {
+    color: white;
+    display: block;
+    font-size: 20px;
+    margin-top: 5px;
+  }
+
+  .reference-pair {
+    align-items: stretch;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr);
+    margin-top: 20px;
+  }
+
+  .reference-pair > div {
+    background: rgba(30, 41, 59, 0.86);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 16px;
+    display: grid;
+    gap: 5px;
+    padding: 14px;
+  }
+
+  .reference-pair span,
+  .reference-pair small {
+    color: #94a3b8;
+    font-size: 11px;
+  }
+
+  .reference-pair strong {
+    color: #e2e8f0;
+    font-size: 14px;
+  }
+
+  .reference-pair i {
+    align-self: center;
+    color: #67e8f9;
+    font-style: normal;
+    text-align: center;
+  }
+
+  .keyboard-schematic {
+    background: linear-gradient(145deg, #d7eadf, #b9d8c8);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 18px;
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1.55fr) minmax(130px, 0.65fr);
+    margin-top: 18px;
+    padding: 18px;
+    transform: perspective(850px) rotateX(2deg) rotateZ(-1deg);
+  }
+
+  .keys {
+    display: grid;
+    gap: 5px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .keys span {
+    aspect-ratio: 1;
+    background: rgba(248, 250, 252, 0.88);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.09);
+  }
+
+  .touchpad {
+    align-items: end;
+    background: rgba(241, 245, 249, 0.34);
+    border: 1px solid rgba(15, 23, 42, 0.16);
+    border-radius: 13px;
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .touchpad small {
+    color: rgba(15, 23, 42, 0.6);
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .generation-path {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .generation-path span,
+  .generation-path strong {
+    border-radius: 999px;
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+
+  .generation-path span {
+    background: rgba(37, 99, 235, 0.17);
+    color: #bfdbfe;
+  }
+
+  .generation-path strong {
+    background: rgba(16, 185, 129, 0.16);
+    color: #86efac;
+  }
+
+  .generation-path i {
+    color: #64748b;
+    font-style: normal;
+  }
+
+  .progress-panel {
+    align-items: start;
+    display: grid;
+    gap: 34px;
+    grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1.28fr);
+    padding-bottom: 42px;
+    padding-top: 42px;
+  }
+
+  .progress-track {
+    display: grid;
+  }
+
+  .progress-item {
+    align-items: center;
+    border-top: 1px solid rgba(148, 163, 184, 0.22);
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    padding: 14px 0;
+  }
+
+  .progress-item span {
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  .progress-item strong {
+    font-size: 15px;
+  }
+
+  .progress-item small {
+    color: var(--soft);
+    font-size: 11px;
+  }
+
+  .progress-item.done span,
+  .progress-item.done small {
+    color: var(--lab-green);
+  }
+
+  .progress-item.current {
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.09), transparent);
+    border-left: 3px solid var(--lab-blue);
+    margin-left: -13px;
+    padding-left: 10px;
+  }
+
+  .progress-item.current span,
+  .progress-item.current small {
+    color: var(--lab-blue);
+  }
+
+  .lab-verdict {
+    align-items: center;
+    background: linear-gradient(110deg, rgba(37, 99, 235, 0.96), rgba(124, 58, 237, 0.94));
+    display: grid;
+    gap: 9px;
+    grid-template-columns: auto minmax(0, 1fr);
+    padding-bottom: 24px;
+    padding-top: 24px;
+  }
+
+  .lab-verdict span {
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    color: white;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 8px 10px;
+  }
+
+  .lab-verdict strong {
+    color: white;
+    font-size: clamp(17px, 2.2vw, 23px);
+    line-height: 1.45;
+  }
+
+  @media (max-width: 900px) {
+    .lab-hero,
+    .logic-grid,
+    .trace-layout,
+    .progress-panel {
+      grid-template-columns: 1fr;
+    }
+
+    .metric-strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .metric-strip > div:nth-child(3) {
+      border-left: 0;
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .metric-strip > div:nth-child(4) {
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .pipeline-rail li,
+    .role-row {
+      grid-template-columns: 48px minmax(0, 1fr);
+    }
+
+    .stage-output,
+    .role-row small {
+      grid-column: 2;
+      justify-self: start;
+      text-align: left;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .x51c-lab {
+      border-radius: 20px;
+      margin-left: -8px;
+      margin-right: -8px;
+    }
+
+    .lab-hero,
+    .pipeline-panel,
+    .logic-grid,
+    .trace-panel,
+    .progress-panel,
+    .lab-verdict {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .hero-copy h2 {
+      font-size: 34px;
+    }
+
+    .metric-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .metric-strip > div + div,
+    .metric-strip > div:nth-child(3),
+    .metric-strip > div:nth-child(4) {
+      border-left: 0;
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .pipeline-rail li,
+    .role-row {
+      grid-template-columns: 42px minmax(0, 1fr);
+    }
+
+    .stage-index {
+      height: 40px;
+      width: 40px;
+    }
+
+    .pipeline-rail li::before {
+      left: 19px;
+    }
+
+    .stage-output {
+      border-radius: 14px;
+      line-height: 1.45;
+    }
+
+    .boundary-gate,
+    .execution-console {
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .reference-pair {
+      grid-template-columns: 1fr;
+    }
+
+    .reference-pair i {
+      transform: rotate(90deg);
+    }
+
+    .keyboard-schematic {
+      grid-template-columns: minmax(0, 1.3fr) minmax(92px, 0.7fr);
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .keys {
+      gap: 3px;
+    }
+
+    .lab-verdict {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
