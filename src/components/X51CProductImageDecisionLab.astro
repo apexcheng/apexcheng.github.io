@@ -222,6 +222,8 @@
     border: 1px solid rgba(96, 165, 250, 0.24);
     border-radius: 26px;
     box-shadow: 0 30px 80px rgba(15, 23, 42, 0.11);
+    container-name: project-map;
+    container-type: inline-size;
     margin: 34px 0;
     overflow: hidden;
   }
@@ -644,6 +646,8 @@
     background: rgba(255, 255, 255, 0.78);
     border: 1px solid rgba(148, 163, 184, 0.24);
     border-radius: 18px;
+    min-width: 0;
+    overflow-wrap: anywhere;
     padding: 18px;
   }
 
@@ -711,6 +715,8 @@
   .generator-box,
   .review-box {
     border-radius: 16px;
+    min-width: 0;
+    overflow-wrap: anywhere;
     padding: 16px;
     text-align: center;
   }
@@ -820,7 +826,7 @@
     margin-top: 5px;
   }
 
-  @media (max-width: 920px) {
+  @container project-map (max-width: 920px) {
     .map-hero {
       grid-template-columns: 1fr;
     }
@@ -863,7 +869,7 @@
     }
   }
 
-  @media (max-width: 640px) {
+  @container project-map (max-width: 640px) {
     .project-map {
       border-radius: 20px;
       margin-left: -8px;
