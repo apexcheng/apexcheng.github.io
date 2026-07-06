@@ -1,0 +1,638 @@
+<section class="warehouse-network" aria-label="东南亚仓储与发货规则可视化">
+  <header class="network-header">
+    <div>
+      <span class="eyebrow">WAREHOUSE ROUTING</span>
+      <h2>4 个仓库，形成一套“本地优先、跨境兜底”的履约网络</h2>
+      <p>三个国家各有独立雅仓；深圳跨境仓由三国共用，但只在本国雅仓无可用库存时接手发货。</p>
+    </div>
+    <div class="network-metrics" aria-label="仓储网络概览">
+      <span><b>3</b> 个国家</span>
+      <span><b>3</b> 个雅仓</span>
+      <span><b>2</b> 个平台</span>
+      <span><b>1</b> 个跨境仓</span>
+    </div>
+  </header>
+
+  <div class="country-grid">
+    <article class="country-card country-th">
+      <div class="country-heading">
+        <span class="country-code">TH</span>
+        <div>
+          <strong>泰国雅仓</strong>
+          <small>仅服务泰国站点</small>
+        </div>
+      </div>
+      <div class="stock-pool">
+        <span class="pool-label">本国实物库存</span>
+        <strong>同一份库存池</strong>
+      </div>
+      <div class="platform-row">
+        <span class="platform-chip shopee">Shopee</span>
+        <span class="share-mark">共享</span>
+        <span class="platform-chip lazada">Lazada</span>
+      </div>
+    </article>
+
+    <article class="country-card country-my">
+      <div class="country-heading">
+        <span class="country-code">MY</span>
+        <div>
+          <strong>马来西亚雅仓</strong>
+          <small>仅服务马来西亚站点</small>
+        </div>
+      </div>
+      <div class="stock-pool">
+        <span class="pool-label">本国实物库存</span>
+        <strong>同一份库存池</strong>
+      </div>
+      <div class="platform-row">
+        <span class="platform-chip shopee">Shopee</span>
+        <span class="share-mark">共享</span>
+        <span class="platform-chip lazada">Lazada</span>
+      </div>
+    </article>
+
+    <article class="country-card country-ph">
+      <div class="country-heading">
+        <span class="country-code">PH</span>
+        <div>
+          <strong>菲律宾雅仓</strong>
+          <small>仅服务菲律宾站点</small>
+        </div>
+      </div>
+      <div class="stock-pool">
+        <span class="pool-label">本国实物库存</span>
+        <strong>同一份库存池</strong>
+      </div>
+      <div class="platform-row">
+        <span class="platform-chip shopee">Shopee</span>
+        <span class="share-mark">共享</span>
+        <span class="platform-chip lazada">Lazada</span>
+      </div>
+    </article>
+  </div>
+
+  <div class="boundary-strip">
+    <span class="boundary-icon" aria-hidden="true">×</span>
+    <div>
+      <strong>国家之间不共享库存</strong>
+      <p>泰国、马来西亚、菲律宾三地雅仓是独立物理库房。一国有货，不代表另外两国可以调用。</p>
+    </div>
+    <div class="boundary-codes" aria-label="三国库存相互隔离">
+      <span>TH</span><i></i><span>MY</span><i></i><span>PH</span>
+    </div>
+  </div>
+
+  <div class="route-board">
+    <div class="route-copy">
+      <span class="eyebrow">SHIPPING PRIORITY</span>
+      <h3>发货只看一个优先级</h3>
+      <p>先检查订单所在国家的本地雅仓；只有本地没有可用库存，才切换到深圳跨境仓。</p>
+    </div>
+
+    <div class="route-flow" aria-label="发货优先级流程">
+      <div class="route-node primary">
+        <span>优先</span>
+        <strong>本国雅仓</strong>
+        <small>有可用库存</small>
+      </div>
+      <span class="route-arrow" aria-hidden="true">→</span>
+      <div class="route-result success">
+        <span>本地履约</span>
+        <strong>直接发货</strong>
+      </div>
+      <span class="route-divider">无可用库存 ↓</span>
+      <div class="route-node fallback">
+        <span>兜底</span>
+        <strong>深圳跨境仓</strong>
+        <small>三国共用直发渠道</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="platform-aliases">
+    <div class="alias-intro">
+      <span class="eyebrow">BACKEND NAMES</span>
+      <strong>当前业务后台名称</strong>
+      <small>这里记录的是当前操作口径，不代表所有平台、所有商家都只有这一种叫法。</small>
+    </div>
+    <div class="alias-card lazada-alias">
+      <span>Lazada 后台</span>
+      <strong>3PF</strong>
+    </div>
+    <div class="alias-card shopee-alias">
+      <span>Shopee 后台</span>
+      <strong>LFF</strong>
+    </div>
+  </div>
+</section>
+
+<style>
+  .warehouse-network {
+    --network-blue: #2563eb;
+    --network-cyan: #0891b2;
+    --network-green: #0f9f76;
+    --network-orange: #ea580c;
+    background:
+      radial-gradient(circle at 8% 0%, rgba(56, 189, 248, 0.22), transparent 34%),
+      radial-gradient(circle at 94% 12%, rgba(129, 140, 248, 0.2), transparent 30%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.97), rgba(239, 246, 255, 0.92));
+    border: 1px solid rgba(96, 165, 250, 0.24);
+    border-radius: 24px;
+    box-shadow: 0 28px 76px rgba(15, 23, 42, 0.11);
+    color: var(--ink);
+    margin: 34px 0;
+    overflow: hidden;
+    padding: clamp(22px, 4vw, 40px);
+  }
+
+  .network-header {
+    align-items: end;
+    display: grid;
+    gap: 24px;
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
+  }
+
+  .eyebrow {
+    color: var(--network-blue);
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: 0.14em;
+  }
+
+  .network-header h2,
+  .route-copy h3 {
+    color: var(--ink);
+    letter-spacing: -0.045em;
+    line-height: 1.13;
+  }
+
+  .network-header h2 {
+    font-size: clamp(28px, 5vw, 48px);
+    margin: 10px 0 14px;
+  }
+
+  .network-header p,
+  .route-copy p,
+  .boundary-strip p {
+    color: var(--muted);
+    line-height: 1.75;
+    margin: 0;
+  }
+
+  .network-metrics {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .network-metrics span {
+    align-items: baseline;
+    background: rgba(255, 255, 255, 0.74);
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 14px;
+    color: var(--soft);
+    display: flex;
+    font-size: 13px;
+    gap: 7px;
+    padding: 12px 14px;
+  }
+
+  .network-metrics b {
+    color: var(--network-blue);
+    font-size: 24px;
+    letter-spacing: -0.05em;
+  }
+
+  .country-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 30px;
+  }
+
+  .country-card {
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 20px;
+    box-shadow: 0 16px 42px rgba(15, 23, 42, 0.07);
+    display: grid;
+    gap: 16px;
+    padding: 20px;
+    position: relative;
+  }
+
+  .country-card::before {
+    background: linear-gradient(90deg, var(--accent), transparent);
+    border-radius: 999px;
+    content: '';
+    height: 3px;
+    left: 20px;
+    position: absolute;
+    right: 20px;
+    top: 0;
+  }
+
+  .country-th { --accent: #2563eb; }
+  .country-my { --accent: #0f9f76; }
+  .country-ph { --accent: #ea580c; }
+
+  .country-heading {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+  }
+
+  .country-code {
+    align-items: center;
+    background: color-mix(in srgb, var(--accent) 12%, white);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, white);
+    border-radius: 12px;
+    color: var(--accent);
+    display: inline-flex;
+    flex: 0 0 46px;
+    font-size: 13px;
+    font-weight: 900;
+    height: 46px;
+    justify-content: center;
+    letter-spacing: 0.06em;
+  }
+
+  .country-heading div {
+    display: grid;
+    gap: 3px;
+  }
+
+  .country-heading strong {
+    color: var(--ink);
+    font-size: 17px;
+  }
+
+  .country-heading small {
+    color: var(--soft);
+    font-size: 12px;
+  }
+
+  .stock-pool {
+    background: linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(240, 253, 250, 0.9));
+    border: 1px dashed rgba(59, 130, 246, 0.3);
+    border-radius: 16px;
+    display: grid;
+    gap: 4px;
+    padding: 15px 16px;
+  }
+
+  .pool-label {
+    color: var(--soft);
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .stock-pool strong {
+    color: var(--ink);
+    font-size: 17px;
+  }
+
+  .platform-row {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .platform-chip,
+  .share-mark {
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .platform-chip {
+    padding: 8px 10px;
+  }
+
+  .platform-chip.shopee {
+    background: rgba(234, 88, 12, 0.1);
+    color: #c2410c;
+  }
+
+  .platform-chip.lazada {
+    background: rgba(37, 99, 235, 0.1);
+    color: #1d4ed8;
+  }
+
+  .share-mark {
+    color: var(--soft);
+    font-size: 11px;
+  }
+
+  .boundary-strip {
+    align-items: center;
+    background: rgba(15, 23, 42, 0.94);
+    border-radius: 18px;
+    display: grid;
+    gap: 16px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    margin-top: 18px;
+    padding: 18px 20px;
+  }
+
+  .boundary-icon {
+    align-items: center;
+    background: rgba(248, 113, 113, 0.14);
+    border: 1px solid rgba(248, 113, 113, 0.24);
+    border-radius: 12px;
+    color: #fca5a5;
+    display: inline-flex;
+    font-size: 24px;
+    font-weight: 700;
+    height: 44px;
+    justify-content: center;
+    width: 44px;
+  }
+
+  .boundary-strip strong {
+    color: #f8fafc;
+    display: block;
+    font-size: 16px;
+    margin-bottom: 3px;
+  }
+
+  .boundary-strip p {
+    color: #cbd5e1;
+    font-size: 13px;
+  }
+
+  .boundary-codes {
+    align-items: center;
+    display: flex;
+    gap: 7px;
+  }
+
+  .boundary-codes span {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    color: #e2e8f0;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 850;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
+  }
+
+  .boundary-codes i {
+    background: #f87171;
+    height: 1px;
+    opacity: 0.75;
+    width: 14px;
+  }
+
+  .route-board {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.74);
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    border-radius: 20px;
+    display: grid;
+    gap: 24px;
+    grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
+    margin-top: 18px;
+    padding: 22px;
+  }
+
+  .route-copy h3 {
+    font-size: clamp(22px, 4vw, 34px);
+    margin: 8px 0 10px;
+  }
+
+  .route-flow {
+    align-items: center;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(120px, 1fr) auto minmax(110px, 0.86fr);
+  }
+
+  .route-node,
+  .route-result {
+    border-radius: 16px;
+    display: grid;
+    gap: 4px;
+    min-height: 104px;
+    padding: 16px;
+  }
+
+  .route-node span,
+  .route-result span {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .route-node strong,
+  .route-result strong {
+    font-size: 17px;
+  }
+
+  .route-node small {
+    color: var(--soft);
+    font-size: 12px;
+  }
+
+  .route-node.primary {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.11), rgba(8, 145, 178, 0.08));
+    border: 1px solid rgba(37, 99, 235, 0.22);
+  }
+
+  .route-node.primary span,
+  .route-node.primary strong {
+    color: #1d4ed8;
+  }
+
+  .route-result.success {
+    background: rgba(236, 253, 245, 0.9);
+    border: 1px solid rgba(15, 159, 118, 0.2);
+  }
+
+  .route-result.success span,
+  .route-result.success strong {
+    color: #047857;
+  }
+
+  .route-arrow {
+    color: var(--network-blue);
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  .route-divider {
+    color: #c2410c;
+    font-size: 12px;
+    font-weight: 800;
+    grid-column: 1 / -1;
+    justify-self: center;
+    margin: -3px 0;
+  }
+
+  .route-node.fallback {
+    background: rgba(255, 247, 237, 0.94);
+    border: 1px solid rgba(234, 88, 12, 0.2);
+    grid-column: 1 / -1;
+    justify-self: center;
+    min-height: auto;
+    text-align: center;
+  }
+
+  .route-node.fallback span,
+  .route-node.fallback strong {
+    color: #c2410c;
+  }
+
+  .platform-aliases {
+    align-items: stretch;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(0, 1.4fr) minmax(150px, 0.65fr) minmax(150px, 0.65fr);
+    margin-top: 18px;
+  }
+
+  .alias-intro,
+  .alias-card {
+    border-radius: 16px;
+    padding: 17px 18px;
+  }
+
+  .alias-intro {
+    background: rgba(15, 23, 42, 0.05);
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    display: grid;
+    gap: 5px;
+  }
+
+  .alias-intro strong {
+    color: var(--ink);
+    font-size: 16px;
+  }
+
+  .alias-intro small {
+    color: var(--soft);
+    line-height: 1.55;
+  }
+
+  .alias-card {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .alias-card span {
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .alias-card strong {
+    font-size: 28px;
+    letter-spacing: -0.04em;
+  }
+
+  .lazada-alias {
+    background: rgba(37, 99, 235, 0.09);
+    border: 1px solid rgba(37, 99, 235, 0.18);
+    color: #1d4ed8;
+  }
+
+  .shopee-alias {
+    background: rgba(234, 88, 12, 0.09);
+    border: 1px solid rgba(234, 88, 12, 0.18);
+    color: #c2410c;
+  }
+
+  :global(html[data-theme='dark']) .warehouse-network {
+    background:
+      radial-gradient(circle at 8% 0%, rgba(37, 99, 235, 0.2), transparent 34%),
+      radial-gradient(circle at 94% 12%, rgba(124, 58, 237, 0.18), transparent 30%),
+      linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.96));
+    border-color: rgba(148, 163, 184, 0.2);
+  }
+
+  :global(html[data-theme='dark']) .network-metrics span,
+  :global(html[data-theme='dark']) .country-card,
+  :global(html[data-theme='dark']) .route-board {
+    background: rgba(15, 23, 42, 0.72);
+  }
+
+  :global(html[data-theme='dark']) .stock-pool {
+    background: linear-gradient(135deg, rgba(30, 64, 175, 0.18), rgba(13, 148, 136, 0.12));
+  }
+
+  :global(html[data-theme='dark']) .alias-intro {
+    background: rgba(15, 23, 42, 0.64);
+  }
+
+  @media (max-width: 860px) {
+    .network-header,
+    .route-board {
+      grid-template-columns: 1fr;
+    }
+
+    .country-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .platform-aliases {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .alias-intro {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .warehouse-network {
+      border-radius: 20px;
+      padding: 20px 16px;
+    }
+
+    .network-metrics {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .boundary-strip {
+      align-items: start;
+      grid-template-columns: auto 1fr;
+    }
+
+    .boundary-codes {
+      grid-column: 1 / -1;
+      justify-content: center;
+    }
+
+    .route-flow {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+
+    .route-arrow {
+      transform: rotate(90deg);
+    }
+
+    .route-divider,
+    .route-node.fallback {
+      grid-column: 1;
+    }
+
+    .platform-aliases {
+      grid-template-columns: 1fr;
+    }
+
+    .alias-intro {
+      grid-column: 1;
+    }
+  }
+</style>
