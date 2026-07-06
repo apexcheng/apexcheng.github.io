@@ -1,521 +1,264 @@
-<section class="project-map" aria-label="X51C AI 商品图项目运行地图">
-  <header class="map-hero">
-    <div>
-      <span class="eyebrow">HOW THE PROJECT RUNS</span>
-      <h2>运营只进一个入口，后面由 Skill 分工完成</h2>
-      <p>这张图既是使用流程，也是项目架构。第一次使用时顺着箭头走；以后排查问题，也顺着同一条链往回找。</p>
-    </div>
-    <div class="hero-summary" aria-label="项目结构概览">
-      <span><b>1</b> 个总入口</span>
-      <span><b>2</b> 个专业 Skill</span>
-      <span><b>2</b> 份状态文件</span>
-      <span><b>1</b> 个图片生成层</span>
-    </div>
+<section class="x51c-overview" aria-label="X51C AI 商品图总流程">
+  <header class="overview-hero">
+    <span class="eyebrow">X51C PRODUCT IMAGE FLOW</span>
+    <h2>先分析和确认，再进入图片生成</h2>
+    <p>完整商品图任务从一个入口开始。竞品分析默认必经；评价分析只在有评价资料时使用；最终方案由商品图总入口统一汇总。</p>
   </header>
 
-  <section class="usage-strip" aria-label="运营使用流程">
-    <div class="usage-step">
+  <div class="pipeline" aria-label="商品图主流程">
+    <article>
       <span>01</span>
       <strong>准备资料</strong>
-      <small>商品属性、实拍图、至少 1 个竞品链接，可选评价数据</small>
-    </div>
+      <small>商品事实、实拍图、竞品链接和可选评价数据</small>
+    </article>
     <i>→</i>
-    <div class="usage-step">
+    <article>
       <span>02</span>
-      <strong>发起任务</strong>
-      <small>“我要给 X51C 做一套主图和详情图”</small>
-    </div>
+      <strong>专业分析</strong>
+      <small>竞品分析默认执行，评价分析按资料决定是否使用</small>
+    </article>
     <i>→</i>
-    <div class="usage-step">
+    <article>
       <span>03</span>
-      <strong>确认方案</strong>
-      <small>看整套图片计划，确认卖点、顺序和边界</small>
-    </div>
+      <strong>汇总判断</strong>
+      <small>商品事实 + 市场表达 + 用户反馈</small>
+    </article>
     <i>→</i>
-    <div class="usage-step">
+    <article>
       <span>04</span>
-      <strong>逐张出图</strong>
-      <small>单图生成、审核，有问题就回到对应层修改</small>
-    </div>
+      <strong>生成计划</strong>
+      <small>先落盘整套主图和详情图方案</small>
+    </article>
+    <i>→</i>
+    <article>
+      <span>05</span>
+      <strong>用户确认</strong>
+      <small>确认卖点、顺序、文案和禁止内容</small>
+    </article>
+    <i>→</i>
+    <article>
+      <span>06</span>
+      <strong>逐张生成</strong>
+      <small>拆单图任务、检查真实参考图、生成并审核</small>
+    </article>
+  </div>
+
+  <section class="roles" aria-label="三个 Skill 的分工">
+    <article class="role-card lead-card">
+      <div class="role-topline">
+        <span>MAIN SKILL</span>
+        <b>唯一入口</b>
+      </div>
+      <strong>ecommerce-product-image</strong>
+      <h3>商品图负责人</h3>
+      <p>接收任务、检查资料、调用专业 Skill、汇总结论、生成整套计划，并控制什么时候继续、暂停或等待确认。</p>
+      <div class="role-note">最终图片方案由它统一决定</div>
+    </article>
+
+    <article class="role-card market-card">
+      <div class="role-topline">
+        <span>SPECIALIST</span>
+        <b>默认必经</b>
+      </div>
+      <strong>competitor-analysis</strong>
+      <h3>竞品分析</h3>
+      <p>逐个分析用户提供的竞品链接，读取页面、截图主图和详情图、OCR 文案，再整理市场表达和机会点。</p>
+      <div class="role-note">结果返回商品图负责人</div>
+    </article>
+
+    <article class="role-card review-card">
+      <div class="role-topline">
+        <span>OPTIONAL</span>
+        <b>有资料才用</b>
+      </div>
+      <strong>review-analysis</strong>
+      <h3>评价分析</h3>
+      <p>从评价和用户问题里找高频关注、误解和痛点，判断哪些内容值得被带回商品图方案。</p>
+      <div class="role-note">没有评价资料就直接跳过</div>
+    </article>
   </section>
 
-  <section class="architecture-panel">
-    <div class="section-heading">
-      <span class="eyebrow">PROJECT ARCHITECTURE</span>
-      <h3>一条任务进入项目后，背后到底发生了什么</h3>
-      <p>运营不需要手动调用 Skill。总入口负责判断什么时候找谁、什么时候停、什么时候继续。</p>
-    </div>
-
-    <div class="architecture-flow">
-      <div class="user-node">
-        <span class="node-type">USER</span>
-        <strong>运营 / 商品负责人</strong>
-        <p>输入商品资料、真实照片、竞品链接（至少 1 个，推荐 3～5 个）和可选评价数据。</p>
-        <div class="user-prompt">“我要给 X51C 做一套商品图”</div>
-      </div>
-
-      <span class="flow-arrow">↓</span>
-
-      <div class="controller-node">
-        <div class="controller-head">
-          <div>
-            <span class="node-type">MAIN SKILL</span>
-            <strong>ecommerce-product-image</strong>
-            <small>商品图总入口 / 项目负责人</small>
-          </div>
-          <span class="controller-badge">唯一入口</span>
-        </div>
-        <div class="controller-actions">
-          <span>接收任务</span>
-          <span>检查资料</span>
-          <span>调用专业 Skill</span>
-          <span>汇总判断</span>
-          <span>控制流程继续或暂停</span>
-        </div>
-      </div>
-
-      <div class="specialist-branch" aria-label="专业 Skill 分工">
-        <div class="branch-line"></div>
-        <article class="specialist-card market-card">
-          <span class="node-type">SPECIALIST SKILL</span>
-          <strong>competitor-analysis</strong>
-          <h4>看市场怎么卖</h4>
-          <p>逐个打开用户提供的竞品链接，截图主图和详情图、OCR 文字，再分析首图钩子、图片分工和视觉机会点。</p>
-          <div class="return-note">用户提供链接 · 至少 1 个，推荐 3～5 个</div>
-        </article>
-
-        <article class="specialist-card review-card">
-          <span class="node-type">OPTIONAL SKILL</span>
-          <strong>review-analysis</strong>
-          <h4>看用户在意什么</h4>
-          <p>从评价里找高频关注、误解和痛点；没有评价资料时直接跳过。</p>
-          <div class="return-note">分析结果返回总入口</div>
-        </article>
-      </div>
-
-      <span class="flow-arrow">↓</span>
-
-      <div class="fact-gate">
-        <div class="gate-title">
-          <span class="node-type">MATERIAL GATE</span>
-          <strong>资料和实拍图够不够？</strong>
-        </div>
-
-        <div class="gate-cases">
-          <div class="gate-case pass">
-            <span>够</span>
-            <strong>继续</strong>
-            <p>商品事实已确认，当前图片也有真实角度依据。</p>
-          </div>
-          <div class="gate-case wait">
-            <span>缺事实</span>
-            <strong>标记待补</strong>
-            <p>例如尺寸、重量、包装清单。不能猜，但不一定阻塞所有图片。</p>
-          </div>
-          <div class="gate-case stop">
-            <span>缺角度</span>
-            <strong>暂停这张图</strong>
-            <p>明确告诉用户缺什么照片，并给出补拍要求。</p>
-          </div>
-        </div>
-
-        <div class="shoot-request">
-          <div class="shoot-copy">
-            <span>真实分支示例</span>
-            <strong>要做 Type-C 接口图，但没有接口实拍</strong>
-          </div>
-          <div class="shoot-route">
-            <span>不能让 AI 猜接口位置</span>
-            <i>→</i>
-            <span>暂停该图片任务</span>
-            <i>→</i>
-            <strong>让用户补拍接口近景</strong>
-          </div>
-          <small>建议说明：拍清接口完整位置、机身侧面结构、光线清楚、不要遮挡。</small>
-        </div>
-      </div>
-
-      <span class="flow-arrow">↓</span>
-
-      <div class="state-layer" aria-label="两个核心状态文件">
-        <article class="state-file plan-file">
-          <span class="file-role">整套方案状态</span>
-          <strong>商品图片生成计划.md</strong>
-          <p>保存商品事实、竞品结论、评价结论、卖点分级、主图规划、详情图规划、禁止项和待补资料。</p>
-          <small>整套方向错了，先查这里。</small>
-        </article>
-
-        <span class="state-arrow">→</span>
-
-        <div class="human-confirm">
-          <span>HUMAN CHECKPOINT</span>
-          <strong>运营确认</strong>
-          <p>确认首图方向、最大卖点、文案和禁止内容。</p>
-        </div>
-
-        <span class="state-arrow">→</span>
-
-        <article class="state-file task-file">
-          <span class="file-role">单张执行状态</span>
-          <strong>商品图片单图任务.md</strong>
-          <p>保存某一张图的目标、文案、参考图片、允许修改、禁止修改和审核标准。</p>
-          <small>只有某张图有问题，先查这里。</small>
-        </article>
-      </div>
-
-      <span class="flow-arrow">↓</span>
-
-      <div class="generation-layer">
-        <div class="reference-box">
-          <span>真实产品图</span>
-          <strong>角度依据 + 结构依据</strong>
-        </div>
-        <span>+</span>
-        <div class="reference-box">
-          <span>单图任务</span>
-          <strong>目标 + 文案 + 禁止项</strong>
-        </div>
-        <span>→</span>
-        <div class="generator-box">
-          <span>IMAGE MODEL</span>
-          <strong>GPT Image 2</strong>
-          <small>负责执行画面，不负责重新定义商品</small>
-        </div>
-        <span>→</span>
-        <div class="review-box">
-          <span>人工审核</span>
-          <strong>通过 / 返回修改</strong>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="layer-index" aria-label="项目排查层级">
-    <div class="section-heading compact">
-      <span class="eyebrow">WHERE TO LOOK</span>
-      <h3>以后排查项目，可以先按这 6 层找</h3>
-    </div>
-
-    <div class="layer-list">
-      <div><span>L1</span><strong>入口层</strong><small>ecommerce-product-image</small></div>
-      <div><span>L2</span><strong>专业分析层</strong><small>competitor-analysis / review-analysis</small></div>
-      <div><span>L3</span><strong>资料闸门</strong><small>商品事实 / 实拍角度 / 图片质量</small></div>
-      <div><span>L4</span><strong>整套计划层</strong><small>商品图片生成计划.md</small></div>
-      <div><span>L5</span><strong>单图执行层</strong><small>商品图片单图任务.md</small></div>
-      <div><span>L6</span><strong>生成与审核层</strong><small>真实参考图 / GPT Image 2 / 人工审核</small></div>
-    </div>
-  </section>
+  <footer class="flow-rule">
+    <span>关键规则</span>
+    <strong>竞品分析不会直接决定图片方案，所有结论都要回到 ecommerce-product-image，再和商品事实一起形成最终计划。</strong>
+  </footer>
 </section>
 
 <style>
-  .project-map {
+  .x51c-overview {
     --blue: #2563eb;
     --cyan: #0891b2;
     --violet: #7c3aed;
-    --green: #0f9f76;
-    --amber: #d97706;
-    --red: #dc2626;
     background:
-      radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.18), transparent 30%),
-      radial-gradient(circle at 90% 5%, rgba(124, 58, 237, 0.14), transparent 30%),
-      linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(241, 247, 255, 0.94));
+      radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.14), transparent 30%),
+      radial-gradient(circle at 90% 5%, rgba(124, 58, 237, 0.12), transparent 30%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(241, 247, 255, 0.95));
     border: 1px solid rgba(96, 165, 250, 0.24);
-    border-radius: 26px;
-    box-shadow: 0 30px 80px rgba(15, 23, 42, 0.11);
-    container-name: project-map;
+    border-radius: 24px;
+    box-shadow: 0 26px 68px rgba(15, 23, 42, 0.09);
+    container-name: x51c-overview;
     container-type: inline-size;
-    margin: 34px 0;
+    margin: 32px 0;
     overflow: hidden;
   }
 
-  .map-hero,
-  .architecture-panel,
-  .layer-index {
-    padding-left: clamp(22px, 4vw, 42px);
-    padding-right: clamp(22px, 4vw, 42px);
+  .overview-hero,
+  .roles,
+  .flow-rule {
+    padding-left: clamp(20px, 4vw, 38px);
+    padding-right: clamp(20px, 4vw, 38px);
   }
 
-  .map-hero {
-    align-items: end;
-    display: grid;
-    gap: 28px;
-    grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.7fr);
-    padding-bottom: 34px;
-    padding-top: 40px;
+  .overview-hero {
+    padding-bottom: 30px;
+    padding-top: 36px;
   }
 
   .eyebrow,
-  .node-type {
+  .role-topline span {
     color: var(--blue);
-    display: inline-flex;
     font-size: 10px;
     font-weight: 900;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.14em;
   }
 
-  .map-hero h2,
-  .section-heading h3 {
+  .overview-hero h2 {
     color: var(--ink);
+    font-size: clamp(31px, 5vw, 50px);
     letter-spacing: -0.045em;
     line-height: 1.12;
+    margin: 9px 0 13px;
   }
 
-  .map-hero h2 {
-    font-size: clamp(32px, 5.5vw, 56px);
-    margin: 10px 0 15px;
-  }
-
-  .map-hero p,
-  .section-heading p {
+  .overview-hero p {
     color: var(--muted);
     line-height: 1.75;
     margin: 0;
+    max-width: 780px;
   }
 
-  .hero-summary {
-    display: grid;
-    gap: 10px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .hero-summary span {
-    align-items: baseline;
-    background: rgba(255, 255, 255, 0.74);
-    border: 1px solid rgba(148, 163, 184, 0.23);
-    border-radius: 14px;
-    color: var(--soft);
-    display: flex;
-    font-size: 12px;
-    gap: 7px;
-    padding: 12px 14px;
-  }
-
-  .hero-summary b {
-    color: var(--blue);
-    font-size: 23px;
-    letter-spacing: -0.05em;
-  }
-
-  .usage-strip {
+  .pipeline {
     align-items: stretch;
     background: rgba(15, 23, 42, 0.97);
     display: grid;
-    gap: 12px;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
-    padding: 22px clamp(22px, 4vw, 42px);
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    padding: 22px clamp(20px, 4vw, 38px);
   }
 
-  .usage-strip > i {
-    align-self: center;
-    color: #475569;
-    font-style: normal;
-  }
-
-  .usage-step {
+  .pipeline article {
     min-width: 0;
   }
 
-  .usage-step span {
+  .pipeline article span {
     color: #67e8f9;
     display: block;
     font-size: 10px;
     font-weight: 900;
   }
 
-  .usage-step strong {
+  .pipeline article strong {
     color: #f8fafc;
-    display: block;
-    font-size: 16px;
-    margin-top: 5px;
-  }
-
-  .usage-step small {
-    color: #94a3b8;
-    display: block;
-    line-height: 1.55;
-    margin-top: 5px;
-  }
-
-  .architecture-panel {
-    padding-bottom: 44px;
-    padding-top: 44px;
-  }
-
-  .section-heading {
-    max-width: 780px;
-  }
-
-  .section-heading.compact {
-    max-width: none;
-  }
-
-  .section-heading h3 {
-    font-size: clamp(26px, 4vw, 40px);
-    margin: 9px 0 12px;
-  }
-
-  .architecture-flow {
-    align-items: center;
-    display: grid;
-    justify-items: center;
-    margin-top: 32px;
-  }
-
-  .flow-arrow {
-    color: #94a3b8;
-    font-size: 22px;
-    margin: 10px 0;
-  }
-
-  .user-node,
-  .controller-node,
-  .fact-gate,
-  .state-layer,
-  .generation-layer {
-    width: min(100%, 920px);
-  }
-
-  .user-node {
-    background: rgba(255, 255, 255, 0.76);
-    border: 1px solid rgba(148, 163, 184, 0.24);
-    border-radius: 20px;
-    padding: 20px 22px;
-    text-align: center;
-  }
-
-  .user-node strong {
-    display: block;
-    font-size: 20px;
-    margin-top: 6px;
-  }
-
-  .user-node p {
-    color: var(--muted);
-    margin: 7px 0 0;
-  }
-
-  .user-prompt {
-    background: rgba(37, 99, 235, 0.08);
-    border: 1px solid rgba(37, 99, 235, 0.16);
-    border-radius: 999px;
-    color: var(--blue);
-    display: inline-flex;
-    font-size: 13px;
-    font-weight: 800;
-    margin-top: 13px;
-    padding: 8px 13px;
-  }
-
-  .controller-node {
-    background:
-      radial-gradient(circle at 90% 0%, rgba(103, 232, 249, 0.17), transparent 36%),
-      linear-gradient(145deg, #172554, #1e3a8a 55%, #164e63);
-    border: 1px solid rgba(96, 165, 250, 0.26);
-    border-radius: 22px;
-    box-shadow: 0 20px 50px rgba(30, 64, 175, 0.2);
-    color: white;
-    padding: 24px;
-  }
-
-  .controller-head {
-    align-items: start;
-    display: flex;
-    gap: 18px;
-    justify-content: space-between;
-  }
-
-  .controller-node .node-type {
-    color: #67e8f9;
-  }
-
-  .controller-head strong {
-    display: block;
-    font-size: 23px;
-    margin-top: 5px;
-  }
-
-  .controller-head small {
-    color: #bfdbfe;
-    display: block;
-    margin-top: 5px;
-  }
-
-  .controller-badge {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 999px;
-    color: #e0f2fe;
-    font-size: 11px;
-    font-weight: 850;
-    padding: 7px 10px;
-    white-space: nowrap;
-  }
-
-  .controller-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 20px;
-  }
-
-  .controller-actions span {
-    background: rgba(255, 255, 255, 0.09);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 999px;
-    color: #dbeafe;
-    font-size: 11px;
-    padding: 7px 10px;
-  }
-
-  .specialist-branch {
-    display: grid;
-    gap: 20px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin-top: 26px;
-    position: relative;
-    width: min(100%, 860px);
-  }
-
-  .branch-line {
-    border-left: 1px solid rgba(148, 163, 184, 0.35);
-    border-right: 1px solid rgba(148, 163, 184, 0.35);
-    border-top: 1px solid rgba(148, 163, 184, 0.35);
-    height: 18px;
-    left: 25%;
-    position: absolute;
-    right: 25%;
-    top: -18px;
-  }
-
-  .specialist-card {
-    background: rgba(255, 255, 255, 0.78);
-    border: 1px solid rgba(148, 163, 184, 0.24);
-    border-radius: 20px;
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
-    padding: 20px;
-  }
-
-  .market-card .node-type { color: var(--cyan); }
-  .review-card .node-type { color: var(--violet); }
-
-  .specialist-card > strong {
     display: block;
     font-size: 15px;
     margin-top: 5px;
   }
 
-  .specialist-card h4 {
-    font-size: 20px;
-    margin: 16px 0 8px;
+  .pipeline article small {
+    color: #94a3b8;
+    display: block;
+    line-height: 1.5;
+    margin-top: 5px;
   }
 
-  .specialist-card p {
+  .pipeline > i {
+    align-self: center;
+    color: #475569;
+    font-style: normal;
+  }
+
+  .roles {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-bottom: 34px;
+    padding-top: 34px;
+  }
+
+  .role-card {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.23);
+    border-radius: 18px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding: 20px;
+  }
+
+  .lead-card {
+    border-top: 4px solid var(--blue);
+  }
+
+  .market-card {
+    border-top: 4px solid var(--cyan);
+  }
+
+  .review-card {
+    border-top: 4px solid var(--violet);
+  }
+
+  .role-topline {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+  }
+
+  .role-topline b {
+    background: rgba(37, 99, 235, 0.08);
+    border-radius: 999px;
+    color: var(--blue);
+    font-size: 10px;
+    padding: 6px 8px;
+    white-space: nowrap;
+  }
+
+  .market-card .role-topline span,
+  .market-card .role-topline b {
+    color: var(--cyan);
+  }
+
+  .market-card .role-topline b {
+    background: rgba(8, 145, 178, 0.08);
+  }
+
+  .review-card .role-topline span,
+  .review-card .role-topline b {
+    color: var(--violet);
+  }
+
+  .review-card .role-topline b {
+    background: rgba(124, 58, 237, 0.08);
+  }
+
+  .role-card > strong {
+    display: block;
+    font-size: 14px;
+    margin-top: 16px;
+  }
+
+  .role-card h3 {
+    color: var(--ink);
+    font-size: 21px;
+    margin: 5px 0 9px;
+  }
+
+  .role-card p {
     color: var(--muted);
     line-height: 1.65;
     margin: 0;
   }
 
-  .return-note {
+  .role-note {
     border-top: 1px dashed rgba(148, 163, 184, 0.3);
     color: var(--soft);
     font-size: 11px;
@@ -523,421 +266,78 @@
     padding-top: 12px;
   }
 
-  .fact-gate {
-    background: rgba(255, 255, 255, 0.66);
-    border: 1px solid rgba(148, 163, 184, 0.24);
-    border-radius: 22px;
-    padding: 24px;
-  }
-
-  .gate-title {
-    text-align: center;
-  }
-
-  .gate-title strong {
-    display: block;
-    font-size: 25px;
-    margin-top: 6px;
-  }
-
-  .gate-cases {
-    display: grid;
-    gap: 14px;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin-top: 22px;
-  }
-
-  .gate-case {
-    border-left: 4px solid currentColor;
-    padding: 4px 0 4px 14px;
-  }
-
-  .gate-case.pass { color: var(--green); }
-  .gate-case.wait { color: var(--amber); }
-  .gate-case.stop { color: var(--red); }
-
-  .gate-case span {
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.1em;
-  }
-
-  .gate-case strong {
-    color: var(--ink);
-    display: block;
-    font-size: 17px;
-    margin-top: 4px;
-  }
-
-  .gate-case p {
-    color: var(--muted);
-    line-height: 1.6;
-    margin: 5px 0 0;
-  }
-
-  .shoot-request {
-    background: rgba(15, 23, 42, 0.96);
-    border-radius: 18px;
-    color: white;
-    margin-top: 22px;
-    padding: 19px;
-  }
-
-  .shoot-copy span {
-    color: #fbbf24;
-    display: block;
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.1em;
-  }
-
-  .shoot-copy strong {
-    display: block;
-    font-size: 17px;
-    margin-top: 5px;
-  }
-
-  .shoot-route {
+  .flow-rule {
     align-items: center;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 14px;
-  }
-
-  .shoot-route span,
-  .shoot-route strong {
-    border-radius: 999px;
-    font-size: 11px;
-    padding: 7px 9px;
-  }
-
-  .shoot-route span {
-    background: rgba(148, 163, 184, 0.12);
-    color: #cbd5e1;
-  }
-
-  .shoot-route strong {
-    background: rgba(245, 158, 11, 0.16);
-    color: #fcd34d;
-  }
-
-  .shoot-route i {
-    color: #64748b;
-    font-style: normal;
-  }
-
-  .shoot-request small {
-    color: #94a3b8;
-    display: block;
-    line-height: 1.55;
-    margin-top: 12px;
-  }
-
-  .state-layer {
-    align-items: stretch;
+    background: linear-gradient(110deg, rgba(37, 99, 235, 0.96), rgba(14, 116, 144, 0.94));
     display: grid;
     gap: 12px;
-    grid-template-columns: minmax(0, 1fr) auto minmax(150px, 0.55fr) auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
+    padding-bottom: 20px;
+    padding-top: 20px;
   }
 
-  .state-file,
-  .human-confirm {
-    background: rgba(255, 255, 255, 0.78);
-    border: 1px solid rgba(148, 163, 184, 0.24);
-    border-radius: 18px;
-    min-width: 0;
-    overflow-wrap: anywhere;
-    padding: 18px;
-  }
-
-  .file-role,
-  .human-confirm span {
-    color: var(--soft);
+  .flow-rule span {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    color: white;
     font-size: 10px;
     font-weight: 900;
-    letter-spacing: 0.1em;
+    padding: 7px 9px;
+    white-space: nowrap;
   }
 
-  .state-file strong,
-  .human-confirm strong {
-    display: block;
-    font-size: 16px;
-    margin-top: 5px;
-  }
-
-  .state-file p,
-  .human-confirm p {
-    color: var(--muted);
-    line-height: 1.6;
-    margin: 7px 0 0;
-  }
-
-  .state-file small {
-    color: var(--blue);
-    display: block;
-    font-weight: 750;
-    margin-top: 10px;
-  }
-
-  .plan-file {
-    border-top: 4px solid var(--violet);
-  }
-
-  .task-file {
-    border-top: 4px solid var(--cyan);
-  }
-
-  .human-confirm {
-    align-content: center;
-    background: linear-gradient(145deg, rgba(254, 249, 195, 0.74), rgba(255, 251, 235, 0.9));
-    border-color: rgba(217, 119, 6, 0.18);
-    text-align: center;
-  }
-
-  .human-confirm span {
-    color: var(--amber);
-  }
-
-  .state-arrow {
-    align-self: center;
-    color: #94a3b8;
-  }
-
-  .generation-layer {
-    align-items: center;
-    display: grid;
-    gap: 10px;
-    grid-template-columns: minmax(0, 0.9fr) auto minmax(0, 0.9fr) auto minmax(0, 1fr) auto minmax(0, 0.8fr);
-  }
-
-  .reference-box,
-  .generator-box,
-  .review-box {
-    border-radius: 16px;
-    min-width: 0;
-    overflow-wrap: anywhere;
-    padding: 16px;
-    text-align: center;
-  }
-
-  .reference-box {
-    background: rgba(255, 255, 255, 0.78);
-    border: 1px solid rgba(148, 163, 184, 0.24);
-  }
-
-  .reference-box span,
-  .generator-box span,
-  .review-box span {
-    color: var(--soft);
-    display: block;
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.08em;
-  }
-
-  .reference-box strong,
-  .generator-box strong,
-  .review-box strong {
-    display: block;
-    font-size: 15px;
-    margin-top: 5px;
-  }
-
-  .generator-box {
-    background: linear-gradient(145deg, #1e3a8a, #164e63);
+  .flow-rule strong {
     color: white;
-  }
-
-  .generator-box span,
-  .generator-box small {
-    color: #bfdbfe;
-  }
-
-  .generator-box small {
-    display: block;
-    line-height: 1.5;
-    margin-top: 6px;
-  }
-
-  .review-box {
-    background: rgba(236, 253, 245, 0.82);
-    border: 1px solid rgba(15, 159, 118, 0.2);
-  }
-
-  .review-box span,
-  .review-box strong {
-    color: var(--green);
-  }
-
-  .layer-index {
-    background: rgba(15, 23, 42, 0.97);
-    padding-bottom: 34px;
-    padding-top: 34px;
-  }
-
-  .layer-index .eyebrow {
-    color: #67e8f9;
-  }
-
-  .layer-index .section-heading h3 {
-    color: white;
-  }
-
-  .layer-list {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin-top: 22px;
-  }
-
-  .layer-list > div {
-    border-left: 1px solid rgba(148, 163, 184, 0.18);
-    border-top: 1px solid rgba(148, 163, 184, 0.18);
-    min-width: 0;
-    padding: 16px;
-  }
-
-  .layer-list > div:nth-child(3n + 1) {
-    border-left: 0;
-  }
-
-  .layer-list > div:nth-child(-n + 3) {
-    border-top: 0;
-  }
-
-  .layer-list span {
-    color: #67e8f9;
-    display: block;
-    font-size: 11px;
-    font-weight: 900;
-  }
-
-  .layer-list strong {
-    color: #f8fafc;
-    display: block;
     font-size: 15px;
-    margin-top: 5px;
+    line-height: 1.55;
   }
 
-  .layer-list small {
-    color: #94a3b8;
-    display: block;
-    line-height: 1.5;
-    margin-top: 5px;
-  }
-
-  @container project-map (max-width: 920px) {
-    .map-hero {
-      grid-template-columns: 1fr;
+  @container x51c-overview (max-width: 900px) {
+    .pipeline {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .usage-strip {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .usage-strip > i {
+    .pipeline > i {
       display: none;
     }
 
-    .state-layer,
-    .generation-layer {
+    .roles {
       grid-template-columns: 1fr;
-    }
-
-    .state-arrow,
-    .generation-layer > span {
-      transform: rotate(90deg);
-    }
-
-    .layer-list {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .layer-list > div,
-    .layer-list > div:nth-child(3n + 1),
-    .layer-list > div:nth-child(-n + 3) {
-      border-left: 1px solid rgba(148, 163, 184, 0.18);
-      border-top: 1px solid rgba(148, 163, 184, 0.18);
-    }
-
-    .layer-list > div:nth-child(2n + 1) {
-      border-left: 0;
-    }
-
-    .layer-list > div:nth-child(-n + 2) {
-      border-top: 0;
     }
   }
 
-  @container project-map (max-width: 640px) {
-    .project-map {
+  @container x51c-overview (max-width: 620px) {
+    .x51c-overview {
       border-radius: 20px;
       margin-left: -8px;
       margin-right: -8px;
     }
 
-    .map-hero,
-    .architecture-panel,
-    .layer-index {
+    .overview-hero,
+    .roles,
+    .flow-rule {
       padding-left: 18px;
       padding-right: 18px;
     }
 
-    .map-hero h2 {
+    .overview-hero h2 {
       font-size: 34px;
     }
 
-    .hero-summary,
-    .usage-strip,
-    .specialist-branch,
-    .gate-cases,
-    .layer-list {
+    .pipeline {
+      grid-template-columns: 1fr;
+      gap: 18px;
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .flow-rule {
       grid-template-columns: 1fr;
     }
 
-    .hero-summary span,
-    .usage-step {
-      min-height: auto;
-    }
-
-    .usage-strip {
-      gap: 18px;
-    }
-
-    .branch-line {
-      display: none;
-    }
-
-    .controller-head {
-      display: grid;
-    }
-
-    .controller-badge {
+    .flow-rule span {
       justify-self: start;
-    }
-
-    .fact-gate {
-      padding: 18px;
-    }
-
-    .shoot-route {
-      align-items: flex-start;
-      flex-direction: column;
-    }
-
-    .shoot-route i {
-      transform: rotate(90deg);
-    }
-
-    .layer-list > div,
-    .layer-list > div:nth-child(2n + 1),
-    .layer-list > div:nth-child(-n + 2) {
-      border-left: 0;
-      border-top: 1px solid rgba(148, 163, 184, 0.18);
-    }
-
-    .layer-list > div:first-child {
-      border-top: 0;
     }
   }
 </style>

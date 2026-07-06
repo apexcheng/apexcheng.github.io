@@ -32,7 +32,7 @@
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
 | `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `实践` | 泰国、马来西亚、菲律宾雅仓与深圳跨境仓的仓储网络，覆盖双平台共享库存、跨国家隔离和本地优先发货 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
 | `src/content/posts/ai-product-image-agent-workflow.mdx` | `实践` | AI 商品主图 / 详情图 Agent 工作流，覆盖竞品 OCR、卖点提炼、MD 计划文档、用户对话定稿和受控出图 | 写商品图生成、竞品视觉分析、电商 Agent 工作流、图片策划方案时参考 |
-| `src/content/posts/ai-product-image-decision-workflow-x51c.mdx` | `实践` | 以 X51C 为真实案例，讲清 AI 商品图项目怎么使用、Skill 怎么分工、资料不足时如何暂停补拍、两份状态文件如何承接流程，以及问题应该回哪一层排查 | 写 AI 商品图使用流程、Skill 架构、资料闸门、补拍机制、状态文件和排查路径时参考 |
+| `src/content/posts/ai-product-image-decision-workflow-x51c.mdx` | `实践` | 以 X51C 为真实案例，顺着一次商品图任务讲清输入资料、三个 Skill 分工、竞品链接抓取、评价反馈、整套计划、补拍机制、单图生成和排查路径 | 写 AI 商品图真实使用流程、Skill 协作、竞品分析、状态文件、补拍机制和单图执行时参考 |
 | `src/content/posts/github-pages-deployment-guide.mdx` | `实践` | GitHub Pages、Astro、Actions 部署流程 | 写部署说明、构建发布、静态站点原理时参考 |
 | `src/content/posts/performance-review-should-recognize-talent.mdx` | `生活` | 从运营助理分级考核表出发，批评统一能力清单如何用短板限制长板，并提出共同底线加专项晋升路线 | 写职场观察、绩效考核、人才管理、专人专项和制度批评类文章时参考 |
 | `src/content/posts/h-pylori-acid-drink-note.mdx` | `生活` | 幽门螺杆菌、胃酸过多和气泡饮料的个人判断笔记 | 写生活判断清单、风险边界提醒、个人健康记录类文章时参考 |
