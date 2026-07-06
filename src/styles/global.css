@@ -1157,6 +1157,7 @@ h3 {
   color: var(--muted);
   display: block;
   font-size: 14px;
+  overflow-wrap: anywhere;
   padding: 10px 0;
 }
 
