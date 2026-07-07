@@ -1,0 +1,293 @@
+<section class="connection-architecture" aria-label="DevSpace 接入 ChatGPT 最终架构">
+  <header class="architecture-header">
+    <span class="eyebrow">FINAL ARCHITECTURE</span>
+    <h3>ChatGPT 到 WSL 的最终连接链路</h3>
+    <p>公网请求先进入 ChmlFrp，再转发到 Caddy，最后由 Caddy 代理到 DevSpace。</p>
+  </header>
+
+  <div class="connection-flow" aria-label="ChatGPT 到 DevSpace 的连接流程">
+    <article class="flow-node public-node">
+      <span class="node-label">公网调用</span>
+      <strong>ChatGPT</strong>
+      <code>/mcp</code>
+    </article>
+
+    <div class="flow-connector">
+      <span>HTTPS</span>
+      <i aria-hidden="true">→</i>
+    </div>
+
+    <article class="flow-node tunnel-node">
+      <span class="node-label">公网隧道</span>
+      <strong>ChmlFrp</strong>
+      <code>HTTPS tunnel</code>
+    </article>
+
+    <div class="flow-connector">
+      <span>HTTPS</span>
+      <i aria-hidden="true">→</i>
+    </div>
+
+    <article class="flow-node caddy-node">
+      <span class="node-label">本地 HTTPS</span>
+      <strong>Caddy</strong>
+      <code>127.0.0.1:7677</code>
+    </article>
+
+    <div class="flow-connector">
+      <span>HTTP</span>
+      <i aria-hidden="true">→</i>
+    </div>
+
+    <article class="flow-node devspace-node">
+      <span class="node-label">MCP 服务</span>
+      <strong>DevSpace</strong>
+      <code>127.0.0.1:7676</code>
+    </article>
+  </div>
+
+  <div class="endpoint-grid" aria-label="三个关键连接地址">
+    <article class="endpoint-card public-endpoint">
+      <div class="endpoint-heading">
+        <span>01</span>
+        <strong>ChatGPT 使用</strong>
+        <b>HTTPS</b>
+      </div>
+      <code>https://your-domain.example.com/mcp</code>
+      <p>最终填到 ChatGPT 里的公网地址。</p>
+    </article>
+
+    <article class="endpoint-card caddy-endpoint">
+      <div class="endpoint-heading">
+        <span>02</span>
+        <strong>Caddy 本地监听</strong>
+        <b>HTTPS</b>
+      </div>
+      <code>127.0.0.1:7677</code>
+      <p>ChmlFrp 在 WSL 内部转发到这里。</p>
+    </article>
+
+    <article class="endpoint-card devspace-endpoint">
+      <div class="endpoint-heading">
+        <span>03</span>
+        <strong>DevSpace 本地监听</strong>
+        <b>HTTP</b>
+      </div>
+      <code>127.0.0.1:7676</code>
+      <p>Caddy 最终反向代理到真正的 MCP 服务。</p>
+    </article>
+  </div>
+</section>
+
+<style>
+  .connection-architecture {
+    background:
+      radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.2), transparent 32%),
+      radial-gradient(circle at 92% 12%, rgba(99, 102, 241, 0.14), transparent 30%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.94));
+    border: 1px solid rgba(96, 165, 250, 0.26);
+    border-radius: 24px;
+    box-shadow: 0 22px 64px rgba(15, 23, 42, 0.1);
+    margin: 30px 0;
+    overflow: hidden;
+    padding: clamp(22px, 4vw, 38px);
+  }
+
+  .architecture-header {
+    max-width: 760px;
+  }
+
+  .eyebrow {
+    color: #2563eb;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: 0.14em;
+  }
+
+  .architecture-header h3 {
+    color: var(--ink);
+    font-size: clamp(25px, 4vw, 38px);
+    letter-spacing: -0.045em;
+    line-height: 1.14;
+    margin: 10px 0 12px;
+  }
+
+  .architecture-header p {
+    color: var(--muted);
+    line-height: 1.75;
+    margin: 0;
+  }
+
+  .connection-flow {
+    align-items: stretch;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(120px, 1fr) 62px minmax(120px, 1fr) 62px minmax(135px, 1fr) 62px minmax(135px, 1fr);
+    margin-top: 28px;
+  }
+
+  .flow-node {
+    background: rgba(255, 255, 255, 0.84);
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    border-radius: 18px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07);
+    display: grid;
+    gap: 7px;
+    min-height: 132px;
+    padding: 18px 16px;
+  }
+
+  .flow-node::before {
+    background: var(--node-accent);
+    border-radius: 999px;
+    content: '';
+    height: 3px;
+    width: 44px;
+  }
+
+  .public-node { --node-accent: #2563eb; }
+  .tunnel-node { --node-accent: #6366f1; }
+  .caddy-node { --node-accent: #0891b2; }
+  .devspace-node { --node-accent: #0f9f76; }
+
+  .node-label {
+    color: var(--soft);
+    font-size: 12px;
+    font-weight: 750;
+  }
+
+  .flow-node strong {
+    color: var(--ink);
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .flow-node code,
+  .endpoint-card code {
+    font-family: var(--sl-font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  }
+
+  .flow-node code {
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 0;
+    word-break: break-word;
+  }
+
+  .flow-connector {
+    align-items: center;
+    color: #4f6f95;
+    display: flex;
+    flex-direction: column;
+    font-size: 11px;
+    font-weight: 800;
+    gap: 8px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .flow-connector i {
+    color: #2563eb;
+    font-size: 28px;
+    font-style: normal;
+    line-height: 1;
+  }
+
+  .endpoint-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 20px;
+  }
+
+  .endpoint-card {
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 18px;
+    padding: 18px;
+  }
+
+  .endpoint-heading {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .endpoint-heading span {
+    align-items: center;
+    background: rgba(37, 99, 235, 0.1);
+    border-radius: 9px;
+    color: #2563eb;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 850;
+    height: 28px;
+    justify-content: center;
+    width: 32px;
+  }
+
+  .endpoint-heading strong {
+    color: var(--ink);
+    font-size: 14px;
+  }
+
+  .endpoint-heading b {
+    background: rgba(8, 145, 178, 0.1);
+    border-radius: 999px;
+    color: #0e7490;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    padding: 5px 8px;
+  }
+
+  .devspace-endpoint .endpoint-heading b {
+    background: rgba(15, 159, 118, 0.1);
+    color: #0f7c60;
+  }
+
+  .endpoint-card code {
+    background: rgba(239, 246, 255, 0.9);
+    border: 1px solid rgba(147, 197, 253, 0.24);
+    border-radius: 12px;
+    color: #234d7a;
+    display: block;
+    font-size: 12px;
+    line-height: 1.65;
+    margin-top: 14px;
+    padding: 10px 12px;
+    word-break: break-all;
+  }
+
+  .endpoint-card p {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 10px 0 0;
+  }
+
+  @media (max-width: 860px) {
+    .connection-flow {
+      grid-template-columns: 1fr;
+    }
+
+    .flow-node {
+      min-height: 0;
+    }
+
+    .flow-connector {
+      gap: 3px;
+      min-height: 52px;
+    }
+
+    .flow-connector i {
+      transform: rotate(90deg);
+    }
+
+    .endpoint-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

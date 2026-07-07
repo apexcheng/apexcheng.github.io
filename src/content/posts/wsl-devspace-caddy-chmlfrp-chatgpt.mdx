@@ -1,5 +1,5 @@
 ---
-title: "在 WSL 中用 DevSpace + Caddy + ChmlFrp 接入 ChatGPT：可直接照抄的配置教程"
+title: "DevSpace + Caddy + ChmlFrp 接入 ChatGPT"
 description: "一份可直接照抄的配置教程：在 WSL 中运行 DevSpace，用 Caddy 提供本地 HTTPS，再通过 ChmlFrp 暴露为公网地址，最终接入 ChatGPT。"
 date: 2026-07-07
 category: "实践"
@@ -21,7 +21,7 @@ import FeatureCard from '../../components/FeatureCard.astro';
 import VisualGrid from '../../components/VisualGrid.astro';
 import HighlightBox from '../../components/HighlightBox.astro';
 import DecisionFlow from '../../components/DecisionFlow.astro';
-import Mermaid from '../../components/Mermaid.astro';
+import DevSpaceConnectionArchitecture from '../../components/DevSpaceConnectionArchitecture.astro';
 
 这篇文章只做一件事：把 WSL 里的 DevSpace 通过 Caddy 和 ChmlFrp 暴露成公网 HTTPS 地址，然后接入 ChatGPT。
 
@@ -35,22 +35,7 @@ import Mermaid from '../../components/Mermaid.astro';
 
 先看清楚整条链路，后面的所有配置都围绕这四层展开。
 
-<Mermaid
-  title="ChatGPT 到 WSL 的最终连接链路"
-  caption="公网 URL 不带本地端口；ChmlFrp 连接 Caddy，Caddy 再转发到 DevSpace。"
-  chart={`flowchart LR
-    A[ChatGPT] -->|HTTPS /mcp| B[ChmlFrp 公网入口]
-    B -->|HTTPS 隧道| C[Caddy 127.0.0.1:7677]
-    C -->|HTTP 反向代理| D[DevSpace 127.0.0.1:7676]`}
-/>
-
-这几个地址不要混：
-
-| 位置 | 地址 | 协议 |
-| --- | --- | --- |
-| ChatGPT 使用 | `https://your-domain.example.com/mcp` | HTTPS |
-| Caddy 本地监听 | `127.0.0.1:7677` | HTTPS |
-| DevSpace 本地监听 | `127.0.0.1:7676` | HTTP |
+<DevSpaceConnectionArchitecture />
 
 <Callout title="最容易记错的一点">
   `7677` 只是 WSL 里的本地端口。ChatGPT 的公网地址不要写成 `https://your-domain.example.com:7677/mcp`。
