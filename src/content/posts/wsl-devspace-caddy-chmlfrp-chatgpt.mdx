@@ -27,6 +27,10 @@ import DevSpaceConnectionArchitecture from '../../components/DevSpaceConnectionA
 
 本文假设你已经安装好 DevSpace、Caddy 和 ChmlFrp，并且已经准备好 ChmlFrp 隧道、独立域名和对应的 DNS 解析。下面只讲配置和验证，可以从上往下直接照抄。
 
+## 为什么我选择这套方案
+
+Cloudflare Tunnel 确实更省事，但对我这种「个人开发机 + WSL + DevSpace」场景，核心需求不是 CDN 或全球加速，而是让 ChatGPT 直接使用本机项目，同时把代码、运行环境和网络链路掌握在自己手里。WSL 提供 Linux 环境，DevSpace 让 ChatGPT 获得读取、搜索、修改和执行项目的能力，Caddy + ChmlFrp 负责提供公网入口。这样 VS Code、DevSpace 和 ChatGPT 操作的是同一份本地代码，链路也更直接。**简单说：AI 获得了操作能力，但代码和运行环境仍然在自己的机器上。**
+
 <HighlightBox eyebrow="目标" title="最终给 ChatGPT 的地址只有一个">
   `https://your-domain.example.com/mcp`
 </HighlightBox>
