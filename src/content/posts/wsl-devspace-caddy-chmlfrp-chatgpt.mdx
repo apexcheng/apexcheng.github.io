@@ -10,7 +10,7 @@ tags:
   - "ChmlFrp"
   - "ChatGPT"
   - "MCP"
-minutes: 14
+minutes: 18
 featured: false
 draft: false
 private: false
@@ -45,6 +45,17 @@ Cloudflare Tunnel 确实更省事，但对我这种「个人开发机 + WSL + De
   `7677` 只是 WSL 里的本地端口。ChatGPT 的公网地址不要写成 `https://your-domain.example.com:7677/mcp`。
 </Callout>
 
+<HighlightBox eyebrow="VERIFIED" title="本文按当前这台真实运行中的 WSL 验证">
+  <ul>
+    <li>DevSpace：`1.0.4`</li>
+    <li>Caddy：`2.11.4`</li>
+    <li>frpc：`0.69.1`</li>
+    <li>WSL：Ubuntu + systemd</li>
+  </ul>
+</HighlightBox>
+
+下面不是理论模板。当前这台机器的 DevSpace `7676`、Caddy `7677` 和公网 `/mcp` 都已经实际返回 `401`，ChatGPT 也能通过这条链路访问 WSL 工作区。
+
 ## 开始前先替换这些占位符
 
 全文统一使用以下占位符。复制配置后，把它们替换成自己的真实值。
@@ -66,27 +77,32 @@ Cloudflare Tunnel 确实更省事，但对我这种「个人开发机 + WSL + De
 ## 配置顺序
 
 <DecisionFlow
-  title="按这个顺序配置"
+  title="每一层通过验收，再继续下一层"
   items={[
     {
       label: 'Step 1',
-      title: '让 WSL 启用 systemd',
-      description: '后面的 DevSpace、Caddy 和 frpc 都交给 systemd 常驻运行。',
+      title: '初始化',
+      description: 'WSL 启用 systemd，Hermes Node 可用，config.json 和 auth.json 都已生成。',
     },
     {
       label: 'Step 2',
-      title: '配置 DevSpace 和 Caddy',
-      description: 'DevSpace 保持本地 HTTP，Caddy 在 7677 提供本地 HTTPS。',
+      title: 'DevSpace',
+      description: '启动 7676，本地请求 /mcp 返回 401。',
     },
     {
       label: 'Step 3',
-      title: '配置 ChmlFrp',
-      description: '把公网 HTTPS 隧道转发到 Caddy 的 7677，而不是 DevSpace 的 7676。',
+      title: 'Caddy',
+      description: '启动 7677，本地 HTTPS 请求 /mcp 返回 401。',
     },
     {
       label: 'Step 4',
-      title: '设置常驻和验证',
-      description: '启用 systemd 服务，再让 Windows 登录后保持 WSL 运行。',
+      title: 'ChmlFrp',
+      description: '公网 https://your-domain.example.com/mcp 返回 401。',
+    },
+    {
+      label: 'Step 5',
+      title: 'ChatGPT',
+      description: '完成授权后，实际读取 allowedRoots 中的测试文件。',
     },
   ]}
 />
@@ -125,7 +141,58 @@ systemctl is-system-running
 
 `appendWindowsPath` 必须放在 `[interop]` 下，不要写进 `[boot]`。
 
-## 第二步：配置 DevSpace
+## 第二步：准备 Hermes Node，并初始化 DevSpace
+
+这台机器的 DevSpace 安装在 Hermes 自带的 Node 环境里：
+
+```text
+/home/YOUR_WSL_USER/.hermes/node/bin/node
+```
+
+先把它临时加入当前 Shell 的 `PATH`：
+
+```bash
+export PATH="$HOME/.hermes/node/bin:$PATH"
+```
+
+检查 DevSpace：
+
+```bash
+devspace --version
+```
+
+本文实际验证版本：
+
+```text
+1.0.4
+```
+
+然后初始化 DevSpace：
+
+```bash
+devspace init
+```
+
+完成初始化后确认这两个文件都存在：
+
+```bash
+ls ~/.devspace/config.json ~/.devspace/auth.json
+```
+
+必须看到：
+
+```text
+~/.devspace/config.json
+~/.devspace/auth.json
+```
+
+<Callout title="为什么这里先做 init？">
+  `config.json` 只是服务配置；当前 DevSpace 还会使用 `auth.json` 保存认证相关信息。只手工创建 `config.json`，并不能保证新环境已经完成初始化。
+</Callout>
+
+`auth.json` 属于私密文件，不要提交到公开仓库。
+
+## 第三步：配置并启动 DevSpace
 
 编辑：
 
@@ -162,7 +229,128 @@ systemctl is-system-running
   正确写法是 `https://your-domain.example.com`。不要加 `/mcp`，也不要写成本地的 `http://127.0.0.1:7676`。
 </Callout>
 
-## 第三步：配置 Caddy
+### 创建当前机器实际使用的启动文件
+
+当前这台机器的 DevSpace `1.0.4` 使用下面这个文件常驻运行。
+
+新建：
+
+```text
+~/.devspace/serve-direct.mjs
+```
+
+写入：
+
+```js
+import { loadConfig } from "/home/YOUR_WSL_USER/.hermes/node/lib/node_modules/@waishnav/devspace/dist/config.js";
+import { createServer } from "/home/YOUR_WSL_USER/.hermes/node/lib/node_modules/@waishnav/devspace/dist/server.js";
+import { formatLocalAgentProviderAvailabilitySummary } from "/home/YOUR_WSL_USER/.hermes/node/lib/node_modules/@waishnav/devspace/dist/local-agent-availability.js";
+
+const config = loadConfig();
+const { app, close, localAgentProviders } = createServer(config);
+const keepAlive = setInterval(() => {}, 60_000);
+
+const httpServer = app.listen(config.port, config.host, () => {
+  console.log(`devspace listening on http://${config.host}:${config.port}/mcp`);
+  console.log(`public base url: ${config.publicBaseUrl}`);
+  console.log(`allowed roots: ${config.allowedRoots.join(", ")}`);
+  console.log(`allowed hosts: ${config.allowedHosts.join(", ")}`);
+  console.log("auth: Owner password approval required");
+  console.log(`logging: ${config.logging.level} ${config.logging.format}`);
+  if (config.subagents) {
+    console.log(`subagent providers: ${formatLocalAgentProviderAvailabilitySummary(localAgentProviders)}`);
+  }
+});
+
+const shutdown = () => {
+  clearInterval(keepAlive);
+  httpServer.close(() => {
+    close();
+    process.exit(0);
+  });
+};
+
+process.once("SIGINT", shutdown);
+process.once("SIGTERM", shutdown);
+```
+
+把其中所有 `YOUR_WSL_USER` 替换成真实用户名。
+
+<Callout title="这个文件和版本有关">
+  它引用了 DevSpace `1.0.4` 的内部模块路径，是当前机器已经实际运行成功的方案。以后升级 DevSpace 后，如果 `dist/` 目录结构变化，需要重新验证。
+</Callout>
+
+### 配置 DevSpace systemd 服务
+
+新建：
+
+```text
+/etc/systemd/system/devspace.service
+```
+
+写入：
+
+```ini
+[Unit]
+Description=DevSpace MCP server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=YOUR_WSL_USER
+WorkingDirectory=/home/YOUR_WSL_USER
+Environment=DEVSPACE_TOOL_MODE=codex
+Environment=DEVSPACE_WIDGETS=changes
+Environment=DEVSPACE_LOG_FORMAT=pretty
+Environment=DEVSPACE_TRUST_PROXY=1
+ExecStart=/home/YOUR_WSL_USER/.hermes/node/bin/node /home/YOUR_WSL_USER/.devspace/serve-direct.mjs
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+```
+
+这里故意使用 Node 的绝对路径。systemd 不依赖交互式 Shell 的 `PATH`，这样最稳定。
+
+执行：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now devspace.service
+```
+
+检查状态：
+
+```bash
+systemctl status devspace.service --no-pager -l
+```
+
+目标：
+
+```text
+active (running)
+```
+
+### 验收 DevSpace：7676 必须返回 401
+
+执行：
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  http://127.0.0.1:7676/mcp
+```
+
+预期：
+
+```text
+401
+```
+
+这个 `401` 是好结果：DevSpace 已经启动，`/mcp` 路径存在，只是当前请求没有认证。
+
+## 第四步：配置并验收 Caddy
 
 编辑：
 
@@ -210,7 +398,50 @@ systemctl status caddy.service --no-pager -l
 active (running)
 ```
 
-## 第四步：配置 ChmlFrp
+### 确认 7676 和 7677 都在监听
+
+执行：
+
+```bash
+ss -ltn | grep -E ':(7676|7677)\b'
+```
+
+应该同时看到：
+
+```text
+127.0.0.1:7676
+127.0.0.1:7677
+```
+
+### 验收 Caddy：本地 HTTPS 必须返回 401
+
+执行：
+
+```bash
+curl -sk \
+  --resolve your-domain.example.com:7677:127.0.0.1 \
+  -o /dev/null \
+  -w '%{http_code}\n' \
+  https://your-domain.example.com:7677/mcp
+```
+
+预期：
+
+```text
+401
+```
+
+做到这里，可以确认：
+
+```text
+DevSpace 7676 正常
++
+Caddy 7677 HTTPS 正常
+```
+
+如果这一步还没成功，不要先排查 ChmlFrp。
+
+## 第五步：配置并验收 ChmlFrp
 
 编辑：
 
@@ -253,59 +484,6 @@ local_port = 7677
 
 必须替换成 ChmlFrp 面板里的真实隧道名称。
 
-## 第五步：把 DevSpace 交给 systemd
-
-新建：
-
-```text
-/etc/systemd/system/devspace.service
-```
-
-写入：
-
-```ini
-[Unit]
-Description=DevSpace MCP server
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=YOUR_WSL_USER
-WorkingDirectory=/home/YOUR_WSL_USER
-Environment=DEVSPACE_TOOL_MODE=codex
-Environment=DEVSPACE_WIDGETS=changes
-Environment=DEVSPACE_LOG_FORMAT=pretty
-Environment=DEVSPACE_TRUST_PROXY=1
-ExecStart=/home/YOUR_WSL_USER/.hermes/node/bin/node /home/YOUR_WSL_USER/.devspace/serve-direct.mjs
-Restart=always
-RestartSec=2
-
-[Install]
-WantedBy=multi-user.target
-```
-
-把 `YOUR_WSL_USER` 替换成真实用户名，然后执行：
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now devspace.service
-```
-
-检查：
-
-```bash
-systemctl status devspace.service --no-pager -l
-```
-
-目标状态：
-
-```text
-active (running)
-```
-
-## 第六步：把 ChmlFrp 交给 systemd
-
 新建：
 
 ```text
@@ -317,16 +495,15 @@ active (running)
 ```ini
 [Unit]
 Description=ChmlFrp FRPC
-After=network-online.target devspace.service caddy.service
-Wants=network-online.target devspace.service caddy.service
+After=network.target
 
 [Service]
 Type=simple
 User=YOUR_WSL_USER
-WorkingDirectory=/home/YOUR_WSL_USER
+WorkingDirectory=/home/YOUR_WSL_USER/.chmlfrp
 ExecStart=/home/YOUR_WSL_USER/.chmlfrp/frpc -c /home/YOUR_WSL_USER/.chmlfrp/frpc.ini
-Restart=always
-RestartSec=1
+Restart=on-failure
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
@@ -359,7 +536,50 @@ proxy added: [YOUR_TUNNEL_NAME]
 [YOUR_TUNNEL_NAME] start proxy success
 ```
 
-## 第七步：让 Windows 登录后保持 WSL 运行
+### 验收公网 MCP：必须返回 401
+
+执行：
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  https://your-domain.example.com/mcp
+```
+
+预期：
+
+```text
+401
+```
+
+如果公网也返回 `401`，说明这条链路已经真正打通：
+
+```text
+公网 HTTPS
+→ ChmlFrp
+→ Caddy 7677
+→ DevSpace 7676
+```
+
+### 再验证 OAuth metadata
+
+执行：
+
+```bash
+curl -sS https://your-domain.example.com/.well-known/oauth-protected-resource/mcp
+```
+
+正常时应该返回类似：
+
+```json
+{
+  "resource": "https://your-domain.example.com/mcp",
+  "authorization_servers": ["https://your-domain.example.com/"],
+  "scopes_supported": ["devspace"],
+  "resource_name": "DevSpace"
+}
+```
+
+## 第六步：让 Windows 登录后保持 WSL 运行
 
 WSL 退出后，里面的 DevSpace、Caddy 和 frpc 都会停止。
 
@@ -403,7 +623,7 @@ Ubuntu    Running    2
 -d Ubuntu
 ```
 
-## 第八步：一次性检查所有服务
+## 第七步：一次性检查所有服务
 
 先检查 WSL：
 
@@ -429,49 +649,7 @@ systemctl status devspace.service caddy.service chmlfrp-frpc.service --no-pager 
 active (running)
 ```
 
-## 第九步：验证公网 OAuth 地址
-
-执行：
-
-```bash
-curl -sS https://your-domain.example.com/.well-known/oauth-protected-resource/mcp
-```
-
-正常时应该返回类似：
-
-```json
-{
-  "resource": "https://your-domain.example.com/mcp",
-  "authorization_servers": ["https://your-domain.example.com/"],
-  "scopes_supported": ["devspace"],
-  "resource_name": "DevSpace"
-}
-```
-
-只要这里能正常返回 JSON，就说明公网 HTTPS 已经能到达 DevSpace。
-
-## 第十步：验证 MCP 地址
-
-执行：
-
-```bash
-curl -sS https://your-domain.example.com/mcp
-```
-
-未带认证信息时，预期返回类似：
-
-```json
-{
-  "error": "invalid_token",
-  "error_description": "Missing Authorization header"
-}
-```
-
-<HighlightBox eyebrow="验证结果" title="这个 401 是正常的">
-  它说明 DNS、HTTPS、ChmlFrp、Caddy 和 DevSpace 已经连通。当前请求只是没有携带 Authorization，所以被 DevSpace 拒绝。
-</HighlightBox>
-
-## 第十一步：在 ChatGPT 中填写地址
+## 第八步：在 ChatGPT 中连接，并完成实际调用验收
 
 最终填写：
 
@@ -493,9 +671,90 @@ http://127.0.0.1:7676/mcp
 
 ChatGPT 只需要公网 HTTPS 地址。
 
+填写地址后，完成 DevSpace 的授权流程。
+
+然后在 `allowedRoots` 中准备一个最简单的测试文件：
+
+```bash
+printf 'devspace-ok\n' > \
+  /home/YOUR_WSL_USER/projects/example/DEVSPACE_VERIFY.txt
+```
+
+接着让 ChatGPT 通过 DevSpace 读取：
+
+```text
+DEVSPACE_VERIFY.txt
+```
+
+预期内容：
+
+```text
+devspace-ok
+```
+
+<HighlightBox eyebrow="SUCCESS" title="读到测试文件，才算真正配置成功">
+  公网 `/mcp` 返回 `401` 只能证明网络链路和认证入口可达；ChatGPT 能实际读取 `allowedRoots` 中的文件，才证明整条接入链路真正可用。
+</HighlightBox>
+
 ## 常见的坑
 
 正文配置照抄后，如果仍然连不上，优先检查下面几项。
+
+### 先检查这三个本机实际遇到的问题
+
+#### `devspace` 提示找不到 Node
+
+当前这台机器直接执行：
+
+```bash
+devspace --version
+```
+
+可能报错：
+
+```text
+/usr/bin/env: ‘node’: No such file or directory
+```
+
+先执行：
+
+```bash
+export PATH="$HOME/.hermes/node/bin:$PATH"
+```
+
+再运行 `devspace --version`。
+
+#### `serve-direct.mjs` 不存在
+
+如果 systemd 日志提示找不到：
+
+```text
+~/.devspace/serve-direct.mjs
+```
+
+说明漏掉了本文第三步里的启动文件。
+
+检查：
+
+```bash
+ls ~/.devspace/serve-direct.mjs
+```
+
+#### `auth.json` 不存在
+
+检查：
+
+```bash
+ls ~/.devspace/auth.json
+```
+
+如果不存在，先确认已经执行：
+
+```bash
+devspace init
+```
+
+不要只手工创建 `config.json` 就直接启动服务。
 
 <VisualGrid columns={2}>
   <FeatureCard title="ChmlFrp 指错端口" meta="PORT" description="`local_port` 写成了 DevSpace 的 7676，而不是 Caddy 的 7677。">
@@ -538,8 +797,11 @@ ChatGPT 只需要公网 HTTPS 地址。
 
 ## 最终检查清单
 
-<HighlightBox eyebrow="CHECK" title="全部满足后，再去 ChatGPT 连接">
+<HighlightBox eyebrow="CHECK" title="全部满足，才算配置完成">
   <ul>
+    <li>本文使用的 DevSpace 版本是 `1.0.4`，升级后已重新验证 `serve-direct.mjs`。</li>
+    <li>`~/.devspace/config.json`、`auth.json`、`serve-direct.mjs` 都存在。</li>
+    <li>Hermes Node 存在于 `/home/YOUR_WSL_USER/.hermes/node/bin/node`。</li>
     <li>DevSpace 使用 `127.0.0.1:7676`，协议是 HTTP。</li>
     <li>Caddy 使用 `127.0.0.1:7677`，协议是 HTTPS。</li>
     <li>ChmlFrp 使用 `type = https`。</li>
@@ -550,9 +812,12 @@ ChatGPT 只需要公网 HTTPS 地址。
     <li>ChmlFrp 隧道名称和 `frpc.ini` section 名称一致。</li>
     <li>DevSpace、Caddy、frpc 三个服务都是 `active (running)`。</li>
     <li>WSL 状态是 `Running`。</li>
+    <li>本地 DevSpace `7676/mcp` 返回 `401`。</li>
+    <li>本地 Caddy `7677/mcp` 返回 `401`。</li>
+    <li>公网 `/mcp` 返回 `401`。</li>
     <li>OAuth metadata 能返回 JSON。</li>
-    <li>直接请求 `/mcp` 能返回 `invalid_token` 或缺少 Authorization 的 401。</li>
+    <li>ChatGPT 能实际读取 `allowedRoots` 中的 `DEVSPACE_VERIFY.txt`。</li>
   </ul>
 </HighlightBox>
 
-这套配置真正需要记住的只有一条：公网 HTTPS 先到 ChmlFrp，再进入 Caddy 的 7677，最后由 Caddy 转发到 DevSpace 的 7676。端口和协议不要混，整条链路就清楚了。
+这套配置真正需要记住的只有一条：公网 HTTPS 先到 ChmlFrp，再进入 Caddy 的 `7677`，最后由 Caddy 转发到 DevSpace 的 `7676`。前三层都返回 `401`，最后 ChatGPT 能实际读取测试文件，才算整条链路真正完成。
