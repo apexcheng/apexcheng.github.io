@@ -1,0 +1,39 @@
+---
+import { getCollection } from 'astro:content';
+import { seriesMetaList } from '../../data/series';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { withBase } from '../../utils/paths';
+
+const posts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private);
+const seriesList = seriesMetaList
+  .map((series) => ({
+    ...series,
+    postCount: posts.filter((post) => post.data.series === series.id).length,
+  }))
+  .filter((series) => series.postCount > 0)
+  .sort((a, b) => a.order - b.order);
+---
+
+<SiteLayout title="系列" active="series">
+  <main class="page-content series-page">
+    <section class="series-hero">
+      <p class="eyebrow">系列</p>
+      <h1 class="page-title">按一条路线，把一个主题读完整</h1>
+      <p class="page-lead">有些内容不适合拆成互不相关的单篇文章。这里把连续主题整理成清晰的阅读路线。</p>
+    </section>
+
+    <section class="series-library" aria-label="系列列表">
+      {seriesList.map((series, index) => (
+        <article class="series-card">
+          <span class="series-card-index">{String(index + 1).padStart(2, '0')}</span>
+          <div class="series-card-body">
+            <p class="series-card-meta">{series.postCount} 篇文章</p>
+            <h2>{series.title}</h2>
+            <p>{series.description}</p>
+          </div>
+          <a class="series-card-link" href={withBase(`/series/${series.id}/`)}>查看阅读路线 <span aria-hidden="true">→</span></a>
+        </article>
+      ))}
+    </section>
+  </main>
+</SiteLayout>

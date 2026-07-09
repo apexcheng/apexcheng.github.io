@@ -8,7 +8,7 @@ import { withBase } from '../../utils/paths';
 const posts = (await getCollection('posts'))
   .filter((post) => !post.data.draft && !post.data.private)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const defaultPosts = posts.filter((post) => post.data.category !== '视觉实验室');
+const defaultPosts = posts.filter((post) => post.data.category !== '视觉实验室' && !post.data.series);
 const articlesPageUrl = withBase('/articles/');
 const categoryCounts = Object.fromEntries(
   categoryMetaList.map((category) => [category.name, posts.filter((post) => post.data.category === category.name).length]),
@@ -49,7 +49,7 @@ const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags))).sort((
         <button type="button" data-sort-option data-sort-value="updated" aria-pressed="false">修改时间</button>
       </div>
       <div class="search-placeholder">当前共有 {defaultPosts.length} 篇文章、{categoryMetaList.length} 个分类、{tags.length} 个标签；也可以使用顶部导航里的搜索查找内容。</div>
-      <ArticleList posts={posts} hideVisualLab />
+      <ArticleList posts={posts} hideVisualLab hideSeries />
       <p class="article-filter-empty" data-empty-state hidden>当前分类暂无公开文章，请切换到其他分类或查看全部文章。</p>
     </section>
   </main>
@@ -128,7 +128,8 @@ const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags))).sort((
 
         items.forEach(function (item) {
           var itemCategory = item.getAttribute('data-category') || '';
-          var isVisible = category ? itemCategory === category : itemCategory !== '视觉实验室';
+          var itemSeries = item.getAttribute('data-series') || '';
+          var isVisible = category ? itemCategory === category : itemCategory !== '视觉实验室' && !itemSeries;
           item.hidden = !isVisible;
           if (isVisible) visibleCount += 1;
         });

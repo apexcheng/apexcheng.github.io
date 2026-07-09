@@ -1,0 +1,65 @@
+---
+import { getCollection } from 'astro:content';
+import { seriesMetaList } from '../../data/series';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { withBase } from '../../utils/paths';
+
+export async function getStaticPaths() {
+  const allPosts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private);
+
+  return seriesMetaList
+    .map((series) => ({
+      series,
+      posts: allPosts
+        .filter((post) => post.data.series === series.id)
+        .sort((a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0)),
+    }))
+    .filter((item) => item.posts.length > 0)
+    .map((item) => ({
+      params: { series: item.series.id },
+      props: item,
+    }));
+}
+
+const { series, posts } = Astro.props;
+const totalMinutes = posts.reduce((sum, post) => sum + post.data.minutes, 0);
+---
+
+<SiteLayout title={series.title} active="series" description={series.description}>
+  <main class="page-content series-detail-page">
+    <header class="series-detail-hero">
+      <a class="series-back-link" href={withBase('/series/')}>← 全部系列</a>
+      <p class="eyebrow">系列阅读</p>
+      <h1 class="page-title">{series.title}</h1>
+      <p class="page-lead">{series.description}</p>
+      <div class="series-summary" aria-label="系列信息">
+        <span>{posts.length} 篇文章</span>
+        <span>阅读约 {totalMinutes} 分钟</span>
+      </div>
+    </header>
+
+    <section class="series-route-section">
+      <div class="series-route-heading">
+        <p class="eyebrow">阅读路线</p>
+        <h2>从第一篇开始，也可以直接进入你关心的位置</h2>
+      </div>
+
+      <ol class="series-route">
+        {posts.map((post, index) => (
+          <li class="series-route-item">
+            <span class="series-route-index">{String(index + 1).padStart(2, '0')}</span>
+            <div class="series-route-content">
+              <div class="series-route-meta">
+                <span>{post.data.category}</span>
+                <span>阅读约 {post.data.minutes} 分钟</span>
+              </div>
+              <h3><a href={withBase(`/articles/${post.slug}/`)}>{post.data.title}</a></h3>
+              <p>{post.data.description}</p>
+            </div>
+            <span class="series-route-arrow" aria-hidden="true">→</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  </main>
+</SiteLayout>

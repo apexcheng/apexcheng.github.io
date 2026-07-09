@@ -1,5 +1,6 @@
 import { defineCollection, z } from 'astro:content';
 import { categories } from './data/categories';
+import { seriesIds } from './data/series';
 
 const posts = defineCollection({
   type: 'content',
@@ -12,6 +13,8 @@ const posts = defineCollection({
     tags: z.array(z.string()),
     minutes: z.number(),
     featured: z.boolean().default(false),
+    series: z.enum(seriesIds).optional(),
+    seriesOrder: z.number().int().positive().optional(),
     draft: z.boolean().default(false),
     private: z.boolean().default(false),
   }),

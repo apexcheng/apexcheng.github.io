@@ -1,7 +1,8 @@
 ---
 import { withBase } from '../utils/paths';
+import { getSeriesMeta } from '../data/series';
 
-const { posts, hideVisualLab = false } = Astro.props;
+const { posts, hideVisualLab = false, hideSeries = false } = Astro.props;
 ---
 
 <div class="article-list" data-article-list>
@@ -10,14 +11,22 @@ const { posts, hideVisualLab = false } = Astro.props;
       class="article-list-item"
       data-article-item
       data-category={post.data.category}
+      data-series={post.data.series ?? ''}
       data-published-at={post.data.date.valueOf()}
       data-updated-at={(post.data.updated ?? post.data.date).valueOf()}
-      hidden={hideVisualLab && post.data.category === '视觉实验室'}
+      hidden={(hideVisualLab && post.data.category === '视觉实验室') || (hideSeries && post.data.series)}
     >
       <div>
         <small><a href={withBase(`/articles/category/${encodeURIComponent(post.data.category)}/`)}>{post.data.category}</a></small>
         <h2><a href={withBase(`/articles/${post.slug}/`)}>{post.data.title}</a></h2>
         <p>{post.data.description}</p>
+        {post.data.series && (
+          <p class="article-series-meta">
+            <a href={withBase(`/series/${post.data.series}/`)}>
+              系列 · {getSeriesMeta(post.data.series)?.title} · 第 {post.data.seriesOrder} 篇
+            </a>
+          </p>
+        )}
         <div class="chips">
           {post.data.tags.map((tag) => <a href={withBase(`/articles/tag/${encodeURIComponent(tag)}/`)}>{tag}</a>)}
         </div>

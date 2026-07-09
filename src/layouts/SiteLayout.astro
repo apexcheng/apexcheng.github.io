@@ -7,7 +7,7 @@ import { withBase } from '../utils/paths';
 
 interface Props {
   title?: string;
-  active?: 'home' | 'articles' | 'projects' | 'about';
+  active?: 'home' | 'articles' | 'series' | 'projects' | 'about';
   description?: string;
 }
 
@@ -74,6 +74,7 @@ const searchItems = [
         <nav class="site-nav" aria-label="主导航">
           <a class:list={[active === 'home' && 'active']} href={withBase('/')}>首页</a>
           <a class:list={[active === 'articles' && 'active']} href={withBase('/articles/')}>文章</a>
+          <a class:list={[active === 'series' && 'active']} href={withBase('/series/')}>系列</a>
           <a class:list={[active === 'projects' && 'active']} href={withBase('/projects/')}>项目</a>
           <div class="nav-search" data-site-search data-search-items={JSON.stringify(searchItems)}>
             <button class="nav-search-trigger" type="button" aria-label="搜索文章和项目" aria-expanded="false" data-search-toggle>搜索</button>

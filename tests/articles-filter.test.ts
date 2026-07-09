@@ -19,8 +19,11 @@ describe('articles page category filter', () => {
     expect(categorySource).toContain('getStaticPaths');
     expect(articlesSource).toContain("post.data.category !== '视觉实验室'");
     expect(articlesSource).toContain("itemCategory !== '视觉实验室'");
-    expect(articlesSource).toContain('<ArticleList posts={posts} hideVisualLab />');
-    expect(articleListSource).toContain("hidden={hideVisualLab && post.data.category === '视觉实验室'}");
+    expect(articlesSource).toContain('!post.data.series');
+    expect(articlesSource).toContain('!itemSeries');
+    expect(articlesSource).toContain('<ArticleList posts={posts} hideVisualLab hideSeries />');
+    expect(articleListSource).toContain("data-series={post.data.series ?? ''}");
+    expect(articleListSource).toContain('(hideSeries && post.data.series)');
   });
 
   it('sorts visible articles by publish date or update date in place', () => {
