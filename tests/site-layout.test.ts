@@ -36,18 +36,19 @@ describe('site layout', () => {
     expect(globalCssSource).toContain('.nav-search-panel::before');
   });
 
-  it('keeps the classic theme and adds switchable gradient journal themes', () => {
+  it('keeps switchable themes with visual system as the default', () => {
     expect(layoutSource).toContain("localStorage.getItem('styleTheme')");
     expect(layoutSource).toContain("document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light'");
-    expect(layoutSource).toContain("['index', 'classic', 'index-gradient', 'classic-gradient'].includes(savedStyleTheme)");
-    expect(layoutSource).toContain("document.documentElement.dataset.styleTheme = savedStyleTheme || 'index-gradient'");
+    expect(layoutSource).toContain("['index', 'classic', 'index-gradient', 'classic-gradient', 'visual-system'].includes(savedStyleTheme)");
+    expect(layoutSource).toContain("document.documentElement.dataset.styleTheme = savedStyleTheme || 'visual-system'");
     expect(layoutSource).toContain('data-theme-menu-toggle');
     expect(layoutSource).toContain('data-theme-option');
     expect(layoutSource).toContain('主题');
     expect(layoutSource.indexOf('晨曦手札')).toBeLessThan(layoutSource.indexOf('素笺经典'));
     expect(layoutSource.indexOf('素笺经典')).toBeLessThan(layoutSource.indexOf('晨曦渐变'));
     expect(layoutSource.indexOf('晨曦渐变')).toBeLessThan(layoutSource.indexOf('素笺渐变'));
-    expect(layoutSource.indexOf('素笺渐变')).toBeLessThan(layoutSource.indexOf('玄墨经典'));
+    expect(layoutSource.indexOf('素笺渐变')).toBeLessThan(layoutSource.indexOf('视觉晶蓝'));
+    expect(layoutSource.indexOf('视觉晶蓝')).toBeLessThan(layoutSource.indexOf('玄墨经典'));
     expect(layoutSource).not.toContain('晨曦手札 · 渐变');
     expect(layoutSource).not.toContain('素笺经典 · 渐变');
     expect(layoutSource).not.toContain('秋夜手札');
@@ -58,6 +59,8 @@ describe('site layout', () => {
     expect(globalCssSource).toContain("html[data-style-theme='index-gradient'] body");
     expect(globalCssSource).toContain("html[data-style-theme='classic-gradient']");
     expect(globalCssSource).toContain("html[data-style-theme='classic-gradient'] body");
+    expect(globalCssSource).toContain("html[data-style-theme='visual-system']");
+    expect(globalCssSource).toContain("html[data-style-theme='visual-system'] body");
     expect(globalCssSource).toContain('--display-font');
     expect(globalCssSource).toContain('linear-gradient(135deg, #ece7d8 0%, #f8f1df 46%, #dfe7d6 100%)');
   });
@@ -83,7 +86,7 @@ describe('site layout', () => {
     expect(globalCssSource).toContain('@media (max-width: 1100px)');
     expect(globalCssSource).toMatch(/\.article-shell\s*\{[^}]*grid-template-columns:\s*1fr;/s);
     expect(globalCssSource).toContain('@media (max-width: 760px)');
-    expect(globalCssSource).toMatch(/\.site-nav\s*\{[^}]*display:\s*none;/s);
+    expect(globalCssSource).toMatch(/@media \(max-width: 760px\)[\s\S]*\.site-nav\s*\{[^}]*overflow-x:\s*auto;[^}]*white-space:\s*nowrap;/);
     expect(globalCssSource).toMatch(/@media \(max-width: 1100px\)[\s\S]*\.desktop-article-info\s*\{[^}]*display:\s*none;/);
     expect(globalCssSource).toMatch(/\.article-content\s*\{[^}]*min-width:\s*0;/s);
     expect(globalCssSource).toMatch(/\.hero-grid h1,\s*\.page-title,\s*\.article-content h1\s*\{[^}]*font-size:\s*36px;/s);

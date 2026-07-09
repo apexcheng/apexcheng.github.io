@@ -19,11 +19,10 @@ describe('site metadata', () => {
     }
   });
 
-  it('uses shared metadata in layout, about, rss, and Astro config', () => {
+  it('uses shared metadata in layout, about, and rss', () => {
     expect(layoutSource).toContain("from '../data/site'");
     expect(aboutSource).toContain("from '../data/site'");
     expect(rssSource).toContain("from '../data/site'");
-    expect(astroConfigSource).toContain("from './src/data/site'");
   });
 
   it('documents GitHub Pages site metadata', () => {

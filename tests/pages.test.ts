@@ -8,7 +8,7 @@ const articlesSource = readFileSync('src/pages/articles/index.astro', 'utf8');
 const articleDetailSource = readFileSync('src/pages/articles/[...slug].astro', 'utf8');
 const categorySource = readFileSync('src/pages/articles/category/[category].astro', 'utf8');
 const tagSource = readFileSync('src/pages/articles/tag/[tag].astro', 'utf8');
-const searchSource = readFileSync('src/pages/search.astro', 'utf8');
+const layoutSource = readFileSync('src/layouts/SiteLayout.astro', 'utf8');
 const rssSource = readFileSync('src/pages/rss.xml.ts', 'utf8');
 
 describe('front page structure', () => {
@@ -52,8 +52,8 @@ describe('front page structure', () => {
     expect(aboutSource).toContain("withBase('/about-assets/resume.docx')");
   });
 
-  it('links article categories and tags to static filter pages', () => {
-    expect(articlesSource).toContain('/articles/category/${encodeURIComponent(category.name)}/');
+  it('filters categories in place while keeping static category and tag archives', () => {
+    expect(articlesSource).toContain('?category=${encodeURIComponent(category.name)}');
     expect(articlesSource).toContain('/articles/tag/${encodeURIComponent(tag)}/');
     expect(categorySource).toContain('getStaticPaths');
     expect(categorySource).toContain('!post.data.draft');
@@ -64,11 +64,13 @@ describe('front page structure', () => {
     expect(articlesSource).not.toContain('暂不支持点击筛选');
   });
 
-  it('keeps the static search page aligned with the header search entry', () => {
-    expect(searchSource).toContain('顶部导航');
-    expect(searchSource).toContain('文章和项目');
-    expect(searchSource).not.toContain('/guides/mdx-content/');
-    expect(searchSource).not.toContain('fetch(');
+  it('keeps search inside the shared header without a separate search page', () => {
+    expect(layoutSource).toContain('data-site-search');
+    expect(layoutSource).toContain('搜索文章和项目');
+    expect(layoutSource).toContain("getCollection('posts')");
+    expect(layoutSource).toContain('projects.map((project)');
+    expect(layoutSource).not.toContain('/guides/mdx-content/');
+    expect(layoutSource).not.toContain('fetch(');
   });
 
   it('keeps article detail pages static and content-driven', () => {
@@ -88,7 +90,7 @@ describe('front page structure', () => {
     expect(articleDetailSource).toContain('作者：{siteMeta.authorName}');
     expect(articleDetailSource).toContain('class="toc-panel"');
     expect(articleDetailSource).toContain('本文目录');
-    expect(articleDetailSource).toContain('headings.filter((heading) => heading.depth === 2)');
+    expect(articleDetailSource).toContain('heading.depth === 2 || heading.depth === 3');
   });
 
   it('keeps rss generated from content collections', () => {
