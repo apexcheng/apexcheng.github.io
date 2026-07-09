@@ -1,16 +1,16 @@
 ---
 title: "用 Tailscale Funnel 暴露 DevSpace 给 ChatGPT"
-description: "把 DevSpace 和 Tailscale 都放进 WSL，用 Funnel 提供公网 HTTPS MCP 地址，替代 Caddy + ChmlFrp 的多层转发方案。"
+description: "让 DevSpace 和 Tailscale Funnel 运行在同一个本地环境，用公网 HTTPS MCP 地址把本机项目接入 ChatGPT。"
 date: 2026-07-09
 category: "实践"
 tags:
-  - "WSL"
   - "DevSpace"
   - "Tailscale"
   - "Funnel"
   - "ChatGPT"
   - "MCP"
-minutes: 12
+  - "本地开发"
+minutes: 13
 featured: false
 draft: false
 private: false
@@ -22,49 +22,76 @@ import VisualGrid from '../../components/VisualGrid.astro';
 import HighlightBox from '../../components/HighlightBox.astro';
 import DevSpaceFunnelVerification from '../../components/DevSpaceFunnelVerification.astro';
 
-之前我用的是 **WSL DevSpace + Caddy + ChmlFrp**：DevSpace 在 WSL 里监听本地端口，Caddy 做本地 HTTPS，ChmlFrp 再把 Caddy 暴露到公网。它能跑，但链路长，故障点也多。
+这篇教程解决一个很具体的问题：**DevSpace 已经能在自己的电脑或服务器上运行，怎么给它一个 ChatGPT 能访问的公网 HTTPS MCP 地址。**
 
-这次改成更适合长期使用的方案：**DevSpace 和 Tailscale 都安装在 WSL 里，由 Tailscale Funnel 直接提供公网 HTTPS 地址给 ChatGPT。**
+这里不再把 WSL 当成前提。你可以使用 Linux、WSL、Windows、macOS，甚至一台远程 Linux 开发机。真正重要的只有一个原则：
 
-本文假设你已经在 WSL 中安装好 DevSpace，并且至少能手动启动一次。下面只讲如何固定启动方式、打开 Funnel、验收 OAuth，最后接入 ChatGPT。
+**Tailscale Funnel 必须能够通过本机回环地址访问 DevSpace。最简单的做法，就是让 Tailscale 和 DevSpace 运行在同一个系统环境里。**
 
 <HighlightBox eyebrow="最终地址" title="给 ChatGPT 的只有 Funnel 公网地址">
-  `https://devspace-wsl.your-tailnet.ts.net/mcp`
+  `https://devspace-device.your-tailnet.ts.net/mcp`
 </HighlightBox>
 
 ## 最终架构与验收顺序
 
-这篇文章真正要记住的不是命令，而是验收顺序：**本地 DevSpace 和 OAuth 先通，再开 Funnel，最后让 ChatGPT 做一次真实调用。**
+这套方案的核心链路始终一样：
+
+```text
+ChatGPT -> Tailscale Funnel -> 127.0.0.1:7676 -> DevSpace
+```
+
+不同系统的区别，只在于 **DevSpace 怎么启动、Tailscale 怎么安装、服务怎么常驻**。Funnel、公网域名、OAuth 验收和 ChatGPT 连接方式不变。
 
 <DevSpaceFunnelVerification />
 
 普通 Tailscale 的 `100.x` 地址只给 Tailnet 内的设备访问。ChatGPT 不在你的 Tailnet 里，所以不能填 `http://100.x.x.x:7676/mcp`，必须使用 Funnel 提供的公网 HTTPS 地址。
 
-和旧方案相比，链路从：
+## 先决定 DevSpace 和 Tailscale 放在哪里
 
-```text
-ChatGPT -> ChmlFrp -> Caddy -> DevSpace
-```
+不要先复制命令。先确认两者是不是处于同一个本地环境。
 
-缩短为：
+<VisualGrid columns={2}>
+  <FeatureCard title="Linux / 远程开发机" meta="推荐" description="DevSpace 和 Tailscale 都直接运行在同一台 Linux 机器上。">
+    <ul>
+      <li>Funnel 直接代理 `127.0.0.1:7676`</li>
+      <li>需要常驻时可使用 systemd</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="WSL" meta="推荐" description="DevSpace 和 Tailscale 都装进同一个 WSL 发行版。">
+    <ul>
+      <li>避免 Windows 到 WSL 的跨系统转发</li>
+      <li>Funnel 和 DevSpace 共用同一个回环地址</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="Windows" meta="可用" description="DevSpace 和 Tailscale 都直接运行在 Windows 主机。">
+    <ul>
+      <li>先确认 `tailscale` CLI 可用</li>
+      <li>不要再把服务转发进另一个虚拟环境</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="macOS" meta="可用" description="DevSpace 和支持 Funnel CLI 的 Tailscale 客户端运行在同一台 Mac。">
+    <ul>
+      <li>先确认当前客户端变体支持 Funnel</li>
+      <li>端口共享和文件共享的限制并不相同</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
 
-```text
-ChatGPT -> Tailscale Funnel -> DevSpace
-```
-
-这里最重要的取舍是：**Tailscale 和 DevSpace 都放在 WSL 里。** 不要把 Windows Tailscale 当公网入口，再转发回 WSL，否则会多一层跨系统代理，排查面也会重新变复杂。
+<Callout title="为什么强调同一个环境">
+  Tailscale Funnel 的本地反向代理目标最终要落到本机服务。DevSpace 在容器、虚拟机或 WSL 里，而 Tailscale 在宿主机时，双方的 `127.0.0.1` 往往不是同一个网络环境。这样也不是绝对做不了，但会重新引入端口转发和跨环境代理，不再是这篇教程的最短链路。
+</Callout>
 
 ## 开始前准备
 
 先确认下面几件事：
 
-- WSL 已启用 `systemd`。
-- DevSpace 已经安装，并且能在 WSL 中手动启动。
+- DevSpace 已经安装，并且至少能在当前环境里手动启动一次。
+- 当前环境能运行 `tailscale` CLI。
 - 已有 Tailscale 账号，并有权限为这台设备启用 Funnel。
 - 已经确定 DevSpace 只允许访问哪些项目目录。
 
 <Callout title="公网暴露前先确认安全边界">
-  Funnel 是公网入口，而 DevSpace 具备读取文件、修改项目和执行命令的能力。必须保留 OAuth，只开放必要的 `allowedRoots`，不要直接开放整个 `/home` 或根目录 `/`，也不要为了排错临时关闭认证。
+  Funnel 是公网入口，而 DevSpace 具备读取文件、修改项目和执行命令的能力。必须保留 OAuth，只开放必要的 `allowedRoots`，不要直接开放整个用户目录、磁盘根目录或所有项目，也不要为了排错临时关闭认证。
 </Callout>
 
 ## 开始前替换这些占位符
@@ -73,12 +100,11 @@ ChatGPT -> Tailscale Funnel -> DevSpace
 
 | 占位符 | 替换内容 |
 | --- | --- |
-| `YOUR_WSL_USER` | WSL 用户名 |
-| `devspace-wsl` | WSL 这台 Tailscale 设备的 hostname |
+| `devspace-device` | 这台 Tailscale 设备的 hostname |
 | `your-tailnet.ts.net` | 你的 Tailscale Funnel 域名后缀 |
-| `https://devspace-wsl.your-tailnet.ts.net` | Funnel 提供的公网 Origin |
-| `/home/YOUR_WSL_USER/projects/example` | 允许 DevSpace 访问的项目目录 |
-| `YOUR_DEVSPACE_START_COMMAND` | 这台机器真正能启动 DevSpace 的绝对命令 |
+| `https://devspace-device.your-tailnet.ts.net` | Funnel 提供的公网 Origin |
+| `/absolute/path/to/project` | 允许 DevSpace 访问的项目绝对路径 |
+| `YOUR_DEVSPACE_START_COMMAND` | 这台机器真正能启动 DevSpace 的命令 |
 
 <Callout title="隐私提醒">
   公开笔记里建议写占位符，不要直接提交真实 tailnet 域名、私有项目路径、token 或授权文件。
@@ -86,9 +112,9 @@ ChatGPT -> Tailscale Funnel -> DevSpace
 
 ## 第一步：先确定 DevSpace 的真实启动方式
 
-这一步不要先照抄 systemd。先在 WSL 里手动启动一次 DevSpace，确认这台机器真正使用的启动命令。
+这一步不要先配置开机启动。先手动启动一次 DevSpace，确认这台机器真正使用的命令。
 
-### 情况 A：`devspace` CLI 在 PATH 里
+### Linux / WSL / macOS
 
 先检查：
 
@@ -98,57 +124,71 @@ command -v devspace
 devspace --help
 ```
 
-如果能找到 `devspace`，并且当前版本支持下面的方式启动：
+### Windows PowerShell
+
+可以检查：
+
+```powershell
+Get-Command node
+Get-Command devspace
+devspace --help
+```
+
+### 情况 A：`devspace` CLI 可以直接运行
+
+如果当前版本支持下面的方式启动：
 
 ```bash
 devspace serve
 ```
 
-那么后面的 systemd 可以直接使用它的绝对路径，例如：
+就把这个真实可用的命令记录下来。后续需要常驻时，再让系统启动机制执行它。
 
-```text
-ExecStart=/absolute/path/to/devspace serve
-```
-
-### 情况 B：`command -v devspace` 找不到，但 DevSpace 已经能运行
+### 情况 B：找不到全局 `devspace`，但 DevSpace 已经能运行
 
 这不一定是安装失败。Node 可能来自 NVM、Volta、asdf、某个工具内置环境或其他受管目录，DevSpace 也可能通过 Node 脚本启动。
 
-这种情况不要强行把 `devspace` 加进全局 PATH，直接记录已经验证可用的绝对启动命令，例如：
+这种情况不要强行改全局 PATH。直接记录已经验证可用的启动命令，例如：
 
 ```text
-ExecStart=/absolute/path/to/node /absolute/path/to/start-script.mjs
+/absolute/path/to/node /absolute/path/to/start-script.mjs
 ```
 
-核心原则只有一个：**systemd 使用的必须是实际能启动成功的绝对命令，不要假设每台机器都有全局 `node` 和 `devspace`。**
+核心原则只有一个：**后续自动启动时，使用的必须是已经手动验证成功的真实命令，不要假设每台机器都有全局 `node` 和 `devspace`。**
 
-## 第二步：在 WSL 安装并登录 Tailscale
+## 第二步：安装并登录 Tailscale
 
-安装：
+不同系统的安装方式不同，这里不把某一个系统写成唯一标准。你只需要在 **运行 DevSpace 的同一个环境** 里完成安装和登录。
+
+Linux / WSL 可以直接使用官方安装脚本：
 
 ```bash
 curl -fsSL https://tailscale.com/install.sh | sh
 ```
 
-启动服务：
+如果当前环境使用 systemd，再启动服务：
 
 ```bash
 sudo systemctl enable --now tailscaled
 ```
 
-登录，并给这台 WSL 一个稳定 hostname：
+没有 systemd 的环境不要硬套这条命令，按当前系统实际支持的方式启动 Tailscale。判断是否成功的标准不是用了哪种服务管理器，而是 `tailscale status` 能正常返回设备状态。
+
+Windows 和 macOS 使用对应客户端安装后，确认终端里能够执行：
 
 ```bash
-sudo tailscale up --hostname=devspace-wsl
+tailscale status
 ```
 
-如果后续希望普通用户也能管理 Funnel，可以设置 operator：
+登录，并给设备设置一个容易识别的 hostname：
 
 ```bash
-sudo tailscale set --operator=$USER
+tailscale up --hostname=devspace-device
 ```
 
-确认设备在线：
+如果当前平台需要管理员权限，就按平台要求执行；已经登录的设备不一定需要重新 `up`，重点是最后能看到设备在线。
+
+确认：
 
 ```bash
 tailscale status
@@ -156,21 +196,25 @@ tailscale status
 
 这一步看到 `100.x.x.x` 很正常，但不要把它填进 ChatGPT。`100.x` 是 Tailnet 内网地址，不是公网 MCP 地址。
 
-接着在 Tailscale 管理后台确认这台设备的完整 DNS 名称，例如：
+接着确认这台设备的完整 DNS 名称，例如：
 
 ```text
-devspace-wsl.your-tailnet.ts.net
+devspace-device.your-tailnet.ts.net
 ```
 
 从下一步开始，用这个真实域名替换全文占位符。**到这里仍然没有打开 Funnel，只是先拿到 DevSpace 需要的公网 Origin。**
 
-## 第三步：配置 DevSpace，并完成本地 OAuth 验收
+## 第三步：配置 DevSpace
 
-编辑：
+打开 DevSpace 配置文件。
+
+Linux、WSL 和 macOS 通常是：
 
 ```text
 ~/.devspace/config.json
 ```
+
+Windows 则使用当前用户目录下对应的 `.devspace/config.json`。不要照抄别人机器的绝对路径。
 
 核心配置类似这样：
 
@@ -179,76 +223,31 @@ devspace-wsl.your-tailnet.ts.net
   "host": "127.0.0.1",
   "port": 7676,
   "allowedRoots": [
-    "/home/YOUR_WSL_USER/projects/example"
+    "/absolute/path/to/project"
   ],
-  "publicBaseUrl": "https://devspace-wsl.your-tailnet.ts.net",
+  "publicBaseUrl": "https://devspace-device.your-tailnet.ts.net",
   "allowedHosts": [
     "localhost",
     "127.0.0.1",
     "::1",
-    "devspace-wsl.your-tailnet.ts.net"
+    "devspace-device.your-tailnet.ts.net"
   ]
 }
 ```
 
 `publicBaseUrl` 只写公网 Origin，不带 `/mcp`。ChatGPT 里填写连接地址时，才加 `/mcp`。
 
-### 用 systemd 固定第一步验证过的启动命令
+`allowedRoots` 必须使用这台机器上 DevSpace 真正能识别的绝对路径。Linux、WSL、macOS 和 Windows 的路径格式不同，不要把示例路径原样复制到所有系统。
 
-创建服务文件：
+## 第四步：启动 DevSpace，并完成本地 OAuth 验收
 
-```bash
-sudo nano /etc/systemd/system/devspace.service
-```
-
-写入：
-
-```ini
-[Unit]
-Description=DevSpace MCP server
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=YOUR_WSL_USER
-WorkingDirectory=/home/YOUR_WSL_USER
-Environment=DEVSPACE_TOOL_MODE=codex
-Environment=DEVSPACE_TRUST_PROXY=1
-ExecStart=YOUR_DEVSPACE_START_COMMAND
-Restart=always
-RestartSec=2
-
-[Install]
-WantedBy=multi-user.target
-```
-
-`ExecStart` 要替换成第一步已经验证成功的绝对命令，例如：
+先用第一步已经验证过的命令启动 DevSpace。
 
 ```text
-ExecStart=/absolute/path/to/devspace serve
+YOUR_DEVSPACE_START_COMMAND
 ```
 
-或者：
-
-```text
-ExecStart=/absolute/path/to/node /absolute/path/to/start-script.mjs
-```
-
-如果 `devspace` 本身依赖一个不在 systemd 默认 PATH 里的 Node，不要继续赌环境变量。优先改成“绝对 Node 路径 + 绝对脚本路径”的启动方式。
-
-启用服务：
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now devspace.service
-```
-
-先确认服务真的在运行：
-
-```bash
-systemctl status devspace.service --no-pager
-```
+这时先不要打开 Funnel。先确认本地端点和 OAuth discovery 都是完整的。
 
 ### 先看 `/mcp` 是否可达
 
@@ -264,6 +263,8 @@ curl -sS -o /dev/null -w '%{http_code}\n' \
 ```
 
 这个 `401` 是好结果：说明 `/mcp` 存在，只是当前请求还没有授权。
+
+Windows PowerShell 也可以用自己习惯的 HTTP 请求工具验证，判断标准仍然是相同的状态码。
 
 ### 再看 OAuth metadata 是否完整
 
@@ -322,9 +323,43 @@ app.get('/.well-known/oauth-authorization-server/mcp', (_req, res) => {
 
 这段路由必须注册在 `app.listen(...)` 之前。至于 `config` 和 `app` 怎么导入，要按你的 DevSpace 安装方式处理，不要照抄别人的 Node 目录或包路径。
 
-如果改成包装脚本启动，记得同步把 systemd 的 `ExecStart` 改成真实脚本命令，然后重新验收本地三个信号。
+如果改成包装脚本启动，记得同步更新第一步记录的真实启动命令，然后重新验收本地三个信号。
 
-## 第四步：开启 Funnel 指向 DevSpace
+## 可选：让 DevSpace 长期常驻
+
+**常驻不是 Funnel 的前提。** 第一次配置时先手动跑通整条链路，确认没有问题后，再根据系统选择常驻方式。
+
+| 系统 | 常见方式 |
+| --- | --- |
+| Linux / WSL | systemd |
+| macOS | launchd 或登录项 |
+| Windows | 任务计划程序或系统服务 |
+
+Linux / WSL 的 systemd 示例：
+
+```ini
+[Unit]
+Description=DevSpace MCP server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=YOUR_USER
+WorkingDirectory=/home/YOUR_USER
+Environment=DEVSPACE_TOOL_MODE=codex
+Environment=DEVSPACE_TRUST_PROXY=1
+ExecStart=YOUR_DEVSPACE_START_COMMAND
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+```
+
+这里的 `User`、`WorkingDirectory` 和 `ExecStart` 都只是占位符，必须替换成当前机器的真实值。其他平台同样遵守一个原则：**自动启动机制只负责执行已经验证成功的 DevSpace 启动命令。**
+
+## 第五步：开启 Funnel 指向 DevSpace
 
 直接把 Funnel 指向 DevSpace 的本地端口：
 
@@ -341,19 +376,23 @@ tailscale funnel status
 目标结构类似：
 
 ```text
-https://devspace-wsl.your-tailnet.ts.net
+https://devspace-device.your-tailnet.ts.net
 |-- / proxy http://127.0.0.1:7676
 ```
 
-如果命令提示需要在 Tailscale 管理后台启用 Funnel，就先到后台打开 Funnel 权限，再回到 WSL 重新执行上面的命令。
+如果命令提示需要在 Tailscale 管理后台启用 Funnel，就按提示完成授权，再回到当前环境重新执行命令。
 
-## 第五步：验证公网和 OAuth metadata
+<Callout title="macOS 先确认客户端变体">
+  Tailscale 在 macOS 上不同客户端变体的 Funnel 能力有差异。这里只需要共享本地端口，不需要共享文件目录；安装前仍建议先确认当前官方文档中的客户端限制，避免装好后才发现 CLI 或 Funnel 能力不符合预期。
+</Callout>
+
+## 第六步：验证公网和 OAuth metadata
 
 公网 `/mcp` 应该返回 `401`：
 
 ```bash
 curl -sS -o /dev/null -w '%{http_code}\n' \
-  https://devspace-wsl.your-tailnet.ts.net/mcp
+  https://devspace-device.your-tailnet.ts.net/mcp
 ```
 
 预期：
@@ -366,7 +405,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' \
 
 ```bash
 curl -sS -o /dev/null -w '%{http_code}\n' \
-  https://devspace-wsl.your-tailnet.ts.net/.well-known/oauth-protected-resource/mcp
+  https://devspace-device.your-tailnet.ts.net/.well-known/oauth-protected-resource/mcp
 ```
 
 预期：
@@ -379,7 +418,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' \
 
 ```bash
 curl -sS -o /dev/null -w '%{http_code}\n' \
-  https://devspace-wsl.your-tailnet.ts.net/.well-known/oauth-authorization-server/mcp
+  https://devspace-device.your-tailnet.ts.net/.well-known/oauth-authorization-server/mcp
 ```
 
 预期：
@@ -388,30 +427,26 @@ curl -sS -o /dev/null -w '%{http_code}\n' \
 200
 ```
 
-这一步只是把第三步的三个本地信号搬到公网再验收一次。如果本地已经是 `401 / 200 / 200`，公网却不是，就只查 Funnel、域名和 Host 校验，不要回头改 DevSpace 业务逻辑。
+这一步只是把第四步的三个本地信号搬到公网再验收一次。如果本地已经是 `401 / 200 / 200`，公网却不是，就只查 Funnel、域名和 Host 校验，不要回头改 DevSpace 业务逻辑。
 
-刚启用 Funnel 时，如果公网域名暂时还解析不到，先等几分钟再测；不要因为一次 DNS 失败就立刻重装 Tailscale。
+刚启用 Funnel 时，公网 DNS 可能需要一点时间生效。一次解析失败不代表 Tailscale 安装坏了，先看 `tailscale funnel status` 是否正确，再继续判断。
 
-## 第六步：在 ChatGPT 中连接
+## 第七步：在 ChatGPT 中连接
 
-在 ChatGPT 的 MCP / Connector 配置里填写：
-
-```text
-https://devspace-wsl.your-tailnet.ts.net/mcp
-```
-
-认证方式选择：
+在 ChatGPT 的自定义 App / MCP 配置中填写：
 
 ```text
-OAuth
+https://devspace-device.your-tailnet.ts.net/mcp
 ```
+
+认证使用 DevSpace 提供的 OAuth 流程。
 
 不要填写：
 
 ```text
 http://100.x.x.x:7676/mcp
 http://127.0.0.1:7676/mcp
-https://devspace-wsl.your-tailnet.ts.net
+https://devspace-device.your-tailnet.ts.net
 ```
 
 最后做一次真实调用验收：在 `allowedRoots` 里创建一个测试文件，让 ChatGPT 读取它。能读到文件，才说明网络、OAuth、DevSpace 权限和项目根目录全部闭环。
@@ -422,7 +457,7 @@ https://devspace-wsl.your-tailnet.ts.net
   <FeatureCard title="把 100.x IP 填给 ChatGPT" meta="内网地址" description="100.x 是 Tailnet 内地址，ChatGPT 默认访问不到。">
     <ul>
       <li>错误：`http://100.x.x.x:7676/mcp`</li>
-      <li>正确：`https://devspace-wsl.your-tailnet.ts.net/mcp`</li>
+      <li>正确：`https://devspace-device.your-tailnet.ts.net/mcp`</li>
     </ul>
   </FeatureCard>
   <FeatureCard title="publicBaseUrl 多写 /mcp" meta="配置项" description="DevSpace 的 publicBaseUrl 只写 Origin，MCP 路径由客户端请求。">
@@ -433,26 +468,26 @@ https://devspace-wsl.your-tailnet.ts.net
   </FeatureCard>
   <FeatureCard title="Funnel 没真正打开" meta="公网入口" description="本地一切正常，但公网地址不可用时，先看 Funnel 状态和权限。">
     <ul>
-      <li>`tailscale funnel status` 必须显示 `Funnel on`</li>
+      <li>`tailscale funnel status` 必须显示 Funnel 已开启</li>
       <li>首次使用时按提示启用 Funnel 权限</li>
     </ul>
   </FeatureCard>
   <FeatureCard title="allowedHosts 没加 Funnel 域名" meta="Host 校验" description="Funnel 已经可达，但 DevSpace 仍可能拒绝外部 Host。">
     <ul>
-      <li>加入 `devspace-wsl.your-tailnet.ts.net`</li>
-      <li>修改后重启 `devspace.service`</li>
+      <li>加入 `devspace-device.your-tailnet.ts.net`</li>
+      <li>修改后重启 DevSpace</li>
     </ul>
   </FeatureCard>
   <FeatureCard title="OAuth metadata 缺路由" meta="ChatGPT" description="公网 /mcp 返回 401，不代表 ChatGPT 的 OAuth discovery 一定完整。">
     <ul>
       <li>先在本地检查两个 metadata 端点</li>
-      <li>缺路由时回到第三步处理兼容层</li>
+      <li>缺路由时回到第四步处理兼容层</li>
     </ul>
   </FeatureCard>
-  <FeatureCard title="WSL 停止后服务消失" meta="常驻" description="DevSpace 和 tailscaled 都在 WSL 里，WSL 退出后服务也会停。">
+  <FeatureCard title="Tailscale 和 DevSpace 不在同一环境" meta="回环地址" description="宿主机、WSL、虚拟机和容器里的 127.0.0.1 不一定指向同一个地方。">
     <ul>
-      <li>用 Windows 启动项保活 WSL</li>
-      <li>或登录后先启动一次 Ubuntu</li>
+      <li>优先把两者放到同一个运行环境</li>
+      <li>WSL 场景尤其不要默认依赖 Windows 到 WSL 转发</li>
     </ul>
   </FeatureCard>
 </VisualGrid>
@@ -461,20 +496,20 @@ https://devspace-wsl.your-tailnet.ts.net
 
 <HighlightBox eyebrow="CHECK" title="全部满足，才算整条链路完成">
   <ul>
-    <li>systemd 使用的是这台机器真实可用的 DevSpace 绝对启动命令。</li>
-    <li>`systemctl status devspace.service` 是 `active (running)`。</li>
-    <li>`systemctl status tailscaled` 是 `active (running)`。</li>
-    <li>DevSpace 监听 `127.0.0.1:7676`。</li>
+    <li>DevSpace 和 Tailscale 运行在同一个本地环境，或明确确认双方能通过本机回环地址连接。</li>
+    <li>使用的是这台机器真实可用的 DevSpace 启动命令。</li>
+    <li>DevSpace 正在监听 `127.0.0.1:7676`。</li>
     <li>`http://127.0.0.1:7676/mcp` 返回 `401`。</li>
     <li>本地两个 OAuth metadata 端点都返回 `200`。</li>
+    <li>`tailscale status` 能看到当前设备在线。</li>
     <li>`tailscale funnel status` 显示 `/` 代理到 `http://127.0.0.1:7676`。</li>
-    <li>`https://devspace-wsl.your-tailnet.ts.net/mcp` 返回 `401`。</li>
+    <li>`https://devspace-device.your-tailnet.ts.net/mcp` 返回 `401`。</li>
     <li>公网两个 OAuth metadata 端点都返回 `200`。</li>
     <li>`publicBaseUrl` 是 Funnel Origin，不带 `/mcp`。</li>
     <li>`allowedHosts` 包含 Funnel 域名。</li>
-    <li>ChatGPT 中填写的是 `https://devspace-wsl.your-tailnet.ts.net/mcp`。</li>
+    <li>ChatGPT 中填写的是 `https://devspace-device.your-tailnet.ts.net/mcp`。</li>
     <li>ChatGPT 能真实读取 `allowedRoots` 中的测试文件。</li>
   </ul>
 </HighlightBox>
 
-这套方案真正要记住的只有一句：**DevSpace 负责 MCP，Tailscale Funnel 负责公网 HTTPS，二者都放在 WSL 里。** 这样故障面最小，排查路径也最短。
+这套方案真正要记住的只有一句：**DevSpace 负责 MCP，Tailscale Funnel 负责公网 HTTPS；两者尽量放在同一个运行环境里。** Linux、WSL、Windows 和 macOS 的启动方式可以不同，但验收路径始终是同一条。
