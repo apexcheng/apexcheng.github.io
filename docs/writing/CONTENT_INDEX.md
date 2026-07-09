@@ -35,6 +35,6 @@
 | `src/content/posts/ai-product-image-decision-workflow-x51c.mdx` | `实践` | 以 X51C 为真实案例，顺着一次商品图任务讲清输入资料、三个 Skill 分工、竞品链接抓取、评价反馈、整套计划、补拍机制、单图生成和排查路径 | 写 AI 商品图真实使用流程、Skill 协作、竞品分析、状态文件、补拍机制和单图执行时参考 |
 | `src/content/posts/github-pages-deployment-guide.mdx` | `实践` | GitHub Pages、Astro、Actions 部署流程 | 写部署说明、构建发布、静态站点原理时参考 |
 | `src/content/posts/wsl-devspace-caddy-chmlfrp-chatgpt.mdx` | `实践` | 在 WSL 中用 DevSpace、Caddy 和 ChmlFrp 暴露公网 HTTPS MCP 地址，包含完整配置、systemd 常驻、Windows KeepAlive、验证命令和常见配置坑 | 写 WSL 本地 MCP 公网接入、DevSpace、Caddy、ChmlFrp、ChatGPT 连接教程时参考 |
-| `src/content/posts/wsl-devspace-tailscale-funnel-chatgpt.mdx` | `实践` | 在 WSL 中同时运行 DevSpace 和 Tailscale，用 Tailscale Funnel 暴露公网 HTTPS MCP 地址，替代 Caddy + ChmlFrp 多层转发 | 写 WSL 本地 MCP 公网接入、DevSpace、Tailscale Funnel、ChatGPT OAuth 连接和迁移方案时参考 |
+| `src/content/posts/wsl-devspace-tailscale-funnel-chatgpt.mdx` | `实践` | 在 WSL 中同时运行 DevSpace 和 Tailscale，用 Funnel 暴露公网 HTTPS MCP 地址，并按本地 401、OAuth metadata、Funnel 和 ChatGPT 真实调用逐层验收 | 写 WSL 本地 MCP 公网接入、DevSpace 多种启动方式、Tailscale Funnel、ChatGPT OAuth 连接和分层排查时参考 |
 | `src/content/posts/performance-review-should-recognize-talent.mdx` | `生活` | 从运营助理分级考核表出发，批评统一能力清单如何用短板限制长板，并提出共同底线加专项晋升路线 | 写职场观察、绩效考核、人才管理、专人专项和制度批评类文章时参考 |
 | `src/content/posts/h-pylori-acid-drink-note.mdx` | `生活` | 幽门螺杆菌、胃酸过多和气泡饮料的个人判断笔记 | 写生活判断清单、风险边界提醒、个人健康记录类文章时参考 |
