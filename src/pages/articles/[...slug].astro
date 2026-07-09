@@ -40,7 +40,7 @@ const { Content, headings } = await render(post);
       <p class="article-description">{post.data.description}</p>
       <div class="meta-row">
         <span>作者：{siteMeta.authorName}</span>
-        <span>更新于 {post.data.date.toISOString().slice(0, 10)}</span>
+        <span>更新于 {(post.data.updated ?? post.data.date).toISOString().slice(0, 10)}</span>
       </div>
       <Content />
     </article>

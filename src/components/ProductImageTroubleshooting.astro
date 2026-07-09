@@ -3,7 +3,7 @@
     <div>
       <span class="eyebrow">TROUBLESHOOTING</span>
       <h2>出了问题，不要先改 Prompt</h2>
-      <p>先判断问题属于哪一层。整套方向错、某一张图错、产品结构错，回去检查的地方完全不同。</p>
+      <p>先判断问题属于哪一层。分析、商品策略、视觉设计、产品依据和出图整改，回去检查的地方完全不同。</p>
     </div>
     <div class="rule-chip">先定位层级，再修改</div>
   </header>
@@ -19,7 +19,7 @@
         <span>01</span>
         <strong>任务根本没有按商品图流程走</strong>
       </div>
-      <p>例如没有先检查资料、没有做竞品分析，或者分析完直接出图。</p>
+      <p>例如没有先检查资料、没有做竞品分析，或者还没完成计划和确认就直接出图。</p>
       <div class="route-back">
         <span>回到</span>
         <strong>ecommerce-product-image</strong>
@@ -32,7 +32,7 @@
         <span>02</span>
         <strong>竞品或评价分析本身不对</strong>
       </div>
-      <p>例如竞品图没有分析到位，或者把用户问题错误映射成图片动作。</p>
+      <p>例如竞品页面没有读完整，或者把不适合用图片解决的用户问题硬塞进方案。</p>
       <div class="route-split">
         <div><span>竞品问题</span><strong>competitor-analysis</strong></div>
         <div><span>评价问题</span><strong>review-analysis</strong></div>
@@ -43,62 +43,60 @@
     <article class="route-card route-material">
       <div class="route-head">
         <span>03</span>
-        <strong>缺资料、缺角度、照片看不清</strong>
+        <strong>商品事实或真实依据不足</strong>
       </div>
-      <p>例如想做接口图却没有接口照片，或者产品角度被遮挡。</p>
+      <p>例如关键结构无法从现有实拍确认，或者 AI 把真实结构、颜色、接口改坏了。</p>
       <div class="route-back material-back">
         <span>回到</span>
-        <strong>资料闸门</strong>
+        <strong>输入与真实依据</strong>
       </div>
-      <small>暂停对应任务，明确告诉用户补什么、怎么拍。</small>
+      <small>先查事实和参考图；只有关键结构无法确认时，才暂停对应图片并要求补拍。</small>
     </article>
 
     <article class="route-card route-plan">
       <div class="route-head">
         <span>04</span>
-        <strong>整套图片方向就错了</strong>
+        <strong>卖点、图片任务或顺序不对</strong>
       </div>
-      <p>例如本来应该突出 HarmonyOS，却把整套主图都做成触控板；或者详情页顺序不合理。</p>
+      <p>例如最大卖点选错、某张图根本不该存在，或者详情页说服顺序不合理。</p>
       <div class="route-back plan-back">
         <span>回到</span>
-        <strong>商品图片生成计划.md</strong>
+        <strong>ecommerce-product-image + 生成计划</strong>
       </div>
-      <small>这是方案问题，不是某一张图的 Prompt 问题。</small>
+      <small>这是 WHAT / WHY 的问题，不要交给视觉 Skill 或生成阶段修。</small>
     </article>
 
     <article class="route-card route-task">
       <div class="route-head">
         <span>05</span>
-        <strong>只有某一张图不对</strong>
+        <strong>画面、构图或 Prompt 不对</strong>
       </div>
-      <p>例如触控板太小、标题位置不好、产品占比不合适。</p>
+      <p>例如画面太空、产品占比不合适、空间层次不足，或者最终 Prompt 和当前设计不一致。</p>
       <div class="route-back task-back">
         <span>回到</span>
-        <strong>商品图片单图任务.md</strong>
+        <strong>image-art-direction</strong>
       </div>
-      <small>修改这一张图的目标、构图、文案或审核标准。</small>
+      <small>只调整受影响图片的画面设计、输入和最终 Prompt，不重新规划整套图片。</small>
     </article>
 
     <article class="route-card route-structure">
       <div class="route-head">
         <span>06</span>
-        <strong>产品结构被 AI 改坏了</strong>
+        <strong>出图后到底是小修还是正式改设计</strong>
       </div>
-      <p>例如按键数量变化、触控板位置移动、接口凭空出现。</p>
+      <p>先问：如果从零重新生成，这个改动是否仍然必须保留？</p>
       <div class="structure-stack">
-        <span>先查真实参考图</span>
+        <span>不需要长期保留 → 直接小修</span>
         <i>→</i>
-        <span>再查结构校准图</span>
-        <i>→</i>
-        <strong>最后加强单图禁止项</strong>
+        <strong>需要长期保留 → 更新这张图的任务和 Prompt</strong>
       </div>
-      <small>结构错误优先检查事实依据，而不是只改画面风格。</small>
+      <small>两种情况都只处理受影响图片，不因为一张图的问题重做整套方案。</small>
     </article>
   </div>
 
   <footer class="trouble-verdict">
     <span>排查口诀</span>
-    <strong>流程错看总入口，分析错看专业 Skill，资料不够先补拍，方向错回整套计划，单图错改单图任务，结构错查真实参考图。</strong>
+    <strong>流程错看总入口，分析错看专业 Skill，事实错查真实依据，策略错回生成计划，视觉错回 Art Direction，出图后先分清小修还是正式设计改变。</strong>
   </footer>
 </section>
 
