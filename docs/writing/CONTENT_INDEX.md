@@ -31,7 +31,7 @@
 | `src/content/posts/browser-automation-selectors.md` | `实践` | 选择器优先于坐标点击的判断原则，并用报告仪表盘风展示网页自动化稳定性防线 | 写网页自动化、RPA、可验证操作规范、稳定性分层报告时参考 |
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
 | `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `实践` | 泰国、马来西亚、菲律宾雅仓与深圳跨境仓的仓储网络，覆盖双平台共享库存、跨国家隔离和本地优先发货 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
-| `src/content/posts/ai-product-image-agent-workflow.mdx` | `实践` | AI 商品主图 / 详情图 Agent 工作流，覆盖竞品 OCR、卖点提炼、MD 计划文档、用户对话定稿和受控出图 | 写商品图生成、竞品视觉分析、电商 Agent 工作流、图片策划方案时参考 |
+| `src/content/posts/ai-product-image-agent-workflow.mdx` | `实践` | AI 商品图工作流重构复盘，覆盖从逐张临场决策到规划前移、Art Direction、同组差异化、纯执行生成、人工审查和规则单一来源 | 写商品图生成、Agent 工作流重构、视觉规划、Prompt 设计和执行边界时参考 |
 | `src/content/posts/ai-product-image-workflow-in-practice.mdx` | `实践` | 以一次脱敏后的真实新品项目为背景，讲清输入资料、四个 Skill 分工、竞品链接抓取、可选评价分析、Art Direction 前移、真实产品图边界、纯执行生成和定向整改 | 写 AI 商品图真实使用流程、Skill 协作、竞品分析、视觉规划、补拍边界和单图执行时参考 |
 | `src/content/posts/github-pages-deployment-guide.mdx` | `实践` | GitHub Pages、Astro、Actions 部署流程 | 写部署说明、构建发布、静态站点原理时参考 |
 | `src/content/posts/wsl-devspace-caddy-chmlfrp-chatgpt.mdx` | `实践` | 在 WSL 中用 DevSpace、Caddy 和 ChmlFrp 暴露公网 HTTPS MCP 地址，包含完整配置、systemd 常驻、Windows KeepAlive、验证命令和常见配置坑 | 写 WSL 本地 MCP 公网接入、DevSpace、Caddy、ChmlFrp、ChatGPT 连接教程时参考 |
