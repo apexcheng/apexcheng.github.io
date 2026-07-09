@@ -4,8 +4,7 @@ description: "长文中的视觉节奏、代码块样式和图表容器。"
 date: 2026-06-08T02:35:56+08:00
 category: "视觉实验室"
 tags:
-  - "MDX"
-  - "Mermaid"
+  - "文章设计"
 minutes: 7
 featured: false
 draft: false

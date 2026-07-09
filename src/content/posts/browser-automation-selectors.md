@@ -5,8 +5,7 @@ date: 2026-06-12T02:35:56+08:00
 updated: 2026-07-03T21:49:00+08:00
 category: "实践"
 tags:
-  - "Playwright"
-  - "RPA"
+  - "自动化"
 minutes: 7
 featured: false
 draft: false
