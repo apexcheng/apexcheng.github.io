@@ -1,0 +1,398 @@
+---
+title: "WSL 中用 Tailscale Funnel 暴露 DevSpace 给 ChatGPT"
+description: "把 DevSpace 和 Tailscale 都放进 WSL，用 Funnel 提供公网 HTTPS MCP 地址，替代 Caddy + ChmlFrp 的多层转发方案。"
+date: 2026-07-09
+category: "实践"
+tags:
+  - "WSL"
+  - "DevSpace"
+  - "Tailscale"
+  - "Funnel"
+  - "ChatGPT"
+  - "MCP"
+minutes: 12
+featured: false
+draft: false
+private: false
+---
+
+import Callout from '../../components/Callout.astro';
+import MetricCard from '../../components/MetricCard.astro';
+import FeatureCard from '../../components/FeatureCard.astro';
+import VisualGrid from '../../components/VisualGrid.astro';
+import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+之前我用的是 **WSL DevSpace + Caddy + ChmlFrp**：DevSpace 在 WSL 里监听本地端口，Caddy 做本地 HTTPS，ChmlFrp 再把 Caddy 暴露到公网。它能跑，但链路长，故障点也多。
+
+这次改成更适合长期使用的方案：**DevSpace 和 Tailscale 都安装在 WSL 里，由 Tailscale Funnel 直接提供公网 HTTPS 地址给 ChatGPT。**
+
+<HighlightBox eyebrow="结论" title="ChatGPT 不能直接用 Tailscale 的 100.x 内网地址">
+  普通 Tailnet 地址只给 Tailnet 内的设备访问。ChatGPT 不在你的 Tailnet 里，所以最终要填的是 Tailscale Funnel 提供的公网 `https://...ts.net/mcp`，不是 `http://100.x.x.x:7676/mcp`。
+</HighlightBox>
+
+## 最终形态
+
+<VisualGrid columns={4}>
+  <MetricCard label="公网入口" value="Funnel" detail="由 Tailscale 托管 HTTPS，不再依赖 ChmlFrp 节点。" />
+  <MetricCard label="本地服务" value="7676" detail="DevSpace 只监听 WSL 内部的 127.0.0.1。" tone="cyan" />
+  <MetricCard label="ChatGPT 地址" value="/mcp" detail="只填写 Funnel 域名下的 MCP 路径。" tone="green" />
+  <MetricCard label="验收信号" value="401" detail="公网 /mcp 返回 401，说明认证入口可达。" tone="violet" />
+</VisualGrid>
+
+整条链路变成这样：
+
+<Mermaid
+  title="DevSpace + Tailscale Funnel 架构"
+  caption="DevSpace 和 Tailscale 都在 WSL 内，避免 Windows 到 WSL 的 localhost 代理层。"
+  chart={`flowchart LR
+    A["ChatGPT"] -->|HTTPS /mcp| B["Tailscale Funnel 公网域名"]
+    B --> C["WSL tailscaled"]
+    C -->|proxy| D["127.0.0.1:7676"]
+    D --> E["DevSpace MCP Server"]`}
+/>
+
+这里最重要的取舍是：不要把 Windows Tailscale 当公网入口，再转发回 WSL。那样虽然也能做，但会多一层 Windows 到 WSL 的 localhost 代理，WSL 休眠、端口转发失效或启动顺序不对时，很容易出现 `502`。
+
+## 和旧方案的差异
+
+<VisualGrid columns={2}>
+  <FeatureCard title="旧方案：Caddy + ChmlFrp" meta="多层转发" description="适合没有 Tailscale Funnel 时使用，但需要维护 Caddy、frpc、节点、域名和 DNS。">
+    <ul>
+      <li>链路是 ChatGPT -> ChmlFrp -> Caddy -> DevSpace。</li>
+      <li>公网稳定性依赖 ChmlFrp 节点。</li>
+      <li>排查时要逐层看 7676、7677、frpc 和域名解析。</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="新方案：Tailscale Funnel" meta="WSL 闭环" description="适合个人开发机长期使用，把公网入口和 DevSpace 都收进 WSL。">
+    <ul>
+      <li>链路是 ChatGPT -> Funnel -> WSL tailscaled -> DevSpace。</li>
+      <li>不需要 Caddy 和 ChmlFrp 参与 MCP 链路。</li>
+      <li>排查重点变成 DevSpace、tailscaled、Funnel 和 OAuth metadata。</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
+
+普通 Tailscale 的确通常要求两端都安装客户端；但 **Tailscale Funnel 是公网入口**，它的作用就是让没有安装 Tailscale 的外部服务也能访问你的指定服务。ChatGPT 不能加入你的 Tailnet，所以这里必须使用 Funnel。
+
+## 开始前替换这些占位符
+
+全文使用下面的占位符，复制命令时先替换成自己的真实值。
+
+| 占位符 | 替换内容 |
+| --- | --- |
+| `YOUR_WSL_USER` | WSL 用户名 |
+| `devspace-wsl` | WSL 这台 Tailscale 设备的 hostname |
+| `your-tailnet.ts.net` | 你的 Tailscale Funnel 域名后缀 |
+| `https://devspace-wsl.your-tailnet.ts.net` | Funnel 提供的公网 Origin |
+| `/home/YOUR_WSL_USER/projects/example` | 允许 DevSpace 访问的项目目录 |
+| `YOUR_DEVSPACE_BIN` | `devspace` 可执行文件完整路径 |
+| `YOUR_NODE_BIN_DIR` | `node` 所在目录 |
+
+<Callout title="隐私提醒">
+  公开笔记里建议写占位符，不要直接提交真实 tailnet 域名、私有项目路径、token 或授权文件。
+</Callout>
+
+## 配置顺序
+
+<DecisionFlow
+  title="先让本地可用，再打开公网"
+  items={[
+    {
+      label: 'Step 1',
+      title: 'DevSpace 留在 WSL',
+      description: '确认 DevSpace 只监听 127.0.0.1:7676，并且本地 /mcp 返回 401。',
+    },
+    {
+      label: 'Step 2',
+      title: 'Tailscale 也装进 WSL',
+      description: '让 tailscaled 和 DevSpace 在同一个 Linux 环境里运行，减少跨系统代理。',
+    },
+    {
+      label: 'Step 3',
+      title: '开启 Funnel',
+      description: '把 Funnel 直接指向 7676，生成公网 HTTPS Origin。',
+    },
+    {
+      label: 'Step 4',
+      title: '补齐 OAuth 验收',
+      description: '确认 /mcp、OAuth protected resource 和 authorization server metadata 都能访问。',
+    },
+    {
+      label: 'Step 5',
+      title: '连接 ChatGPT',
+      description: '在 ChatGPT 里填写 https://devspace-wsl.your-tailnet.ts.net/mcp，并选择 OAuth。',
+    },
+  ]}
+/>
+
+## 第一步：确认 DevSpace 本地可用
+
+先确认 DevSpace 和 Node 的实际路径：
+
+```bash
+command -v node
+command -v devspace
+```
+
+编辑：
+
+```text
+~/.devspace/config.json
+```
+
+核心配置类似这样：
+
+```json
+{
+  "host": "127.0.0.1",
+  "port": 7676,
+  "allowedRoots": [
+    "/home/YOUR_WSL_USER/projects/example"
+  ],
+  "publicBaseUrl": "https://devspace-wsl.your-tailnet.ts.net",
+  "allowedHosts": [
+    "localhost",
+    "127.0.0.1",
+    "::1",
+    "devspace-wsl.your-tailnet.ts.net"
+  ]
+}
+```
+
+`publicBaseUrl` 只写公网 Origin，不带 `/mcp`。ChatGPT 里填写连接地址时，才加 `/mcp`。
+
+systemd 服务可以继续沿用旧文的结构，只需要让它启动 DevSpace：
+
+```ini
+[Unit]
+Description=DevSpace MCP server
+After=network-online.target tailscaled.service
+Wants=network-online.target tailscaled.service
+
+[Service]
+Type=simple
+User=YOUR_WSL_USER
+WorkingDirectory=/home/YOUR_WSL_USER
+Environment=DEVSPACE_TOOL_MODE=codex
+Environment=DEVSPACE_TRUST_PROXY=1
+Environment=PATH=YOUR_NODE_BIN_DIR:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=YOUR_DEVSPACE_BIN serve
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+```
+
+启用服务：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now devspace.service
+```
+
+本地验收：
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  http://127.0.0.1:7676/mcp
+```
+
+预期：
+
+```text
+401
+```
+
+这个 `401` 是好结果：说明 `/mcp` 存在，只是当前请求还没有授权。
+
+## 第二步：在 WSL 安装并登录 Tailscale
+
+安装：
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+```
+
+启动服务：
+
+```bash
+sudo systemctl enable --now tailscaled
+```
+
+登录，并给这台 WSL 一个稳定 hostname：
+
+```bash
+sudo tailscale up --hostname=devspace-wsl
+```
+
+如果后续希望普通用户也能管理 Funnel，可以设置 operator：
+
+```bash
+sudo tailscale set --operator=$USER
+```
+
+确认设备在线：
+
+```bash
+tailscale status
+```
+
+这一步看到 `100.x.x.x` 很正常，但不要把它填进 ChatGPT。`100.x` 是 Tailnet 内网地址，不是公网 MCP 地址。
+
+## 第三步：开启 Funnel 指向 DevSpace
+
+直接把 Funnel 指向 DevSpace 的本地端口：
+
+```bash
+tailscale funnel --bg --yes 7676
+```
+
+查看状态：
+
+```bash
+tailscale funnel status
+```
+
+目标结构类似：
+
+```text
+https://devspace-wsl.your-tailnet.ts.net
+|-- / proxy http://127.0.0.1:7676
+```
+
+如果命令提示需要在 Tailscale 管理后台启用 Funnel，就先到后台打开 Funnel 权限，再回到 WSL 重新执行上面的命令。
+
+## 第四步：验证公网和 OAuth metadata
+
+公网 `/mcp` 应该返回 `401`：
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  https://devspace-wsl.your-tailnet.ts.net/mcp
+```
+
+预期：
+
+```text
+401
+```
+
+再验证 OAuth protected resource：
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  https://devspace-wsl.your-tailnet.ts.net/.well-known/oauth-protected-resource/mcp
+```
+
+预期：
+
+```text
+200
+```
+
+有些客户端还会请求 authorization server metadata：
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  https://devspace-wsl.your-tailnet.ts.net/.well-known/oauth-authorization-server/mcp
+```
+
+预期：
+
+```text
+200
+```
+
+<Callout title="ChatGPT 卡在连接时先查这里">
+  如果 `/mcp` 是 `401`，但 ChatGPT 仍然连不上，优先检查 `/.well-known/oauth-authorization-server/mcp` 是否存在。有些 DevSpace 版本需要升级，或用一个很薄的本地启动包装补上这个兼容路由。
+</Callout>
+
+这类兼容路由的原则很简单：不要改公网代理层，只在 DevSpace app 启动前补一个 metadata endpoint。它应该返回 `issuer`、`authorization_endpoint`、`token_endpoint`、`registration_endpoint`、`scopes_supported` 等 OAuth 字段，并且这些 URL 都以 `publicBaseUrl` 为前缀。
+
+## 第五步：在 ChatGPT 中连接
+
+在 ChatGPT 的 MCP / Connector 配置里填写：
+
+```text
+https://devspace-wsl.your-tailnet.ts.net/mcp
+```
+
+认证方式选择：
+
+```text
+OAuth
+```
+
+不要填写：
+
+```text
+http://100.x.x.x:7676/mcp
+http://127.0.0.1:7676/mcp
+https://devspace-wsl.your-tailnet.ts.net
+```
+
+最后做一次真实调用验收：在 `allowedRoots` 里创建一个测试文件，让 ChatGPT 读取它。能读到文件，才说明网络、OAuth、DevSpace 权限和项目根目录全部闭环。
+
+## 常见问题
+
+<VisualGrid columns={2}>
+  <FeatureCard title="把 100.x IP 填给 ChatGPT" meta="内网地址" description="100.x 是 Tailnet 内地址，ChatGPT 默认访问不到。">
+    <ul>
+      <li>错误：`http://100.x.x.x:7676/mcp`</li>
+      <li>正确：`https://devspace-wsl.your-tailnet.ts.net/mcp`</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="publicBaseUrl 多写 /mcp" meta="配置项" description="DevSpace 的 publicBaseUrl 只写 Origin，MCP 路径由客户端请求。">
+    <ul>
+      <li>错误：`https://domain/mcp`</li>
+      <li>正确：`https://domain`</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="allowedHosts 没加 Funnel 域名" meta="Host 校验" description="DevSpace 可能拒绝外部 Host，导致公网入口看起来可达但实际不可用。">
+    <ul>
+      <li>加入 `devspace-wsl.your-tailnet.ts.net`</li>
+      <li>修改后重启 `devspace.service`</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="WSL 全局代理污染" meta="代理" description="这套方案不需要 WSL 默认走代理，代理反而可能让 OAuth 或本地回环变复杂。">
+    <ul>
+      <li>检查 `env | grep -i proxy`</li>
+      <li>从 shell 配置里移除默认代理</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="WSL 停止后服务消失" meta="常驻" description="DevSpace 和 tailscaled 都在 WSL 里，WSL 退出后服务也会停。">
+    <ul>
+      <li>用 Windows 启动项保活 WSL</li>
+      <li>或登录后先启动一次 Ubuntu</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="OAuth metadata 缺路由" meta="ChatGPT" description="公网 /mcp 返回 401 不代表 ChatGPT 的 OAuth discovery 一定完整。">
+    <ul>
+      <li>检查 protected resource metadata</li>
+      <li>再检查 authorization server metadata</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
+
+## 最终检查清单
+
+<HighlightBox eyebrow="CHECK" title="全部满足，再去 ChatGPT 里连接">
+  <ul>
+    <li>`systemctl status devspace.service` 是 `active (running)`。</li>
+    <li>`systemctl status tailscaled` 是 `active (running)`。</li>
+    <li>DevSpace 监听 `127.0.0.1:7676`。</li>
+    <li>`http://127.0.0.1:7676/mcp` 返回 `401`。</li>
+    <li>`tailscale funnel status` 显示 `/` 代理到 `http://127.0.0.1:7676`。</li>
+    <li>`https://devspace-wsl.your-tailnet.ts.net/mcp` 返回 `401`。</li>
+    <li>`/.well-known/oauth-protected-resource/mcp` 返回 `200`。</li>
+    <li>`/.well-known/oauth-authorization-server/mcp` 返回 `200`。</li>
+    <li>`publicBaseUrl` 是 Funnel Origin，不带 `/mcp`。</li>
+    <li>`allowedHosts` 包含 Funnel 域名。</li>
+    <li>ChatGPT 中填写的是 `https://devspace-wsl.your-tailnet.ts.net/mcp`。</li>
+  </ul>
+</HighlightBox>
+
+这套方案真正要记住的只有一句：**DevSpace 负责 MCP，Tailscale Funnel 负责公网 HTTPS，二者都放在 WSL 里。** 这样故障面最小，排查路径也最短。
