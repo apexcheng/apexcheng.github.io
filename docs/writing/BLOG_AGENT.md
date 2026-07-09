@@ -23,7 +23,8 @@
 
 文章必须包含模板中的 frontmatter 字段。重点规则：
 
-- `date` 使用 `YYYY-MM-DD`。
+- `date` 使用带时区的完整时间：`YYYY-MM-DDTHH:mm:ss+08:00`。
+- `updated` 可选；存在时也使用同样格式。前端只显示日期，时分秒用于同一天文章的精准排序。
 - `category` 只能是 `生活`、`实践`、`教程`、`视觉实验室`。
 - 新文章默认保持 `draft: false`、`featured: false`、`private: false`。
 - 只有用户明确说“草稿”“暂不发布”“仅存仓库”“先不公开”等同等意思时，才设置为 `draft: true`。

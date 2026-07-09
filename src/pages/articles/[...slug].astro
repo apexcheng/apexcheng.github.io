@@ -3,6 +3,7 @@ import { getCollection, render } from 'astro:content';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getSeriesMeta } from '../../data/series';
 import { siteMeta } from '../../data/site';
+import { formatPostDate } from '../../utils/dates';
 import { withBase } from '../../utils/paths';
 
 export async function getStaticPaths() {
@@ -32,7 +33,7 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
       <aside class="article-info desktop-article-info">
         <h2>文章信息</h2>
         <p>{post.data.category}</p>
-        <p>{post.data.date.toISOString().slice(0, 10)}</p>
+        <p>{formatPostDate(post.data.date)}</p>
         <p>阅读约 {post.data.minutes} 分钟</p>
         <div class="chips">
           {post.data.tags.map((tag) => <span>{tag}</span>)}
@@ -57,7 +58,7 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
       <p class="article-description">{post.data.description}</p>
       <div class="meta-row">
         <span>作者：{siteMeta.authorName}</span>
-        <span>更新于 {(post.data.updated ?? post.data.date).toISOString().slice(0, 10)}</span>
+        <span>更新于 {formatPostDate(post.data.updated ?? post.data.date)}</span>
       </div>
       <Content />
       {post.data.series && seriesMeta && seriesIndex >= 0 && (

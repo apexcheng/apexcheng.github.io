@@ -1,6 +1,7 @@
 ---
 import { withBase } from '../utils/paths';
 import { getSeriesMeta } from '../data/series';
+import { formatPostDate } from '../utils/dates';
 
 const { posts, hideVisualLab = false, hideSeries = false } = Astro.props;
 ---
@@ -32,7 +33,7 @@ const { posts, hideVisualLab = false, hideSeries = false } = Astro.props;
         </div>
       </div>
       <time datetime={post.data.date.toISOString()}>
-        {post.data.date.toISOString().slice(0, 10)}
+        {formatPostDate(post.data.date)}
         <span>阅读约 {post.data.minutes} 分钟</span>
       </time>
     </article>

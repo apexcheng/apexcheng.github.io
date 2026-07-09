@@ -1,8 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { formatPostDate } from '../src/utils/dates';
 
 const articlesSource = readFileSync('src/pages/articles/index.astro', 'utf8');
 const articleListSource = readFileSync('src/components/ArticleList.astro', 'utf8');
+const articlePageSource = readFileSync('src/pages/articles/[...slug].astro', 'utf8');
 const categorySource = readFileSync('src/pages/articles/category/[category].astro', 'utf8');
 const contentConfigSource = readFileSync('src/content.config.ts', 'utf8');
 
@@ -37,5 +39,12 @@ describe('articles page category filter', () => {
     expect(articleListSource).toContain('data-published-at={post.data.date.valueOf()}');
     expect(articleListSource).toContain('data-updated-at={(post.data.updated ?? post.data.date).valueOf()}');
     expect(contentConfigSource).toContain('updated: z.coerce.date().optional()');
+  });
+
+  it('keeps timestamp precision for sorting while rendering date-only values', () => {
+    expect(articleListSource).toContain('formatPostDate(post.data.date)');
+    expect(articlePageSource).toContain('formatPostDate(post.data.date)');
+    expect(articlePageSource).toContain('formatPostDate(post.data.updated ?? post.data.date)');
+    expect(formatPostDate(new Date('2026-07-09T00:30:00+08:00'))).toBe('2026-07-09');
   });
 });
