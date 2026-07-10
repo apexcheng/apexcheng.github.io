@@ -1,0 +1,427 @@
+---
+title: "用 Agent 开发影刀：从知识库、元素探索到代码同步"
+description: "介绍我为什么整理影刀开发知识库，以及如何让 Agent 查 API、探索网页元素、编写真实影刀项目代码，并通过同步工具交回影刀编辑器验证。"
+date: 2026-07-10T16:20:50+08:00
+category: "教程"
+tags:
+  - "影刀RPA"
+  - "Agent"
+  - "知识库"
+minutes: 12
+featured: false
+draft: false
+private: false
+series: "yingdao-agent-development"
+seriesOrder: 1
+---
+
+import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
+
+<div class="yad-hero">
+  <div class="yad-hero__copy">
+    <span class="yad-kicker">YINGDAO × AGENT</span>
+    <h2>给 Agent 一套能查、能写、能同步的影刀开发环境</h2>
+    <p>知识库负责提供 API、限制和排错依据；Agent 在真实项目目录写代码；浏览器插件帮助探索页面；同步工具负责把外部修改登记并编译。</p>
+    <a class="yad-repo-link" href="https://github.com/apexcheng/xbot-AI-docs">查看影刀开发知识库 →</a>
+  </div>
+  <div class="yad-workbench" aria-label="影刀 Agent 开发工作台">
+    <div class="yad-workbench__bar">
+      <span></span><span></span><span></span>
+      <em>agent-workbench</em>
+    </div>
+    <div class="yad-workbench__grid">
+      <div class="yad-console is-knowledge">
+        <small>01 / KNOWLEDGE</small>
+        <strong>知识库</strong>
+        <p>API · 示例 · 排错</p>
+      </div>
+      <div class="yad-console is-agent">
+        <small>02 / REASONING</small>
+        <strong>Agent</strong>
+        <p>查依据 · 写代码</p>
+      </div>
+      <div class="yad-console is-browser">
+        <small>03 / BROWSER</small>
+        <strong>页面探索</strong>
+        <p>DOM · 元素 · 流程</p>
+      </div>
+      <div class="yad-console is-shadowbot">
+        <small>04 / RUNTIME</small>
+        <strong>影刀项目</strong>
+        <p>登记 · 编译 · 验证</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<HighlightBox eyebrow="核心判断" title="真正缺的不是另一个 AI，而是 AI 可以依赖的影刀开发上下文">
+  如果 Agent 不知道影刀 API、项目结构和开发限制，它只能用普通 Python 经验猜。知识库的作用，就是把“我查资料、试参数、踩坑、修正”的过程沉淀下来，让人和 Agent 下次都能直接复用。
+</HighlightBox>
+
+## 为什么要做这个知识库
+
+影刀的可视化指令已经比较容易上手，但我实际做编码版开发时，最直接的感受是：官方 API 说明偏少，有些说明也不够清楚。有些能力只看到方法名，不容易确认参数怎么传；有些市场指令在界面里能用，切到代码后却不知道真实入口；遇到异常时，也很难从一条报错快速定位到正确用法。
+
+我最初整理知识库，是为了让自己查得更快。后来发现，同一份资料也可以直接成为 Agent 的影刀开发上下文。
+
+<div class="yad-why">
+  <div class="yad-why__source">
+    <span>原始问题</span>
+    <strong>资料零散，API 容易靠猜</strong>
+    <ul>
+      <li>参数和返回值不够清楚</li>
+      <li>市场指令缺少编码版说明</li>
+      <li>踩过的坑下次还要重新查</li>
+    </ul>
+  </div>
+  <div class="yad-why__bridge">
+    <i>→</i>
+    <em>持续整理</em>
+  </div>
+  <div class="yad-why__result">
+    <span>一个知识库，两种入口</span>
+    <div>
+      <strong>自己查询</strong>
+      <p>按浏览器、Excel、日志、市场指令等主题查文档和例子。</p>
+    </div>
+    <div>
+      <strong>交给 Agent</strong>
+      <p>让 Agent 先查依据，再回答问题或修改真实项目代码。</p>
+    </div>
+  </div>
+</div>
+
+它不是影刀官方文档的镜像，也不是把所有源码塞进仓库。当前更像一层“开发者翻译”：
+
+- 把常用 API 整理成适用场景、参数、最小示例和注意事项；
+- 把市场指令的调用方式和参数映射单独记录；
+- 把踩坑结论、待验证事项和错误修正留下来；
+- 给 Agent 写清楚边界，例如不猜 API、不把知识库当业务项目、不把编译成功说成业务验证成功。
+
+## 让 Agent 帮我回答影刀问题
+
+最简单的用法，不是立刻让 Agent 改代码，而是先把知识库接进它能访问的目录。
+
+不同 Agent 的配置方式不完全一样，但目标相同：让它可以读取 `xbot-AI-docs`，并知道影刀问题要优先查询这里。Codex、Claude Code 可以在项目规则里写明知识库位置；OpenClaw 这类长期运行的 Agent，可以把知识库目录配置为只读资料源。
+
+<div class="yad-query">
+  <div class="yad-query__prompt">
+    <span>YOU</span>
+    <p>影刀里怎么批量写入二维表格？不要猜 API，查知识库后给我最小示例和依据路径。</p>
+  </div>
+  <div class="yad-query__scan">
+    <span>AGENT SEARCH</span>
+    <code>current project → docs/excel.md → examples/</code>
+    <div class="yad-scan-line"><i style={{ width: '92%' }}></i></div>
+  </div>
+  <div class="yad-query__answer">
+    <span>ANSWER</span>
+    <strong>用已经确认的 API 回答</strong>
+    <p>同时说明依据文件、适用边界，以及哪些行为仍需在真实影刀环境运行验证。</p>
+  </div>
+</div>
+
+我通常会在问题里加三个要求：
+
+1. **先查当前项目，再查知识库。** 当前项目已有写法往往比通用文档更贴近真实业务。
+2. **给出依据路径。** 这样可以快速判断 Agent 是查到的，还是凭普通 Python 经验推断的。
+3. **不确定就标注“需运行验证”。** 尤其是市场指令参数、页面元素和编辑器行为，不能把静态阅读当成真实运行。
+
+知识库地址：[apexcheng/xbot-AI-docs](https://github.com/apexcheng/xbot-AI-docs)
+
+## 让 Agent 直接写影刀项目代码
+
+知识问答只是第一层。更实用的方式，是让 Agent 直接进入真实影刀项目目录开发。
+
+这里最容易犯的错误，是把知识库目录当成项目目录。知识库存的是规则和资料，真正要改的 `main.py`、`package.json` 和业务文件仍然在影刀创建出来的应用目录里。
+
+<DecisionFlow
+  title="从新建影刀应用到完成代码同步"
+  items={[
+    {
+      label: 'Step 1',
+      title: '先在影刀里创建项目',
+      description: '创建真实应用并确认它的项目目录；Agent 后续必须在这个目录工作，而不是在知识库里写业务代码。',
+    },
+    {
+      label: 'Step 2',
+      title: '把 AGENTS.md 复制到项目根目录',
+      description: '从知识库复制通用规则；使用 Claude Code 或 Codex 时，再按需复制对应入口和只读子 Agent 配置。',
+    },
+    {
+      label: 'Step 3',
+      title: '让 Agent 先读现有项目',
+      description: '说明业务目标、输入输出、页面和人工确认点；小改直接做，大任务再建立 TASK.md 维护阶段状态。',
+    },
+    {
+      label: 'Step 4',
+      title: '搭配浏览器插件探索页面',
+      description: '在授权的浏览器页面中检查 DOM、测试元素定位并梳理操作路径，再把验证过的选择器写进项目。',
+    },
+    {
+      label: 'Step 5',
+      title: '运行同步工具并回到影刀验证',
+      description: '登记代码流程、编译入口和辅助模块；最后仍要在影刀编辑器里运行，确认页面、参数和业务结果。',
+    },
+  ]}
+/>
+
+### 第一步：复制项目规则
+
+知识库根目录的 `AGENTS.md` 是通用规则入口，也可以复制到真实影刀项目根目录。它会提醒 Agent：
+
+- 优先读取现有代码，不凭经验猜影刀 API；
+- 浏览器业务优先使用 `xbot.web`，不要随手换成普通网络库；
+- 影刀日志使用 `xbot.app.logging`；
+- 页面元素、市场指令参数和业务口径没有验证时必须明确标注；
+- 只改当前任务需要的代码，不做无关重构。
+
+项目目录大致会变成：
+
+```text
+真实影刀项目/
+├── AGENTS.md
+├── package.json
+├── main.py
+├── tools.py
+└── 其他业务文件
+```
+
+然后直接把这个目录交给 Agent，说明你希望它实现什么即可。复杂项目可以先让 Agent 生成一份 `TASK.md`，把目标、阶段、当前进度、未完成事项和风险写清楚；只改一个函数时不需要额外增加流程。
+
+### 第二步：让浏览器插件成为 Agent 的“眼睛”
+
+网页自动化最麻烦的地方，通常不是 Python 语法，而是页面到底有什么元素、按钮藏在哪一层、选择器是否稳定。
+
+如果 Agent 能通过浏览器插件连接到你已经打开并授权的页面，它就可以辅助完成：
+
+<div class="yad-browser-map">
+  <div class="yad-browser-map__window">
+    <div class="yad-browser-map__toolbar">
+      <span></span><span></span><span></span>
+      <code>https://example.com/orders</code>
+    </div>
+    <div class="yad-browser-map__page">
+      <div class="yad-page-nav">订单管理</div>
+      <div class="yad-page-filter">
+        <span class="is-detected">订单号输入框</span>
+        <span>状态筛选</span>
+        <button class="is-detected">查询按钮</button>
+      </div>
+      <div class="yad-page-row"><i></i><i></i><i></i></div>
+      <div class="yad-page-row"><i></i><i></i><i></i></div>
+    </div>
+  </div>
+  <div class="yad-browser-map__notes">
+    <div><b>01</b><p><strong>查看页面结构</strong><span>确认 iframe、弹窗、表格和按钮层级。</span></p></div>
+    <div><b>02</b><p><strong>测试元素定位</strong><span>优先选择稳定属性、文本和局部范围。</span></p></div>
+    <div><b>03</b><p><strong>探索操作流程</strong><span>验证点击、输入、等待和状态变化。</span></p></div>
+    <div><b>04</b><p><strong>写回项目代码</strong><span>把验证过的元素和动作交给影刀执行。</span></p></div>
+  </div>
+</div>
+
+这会比“你截一张图，Agent 猜按钮在哪里”可靠得多。但浏览器插件也不是全自动保证：登录状态、风控、动态页面、影刀浏览器对象和真实业务结果，仍然要在对应环境里验证。
+
+### 第三步：把外部修改同步回影刀
+
+Agent 在项目目录写完 `.py` 文件后，还需要让影刀认识这些代码流程。知识库根目录提供了 `shadowbot_sync_tool.py`，用于：
+
+- 把尚未登记的 Python 文件写入 `package.json`；
+- 自动发现入口文件引用的辅助模块；
+- 使用影刀 Python 编译入口文件和辅助模块。
+
+调用时要同时区分“知识库工具路径”和“真实影刀项目路径”：
+
+```powershell
+python "C:\\path\\to\\xbot-AI-docs\\shadowbot_sync_tool.py" ^
+  --project-dir "%LOCALAPPDATA%\\ShadowBot\\users\\<user_id>\\apps\\<app_id>" ^
+  prepare main.py
+```
+
+`prepare` 成功，说明流程登记和编译准备已经完成；它不等于页面操作、接口参数或整套业务已经在影刀中跑通。最后一步永远是回到影刀编辑器运行并检查结果。
+
+<div class="yad-pipeline" aria-label="影刀 Agent 完整开发链路">
+  <div class="yad-pipeline__head">
+    <span>DEVELOPMENT PIPELINE</span>
+    <em>5 个环节，2 次验证</em>
+  </div>
+  <div class="yad-pipeline__track">
+    <div><b>01</b><strong>需求</strong><small>写清输入输出</small></div>
+    <i>→</i>
+    <div><b>02</b><strong>查库</strong><small>确认 API 依据</small></div>
+    <i>→</i>
+    <div class="is-focus"><b>03</b><strong>开发</strong><small>真实项目改代码</small></div>
+    <i>→</i>
+    <div><b>04</b><strong>编译</strong><small>登记并 prepare</small></div>
+    <i>→</i>
+    <div class="is-success"><b>05</b><strong>运行</strong><small>影刀内验收</small></div>
+  </div>
+  <div class="yad-pipeline__checks">
+    <span>验证 A · 浏览器里确认元素与页面路径</span>
+    <span>验证 B · 影刀里确认代码与业务结果</span>
+  </div>
+</div>
+
+## 知识库怎么继续更新
+
+知识库不是整理一次就结束。影刀新增能力、项目遇到新问题、市场指令参数发生变化，都可能产生新的资料。
+
+我现在保留两种更新方式。
+
+### 方式一：让 Agent 分析指令后补库
+
+遇到官方内置指令或市场指令没有清楚的编码版说明时，可以让 Agent 阅读允许查看的本地实现和调用信息，分析：
+
+- 真实导入路径和调用入口；
+- 参数名、默认值和必要类型；
+- 返回值与异常表现；
+- 一个最小可用示例；
+- 还没有运行验证的部分。
+
+然后把结论补充到 `xbot-api-docs/docs/`，示例放进 `examples/`，必要时同步更新 `llms.txt` 索引。不能公开的账号、Token、个人路径和完整运行包源码不能写进仓库。
+
+### 方式二：直接把已知结论告诉 AI
+
+如果我已经通过影刀运行确认某个参数或坑点，也可以直接告诉 Agent：
+
+> 把这次验证结果补充进影刀知识库，写明正确用法、错误表现、最小示例和依据；不确定的部分放到待验证事项。
+
+这样做的重点不是让文档越来越长，而是把下一次还会重复遇到的问题留下来。
+
+<div class="yad-loop" aria-label="影刀知识库更新闭环">
+  <div><span>真实项目</span><strong>遇到新问题</strong></div>
+  <i>→</i>
+  <div><span>Agent / 人工</span><strong>查源码与运行验证</strong></div>
+  <i>→</i>
+  <div class="is-core"><span>知识库</span><strong>记录结论和边界</strong></div>
+  <i>→</i>
+  <div><span>下一次开发</span><strong>直接复用</strong></div>
+</div>
+
+## 为什么把它做成一个系列
+
+这篇文章先把完整链路讲清楚，但其中每个环节都值得单独展开。后续可以继续补充：
+
+- Agent 如何连接影刀项目与只读知识库；
+- 如何用浏览器插件探索页面、寻找稳定元素定位；
+- 如何分析市场指令和内置指令，并整理成可用 API 文档；
+- `shadowbot_sync_tool.py` 的同步边界和排错方式；
+- 一个真实影刀项目如何从需求一直开发到编辑器内验证。
+
+<HighlightBox eyebrow="总结" title="知识库不是终点，它是 Agent 进入影刀开发现场的入口">
+  最理想的状态不是“AI 什么都会”，而是它知道先看哪里、在哪个目录改、哪些 API 不能猜、改完怎么同步，以及最后必须回到哪里验证。
+</HighlightBox>
+
+<style>{`
+  .yad-hero, .yad-why, .yad-query, .yad-browser-map, .yad-pipeline, .yad-loop {
+    margin: 1.8rem 0 2.2rem;
+  }
+  .yad-hero {
+    display: grid;
+    grid-template-columns: minmax(0, .95fr) minmax(320px, 1.05fr);
+    gap: 1.4rem;
+    padding: clamp(1.4rem, 3vw, 2.2rem);
+    overflow: hidden;
+    color: #eaf4ff;
+    border: 1px solid rgba(95, 186, 255, .24);
+    border-radius: 28px;
+    background: radial-gradient(circle at 78% 10%, rgba(37, 162, 255, .22), transparent 34%), linear-gradient(135deg, #07111f 0%, #0b1728 52%, #07101b 100%);
+    box-shadow: 0 24px 70px rgba(2, 10, 24, .24);
+  }
+  .yad-hero__copy { align-self: center; }
+  .yad-kicker, .yad-workbench small, .yad-why span, .yad-query > div > span, .yad-pipeline__head span {
+    font-size: .72rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase;
+  }
+  .yad-kicker { color: #62c7ff; }
+  .yad-hero h2 { margin: .65rem 0 .85rem; color: #fff; font-size: clamp(1.55rem, 3vw, 2.45rem); line-height: 1.2; }
+  .yad-hero p { margin: 0; color: #a9bdd2; line-height: 1.8; }
+  .yad-repo-link { display: inline-flex; margin-top: 1.2rem; color: #7dd3fc; font-weight: 750; text-decoration: none; }
+  .yad-workbench { border: 1px solid rgba(125, 211, 252, .18); border-radius: 18px; background: rgba(4, 12, 24, .72); box-shadow: inset 0 1px rgba(255,255,255,.04); }
+  .yad-workbench__bar, .yad-browser-map__toolbar { display: flex; align-items: center; gap: .42rem; padding: .72rem .9rem; border-bottom: 1px solid rgba(148,190,230,.14); }
+  .yad-workbench__bar span, .yad-browser-map__toolbar > span { width: 8px; height: 8px; border-radius: 999px; background: #2b4561; }
+  .yad-workbench__bar span:first-child, .yad-browser-map__toolbar > span:first-child { background: #ff7891; }
+  .yad-workbench__bar span:nth-child(2), .yad-browser-map__toolbar > span:nth-child(2) { background: #ffd166; }
+  .yad-workbench__bar span:nth-child(3), .yad-browser-map__toolbar > span:nth-child(3) { background: #57d69a; }
+  .yad-workbench__bar em { margin-left: auto; color: #66819d; font-size: .72rem; font-style: normal; }
+  .yad-workbench__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; padding: .85rem; }
+  .yad-console { min-height: 118px; padding: 1rem; border: 1px solid rgba(125,211,252,.12); border-radius: 14px; background: linear-gradient(145deg, rgba(16,35,58,.96), rgba(8,21,37,.96)); }
+  .yad-console small { color: #5e7c99; }
+  .yad-console strong { display: block; margin-top: .55rem; color: #f4f9ff; font-size: 1.08rem; }
+  .yad-console p { margin-top: .2rem; color: #7993ad; font-size: .82rem; }
+  .yad-console.is-agent { border-color: rgba(80,196,255,.42); box-shadow: 0 0 26px rgba(35,158,255,.09); }
+  .yad-console.is-browser { border-color: rgba(119,106,255,.32); }
+  .yad-console.is-shadowbot { border-color: rgba(72,211,154,.28); }
+  .yad-why { display: grid; grid-template-columns: 1fr auto 1.15fr; align-items: stretch; gap: 1rem; padding: 1.2rem; border: 1px solid var(--line); border-radius: 24px; background: linear-gradient(135deg, rgba(31,111,235,.06), rgba(14,165,233,.025)); }
+  .yad-why__source, .yad-why__result { padding: 1.2rem; border-radius: 17px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); }
+  .yad-why span { color: var(--blue); }
+  .yad-why strong { display: block; margin: .45rem 0 .7rem; font-size: 1.05rem; }
+  .yad-why ul { margin: 0; padding-left: 1.1rem; }
+  .yad-why li { margin: .35rem 0; }
+  .yad-why__bridge { display: grid; place-content: center; color: var(--blue); text-align: center; }
+  .yad-why__bridge i { font-size: 1.5rem; font-style: normal; }
+  .yad-why__bridge em { font-size: .7rem; font-style: normal; }
+  .yad-why__result > div + div { margin-top: .9rem; padding-top: .9rem; border-top: 1px dashed var(--line); }
+  .yad-why__result p { margin: .2rem 0 0; font-size: .88rem; }
+  .yad-query { padding: 1.2rem; border: 1px solid #20344c; border-radius: 22px; color: #dcecff; background: #091421; }
+  .yad-query > div { padding: 1rem 1.1rem; border-radius: 14px; }
+  .yad-query > div > span { color: #5daee8; }
+  .yad-query p { margin: .45rem 0 0; color: #b8c9da; }
+  .yad-query__prompt { width: 84%; margin-left: auto; background: #132942; }
+  .yad-query__scan { margin: .8rem 10% .8rem 0; background: #0d1d2e; }
+  .yad-query__scan code { display: block; margin-top: .5rem; color: #8fd8ff; font-size: .8rem; }
+  .yad-query__answer { width: 88%; border: 1px solid rgba(72,211,154,.24); background: #0c241f; }
+  .yad-query__answer strong { display: block; margin-top: .5rem; color: #dfffee; }
+  .yad-scan-line { height: 4px; margin-top: .8rem; overflow: hidden; border-radius: 99px; background: #172d43; }
+  .yad-scan-line i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #258bea, #4ed3ff); }
+  .yad-browser-map { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(260px,.75fr); gap: 1rem; padding: 1rem; border: 1px solid #243b56; border-radius: 24px; color: #e8f2ff; background: linear-gradient(145deg, #081421, #0d1c2d); }
+  .yad-browser-map__window { overflow: hidden; border: 1px solid #253e5b; border-radius: 15px; background: #f3f7fb; }
+  .yad-browser-map__toolbar { background: #102239; }
+  .yad-browser-map__toolbar code { margin-left: .5rem; color: #7592ae; font-size: .72rem; }
+  .yad-browser-map__page { padding: 1rem; color: #1a2b3d; }
+  .yad-page-nav { margin-bottom: .9rem; font-weight: 800; }
+  .yad-page-filter { display: flex; gap: .55rem; padding: .65rem; border: 1px solid #dce5ee; border-radius: 10px; background: #fff; }
+  .yad-page-filter span, .yad-page-filter button { flex: 1; padding: .5rem; border: 1px solid #dce5ee; border-radius: 7px; color: #61758b; background: #f8fafc; font-size: .68rem; }
+  .yad-page-filter .is-detected { outline: 2px solid #20a7ff; outline-offset: 2px; }
+  .yad-page-row { display: grid; grid-template-columns: .7fr 1.5fr .8fr; gap: .5rem; margin-top: .7rem; }
+  .yad-page-row i { height: 12px; border-radius: 99px; background: #dce7f0; }
+  .yad-browser-map__notes { display: grid; gap: .7rem; }
+  .yad-browser-map__notes > div { display: flex; gap: .8rem; padding: .85rem; border: 1px solid rgba(105,180,234,.15); border-radius: 12px; background: rgba(16,37,59,.82); }
+  .yad-browser-map__notes b { color: #55c5ff; font: 800 .78rem/1.4 monospace; }
+  .yad-browser-map__notes p { margin: 0; }
+  .yad-browser-map__notes strong { display: block; color: #edf7ff; font-size: .9rem; }
+  .yad-browser-map__notes span { display: block; margin-top: .15rem; color: #829bb3; font-size: .76rem; }
+  .yad-pipeline { padding: 1.25rem; overflow: hidden; border: 1px solid #203a55; border-radius: 24px; color: #edf7ff; background: #081522; }
+  .yad-pipeline__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .yad-pipeline__head span { color: #5ec9ff; }
+  .yad-pipeline__head em { color: #718aa2; font-size: .75rem; font-style: normal; }
+  .yad-pipeline__track { display: flex; align-items: center; gap: .5rem; }
+  .yad-pipeline__track > div { flex: 1; min-width: 0; padding: .9rem .65rem; border: 1px solid #203a55; border-radius: 12px; background: #0d2033; }
+  .yad-pipeline__track > i { color: #3c769f; font-style: normal; }
+  .yad-pipeline__track b { display: block; color: #52718d; font: 700 .7rem/1 monospace; }
+  .yad-pipeline__track strong { display: block; margin: .38rem 0 .16rem; font-size: .9rem; }
+  .yad-pipeline__track small { color: #7891a8; font-size: .68rem; }
+  .yad-pipeline__track .is-focus { border-color: #238fea; box-shadow: 0 0 25px rgba(35,143,234,.12); }
+  .yad-pipeline__track .is-success { border-color: #31bd82; }
+  .yad-pipeline__checks { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-top: .8rem; }
+  .yad-pipeline__checks span { padding: .65rem .8rem; border-radius: 9px; color: #9bb3c8; background: #0c1d2d; font-size: .74rem; }
+  .yad-loop { display: flex; align-items: stretch; gap: .6rem; padding: 1rem; border: 1px solid var(--line); border-radius: 22px; background: var(--paper); }
+  .yad-loop > div { flex: 1; padding: .9rem; border: 1px solid var(--line); border-radius: 12px; }
+  .yad-loop > i { align-self: center; color: var(--blue); font-style: normal; }
+  .yad-loop span { display: block; color: var(--muted); font-size: .7rem; }
+  .yad-loop strong { display: block; margin-top: .35rem; font-size: .86rem; }
+  .yad-loop .is-core { color: #e8f6ff; border-color: #278fd6; background: #0c2740; }
+  .yad-loop .is-core span { color: #79cffd; }
+  @media (max-width: 760px) {
+    .yad-hero, .yad-browser-map { grid-template-columns: 1fr; }
+    .yad-why { grid-template-columns: 1fr; }
+    .yad-why__bridge { transform: rotate(90deg); }
+    .yad-pipeline__track, .yad-loop { flex-direction: column; }
+    .yad-pipeline__track > i, .yad-loop > i { transform: rotate(90deg); text-align: center; }
+  }
+  @media (max-width: 520px) {
+    .yad-workbench__grid, .yad-pipeline__checks { grid-template-columns: 1fr; }
+    .yad-query__prompt, .yad-query__answer, .yad-query__scan { width: auto; margin-left: 0; margin-right: 0; }
+    .yad-page-filter { flex-direction: column; }
+  }
+`}</style>
