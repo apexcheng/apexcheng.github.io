@@ -1,0 +1,523 @@
+---
+title: "把 GBrain 配成 OpenClaw 的长期大脑"
+description: "记录我把 GBrain 接入 OpenClaw 的完整配置：Context Engine 自动召回、Signal Detector 后台写入、PostgreSQL 多会话并发，以及一路踩过的坑。"
+date: 2026-07-10T18:20:24+08:00
+category: "实践"
+tags:
+  - "GBrain"
+  - "OpenClaw"
+  - "Agent"
+minutes: 18
+featured: false
+draft: false
+private: false
+---
+
+import Callout from '../../components/Callout.astro';
+import MetricCard from '../../components/MetricCard.astro';
+import FeatureCard from '../../components/FeatureCard.astro';
+import VisualGrid from '../../components/VisualGrid.astro';
+import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+我最近把 GBrain 接进了自己的 OpenClaw。
+
+最开始我以为这件事很简单：装上 GBrain、挂一个 MCP、再把 Skill 放进去，OpenClaw 就有长期记忆了。
+
+实际跑下来才发现，**“Agent 能调用 GBrain”与“GBrain 成为 Agent 的大脑”是两回事。**
+
+真正完成之后，我需要的是两条闭环同时成立：
+
+1. 每轮对话开始时，GBrain 能自动召回相关长期知识。
+2. 每条新消息进入后，Signal Detector 能在后台判断是否值得长期保存，并写回 GBrain。
+
+<VisualGrid columns={4}>
+  <MetricCard label="长期记忆" value="GBrain" detail="项目、人物、公司、决策与长期方法论。" />
+  <MetricCard label="自动召回" value="Context Engine" detail="每轮对话前通过 Retrieval Reflex 注入相关指针。" tone="cyan" />
+  <MetricCard label="自动写入" value="Signal Detector" detail="后台并行判断，不阻塞主 Agent 回复。" tone="green" />
+  <MetricCard label="数据层" value="PostgreSQL 17" detail="解决多 Agent、多会话下的 PGLite 锁冲突。" tone="violet" />
+</VisualGrid>
+
+<HighlightBox eyebrow="最终结论" title="真正的大脑，不只是一个 MCP 工具">
+  MCP 解决的是“Agent 主动查和写”，Context Engine 解决的是“系统自动想起”，Signal Detector 解决的是“系统自动记住”。三者缺一块，都只能算接入了 GBrain，不能算让 GBrain 真正成为长期大脑。
+</HighlightBox>
+
+## 我最终想要的架构
+
+现在这套系统里，OpenClaw 的 `memory-core` 没有被删掉。它继续负责短期状态、轻量偏好和 OpenClaw 自己的会话记忆。
+
+GBrain 则负责更长期、更结构化的内容。
+
+<Mermaid
+  title="OpenClaw 与 GBrain 的最终分工"
+  caption="一条链路负责自动召回，一条链路负责后台记忆；Memory Core 保留为短期层。"
+  chart={`flowchart TD
+    U[用户消息] --> C[GBrain Context Engine]
+    C --> R[Retrieval Reflex]
+    R --> A[相关长期知识注入]
+    A --> M[OpenClaw 主 Agent]
+    M --> O[正常回复]
+
+    U --> H[message_received]
+    H --> S[Signal Detector 子 Agent]
+    S --> J{是否值得长期保存}
+    J -- 否 --> X[跳过]
+    J -- 是 --> P[put_page / add_link / timeline]
+    P --> B[(GBrain / PostgreSQL)]
+
+    MC[memory-core] --> M
+    B --> C`}
+/>
+
+我把职责拆成了四层：
+
+<VisualGrid columns={2}>
+  <FeatureCard title="Memory Core" meta="SHORT TERM" description="保留 OpenClaw 自己的短期记忆，不急着替换。">
+    <ul>
+      <li>最近对话状态</li>
+      <li>轻量偏好</li>
+      <li>Agent 自己的运行上下文</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="GBrain Context Engine" meta="RECALL" description="每轮对话前主动寻找值得注入的长期知识。">
+    <ul>
+      <li>人物与公司</li>
+      <li>项目与概念</li>
+      <li>长期决策与方法论</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="Signal Detector" meta="CAPTURE" description="每条入站消息进入后，后台判断是否值得保存。">
+    <ul>
+      <li>与主回复并行</li>
+      <li>低价值操作消息直接跳过</li>
+      <li>有价值信号直接写入 GBrain</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="GBrain MCP" meta="TOOLS" description="让 Agent 在需要时主动搜索、读取和写入 GBrain。">
+    <ul>
+      <li>搜索与查询</li>
+      <li>读取页面</li>
+      <li>写页面、链接和时间线</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
+
+## 最终配置路径
+
+这不是我最开始走的路径，而是把踩过的坑排除后，留下来的最终方案。
+
+<DecisionFlow
+  title="最终配置顺序"
+  items={[
+    {
+      label: 'Step 1',
+      title: '先把存储层定下来',
+      description: '多 Agent、多会话的 OpenClaw 直接使用 PostgreSQL 17 + pgvector，不再让 PGLite 承担多进程并发。',
+    },
+    {
+      label: 'Step 2',
+      title: '建立独立 Brain Repo',
+      description: '使用 ~/brain 作为长期知识源，注册成名为 brain 的 GBrain source。',
+    },
+    {
+      label: 'Step 3',
+      title: '接入 Skillpack、Retrieval Reflex 与 MCP',
+      description: '让 Agent 拥有查询、读写和主动召回能力，并统一把 MCP 写入路由到 brain source。',
+    },
+    {
+      label: 'Step 4',
+      title: '把 Context Engine 设为 GBrain',
+      description: 'OpenClaw 每轮上下文组装都经过 GBrain，而不是继续使用 legacy Context Engine。',
+    },
+    {
+      label: 'Step 5',
+      title: '补上 Signal Detector 宿主触发',
+      description: '在 message_received 上后台启动官方 Signal Detector，使“值得记住的消息”自动落库。',
+    },
+  ]}
+/>
+
+## 1. 存储层：直接使用 PostgreSQL 17
+
+我最初使用的是 PGLite。单独运行 GBrain 时没有问题，但接入 OpenClaw 后，问题马上出现了。
+
+OpenClaw 的 MCP runtime 会按 session 启动独立进程。多个会话同时加载 GBrain MCP 时，会出现多个 `gbrain serve` 去争同一份 PGLite 数据库文件。
+
+结果就是：
+
+```text
+第一个 gbrain serve -> 正常持有数据库锁
+第二个 gbrain serve -> 等待锁
+第三个 gbrain serve -> 继续等待
+
+最终表现：MCP 启动卡住约 30 秒
+```
+
+所以我最后改成了本地 PostgreSQL 17 + pgvector。
+
+```bash
+brew install postgresql@17 pgvector
+brew services start postgresql@17
+
+createdb gbrain
+psql gbrain -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+```
+
+然后让 GBrain 直接使用 PostgreSQL：
+
+```bash
+gbrain init \
+  --url "postgresql://<user>@127.0.0.1:5432/gbrain" \
+  --no-embedding
+```
+
+我当前先没有配置 Embedding，所以使用 `--no-embedding`。这不影响关键词搜索、实体召回、MCP 查询和 Signal Detector 自动写入，只是暂时没有完整的向量语义检索。
+
+<Callout title="为什么不是 PostgreSQL 16">
+  我实际安装时踩过一次版本兼容：当前 Homebrew 的 `pgvector` 扩展文件没有落到 PostgreSQL 16 的扩展目录，换成 PostgreSQL 17 后直接正常。最终只保留 PostgreSQL 17，避免两套数据库服务同时占端口。
+</Callout>
+
+## 2. 建立独立的 Brain Repo
+
+我没有把长期知识直接塞进 OpenClaw workspace，而是单独建立：
+
+```text
+~/brain
+```
+
+这个目录本身是一个 Git 仓库，负责保存长期知识源。
+
+```bash
+mkdir -p ~/brain
+cd ~/brain
+git init
+
+gbrain sources add brain --path ~/brain
+gbrain sync --source brain --no-pull --no-embed
+```
+
+这样做的好处是，OpenClaw workspace 和长期知识仓库不会混在一起：
+
+```text
+~/.openclaw/workspace  -> Agent 工作区、规则、Skill
+~/brain                -> 长期知识源
+PostgreSQL              -> GBrain 检索与运行数据
+```
+
+我最终只保留一个明确的长期 source：
+
+```text
+brain
+```
+
+## 3. Skillpack、Retrieval Reflex 与 MCP
+
+接下来是三块能力：
+
+- GBrain 官方 Skillpack：告诉 Agent 各类 GBrain 能力怎么使用。
+- Retrieval Reflex：让相关实体被提到时，主动召回长期知识。
+- MCP：提供搜索、查询、读取和写入工具。
+
+Retrieval Reflex 安装到 OpenClaw workspace：
+
+```bash
+gbrain integrations install retrieval-reflex \
+  --target ~/.openclaw/workspace
+```
+
+MCP 的关键不是 `cwd`，而是明确指定 source：
+
+```bash
+openclaw mcp add gbrain \
+  --command "$(command -v gbrain)" \
+  --arg serve \
+  --cwd ~/brain \
+  --env GBRAIN_SOURCE=brain
+```
+
+最后验证：
+
+```bash
+openclaw mcp doctor
+```
+
+我的当前结果是：
+
+```text
+gbrain: ok
+```
+
+## 4. 让 GBrain 真正成为 Context Engine
+
+只安装 MCP 还不够。
+
+如果 OpenClaw 仍然是：
+
+```text
+contextEngine = legacy
+```
+
+那么 GBrain 只是一个“可以被调用的工具”，并没有进入每轮上下文组装过程。
+
+我最后使用的 slot 是：
+
+```json
+{
+  "plugins": {
+    "slots": {
+      "memory": "memory-core",
+      "contextEngine": "gbrain-context"
+    }
+  }
+}
+```
+
+这里有一个非常容易踩的坑：
+
+```text
+插件 ID：gbrain-context-engine
+Context Engine ID：gbrain-context
+```
+
+slot 必须填 Context Engine ID，不是插件 ID。
+
+我的本地桥接插件位于：
+
+```text
+~/.openclaw/extensions/gbrain-context-engine
+```
+
+它的职责非常克制：
+
+1. 加载 GBrain 官方 Context Engine。
+2. 适配当前版本 OpenClaw 与 GBrain 的 `prompt` / `messages` 参数差异。
+3. 在 `message_received` 上启动官方 Signal Detector。
+
+核心不是重写 GBrain，而是把两个宿主接口接起来。
+
+## 5. 让 Signal Detector 真正自动运行
+
+这一块是我最开始误判最久的地方。
+
+GBrain 的 `signal-detector/SKILL.md` 里有触发描述，但 OpenClaw 不会因为一个 Skill 文件写了 `triggers:` 就自动执行它。
+
+所以单纯在 `AGENTS.md` 里写：
+
+```text
+每条消息都启动 Signal Detector
+```
+
+也不够稳定。这只是 Prompt 约束，不是事件触发器。
+
+最后我使用 OpenClaw 原生的 `message_received` hook，在每条入站消息到来后启动一个隐藏子 Agent，让它严格执行官方 Signal Detector Skill。
+
+逻辑可以压缩成：
+
+```js
+api.on('message_received', (event, ctx) => {
+  void runSignalDetector(event.content ?? '', ctx)
+    .catch((error) => api.logger.error(String(error)));
+});
+```
+
+这里最重要的是 `void`：Signal Detector 在后台继续运行，不等待它完成，主 Agent 可以正常回复。
+
+我实际验收时：
+
+```text
+主消息 ACK：约 3 秒
+Signal Detector 后台完成：约 6.5 秒
+```
+
+并且最终写入：
+
+```text
+source_id = brain
+```
+
+这才算“自动记忆”闭环真正成立。
+
+## 经常遇到的坑
+
+这一节单独记录真实踩过的问题。很多现象看起来都像“GBrain 没生效”，但根因完全不同。
+
+### 坑 1：装了 MCP，就以为 GBrain 已经是大脑
+
+**现象：** Agent 能看到大量 `gbrain__*` 工具，也能主动搜索，但新对话不会自动想起历史知识。
+
+**真正原因：** MCP 只提供工具调用，没有进入 OpenClaw 的 Context Engine。
+
+**修复：** 把 `plugins.slots.contextEngine` 切到 `gbrain-context`，再做无工具调用的自动召回测试。
+
+---
+
+### 坑 2：把插件 ID 当成 Context Engine ID
+
+**现象：** 配置看起来正确，但健康检查提示降级回 legacy，日志里出现 `not registered`。
+
+**错误配置：**
+
+```text
+contextEngine = gbrain-context-engine
+```
+
+**正确配置：**
+
+```text
+contextEngine = gbrain-context
+```
+
+插件叫什么，和它注册了哪个 Context Engine，是两层不同的 ID。
+
+---
+
+### 坑 3：插件入口引用目录外代码，被 OpenClaw quarantine
+
+**现象：** 插件文件存在，但 OpenClaw 报：
+
+```text
+extension entry escapes package directory
+```
+
+**真正原因：** 插件入口直接引用了全局安装目录里的 GBrain 源码，触发 OpenClaw 的扩展隔离检查。
+
+**修复：** 让扩展目录拥有自己的本地依赖，从扩展包内部加载 GBrain，不要让入口跳出插件目录。
+
+---
+
+### 坑 4：Context Engine 已加载，但就是不自动召回
+
+**现象：** 插件状态正常、没有降级，但新会话里依然没有 GBrain 上下文。
+
+**真正原因：** 在我当前使用的版本组合里，OpenClaw 把当前用户输入放在 `prompt` 参数，而 GBrain Context Engine 实际只从 `messages` 读取当前用户消息。
+
+版本快照：
+
+```text
+OpenClaw 2026.7.1-beta.2
+GBrain 0.42.57.0
+```
+
+**修复：** 在插件边界把当前 `prompt` 临时补成一条 user message，调用官方 Context Engine 后再恢复原 messages。
+
+这个兼容层只适合当前版本差异。以后升级时应该先检查上游是否已经原生修复，能删就删。
+
+---
+
+### 坑 5：PGLite 在 OpenClaw 多会话下抢锁
+
+**现象：** 每开一个新会话，GBrain MCP 可能卡约 30 秒，日志出现：
+
+```text
+Timed out waiting for PGLite lock
+```
+
+**真正原因：** OpenClaw 的 MCP runtime 按 session 隔离，每个会话可能启动新的 `gbrain serve`。PGLite 不适合这种多进程访问方式。
+
+**修复：** 改用 PostgreSQL 17 + pgvector。
+
+这是整个配置里最关键的一次架构调整。
+
+---
+
+### 坑 6：Signal Detector Skill 存在，但从来不自动写入
+
+**现象：** `skills/signal-detector/SKILL.md` 已经存在，手动让 Agent 记忆也会回复“已记录”，但数据库里没有新页面。
+
+**真正原因：** Skill 的触发描述不是 OpenClaw 的原生事件机制；Prompt 里要求“每条消息都触发”也不等于真的触发。
+
+**修复：** 使用宿主侧 `message_received` hook，真实启动隐藏子 Agent，并限制它只使用 GBrain 读写工具。
+
+---
+
+### 坑 7：明明写入成功，为什么 `brain` 里搜不到
+
+**现象：** Signal Detector 明确说已经 captured，数据库页面数也变化了，但 `gbrain search` 在 `brain` source 里找不到。
+
+**真正原因：** `gbrain serve` 不会因为 `cwd=~/brain` 就自动把所有 MCP 写入路由到 `brain`。没有明确 source 时，会回退到 `default`。
+
+**修复：** MCP 服务必须带：
+
+```text
+GBRAIN_SOURCE=brain
+```
+
+修复后，真实写入验收必须查数据库里的：
+
+```text
+source_id = brain
+```
+
+不要只相信模型说“已经写入”。
+
+---
+
+### 坑 8：测试实体写得太奇怪，误判自动召回失败
+
+**现象：** `gbrain search` 能搜到测试页，但 Context Engine 不自动注入。
+
+**真正原因：** Retrieval Reflex 有自己的实体提取和置信度规则。带长数字、奇怪标记或普通想法标题，不一定会被当成高置信度实体。
+
+例如这种测试名：
+
+```text
+Aurelia Lantern Labs 20260710
+```
+
+数字部分可能不会进入 Proper-Case 实体候选。
+
+**更合理的验收：** 使用干净的人物、公司或组织名称，先确认官方 resolver 能命中，再测试 OpenClaw 是否自动注入。
+
+## 我现在故意没有开启的东西
+
+目前这套 GBrain 已经可以正常体验，但我没有把所有功能一次开满。
+
+<VisualGrid columns={2}>
+  <FeatureCard title="ZeroEntropy Embedding" meta="暂不启用" description="先体验一周基础召回，再决定是否需要完整语义检索。">
+    <ul>
+      <li>当前 embedding_disabled = true</li>
+      <li>关键词、实体召回和 MCP 查询仍可使用</li>
+      <li>需要时再补 zembed 与 reranker</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="Autopilot" meta="暂不恢复" description="先观察自动捕获质量，不急着让后台维护循环持续运行。">
+    <ul>
+      <li>当前未安装</li>
+      <li>先看 GBrain 记了什么、召回准不准</li>
+      <li>确认有价值后再增加后台维护</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
+
+我更想先回答一个问题：
+
+> 没有 Embedding、没有 Autopilot 的情况下，GBrain 作为长期大脑本身有没有价值？
+
+如果一周后发现：同义表达经常搜不到、语义召回明显不足，再配置 ZeroEntropy，会更有依据。
+
+## 我的最终验收标准
+
+配置完成后，我不会只看“进程启动了没有”，而是按链路逐层验收。
+
+```bash
+openclaw health
+openclaw mcp doctor
+gbrain status
+```
+
+但真正重要的是行为：
+
+1. 新会话里，不调用任何 GBrain 工具，提到一个已知实体，Agent 仍能看到 GBrain 注入的指针。
+2. 发送一个明确的长期观点，主 Agent 正常回复，不等待后台记忆完成。
+3. 几秒后，Signal Detector 日志显示 captured。
+4. 数据库里出现新页面，并且 `source_id = brain`。
+5. 多个会话同时运行时，不再出现 PGLite 锁等待和 30 秒 MCP 超时。
+
+<HighlightBox eyebrow="完成标准" title="不是“插件 loaded”，而是两条闭环都成立">
+  自动召回：用户消息 → Context Engine → Retrieval Reflex → 长期知识注入。自动记忆：用户消息 → message_received → Signal Detector → GBrain 写入。只有这两条链路都经过真实测试，我才认为 GBrain 真正成为了 OpenClaw 的长期大脑。
+</HighlightBox>
+
+这套配置目前仍然保留了一个原则：**先让最小闭环稳定，再增加复杂能力。**
+
+Embedding、reranker、Autopilot 都可以后面补，但“自动想起”和“自动记住”必须先真的跑通。
