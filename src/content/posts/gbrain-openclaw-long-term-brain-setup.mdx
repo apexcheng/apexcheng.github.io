@@ -1,135 +1,528 @@
 ---
 title: "给 OpenClaw 装上长期记忆：让 AI Agent 不再每次重新认识你"
-description: "记录我如何把 GBrain 接入 OpenClaw，让 Agent 从一次性聊天工具变成可以长期积累项目经验、知识和决策记录的个人助手。"
+description: "记录我如何把 GBrain 接入 OpenClaw：从安装、PostgreSQL、独立 Brain Repo，到 MCP、Context Engine、Signal Detector 和最终验收。"
 date: 2026-07-10T18:20:24+08:00
-updated: 2026-07-10T19:00:00+08:00
+updated: 2026-07-10T18:37:00+08:00
 category: "实践"
 tags:
   - "GBrain"
   - "OpenClaw"
   - "Agent"
-minutes: 12
+minutes: 20
 featured: false
 draft: false
 private: false
 ---
 
-import Mermaid from '../../components/Mermaid.astro';
+import Callout from '../../components/Callout.astro';
 import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
 
-很多人在使用 AI 助手时都会遇到一个问题：
+很多人在使用 AI 助手时都会遇到同一个问题：
 
 > 昨天已经告诉它的事情，今天为什么又忘了？
 
-原因很简单：大部分 AI 对话只有当前窗口的短期记忆。
+原因很简单：大部分 AI 对话主要依赖当前聊天窗口里的上下文。对一次性任务来说够用，但当任务变成长期项目，例如维护博客、开发 Agent、管理自动化流程时，就会越来越难受。
 
-当任务变成长期项目，例如维护博客、开发 Agent、管理自动化流程时，仅靠聊天上下文已经不够了。
+你会不断重复：
 
-所以我尝试给 OpenClaw 增加一个长期记忆系统，让它能够：
+- 这个项目是做什么的；
+- 为什么之前没有选某个方案；
+- 我的长期偏好是什么；
+- 上次已经踩过哪些坑。
 
-- 记住长期项目背景；
-- 保存过去的重要决策；
-- 在需要的时候自动回忆相关信息；
-- 随着使用时间增加不断积累经验。
+所以我最近把 GBrain 接进了自己的 OpenClaw。
 
-这套方案的核心就是：**OpenClaw 负责思考和执行，GBrain 负责长期记忆。**
+我的目标不是再给 Agent 多装一个搜索工具，而是让它真的形成两条闭环：
 
-<HighlightBox eyebrow="一句话理解" title="让 AI 从临时助手变成长期合作伙伴">
-  普通 AI 像一个能力很强但刚入职的员工，每次聊天都需要重新介绍背景。接入长期记忆后，它更像一个持续合作的同事。
+1. **自动想起来**：每次对话开始时，系统主动召回相关长期知识。
+2. **自动记下来**：新消息进入后，后台判断是否值得长期保存，并写回 GBrain。
+
+<div class="gb-hero-map" aria-label="普通 AI 与接入 GBrain 后的区别">
+  <div class="gb-hero-map__head">
+    <span>BEFORE / AFTER</span>
+    <strong>区别不在“多一个工具”，而在记忆能不能形成闭环</strong>
+  </div>
+  <div class="gb-hero-map__body">
+    <div class="gb-state gb-state--old">
+      <span>普通 AI</span>
+      <strong>每次重新认识你</strong>
+      <p>当前聊天结束后，项目背景、历史决策和长期偏好很容易散掉。</p>
+      <div class="gb-state__chips"><i>重复解释</i><i>上下文断裂</i><i>经验难积累</i></div>
+    </div>
+    <div class="gb-hero-map__bridge">
+      <b>+</b>
+      <span>GBrain</span>
+    </div>
+    <div class="gb-state gb-state--new">
+      <span>OpenClaw + GBrain</span>
+      <strong>逐渐了解你的长期助手</strong>
+      <p>重要项目、历史决定和可复用经验会被保存，并在需要时重新召回。</p>
+      <div class="gb-state__chips"><i>自动召回</i><i>自动沉淀</i><i>长期积累</i></div>
+    </div>
+  </div>
+</div>
+
+<HighlightBox eyebrow="一句话理解" title="OpenClaw 负责思考和执行，GBrain 负责长期记忆">
+  普通 AI 像一个能力很强但刚入职的员工，每次聊天都需要重新介绍背景。接入长期记忆后，它更像一个持续合作、逐渐了解你的同事。
 </HighlightBox>
 
 ## OpenClaw 和 GBrain 分别负责什么？
 
 不要把 GBrain 理解成另一个聊天机器人。
 
-它更像是 Agent 的知识库和长期记忆层。
+它更像是 Agent 的长期知识库和记忆层。
 
-<Mermaid
-  title="OpenClaw + GBrain 的关系"
-  chart={`flowchart TD
-    U[用户] --> O[OpenClaw Agent]
-    O --> A[理解问题与执行任务]
-    O --> G[GBrain 长期记忆]
-    G --> K[项目资料]
-    G --> D[历史决策]
-    G --> E[经验总结]
-    G --> O`}
-/>
+<div class="gb-role-map" aria-label="OpenClaw 和 GBrain 的分工">
+  <div class="gb-role-map__user">你提出一个目标</div>
+  <div class="gb-role-map__arrow">↓</div>
+  <div class="gb-role-map__agent">
+    <span>OpenClaw</span>
+    <strong>理解问题 · 推理 · 调用工具 · 执行任务</strong>
+  </div>
+  <div class="gb-role-map__split">
+    <div>
+      <span>短期状态</span>
+      <strong>Memory Core</strong>
+      <small>当前会话、最近状态、轻量偏好</small>
+    </div>
+    <div class="is-core">
+      <span>长期记忆</span>
+      <strong>GBrain</strong>
+      <small>项目、人物、公司、决策、经验和方法论</small>
+    </div>
+    <div>
+      <span>主动操作</span>
+      <strong>MCP</strong>
+      <small>搜索、读取、写入和查询长期知识</small>
+    </div>
+  </div>
+</div>
 
 简单理解：
 
-| 部分 | 作用 |
+| 部分 | 负责什么 |
 | --- | --- |
-| OpenClaw | AI 助手的大脑，负责推理、调用工具、执行任务 |
-| GBrain | 长期记忆，保存项目、经验和历史信息 |
-| Memory Core | OpenClaw 自己的短期状态 |
+| OpenClaw | AI 助手的运行中心，负责推理、调用工具和执行任务 |
+| Memory Core | OpenClaw 自己的短期状态和轻量记忆 |
+| GBrain | 保存长期项目、历史决策和可复用经验 |
+| GBrain MCP | 让 Agent 主动搜索、读取和写入 GBrain |
 
-## 为什么 MCP 不等于长期记忆？
+## 为什么只装 MCP 还不够？
 
 刚开始接入时，我也认为：
 
-> 安装 GBrain MCP，让 Agent 可以调用工具，不就完成了吗？
+> 安装 GBrain MCP，让 Agent 能调用工具，不就完成了吗？
 
-实际并不是。
+实际不是。
 
-MCP 解决的是：
+MCP 只解决了：
 
-> Agent 可以主动查询和写入记忆。
+> Agent **可以主动**查询和写入记忆。
 
-但真正的长期记忆还需要两个能力：
+真正的长期记忆还要补两块。
 
-### 1. 自动想起来
+### 自动想起来：Context Engine
 
-当用户提到某个项目时，系统应该主动找到相关历史信息，而不是等待 Agent 手动搜索。
+当我说到某个项目时，系统应该主动找到相关历史信息，而不是等 Agent 先猜“要不要搜索 GBrain”。
 
 这部分由 Context Engine 负责。
 
-### 2. 自动记下来
+### 自动记下来：Signal Detector
 
-聊天过程中，并不是所有内容都值得保存。
+聊天里也不是所有内容都值得保存。
 
 例如：
 
 ```text
-今天帮我改一下标题
+今天帮我把这个标题改一下
 ```
 
-没有必要长期保存。
+通常没必要长期保存。
 
 但：
 
 ```text
-以后博客文章默认使用视觉晶蓝主题
+以后博客文章默认公开，除非我明确要求草稿
 ```
 
-这种长期规则就应该记录。
+这种长期规则就值得记录。
 
 这部分由 Signal Detector 判断。
 
-## 最终架构
+## 我最终跑通的完整架构
 
-我的最终方案不是替换 OpenClaw 原有记忆，而是分层：
+我没有删除 OpenClaw 原来的 `memory-core`，而是让短期记忆和长期记忆分工。
 
-<Mermaid
-  title="短期记忆和长期记忆分工"
-  chart={`flowchart LR
-    U[用户消息] --> O[OpenClaw]
-    O --> M[短期记忆 Memory Core]
-    O --> C[GBrain Context Engine]
-    C --> R[自动召回历史知识]
-    U --> S[Signal Detector]
-    S --> J{是否值得保存}
-    J -->|是| G[GBrain]
-    J -->|否| X[忽略]`}
+<div class="gb-architecture" aria-label="OpenClaw 和 GBrain 的完整长期记忆架构">
+  <div class="gb-architecture__head">
+    <span>LONG-TERM MEMORY SYSTEM</span>
+    <strong>同一条用户消息，同时进入“自动想起”和“自动记住”两条链路</strong>
+  </div>
+  <div class="gb-architecture__input">用户消息</div>
+  <div class="gb-architecture__lanes">
+    <section>
+      <div class="gb-lane__tag">RECALL · 自动想起</div>
+      <div class="gb-lane__track">
+        <div><b>01</b><strong>Context Engine</strong><small>接管每轮上下文组装</small></div>
+        <i>→</i>
+        <div><b>02</b><strong>Retrieval Reflex</strong><small>识别相关实体和长期知识</small></div>
+        <i>→</i>
+        <div class="is-focus"><b>03</b><strong>注入 OpenClaw</strong><small>让主 Agent 带着历史继续思考</small></div>
+      </div>
+    </section>
+    <section>
+      <div class="gb-lane__tag gb-lane__tag--green">CAPTURE · 自动记住</div>
+      <div class="gb-lane__track">
+        <div><b>01</b><strong>message_received</strong><small>每条新消息到达</small></div>
+        <i>→</i>
+        <div><b>02</b><strong>Signal Detector</strong><small>后台判断是否值得长期保存</small></div>
+        <i>→</i>
+        <div class="is-success"><b>03</b><strong>写入 GBrain</strong><small>统一保存到 brain source</small></div>
+      </div>
+    </section>
+  </div>
+  <div class="gb-architecture__base">
+    <div><span>短期层</span><strong>Memory Core</strong></div>
+    <div class="is-db"><span>长期数据层</span><strong>GBrain + PostgreSQL 17</strong></div>
+  </div>
+</div>
+
+这张图就是整篇文章最核心的东西。
+
+真正成为“长期大脑”后：
+
+- 旧知识能自动回来；
+- 新知识能自动沉淀；
+- 主 Agent 的回复不会被后台记忆任务卡住；
+- 多会话同时运行也不会抢同一份本地数据库锁。
+
+## 先说安装：我是怎么装 GBrain 的
+
+GBrain 官方现在更推荐让 Agent 自己读取安装说明并执行，而不是人工一条条抄命令。
+
+官方入口是：
+
+[GBrain GitHub 仓库](https://github.com/garrytan/gbrain)
+
+把下面这句话直接交给可以访问网络和终端的 Agent：
+
+```text
+Retrieve and follow the instructions at:
+https://raw.githubusercontent.com/garrytan/gbrain/master/INSTALL_FOR_AGENTS.md
+```
+
+如果只想先装 CLI，官方也提供了手动方式：
+
+```bash
+bun install -g github:garrytan/gbrain
+gbrain doctor
+```
+
+我当前本机实际使用的是：
+
+```text
+GBrain 0.42.57.0
+OpenClaw 2026.7.1-beta.2
+```
+
+<Callout title="这篇文章不是照抄官方安装文档">
+  官方安装负责把 GBrain 本身装起来；这篇文章重点记录的是：我怎样把它真正接进现有 OpenClaw，并跑通自动召回、自动写入和多会话并发。
+</Callout>
+
+## 我的最终配置顺序
+
+这不是我最开始走的路径，而是把踩过的坑排除后，留下来的顺序。
+
+<DecisionFlow
+  title="最终配置路径"
+  items={[
+    {
+      label: 'Step 1',
+      title: '安装 GBrain，并先确认 CLI 正常',
+      description: '先运行 gbrain doctor，确保不是在后面排查 OpenClaw 时才发现 GBrain 本身就没有装好。',
+    },
+    {
+      label: 'Step 2',
+      title: '把存储层换成 PostgreSQL 17',
+      description: '多 Agent、多会话场景不再使用 PGLite，避免多个 gbrain serve 抢同一个文件锁。',
+    },
+    {
+      label: 'Step 3',
+      title: '建立独立 Brain Repo',
+      description: '使用 ~/brain 保存长期知识，并注册成名为 brain 的 GBrain source。',
+    },
+    {
+      label: 'Step 4',
+      title: '接入 Retrieval Reflex 和 MCP',
+      description: '让 Agent 能查询、读写长期知识，并明确所有写入都落到 brain source。',
+    },
+    {
+      label: 'Step 5',
+      title: '把 Context Engine 切到 GBrain',
+      description: '让 GBrain 真正进入每轮上下文组装，而不是只作为一个可选工具存在。',
+    },
+    {
+      label: 'Step 6',
+      title: '补上 Signal Detector 事件触发',
+      description: '在 message_received 后台运行官方 Signal Detector，让值得保存的消息自动落库。',
+    },
+    {
+      label: 'Step 7',
+      title: '按行为做最终验收',
+      description: '不仅看插件 loaded，还要真实验证自动召回、自动写入和多会话并发。',
+    },
+  ]}
 />
 
-这样：
+## 1. 存储层：直接使用 PostgreSQL 17
 
-- 当前聊天状态继续交给 OpenClaw；
-- 长期知识交给 GBrain；
-- 重要经验自动沉淀。
+我最初使用的是 PGLite。
 
-## 实际使用场景
+单独运行 GBrain 时没问题，但接入 OpenClaw 后，问题马上出现了。
+
+OpenClaw 的 MCP runtime 会按 session 启动独立进程。多个会话同时加载 GBrain MCP 时，就可能出现多个 `gbrain serve` 去争同一份 PGLite 数据库文件。
+
+结果就是：
+
+```text
+第一个 gbrain serve -> 正常持有数据库锁
+第二个 gbrain serve -> 等待锁
+第三个 gbrain serve -> 继续等待
+
+最终表现：MCP 启动卡住约 30 秒
+```
+
+所以我最后改成了本地 PostgreSQL 17 + pgvector。
+
+```bash
+brew install postgresql@17 pgvector
+brew services start postgresql@17
+
+createdb gbrain
+psql gbrain -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+```
+
+然后让 GBrain 直接使用 PostgreSQL：
+
+```bash
+gbrain init \
+  --url "postgresql://<user>@127.0.0.1:5432/gbrain" \
+  --no-embedding
+```
+
+我当前先没有配置 Embedding，所以使用 `--no-embedding`。
+
+这不会影响：
+
+- 关键词搜索；
+- 实体召回；
+- MCP 查询；
+- Signal Detector 自动写入。
+
+只是暂时没有完整的向量语义检索。
+
+<Callout title="为什么不是 PostgreSQL 16">
+  我实际安装时踩过一次版本兼容：当时 Homebrew 的 pgvector 扩展文件没有落到 PostgreSQL 16 的扩展目录，换成 PostgreSQL 17 后直接正常。最终只保留 PostgreSQL 17，避免两套数据库服务同时占端口。
+</Callout>
+
+## 2. 建立独立的 Brain Repo
+
+我没有把长期知识直接塞进 OpenClaw workspace，而是单独建立：
+
+```text
+~/brain
+```
+
+这个目录本身是一个 Git 仓库，负责保存长期知识源。
+
+```bash
+mkdir -p ~/brain
+cd ~/brain
+git init
+
+gbrain sources add brain --path ~/brain
+gbrain sync --source brain --no-pull --no-embed
+```
+
+最终目录职责是：
+
+```text
+~/.openclaw/workspace  -> Agent 工作区、规则、Skill
+~/brain                -> 长期知识源
+PostgreSQL              -> GBrain 检索与运行数据
+```
+
+我最终只保留一个明确的长期 source：
+
+```text
+brain
+```
+
+这一步看起来简单，但后面非常重要，因为 MCP 写入也必须明确落到这个 source。
+
+## 3. 接入 Retrieval Reflex 和 MCP
+
+接下来是三块能力：
+
+- GBrain 官方 Skillpack：告诉 Agent 各类 GBrain 能力怎么使用；
+- Retrieval Reflex：提到相关实体时，主动召回长期知识；
+- MCP：提供搜索、查询、读取和写入工具。
+
+Retrieval Reflex 安装到 OpenClaw workspace：
+
+```bash
+gbrain integrations install retrieval-reflex \
+  --target ~/.openclaw/workspace
+```
+
+MCP 的关键不是只有 `cwd`，而是要明确指定 source：
+
+```bash
+openclaw mcp add gbrain \
+  --command "$(command -v gbrain)" \
+  --arg serve \
+  --cwd ~/brain \
+  --env GBRAIN_SOURCE=brain
+```
+
+我当前实际配置的核心结构是：
+
+```json
+{
+  "command": "/Users/<user>/.bun/bin/gbrain",
+  "args": ["serve"],
+  "cwd": "/Users/<user>/brain",
+  "env": {
+    "GBRAIN_SOURCE": "brain"
+  }
+}
+```
+
+这里把个人用户名做了脱敏，真正重要的是：
+
+```text
+GBRAIN_SOURCE=brain
+```
+
+最后验证：
+
+```bash
+openclaw mcp doctor
+```
+
+我当前真实结果是：
+
+```text
+gbrain: ok
+```
+
+## 4. 让 GBrain 真正成为 Context Engine
+
+只安装 MCP 还不够。
+
+如果 OpenClaw 仍然是：
+
+```text
+contextEngine = legacy
+```
+
+那么 GBrain 只是一个“可以被调用的工具”，并没有进入每轮上下文组装过程。
+
+我当前真正使用的 slot 是：
+
+```json
+{
+  "plugins": {
+    "slots": {
+      "memory": "memory-core",
+      "contextEngine": "gbrain-context"
+    }
+  }
+}
+```
+
+这代表：
+
+```text
+短期记忆    -> memory-core
+上下文组装  -> gbrain-context
+```
+
+这里有一个很容易踩的坑：
+
+```text
+插件 ID：gbrain-context-engine
+Context Engine ID：gbrain-context
+```
+
+slot 必须填 Context Engine ID，不是插件 ID。
+
+我的本地桥接插件位于：
+
+```text
+~/.openclaw/extensions/gbrain-context-engine
+```
+
+它的职责很克制：
+
+1. 加载 GBrain 官方 Context Engine；
+2. 适配当前版本 OpenClaw 与 GBrain 的 `prompt` / `messages` 参数差异；
+3. 在 `message_received` 上启动官方 Signal Detector。
+
+核心不是重写 GBrain，而是把两个宿主接口接起来。
+
+<Callout title="这一段不是所有人都要照抄">
+  我当前使用的是 OpenClaw 2026.7.1-beta.2 和 GBrain 0.42.57.0，这个桥接层是为当前版本差异服务。以后升级时应该先看上游是否已经原生修复，能删除兼容代码就删除。
+</Callout>
+
+## 5. 让 Signal Detector 真正自动运行
+
+这一块是我误判最久的地方。
+
+GBrain 的 `signal-detector/SKILL.md` 里虽然写了触发描述，但 OpenClaw 不会因为 Skill 文件里有 `triggers:` 就自动执行它。
+
+所以只在 `AGENTS.md` 里写：
+
+```text
+每条消息都启动 Signal Detector
+```
+
+也不够稳定。
+
+这只是 Prompt 约束，不是系统事件。
+
+我最后使用 OpenClaw 原生的 `message_received` hook，在每条入站消息到来后启动隐藏子 Agent，让它执行官方 Signal Detector Skill。
+
+核心逻辑可以压缩成：
+
+```js
+api.on('message_received', (event, ctx) => {
+  void runSignalDetector(event.content ?? '', ctx)
+    .catch((error) => api.logger.error(String(error)));
+});
+```
+
+这里最重要的是 `void`。
+
+Signal Detector 在后台继续运行，不等待它完成，主 Agent 可以正常回复。
+
+我实际验收时：
+
+```text
+主消息 ACK：约 3 秒
+Signal Detector 后台完成：约 6.5 秒
+```
+
+并且最终写入：
+
+```text
+source_id = brain
+```
+
+这才算“自动记忆”闭环真正成立。
+
+## 实际使用时会是什么感觉？
 
 ### 场景一：维护博客
 
@@ -137,20 +530,20 @@ MCP 解决的是：
 
 ```text
 每次开始写文章：
-告诉 AI 我的博客风格、目录结构、视觉要求……
+重新告诉 AI 博客定位、目录结构、视觉要求……
 ```
 
-现在：
+现在，长期记忆可以保存：
 
 ```text
-AI 已经知道：
 - 博客定位
-- 写作习惯
-- 文章视觉规范
-- 过去做过的项目
+- 写作偏好
+- 文章默认发布规则
+- 过去做过的视觉改造
+- 已经确定过的项目决策
 ```
 
-沟通成本明显降低。
+最明显的变化不是 AI 突然变聪明，而是不用不断重复背景。
 
 ### 场景二：长期开发项目
 
@@ -161,94 +554,562 @@ AI 已经知道：
 ```text
 为什么不用方案 A？
 之前遇到什么问题？
-这个设计是谁决定的？
+这个设计是怎么决定的？
 ```
 
-长期记忆可以保存这些上下文。
+长期记忆真正有价值的地方，就是把这些以后还会再次用到的上下文留下来。
 
-## 我的配置过程
+## 经常遇到的坑
 
-最终配置主要分几个步骤：
+很多现象看起来都像“GBrain 没生效”，但根因完全不同。
 
-### 1. 使用独立知识仓库
+### 坑 1：装了 MCP，就以为 GBrain 已经是大脑
 
-我没有把长期知识直接放进 OpenClaw 工作目录，而是单独维护：
+**现象：** Agent 能看到大量 `gbrain__*` 工具，也能主动搜索，但新对话不会自动想起历史知识。
+
+**真正原因：** MCP 只提供工具调用，没有进入 OpenClaw 的 Context Engine。
+
+**修复：** 把 `plugins.slots.contextEngine` 切到 `gbrain-context`，再做不调用工具的自动召回测试。
+
+---
+
+### 坑 2：把插件 ID 当成 Context Engine ID
+
+**错误配置：**
 
 ```text
-OpenClaw workspace
-    ↓
-Agent 配置、Skill、运行环境
-
-GBrain knowledge
-    ↓
-长期知识、项目经验、历史记录
+contextEngine = gbrain-context-engine
 ```
 
-这样两个系统职责更清晰。
+**正确配置：**
 
-### 2. 接入 Context Engine
+```text
+contextEngine = gbrain-context
+```
 
-只安装 MCP 后，GBrain 只是一个工具。
-
-接入 Context Engine 后，它才真正参与每轮对话上下文生成。
-
-### 3. 增加 Signal Detector
-
-通过消息触发机制，在后台判断哪些内容值得保存。
-
-主 Agent 继续正常回复，不需要等待记忆写入完成。
-
-## 遇到的几个坑
-
-### MCP 可以用，但 Agent 不会自动回忆
-
-原因：
-
-MCP 只是工具，不负责自动注入上下文。
-
-解决：
-
-启用 Context Engine。
+插件叫什么，和它注册了哪个 Context Engine，是两层不同的 ID。
 
 ---
 
-### Skill 写了触发规则，但没有自动执行
+### 坑 3：Context Engine 已加载，但还是不自动召回
 
-原因：
+**现象：** 插件状态正常、没有降级，但新会话里依然没有 GBrain 上下文。
 
-Skill 文件只是说明能力，不等于系统事件。
+**真正原因：** 在我当前版本组合里，OpenClaw 把当前用户输入放在 `prompt`，而 GBrain Context Engine 实际从 `messages` 读取当前用户消息。
 
-解决：
-
-使用 OpenClaw 的事件机制触发 Signal Detector。
+**修复：** 在插件边界把当前 `prompt` 临时补成一条 user message，调用官方 Context Engine 后再恢复原 messages。
 
 ---
 
-### 长期记忆不是越多越好
+### 坑 4：PGLite 在 OpenClaw 多会话下抢锁
 
-如果什么都保存，最后得到的是垃圾堆。
+**现象：** 每开一个新会话，GBrain MCP 可能卡约 30 秒，日志出现：
 
-真正有价值的是：
+```text
+Timed out waiting for PGLite lock
+```
 
-- 稳定偏好；
-- 长期项目背景；
-- 重要决策；
-- 可复用经验。
+**真正原因：** OpenClaw 的 MCP runtime 按 session 隔离，每个会话可能启动新的 `gbrain serve`。
 
-## 最后的体验
+**修复：** 改用 PostgreSQL 17 + pgvector。
 
-接入 GBrain 后，最大的变化不是 AI 变得“更聪明”。
+---
 
-而是减少了重复沟通。
+### 坑 5：Signal Detector Skill 存在，但从来不自动写入
 
-以前像：
+**现象：** Skill 已经存在，手动让 Agent 记忆也会回复“已记录”，但数据库里没有新页面。
 
-> 一个能力很强但每次见面都需要重新介绍自己的助手。
+**真正原因：** Skill 的触发描述不是 OpenClaw 的原生事件机制。
 
-现在更像：
+**修复：** 使用宿主侧 `message_received` hook，真实启动隐藏子 Agent。
 
-> 一个长期合作，逐渐了解你的 AI 同事。
+---
 
-这也是我认为 Agent 下一阶段很重要的方向：
+### 坑 6：明明写入成功，为什么 `brain` 里搜不到
 
-**不仅要会执行任务，还要能够长期积累经验。**
+**真正原因：** `gbrain serve` 不会因为 `cwd=~/brain` 就自动把所有 MCP 写入路由到 `brain`。没有明确 source 时，会回退到 `default`。
+
+**修复：** MCP 服务必须带：
+
+```text
+GBRAIN_SOURCE=brain
+```
+
+真实验收时还要查：
+
+```text
+source_id = brain
+```
+
+不要只相信模型说“已经写入”。
+
+## 我现在故意没有开启的东西
+
+当前 GBrain 已经可以正常体验，但我没有把所有功能一次开满。
+
+### ZeroEntropy Embedding
+
+暂时不启用。
+
+当前状态：
+
+```text
+embedding_disabled = true
+```
+
+关键词、实体召回和 MCP 查询仍然可以使用。先体验基础召回，再决定是否需要完整语义检索。
+
+### Autopilot
+
+暂时不恢复。
+
+我当前本机真实状态是：
+
+```text
+Autopilot: not running
+```
+
+原因也很简单：先看 GBrain 到底记了什么、召回准不准，再增加后台维护循环。
+
+## 我的最终验收标准
+
+配置完成后，我不会只看“进程启动了没有”，而是按链路逐层验收。
+
+基础健康检查：
+
+```bash
+openclaw health
+openclaw mcp doctor
+gbrain status
+```
+
+我当前本机实际状态：
+
+```text
+GBrain 0.42.57.0
+brain source: pages=1
+Embedding: 0%
+Autopilot: not running
+MCP: gbrain ok
+```
+
+但真正重要的是行为。
+
+<div class="gb-checkboard" aria-label="GBrain 最终验收标准">
+  <div class="gb-checkboard__head">
+    <span>ACCEPTANCE CHECK</span>
+    <strong>只有两条闭环都经过真实测试，才算完成</strong>
+  </div>
+  <div class="gb-checkboard__grid">
+    <div><b>01</b><strong>自动召回</strong><p>新会话不主动调用 GBrain 工具，提到已知实体时仍能看到历史知识。</p></div>
+    <div><b>02</b><strong>主回复不被阻塞</strong><p>发送长期观点后，主 Agent 先正常回复，不等待后台记忆完成。</p></div>
+    <div><b>03</b><strong>自动写入</strong><p>几秒后 Signal Detector 显示 captured，数据库出现新页面。</p></div>
+    <div><b>04</b><strong>写入正确 source</strong><p>真实检查 source_id = brain，而不是只相信模型回复。</p></div>
+    <div><b>05</b><strong>多会话稳定</strong><p>多个会话同时运行时，不再出现 PGLite 锁等待和 30 秒超时。</p></div>
+    <div class="is-final"><b>✓</b><strong>闭环成立</strong><p>自动想起 + 自动记住，GBrain 才真正成为 OpenClaw 的长期大脑。</p></div>
+  </div>
+</div>
+
+<HighlightBox eyebrow="最终结论" title="不是“插件 loaded”，而是两条闭环都成立">
+  自动召回：用户消息 → Context Engine → Retrieval Reflex → 长期知识注入。自动记忆：用户消息 → message_received → Signal Detector → GBrain 写入。只有这两条链路都经过真实测试，我才认为 GBrain 真正成为了 OpenClaw 的长期大脑。
+</HighlightBox>
+
+这套配置目前仍然保留一个原则：**先让最小闭环稳定，再增加复杂能力。**
+
+Embedding、reranker、Autopilot 都可以后面再补，但“自动想起”和“自动记住”必须先真的跑通。
+
+<style>{`
+  .gb-hero-map, .gb-role-map, .gb-architecture, .gb-checkboard {
+    margin: 2rem 0 2.5rem;
+  }
+
+  .gb-hero-map {
+    overflow: hidden;
+    border: 1px solid rgba(47, 123, 246, .22);
+    border-radius: 26px;
+    background: linear-gradient(145deg, #071422 0%, #0b1b2e 55%, #0a1524 100%);
+    box-shadow: 0 24px 70px rgba(7, 20, 34, .18);
+  }
+
+  .gb-hero-map__head, .gb-architecture__head, .gb-checkboard__head {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(126, 194, 255, .14);
+  }
+
+  .gb-hero-map__head span, .gb-architecture__head span, .gb-checkboard__head span {
+    display: block;
+    margin-bottom: .35rem;
+    color: #60c5ff;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+  }
+
+  .gb-hero-map__head strong, .gb-architecture__head strong, .gb-checkboard__head strong {
+    color: #eff7ff;
+    font-size: 1.12rem;
+  }
+
+  .gb-hero-map__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 1.2rem;
+    align-items: stretch;
+    padding: 1.4rem;
+  }
+
+  .gb-state {
+    min-height: 220px;
+    padding: 1.4rem;
+    border: 1px solid rgba(143, 185, 224, .16);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .035);
+  }
+
+  .gb-state--new {
+    border-color: rgba(89, 212, 168, .3);
+    background: linear-gradient(145deg, rgba(58, 190, 145, .14), rgba(47, 123, 246, .08));
+  }
+
+  .gb-state > span {
+    color: #76bff1;
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+  }
+
+  .gb-state--new > span { color: #71dfb8; }
+
+  .gb-state > strong {
+    display: block;
+    margin: .6rem 0 .75rem;
+    color: #f8fbff;
+    font-size: clamp(1.2rem, 2vw, 1.65rem);
+  }
+
+  .gb-state p {
+    margin: 0;
+    color: #a9bdd1;
+    line-height: 1.75;
+  }
+
+  .gb-state__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: 1.1rem;
+  }
+
+  .gb-state__chips i {
+    padding: .34rem .62rem;
+    color: #9db2c7;
+    border: 1px solid rgba(147, 186, 222, .14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .04);
+    font-size: .76rem;
+    font-style: normal;
+  }
+
+  .gb-state--new .gb-state__chips i {
+    color: #bff5df;
+    border-color: rgba(90, 215, 170, .18);
+  }
+
+  .gb-hero-map__bridge {
+    display: grid;
+    place-content: center;
+    min-width: 88px;
+    color: #7cc8ff;
+    text-align: center;
+  }
+
+  .gb-hero-map__bridge b {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .gb-hero-map__bridge span {
+    margin-top: .45rem;
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+  }
+
+  .gb-role-map {
+    padding: 1.4rem;
+    border: 1px solid var(--line);
+    border-radius: 26px;
+    background: linear-gradient(145deg, rgba(46, 125, 245, .07), rgba(72, 209, 161, .03));
+  }
+
+  .gb-role-map__user {
+    width: max-content;
+    margin: 0 auto;
+    padding: .7rem 1.15rem;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--paper);
+    font-weight: 750;
+  }
+
+  .gb-role-map__arrow {
+    padding: .55rem 0;
+    color: var(--blue);
+    font-size: 1.45rem;
+    text-align: center;
+  }
+
+  .gb-role-map__agent {
+    padding: 1.15rem 1.3rem;
+    color: #ecf7ff;
+    border: 1px solid #25496c;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #0a1b2d, #0e2a46);
+    text-align: center;
+  }
+
+  .gb-role-map__agent span {
+    display: block;
+    color: #67c6ff;
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+  }
+
+  .gb-role-map__agent strong {
+    display: block;
+    margin-top: .45rem;
+    font-size: 1.05rem;
+  }
+
+  .gb-role-map__split {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .85rem;
+    margin-top: 1rem;
+  }
+
+  .gb-role-map__split > div {
+    min-height: 145px;
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 17px;
+    background: var(--paper);
+  }
+
+  .gb-role-map__split > div.is-core {
+    border-color: rgba(47, 123, 246, .38);
+    box-shadow: inset 0 0 0 1px rgba(47, 123, 246, .08);
+  }
+
+  .gb-role-map__split span {
+    display: block;
+    color: var(--muted);
+    font-size: .76rem;
+    font-weight: 750;
+  }
+
+  .gb-role-map__split strong {
+    display: block;
+    margin: .4rem 0 .55rem;
+    color: var(--ink);
+    font-size: 1.05rem;
+  }
+
+  .gb-role-map__split small {
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .gb-architecture {
+    overflow: hidden;
+    border: 1px solid #23405e;
+    border-radius: 26px;
+    color: #eaf5ff;
+    background: linear-gradient(150deg, #071421, #0b1b2d);
+    box-shadow: 0 26px 74px rgba(6, 20, 34, .18);
+  }
+
+  .gb-architecture__input {
+    width: max-content;
+    margin: 1.4rem auto 1rem;
+    padding: .72rem 1.2rem;
+    border: 1px solid rgba(100, 196, 255, .3);
+    border-radius: 999px;
+    background: #102a43;
+    font-weight: 800;
+  }
+
+  .gb-architecture__lanes {
+    display: grid;
+    gap: 1rem;
+    padding: 0 1.25rem 1.25rem;
+  }
+
+  .gb-architecture__lanes section {
+    padding: 1rem;
+    border: 1px solid rgba(130, 184, 230, .14);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .028);
+  }
+
+  .gb-lane__tag {
+    color: #65c8ff;
+    font-size: .75rem;
+    font-weight: 850;
+    letter-spacing: .1em;
+  }
+
+  .gb-lane__tag--green { color: #68ddaf; }
+
+  .gb-lane__track {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: .7rem;
+    align-items: center;
+    margin-top: .8rem;
+  }
+
+  .gb-lane__track > div {
+    min-height: 118px;
+    padding: .9rem;
+    border: 1px solid #27425d;
+    border-radius: 15px;
+    background: #0d2134;
+  }
+
+  .gb-lane__track > div.is-focus {
+    border-color: rgba(71, 170, 255, .5);
+    background: linear-gradient(145deg, #102942, #113657);
+  }
+
+  .gb-lane__track > div.is-success {
+    border-color: rgba(83, 218, 166, .42);
+    background: linear-gradient(145deg, #0d2a25, #103a31);
+  }
+
+  .gb-lane__track b {
+    display: block;
+    color: #5b9bce;
+    font-size: .72rem;
+  }
+
+  .gb-lane__track strong {
+    display: block;
+    margin: .4rem 0 .35rem;
+    color: #f3f9ff;
+  }
+
+  .gb-lane__track small {
+    color: #8fa8bd;
+    line-height: 1.5;
+  }
+
+  .gb-lane__track > i {
+    color: #4d8dbd;
+    font-size: 1.25rem;
+    font-style: normal;
+  }
+
+  .gb-architecture__base {
+    display: grid;
+    grid-template-columns: .8fr 1.2fr;
+    gap: .8rem;
+    padding: 1rem 1.25rem 1.25rem;
+    border-top: 1px solid rgba(126, 194, 255, .12);
+  }
+
+  .gb-architecture__base > div {
+    padding: .85rem 1rem;
+    border: 1px solid #27425d;
+    border-radius: 14px;
+    background: #0a1928;
+  }
+
+  .gb-architecture__base > div.is-db {
+    border-color: rgba(83, 218, 166, .28);
+  }
+
+  .gb-architecture__base span {
+    display: block;
+    color: #7895ae;
+    font-size: .72rem;
+  }
+
+  .gb-architecture__base strong {
+    display: block;
+    margin-top: .3rem;
+    color: #eaf6ff;
+  }
+
+  .gb-checkboard {
+    overflow: hidden;
+    border: 1px solid #26425e;
+    border-radius: 24px;
+    color: #e9f5ff;
+    background: #091725;
+  }
+
+  .gb-checkboard__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+    padding: 1rem;
+  }
+
+  .gb-checkboard__grid > div {
+    min-height: 145px;
+    padding: 1rem;
+    border: 1px solid #29445e;
+    border-radius: 16px;
+    background: #0d2032;
+  }
+
+  .gb-checkboard__grid > div.is-final {
+    border-color: rgba(82, 220, 164, .38);
+    background: linear-gradient(145deg, #0d2a25, #11382f);
+  }
+
+  .gb-checkboard__grid b {
+    color: #62bffc;
+    font-size: .78rem;
+  }
+
+  .gb-checkboard__grid strong {
+    display: block;
+    margin: .45rem 0 .4rem;
+    color: #f7fbff;
+  }
+
+  .gb-checkboard__grid p {
+    margin: 0;
+    color: #93abc0;
+    font-size: .88rem;
+    line-height: 1.65;
+  }
+
+  @media (max-width: 760px) {
+    .gb-hero-map__body, .gb-role-map__split, .gb-checkboard__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .gb-hero-map__bridge {
+      min-width: 0;
+      padding: .1rem 0;
+    }
+
+    .gb-lane__track {
+      grid-template-columns: 1fr;
+    }
+
+    .gb-lane__track > i {
+      transform: rotate(90deg);
+      text-align: center;
+    }
+
+    .gb-architecture__base {
+      grid-template-columns: 1fr;
+    }
+  }
+`}</style>
