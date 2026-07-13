@@ -277,8 +277,12 @@ p {
 }
 
 .site-nav > a {
+  border-radius: 999px;
+  padding: 6px 2px;
   position: relative;
-  transition: color 0.16s ease;
+  transition:
+    color 0.16s ease,
+    transform 0.16s ease;
 }
 
 .site-nav > a::after {
@@ -296,6 +300,7 @@ p {
 @media (hover: hover) {
   .site-nav > a:hover {
     color: var(--ink);
+    transform: translateY(-1px);
   }
 
   .site-nav > a:hover::after {
@@ -335,6 +340,16 @@ p {
   cursor: pointer;
   font: inherit;
   padding: 0;
+  transition:
+    color 0.16s ease,
+    transform 0.16s ease;
+}
+
+@media (hover: hover) {
+  .nav-search-trigger:hover {
+    color: var(--ink);
+    transform: translateY(-1px);
+  }
 }
 
 .nav-search-panel {
