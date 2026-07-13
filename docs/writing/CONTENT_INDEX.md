@@ -30,7 +30,7 @@
 | `src/content/posts/gbrain-openclaw-long-term-brain-setup.mdx` | `实践` | GBrain 接入 OpenClaw 的实战配置，覆盖 Context Engine 自动召回、Signal Detector 后台写入、PostgreSQL 多会话并发、Brain source 路由与高频踩坑 | 写 Agent 长期记忆、GBrain、OpenClaw Context Engine、自动记忆闭环和多进程存储选型时参考 |
 | `src/content/posts/blog-project-architecture.mdx` | `实践` | 博客架构、内容流、发布链路、视觉笔记结构 | 写本博客说明、仓库结构、内容维护规则时参考 |
 | `src/content/posts/blog-code-structure-runtime.mdx` | `实践` | 项目结构、页面入口、文章读取、组件渲染、本地运行和发布流程 | 写本博客代码结构、运行流程、Astro 项目拆解时参考 |
-| `src/content/posts/css-selector-for-automation-beginners.mdx` | `教程` | 面向自动化初学者的 CSS 元素定位教程，覆盖 id、class、属性组合、范围限定、四步定位法、浏览器验证和三个实战案例 | 写 CSS 选择器教学、网页元素定位、实习生自动化入门和定位排错文章时参考 |
+| `src/content/posts/css-selector-for-automation-beginners.mdx` | `教程` | 面向网页自动化实战的 CSS 定位教程，覆盖基础选择器、属性匹配、关系选择器、伪类边界、影刀文字定位和唯一性验证 | 写 CSS 选择器教学、网页元素定位、影刀编码版自动化、动态 class 处理和定位排错文章时参考 |
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
 | `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `实践` | 泰国、马来西亚、菲律宾雅仓与深圳跨境仓的仓储网络，覆盖双平台共享库存、跨国家隔离和本地优先发货 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
 | `src/content/posts/ai-product-image-agent-workflow.mdx` | `实践` | AI 商品图工作流重构复盘，覆盖从逐张临场决策到规划前移、Art Direction、同组差异化、纯执行生成、人工审查和规则单一来源 | 写商品图生成、Agent 工作流重构、视觉规划、Prompt 设计和执行边界时参考 |
