@@ -24,15 +24,15 @@ const seriesList = seriesMetaList
 
     <section class="series-library" aria-label="系列列表">
       {seriesList.map((series, index) => (
-        <article class="series-card">
+        <a class="series-card" href={withBase(`/series/${series.id}/`)}>
           <span class="series-card-index">{String(index + 1).padStart(2, '0')}</span>
           <div class="series-card-body">
             <p class="series-card-meta">{series.postCount} 篇文章</p>
             <h2>{series.title}</h2>
             <p>{series.description}</p>
           </div>
-          <a class="series-card-link" href={withBase(`/series/${series.id}/`)}>查看阅读路线 <span aria-hidden="true">→</span></a>
-        </article>
+          <span class="series-card-link">查看阅读路线 <span aria-hidden="true">→</span></span>
+        </a>
       ))}
     </section>
   </main>

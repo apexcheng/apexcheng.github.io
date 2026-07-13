@@ -1897,6 +1897,13 @@ html[data-theme='dark'] .report-dashboard {
   overflow: hidden;
   padding: 34px 36px;
   position: relative;
+  text-decoration: none;
+}
+
+.series-card:hover,
+.series-card:focus {
+  border-color: rgba(37, 99, 235, 0.34);
+  color: inherit;
 }
 
 .series-card::before {
@@ -1945,6 +1952,12 @@ html[data-theme='dark'] .report-dashboard {
 
 .series-card-link:hover,
 .series-card-link:focus {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.series-card:hover .series-card-link,
+.series-card:focus .series-card-link {
   border-color: var(--blue);
   color: var(--blue);
 }
@@ -2065,6 +2078,12 @@ html[data-theme='dark'] .report-dashboard {
   color: var(--soft);
   font-size: 22px;
   padding-top: 26px;
+  text-decoration: none;
+}
+
+.series-route-arrow:hover,
+.series-route-arrow:focus {
+  color: var(--blue);
 }
 
 .article-content .article-series-kicker {
