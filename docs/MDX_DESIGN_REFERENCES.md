@@ -99,7 +99,6 @@
 
 可以参考的现有文章：
 
-- `src/content/posts/browser-automation-selectors.md`：网页自动化稳定性防线。
 - `src/content/posts/automation-agent-workflow.mdx`：Agent 工作流可靠性层级。
 - `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx`：经营看板验收标准。
 - `src/content/posts/ulike-customer-service-rpa-flow-detail.mdx`：客服售后 RPA 风险控制层。
