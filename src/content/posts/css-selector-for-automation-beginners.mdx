@@ -2,6 +2,7 @@
 title: "自动化入门：CSS 定位到底怎么用？"
 description: "从 id、class、属性选择器到弹窗和表格行定位，用一篇文章掌握网页自动化最常用的 CSS 定位方法。"
 date: 2026-07-13T11:10:42+08:00
+updated: 2026-07-13T11:23:00+08:00
 category: "教程"
 tags:
   - "自动化"
@@ -363,28 +364,159 @@ document.querySelectorAll('input[name="username"]')
   </div>
 </div>
 
-## CSS 不能直接按文字定位
+## CSS 本身不能按文字定位，影刀里怎么做？
 
-标准 CSS 不能根据元素内部文字进行匹配。页面上有：
+标准 CSS 不能根据元素内部显示的文字进行匹配。
+
+例如页面上有一个按钮：
 
 ```html
 <button>提交订单</button>
 ```
 
-下面这种 CSS 并不存在：
+下面这种写法并不是有效的 CSS 文本定位：
 
 ```css
 button[text="提交订单"]
 ```
 
-Playwright 等自动化工具提供了自己的文本定位和角色定位：
+也不要在影刀中写：
 
-```python
-page.get_by_text("提交订单")
-page.get_by_role("button", name="提交订单")
+```css
+button:contains("提交订单")
 ```
 
-如果按钮没有稳定属性，但文字和角色非常明确，角色定位可能比 CSS 更合适。学习 CSS 并不代表所有元素都必须使用 CSS，真正的目标始终是：**选择最清楚、最稳定、最容易维护的定位方式。**
+`:contains()` 不是浏览器支持的标准 CSS 选择器。影刀的 `find_by_css()` 应该按照普通 CSS 选择器使用。
+
+### 方法一：使用 XPath 按文字定位
+
+在影刀编码版中，需要按照文字查找元素时，可以直接使用 XPath。
+
+精确匹配按钮文字：
+
+```python
+button = browser.find_by_xpath(
+    '//button[normalize-space(.)="提交订单"]',
+    timeout=10,
+)
+
+button.click()
+```
+
+`normalize-space(.)` 会清理文字前后的空格和换行。
+
+例如下面的按钮：
+
+```html
+<button>
+  提交订单
+</button>
+```
+
+仍然可以被正常找到。
+
+如果按钮文字还包含其他内容，可以使用模糊匹配：
+
+```python
+button = browser.find_by_xpath(
+    '//button[contains(normalize-space(.), "提交订单")]',
+    timeout=10,
+)
+
+button.click()
+```
+
+这会匹配：
+
+```text
+提交订单
+立即提交订单
+确认提交订单
+```
+
+因此，能够精确匹配时，优先使用精确匹配，避免找到错误按钮。
+
+### 方法二：先用 CSS 缩小范围，再读取文字
+
+有时页面结构适合使用 CSS，但目标元素没有稳定属性。
+
+可以先通过 CSS 找到一组候选按钮：
+
+```python
+buttons = browser.find_all_by_css(
+    ".order-dialog button",
+    timeout=10,
+)
+```
+
+再读取每个元素的文字：
+
+```python
+submit_button = None
+
+for button in buttons:
+    if button.get_text().strip() == "提交订单":
+        submit_button = button
+        break
+
+if submit_button is None:
+    raise RuntimeError('未找到文本为“提交订单”的按钮')
+
+submit_button.click()
+```
+
+这种方式的思路是：
+
+```text
+CSS 缩小查找范围
+        ↓
+get_text() 读取元素文字
+        ↓
+Python 判断是不是目标元素
+```
+
+它确实能够按文字找到元素，但需要注意：
+
+> 文字判断发生在 Python 代码中，并不是 CSS 选择器本身支持文字定位。
+
+### 能用稳定属性时，仍然优先使用 CSS
+
+如果按钮本身有稳定属性：
+
+```html
+<button data-action="submit-order">提交订单</button>
+```
+
+直接使用 CSS 会更简单：
+
+```python
+button = browser.find_by_css(
+    'button[data-action="submit-order"]',
+    timeout=10,
+)
+
+button.click()
+```
+
+在影刀中可以按照下面的顺序选择：
+
+```text
+有稳定属性
+    ↓
+优先使用 CSS
+
+没有稳定属性，但文字明确
+    ↓
+使用 XPath 按文字定位
+
+需要先限定弹窗、表格或卡片范围
+    ↓
+CSS 找候选元素，再通过 get_text() 筛选
+```
+
+学习 CSS 并不代表所有元素都必须使用 CSS。
+
+真正的目标始终是：**选择最清楚、最稳定、最容易维护的定位方式。**
 
 ## 给实习生的练习
 
