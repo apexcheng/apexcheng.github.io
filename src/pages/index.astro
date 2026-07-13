@@ -103,11 +103,11 @@ if result.needs_review:
         </article>
         <div class="article-row-list">
           {sidePosts.map((post) => (
-            <article>
+            <a class="article-row-link" href={withBase(`/articles/${post.slug}/`)}>
               <small>{post.data.category}</small>
-              <h3><a href={withBase(`/articles/${post.slug}/`)}>{post.data.title}</a></h3>
+              <h3>{post.data.title}</h3>
               <p>{post.data.description}</p>
-            </article>
+            </a>
           ))}
         </div>
       </div>

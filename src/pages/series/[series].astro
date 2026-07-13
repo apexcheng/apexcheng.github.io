@@ -47,16 +47,18 @@ const totalMinutes = posts.reduce((sum, post) => sum + post.data.minutes, 0);
       <ol class="series-route">
         {posts.map((post, index) => (
           <li class="series-route-item">
-            <span class="series-route-index">{String(index + 1).padStart(2, '0')}</span>
-            <div class="series-route-content">
-              <div class="series-route-meta">
-                <span>{post.data.category}</span>
-                <span>阅读约 {post.data.minutes} 分钟</span>
+            <a class="series-route-link" href={withBase(`/articles/${post.slug}/`)}>
+              <span class="series-route-index">{String(index + 1).padStart(2, '0')}</span>
+              <div class="series-route-content">
+                <div class="series-route-meta">
+                  <span>{post.data.category}</span>
+                  <span>阅读约 {post.data.minutes} 分钟</span>
+                </div>
+                <h3>{post.data.title}</h3>
+                <p>{post.data.description}</p>
               </div>
-              <h3><a href={withBase(`/articles/${post.slug}/`)}>{post.data.title}</a></h3>
-              <p>{post.data.description}</p>
-            </div>
-            <a class="series-route-arrow" href={withBase(`/articles/${post.slug}/`)} aria-label={`阅读：${post.data.title}`}>→</a>
+              <span class="series-route-arrow" aria-hidden="true">→</span>
+            </a>
           </li>
         ))}
       </ol>

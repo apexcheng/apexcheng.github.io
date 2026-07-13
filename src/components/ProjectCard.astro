@@ -17,17 +17,33 @@ const { project, index } = Astro.props;
 const number = String(index + 1).padStart(2, '0');
 ---
 
-<article class="project-card">
-  <div class:list={['project-cover', `tone-${project.tone}`]}>
-    <span>{project.type}</span>
-    <b>{number}</b>
-  </div>
-  <div class="project-body">
-    <h3>{project.title}</h3>
-    <p>{project.description}</p>
-    <div class="chips">
-      {project.tags.map((tag) => <span>{tag}</span>)}
+{project.url ? (
+  <a class="project-card project-card-link" href={project.url}>
+    <div class:list={['project-cover', `tone-${project.tone}`]}>
+      <span>{project.type}</span>
+      <b>{number}</b>
     </div>
-    {project.url && <a class="project-link" href={project.url}>查看项目</a>}
-  </div>
-</article>
+    <div class="project-body">
+      <h3>{project.title}</h3>
+      <p>{project.description}</p>
+      <div class="chips">
+        {project.tags.map((tag) => <span>{tag}</span>)}
+      </div>
+      <span class="project-link">查看项目</span>
+    </div>
+  </a>
+) : (
+  <article class="project-card">
+    <div class:list={['project-cover', `tone-${project.tone}`]}>
+      <span>{project.type}</span>
+      <b>{number}</b>
+    </div>
+    <div class="project-body">
+      <h3>{project.title}</h3>
+      <p>{project.description}</p>
+      <div class="chips">
+        {project.tags.map((tag) => <span>{tag}</span>)}
+      </div>
+    </div>
+  </article>
+)}
