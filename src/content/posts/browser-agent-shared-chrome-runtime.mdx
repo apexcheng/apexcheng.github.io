@@ -1,0 +1,217 @@
+---
+title: "Browser Agent：让多个 AI Agent 共用同一个真实 Chrome"
+description: "一个本地共享浏览器运行时：统一管理真实 Chrome、固定 Profile、CDP 和自动恢复，让 Skill 与 AI Agent 只负责页面业务。"
+date: 2026-07-14T15:20:01+08:00
+category: "实践"
+tags:
+  - "Browser Agent"
+  - "Playwright"
+  - "Chrome CDP"
+minutes: 6
+featured: false
+draft: false
+private: false
+---
+
+import MetricCard from '../../components/MetricCard.astro';
+import FeatureCard from '../../components/FeatureCard.astro';
+import VisualGrid from '../../components/VisualGrid.astro';
+import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+Browser Agent 是一个本地共享浏览器运行时。它统一管理真实 Google Chrome、固定 Profile、CDP 端口和浏览器生命周期，让多个 Skill、Python 项目与 AI Agent 连接同一个浏览器环境。
+
+它不负责具体网站的采集逻辑，只负责保证浏览器可用。
+
+## 项目定位
+
+<VisualGrid columns={4}>
+  <MetricCard label="浏览器" value="真实 Chrome" detail="不使用临时 Chromium，保留正常浏览器环境。" />
+  <MetricCard label="状态" value="固定 Profile" detail="复用 Cookie、登录状态和 Local Storage。" tone="cyan" />
+  <MetricCard label="连接" value="CDP" detail="Playwright 通过固定地址连接现有 Chrome。" tone="green" />
+  <MetricCard label="入口" value="ensure" detail="外部项目调用一次，即可保证浏览器在线。" tone="violet" />
+</VisualGrid>
+
+<HighlightBox eyebrow="CORE" title="它是浏览器基础设施，不是采集器">
+  Browser Agent 管理 Chrome 是否在线、Profile 是否可用、CDP 是否正常；业务 Skill 只管理自己的页面、选择器和数据处理逻辑。
+</HighlightBox>
+
+## 它解决什么问题
+
+没有统一浏览器运行时，每个自动化项目通常会重复处理同一批问题：
+
+- 自己选择 Chrome 或 Chromium。
+- 自己维护 Profile 路径。
+- 自己分配远程调试端口。
+- 浏览器关闭后连接直接报错。
+- Profile 被旧进程占用时无法启动。
+- 多个项目分别登录同一批网站。
+- Agent 任务结束时误关共享浏览器。
+
+Browser Agent 把这些通用能力集中到一个项目里。
+
+<VisualGrid columns={2}>
+  <FeatureCard title="统一登录状态" meta="PROFILE" description="所有接入方复用同一个 Chrome Profile，不需要每个 Skill 单独登录。">
+    <ul>
+      <li>Cookie 和本地存储长期保留</li>
+      <li>登录验证可在可见 Chrome 中人工完成</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="统一生命周期" meta="RUNTIME" description="浏览器启动、健康检查、异常进程清理和重启都由 Browser Agent 负责。">
+    <ul>
+      <li>浏览器在线时直接复用</li>
+      <li>CDP 异常时自动恢复</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="统一连接地址" meta="CDP" description="外部项目不再自行管理端口，统一连接固定 CDP 地址。">
+    <ul>
+      <li><code>http://127.0.0.1:19312</code></li>
+      <li>Playwright 使用 <code>connect_over_cdp()</code></li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="统一使用规范" meta="AGENT" description="README、SKILL.md、AGENTS.md 和 CLAUDE.md 描述同一套接入边界。">
+    <ul>
+      <li>适配 Codex、Claude Code 和 OpenClaw</li>
+      <li>新 Skill 不再重复实现 Chrome 管理</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
+
+## 整体架构
+
+<Mermaid
+  title="Browser Agent 分层"
+  caption="浏览器运行时和网站业务逻辑分开维护。"
+  chart={`flowchart LR
+    A[Skill / Python / AI Agent] --> B[browser-agent ensure]
+    B --> C{CDP 是否正常}
+    C -->|正常| D[复用现有 Chrome]
+    C -->|异常| E[清理异常进程与运行锁]
+    E --> F[启动真实 Google Chrome]
+    F --> G[固定 Profile + 固定 CDP]
+    D --> H[Playwright connect_over_cdp]
+    G --> H
+    H --> I[创建独立 Page]
+    I --> J[执行网站业务逻辑]`}
+/>
+
+固定约定如下：
+
+```text
+控制入口：~/browser-agent/browser-agent
+共享 Profile：~/browser-agent/chrome-profile
+CDP：http://127.0.0.1:19312
+```
+
+## ensure 如何工作
+
+外部项目不需要判断浏览器当前处于什么状态，只需要执行：
+
+```bash
+~/browser-agent/browser-agent ensure
+```
+
+<DecisionFlow
+  title="浏览器自愈流程"
+  items={[
+    {
+      label: 'Check',
+      title: '检查 CDP',
+      description: '访问 /json/version。正常时直接返回，不重复启动 Chrome。',
+    },
+    {
+      label: 'Recover',
+      title: '处理异常进程',
+      description: 'CDP 不可用但共享 Profile 仍有 Chrome 进程时，先正常结束，再按需强制结束。',
+    },
+    {
+      label: 'Clean',
+      title: '清理运行锁',
+      description: '确认端口未被其他程序占用，并清理 SingletonLock、SingletonCookie 和 SingletonSocket。',
+    },
+    {
+      label: 'Start',
+      title: '启动并等待恢复',
+      description: '使用固定 Profile 和端口启动真实 Chrome，等待 CDP 可访问后返回成功。',
+    },
+  ]}
+/>
+
+## 外部项目怎么接入
+
+Python 项目只需要先调用 `ensure`，再通过 Playwright 连接 CDP：
+
+```python
+import subprocess
+from pathlib import Path
+
+from playwright.sync_api import sync_playwright
+
+
+browser_agent = Path.home() / "browser-agent" / "browser-agent"
+
+subprocess.run(
+    [str(browser_agent), "ensure"],
+    check=True,
+)
+
+with sync_playwright() as playwright:
+    browser = playwright.chromium.connect_over_cdp(
+        "http://127.0.0.1:19312"
+    )
+
+    context = browser.contexts[0]
+    page = context.new_page()
+
+    try:
+        page.goto("https://example.com")
+        # 当前项目的页面业务逻辑
+    finally:
+        page.close()
+```
+
+业务项目不再负责以下内容：
+
+```text
+Chrome 可执行文件路径
+Profile 创建与迁移
+远程调试端口分配
+Chrome 进程启动与结束
+CDP 健康检查
+异常进程恢复
+```
+
+## 使用价值
+
+<VisualGrid columns={3}>
+  <FeatureCard title="减少重复代码" meta="MAINTAIN" description="Chrome 管理只维护一份，网站适配器不再复制启动和重启逻辑。" />
+  <FeatureCard title="提高任务稳定性" meta="RECOVER" description="浏览器未启动或 CDP 异常时，项目可以自动恢复，而不是直接连接失败。" />
+  <FeatureCard title="跨 Agent 复用" meta="SHARE" description="ChatGPT、Codex、Claude Code、OpenClaw 和普通 Python 可以连接同一个环境。" />
+</VisualGrid>
+
+它尤其适合以下场景：
+
+- 需要登录状态的网页采集。
+- 多个 Skill 操作相同网站。
+- 本地 Agent 调试网页结构和选择器。
+- 定时任务需要在 Chrome 关闭后自动恢复。
+- 不希望每个项目创建临时 Profile。
+
+## 使用边界
+
+Browser Agent 是单机共享运行时，不是远程浏览器集群，也不是并发调度平台。
+
+需要遵守以下边界：
+
+1. 每个任务创建自己的 `page`，任务结束只关闭该页面。
+2. 不调用 `context.close()` 或 `browser.close()`，避免影响其他任务。
+3. 默认不要让多个 Agent 同时操作同一个页面。
+4. 验证码、扫码和账号安全验证需要人工处理。
+5. Profile 包含登录信息，不能提交到 Git 仓库。
+
+<HighlightBox eyebrow="RESULT" title="统一运行时，业务项目只写业务">
+  Browser Agent 的价值不是替代 Playwright，而是把 Playwright 连接之前的 Chrome 生命周期管理统一起来。所有 Skill 先调用 <code>ensure</code>，再连接固定 CDP，就能复用同一个真实浏览器和登录状态。
+</HighlightBox>
+
+项目仓库：[apexcheng/browser-agent](https://github.com/apexcheng/browser-agent)
