@@ -1,8 +1,8 @@
 ---
 title: "Excel 常用函数：从基础到中级的完整清单"
-description: "按实际使用难度整理 39 个基础函数和 19 个中级函数，并通过查找、汇总、异常清单和批量判断等场景讲解函数的综合应用。"
+description: "按实际使用难度整理 39 个基础函数和 18 个中级函数，并通过查找、汇总、异常清单和批量判断等场景讲解函数的综合应用。"
 date: 2026-07-14T08:23:03+08:00
-updated: 2026-07-14T09:05:08+08:00
+updated: 2026-07-14T11:55:12+08:00
 category: "教程"
 tags:
   - "Excel"
@@ -38,7 +38,7 @@ private: false
       <span class="excel-level-card__index">02</span>
       <div>
         <small>中级函数</small>
-        <strong>19 个</strong>
+        <strong>18 个</strong>
         <p>处理多条件、动态结果和整行整列计算，让表格减少手工整理。</p>
       </div>
     </div>
@@ -360,20 +360,13 @@ private: false
 
 | 类别 | 函数 | 主要用途 |
 | --- | --- | --- |
-| 条件统计 | `AVERAGEIFS` | 按多个条件计算平均值 |
 | 文本与日期 | `REPLACE`、`CONCAT`、`WEEKDAY`、`WEEKNUM`、`DATEDIF`、`EDATE` | 按位置替换、拼接、周统计和日期周期计算 |
 | 动态数组 | `FILTER`、`UNIQUE`、`SORT`、`SORTBY`、`SEQUENCE`、`TRANSPOSE` | 自动筛选、去重、排序、编号和行列转换 |
 | 批量计算 | `LET`、`MAKEARRAY`、`BYROW`、`BYCOL`、`MAP`、`REDUCE` | 简化长公式、按行按列计算、批量处理和累计汇总 |
 
-### 条件统计、文本与日期
+### 文本与日期
 
 <div class="excel-function-grid">
-  <section class="excel-function-card is-middle">
-    <header><code>AVERAGEIFS</code><span>多条件平均</span></header>
-    <p>只对同时满足多个条件的数据求平均，例如计算某平台某店铺的平均订单金额。</p>
-    <div class="excel-formula-example"><code>=AVERAGEIFS(E2:E500,B2:B500,"淘宝",C2:C500,"旗舰店")</code><small>计算指定平台和店铺的平均金额</small></div>
-  </section>
-
   <section class="excel-function-card is-middle">
     <header><code>REPLACE</code><span>按位置替换</span></header>
     <p>从指定位置开始，把固定数量的字符替换成新内容，适合处理格式固定的编码。</p>
