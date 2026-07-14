@@ -1,8 +1,8 @@
 ---
 title: "Excel 常用函数：从基础到中级的完整清单"
-description: "按实际使用难度整理 38 个基础函数和 20 个中级函数，并通过查找、汇总、异常清单和批量判断等场景讲解函数的综合应用。"
+description: "按实际使用难度整理 39 个基础函数和 19 个中级函数，并通过查找、汇总、异常清单和批量判断等场景讲解函数的综合应用。"
 date: 2026-07-14T08:23:03+08:00
-updated: 2026-07-14T08:36:34+08:00
+updated: 2026-07-14T09:05:08+08:00
 category: "教程"
 tags:
   - "Excel"
@@ -29,7 +29,7 @@ private: false
       <span class="excel-level-card__index">01</span>
       <div>
         <small>基础函数</small>
-        <strong>38 个</strong>
+        <strong>39 个</strong>
         <p>一个公式解决一个明确问题，先学会看懂参数和引用区域。</p>
       </div>
     </div>
@@ -38,7 +38,7 @@ private: false
       <span class="excel-level-card__index">02</span>
       <div>
         <small>中级函数</small>
-        <strong>20 个</strong>
+        <strong>19 个</strong>
         <p>处理多条件、动态结果和整行整列计算，让表格减少手工整理。</p>
       </div>
     </div>
@@ -87,7 +87,7 @@ private: false
 | 基础统计 | `SUM`、`AVERAGE`、`MAX`、`MIN`、`COUNT`、`COUNTA`、`COUNTBLANK` | 求和、平均、极值和数量统计 |
 | 数值处理 | `ROUND`、`ROUNDUP`、`ROUNDDOWN` | 四舍五入、向上取整和向下取整 |
 | 条件统计 | `COUNTIF`、`COUNTIFS`、`SUMIF`、`SUMIFS`、`AVERAGEIF` | 按一个或多个条件统计 |
-| 查找匹配 | `XLOOKUP`、`INDEX`、`MATCH`、`XMATCH` | 根据商品编码、SKU 或位置查数据 |
+| 查找匹配 | `VLOOKUP`、`XLOOKUP`、`INDEX`、`MATCH`、`XMATCH` | 根据商品编码、SKU 或位置查数据 |
 | 文本处理 | `LEFT`、`RIGHT`、`MID`、`LEN`、`TRIM`、`SUBSTITUTE`、`TEXTJOIN`、`FIND`、`SEARCH` | 截取、清洗、拼接和查找文字 |
 | 逻辑判断 | `IF`、`IFS`、`AND`、`OR`、`IFERROR` | 判断状态、组合条件和处理错误 |
 | 日期处理 | `TODAY`、`NOW`、`YEAR`、`MONTH`、`DAY` | 获取当前日期时间或拆分日期 |
@@ -193,6 +193,12 @@ private: false
 ### 查找与匹配
 
 <div class="excel-function-grid">
+  <section class="excel-function-card">
+    <header><code>VLOOKUP</code><span>纵向查找</span></header>
+    <p>在表格第一列查找内容，再返回右侧指定列的值。老表格和旧模板中非常常见。</p>
+    <div class="excel-formula-example"><code>=VLOOKUP(A2,商品表!A:D,3,FALSE)</code><small>在商品表第一列查找 A2，返回第 3 列</small></div>
+  </section>
+
   <section class="excel-function-card">
     <header><code>XLOOKUP</code><span>按值查找</span></header>
     <p>在一个区域里查找指定内容，再返回另一列的结果。适合根据 SKU 查名称、价格或库存。</p>
@@ -354,24 +360,18 @@ private: false
 
 | 类别 | 函数 | 主要用途 |
 | --- | --- | --- |
-| 条件与查找 | `AVERAGEIFS`、`VLOOKUP` | 多条件平均、传统纵向查找 |
+| 条件统计 | `AVERAGEIFS` | 按多个条件计算平均值 |
 | 文本与日期 | `REPLACE`、`CONCAT`、`WEEKDAY`、`WEEKNUM`、`DATEDIF`、`EDATE` | 按位置替换、拼接、周统计和日期周期计算 |
 | 动态数组 | `FILTER`、`UNIQUE`、`SORT`、`SORTBY`、`SEQUENCE`、`TRANSPOSE` | 自动筛选、去重、排序、编号和行列转换 |
 | 批量计算 | `LET`、`MAKEARRAY`、`BYROW`、`BYCOL`、`MAP`、`REDUCE` | 简化长公式、按行按列计算、批量处理和累计汇总 |
 
-### 条件、查找、文本与日期
+### 条件统计、文本与日期
 
 <div class="excel-function-grid">
   <section class="excel-function-card is-middle">
     <header><code>AVERAGEIFS</code><span>多条件平均</span></header>
     <p>只对同时满足多个条件的数据求平均，例如计算某平台某店铺的平均订单金额。</p>
     <div class="excel-formula-example"><code>=AVERAGEIFS(E2:E500,B2:B500,"淘宝",C2:C500,"旗舰店")</code><small>计算指定平台和店铺的平均金额</small></div>
-  </section>
-
-  <section class="excel-function-card is-middle">
-    <header><code>VLOOKUP</code><span>纵向查找</span></header>
-    <p>在表格第一列查找内容，再返回右侧指定列的值。老表格和旧模板中非常常见。</p>
-    <div class="excel-formula-example"><code>=VLOOKUP(A2,商品表!A:D,3,FALSE)</code><small>在商品表第一列查找 A2，返回第 3 列</small></div>
   </section>
 
   <section class="excel-function-card is-middle">
