@@ -1,7 +1,8 @@
 ---
-title: "运营新人常用 Excel 函数：从基础到中级的完整清单"
-description: "按运营日常使用难度整理 38 个基础函数和 20 个中级函数，并通过查找、周报、异常清单、库存周转等场景讲解函数的综合应用。"
+title: "Excel 常用函数：从基础到中级的完整清单"
+description: "按实际使用难度整理 38 个基础函数和 20 个中级函数，并通过查找、汇总、异常清单和批量判断等场景讲解函数的综合应用。"
 date: 2026-07-14T08:23:03+08:00
+updated: 2026-07-14T08:36:34+08:00
 category: "教程"
 tags:
   - "Excel"
@@ -12,9 +13,9 @@ draft: false
 private: false
 ---
 
-新人学习 Excel 函数，最容易遇到两个问题：一份清单只有十几个函数，真正做表格时不够用；另一份清单又把数组、查找、日期和复杂公式全混在一起，看完还是不知道先学什么。
+学习 Excel 函数，最容易遇到两个问题：一份清单只有十几个函数，真正做表格时不够用；另一份清单又把数组、查找、日期和复杂公式全混在一起，看完还是不知道先学什么。
 
-这篇文章按日常运营工作的实际使用难度，把常用函数分成两个等级：**基础函数**和**中级函数**。传统教程里经常被称为“高级”的 `LET`、`MAP`、`REDUCE` 等函数，在这里也统一归到中级，不再单独设置高级等级。
+这篇文章按实际使用难度，把常用函数分成两个等级：**基础函数**和**中级函数**。传统教程里经常被称为“高级”的 `LET`、`MAP`、`REDUCE` 等函数，在这里也统一归到中级，不再单独设置高级等级。
 
 <div class="excel-function-hero" role="group" aria-label="Excel 函数学习地图">
   <div class="excel-function-hero__head">
@@ -53,7 +54,7 @@ private: false
   </div>
 
   <div class="excel-function-hero__footer">
-    <span>◎ 示例以运营表格为主</span>
+    <span>◎ 示例覆盖常见表格场景</span>
     <span>◉ 不要求一次全部背完</span>
     <span>◇ 重点是知道什么时候用</span>
   </div>
@@ -77,7 +78,7 @@ private: false
 
 ## 一、基础函数
 
-基础函数的判断标准不是“看起来简单”，而是它通常可以独立解决一个明确问题。新人先掌握这些函数，已经能够完成大部分日常统计、数据清洗和基础报表工作。
+基础函数的判断标准不是“看起来简单”，而是它通常可以独立解决一个明确问题。掌握这些函数，已经能够完成大部分日常统计、数据清洗和基础报表工作。
 
 ### 基础函数清单
 
@@ -178,7 +179,7 @@ private: false
 
   <section class="excel-function-card">
     <header><code>SUMIFS</code><span>多条件求和</span></header>
-    <p>根据多个条件汇总数字，是运营报表里最常用的函数之一。</p>
+    <p>根据多个条件汇总数字，是各类报表里最常用的函数之一。</p>
     <div class="excel-formula-example"><code>=SUMIFS(D2:D500,B2:B500,"淘宝",A2:A500,H2)</code><small>汇总淘宝平台中指定 SKU 的销量</small></div>
   </section>
 
@@ -500,7 +501,7 @@ private: false
 
 进阶用法不再继续增加函数清单。重点是把基础函数和中级函数组合起来，让结果随着源数据自动更新。
 
-下面的公式不要求新人一次背下来。先看它由哪几部分组成，每一部分分别解决什么问题。
+下面的公式不要求一次背下来。先看它由哪几部分组成，每一部分分别解决什么问题。
 
 <div class="excel-application-board" role="group" aria-label="Excel 函数组合应用路径">
   <div class="excel-application-board__head">
@@ -630,7 +631,7 @@ private: false
   <strong>适合：批量状态判断、整行汇总和无需下拉的动态报表。</strong>
 </div>
 
-## 新人应该怎么学习
+## 推荐学习顺序
 
 <div class="excel-learning-path" role="group" aria-label="Excel 函数学习顺序">
   <div>
