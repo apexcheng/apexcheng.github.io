@@ -1,0 +1,795 @@
+---
+title: "运营新人常用 Excel 函数：从基础到中级的完整清单"
+description: "按运营日常使用难度整理 38 个基础函数和 20 个中级函数，并通过查找、周报、异常清单、库存周转等场景讲解函数的综合应用。"
+date: 2026-07-14T08:23:03+08:00
+category: "教程"
+tags:
+  - "Excel"
+  - "数据处理"
+minutes: 30
+featured: false
+draft: false
+private: false
+---
+
+新人学习 Excel 函数，最容易遇到两个问题：一份清单只有十几个函数，真正做表格时不够用；另一份清单又把数组、查找、日期和复杂公式全混在一起，看完还是不知道先学什么。
+
+这篇文章按日常运营工作的实际使用难度，把常用函数分成两个等级：**基础函数**和**中级函数**。传统教程里经常被称为“高级”的 `LET`、`MAP`、`REDUCE` 等函数，在这里也统一归到中级，不再单独设置高级等级。
+
+<div class="excel-function-hero" role="group" aria-label="Excel 函数学习地图">
+  <div class="excel-function-hero__head">
+    <span>EXCEL FUNCTION MAP</span>
+    <strong>先解决单个问题，再让整张表自动更新</strong>
+    <p>基础函数负责计算、判断、查找和清洗；中级函数负责多条件、动态数组和批量计算；进阶用法负责把它们组合成真正能工作的报表。</p>
+  </div>
+
+  <div class="excel-level-track">
+    <div class="excel-level-card is-basic">
+      <span class="excel-level-card__index">01</span>
+      <div>
+        <small>基础函数</small>
+        <strong>38 个</strong>
+        <p>一个公式解决一个明确问题，先学会看懂参数和引用区域。</p>
+      </div>
+    </div>
+    <div class="excel-level-arrow">→</div>
+    <div class="excel-level-card is-middle">
+      <span class="excel-level-card__index">02</span>
+      <div>
+        <small>中级函数</small>
+        <strong>20 个</strong>
+        <p>处理多条件、动态结果和整行整列计算，让表格减少手工整理。</p>
+      </div>
+    </div>
+    <div class="excel-level-arrow">→</div>
+    <div class="excel-level-card is-apply">
+      <span class="excel-level-card__index">03</span>
+      <div>
+        <small>进阶用法</small>
+        <strong>综合应用</strong>
+        <p>不再学习新等级，而是把多个函数组合成查询、周报、异常清单和看板。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="excel-function-hero__footer">
+    <span>◎ 示例以运营表格为主</span>
+    <span>◉ 不要求一次全部背完</span>
+    <span>◇ 重点是知道什么时候用</span>
+  </div>
+</div>
+
+## 使用这份清单前，先认识公式里的三个符号
+
+| 符号 | 作用 | 示例 |
+| --- | --- | --- |
+| `:` | 表示连续区域 | `A2:A100` 表示 A2 到 A100 |
+| `$` | 锁定行或列，复制公式时不移动 | `$A$2:$A$100` |
+| `""` | 表示文本或空白文本 | `"淘宝"`、`""` |
+
+公式基本结构可以理解为：
+
+```text
+=函数名(需要处理的数据, 条件或规则)
+```
+
+不用先背完整语法。先看它在解决什么问题，再把示例里的区域和条件换成自己的数据。
+
+## 一、基础函数
+
+基础函数的判断标准不是“看起来简单”，而是它通常可以独立解决一个明确问题。新人先掌握这些函数，已经能够完成大部分日常统计、数据清洗和基础报表工作。
+
+### 基础函数清单
+
+| 类别 | 函数 | 主要用途 |
+| --- | --- | --- |
+| 基础统计 | `SUM`、`AVERAGE`、`MAX`、`MIN`、`COUNT`、`COUNTA`、`COUNTBLANK` | 求和、平均、极值和数量统计 |
+| 数值处理 | `ROUND`、`ROUNDUP`、`ROUNDDOWN` | 四舍五入、向上取整和向下取整 |
+| 条件统计 | `COUNTIF`、`COUNTIFS`、`SUMIF`、`SUMIFS`、`AVERAGEIF` | 按一个或多个条件统计 |
+| 查找匹配 | `XLOOKUP`、`INDEX`、`MATCH`、`XMATCH` | 根据商品编码、SKU 或位置查数据 |
+| 文本处理 | `LEFT`、`RIGHT`、`MID`、`LEN`、`TRIM`、`SUBSTITUTE`、`TEXTJOIN`、`FIND`、`SEARCH` | 截取、清洗、拼接和查找文字 |
+| 逻辑判断 | `IF`、`IFS`、`AND`、`OR`、`IFERROR` | 判断状态、组合条件和处理错误 |
+| 日期处理 | `TODAY`、`NOW`、`YEAR`、`MONTH`、`DAY` | 获取当前日期时间或拆分日期 |
+
+### 基础统计与数值处理
+
+<div class="excel-function-grid">
+  <section class="excel-function-card">
+    <header><code>SUM</code><span>求和</span></header>
+    <p>把一段区域里的数字加起来。销量、销售额、库存和推广花费汇总都会用到。</p>
+    <div class="excel-formula-example"><code>=SUM(D2:D100)</code><small>汇总 D2 到 D100 的销量</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>AVERAGE</code><span>平均值</span></header>
+    <p>计算一组数字的平均值，适合平均售价、日均销量和平均退款率。</p>
+    <div class="excel-formula-example"><code>=AVERAGE(E2:E31)</code><small>计算 30 天平均销量</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>MAX</code><span>最大值</span></header>
+    <p>找出区域中的最大数字，例如最高单日销量、最高价格或最大库存。</p>
+    <div class="excel-formula-example"><code>=MAX(C2:C50)</code><small>找出最高单日销量</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>MIN</code><span>最小值</span></header>
+    <p>找出区域中的最小数字，例如最低价格、最低库存或最低销量。</p>
+    <div class="excel-formula-example"><code>=MIN(F2:F50)</code><small>找出最低库存</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>COUNT</code><span>统计数字</span></header>
+    <p>只统计包含数字的单元格数量，文字和空白不会计入。</p>
+    <div class="excel-formula-example"><code>=COUNT(D2:D100)</code><small>统计有销量数字的记录数</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>COUNTA</code><span>统计非空</span></header>
+    <p>只要单元格不是空白就会计数，适合统计商品、订单号或 SKU 数量。</p>
+    <div class="excel-formula-example"><code>=COUNTA(A2:A100)</code><small>统计已填写的商品编码数量</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>COUNTBLANK</code><span>统计空白</span></header>
+    <p>统计区域中有多少个空白单元格，常用于检查资料是否漏填。</p>
+    <div class="excel-formula-example"><code>=COUNTBLANK(G2:G100)</code><small>检查有多少条记录未填写负责人</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>ROUND</code><span>四舍五入</span></header>
+    <p>按指定小数位进行四舍五入，金额、比例和日均销量经常需要统一位数。</p>
+    <div class="excel-formula-example"><code>=ROUND(B2/C2,2)</code><small>结果保留两位小数</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>ROUNDUP</code><span>向上取整</span></header>
+    <p>只要有小数就向上进一位，适合按整箱、整件或整批计算需求量。</p>
+    <div class="excel-formula-example"><code>=ROUNDUP(B2/24,0)</code><small>每箱 24 件，计算至少需要多少箱</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>ROUNDDOWN</code><span>向下取整</span></header>
+    <p>直接舍去多余小数，适合计算最多能装多少整箱或只保留完整数量。</p>
+    <div class="excel-formula-example"><code>=ROUNDDOWN(B2/24,0)</code><small>计算当前库存能装多少完整箱</small></div>
+  </section>
+</div>
+
+### 条件统计
+
+<div class="excel-function-grid">
+  <section class="excel-function-card">
+    <header><code>COUNTIF</code><span>单条件计数</span></header>
+    <p>统计满足一个条件的记录数量，例如某平台有多少条订单。</p>
+    <div class="excel-formula-example"><code>=COUNTIF(B2:B500,"淘宝")</code><small>统计淘宝订单数量</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>COUNTIFS</code><span>多条件计数</span></header>
+    <p>统计同时满足多个条件的记录数量，例如某店铺中处于缺货状态的商品数。</p>
+    <div class="excel-formula-example"><code>=COUNTIFS(B2:B500,"淘宝",F2:F500,"缺货")</code><small>统计淘宝平台的缺货记录</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>SUMIF</code><span>单条件求和</span></header>
+    <p>根据一个条件汇总数字，例如汇总某个 SKU 的总销量。</p>
+    <div class="excel-formula-example"><code>=SUMIF(A2:A500,H2,D2:D500)</code><small>汇总 H2 对应 SKU 的销量</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>SUMIFS</code><span>多条件求和</span></header>
+    <p>根据多个条件汇总数字，是运营报表里最常用的函数之一。</p>
+    <div class="excel-formula-example"><code>=SUMIFS(D2:D500,B2:B500,"淘宝",A2:A500,H2)</code><small>汇总淘宝平台中指定 SKU 的销量</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>AVERAGEIF</code><span>条件平均</span></header>
+    <p>只对满足一个条件的数据求平均，例如计算某个平台的平均客单价。</p>
+    <div class="excel-formula-example"><code>=AVERAGEIF(B2:B500,"淘宝",E2:E500)</code><small>计算淘宝订单的平均金额</small></div>
+  </section>
+</div>
+
+### 查找与匹配
+
+<div class="excel-function-grid">
+  <section class="excel-function-card">
+    <header><code>XLOOKUP</code><span>按值查找</span></header>
+    <p>在一个区域里查找指定内容，再返回另一列的结果。适合根据 SKU 查名称、价格或库存。</p>
+    <div class="excel-formula-example"><code>=XLOOKUP(A2,商品表!A:A,商品表!B:B,"未找到")</code><small>根据 A2 的商品编码返回商品名称</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>INDEX</code><span>按位置取值</span></header>
+    <p>根据第几行、第几列返回区域里的值。它通常会和 `MATCH` 或 `XMATCH` 配合。</p>
+    <div class="excel-formula-example"><code>=INDEX(B2:B100,5)</code><small>返回 B2:B100 中第 5 个值</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>MATCH</code><span>查找位置</span></header>
+    <p>查找某个值在区域中的相对位置，不直接返回对应内容。</p>
+    <div class="excel-formula-example"><code>=MATCH(H2,A2:A100,0)</code><small>查找 H2 在商品编码列中的位置</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>XMATCH</code><span>新版位置查找</span></header>
+    <p>作用和 `MATCH` 类似，默认精确匹配，查找方式更明确。</p>
+    <div class="excel-formula-example"><code>=XMATCH(H2,A2:A100)</code><small>返回 H2 在区域中的相对位置</small></div>
+  </section>
+</div>
+
+### 文本处理
+
+<div class="excel-function-grid">
+  <section class="excel-function-card">
+    <header><code>LEFT</code><span>从左截取</span></header>
+    <p>从文本左侧开始截取指定数量的字符，适合提取编码前缀。</p>
+    <div class="excel-formula-example"><code>=LEFT(A2,2)</code><small>从 A2 左侧提取 2 个字符</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>RIGHT</code><span>从右截取</span></header>
+    <p>从文本右侧开始截取字符，适合提取订单尾号或规格后缀。</p>
+    <div class="excel-formula-example"><code>=RIGHT(A2,4)</code><small>提取订单号最后 4 位</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>MID</code><span>从中间截取</span></header>
+    <p>从指定位置开始截取指定数量的字符，适合从固定格式编码中取出一段内容。</p>
+    <div class="excel-formula-example"><code>=MID(A2,4,6)</code><small>从第 4 个字符开始提取 6 个字符</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>LEN</code><span>计算字符数</span></header>
+    <p>计算文本长度，可用于检查订单号、商品编码或手机号位数是否正确。</p>
+    <div class="excel-formula-example"><code>=LEN(A2)</code><small>返回 A2 的字符数量</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>TRIM</code><span>清理多余空格</span></header>
+    <p>删除文本前后空格，并把中间连续多个空格压缩为一个。</p>
+    <div class="excel-formula-example"><code>=TRIM(A2)</code><small>清理复制数据中多余的空格</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>SUBSTITUTE</code><span>按内容替换</span></header>
+    <p>把文本中的指定内容替换成新内容，适合去掉单位、符号或统一名称。</p>
+    <div class="excel-formula-example"><code>=SUBSTITUTE(A2,"旗舰店","")</code><small>删除店铺名称中的“旗舰店”</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>TEXTJOIN</code><span>批量拼接</span></header>
+    <p>使用统一分隔符连接多个单元格，并可选择忽略空白。</p>
+    <div class="excel-formula-example"><code>=TEXTJOIN("-",TRUE,A2:C2)</code><small>把平台、店铺和 SKU 拼成一段文本</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>FIND</code><span>精确查找文字位置</span></header>
+    <p>返回一段文字在文本中的位置，并区分英文大小写。</p>
+    <div class="excel-formula-example"><code>=FIND("-",A2)</code><small>查找第一个短横线所在的位置</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>SEARCH</code><span>模糊查找文字位置</span></header>
+    <p>作用和 `FIND` 类似，但不区分英文大小写，适合普通关键词判断。</p>
+    <div class="excel-formula-example"><code>=SEARCH("蓝牙",A2)</code><small>查找商品标题中是否出现“蓝牙”</small></div>
+  </section>
+</div>
+
+### 逻辑判断
+
+<div class="excel-function-grid">
+  <section class="excel-function-card">
+    <header><code>IF</code><span>单层判断</span></header>
+    <p>判断条件是否成立，再返回不同结果。库存预警、状态分类和是否达标都离不开它。</p>
+    <div class="excel-formula-example"><code>=IF(C2&lt;10,"库存不足","正常")</code><small>库存少于 10 时提示不足</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>IFS</code><span>多层判断</span></header>
+    <p>按顺序检查多个条件，适合把数据分成高、中、低等多个等级。</p>
+    <div class="excel-formula-example"><code>=IFS(C2&lt;7,"紧急",C2&lt;15,"预警",TRUE,"正常")</code><small>按库存数量划分状态</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>AND</code><span>同时满足</span></header>
+    <p>只有所有条件都成立时才返回 TRUE，通常放在 `IF` 里面使用。</p>
+    <div class="excel-formula-example"><code>=IF(AND(C2&lt;10,D2&gt;5),"需要补货","暂不处理")</code><small>库存低且日销量高时提醒补货</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>OR</code><span>满足任意一个</span></header>
+    <p>只要其中一个条件成立就返回 TRUE，适合合并多种异常情况。</p>
+    <div class="excel-formula-example"><code>=IF(OR(E2="缺货",F2="下架"),"异常","正常")</code><small>缺货或下架都标记为异常</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>IFERROR</code><span>处理错误</span></header>
+    <p>公式出错时返回指定内容，避免报表中出现大量 `#N/A` 或 `#DIV/0!`。</p>
+    <div class="excel-formula-example"><code>=IFERROR(B2/C2,"")</code><small>无法计算时显示空白</small></div>
+  </section>
+</div>
+
+### 日期与时间
+
+<div class="excel-function-grid">
+  <section class="excel-function-card">
+    <header><code>TODAY</code><span>当前日期</span></header>
+    <p>返回今天的日期，每次打开或重新计算表格时会自动更新。</p>
+    <div class="excel-formula-example"><code>=TODAY()</code><small>显示今天的日期</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>NOW</code><span>当前日期时间</span></header>
+    <p>返回当前日期和时间，适合显示报表最近计算时间。</p>
+    <div class="excel-formula-example"><code>=NOW()</code><small>显示当前日期、小时和分钟</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>YEAR</code><span>提取年份</span></header>
+    <p>从日期中提取年份，适合年度汇总或生成年度字段。</p>
+    <div class="excel-formula-example"><code>=YEAR(A2)</code><small>从日期中提取年份</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>MONTH</code><span>提取月份</span></header>
+    <p>从日期中提取月份数字，适合月报和按月分类。</p>
+    <div class="excel-formula-example"><code>=MONTH(A2)</code><small>返回 1 到 12 的月份数字</small></div>
+  </section>
+
+  <section class="excel-function-card">
+    <header><code>DAY</code><span>提取日</span></header>
+    <p>从日期中提取一个月里的第几天。</p>
+    <div class="excel-formula-example"><code>=DAY(A2)</code><small>返回日期中的日</small></div>
+  </section>
+</div>
+
+## 二、中级函数
+
+中级函数不代表“只有高手才能用”。它们只是比基础函数多了一层结构：可能需要同时处理多个条件、返回一整片动态结果，或者把同一套规则批量应用到多行多列。
+
+部分动态数组函数和批量计算函数需要较新的 Excel 或 WPS 版本。如果输入函数名后无法识别，先检查当前软件版本是否支持。
+
+### 中级函数清单
+
+| 类别 | 函数 | 主要用途 |
+| --- | --- | --- |
+| 条件与查找 | `AVERAGEIFS`、`VLOOKUP` | 多条件平均、传统纵向查找 |
+| 文本与日期 | `REPLACE`、`CONCAT`、`WEEKDAY`、`WEEKNUM`、`DATEDIF`、`EDATE` | 按位置替换、拼接、周统计和日期周期计算 |
+| 动态数组 | `FILTER`、`UNIQUE`、`SORT`、`SORTBY`、`SEQUENCE`、`TRANSPOSE` | 自动筛选、去重、排序、编号和行列转换 |
+| 批量计算 | `LET`、`MAKEARRAY`、`BYROW`、`BYCOL`、`MAP`、`REDUCE` | 简化长公式、按行按列计算、批量处理和累计汇总 |
+
+### 条件、查找、文本与日期
+
+<div class="excel-function-grid">
+  <section class="excel-function-card is-middle">
+    <header><code>AVERAGEIFS</code><span>多条件平均</span></header>
+    <p>只对同时满足多个条件的数据求平均，例如计算某平台某店铺的平均订单金额。</p>
+    <div class="excel-formula-example"><code>=AVERAGEIFS(E2:E500,B2:B500,"淘宝",C2:C500,"旗舰店")</code><small>计算指定平台和店铺的平均金额</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>VLOOKUP</code><span>纵向查找</span></header>
+    <p>在表格第一列查找内容，再返回右侧指定列的值。老表格和旧模板中非常常见。</p>
+    <div class="excel-formula-example"><code>=VLOOKUP(A2,商品表!A:D,3,FALSE)</code><small>在商品表第一列查找 A2，返回第 3 列</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>REPLACE</code><span>按位置替换</span></header>
+    <p>从指定位置开始，把固定数量的字符替换成新内容，适合处理格式固定的编码。</p>
+    <div class="excel-formula-example"><code>=REPLACE(A2,1,3,"SKU")</code><small>把 A2 前 3 个字符替换为 SKU</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>CONCAT</code><span>直接拼接</span></header>
+    <p>把多个文本或区域连接起来。它不会自动添加分隔符，需要自己写 `"-"`、`"_"` 等符号。</p>
+    <div class="excel-formula-example"><code>=CONCAT(A2,"-",B2,"-",C2)</code><small>拼接平台、店铺和 SKU</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>WEEKDAY</code><span>返回星期序号</span></header>
+    <p>把日期转换成星期序号。第二个参数用 2 时，星期一为 1，星期日为 7。</p>
+    <div class="excel-formula-example"><code>=WEEKDAY(A2,2)</code><small>判断 A2 是一周中的第几天</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>WEEKNUM</code><span>返回周数</span></header>
+    <p>返回日期属于一年中的第几周，适合周报、周销量和周度异常统计。</p>
+    <div class="excel-formula-example"><code>=WEEKNUM(A2,2)</code><small>按星期一作为每周起点计算周数</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>DATEDIF</code><span>计算日期间隔</span></header>
+    <p>计算两个日期之间相差多少天、月或年，适合库存停留天数、入职年限和活动周期。</p>
+    <div class="excel-formula-example"><code>=DATEDIF(A2,TODAY(),"d")</code><small>计算 A2 到今天相差多少天</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>EDATE</code><span>按月份移动日期</span></header>
+    <p>在原日期基础上增加或减少指定月份，比直接加 30 天更适合计算月度周期。</p>
+    <div class="excel-formula-example"><code>=EDATE(A2,3)</code><small>返回 A2 三个月后的日期</small></div>
+  </section>
+</div>
+
+### 动态数组
+
+动态数组函数的特点是：公式通常只写在一个单元格里，结果会自动向下或向右扩展。源数据增加后，结果区域也能跟着更新。
+
+<div class="excel-function-grid">
+  <section class="excel-function-card is-middle">
+    <header><code>FILTER</code><span>按条件筛选</span></header>
+    <p>直接返回所有满足条件的完整记录，适合自动生成缺货、异常或指定平台清单。</p>
+    <div class="excel-formula-example"><code>=FILTER(A2:F500,F2:F500="异常","暂无异常")</code><small>返回所有状态为异常的记录</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>UNIQUE</code><span>自动去重</span></header>
+    <p>从一段区域中提取不重复内容，源数据增加后，去重结果会自动更新。</p>
+    <div class="excel-formula-example"><code>=UNIQUE(A2:A500)</code><small>生成不重复的 SKU 列表</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>SORT</code><span>按结果位置排序</span></header>
+    <p>对整个数组按指定列排序，适合把动态结果按销量、金额或日期重新排列。</p>
+    <div class="excel-formula-example"><code>=SORT(A2:D100,4,-1)</code><small>按第 4 列从大到小排序</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>SORTBY</code><span>按指定区域排序</span></header>
+    <p>使用另一列或另一组数据作为排序依据，比 `SORT` 更适合复杂表格。</p>
+    <div class="excel-formula-example"><code>=SORTBY(A2:D100,D2:D100,-1)</code><small>按销量列从大到小排列整张表</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>SEQUENCE</code><span>生成连续序号</span></header>
+    <p>自动生成连续数字，可指定行数、列数、起始值和步长。</p>
+    <div class="excel-formula-example"><code>=SEQUENCE(20,1,1,1)</code><small>生成 1 到 20 的序号</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>TRANSPOSE</code><span>行列转换</span></header>
+    <p>把横向数据变成纵向，或把纵向数据变成横向，并保持公式关联。</p>
+    <div class="excel-formula-example"><code>=TRANSPOSE(A1:F2)</code><small>把两行六列转换成六行两列</small></div>
+  </section>
+</div>
+
+### 批量计算与公式组织
+
+这一组函数看起来更复杂，但它们解决的是同一个问题：**不要再手工复制很多公式，而是把规则一次写清楚。**
+
+`MAKEARRAY`、`BYROW`、`BYCOL`、`MAP` 和 `REDUCE` 通常需要配合 `LAMBDA` 写计算规则。这里不单独增加第三个等级，只把 `LAMBDA` 理解成“传给函数的一段计算方法”即可。
+
+<div class="excel-function-grid">
+  <section class="excel-function-card is-middle">
+    <header><code>LET</code><span>给公式中的结果命名</span></header>
+    <p>把长公式里的区域或中间结果命名，减少重复计算，也让公式更容易阅读和修改。</p>
+    <div class="excel-formula-example"><code>=LET(销量,SUM(C2:I2),日均,销量/7,日均)</code><small>先计算 7 天销量，再返回日均销量</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>MAKEARRAY</code><span>按规则生成数组</span></header>
+    <p>指定需要多少行、多少列，再根据行号和列号生成每个单元格的结果。</p>
+    <div class="excel-formula-example"><code>=MAKEARRAY(5,3,LAMBDA(r,c,r*c))</code><small>生成 5 行 3 列的行列乘积表</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>BYROW</code><span>逐行计算</span></header>
+    <p>把同一套计算规则应用到每一行，适合计算每个 SKU 的 7 天总销量或平均销量。</p>
+    <div class="excel-formula-example"><code>=BYROW(C2:I100,LAMBDA(row,SUM(row)))</code><small>分别汇总每一行的 7 天销量</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>BYCOL</code><span>逐列计算</span></header>
+    <p>把同一套计算规则应用到每一列，适合统计每天总销量或每个平台汇总值。</p>
+    <div class="excel-formula-example"><code>=BYCOL(C2:I100,LAMBDA(col,SUM(col)))</code><small>分别汇总 7 个日期列的销量</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>MAP</code><span>逐项批量处理</span></header>
+    <p>对数组里的每个值执行同一套规则，适合批量转换状态、金额或文本。</p>
+    <div class="excel-formula-example"><code>=MAP(C2:C100,LAMBDA(x,IF(x&lt;10,"预警","正常")))</code><small>批量把库存数量转换成状态</small></div>
+  </section>
+
+  <section class="excel-function-card is-middle">
+    <header><code>REDUCE</code><span>逐项累计结果</span></header>
+    <p>从一个初始值开始，依次处理数组中的每一项，并把结果不断累积起来。</p>
+    <div class="excel-formula-example"><code>=REDUCE(0,C2:C100,LAMBDA(total,x,total+x))</code><small>逐项累加 C2:C100 的数字</small></div>
+  </section>
+</div>
+
+## 三、进阶用法：把函数组合成真正能工作的表格
+
+进阶用法不再继续增加函数清单。重点是把基础函数和中级函数组合起来，让结果随着源数据自动更新。
+
+下面的公式不要求新人一次背下来。先看它由哪几部分组成，每一部分分别解决什么问题。
+
+<div class="excel-application-board" role="group" aria-label="Excel 函数组合应用路径">
+  <div class="excel-application-board__head">
+    <span>FORMULA WORKFLOW</span>
+    <strong>一条综合公式通常只有四层</strong>
+  </div>
+  <div class="excel-application-steps">
+    <div><b>1</b><strong>确定输入</strong><span>商品编码、日期、销量、库存或状态</span></div>
+    <div><b>2</b><strong>筛选与查找</strong><span>先找到需要参与计算的数据</span></div>
+    <div><b>3</b><strong>统计与判断</strong><span>求和、平均、排序或判断异常</span></div>
+    <div><b>4</b><strong>处理输出</strong><span>去重、排序、隐藏错误或生成清单</span></div>
+  </div>
+</div>
+
+### 用法一：查找商品资料，找不到时不显示错误
+
+场景：明细表只有商品编码，需要从商品资料表中自动带出商品名称。
+
+```text
+=IFERROR(XLOOKUP(A2,商品表!A:A,商品表!B:B),"未维护")
+```
+
+<div class="excel-formula-breakdown">
+  <div><code>XLOOKUP</code><span>根据 A2 的商品编码查找商品名称</span></div>
+  <div><code>IFERROR</code><span>查不到时显示“未维护”，不让表格出现错误代码</span></div>
+  <strong>适合：商品资料补全、SKU 对照、价格和库存回填。</strong>
+</div>
+
+### 用法二：先生成周数，再汇总每周销量
+
+场景：订单明细按天记录，需要制作每个 SKU 的周销量表。
+
+先在辅助列生成周数：
+
+```text
+=WEEKNUM(B2,2)
+```
+
+再按 SKU 和周数汇总销量：
+
+```text
+=SUMIFS($D$2:$D$500,$A$2:$A$500,H2,$E$2:$E$500,I2)
+```
+
+<div class="excel-formula-breakdown">
+  <div><code>WEEKNUM</code><span>把每天的日期转换成周数</span></div>
+  <div><code>SUMIFS</code><span>同时按 SKU 和周数汇总销量</span></div>
+  <strong>适合：周报、周销量趋势、每周推广花费和售后数量统计。</strong>
+</div>
+
+### 用法三：自动生成异常清单，并按销量从高到低排序
+
+场景：原始表中包含几百个 SKU，只想看到状态异常或库存低于 7 的记录，并优先处理销量高的商品。
+
+```text
+=LET(
+  数据,FILTER(A2:F200,(F2:F200="异常")+(E2:E200<7)),
+  SORTBY(数据,INDEX(数据,,4),-1)
+)
+```
+
+<div class="excel-formula-breakdown">
+  <div><code>FILTER</code><span>筛出状态异常或库存低于 7 的记录</span></div>
+  <div><code>LET</code><span>把筛选结果命名为“数据”，避免重复写长公式</span></div>
+  <div><code>SORTBY + INDEX</code><span>取筛选结果第 4 列作为排序依据，从大到小排列</span></div>
+  <strong>适合：库存预警、活动异常、价格异常和待处理订单清单。</strong>
+</div>
+
+### 用法四：生成不重复 SKU，并自动计算每个 SKU 的总销量
+
+场景：原始明细中一个 SKU 会出现很多次，需要自动生成汇总表。
+
+先生成不重复 SKU：
+
+```text
+=UNIQUE(A2:A500)
+```
+
+假设去重结果从 H2 开始，再在 I2 批量计算每个 SKU 的销量：
+
+```text
+=MAP(H2#,LAMBDA(sku,SUMIFS(D2:D500,A2:A500,sku)))
+```
+
+<div class="excel-formula-breakdown">
+  <div><code>UNIQUE</code><span>生成自动扩展的 SKU 清单</span></div>
+  <div><code>H2#</code><span>引用 H2 动态扩展出来的整片结果</span></div>
+  <div><code>MAP + SUMIFS</code><span>对每个 SKU 分别执行一次销量汇总</span></div>
+  <strong>适合：SKU 汇总、店铺汇总、品牌分布和平台统计。</strong>
+</div>
+
+### 用法五：计算库存周转天数，并处理无销量情况
+
+场景：B2 是当前库存，C2:I2 是最近 7 天销量，需要计算库存还能维持多少天。
+
+```text
+=LET(
+  库存,B2,
+  七天销量,SUM(C2:I2),
+  日均销量,七天销量/7,
+  IFERROR(ROUND(库存/日均销量,1),"无销量")
+)
+```
+
+<div class="excel-formula-breakdown">
+  <div><code>LET</code><span>依次命名库存、七天销量和日均销量</span></div>
+  <div><code>SUM + ROUND</code><span>计算日均销量，再把周转天数保留一位小数</span></div>
+  <div><code>IFERROR</code><span>最近 7 天没有销量时显示“无销量”</span></div>
+  <strong>适合：库存周转、补货判断和滞销商品识别。</strong>
+</div>
+
+### 用法六：一次计算每个 SKU 的 7 天销量状态
+
+场景：C2:I100 是每个 SKU 最近 7 天的销量，不想向下复制几百行公式。
+
+```text
+=BYROW(
+  C2:I100,
+  LAMBDA(row,IF(SUM(row)=0,"无销量",IF(AVERAGE(row)<2,"低销量","正常")))
+)
+```
+
+<div class="excel-formula-breakdown">
+  <div><code>BYROW</code><span>逐行处理每个 SKU 的 7 天销量</span></div>
+  <div><code>SUM</code><span>总销量为 0 时标记“无销量”</span></div>
+  <div><code>AVERAGE + IF</code><span>日均销量低于 2 时标记“低销量”</span></div>
+  <strong>适合：批量状态判断、整行汇总和无需下拉的动态报表。</strong>
+</div>
+
+## 新人应该怎么学习
+
+<div class="excel-learning-path" role="group" aria-label="Excel 函数学习顺序">
+  <div>
+    <span>第一步</span>
+    <strong>先会看懂单个公式</strong>
+    <p>知道函数处理哪一列、条件写在哪里、返回什么结果。先练 `SUM`、`IF`、`COUNTIF`、`SUMIFS` 和 `XLOOKUP`。</p>
+  </div>
+  <div>
+    <span>第二步</span>
+    <strong>再学会处理一整片数据</strong>
+    <p>掌握 `FILTER`、`UNIQUE`、`SORTBY` 和 `LET`，让清单和汇总结果自动更新。</p>
+  </div>
+  <div>
+    <span>第三步</span>
+    <strong>最后减少复制公式</strong>
+    <p>理解 `BYROW`、`BYCOL`、`MAP` 和 `REDUCE` 的作用，不必先背语法，先从现成公式中修改。</p>
+  </div>
+</div>
+
+<div class="excel-final-summary">
+  <span>学习标准</span>
+  <strong>不是记住 58 个函数，而是看到问题时知道该从哪一类函数开始找。</strong>
+  <p>求总数先想统计函数，按条件处理先想条件函数，补资料先想查找函数，自动生成清单先想动态数组。真正熟练以后，复杂报表也只是把这些能力按顺序组合起来。</p>
+</div>
+
+<style>{`
+  .excel-function-hero,
+  .excel-application-board,
+  .excel-learning-path,
+  .excel-final-summary {
+    --excel-blue: #1268e8;
+    --excel-cyan: #08a8d8;
+    --excel-green: #12a779;
+    --excel-violet: #6b63e8;
+    --excel-navy: #071b3d;
+    --excel-text: #1b2a40;
+    --excel-muted: #66778c;
+    --excel-line: #cfe0f5;
+    margin: 1.8rem 0 2.25rem;
+    color: var(--excel-text);
+  }
+
+  .excel-function-hero {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(1.1rem, 3vw, 1.8rem);
+    border: 1px solid #b9d7ff;
+    border-radius: 28px;
+    background:
+      radial-gradient(circle at 92% 8%, rgba(18, 104, 232, .15), transparent 27%),
+      radial-gradient(circle at 8% 90%, rgba(8, 168, 216, .1), transparent 24%),
+      linear-gradient(145deg, #ffffff 0%, #f4f9ff 58%, #eef7ff 100%);
+    box-shadow: 0 22px 65px rgba(39, 103, 179, .12);
+  }
+  .excel-function-hero::before {
+    content: '';
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    width: 56px;
+    height: 56px;
+    opacity: .38;
+    background-image: linear-gradient(#6ba8ef 1px, transparent 1px), linear-gradient(90deg, #6ba8ef 1px, transparent 1px);
+    background-size: 14px 14px;
+  }
+  .excel-function-hero__head { position: relative; max-width: 780px; margin: 0 auto 1.4rem; text-align: center; }
+  .excel-function-hero__head > span { color: var(--excel-blue); font-size: .72rem; font-weight: 850; letter-spacing: .16em; }
+  .excel-function-hero__head strong { display: block; margin: .45rem 0 .55rem; color: var(--excel-navy); font-size: clamp(1.35rem, 3vw, 2rem); line-height: 1.22; }
+  .excel-function-hero__head p { margin: 0; color: var(--excel-muted); font-size: .92rem; line-height: 1.75; }
+  .excel-level-track { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr); align-items: stretch; gap: .7rem; }
+  .excel-level-card { display: grid; grid-template-columns: 42px minmax(0,1fr); gap: .75rem; padding: 1rem; border: 1px solid #c9def8; border-radius: 18px; background: rgba(255,255,255,.9); box-shadow: 0 12px 30px rgba(45,107,175,.07); }
+  .excel-level-card__index { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px; color: #fff; background: linear-gradient(145deg, var(--excel-blue), var(--excel-cyan)); font-size: .74rem; font-weight: 900; }
+  .excel-level-card.is-middle .excel-level-card__index { background: linear-gradient(145deg, var(--excel-violet), var(--excel-blue)); }
+  .excel-level-card.is-apply .excel-level-card__index { background: linear-gradient(145deg, var(--excel-green), var(--excel-cyan)); }
+  .excel-level-card small { color: var(--excel-muted); font-size: .7rem; font-weight: 800; letter-spacing: .08em; }
+  .excel-level-card strong { display: block; margin: .15rem 0 .35rem; color: var(--excel-navy); font-size: 1.12rem; }
+  .excel-level-card p { margin: 0; color: var(--excel-muted); font-size: .74rem; line-height: 1.6; }
+  .excel-level-arrow { display: grid; place-items: center; color: var(--excel-blue); font-size: 1.2rem; font-weight: 900; }
+  .excel-function-hero__footer { display: grid; grid-template-columns: repeat(3,1fr); margin-top: 1rem; overflow: hidden; border: 1px solid #c9dfff; border-radius: 15px; background: rgba(255,255,255,.74); }
+  .excel-function-hero__footer span { padding: .75rem; color: var(--excel-navy); font-size: .78rem; font-weight: 800; text-align: center; }
+  .excel-function-hero__footer span + span { border-left: 1px solid #d7e5f6; }
+
+  .excel-function-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .85rem; margin: 1.1rem 0 2rem; }
+  .excel-function-card { min-width: 0; padding: 1rem; border: 1px solid #d2e2f4; border-radius: 17px; background: linear-gradient(145deg, #fff, #f8fbff); box-shadow: 0 10px 26px rgba(42,95,155,.06); }
+  .excel-function-card.is-middle { border-color: #cfcdf8; background: linear-gradient(145deg, #fff, #f8f7ff); }
+  .excel-function-card header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+  .excel-function-card header code { padding: .35rem .55rem; border: 1px solid #bdd9ff; border-radius: 9px; color: #0b65d2; background: #eef6ff; font-size: .8rem; font-weight: 850; }
+  .excel-function-card.is-middle header code { border-color: #d1cff9; color: #5149ca; background: #f2f1ff; }
+  .excel-function-card header span { color: var(--excel-navy); font-size: .84rem; font-weight: 850; }
+  .excel-function-card > p { margin: .75rem 0; color: var(--excel-muted); font-size: .82rem; line-height: 1.7; }
+  .excel-formula-example { display: grid; gap: .35rem; padding: .7rem; border: 1px solid #d7e6f7; border-radius: 11px; background: #fff; }
+  .excel-formula-example code { min-width: 0; overflow-x: auto; color: #125fb8; font-size: .72rem; white-space: nowrap; }
+  .excel-function-card.is-middle .excel-formula-example code { color: #5149ca; }
+  .excel-formula-example small { color: #77869a; font-size: .68rem; }
+
+  .excel-application-board { padding: clamp(1rem,2.6vw,1.5rem); border: 1px solid #bed9ff; border-radius: 25px; background: linear-gradient(145deg,#fff,#f0f7ff); box-shadow: 0 18px 48px rgba(39,102,174,.09); }
+  .excel-application-board__head { margin-bottom: 1rem; text-align: center; }
+  .excel-application-board__head span { color: var(--excel-blue); font-size: .7rem; font-weight: 850; letter-spacing: .14em; }
+  .excel-application-board__head strong { display: block; margin-top: .3rem; color: var(--excel-navy); font-size: 1.15rem; }
+  .excel-application-steps { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .7rem; }
+  .excel-application-steps > div { position: relative; padding: .9rem; border: 1px solid #d1e2f7; border-radius: 15px; background: rgba(255,255,255,.86); }
+  .excel-application-steps b { display: grid; place-items: center; width: 28px; height: 28px; margin-bottom: .55rem; border-radius: 999px; color: #fff; background: var(--excel-blue); font-size: .7rem; }
+  .excel-application-steps strong { display: block; color: var(--excel-navy); font-size: .82rem; }
+  .excel-application-steps span { display: block; margin-top: .3rem; color: var(--excel-muted); font-size: .7rem; line-height: 1.55; }
+
+  .excel-formula-breakdown { display: grid; gap: .5rem; margin: .8rem 0 1.8rem; padding: .9rem; border: 1px solid #d0e2f5; border-radius: 15px; background: #f8fbff; }
+  .excel-formula-breakdown > div { display: grid; grid-template-columns: minmax(100px,.28fr) minmax(0,1fr); align-items: center; gap: .75rem; padding: .55rem .65rem; border: 1px solid #dce9f7; border-radius: 10px; background: #fff; }
+  .excel-formula-breakdown code { color: #0d65ce; font-size: .75rem; font-weight: 850; }
+  .excel-formula-breakdown span { color: #5f7084; font-size: .77rem; }
+  .excel-formula-breakdown > strong { padding: .65rem .75rem; border-radius: 10px; color: #0b5c9e; background: #eaf6ff; font-size: .78rem; }
+
+  .excel-learning-path { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .8rem; }
+  .excel-learning-path > div { padding: 1rem; border: 1px solid #cfe0f4; border-radius: 18px; background: linear-gradient(145deg,#fff,#f7fbff); }
+  .excel-learning-path span { display: inline-flex; padding: .3rem .55rem; border-radius: 999px; color: #0d66d0; background: #eaf4ff; font-size: .68rem; font-weight: 850; }
+  .excel-learning-path strong { display: block; margin: .65rem 0 .4rem; color: var(--excel-navy); font-size: .92rem; }
+  .excel-learning-path p { margin: 0; color: var(--excel-muted); font-size: .76rem; line-height: 1.65; }
+
+  .excel-final-summary { padding: clamp(1.1rem,3vw,1.7rem); border: 1px solid #a8d7ee; border-radius: 24px; background: linear-gradient(135deg,#eefaff,#f4f7ff); text-align: center; box-shadow: 0 18px 50px rgba(35,109,157,.09); }
+  .excel-final-summary > span { color: var(--excel-blue); font-size: .7rem; font-weight: 900; letter-spacing: .14em; }
+  .excel-final-summary strong { display: block; max-width: 760px; margin: .5rem auto .65rem; color: var(--excel-navy); font-size: clamp(1.05rem,2.4vw,1.4rem); line-height: 1.45; }
+  .excel-final-summary p { max-width: 780px; margin: 0 auto; color: var(--excel-muted); font-size: .84rem; line-height: 1.75; }
+
+  html[data-theme='dark'] .excel-function-hero,
+  html[data-theme='dark'] .excel-application-board,
+  html[data-theme='dark'] .excel-final-summary {
+    --excel-navy: #eef7ff;
+    --excel-text: #dceaf8;
+    --excel-muted: #9aadc1;
+    border-color: #2a4a6b;
+    background: linear-gradient(145deg,#0b1726,#102239);
+    box-shadow: none;
+  }
+  html[data-theme='dark'] .excel-level-card,
+  html[data-theme='dark'] .excel-function-card,
+  html[data-theme='dark'] .excel-application-steps > div,
+  html[data-theme='dark'] .excel-learning-path > div,
+  html[data-theme='dark'] .excel-formula-breakdown > div {
+    border-color: #29445f;
+    background: #102033;
+  }
+  html[data-theme='dark'] .excel-formula-example,
+  html[data-theme='dark'] .excel-formula-breakdown {
+    border-color: #29445f;
+    background: #0d1b2b;
+  }
+  html[data-theme='dark'] .excel-function-hero__footer { border-color: #29445f; background: #0d1b2b; }
+
+  @media (max-width: 840px) {
+    .excel-level-track { grid-template-columns: 1fr; }
+    .excel-level-arrow { transform: rotate(90deg); }
+    .excel-application-steps { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .excel-learning-path { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .excel-function-hero { border-radius: 20px; }
+    .excel-function-grid { grid-template-columns: 1fr; }
+    .excel-function-hero__footer { grid-template-columns: 1fr; }
+    .excel-function-hero__footer span + span { border-top: 1px solid #d7e5f6; border-left: 0; }
+    .excel-application-steps { grid-template-columns: 1fr; }
+    .excel-formula-breakdown > div { grid-template-columns: 1fr; gap: .25rem; }
+  }
+`}</style>
