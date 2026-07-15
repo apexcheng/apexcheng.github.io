@@ -1,4 +1,4 @@
-export const seriesIds = ['personal-blog', 'yingdao-agent-development'] as const;
+export const seriesIds = ['personal-blog', 'yingdao-agent-development', 'excel-functions'] as const;
 
 export type SeriesId = (typeof seriesIds)[number];
 
@@ -14,6 +14,12 @@ export const seriesMetaList = [
     title: '影刀 × Agent 开发实战',
     description: '从知识库、页面元素探索到真实项目编码和同步验证，记录如何让 Agent 参与影刀开发。',
     order: 2,
+  },
+  {
+    id: 'excel-functions',
+    title: 'Excel 函数学习与实战',
+    description: '先建立从基础到中级的函数知识地图，再通过真实表格案例掌握常用基础函数的实际写法。',
+    order: 3,
   },
 ] as const satisfies readonly {
   id: SeriesId;
