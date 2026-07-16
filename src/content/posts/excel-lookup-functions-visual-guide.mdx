@@ -2,7 +2,7 @@
 title: "Excel 查找函数怎么选：VLOOKUP、XLOOKUP、INDEX、MATCH、XMATCH"
 description: "用五张内容相同、标注不同的案例表，逐个讲清 VLOOKUP、XLOOKUP、INDEX、MATCH、XMATCH 的公式参数、查找过程、返回结果和组合关系。"
 date: 2026-07-16T15:25:31+08:00
-updated: 2026-07-16T17:09:17+08:00
+updated: 2026-07-16T17:20:31+08:00
 category: "教程"
 tags:
   - "Excel"
@@ -58,10 +58,6 @@ import HighlightBox from '../../components/HighlightBox.astro';
 
 案例目标：在商品资料区域中找到 SKU `K161`，返回这条记录的价格。
 
-```text
-=VLOOKUP("K161",B2:E5,4,FALSE)
-```
-
 <div class="lookup-case case-vlookup" role="group" aria-label="VLOOKUP 独立可视化案例">
   <header class="lookup-case__header">
     <div><span>CASE 01</span><strong>VLOOKUP 查价格</strong></div>
@@ -112,10 +108,6 @@ VLOOKUP 中的数字 `4` 表示所选区域 `B2:E5` 中的第 4 列，不是 Exc
 ## XLOOKUP：在这列找，从那列返回
 
 案例目标不变：根据 SKU `K161` 返回价格 `199`。XLOOKUP 不再选择一个大区域，也不需要数第几列。
-
-```text
-=XLOOKUP("K161",B2:B5,E2:E5,"未找到")
-```
 
 <div class="lookup-case case-xlookup" role="group" aria-label="XLOOKUP 独立可视化案例">
   <header class="lookup-case__header">
@@ -168,10 +160,6 @@ XLOOKUP 的公式可以直接读成：**在 B 列找 K161，再从 E 列返回�
 
 MATCH 不会直接返回商品名称或价格。它只负责定位：`K161` 在 SKU 区域中排第几个？
 
-```text
-=MATCH("K161",B2:B5,0)
-```
-
 <div class="lookup-case case-match" role="group" aria-label="MATCH 独立可视化案例">
   <header class="lookup-case__header">
     <div><span>CASE 03</span><strong>MATCH 查位置</strong></div>
@@ -222,10 +210,6 @@ MATCH 返回的 `2` 不是工作表第 2 行，也不是商品价格。它表示
 
 INDEX 不负责按关键词查找。它只接受一个区域和一个位置，然后返回对应内容。
 
-```text
-=INDEX(C2:C5,2)
-```
-
 <div class="lookup-case case-index" role="group" aria-label="INDEX 独立可视化案例">
   <header class="lookup-case__header">
     <div><span>CASE 04</span><strong>INDEX 按位置取值</strong></div>
@@ -274,10 +258,6 @@ INDEX 单独使用时，位置 `2` 是直接写在公式里的。真正用于动
 ## XMATCH：更现代的位置查找
 
 XMATCH 的核心作用和 MATCH 一样：返回目标在查找区域中的相对位置。
-
-```text
-=XMATCH("K161",B2:B5)
-```
 
 <div class="lookup-case case-xmatch" role="group" aria-label="XMATCH 独立可视化案例">
   <header class="lookup-case__header">
@@ -407,27 +387,27 @@ MATCH 和 XMATCH 都可以完成这个案例。当前版本支持 XMATCH 时，�
     box-shadow: 0 18px 45px rgba(33, 82, 135, .1);
   }
   .lookup-route-hero header { text-align: center; }
-  .lookup-route-hero header span { color: var(--lookup-blue); font-size: .65rem; font-weight: 900; letter-spacing: .14em; }
+  .lookup-route-hero header span { color: var(--lookup-blue); font-size: .72rem; font-weight: 900; letter-spacing: .14em; }
   .lookup-route-hero header strong { display: block; margin: .42rem 0; color: var(--lookup-navy); font-size: clamp(1.25rem, 3vw, 1.75rem); }
-  .lookup-route-hero header p { margin: 0; color: var(--lookup-muted); font-size: .78rem; }
+  .lookup-route-hero header p { margin: 0; color: var(--lookup-muted); font-size: .88rem; }
   .lookup-route-lanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin-top: 1.15rem; }
   .lookup-route-lanes section { min-width: 0; padding: .9rem; border: 1px solid #ccdced; border-radius: 15px; background: rgba(255,255,255,.9); }
   .lookup-route-lanes section.is-position { border-color: #cfcaeb; background: #faf8ff; }
-  .lookup-route-lanes section > span { color: var(--lookup-blue); font-size: .61rem; font-weight: 900; }
+  .lookup-route-lanes section > span { color: var(--lookup-blue); font-size: .81rem; font-weight: 900; }
   .lookup-route-lanes section.is-position > span { color: var(--lookup-violet); }
   .lookup-route-lanes section > div { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; margin: .7rem 0; }
   .lookup-route-lanes b,
-  .lookup-route-lanes strong { padding: .38rem .5rem; border: 1px solid #d0deeb; border-radius: 8px; background: #fff; font-size: .65rem; }
+  .lookup-route-lanes strong { padding: .42rem .56rem; border: 1px solid #d0deeb; border-radius: 8px; background: #fff; font-size: .81rem; }
   .lookup-route-lanes strong { color: #155fae; background: #edf5ff; }
   .lookup-route-lanes section.is-position strong { color: #6741a7; background: #f3edff; }
-  .lookup-route-lanes i { color: #88a1bb; font-size: .7rem; font-style: normal; font-weight: 900; }
-  .lookup-route-lanes p { margin: 0; color: var(--lookup-muted); font-size: .66rem; line-height: 1.55; }
+  .lookup-route-lanes i { color: #88a1bb; font-size: .82rem; font-style: normal; font-weight: 900; }
+  .lookup-route-lanes p { margin: 0; color: var(--lookup-muted); font-size: .81rem; line-height: 1.6; }
 
-  .lookup-role-map { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .55rem; }
-  .lookup-role-map article { min-width: 0; padding: .78rem; border: 1px solid #d1dfec; border-radius: 14px; background: linear-gradient(145deg, #fff, #f8fbff); }
-  .lookup-role-map span { color: var(--lookup-blue); font-size: .55rem; font-weight: 900; }
-  .lookup-role-map strong { display: block; margin: .24rem 0; color: var(--lookup-navy); font-size: .82rem; }
-  .lookup-role-map p { margin: 0; color: var(--lookup-muted); font-size: .61rem; line-height: 1.5; }
+  .lookup-role-map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; }
+  .lookup-role-map article { min-width: 0; padding: .95rem; border: 1px solid #d1dfec; border-radius: 14px; background: linear-gradient(145deg, #fff, #f8fbff); }
+  .lookup-role-map span { color: var(--lookup-blue); font-size: .72rem; font-weight: 900; }
+  .lookup-role-map strong { display: block; margin: .3rem 0; color: var(--lookup-navy); font-size: 1rem; }
+  .lookup-role-map p { margin: 0; color: var(--lookup-muted); font-size: .84rem; line-height: 1.6; }
 
   .lookup-case {
     padding: clamp(.8rem, 2vw, 1.05rem);
@@ -437,15 +417,15 @@ MATCH 和 XMATCH 都可以完成这个案例。当前版本支持 XMATCH 时，�
     box-shadow: 0 14px 34px rgba(31, 77, 126, .08);
   }
   .lookup-case__header { display: flex; justify-content: space-between; gap: 1rem; align-items: end; margin-bottom: .85rem; }
-  .lookup-case__header span { color: var(--lookup-orange); font-size: .58rem; font-weight: 900; letter-spacing: .08em; }
-  .lookup-case__header strong { display: block; margin-top: .18rem; color: var(--lookup-navy); font-size: 1rem; }
-  .lookup-case__header p { max-width: 380px; margin: 0; color: var(--lookup-muted); font-size: .72rem; line-height: 1.5; text-align: right; }
+  .lookup-case__header span { color: var(--lookup-orange); font-size: .72rem; font-weight: 900; letter-spacing: .08em; }
+  .lookup-case__header strong { display: block; margin-top: .18rem; color: var(--lookup-navy); font-size: 1.15rem; }
+  .lookup-case__header p { max-width: 420px; margin: 0; color: var(--lookup-muted); font-size: .88rem; line-height: 1.55; text-align: right; }
   .lookup-case__workspace { display: grid; grid-template-columns: minmax(430px, 1.05fr) minmax(0, .95fr); gap: .85rem; align-items: stretch; }
-  .lookup-case__table-wrap { position: relative; display: grid; align-content: start; gap: .55rem; min-width: 0; padding: .65rem; border: 1px solid #d0deeb; border-radius: 15px; background: #fff; }
-  .lookup-case__table { width: 100%; margin: 0; border-collapse: separate; border-spacing: 0; overflow: hidden; border: 1px solid #c8d8e7; border-radius: 11px; background: #fff; table-layout: fixed; font-size: .62rem; }
+  .lookup-case__table-wrap { position: relative; display: grid; align-content: start; gap: .65rem; min-width: 0; overflow-x: auto; padding: .72rem; border: 1px solid #d0deeb; border-radius: 15px; background: #fff; }
+  .lookup-case__table { width: 100%; min-width: 650px; margin: 0; border-collapse: separate; border-spacing: 0; overflow: hidden; border: 1px solid #c8d8e7; border-radius: 11px; background: #fff; table-layout: fixed; font-size: .88rem; }
   .lookup-case__table th,
-  .lookup-case__table td { position: relative; padding: .5rem .4rem; border-right: 1px solid #dce6ef; border-bottom: 1px solid #dce6ef; text-align: left; white-space: nowrap; }
-  .lookup-case__table th { height: 44px; color: #fff; background: var(--lookup-blue); font-weight: 850; vertical-align: middle; }
+  .lookup-case__table td { position: relative; padding: .62rem .52rem; border-right: 1px solid #dce6ef; border-bottom: 1px solid #dce6ef; text-align: left; white-space: nowrap; }
+  .lookup-case__table th { height: 58px; padding: .58rem .52rem; color: #fff; background: var(--lookup-blue); font-size: .9rem; font-weight: 850; vertical-align: middle; }
   .lookup-case__table th:first-child,
   .lookup-case__table td:first-child { width: 12%; text-align: center; }
   .lookup-case__table th:nth-child(2),
@@ -456,7 +436,7 @@ MATCH 和 XMATCH 都可以完成这个案例。当前版本支持 XMATCH 时，�
   .lookup-case__table td:nth-child(4) { width: 18%; }
   .lookup-case__table th:nth-child(5),
   .lookup-case__table td:nth-child(5) { width: 16%; }
-  .lookup-case__table th small { display: block; margin-top: .12rem; color: rgba(255,255,255,.75); font-size: .45rem; font-weight: 650; }
+  .lookup-case__table th small { display: block; margin-top: .18rem; color: rgba(255,255,255,.78); font-size: .7rem; font-weight: 650; }
   .lookup-case__table tr.is-hit td { color: #126c45; background: #eaf8f1; font-weight: 850; }
   .lookup-case__table .is-lookup-column { background-color: #edf5ff; }
   .lookup-case__table th.is-lookup-column { color: #fff; background: #145fbf; }
@@ -477,23 +457,24 @@ MATCH 和 XMATCH 都可以完成这个案例。当前版本支持 XMATCH 时，�
   .lookup-case__table tbody tr:last-child .is-range,
   .lookup-case__table tbody tr:last-child .is-range-start,
   .lookup-case__table tbody tr:last-child .is-range-end { border-bottom: 2px solid var(--lookup-blue); }
-  .table-marker { position: absolute; top: 3px; right: 4px; display: grid; place-items: center; width: 19px; height: 19px; border: 2px solid #fff; border-radius: 999px; color: #fff; background: var(--lookup-orange); font-size: .52rem; font-weight: 950; box-shadow: 0 2px 5px rgba(0,0,0,.16); }
+  .table-marker { position: absolute; top: 4px; right: 5px; display: grid; place-items: center; width: 23px; height: 23px; border: 2px solid #fff; border-radius: 999px; color: #fff; background: var(--lookup-orange); font-size: .7rem; font-weight: 950; box-shadow: 0 2px 5px rgba(0,0,0,.16); }
   .table-range-caption,
-  .column-bridge { display: flex; gap: .45rem; align-items: center; padding: .48rem .58rem; border: 1px solid #bfd5eb; border-radius: 9px; color: #315d88; background: #edf6ff; font-size: .56rem; font-weight: 800; }
-  .table-range-caption b { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 999px; color: #fff; background: var(--lookup-orange); font-size: .52rem; }
+  .column-bridge { display: flex; gap: .5rem; align-items: center; padding: .58rem .68rem; border: 1px solid #bfd5eb; border-radius: 9px; color: #315d88; background: #edf6ff; font-size: .81rem; font-weight: 800; }
+  .table-range-caption { font-size: .81rem; }
+  .table-range-caption b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 999px; color: #fff; background: var(--lookup-orange); font-size: .7rem; }
   .column-bridge { justify-content: center; color: #39617f; }
   .column-bridge i { color: var(--lookup-orange); font-style: normal; }
   .column-bridge strong { color: var(--lookup-green); }
   .position-result-card { display: grid; grid-template-columns: auto auto 1fr; gap: .45rem; align-items: center; padding: .48rem .62rem; border: 1px solid #baddca; border-radius: 10px; background: #eef9f3; }
-  .position-result-card small { color: var(--lookup-green); font-size: .6rem; font-weight: 900; }
-  .position-result-card strong { color: var(--lookup-green); font-size: 1.15rem; }
-  .position-result-card span { color: #547363; font-size: .63rem; }
-  .position-result-card.is-text-result strong { font-size: .9rem; }
+  .position-result-card small { color: var(--lookup-green); font-size: .75rem; font-weight: 900; }
+  .position-result-card strong { color: var(--lookup-green); font-size: 1.35rem; }
+  .position-result-card span { color: #547363; font-size: .81rem; }
+  .position-result-card.is-text-result strong { font-size: 1rem; }
 
   .lookup-case__explain { display: grid; gap: .72rem; align-content: center; min-width: 0; padding: .85rem; border: 1px solid #d0deeb; border-radius: 15px; background: rgba(255,255,255,.82); }
   .lookup-case__formula { overflow-x: auto; padding: .95rem .82rem; border: 1px solid #cfddea; border-radius: 10px; color: #17283a; background: #fff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: clamp(.82rem, 1.9vw, 1.02rem); line-height: 2; white-space: nowrap; }
   .lookup-case__formula b { position: relative; display: inline-block; margin: .36rem .26rem; padding: .05rem .2rem; border-radius: 6px; }
-  .lookup-case__formula em { position: absolute; z-index: 1; display: grid; place-items: center; width: 20px; height: 20px; margin: 0; border: 2px solid #fff; border-radius: 999px; color: #fff; background: #6e8ba8; box-shadow: 0 2px 5px rgba(0,0,0,.18); font-size: .52rem; font-style: normal; line-height: 1; }
+  .lookup-case__formula em { position: absolute; z-index: 1; display: grid; place-items: center; width: 22px; height: 22px; margin: 0; border: 2px solid #fff; border-radius: 999px; color: #fff; background: #6e8ba8; box-shadow: 0 2px 5px rgba(0,0,0,.18); font-size: .7rem; font-style: normal; line-height: 1; }
   .lookup-case__formula b:nth-of-type(4n + 1) em { top: -.55rem; left: -.52rem; }
   .lookup-case__formula b:nth-of-type(4n + 2) em { top: -.55rem; right: -.52rem; }
   .lookup-case__formula b:nth-of-type(4n + 3) em { bottom: -.55rem; left: -.52rem; }
@@ -503,20 +484,20 @@ MATCH 和 XMATCH 都可以完成这个案例。当前版本支持 XMATCH 时，�
   .lookup-case__steps.three-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .lookup-case__steps.two-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .lookup-case__steps article { display: grid; grid-template-columns: auto 1fr; gap: .48rem; min-width: 0; padding: .62rem; border: 1px solid #d5e1ec; border-radius: 9px; background: #fff; }
-  .lookup-case__steps article > b { display: grid; place-items: center; width: 23px; height: 23px; border-radius: 999px; color: #fff; background: #6e8ba8; font-size: .58rem; }
-  .lookup-case__steps strong { display: block; color: var(--lookup-navy); font-size: .69rem; }
-  .lookup-case__steps p { margin: .18rem 0 0; color: var(--lookup-muted); font-size: .61rem; line-height: 1.45; }
+  .lookup-case__steps article > b { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 999px; color: #fff; background: #6e8ba8; font-size: .75rem; }
+  .lookup-case__steps strong { display: block; color: var(--lookup-navy); font-size: .88rem; }
+  .lookup-case__steps p { margin: .2rem 0 0; color: var(--lookup-muted); font-size: .81rem; line-height: 1.5; }
   .lookup-case__steps .step-blue > b { background: var(--lookup-blue); }
   .lookup-case__steps .step-orange > b { background: var(--lookup-orange); }
   .lookup-case__steps .step-violet > b { background: var(--lookup-violet); }
   .lookup-case__steps .step-green > b { background: var(--lookup-green); }
   .lookup-case__path { display: grid; grid-template-columns: 1fr auto 1fr auto 1.15fr; gap: .35rem; align-items: center; }
   .lookup-case__path span,
-  .lookup-case__path strong { padding: .56rem; border: 1px solid #d4e0eb; border-radius: 8px; background: #fff; font-size: .63rem; text-align: center; }
+  .lookup-case__path strong { padding: .62rem; border: 1px solid #d4e0eb; border-radius: 8px; background: #fff; font-size: .81rem; text-align: center; }
   .lookup-case__path strong { color: var(--lookup-green); background: #eef9f3; }
   .lookup-case__path i { color: var(--lookup-orange); font-style: normal; font-weight: 950; }
   .match-mini-compare { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: .35rem; align-items: center; }
-  .match-mini-compare code { overflow-x: auto; padding: .52rem; border: 1px solid #d2dfeb; border-radius: 8px; color: #1c63a3; background: #fff; font-size: .61rem; white-space: nowrap; }
+  .match-mini-compare code { overflow-x: auto; padding: .58rem; border: 1px solid #d2dfeb; border-radius: 8px; color: #1c63a3; background: #fff; font-size: .81rem; white-space: nowrap; }
   .match-mini-compare i { color: var(--lookup-orange); font-style: normal; font-weight: 900; }
   .tone-blue { color: var(--lookup-blue); }
   .tone-orange { color: var(--lookup-orange); }
@@ -529,23 +510,23 @@ MATCH 和 XMATCH 都可以完成这个案例。当前版本支持 XMATCH 时，�
 
   .lookup-composition-board { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: .55rem; align-items: center; padding: 1rem; border: 1px solid #cfdaea; border-radius: 18px; background: #f8fbff; }
   .lookup-composition-board section { min-width: 0; padding: .72rem; border: 1px solid #d2deea; border-radius: 11px; background: #fff; }
-  .lookup-composition-board span { color: var(--lookup-blue); font-size: .55rem; font-weight: 900; }
-  .lookup-composition-board code { display: block; overflow-x: auto; margin: .35rem 0; color: #1a62a3; font-size: .58rem; white-space: nowrap; }
-  .lookup-composition-board strong { color: var(--lookup-green); font-size: .65rem; }
+  .lookup-composition-board span { color: var(--lookup-blue); font-size: .75rem; font-weight: 900; }
+  .lookup-composition-board code { display: block; overflow-x: auto; margin: .42rem 0; color: #1a62a3; font-size: .84rem; white-space: nowrap; }
+  .lookup-composition-board strong { color: var(--lookup-green); font-size: .88rem; }
   .lookup-composition-board > i { color: var(--lookup-orange); font-style: normal; font-weight: 900; }
 
-  .lookup-choice-board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; }
-  .lookup-choice-board article { min-width: 0; padding: .82rem; border: 1px solid #d1dfeb; border-radius: 14px; background: linear-gradient(145deg, #fff, #f8fbff); }
-  .lookup-choice-board span { color: var(--lookup-blue); font-size: .56rem; font-weight: 900; }
-  .lookup-choice-board strong { display: block; margin: .28rem 0; color: var(--lookup-navy); font-size: .8rem; }
-  .lookup-choice-board p { margin: 0; color: var(--lookup-muted); font-size: .61rem; line-height: 1.5; }
+  .lookup-choice-board { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+  .lookup-choice-board article { min-width: 0; padding: 1rem; border: 1px solid #d1dfeb; border-radius: 14px; background: linear-gradient(145deg, #fff, #f8fbff); }
+  .lookup-choice-board span { color: var(--lookup-blue); font-size: .72rem; font-weight: 900; }
+  .lookup-choice-board strong { display: block; margin: .3rem 0; color: var(--lookup-navy); font-size: .96rem; }
+  .lookup-choice-board p { margin: 0; color: var(--lookup-muted); font-size: .84rem; line-height: 1.6; }
 
   .lookup-warning-stack { display: grid; gap: .48rem; }
   .lookup-warning-stack article { display: grid; grid-template-columns: auto 1fr auto; gap: .72rem; align-items: center; padding: .72rem .82rem; border: 1px solid #d7e1ea; border-radius: 12px; background: #fff; }
-  .lookup-warning-stack article > span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; color: #fff; background: var(--lookup-orange); font-size: .57rem; font-weight: 900; }
-  .lookup-warning-stack strong { color: var(--lookup-navy); font-size: .7rem; }
-  .lookup-warning-stack p { margin: .16rem 0 0; color: var(--lookup-muted); font-size: .6rem; line-height: 1.45; }
-  .lookup-warning-stack article > b { padding: .27rem .42rem; border: 1px solid #ead8c9; border-radius: 999px; color: #9a5b26; background: #fff7ef; font-size: .53rem; white-space: nowrap; }
+  .lookup-warning-stack article > span { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; color: #fff; background: var(--lookup-orange); font-size: .75rem; font-weight: 900; }
+  .lookup-warning-stack strong { color: var(--lookup-navy); font-size: .88rem; }
+  .lookup-warning-stack p { margin: .18rem 0 0; color: var(--lookup-muted); font-size: .81rem; line-height: 1.55; }
+  .lookup-warning-stack article > b { padding: .32rem .5rem; border: 1px solid #ead8c9; border-radius: 999px; color: #9a5b26; background: #fff7ef; font-size: .7rem; white-space: nowrap; }
 
   html[data-theme='dark'] .lookup-route-hero,
   html[data-theme='dark'] .lookup-role-map article,
@@ -590,7 +571,7 @@ MATCH 和 XMATCH 都可以完成这个案例。当前版本支持 XMATCH 时，�
     .lookup-case__header { align-items: start; flex-direction: column; }
     .lookup-case__header p { max-width: none; text-align: left; }
     .lookup-case__table-wrap { overflow-x: auto; }
-    .lookup-case__table { min-width: 560px; }
+    .lookup-case__table { min-width: 650px; }
     .lookup-case__steps.three-steps { grid-template-columns: 1fr; }
     .lookup-case__path,
     .lookup-composition-board { grid-template-columns: 1fr; }
