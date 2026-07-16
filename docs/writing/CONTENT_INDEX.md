@@ -34,6 +34,7 @@
 | `src/content/posts/css-selector-for-automation-beginners.mdx` | `教程` | 面向网页自动化实战的 CSS 定位教程，覆盖稳定定位三层能力、属性匹配、关系选择器、伪类边界、影刀文字定位、唯一性验证、排错路线和坏定位改造 | 写 CSS 选择器教学、网页元素定位、影刀编码版自动化、动态 class 处理和定位排错文章时参考 |
 | `src/content/posts/excel-functions-from-basic-to-intermediate.mdx` | `教程` | Excel 常用函数清单，按基础和中级两级整理统计、查找、文本、日期、动态数组和批量计算函数，并通过汇总、异常清单、去重和批量判断讲解综合应用 | 写 Excel / WPS 函数教学、表格数据处理和动态报表文章时参考 |
 | `src/content/posts/excel-basic-functions-case-guide.mdx` | `教程` | Excel 基础函数案例教程，使用订单明细和商品资料两张示例表，逐个演示 39 个统计、条件、查找、文本、逻辑和日期函数的公式、结果与组合练习 | 写 Excel 基础函数实操、函数案例讲解、订单明细统计和新手练习文章时参考 |
+| `src/content/posts/excel-wildcards-functions-guide.mdx` | `教程` | Excel 通配符专题，讲清 *、?、~ 的匹配规则，整理条件统计、查找匹配和文本搜索函数的支持方式，并用 K161 前缀平均值案例对比复杂数组公式 | 写 Excel 模糊匹配、条件统计、XLOOKUP 通配符模式、编码前缀和文本搜索文章时参考 |
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
 | `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `实践` | 泰国、马来西亚、菲律宾雅仓与深圳跨境仓的仓储网络，覆盖双平台共享库存、跨国家隔离和本地优先发货 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
 | `src/content/posts/ai-product-image-agent-workflow.mdx` | `实践` | AI 商品图工作流重构复盘，覆盖从逐张临场决策到规划前移、Art Direction、同组差异化、纯执行生成、人工审查和规则单一来源 | 写商品图生成、Agent 工作流重构、视觉规划、Prompt 设计和执行边界时参考 |

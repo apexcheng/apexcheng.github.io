@@ -1,0 +1,445 @@
+---
+title: "Excel 通配符使用指南：*、?、~ 和支持函数清单"
+description: "讲清 Excel 中 *、?、~ 三种通配符的含义，整理 COUNTIF、SUMIFS、XLOOKUP、MATCH、SEARCH 等支持通配符的常用函数，并给出前缀、包含、结尾和转义案例。"
+date: 2026-07-16T09:46:18+08:00
+category: "教程"
+tags:
+  - "Excel"
+  - "数据处理"
+minutes: 12
+featured: false
+series: "excel-functions"
+seriesOrder: 3
+draft: false
+private: false
+---
+
+import FeatureCard from '../../components/FeatureCard.astro';
+import VisualGrid from '../../components/VisualGrid.astro';
+import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
+
+在 Excel 里，通配符就是用一个符号代替不确定的文字。比如商品编码可能是 `K161-黑色`、`K161-白色`、`K161-蓝色`，只要共同点是以 `K161` 开头，就不必先用 `LEFT` 截取，可以直接用 `"K161*"` 匹配。
+
+但并不是所有函数都能直接识别通配符。即使支持，不同函数的开启方式也不一样：条件统计函数直接写，`XLOOKUP` 和 `XMATCH` 要把匹配模式设为 `2`，`VLOOKUP`、`HLOOKUP` 和 `MATCH` 则要使用精确匹配参数。
+
+<div class="wildcard-hero" role="group" aria-label="Excel 通配符匹配示意">
+  <div class="wildcard-hero__intro">
+    <span>EXCEL WILDCARD MATCHING</span>
+    <strong>不用先截取文字，也能完成模糊匹配</strong>
+    <p>把固定部分写出来，再用通配符表示不确定的字符。</p>
+  </div>
+
+  <div class="wildcard-match-board">
+    <div class="wildcard-pattern">
+      <small>匹配条件</small>
+      <code>K161*</code>
+      <span>以 K161 开头，后面可以有任意内容</span>
+    </div>
+    <div class="wildcard-arrow">→</div>
+    <div class="wildcard-values">
+      <span class="is-match">K161-黑色 <b>匹配</b></span>
+      <span class="is-match">K161-白色 <b>匹配</b></span>
+      <span>K162-黑色 <b>不匹配</b></span>
+    </div>
+  </div>
+
+  <div class="wildcard-hero__formula">
+    <span>条件平均值</span>
+    <code>=AVERAGEIF(C8:C17,"K161*",D8:D17)</code>
+  </div>
+</div>
+
+## Excel 只有三种通配符
+
+严格来说，真正负责模糊匹配的是 `*` 和 `?`；`~` 是转义符，用于告诉 Excel：后面的星号或问号是普通字符，不要把它当作通配符。
+
+<VisualGrid columns={3}>
+  <FeatureCard title="*" meta="任意数量" description="匹配任意数量的字符，也可以没有其他字符。">
+    <ul>
+      <li><code>K161*</code>：以 K161 开头</li>
+      <li><code>*K161*</code>：包含 K161</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="?" meta="一个字符" description="只代替一个字符，不能多也不能少。">
+    <ul>
+      <li><code>K?61</code>：匹配 K161、KA61</li>
+      <li><code>???-黑色</code>：前面正好三个字符</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="~" meta="取消通配" description="查找真正的星号或问号时，写在符号前面。">
+    <ul>
+      <li><code>{'~*'}</code>：匹配字符 *</li>
+      <li><code>{'~?'}</code>：匹配字符 ?</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
+
+| 写法 | 匹配规则 | 可以匹配 | 不会匹配 |
+| --- | --- | --- | --- |
+| `K161*` | 以 K161 开头 | `K161`、`K161-黑色` | `黑色-K161` |
+| `*K161` | 以 K161 结尾 | `黑色-K161` | `K161-黑色` |
+| `*K161*` | 任意位置包含 K161 | `黑色-K161-套装` | `K162-黑色` |
+| `K161?` | K161 后正好一个字符 | `K161A`、`K161黑` | `K161`、`K161黑色` |
+| `K?61` | K 和 61 中间正好一个字符 | `K161`、`KA61` | `K1261` |
+| `~*` | 查找真正的星号 | `赠品*` 中的 `*` | 普通文字 |
+
+## 哪些函数支持通配符
+
+下面整理的是日常表格中最常用、Microsoft 官方说明中明确支持通配符的函数。它们可以分成三组：条件统计、查找匹配和文本搜索。
+
+<div class="wildcard-support-matrix" role="group" aria-label="支持 Excel 通配符的常用函数">
+  <section>
+    <header><span>01</span><strong>条件统计与汇总</strong><b>直接使用</b></header>
+    <div class="wildcard-function-list">
+      <code>COUNTIF</code><code>COUNTIFS</code><code>SUMIF</code><code>SUMIFS</code>
+      <code>AVERAGEIF</code><code>AVERAGEIFS</code><code>MAXIFS</code><code>MINIFS</code>
+    </div>
+    <p>把通配符直接写在条件参数里，例如 <code>"K161*"</code>。其中 MAXIFS 和 MINIFS 使用与 SUMIFS、AVERAGEIFS 相同的条件规则。</p>
+  </section>
+
+  <section>
+    <header><span>02</span><strong>查找与位置匹配</strong><b>需要参数</b></header>
+    <div class="wildcard-function-list">
+      <code>VLOOKUP</code><code>HLOOKUP</code><code>MATCH</code><code>XLOOKUP</code><code>XMATCH</code>
+    </div>
+    <p>VLOOKUP、HLOOKUP 要写 <code>FALSE</code>，MATCH 要写 <code>0</code>；XLOOKUP、XMATCH 要把 <code>match_mode</code> 设为 <code>2</code>。</p>
+  </section>
+
+  <section>
+    <header><span>03</span><strong>文本搜索</strong><b>直接使用</b></header>
+    <div class="wildcard-function-list">
+      <code>SEARCH</code>
+    </div>
+    <p>在要查找的文本中直接使用 <code>*</code>、<code>?</code> 和 <code>~</code>。SEARCH 不区分英文大小写。</p>
+  </section>
+</div>
+
+### 支持方式速查表
+
+| 函数 | 通配符写在哪里 | 必须注意的参数 | 常见用途 |
+| --- | --- | --- | --- |
+| `COUNTIF`、`COUNTIFS` | 条件参数 | 无 | 统计某类编码、标题或状态数量 |
+| `SUMIF`、`SUMIFS` | 条件参数 | 无 | 汇总某类商品的销量或金额 |
+| `AVERAGEIF`、`AVERAGEIFS` | 条件参数 | 无 | 计算某类商品的平均值 |
+| `MAXIFS`、`MINIFS` | 条件参数 | 无 | 找出某类数据的最大值或最小值 |
+| `VLOOKUP`、`HLOOKUP` | 查找值 | 最后一个参数写 `FALSE` | 返回第一条符合模糊条件的数据 |
+| `MATCH` | 查找值 | 第三个参数写 `0` | 返回第一条匹配记录的位置 |
+| `XLOOKUP` | 查找值 | 第五个参数 `match_mode` 写 `2` | 返回第一条符合通配符的数据 |
+| `XMATCH` | 查找值 | 第三个参数 `match_mode` 写 `2` | 返回第一条符合通配符的位置 |
+| `SEARCH` | `find_text` 参数 | 无 | 在单元格文字内部查找模式 |
+
+## 三类函数的写法不一样
+
+### 1. 条件统计函数：直接写通配符
+
+这类函数最简单，只需要把通配符写进条件中。
+
+```text
+=COUNTIF(C8:C17,"K161*")
+```
+
+统计 C8:C17 中所有以 `K161` 开头的单元格数量。
+
+```text
+=SUMIF(C8:C17,"K161*",D8:D17)
+```
+
+找到 C 列中以 `K161` 开头的记录，再汇总对应 D 列。
+
+```text
+=AVERAGEIF(C8:C17,"K161*",D8:D17)
+```
+
+找到 C 列中以 `K161` 开头的记录，再计算对应 D 列平均值。
+
+条件来自单元格时，不要把单元格引用放进引号：
+
+```text
+=AVERAGEIF(C8:C17,F2&"*",D8:D17)
+```
+
+假设 F2 是 `K161`，`F2&"*"` 会拼成 `K161*`。
+
+### 2. 查找函数：先开启正确的匹配模式
+
+`XLOOKUP` 默认是精确匹配，但默认不会把 `*` 和 `?` 当成通配符。要使用通配符，必须把第五个参数设为 `2`：
+
+```text
+=XLOOKUP("K161*",C8:C17,D8:D17,"未找到",2)
+```
+
+它会返回第一条以 `K161` 开头的记录所对应的 D 列结果。
+
+`XMATCH` 同样需要把第三个参数设为 `2`：
+
+```text
+=XMATCH("K161*",C8:C17,2)
+```
+
+传统查找函数使用精确匹配参数时，也能识别通配符：
+
+```text
+=VLOOKUP("K161*",A2:D100,4,FALSE)
+```
+
+```text
+=MATCH("K161*",C8:C17,0)
+```
+
+<HighlightBox eyebrow="关键区别" title="精确匹配，不等于不能使用通配符">
+  对 VLOOKUP、HLOOKUP 和 MATCH 来说，FALSE 或 0 的意思是不要做近似区间查找。查找值中如果包含 * 或 ?，Excel 仍然会按通配符规则匹配。XLOOKUP 和 XMATCH 的设计不同，需要专门选择 match_mode = 2。
+</HighlightBox>
+
+### 3. SEARCH：在文本内部查找模式
+
+`SEARCH` 返回的是匹配内容在文本中的起始位置。比如编码中间有一个字符不确定：
+
+```text
+=SEARCH("K?61",C8)
+```
+
+如果 C8 是 `K161-黑色`，结果为 `1`。如果找不到，会返回 `#VALUE!`。
+
+实际判断时，通常会和 `ISNUMBER` 组合：
+
+```text
+=ISNUMBER(SEARCH("K?61",C8))
+```
+
+找到时返回 `TRUE`，找不到时返回 `FALSE`。
+
+## 六种高频写法
+
+<div class="wildcard-recipe-grid">
+  <article><span>开头匹配</span><code>{'"K161*"'}</code><p>型号固定，颜色、规格或备注在后面变化。</p></article>
+  <article><span>结尾匹配</span><code>{'"*已退款"'}</code><p>状态文字固定在单元格末尾。</p></article>
+  <article><span>包含匹配</span><code>{'"*蓝牙*"'}</code><p>标题任意位置出现“蓝牙”。</p></article>
+  <article><span>固定长度</span><code>{'"K???"'}</code><p>K 后面必须正好有三个字符。</p></article>
+  <article><span>引用条件</span><code>{'F2&"*"'}</code><p>把 F2 的型号作为开头，后面允许变化。</p></article>
+  <article><span>查真实符号</span><code>{'"*~**"'}</code><p>查找包含真正星号的文本。</p></article>
+</div>
+
+最后一个公式容易看花：最外侧两个 `*` 表示前后可以有任意文字，中间的 `~*` 才表示真正的星号字符。
+
+## 回到最开始的 AVERAGEIF 公式
+
+原来的公式是：
+
+```text
+=AVERAGEIF(MAP(LEFT(C8:C17,4),LAMBDA(r,LEFT(r,4))),"K161",D8:D17)
+```
+
+它的真实目标只是：**找出 C 列中所有以 K161 开头的记录，再计算 D 列平均值。**
+
+因此可以直接改成：
+
+```text
+=AVERAGEIF(C8:C17,"K161*",D8:D17)
+```
+
+新写法不需要 `LEFT`、`MAP` 和 `LAMBDA`，也不需要先生成中间数组。条件本身就是“以 K161 开头”，用原生通配符更贴近实际需求。
+
+<div class="wildcard-before-after">
+  <section>
+    <span>原写法</span>
+    <strong>先截取，再逐项处理</strong>
+    <code>MAP + LEFT + LAMBDA + AVERAGEIF</code>
+    <p>公式长，处理过程绕，兼容性和维护成本更高。</p>
+  </section>
+  <div>→</div>
+  <section class="is-recommended">
+    <span>推荐写法</span>
+    <strong>直接表达前缀条件</strong>
+    <code>AVERAGEIF + "K161*"</code>
+    <p>公式短，含义直接，也更适合作为基础函数案例。</p>
+  </section>
+</div>
+
+## 容易踩的五个坑
+
+### 1. XLOOKUP 没写匹配模式 2
+
+下面的公式不会启用通配符匹配：
+
+```text
+=XLOOKUP("K161*",C8:C17,D8:D17)
+```
+
+应该写成：
+
+```text
+=XLOOKUP("K161*",C8:C17,D8:D17,"未找到",2)
+```
+
+### 2. `*` 不等于“所有非空单元格”
+
+`COUNTIF(A2:A100,"*")` 主要用于统计包含文本的单元格，不能简单理解为统计所有非空内容。需要统计数字、文字和日期等所有非空单元格时，优先使用：
+
+```text
+=COUNTA(A2:A100)
+```
+
+### 3. 通配符匹配通常不区分英文大小写
+
+`K161*` 和 `k161*` 通常会匹配到相同内容。需要严格区分英文大小写时，不能只依赖通配符条件。
+
+### 4. FIND 和 FILTER 不会直接解释通配符
+
+`FIND` 不是通配符搜索函数；`FILTER` 的筛选条件也必须是一组 `TRUE/FALSE`。需要按包含关系筛选时，可以组合 `SEARCH`：
+
+```text
+=FILTER(D8:D17,ISNUMBER(SEARCH("K161",C8:C17)))
+```
+
+### 5. 前后空格仍然会影响匹配位置
+
+`K161*` 要求内容从 K161 开始。如果单元格实际是 ` K161-黑色`，前面多了空格，就不会被视为以 K161 开头。数据来源不干净时，先检查是否需要 `TRIM` 或清洗源数据。
+
+## 应该选哪个函数
+
+<DecisionFlow
+  title="通配符函数选择顺序"
+  items={[
+    {
+      label: '统计或汇总',
+      title: '使用 IF / IFS 条件函数家族',
+      description: '计数用 COUNTIF(S)，求和用 SUMIF(S)，平均值用 AVERAGEIF(S)，极值用 MAXIFS 或 MINIFS。',
+    },
+    {
+      label: '返回一条结果',
+      title: '优先使用 XLOOKUP',
+      description: '把 match_mode 设为 2；旧表格可以使用 VLOOKUP，并把最后一个参数设为 FALSE。',
+    },
+    {
+      label: '返回所在位置',
+      title: '使用 XMATCH 或 MATCH',
+      description: 'XMATCH 的 match_mode 写 2；MATCH 的 match_type 写 0。',
+    },
+    {
+      label: '判断文字内部是否符合模式',
+      title: '使用 SEARCH',
+      description: '需要 TRUE/FALSE 时，再组合 ISNUMBER；需要筛选多行时，可继续组合 FILTER。',
+    },
+  ]}
+/>
+
+<HighlightBox eyebrow="最终判断" title="先看需求关系，再决定要不要使用通配符">
+  条件本身是“以什么开头、以什么结尾、包含什么、某一位可以变化”时，通配符通常是最直接的写法。条件涉及数字区间、复杂逻辑或严格大小写时，就不应继续硬套通配符。
+</HighlightBox>
+
+## 参考资料
+
+- [Microsoft Support：COUNTIF function](https://support.microsoft.com/en-us/office/countif-function-e0de10c6-f885-4e71-abb4-1f464816df34)
+- [Microsoft Support：SUMIF function](https://support.microsoft.com/en-us/office/sumif-function-169b8c99-c05c-4483-a712-1697a653039b)
+- [Microsoft Support：XLOOKUP function](https://support.microsoft.com/en-us/office/xlookup-function-b7fd680e-6d10-43e6-84f9-88eae8bf5929)
+- [Microsoft Support：XMATCH function](https://support.microsoft.com/en-us/excel/functions/xmatch-function)
+- [Microsoft Support：VLOOKUP function](https://support.microsoft.com/en-us/excel/functions/vlookup-function)
+- [Microsoft Support：MATCH function](https://support.microsoft.com/en-us/excel/functions/match-function)
+- [Microsoft Support：SEARCH function](https://support.microsoft.com/en-us/excel/functions/search-function)
+
+<style>{`
+  .wildcard-hero,
+  .wildcard-support-matrix,
+  .wildcard-recipe-grid,
+  .wildcard-before-after {
+    --wc-blue: #146ce8;
+    --wc-cyan: #06a6ce;
+    --wc-green: #168f69;
+    --wc-navy: #0b2141;
+    --wc-text: #23364d;
+    --wc-muted: #66798f;
+    margin: 1.5rem 0 2.2rem;
+    color: var(--wc-text);
+  }
+
+  .wildcard-hero {
+    overflow: hidden;
+    padding: clamp(1.1rem, 3vw, 1.8rem);
+    border: 1px solid #bdd7f6;
+    border-radius: 26px;
+    background:
+      radial-gradient(circle at 92% 8%, rgba(20,108,232,.17), transparent 26%),
+      radial-gradient(circle at 4% 96%, rgba(6,166,206,.11), transparent 25%),
+      linear-gradient(145deg,#fff 0%,#f5f9ff 58%,#eef8ff 100%);
+    box-shadow: 0 22px 56px rgba(36,93,161,.11);
+  }
+  .wildcard-hero__intro { max-width: 760px; margin: 0 auto 1.1rem; text-align: center; }
+  .wildcard-hero__intro span { color: var(--wc-blue); font-size: .68rem; font-weight: 900; letter-spacing: .15em; }
+  .wildcard-hero__intro strong { display: block; margin: .42rem 0 .5rem; color: var(--wc-navy); font-size: clamp(1.25rem,3vw,1.9rem); line-height: 1.3; }
+  .wildcard-hero__intro p { margin: 0; color: var(--wc-muted); font-size: .86rem; }
+  .wildcard-match-board { display: grid; grid-template-columns: minmax(0,.8fr) auto minmax(0,1.2fr); gap: .75rem; align-items: center; }
+  .wildcard-pattern,
+  .wildcard-values { padding: .9rem; border: 1px solid #ccdef3; border-radius: 15px; background: rgba(255,255,255,.86); }
+  .wildcard-pattern { text-align: center; }
+  .wildcard-pattern small { display: block; color: var(--wc-muted); font-size: .65rem; font-weight: 800; }
+  .wildcard-pattern code { display: block; margin: .4rem 0; color: var(--wc-blue); font-size: 1.45rem; font-weight: 900; }
+  .wildcard-pattern span { color: #688099; font-size: .68rem; }
+  .wildcard-arrow { color: #6d9dd3; font-size: 1.3rem; font-weight: 900; }
+  .wildcard-values { display: grid; gap: .45rem; }
+  .wildcard-values span { display: flex; justify-content: space-between; gap: 1rem; padding: .5rem .65rem; border: 1px solid #dde7f2; border-radius: 9px; color: #687b90; background: #f9fbfd; font-size: .72rem; }
+  .wildcard-values span.is-match { border-color: #bfe3d8; color: #176d54; background: #f0faf7; }
+  .wildcard-values b { font-size: .63rem; }
+  .wildcard-hero__formula { display: flex; align-items: center; gap: .75rem; margin-top: .85rem; padding: .75rem .9rem; border: 1px solid #c9dcf2; border-radius: 13px; background: #0d2d56; }
+  .wildcard-hero__formula span { flex: none; color: #9fd4ff; font-size: .66rem; font-weight: 850; }
+  .wildcard-hero__formula code { overflow-x: auto; color: #f0f8ff; font-size: .74rem; white-space: nowrap; }
+
+  .wildcard-support-matrix { display: grid; gap: .75rem; }
+  .wildcard-support-matrix section { padding: 1rem; border: 1px solid #cfdeef; border-radius: 17px; background: linear-gradient(145deg,#fff,#f7fbff); box-shadow: 0 10px 28px rgba(42,90,145,.055); }
+  .wildcard-support-matrix header { display: flex; align-items: center; gap: .65rem; }
+  .wildcard-support-matrix header span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; color: #fff; background: linear-gradient(145deg,var(--wc-blue),var(--wc-cyan)); font-size: .62rem; font-weight: 900; }
+  .wildcard-support-matrix header strong { flex: 1; color: var(--wc-navy); font-size: .88rem; }
+  .wildcard-support-matrix header b { padding: .27rem .5rem; border: 1px solid #bfdfd5; border-radius: 999px; color: var(--wc-green); background: #effaf6; font-size: .61rem; }
+  .wildcard-function-list { display: flex; flex-wrap: wrap; gap: .4rem; margin: .75rem 0; }
+  .wildcard-function-list code { padding: .3rem .5rem; border: 1px solid #c9ddf4; border-radius: 8px; color: #1265bf; background: #eef6ff; font-size: .67rem; font-weight: 800; }
+  .wildcard-support-matrix p { margin: 0; color: var(--wc-muted); font-size: .73rem; line-height: 1.65; }
+
+  .wildcard-recipe-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .7rem; }
+  .wildcard-recipe-grid article { min-width: 0; padding: .9rem; border: 1px solid #d0e0f1; border-radius: 15px; background: linear-gradient(145deg,#fff,#f8fbff); }
+  .wildcard-recipe-grid span { display: block; color: var(--wc-blue); font-size: .67rem; font-weight: 900; }
+  .wildcard-recipe-grid code { display: block; overflow-x: auto; margin: .38rem 0; color: var(--wc-navy); font-size: .9rem; font-weight: 850; white-space: nowrap; }
+  .wildcard-recipe-grid p { margin: 0; color: var(--wc-muted); font-size: .68rem; line-height: 1.5; }
+
+  .wildcard-before-after { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: .8rem; align-items: center; }
+  .wildcard-before-after section { min-width: 0; padding: 1rem; border: 1px solid #dfd6d3; border-radius: 17px; background: linear-gradient(145deg,#fff,#fcf8f7); }
+  .wildcard-before-after section.is-recommended { border-color: #bfe1d7; background: linear-gradient(145deg,#fff,#f1faf7); }
+  .wildcard-before-after > div { color: #7a9cc3; font-size: 1.2rem; font-weight: 900; }
+  .wildcard-before-after span { color: #9a6c5f; font-size: .64rem; font-weight: 900; }
+  .wildcard-before-after .is-recommended span { color: var(--wc-green); }
+  .wildcard-before-after strong { display: block; margin: .35rem 0 .6rem; color: var(--wc-navy); font-size: .87rem; }
+  .wildcard-before-after code { display: block; overflow-x: auto; padding: .6rem; border: 1px solid #e0e5eb; border-radius: 9px; color: #1765ad; background: #fff; font-size: .66rem; white-space: nowrap; }
+  .wildcard-before-after p { margin: .6rem 0 0; color: var(--wc-muted); font-size: .7rem; line-height: 1.55; }
+
+  html[data-theme='dark'] .wildcard-hero,
+  html[data-theme='dark'] .wildcard-support-matrix section,
+  html[data-theme='dark'] .wildcard-recipe-grid article,
+  html[data-theme='dark'] .wildcard-before-after section {
+    --wc-navy: #edf6ff;
+    --wc-text: #dce8f5;
+    --wc-muted: #9cafc1;
+    border-color: #294661;
+    background: linear-gradient(145deg,#0d1a2a,#10243a);
+    box-shadow: none;
+  }
+  html[data-theme='dark'] .wildcard-pattern,
+  html[data-theme='dark'] .wildcard-values,
+  html[data-theme='dark'] .wildcard-values span,
+  html[data-theme='dark'] .wildcard-before-after code {
+    border-color: #2b4864;
+    background: #0b1928;
+  }
+
+  @media (max-width: 760px) {
+    .wildcard-match-board,
+    .wildcard-before-after { grid-template-columns: 1fr; }
+    .wildcard-arrow,
+    .wildcard-before-after > div { transform: rotate(90deg); text-align: center; }
+    .wildcard-recipe-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  }
+  @media (max-width: 520px) {
+    .wildcard-hero { border-radius: 20px; }
+    .wildcard-hero__formula { align-items: flex-start; flex-direction: column; }
+    .wildcard-recipe-grid { grid-template-columns: 1fr; }
+    .wildcard-support-matrix header { flex-wrap: wrap; }
+  }
+`}</style>
