@@ -21,6 +21,7 @@ src/content/posts/visual-lab/
 
 | 文件 | 用途 |
 | --- | --- |
+| `src/content/posts/visual-lab/excel-formula-visual-patterns.mdx` | Excel 公式教学可视化模式，展示数据样本、公式参数映射、字符槽位、错误结果对比和复杂公式简化的复用方法 |
 | `src/content/posts/visual-lab/article-visual-system-demo.mdx` | 文章视觉系统实战 Demo，展示一篇文章如何先做视觉方案，再用总览、流程、路由、风险和审查面板组织成视觉文章 |
 | `src/content/posts/visual-lab/mdx-design-patterns-gallery.mdx` | MDX 文章视觉模式参考，展示结论卡、Bento、指标看板、对比面板、问题链路、时间线、案例拆解、决策树和总结横幅 |
 | `src/content/posts/visual-lab/screenshot-mdx-replica-demo.mdx` | 截图风格 MDX 复刻示例，展示 Agent 功能矩阵、安全防御报告和搜索工具决策树三类定制视觉组件 |

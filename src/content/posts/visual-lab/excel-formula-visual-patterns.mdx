@@ -1,0 +1,309 @@
+---
+title: "Excel 公式教学可视化：让数据、参数、命中结果连起来"
+description: "从 Excel 通配符文章中提炼一套可复用的公式教学视觉模式：数据样本、参数映射、字符槽位、结果反馈和复杂公式简化。"
+date: 2026-07-16T11:20:08+08:00
+category: "视觉实验室"
+tags:
+  - "文章设计"
+  - "Excel"
+minutes: 8
+featured: false
+draft: false
+private: false
+---
+
+import HighlightBox from '../../../components/HighlightBox.astro';
+
+Excel 教程最常见的问题，不是公式写错，而是读者只能看到一行公式，却看不到它究竟检查了哪一列、命中了哪些数据、最后为什么得到这个结果。
+
+这篇视觉实验从 [Excel 通配符使用指南](/articles/excel-wildcards-functions-guide/) 中抽取方法，重点不是再讲一次通配符，而是总结：**公式教学怎样从“展示公式”升级为“展示数据如何流过公式”。**
+
+<div class="formula-pattern-hero" role="group" aria-label="Excel 公式教学可视化核心关系">
+  <header>
+    <span>FORMULA VISUAL PATTERN</span>
+    <strong>一张图同时回答四个问题</strong>
+    <p>检查哪里、匹配什么、命中了谁、最终得到什么。</p>
+  </header>
+  <div class="formula-pattern-hero__flow">
+    <div><small>01</small><b>数据样本</b><span>先让读者看到真实输入</span></div>
+    <i>→</i>
+    <div><small>02</small><b>参数映射</b><span>公式参数对应到数据区域</span></div>
+    <i>→</i>
+    <div><small>03</small><b>命中反馈</b><span>高亮真正参与计算的记录</span></div>
+    <i>→</i>
+    <div><small>04</small><b>计算结果</b><span>展示过程和最终答案</span></div>
+  </div>
+</div>
+
+## 模式一：公式参数映射板
+
+这个模式适合 `SUMIF`、`AVERAGEIF`、`XLOOKUP`、`FILTER`、SQL 查询和其他“输入范围 + 判断条件 + 返回结果”的内容。
+
+<div class="formula-map-board" role="group" aria-label="SUMIF 公式参数与数据区域映射示例">
+  <div class="formula-map-table">
+    <div class="formula-map-table__head"><span>SKU</span><span>订单金额</span></div>
+    <div class="is-hit"><span>K161-BK</span><b>199</b></div>
+    <div><span>X51C-BK</span><b>159</b></div>
+    <div><span>M30-BK</span><b>99</b></div>
+    <div class="is-hit"><span>K161-WH</span><b>219</b></div>
+    <div><span>P12-BL</span><b>139</b></div>
+    <div class="is-hit"><span>K161-BK</span><b>209</b></div>
+  </div>
+
+  <div class="formula-map-main">
+    <div class="formula-map-line">
+      <span>=SUMIF(</span><b class="tone-blue">C8:C17</b><span>,</span><b class="tone-orange">{'"K161*"'}</b><span>,</span><b class="tone-violet">D8:D17</b><span>)</span>
+    </div>
+    <div class="formula-map-legend">
+      <div class="tone-blue"><small>检查哪里</small><strong>SKU 列</strong></div>
+      <div class="tone-orange"><small>匹配什么</small><strong>以 K161 开头</strong></div>
+      <div class="tone-violet"><small>汇总哪里</small><strong>订单金额列</strong></div>
+    </div>
+    <div class="formula-map-result">
+      <span>命中 3 条</span>
+      <b>199 + 219 + 209</b>
+      <strong>= 627</strong>
+    </div>
+  </div>
+</div>
+
+这个视觉块里，颜色不是装饰，而是固定语义：蓝色表示检查范围，橙色表示判断条件，紫色表示计算或返回范围，绿色表示实际命中的数据。
+
+<HighlightBox eyebrow="核心规则" title="不要只框整列，要把“检查范围”和“实际命中”区分开">
+  整列高亮只能说明公式会检查哪里；命中单元格和对应结果再次高亮，才能说明哪些数据真正参与了计算。
+</HighlightBox>
+
+## 模式二：字符槽位演示
+
+解释通配符、正则表达式、文本截取或编码结构时，普通定义不够直观。可以把字符串拆成“固定内容”和“可变化槽位”。
+
+<div class="formula-slot-lab" role="group" aria-label="星号问号和波浪号的字符槽位示例">
+  <article>
+    <header><code>&#42;</code><strong>任意数量</strong></header>
+    <div class="formula-slots"><b>K161</b><i>任意内容</i></div>
+    <p><code>K161&#42;</code> 可以匹配 K161、K161-BK 和 K161-黑色-套装。</p>
+  </article>
+  <article>
+    <header><code>?</code><strong>正好一位</strong></header>
+    <div class="formula-slots"><b>K</b><em>?</em><b>61</b></div>
+    <p><code>K?61</code> 可以匹配 K161、KA61，但不能匹配 K1261。</p>
+  </article>
+  <article>
+    <header><code>&#126;</code><strong>取消特殊含义</strong></header>
+    <div class="formula-slots"><i>&#42;</i><span>→</span><b>&#126;&#42;</b></div>
+    <p>单独的星号表示任意字符，前面加波浪号后表示真正的星号字符。</p>
+  </article>
+</div>
+
+这个模式的关键不是做三张卡片，而是让符号的空间关系可见：`?` 是固定宽度的一个槽位，`*` 是可以伸缩的区域，`~` 则改变后一个符号的含义。
+
+## 模式三：错误公式必须配实际结果
+
+只写“错误”和“正确”仍然比较抽象。更有效的结构是：**公式 → 实际结果 → 原因 → 正确写法。**
+
+<div class="formula-error-compare" role="group" aria-label="XLOOKUP 通配符模式错误和正确结果对比">
+  <section>
+    <span>默认写法</span>
+    <code>{'=XLOOKUP("K161*",C8:C17,D8:D17)'}</code>
+    <strong>结果：未找到</strong>
+    <p>没有开启通配符匹配模式。</p>
+  </section>
+  <i>→</i>
+  <section class="is-correct">
+    <span>正确写法</span>
+    <code>{'=XLOOKUP("K161*",C8:C17,D8:D17,"未找到",2)'}</code>
+    <strong>结果：199</strong>
+    <p>第五个参数写 2 后，返回第一条匹配记录。</p>
+  </section>
+</div>
+
+这种写法也适合调试类文章。读者不只知道哪一行需要修改，还能理解修改前后程序行为发生了什么变化。
+
+## 模式四：复杂公式简化要展示“删掉了什么”
+
+公式简化不只是字符变少，而是处理步骤变少。视觉上应该把中间过程拆出来，让读者看到新写法为什么更直接。
+
+<div class="formula-simplify" role="group" aria-label="复杂数组公式与通配符公式的处理步骤对比">
+  <section>
+    <span>原写法</span>
+    <strong>先截取，再逐项处理</strong>
+    <div><i>LEFT</i><b>→</b><i>MAP</i><b>→</b><i>LAMBDA</i><b>→</b><i>AVERAGEIF</i></div>
+    <code>{'=AVERAGEIF(MAP(LEFT(...)),"K161",D8:D17)'}</code>
+  </section>
+  <i>→</i>
+  <section class="is-short">
+    <span>推荐写法</span>
+    <strong>直接描述前缀条件</strong>
+    <div><i>AVERAGEIF</i><b>+</b><i>{'"K161*"'}</i></div>
+    <code>{'=AVERAGEIF(C8:C17,"K161*",D8:D17)'}</code>
+  </section>
+</div>
+
+如果只是把两个公式并排放置，读者只能看到“长”和“短”；把处理步骤画出来后，才能看到 `LEFT`、`MAP` 和 `LAMBDA` 为什么可以被删除。
+
+## 模式五：颜色和布局必须保持稳定
+
+<div class="formula-design-rules" role="group" aria-label="公式教学可视化设计规则">
+  <article><span>颜色</span><strong>一种颜色只表达一种含义</strong><p>不要让蓝色一会儿表示输入，一会儿又表示正确结果。</p></article>
+  <article><span>箭头</span><strong>距离短、方向清楚、尽量不交叉</strong><p>公式应靠近表格，避免为了连线跨越整个页面。</p></article>
+  <article><span>结果</span><strong>必须显示命中数据和最终答案</strong><p>公式教学不能停在参数说明，还要完成一次真实计算。</p></article>
+  <article><span>移动端</span><strong>横向关系切成纵向阅读</strong><p>桌面端可以左右映射，窄屏应改为表格、公式、结果依次排列。</p></article>
+</div>
+
+## 什么时候使用这套模式
+
+适合：
+
+- Excel、WPS、SQL、正则表达式和数据筛选教程。
+- 一个公式包含多个范围、条件或返回区域。
+- 需要解释为什么某些记录被选中、另一些没有被选中。
+- 需要比较修改前后的实际结果。
+
+不适合：
+
+- 公式只有一个简单参数，普通代码块已经足够。
+- 数据量很大，需要完整查询表格，而不是教学演示。
+- 重点是函数清单，不是数据如何参与计算。
+
+<HighlightBox eyebrow="复用判断" title="公式教学最适合被看成一条数据解释链">
+  原始数据 → 参数对应 → 条件命中 → 计算过程 → 最终结果。只要文章中的核心问题是“这些数据为什么得到这个答案”，就可以优先使用公式参数映射板。
+</HighlightBox>
+
+<style>{`
+  .formula-pattern-hero,
+  .formula-map-board,
+  .formula-slot-lab,
+  .formula-error-compare,
+  .formula-simplify,
+  .formula-design-rules {
+    --fp-blue: #176fe6;
+    --fp-orange: #e76f20;
+    --fp-violet: #7550c7;
+    --fp-green: #16895a;
+    --fp-navy: #102747;
+    --fp-text: #2e4157;
+    --fp-muted: #6d7f91;
+    margin: 1.5rem 0 2.2rem;
+    color: var(--fp-text);
+  }
+
+  .formula-pattern-hero {
+    padding: clamp(1rem, 3vw, 1.6rem);
+    border: 1px solid #c5d9ef;
+    border-radius: 24px;
+    background: linear-gradient(145deg, #ffffff, #f3f8ff);
+    box-shadow: 0 18px 45px rgba(38, 88, 145, .1);
+  }
+  .formula-pattern-hero header { text-align: center; }
+  .formula-pattern-hero header span { color: var(--fp-blue); font-size: .66rem; font-weight: 900; letter-spacing: .14em; }
+  .formula-pattern-hero header strong { display: block; margin: .45rem 0; color: var(--fp-navy); font-size: clamp(1.25rem, 3vw, 1.75rem); }
+  .formula-pattern-hero header p { margin: 0; color: var(--fp-muted); font-size: .82rem; }
+  .formula-pattern-hero__flow { display: grid; grid-template-columns: repeat(7, auto); gap: .55rem; align-items: center; margin-top: 1.15rem; }
+  .formula-pattern-hero__flow div { min-width: 0; padding: .8rem; border: 1px solid #d1e0f0; border-radius: 13px; background: rgba(255,255,255,.88); }
+  .formula-pattern-hero__flow small { color: var(--fp-blue); font-size: .58rem; font-weight: 900; }
+  .formula-pattern-hero__flow b { display: block; margin: .2rem 0; color: var(--fp-navy); font-size: .76rem; }
+  .formula-pattern-hero__flow span { display: block; color: var(--fp-muted); font-size: .62rem; line-height: 1.45; }
+  .formula-pattern-hero__flow i { color: #87a6c8; font-style: normal; font-weight: 900; }
+
+  .formula-map-board { display: grid; grid-template-columns: minmax(250px, .8fr) minmax(0, 1.2fr); gap: 1rem; padding: 1rem; border: 1px solid #cbdced; border-radius: 20px; background: #f8fbff; }
+  .formula-map-table { overflow: hidden; border: 1px solid #c9d8e8; border-radius: 13px; background: #fff; }
+  .formula-map-table > div { display: grid; grid-template-columns: 1.2fr .8fr; }
+  .formula-map-table span,
+  .formula-map-table b { padding: .52rem .65rem; border-bottom: 1px solid #e0e8f0; font-size: .7rem; }
+  .formula-map-table b { border-left: 1px solid #e0e8f0; text-align: right; }
+  .formula-map-table__head { color: #fff; background: var(--fp-blue); font-weight: 850; }
+  .formula-map-table__head span { border-bottom: 0; }
+  .formula-map-table .is-hit span,
+  .formula-map-table .is-hit b { color: #147045; background: #eaf8f1; font-weight: 850; }
+  .formula-map-main { display: grid; gap: .75rem; align-content: center; }
+  .formula-map-line { overflow-x: auto; padding: .85rem; border: 1px solid #cfdceb; border-radius: 12px; color: #172536; background: #fff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: clamp(.82rem, 2vw, 1.05rem); white-space: nowrap; }
+  .formula-map-legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+  .formula-map-legend div { padding: .7rem; border: 1px solid currentColor; border-radius: 11px; background: #fff; }
+  .formula-map-legend small { display: block; font-size: .58rem; font-weight: 900; }
+  .formula-map-legend strong { display: block; margin-top: .18rem; color: var(--fp-navy); font-size: .68rem; }
+  .formula-map-result { display: grid; grid-template-columns: auto 1fr auto; gap: .7rem; align-items: center; padding: .85rem; border: 1px solid #b9dfcb; border-radius: 12px; background: #eef9f3; }
+  .formula-map-result span { color: var(--fp-green); font-size: .66rem; font-weight: 900; }
+  .formula-map-result b { color: #49695a; font-size: .7rem; }
+  .formula-map-result strong { color: var(--fp-green); font-size: 1.15rem; }
+  .tone-blue { color: var(--fp-blue); }
+  .tone-orange { color: var(--fp-orange); }
+  .tone-violet { color: var(--fp-violet); }
+
+  .formula-slot-lab,
+  .formula-design-rules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+  .formula-slot-lab article,
+  .formula-design-rules article { padding: .95rem; border: 1px solid #d1dfed; border-radius: 16px; background: linear-gradient(145deg, #fff, #f8fbff); }
+  .formula-slot-lab header { display: flex; align-items: center; gap: .6rem; }
+  .formula-slot-lab header code { display: grid; place-items: center; width: 35px; height: 35px; border-radius: 10px; color: #fff; background: var(--fp-blue); font-size: 1rem; font-weight: 900; }
+  .formula-slot-lab header strong { color: var(--fp-navy); font-size: .8rem; }
+  .formula-slots { display: flex; align-items: stretch; margin: .8rem 0; }
+  .formula-slots b,
+  .formula-slots i,
+  .formula-slots em,
+  .formula-slots span { display: grid; place-items: center; min-height: 38px; padding: .35rem .55rem; border: 1px solid #c8d8e9; font-size: .68rem; font-style: normal; }
+  .formula-slots b { color: #155faf; background: #eaf4ff; }
+  .formula-slots i { flex: 1; color: #9a5d17; background: #fff3df; }
+  .formula-slots em { min-width: 42px; color: #7144b1; background: #f2ebff; font-weight: 900; }
+  .formula-slot-lab p { margin: 0; color: var(--fp-muted); font-size: .68rem; line-height: 1.55; }
+
+  .formula-error-compare,
+  .formula-simplify { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: .8rem; align-items: center; }
+  .formula-error-compare section,
+  .formula-simplify section { min-width: 0; padding: 1rem; border: 1px solid #ead2ca; border-radius: 16px; background: #fff8f5; }
+  .formula-error-compare .is-correct,
+  .formula-simplify .is-short { border-color: #bfe0cf; background: #f1faf5; }
+  .formula-error-compare > i,
+  .formula-simplify > i { color: #85a1bd; font-style: normal; font-weight: 900; }
+  .formula-error-compare span,
+  .formula-simplify span { color: #a45c42; font-size: .62rem; font-weight: 900; }
+  .formula-error-compare .is-correct span,
+  .formula-simplify .is-short span { color: var(--fp-green); }
+  .formula-error-compare code,
+  .formula-simplify code { display: block; overflow-x: auto; margin: .55rem 0; padding: .55rem; border: 1px solid #dce3ea; border-radius: 9px; color: #165e9f; background: #fff; font-size: .64rem; white-space: nowrap; }
+  .formula-error-compare strong,
+  .formula-simplify strong { display: block; color: var(--fp-navy); font-size: .8rem; }
+  .formula-error-compare p { margin: .45rem 0 0; color: var(--fp-muted); font-size: .67rem; }
+  .formula-simplify section > div { display: flex; flex-wrap: wrap; gap: .35rem; margin: .65rem 0; }
+  .formula-simplify section > div i { padding: .3rem .45rem; border: 1px solid #d0dcea; border-radius: 7px; color: #315c88; background: #f7fbff; font-size: .62rem; font-style: normal; font-weight: 800; }
+  .formula-simplify section > div b { color: #8aa1b9; font-size: .65rem; }
+
+  .formula-design-rules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .formula-design-rules span { color: var(--fp-blue); font-size: .6rem; font-weight: 900; }
+  .formula-design-rules strong { display: block; margin: .28rem 0 .4rem; color: var(--fp-navy); font-size: .78rem; }
+  .formula-design-rules p { margin: 0; color: var(--fp-muted); font-size: .67rem; line-height: 1.55; }
+
+  html[data-theme='dark'] .formula-pattern-hero,
+  html[data-theme='dark'] .formula-map-board,
+  html[data-theme='dark'] .formula-slot-lab article,
+  html[data-theme='dark'] .formula-design-rules article,
+  html[data-theme='dark'] .formula-error-compare section,
+  html[data-theme='dark'] .formula-simplify section {
+    --fp-navy: #edf6ff;
+    --fp-text: #dbe8f5;
+    --fp-muted: #9db0c2;
+    border-color: #294761;
+    background: linear-gradient(145deg, #0d1a29, #11263b);
+    box-shadow: none;
+  }
+  html[data-theme='dark'] .formula-map-table,
+  html[data-theme='dark'] .formula-map-line,
+  html[data-theme='dark'] .formula-map-legend div,
+  html[data-theme='dark'] .formula-error-compare code,
+  html[data-theme='dark'] .formula-simplify code { border-color: #2d4962; background: #0b1927; }
+
+  @media (max-width: 760px) {
+    .formula-pattern-hero__flow { grid-template-columns: 1fr; }
+    .formula-pattern-hero__flow i,
+    .formula-error-compare > i,
+    .formula-simplify > i { transform: rotate(90deg); text-align: center; }
+    .formula-map-board,
+    .formula-error-compare,
+    .formula-simplify { grid-template-columns: 1fr; }
+    .formula-slot-lab { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 520px) {
+    .formula-map-legend,
+    .formula-design-rules { grid-template-columns: 1fr; }
+    .formula-map-result { grid-template-columns: 1fr; }
+  }
+`}</style>
