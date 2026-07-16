@@ -2,6 +2,7 @@
 title: "Excel 通配符使用指南：*、?、~ 和支持函数清单"
 description: "讲清 Excel 中 *、?、~ 三种通配符的含义，整理 COUNTIF、SUMIFS、XLOOKUP、MATCH、SEARCH 等支持通配符的常用函数，并给出前缀、包含、结尾和转义案例。"
 date: 2026-07-16T09:46:18+08:00
+updated: 2026-07-16T10:57:28+08:00
 category: "教程"
 tags:
   - "Excel"
@@ -14,66 +15,164 @@ draft: false
 private: false
 ---
 
-import FeatureCard from '../../components/FeatureCard.astro';
-import VisualGrid from '../../components/VisualGrid.astro';
 import HighlightBox from '../../components/HighlightBox.astro';
 import DecisionFlow from '../../components/DecisionFlow.astro';
 
-在 Excel 里，通配符就是用一个符号代替不确定的文字。比如商品编码可能是 `K161-黑色`、`K161-白色`、`K161-蓝色`，只要共同点是以 `K161` 开头，就不必先用 `LEFT` 截取，可以直接用 `"K161*"` 匹配。
+在 Excel 里，通配符就是用一个符号代替不确定的文字。比如商品编码可能是 `K161-BK`、`K161-WH`、`K161-蓝牙版`，共同点都是以 `K161` 开头，就不必先用 `LEFT` 截取，直接写 `"K161*"` 即可。
 
-但并不是所有函数都能直接识别通配符。即使支持，不同函数的开启方式也不一样：条件统计函数直接写，`XLOOKUP` 和 `XMATCH` 要把匹配模式设为 `2`，`VLOOKUP`、`HLOOKUP` 和 `MATCH` 则要使用精确匹配参数。
+先看一个完整案例。下面的公式会检查 SKU 列，找到所有以 `K161` 开头的记录，再把对应订单金额汇总起来。
 
-<div class="wildcard-hero" role="group" aria-label="Excel 通配符匹配示意">
-  <div class="wildcard-hero__intro">
-    <span>EXCEL WILDCARD MATCHING</span>
-    <strong>不用先截取文字，也能完成模糊匹配</strong>
-    <p>把固定部分写出来，再用通配符表示不确定的字符。</p>
-  </div>
-
-  <div class="wildcard-match-board">
-    <div class="wildcard-pattern">
-      <small>匹配条件</small>
-      <code>K161*</code>
-      <span>以 K161 开头，后面可以有任意内容</span>
+<div class="wildcard-sheet-hero" role="group" aria-label="SUMIF 使用 K161 星号匹配 SKU 并汇总订单金额">
+  <header class="wildcard-sheet-hero__header">
+    <div class="wildcard-excel-mark" aria-hidden="true">X</div>
+    <div>
+      <span>EXCEL WILDCARD MATCHING</span>
+      <strong><code>K161&#42;</code>：匹配所有以 K161 开头的 SKU</strong>
+      <p>不用 LEFT 截取，直接用通配符完成匹配与汇总。</p>
     </div>
-    <div class="wildcard-arrow">→</div>
-    <div class="wildcard-values">
-      <span class="is-match">K161-黑色 <b>匹配</b></span>
-      <span class="is-match">K161-白色 <b>匹配</b></span>
-      <span>K162-黑色 <b>不匹配</b></span>
-    </div>
-  </div>
+  </header>
 
-  <div class="wildcard-hero__formula">
-    <span>条件平均值</span>
-    <code>=AVERAGEIF(C8:C17,"K161*",D8:D17)</code>
+  <div class="wildcard-sheet-workspace">
+    <div class="wildcard-sheet-table-wrap">
+      <table class="wildcard-sheet-table">
+        <thead>
+          <tr>
+            <th aria-label="行号"></th>
+            <th>订单号</th>
+            <th>平台</th>
+            <th class="is-range">SKU</th>
+            <th>订单金额</th>
+            <th>客服响应分钟</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>8</td><td>TM001</td><td>天猫</td><td class="is-range is-match">K161-BK</td><td class="is-sum">199.00</td><td>4</td></tr>
+          <tr><td>9</td><td>PDD002</td><td>拼多多</td><td class="is-range">X51C-BK</td><td>159.00</td><td>8</td></tr>
+          <tr><td>10</td><td>JD003</td><td>京东</td><td class="is-range">M30-BK</td><td>99.00</td><td>3</td></tr>
+          <tr><td>11</td><td>TM004</td><td>天猫</td><td class="is-range">P12-BK</td><td>149.00</td><td>5</td></tr>
+          <tr><td>12</td><td>PDD005</td><td>拼多多</td><td class="is-range is-match">K161-WH</td><td class="is-sum">219.00</td><td>12</td></tr>
+          <tr><td>13</td><td>JD006</td><td>京东</td><td class="is-range">X51C-BK</td><td>169.00</td><td>6</td></tr>
+          <tr><td>14</td><td>TM007</td><td>天猫</td><td class="is-range">M30-WH</td><td>109.00</td><td>2</td></tr>
+          <tr><td>15</td><td>PDD008</td><td>拼多多</td><td class="is-range">P12-BL</td><td>139.00</td><td>10</td></tr>
+          <tr><td>16</td><td>TM009</td><td>天猫</td><td class="is-range is-match">K161-BK</td><td class="is-sum">209.00</td><td>7</td></tr>
+          <tr><td>17</td><td>PDD010</td><td>拼多多</td><td class="is-range">M30-BK</td><td>89.00</td><td>9</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="wildcard-formula-panel">
+      <div class="wildcard-formula-line" aria-label="SUMIF 公式参数拆解">
+        <span>=SUMIF(</span><b class="tone-blue">C8:C17</b><span>,</span><b class="tone-orange">{'"K161*"'}</b><span>,</span><b class="tone-violet">D8:D17</b><span>)</span>
+      </div>
+
+      <div class="wildcard-formula-legend">
+        <div class="tone-blue"><small>检查哪里</small><strong>SKU 列</strong><span>C8:C17</span></div>
+        <div class="tone-orange"><small>匹配什么</small><strong>以 K161 开头</strong><span>{'"K161*"'}</span></div>
+        <div class="tone-violet"><small>汇总哪里</small><strong>订单金额列</strong><span>D8:D17</span></div>
+      </div>
+
+      <div class="wildcard-result-card">
+        <div><small>命中</small><strong>K161-BK、K161-WH、K161-BK</strong></div>
+        <div><small>金额</small><strong>199 + 219 + 209</strong></div>
+        <div class="is-total"><small>结果</small><strong>627</strong></div>
+      </div>
+    </div>
   </div>
 </div>
+
+这个案例里，`C8:C17`、`"K161*"`、`D8:D17` 分别回答三个问题：**检查哪里、匹配什么、汇总哪里**。理解这三个问题，比单独背公式参数更容易。
 
 ## Excel 只有三种通配符
 
 严格来说，真正负责模糊匹配的是 `*` 和 `?`；`~` 是转义符，用于告诉 Excel：后面的星号或问号是普通字符，不要把它当作通配符。
 
-<VisualGrid columns={3}>
-  <FeatureCard title="*" meta="任意数量" description="匹配任意数量的字符，也可以没有其他字符。">
-    <ul>
-      <li><code>K161*</code>：以 K161 开头</li>
-      <li><code>*K161*</code>：包含 K161</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="?" meta="一个字符" description="只代替一个字符，不能多也不能少。">
-    <ul>
-      <li><code>K?61</code>：匹配 K161、KA61</li>
-      <li><code>???-黑色</code>：前面正好三个字符</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="~" meta="取消通配" description="查找真正的星号或问号时，写在符号前面。">
-    <ul>
-      <li><code>{'~*'}</code>：匹配字符 *</li>
-      <li><code>{'~?'}</code>：匹配字符 ?</li>
-    </ul>
-  </FeatureCard>
-</VisualGrid>
+<div class="wildcard-symbol-lab" role="group" aria-label="Excel 三种通配符的匹配实验">
+  <article class="wildcard-symbol-card is-star">
+    <header><code>&#42;</code><div><strong>任意数量字符</strong><span>可以很多，也可以没有</span></div></header>
+    <div class="wildcard-token-demo">
+      <span class="token-fixed">K161</span><span class="token-stretch">任意内容</span>
+    </div>
+    <div class="wildcard-test-list">
+      <span class="is-pass"><code>K161</code><b>✓ 匹配</b></span>
+      <span class="is-pass"><code>K161-BK</code><b>✓ 匹配</b></span>
+      <span class="is-pass"><code>K161-黑色-套装</code><b>✓ 匹配</b></span>
+    </div>
+    <p><code>K161&#42;</code> 表示固定内容是 K161，后面允许出现任意数量字符。</p>
+  </article>
+
+  <article class="wildcard-symbol-card is-question">
+    <header><code>?</code><div><strong>正好一个字符</strong><span>不能多，也不能少</span></div></header>
+    <div class="wildcard-token-demo">
+      <span class="token-fixed">K</span><span class="token-slot">?</span><span class="token-fixed">61</span>
+    </div>
+    <div class="wildcard-test-list">
+      <span class="is-pass"><code>K161</code><b>✓ 匹配</b></span>
+      <span class="is-pass"><code>KA61</code><b>✓ 匹配</b></span>
+      <span class="is-fail"><code>K1261</code><b>× 两个字符</b></span>
+    </div>
+    <p><code>K?61</code> 中间只有一个字符槽位，所以 K1261 不符合。</p>
+  </article>
+
+  <article class="wildcard-symbol-card is-escape">
+    <header><code>&#126;</code><div><strong>取消通配能力</strong><span>查找真正的 &#42; 或 ?</span></div></header>
+    <div class="wildcard-escape-demo">
+      <span><code>&#42;</code><small>任意字符</small></span>
+      <b>→</b>
+      <span><code>&#126;&#42;</code><small>真实星号</small></span>
+    </div>
+    <div class="wildcard-test-list">
+      <span class="is-pass"><code>赠品&#42;</code><b>✓ 包含星号</b></span>
+      <span class="is-pass"><code>赠品&#42;请勿单拍</code><b>✓ 包含星号</b></span>
+      <span class="is-fail"><code>赠品说明</code><b>× 没有星号</b></span>
+    </div>
+    <p><code>{'"*~**"'}</code> 中，前后两个星号是通配符，中间的 <code>{'~*'}</code> 才是真正的星号字符。</p>
+  </article>
+</div>
+
+## 六种高频写法
+
+通配符最常见的差别，不是函数，而是固定文字出现在什么位置。把字符串看成几段，就能快速判断星号应该放在哪里。
+
+<div class="wildcard-position-map" role="group" aria-label="Excel 六种常见通配符位置关系">
+  <article>
+    <span>开头匹配</span>
+    <div class="wildcard-position-track"><b>K161</b><i>任意内容</i></div>
+    <code>{'"K161*"'}</code>
+    <p>型号固定，颜色、规格或备注在后面变化。</p>
+  </article>
+  <article>
+    <span>结尾匹配</span>
+    <div class="wildcard-position-track"><i>任意内容</i><b>已退款</b></div>
+    <code>{'"*已退款"'}</code>
+    <p>状态文字固定在单元格末尾。</p>
+  </article>
+  <article>
+    <span>包含匹配</span>
+    <div class="wildcard-position-track"><i>任意</i><b>蓝牙</b><i>任意</i></div>
+    <code>{'"*蓝牙*"'}</code>
+    <p>标题任意位置出现“蓝牙”。</p>
+  </article>
+  <article>
+    <span>固定一位</span>
+    <div class="wildcard-position-track"><b>K</b><em>?</em><b>61</b></div>
+    <code>{'"K?61"'}</code>
+    <p>K 和 61 中间必须正好一个字符。</p>
+  </article>
+  <article>
+    <span>引用条件</span>
+    <div class="wildcard-position-track"><b>F2 的内容</b><i>任意内容</i></div>
+    <code>{'F2&"*"'}</code>
+    <p>把单元格中的型号作为开头条件。</p>
+  </article>
+  <article>
+    <span>查真实符号</span>
+    <div class="wildcard-position-track"><i>任意</i><b>&#42;</b><i>任意</i></div>
+    <code>{'"*~**"'}</code>
+    <p>查找文本中真正出现的星号。</p>
+  </article>
+</div>
+
+下面这张表保留了更完整的边界，适合需要核对时快速查询。
 
 | 写法 | 匹配规则 | 可以匹配 | 不会匹配 |
 | --- | --- | --- | --- |
@@ -86,33 +185,39 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 ## 哪些函数支持通配符
 
-下面整理的是日常表格中最常用、Microsoft 官方说明中明确支持通配符的函数。它们可以分成三组：条件统计、查找匹配和文本搜索。
+并不是所有函数都能直接识别通配符。即使支持，不同函数的开启方式也不一样：条件统计函数直接写，`XLOOKUP` 和 `XMATCH` 要把匹配模式设为 `2`，`VLOOKUP`、`HLOOKUP` 和 `MATCH` 则要使用精确匹配参数。
 
-<div class="wildcard-support-matrix" role="group" aria-label="支持 Excel 通配符的常用函数">
-  <section>
-    <header><span>01</span><strong>条件统计与汇总</strong><b>直接使用</b></header>
-    <div class="wildcard-function-list">
-      <code>COUNTIF</code><code>COUNTIFS</code><code>SUMIF</code><code>SUMIFS</code>
-      <code>AVERAGEIF</code><code>AVERAGEIFS</code><code>MAXIFS</code><code>MINIFS</code>
-    </div>
-    <p>把通配符直接写在条件参数里，例如 <code>"K161*"</code>。其中 MAXIFS 和 MINIFS 使用与 SUMIFS、AVERAGEIFS 相同的条件规则。</p>
-  </section>
-
-  <section>
-    <header><span>02</span><strong>查找与位置匹配</strong><b>需要参数</b></header>
-    <div class="wildcard-function-list">
-      <code>VLOOKUP</code><code>HLOOKUP</code><code>MATCH</code><code>XLOOKUP</code><code>XMATCH</code>
-    </div>
-    <p>VLOOKUP、HLOOKUP 要写 <code>FALSE</code>，MATCH 要写 <code>0</code>；XLOOKUP、XMATCH 要把 <code>match_mode</code> 设为 <code>2</code>。</p>
-  </section>
-
-  <section>
-    <header><span>03</span><strong>文本搜索</strong><b>直接使用</b></header>
-    <div class="wildcard-function-list">
-      <code>SEARCH</code>
-    </div>
-    <p>在要查找的文本中直接使用 <code>*</code>、<code>?</code> 和 <code>~</code>。SEARCH 不区分英文大小写。</p>
-  </section>
+<div class="wildcard-function-route" role="group" aria-label="根据需求选择支持通配符的 Excel 函数">
+  <header>
+    <span>先回答一个问题</span>
+    <strong>你希望 Excel 返回什么？</strong>
+  </header>
+  <div class="wildcard-function-route__grid">
+    <article>
+      <span>统计或汇总</span>
+      <strong>直接把通配符写进条件</strong>
+      <div><code>COUNTIF(S)</code><code>SUMIF(S)</code><code>AVERAGEIF(S)</code><code>MAXIFS</code><code>MINIFS</code></div>
+      <small>例如：<code>{'"K161*"'}</code></small>
+    </article>
+    <article>
+      <span>返回一条结果</span>
+      <strong>查找函数需要开启匹配方式</strong>
+      <div><code>XLOOKUP</code><code>VLOOKUP</code><code>HLOOKUP</code></div>
+      <small>XLOOKUP 写 <code>match_mode=2</code>；传统函数写 <code>FALSE</code></small>
+    </article>
+    <article>
+      <span>返回所在位置</span>
+      <strong>位置函数同样区分参数</strong>
+      <div><code>XMATCH</code><code>MATCH</code></div>
+      <small>XMATCH 写 <code>2</code>；MATCH 写 <code>0</code></small>
+    </article>
+    <article>
+      <span>判断文字内部</span>
+      <strong>在单元格文本里搜索模式</strong>
+      <div><code>SEARCH</code><code>ISNUMBER</code><code>FILTER</code></div>
+      <small>SEARCH 负责匹配，其他函数负责转换或筛选</small>
+    </article>
+  </div>
 </div>
 
 ### 支持方式速查表
@@ -135,23 +240,30 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 这类函数最简单，只需要把通配符写进条件中。
 
+<div class="wildcard-formula-anatomy" role="group" aria-label="SUMIF 公式参数说明">
+  <div class="wildcard-formula-anatomy__line">
+    <span>=SUMIF(</span><b class="tone-blue">C8:C17</b><span>,</span><b class="tone-orange">{'"K161*"'}</b><span>,</span><b class="tone-violet">D8:D17</b><span>)</span>
+  </div>
+  <div class="wildcard-formula-anatomy__parts">
+    <span class="tone-blue"><b>条件范围</b>检查 SKU</span>
+    <span class="tone-orange"><b>匹配条件</b>以 K161 开头</span>
+    <span class="tone-violet"><b>求和范围</b>汇总订单金额</span>
+  </div>
+</div>
+
+同一套逻辑可以直接换成计数、求和或平均值：
+
 ```text
 =COUNTIF(C8:C17,"K161*")
 ```
-
-统计 C8:C17 中所有以 `K161` 开头的单元格数量。
 
 ```text
 =SUMIF(C8:C17,"K161*",D8:D17)
 ```
 
-找到 C 列中以 `K161` 开头的记录，再汇总对应 D 列。
-
 ```text
 =AVERAGEIF(C8:C17,"K161*",D8:D17)
 ```
-
-找到 C 列中以 `K161` 开头的记录，再计算对应 D 列平均值。
 
 条件来自单元格时，不要把单元格引用放进引号：
 
@@ -165,11 +277,21 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 `XLOOKUP` 默认是精确匹配，但默认不会把 `*` 和 `?` 当成通配符。要使用通配符，必须把第五个参数设为 `2`：
 
-```text
-=XLOOKUP("K161*",C8:C17,D8:D17,"未找到",2)
-```
-
-它会返回第一条以 `K161` 开头的记录所对应的 D 列结果。
+<div class="wildcard-mode-compare" role="group" aria-label="XLOOKUP 是否开启通配符模式的结果对比">
+  <section>
+    <span>默认写法</span>
+    <code>{'=XLOOKUP("K161*",C8:C17,D8:D17)'}</code>
+    <strong>结果：未找到</strong>
+    <p>默认把星号当成公式中的普通匹配内容，不会进入通配符模式。</p>
+  </section>
+  <div aria-hidden="true">→</div>
+  <section class="is-correct">
+    <span>开启通配符模式</span>
+    <code>{'=XLOOKUP("K161*",C8:C17,D8:D17,"未找到",2)'}</code>
+    <strong>结果：199</strong>
+    <p>第五个参数写 2 后，返回第一条以 K161 开头的记录。</p>
+  </section>
+</div>
 
 `XMATCH` 同样需要把第三个参数设为 `2`：
 
@@ -209,19 +331,6 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 找到时返回 `TRUE`，找不到时返回 `FALSE`。
 
-## 六种高频写法
-
-<div class="wildcard-recipe-grid">
-  <article><span>开头匹配</span><code>{'"K161*"'}</code><p>型号固定，颜色、规格或备注在后面变化。</p></article>
-  <article><span>结尾匹配</span><code>{'"*已退款"'}</code><p>状态文字固定在单元格末尾。</p></article>
-  <article><span>包含匹配</span><code>{'"*蓝牙*"'}</code><p>标题任意位置出现“蓝牙”。</p></article>
-  <article><span>固定长度</span><code>{'"K???"'}</code><p>K 后面必须正好有三个字符。</p></article>
-  <article><span>引用条件</span><code>{'F2&"*"'}</code><p>把 F2 的型号作为开头，后面允许变化。</p></article>
-  <article><span>查真实符号</span><code>{'"*~**"'}</code><p>查找包含真正星号的文本。</p></article>
-</div>
-
-最后一个公式容易看花：最外侧两个 `*` 表示前后可以有任意文字，中间的 `~*` 才表示真正的星号字符。
-
 ## 回到最开始的 AVERAGEIF 公式
 
 原来的公式是：
@@ -238,63 +347,68 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 =AVERAGEIF(C8:C17,"K161*",D8:D17)
 ```
 
-新写法不需要 `LEFT`、`MAP` 和 `LAMBDA`，也不需要先生成中间数组。条件本身就是“以 K161 开头”，用原生通配符更贴近实际需求。
-
-<div class="wildcard-before-after">
+<div class="wildcard-before-after" role="group" aria-label="复杂数组公式与通配符公式对比">
   <section>
     <span>原写法</span>
     <strong>先截取，再逐项处理</strong>
-    <code>MAP + LEFT + LAMBDA + AVERAGEIF</code>
-    <p>公式长，处理过程绕，兼容性和维护成本更高。</p>
+    <div class="wildcard-step-chain"><i>LEFT</i><b>→</b><i>MAP</i><b>→</b><i>LAMBDA</i><b>→</b><i>AVERAGEIF</i></div>
+    <code>{'=AVERAGEIF(MAP(LEFT(...)),"K161",D8:D17)'}</code>
+    <p>需要先生成中间数组，公式长，读者还要反推每一步在做什么。</p>
   </section>
-  <div>→</div>
+  <div aria-hidden="true">→</div>
   <section class="is-recommended">
     <span>推荐写法</span>
-    <strong>直接表达前缀条件</strong>
-    <code>AVERAGEIF + "K161*"</code>
-    <p>公式短，含义直接，也更适合作为基础函数案例。</p>
+    <strong>直接表达“以 K161 开头”</strong>
+    <div class="wildcard-step-chain"><i>AVERAGEIF</i><b>+</b><i>{'"K161*"'}</i></div>
+    <code>{'=AVERAGEIF(C8:C17,"K161*",D8:D17)'}</code>
+    <p>不需要 LEFT、MAP 和 LAMBDA，条件本身就与实际需求完全一致。</p>
   </section>
 </div>
 
 ## 容易踩的五个坑
 
-### 1. XLOOKUP 没写匹配模式 2
-
-下面的公式不会启用通配符匹配：
-
-```text
-=XLOOKUP("K161*",C8:C17,D8:D17)
-```
-
-应该写成：
-
-```text
-=XLOOKUP("K161*",C8:C17,D8:D17,"未找到",2)
-```
-
-### 2. `*` 不等于“所有非空单元格”
-
-`COUNTIF(A2:A100,"*")` 主要用于统计包含文本的单元格，不能简单理解为统计所有非空内容。需要统计数字、文字和日期等所有非空单元格时，优先使用：
-
-```text
-=COUNTA(A2:A100)
-```
-
-### 3. 通配符匹配通常不区分英文大小写
-
-`K161*` 和 `k161*` 通常会匹配到相同内容。需要严格区分英文大小写时，不能只依赖通配符条件。
-
-### 4. FIND 和 FILTER 不会直接解释通配符
-
-`FIND` 不是通配符搜索函数；`FILTER` 的筛选条件也必须是一组 `TRUE/FALSE`。需要按包含关系筛选时，可以组合 `SEARCH`：
-
-```text
-=FILTER(D8:D17,ISNUMBER(SEARCH("K161",C8:C17)))
-```
-
-### 5. 前后空格仍然会影响匹配位置
-
-`K161*` 要求内容从 K161 开始。如果单元格实际是 ` K161-黑色`，前面多了空格，就不会被视为以 K161 开头。数据来源不干净时，先检查是否需要 `TRIM` 或清洗源数据。
+<div class="wildcard-trouble-stack">
+  <article>
+    <span>01</span>
+    <div>
+      <h3>XLOOKUP 忘了写匹配模式 2</h3>
+      <p><code>{'=XLOOKUP("K161*",C8:C17,D8:D17)'}</code> 不会启用通配符。应改为 <code>{'=XLOOKUP("K161*",C8:C17,D8:D17,"未找到",2)'}</code>。</p>
+    </div>
+    <b>参数问题</b>
+  </article>
+  <article>
+    <span>02</span>
+    <div>
+      <h3><code>&#42;</code> 不等于“所有非空单元格”</h3>
+      <p><code>{'=COUNTIF(A2:A100,"*")'}</code> 主要统计文本。要统计数字、文字和日期等全部非空内容，优先使用 <code>COUNTA(A2:A100)</code>。</p>
+    </div>
+    <b>统计口径</b>
+  </article>
+  <article>
+    <span>03</span>
+    <div>
+      <h3>通配符通常不区分英文大小写</h3>
+      <p><code>K161&#42;</code> 和 <code>k161&#42;</code> 通常会匹配相同内容。需要严格区分大小写时，不能只依赖通配符条件。</p>
+    </div>
+    <b>匹配边界</b>
+  </article>
+  <article>
+    <span>04</span>
+    <div>
+      <h3>FIND 和 FILTER 不会直接解释通配符</h3>
+      <p>FILTER 需要一组 TRUE/FALSE。按包含关系筛选时，可以组合：<code>{'=FILTER(D8:D17,ISNUMBER(SEARCH("K161",C8:C17)))'}</code>。</p>
+    </div>
+    <b>函数能力</b>
+  </article>
+  <article>
+    <span>05</span>
+    <div>
+      <h3>前后空格会改变“开头”和“结尾”</h3>
+      <p>如果单元格实际是 <code> K161-BK</code>，前面多了空格，就不满足“以 K161 开头”。数据来源不干净时，先用 TRIM 或清洗源数据。</p>
+    </div>
+    <b>数据质量</b>
+  </article>
+</div>
 
 ## 应该选哪个函数
 
@@ -324,6 +438,11 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   ]}
 />
 
+<div class="wildcard-final-check" role="group" aria-label="Excel 通配符使用判断标准">
+  <span>开头</span><span>结尾</span><span>包含</span><span>固定一位</span>
+  <strong>这些文字位置关系明确时，优先考虑通配符。</strong>
+</div>
+
 <HighlightBox eyebrow="最终判断" title="先看需求关系，再决定要不要使用通配符">
   条件本身是“以什么开头、以什么结尾、包含什么、某一位可以变化”时，通配符通常是最直接的写法。条件涉及数字区间、复杂逻辑或严格大小写时，就不应继续硬套通配符。
 </HighlightBox>
@@ -339,107 +458,362 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 - [Microsoft Support：SEARCH function](https://support.microsoft.com/en-us/excel/functions/search-function)
 
 <style>{`
-  .wildcard-hero,
-  .wildcard-support-matrix,
-  .wildcard-recipe-grid,
-  .wildcard-before-after {
-    --wc-blue: #146ce8;
-    --wc-cyan: #06a6ce;
-    --wc-green: #168f69;
-    --wc-navy: #0b2141;
-    --wc-text: #23364d;
-    --wc-muted: #66798f;
-    margin: 1.5rem 0 2.2rem;
+  .wildcard-sheet-hero,
+  .wildcard-symbol-lab,
+  .wildcard-position-map,
+  .wildcard-function-route,
+  .wildcard-formula-anatomy,
+  .wildcard-mode-compare,
+  .wildcard-before-after,
+  .wildcard-trouble-stack,
+  .wildcard-final-check {
+    --wc-blue: #1569d8;
+    --wc-blue-soft: #eef6ff;
+    --wc-orange: #ed6d1f;
+    --wc-orange-soft: #fff4ec;
+    --wc-violet: #7741bc;
+    --wc-violet-soft: #f6f0ff;
+    --wc-green: #17884c;
+    --wc-green-soft: #edf9f1;
+    --wc-navy: #0c2852;
+    --wc-text: #283c52;
+    --wc-muted: #687b90;
+    --wc-line: #d8e2ed;
     color: var(--wc-text);
   }
 
-  .wildcard-hero {
+  .wildcard-sheet-hero {
+    margin: 1.55rem 0 2.4rem;
     overflow: hidden;
-    padding: clamp(1.1rem, 3vw, 1.8rem);
-    border: 1px solid #bdd7f6;
+    border: 1px solid #c9d8e8;
     border-radius: 26px;
     background:
-      radial-gradient(circle at 92% 8%, rgba(20,108,232,.17), transparent 26%),
-      radial-gradient(circle at 4% 96%, rgba(6,166,206,.11), transparent 25%),
-      linear-gradient(145deg,#fff 0%,#f5f9ff 58%,#eef8ff 100%);
-    box-shadow: 0 22px 56px rgba(36,93,161,.11);
+      radial-gradient(circle at 92% 0%, rgba(21,105,216,.12), transparent 28%),
+      linear-gradient(145deg,#fff,#f7fbff);
+    box-shadow: 0 22px 58px rgba(33,70,113,.12);
   }
-  .wildcard-hero__intro { max-width: 760px; margin: 0 auto 1.1rem; text-align: center; }
-  .wildcard-hero__intro span { color: var(--wc-blue); font-size: .68rem; font-weight: 900; letter-spacing: .15em; }
-  .wildcard-hero__intro strong { display: block; margin: .42rem 0 .5rem; color: var(--wc-navy); font-size: clamp(1.25rem,3vw,1.9rem); line-height: 1.3; }
-  .wildcard-hero__intro p { margin: 0; color: var(--wc-muted); font-size: .86rem; }
-  .wildcard-match-board { display: grid; grid-template-columns: minmax(0,.8fr) auto minmax(0,1.2fr); gap: .75rem; align-items: center; }
-  .wildcard-pattern,
-  .wildcard-values { padding: .9rem; border: 1px solid #ccdef3; border-radius: 15px; background: rgba(255,255,255,.86); }
-  .wildcard-pattern { text-align: center; }
-  .wildcard-pattern small { display: block; color: var(--wc-muted); font-size: .65rem; font-weight: 800; }
-  .wildcard-pattern code { display: block; margin: .4rem 0; color: var(--wc-blue); font-size: 1.45rem; font-weight: 900; }
-  .wildcard-pattern span { color: #688099; font-size: .68rem; }
-  .wildcard-arrow { color: #6d9dd3; font-size: 1.3rem; font-weight: 900; }
-  .wildcard-values { display: grid; gap: .45rem; }
-  .wildcard-values span { display: flex; justify-content: space-between; gap: 1rem; padding: .5rem .65rem; border: 1px solid #dde7f2; border-radius: 9px; color: #687b90; background: #f9fbfd; font-size: .72rem; }
-  .wildcard-values span.is-match { border-color: #bfe3d8; color: #176d54; background: #f0faf7; }
-  .wildcard-values b { font-size: .63rem; }
-  .wildcard-hero__formula { display: flex; align-items: center; gap: .75rem; margin-top: .85rem; padding: .75rem .9rem; border: 1px solid #c9dcf2; border-radius: 13px; background: #0d2d56; }
-  .wildcard-hero__formula span { flex: none; color: #9fd4ff; font-size: .66rem; font-weight: 850; }
-  .wildcard-hero__formula code { overflow-x: auto; color: #f0f8ff; font-size: .74rem; white-space: nowrap; }
+  .wildcard-sheet-hero__header {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding: 1.35rem 1.45rem 1.1rem;
+  }
+  .wildcard-excel-mark {
+    display: grid;
+    flex: 0 0 54px;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 13px;
+    color: #fff;
+    background: linear-gradient(145deg,#24a45c,#0d753c);
+    box-shadow: 0 10px 22px rgba(15,117,60,.22);
+    font-size: 1.65rem;
+    font-weight: 900;
+  }
+  .wildcard-sheet-hero__header span {
+    display: block;
+    color: var(--wc-blue);
+    font-size: .64rem;
+    font-weight: 900;
+    letter-spacing: .14em;
+  }
+  .wildcard-sheet-hero__header strong {
+    display: block;
+    margin: .28rem 0 .2rem;
+    color: var(--wc-navy);
+    font-size: clamp(1.1rem,2.7vw,1.65rem);
+    line-height: 1.35;
+  }
+  .wildcard-sheet-hero__header strong code { color: var(--wc-orange); background: transparent; }
+  .wildcard-sheet-hero__header p { margin: 0; color: var(--wc-muted); font-size: .78rem; }
+  .wildcard-sheet-workspace {
+    display: grid;
+    grid-template-columns: minmax(500px,1.45fr) minmax(290px,.8fr);
+    gap: 1rem;
+    padding: 0 1.1rem 1.2rem;
+  }
+  .wildcard-sheet-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #cbd9e8;
+    border-radius: 17px;
+    background: #fff;
+  }
+  .wildcard-sheet-table {
+    width: max-content;
+    min-width: 100%;
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: .66rem;
+  }
+  .wildcard-sheet-table th,
+  .wildcard-sheet-table td {
+    min-width: 82px;
+    padding: .48rem .55rem;
+    border-right: 1px solid #e0e7ee;
+    border-bottom: 1px solid #e0e7ee;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .wildcard-sheet-table th:first-child,
+  .wildcard-sheet-table td:first-child { min-width: 32px; width: 32px; color: #728093; text-align: center; }
+  .wildcard-sheet-table th {
+    color: #fff;
+    background: linear-gradient(180deg,#1971d8,#0e5ebd);
+    font-weight: 850;
+  }
+  .wildcard-sheet-table th.is-range { box-shadow: inset 2px 0 var(--wc-blue), inset -2px 0 var(--wc-blue); }
+  .wildcard-sheet-table td.is-range {
+    box-shadow: inset 2px 0 rgba(21,105,216,.95), inset -2px 0 rgba(21,105,216,.95);
+    background: #fbfdff;
+  }
+  .wildcard-sheet-table td.is-match,
+  .wildcard-sheet-table td.is-sum {
+    color: var(--wc-green);
+    background: var(--wc-green-soft);
+    font-weight: 900;
+  }
+  .wildcard-sheet-table tbody tr:last-child td { border-bottom: 0; }
+  .wildcard-sheet-table tr > *:last-child { border-right: 0; }
+  .wildcard-formula-panel { display: flex; min-width: 0; flex-direction: column; gap: .8rem; }
+  .wildcard-formula-line,
+  .wildcard-result-card,
+  .wildcard-formula-legend > div {
+    border: 1px solid #d5e0eb;
+    background: rgba(255,255,255,.92);
+    box-shadow: 0 10px 26px rgba(31,65,105,.07);
+  }
+  .wildcard-formula-line {
+    overflow-x: auto;
+    padding: .85rem .9rem;
+    border-radius: 15px;
+    color: #101820;
+    font-family: ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size: clamp(.76rem,1.8vw,1rem);
+    font-weight: 850;
+    white-space: nowrap;
+  }
+  .tone-blue { color: var(--wc-blue); }
+  .tone-orange { color: var(--wc-orange); }
+  .tone-violet { color: var(--wc-violet); }
+  .wildcard-formula-legend { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem; }
+  .wildcard-formula-legend > div { min-width: 0; padding: .68rem; border-radius: 13px; }
+  .wildcard-formula-legend small { display: block; font-size: .57rem; font-weight: 800; }
+  .wildcard-formula-legend strong { display: block; margin: .2rem 0; color: var(--wc-navy); font-size: .68rem; }
+  .wildcard-formula-legend span { display: block; overflow-x: auto; font-family: ui-monospace,SFMono-Regular,Menlo,monospace; font-size: .58rem; white-space: nowrap; }
+  .wildcard-result-card { display: grid; gap: .55rem; padding: .85rem; border-color: #bee1ca; border-radius: 15px; background: linear-gradient(145deg,#fff,#f0faf4); }
+  .wildcard-result-card > div { display: grid; grid-template-columns: 52px 1fr; gap: .55rem; align-items: center; }
+  .wildcard-result-card small { color: var(--wc-green); font-size: .62rem; font-weight: 900; }
+  .wildcard-result-card strong { color: var(--wc-navy); font-size: .69rem; }
+  .wildcard-result-card .is-total { padding-top: .55rem; border-top: 1px dashed #a9d7b9; }
+  .wildcard-result-card .is-total strong { color: var(--wc-green); font-size: 1.55rem; }
 
-  .wildcard-support-matrix { display: grid; gap: .75rem; }
-  .wildcard-support-matrix section { padding: 1rem; border: 1px solid #cfdeef; border-radius: 17px; background: linear-gradient(145deg,#fff,#f7fbff); box-shadow: 0 10px 28px rgba(42,90,145,.055); }
-  .wildcard-support-matrix header { display: flex; align-items: center; gap: .65rem; }
-  .wildcard-support-matrix header span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; color: #fff; background: linear-gradient(145deg,var(--wc-blue),var(--wc-cyan)); font-size: .62rem; font-weight: 900; }
-  .wildcard-support-matrix header strong { flex: 1; color: var(--wc-navy); font-size: .88rem; }
-  .wildcard-support-matrix header b { padding: .27rem .5rem; border: 1px solid #bfdfd5; border-radius: 999px; color: var(--wc-green); background: #effaf6; font-size: .61rem; }
-  .wildcard-function-list { display: flex; flex-wrap: wrap; gap: .4rem; margin: .75rem 0; }
-  .wildcard-function-list code { padding: .3rem .5rem; border: 1px solid #c9ddf4; border-radius: 8px; color: #1265bf; background: #eef6ff; font-size: .67rem; font-weight: 800; }
-  .wildcard-support-matrix p { margin: 0; color: var(--wc-muted); font-size: .73rem; line-height: 1.65; }
+  .wildcard-symbol-lab {
+    display: grid;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    gap: .8rem;
+    margin: 1.3rem 0 2.2rem;
+  }
+  .wildcard-symbol-card {
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--wc-line);
+    border-radius: 18px;
+    background: linear-gradient(145deg,#fff,#f8fbff);
+    box-shadow: 0 12px 30px rgba(35,73,117,.06);
+  }
+  .wildcard-symbol-card header { display: flex; gap: .7rem; align-items: center; }
+  .wildcard-symbol-card header > code {
+    display: grid;
+    flex: 0 0 42px;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    color: #fff;
+    background: var(--wc-blue);
+    font-size: 1.45rem;
+    font-weight: 900;
+  }
+  .wildcard-symbol-card.is-question header > code { background: var(--wc-violet); }
+  .wildcard-symbol-card.is-escape header > code { background: var(--wc-orange); }
+  .wildcard-symbol-card header strong { display: block; color: var(--wc-navy); font-size: .82rem; }
+  .wildcard-symbol-card header span { display: block; margin-top: .16rem; color: var(--wc-muted); font-size: .61rem; }
+  .wildcard-token-demo,
+  .wildcard-escape-demo {
+    display: flex;
+    gap: .35rem;
+    align-items: center;
+    margin: .8rem 0;
+    min-height: 42px;
+  }
+  .wildcard-token-demo span { padding: .48rem .6rem; border-radius: 9px; font-size: .66rem; font-weight: 850; }
+  .token-fixed { color: var(--wc-blue); background: var(--wc-blue-soft); }
+  .token-stretch { flex: 1; color: #417598; background: repeating-linear-gradient(135deg,#eef6fb,#eef6fb 8px,#e3f0f7 8px,#e3f0f7 16px); text-align: center; }
+  .token-slot { display: grid; place-items: center; width: 34px; color: var(--wc-violet); background: var(--wc-violet-soft); outline: 2px dashed #b89cda; }
+  .wildcard-escape-demo { justify-content: center; }
+  .wildcard-escape-demo > span { min-width: 82px; padding: .45rem; border: 1px solid #e2d8cf; border-radius: 10px; background: #fffaf6; text-align: center; }
+  .wildcard-escape-demo code { display: block; color: var(--wc-orange); font-size: .9rem; font-weight: 900; }
+  .wildcard-escape-demo small { color: var(--wc-muted); font-size: .56rem; }
+  .wildcard-test-list { display: grid; gap: .34rem; }
+  .wildcard-test-list > span { display: flex; justify-content: space-between; gap: .6rem; padding: .4rem .5rem; border-radius: 8px; background: #f7f9fb; font-size: .6rem; }
+  .wildcard-test-list b { flex: none; }
+  .wildcard-test-list .is-pass { color: var(--wc-green); background: var(--wc-green-soft); }
+  .wildcard-test-list .is-fail { color: #a4663d; background: #fff6ed; }
+  .wildcard-symbol-card p { margin: .7rem 0 0; color: var(--wc-muted); font-size: .64rem; line-height: 1.55; }
 
-  .wildcard-recipe-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .7rem; }
-  .wildcard-recipe-grid article { min-width: 0; padding: .9rem; border: 1px solid #d0e0f1; border-radius: 15px; background: linear-gradient(145deg,#fff,#f8fbff); }
-  .wildcard-recipe-grid span { display: block; color: var(--wc-blue); font-size: .67rem; font-weight: 900; }
-  .wildcard-recipe-grid code { display: block; overflow-x: auto; margin: .38rem 0; color: var(--wc-navy); font-size: .9rem; font-weight: 850; white-space: nowrap; }
-  .wildcard-recipe-grid p { margin: 0; color: var(--wc-muted); font-size: .68rem; line-height: 1.5; }
+  .wildcard-position-map {
+    display: grid;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    gap: .72rem;
+    margin: 1.2rem 0 1.7rem;
+  }
+  .wildcard-position-map article { min-width: 0; padding: .9rem; border: 1px solid var(--wc-line); border-radius: 15px; background: #fff; }
+  .wildcard-position-map article > span { color: var(--wc-blue); font-size: .62rem; font-weight: 900; }
+  .wildcard-position-track { display: flex; min-height: 34px; margin: .55rem 0; overflow: hidden; border: 1px solid #d8e3ed; border-radius: 9px; }
+  .wildcard-position-track > * { display: grid; flex: 1; place-items: center; min-width: 0; padding: .35rem; font-size: .57rem; font-style: normal; text-align: center; }
+  .wildcard-position-track b { color: var(--wc-blue); background: var(--wc-blue-soft); }
+  .wildcard-position-track i { color: #6f8193; background: repeating-linear-gradient(135deg,#f7f9fb,#f7f9fb 7px,#edf2f6 7px,#edf2f6 14px); }
+  .wildcard-position-track em { flex: 0 0 36px; color: var(--wc-violet); background: var(--wc-violet-soft); font-weight: 900; }
+  .wildcard-position-map article > code { display: block; color: var(--wc-navy); font-size: .76rem; font-weight: 850; }
+  .wildcard-position-map p { margin: .38rem 0 0; color: var(--wc-muted); font-size: .61rem; line-height: 1.45; }
 
-  .wildcard-before-after { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: .8rem; align-items: center; }
-  .wildcard-before-after section { min-width: 0; padding: 1rem; border: 1px solid #dfd6d3; border-radius: 17px; background: linear-gradient(145deg,#fff,#fcf8f7); }
-  .wildcard-before-after section.is-recommended { border-color: #bfe1d7; background: linear-gradient(145deg,#fff,#f1faf7); }
-  .wildcard-before-after > div { color: #7a9cc3; font-size: 1.2rem; font-weight: 900; }
-  .wildcard-before-after span { color: #9a6c5f; font-size: .64rem; font-weight: 900; }
+  .wildcard-function-route {
+    margin: 1.3rem 0 1.8rem;
+    overflow: hidden;
+    border: 1px solid #cbdceb;
+    border-radius: 22px;
+    background: linear-gradient(145deg,#f7fbff,#fff);
+  }
+  .wildcard-function-route > header { padding: 1rem 1.1rem .8rem; }
+  .wildcard-function-route > header span { color: var(--wc-violet); font-size: .62rem; font-weight: 900; letter-spacing: .08em; }
+  .wildcard-function-route > header strong { display: block; margin-top: .25rem; color: var(--wc-navy); font-size: 1.02rem; }
+  .wildcard-function-route__grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; padding: 0 1rem 1rem; }
+  .wildcard-function-route article { min-width: 0; padding: .85rem; border: 1px solid #d8e3ed; border-radius: 14px; background: rgba(255,255,255,.94); }
+  .wildcard-function-route article > span { color: var(--wc-blue); font-size: .6rem; font-weight: 900; }
+  .wildcard-function-route article > strong { display: block; margin: .25rem 0 .55rem; color: var(--wc-navy); font-size: .76rem; }
+  .wildcard-function-route article > div { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .wildcard-function-route article > div code { padding: .28rem .4rem; border: 1px solid #ccdef1; border-radius: 7px; color: #155fae; background: #eff6fe; font-size: .58rem; font-weight: 800; }
+  .wildcard-function-route article > small { display: block; margin-top: .55rem; color: var(--wc-muted); font-size: .58rem; line-height: 1.45; }
+
+  .wildcard-formula-anatomy {
+    margin: 1rem 0 1.3rem;
+    padding: 1rem;
+    border: 1px solid #d1deeb;
+    border-radius: 18px;
+    background: #fbfdff;
+  }
+  .wildcard-formula-anatomy__line {
+    overflow-x: auto;
+    padding: .8rem;
+    border: 1px solid #d7e2ed;
+    border-radius: 12px;
+    color: #111923;
+    background: #fff;
+    font-family: ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size: clamp(.78rem,2vw,1.02rem);
+    font-weight: 850;
+    white-space: nowrap;
+  }
+  .wildcard-formula-anatomy__parts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem; margin-top: .7rem; }
+  .wildcard-formula-anatomy__parts span { padding: .55rem; border-radius: 9px; background: #fff; font-size: .59rem; }
+  .wildcard-formula-anatomy__parts b { display: block; margin-bottom: .16rem; font-size: .63rem; }
+
+  .wildcard-mode-compare,
+  .wildcard-before-after {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+    gap: .8rem;
+    align-items: center;
+    margin: 1.15rem 0 1.5rem;
+  }
+  .wildcard-mode-compare section,
+  .wildcard-before-after section { min-width: 0; padding: 1rem; border: 1px solid #e2d4cf; border-radius: 17px; background: linear-gradient(145deg,#fff,#fff8f5); }
+  .wildcard-mode-compare section.is-correct,
+  .wildcard-before-after section.is-recommended { border-color: #bfe1cb; background: linear-gradient(145deg,#fff,#f1faf4); }
+  .wildcard-mode-compare > div,
+  .wildcard-before-after > div { color: #7e9ab8; font-size: 1.2rem; font-weight: 900; }
+  .wildcard-mode-compare span,
+  .wildcard-before-after span { color: #a45c49; font-size: .62rem; font-weight: 900; }
+  .wildcard-mode-compare .is-correct span,
   .wildcard-before-after .is-recommended span { color: var(--wc-green); }
-  .wildcard-before-after strong { display: block; margin: .35rem 0 .6rem; color: var(--wc-navy); font-size: .87rem; }
-  .wildcard-before-after code { display: block; overflow-x: auto; padding: .6rem; border: 1px solid #e0e5eb; border-radius: 9px; color: #1765ad; background: #fff; font-size: .66rem; white-space: nowrap; }
-  .wildcard-before-after p { margin: .6rem 0 0; color: var(--wc-muted); font-size: .7rem; line-height: 1.55; }
+  .wildcard-mode-compare code,
+  .wildcard-before-after code { display: block; overflow-x: auto; margin: .5rem 0; padding: .58rem; border: 1px solid #dce4eb; border-radius: 8px; color: #155fae; background: #fff; font-size: .59rem; white-space: nowrap; }
+  .wildcard-mode-compare strong,
+  .wildcard-before-after strong { display: block; color: var(--wc-navy); font-size: .76rem; }
+  .wildcard-mode-compare p,
+  .wildcard-before-after p { margin: .45rem 0 0; color: var(--wc-muted); font-size: .62rem; line-height: 1.5; }
+  .wildcard-step-chain { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; margin: .6rem 0; }
+  .wildcard-step-chain i { padding: .3rem .4rem; border-radius: 7px; color: #6c4f48; background: #f8ece8; font-size: .57rem; font-style: normal; font-weight: 850; }
+  .wildcard-before-after .is-recommended .wildcard-step-chain i { color: var(--wc-green); background: var(--wc-green-soft); }
+  .wildcard-step-chain b { color: #9badbd; font-size: .6rem; }
 
-  html[data-theme='dark'] .wildcard-hero,
-  html[data-theme='dark'] .wildcard-support-matrix section,
-  html[data-theme='dark'] .wildcard-recipe-grid article,
-  html[data-theme='dark'] .wildcard-before-after section {
+  .wildcard-trouble-stack { display: grid; gap: .65rem; margin: 1.15rem 0 2rem; }
+  .wildcard-trouble-stack article { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: .75rem; align-items: start; padding: .85rem; border: 1px solid #d8e2ec; border-radius: 14px; background: #fff; }
+  .wildcard-trouble-stack article > span { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: #fff; background: linear-gradient(145deg,#f28b4e,#d85a2a); font-size: .58rem; font-weight: 900; }
+  .wildcard-trouble-stack h3 { margin: 0 0 .25rem; color: var(--wc-navy); font-size: .75rem; }
+  .wildcard-trouble-stack p { margin: 0; color: var(--wc-muted); font-size: .63rem; line-height: 1.55; }
+  .wildcard-trouble-stack article > b { align-self: center; padding: .28rem .48rem; border-radius: 999px; color: #a85f35; background: #fff3e8; font-size: .54rem; white-space: nowrap; }
+
+  .wildcard-final-check { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; margin: 1.2rem 0 .8rem; padding: .85rem; border: 1px solid #bedfca; border-radius: 15px; background: linear-gradient(145deg,#fff,#f1faf4); }
+  .wildcard-final-check span { padding: .3rem .48rem; border-radius: 999px; color: var(--wc-green); background: #e5f5eb; font-size: .57rem; font-weight: 850; }
+  .wildcard-final-check strong { flex: 1 1 260px; color: var(--wc-navy); font-size: .7rem; }
+
+  html[data-theme='dark'] .wildcard-sheet-hero,
+  html[data-theme='dark'] .wildcard-symbol-card,
+  html[data-theme='dark'] .wildcard-position-map article,
+  html[data-theme='dark'] .wildcard-function-route,
+  html[data-theme='dark'] .wildcard-formula-anatomy,
+  html[data-theme='dark'] .wildcard-mode-compare section,
+  html[data-theme='dark'] .wildcard-before-after section,
+  html[data-theme='dark'] .wildcard-trouble-stack article,
+  html[data-theme='dark'] .wildcard-final-check {
     --wc-navy: #edf6ff;
     --wc-text: #dce8f5;
-    --wc-muted: #9cafc1;
-    border-color: #294661;
-    background: linear-gradient(145deg,#0d1a2a,#10243a);
+    --wc-muted: #a3b4c4;
+    --wc-line: #29445e;
+    border-color: #29445e;
+    background: linear-gradient(145deg,#0e1d2d,#11263b);
     box-shadow: none;
   }
-  html[data-theme='dark'] .wildcard-pattern,
-  html[data-theme='dark'] .wildcard-values,
-  html[data-theme='dark'] .wildcard-values span,
+  html[data-theme='dark'] .wildcard-sheet-table-wrap,
+  html[data-theme='dark'] .wildcard-formula-line,
+  html[data-theme='dark'] .wildcard-formula-legend > div,
+  html[data-theme='dark'] .wildcard-result-card,
+  html[data-theme='dark'] .wildcard-function-route article,
+  html[data-theme='dark'] .wildcard-formula-anatomy__line,
+  html[data-theme='dark'] .wildcard-formula-anatomy__parts span,
+  html[data-theme='dark'] .wildcard-mode-compare code,
   html[data-theme='dark'] .wildcard-before-after code {
-    border-color: #2b4864;
+    border-color: #2c4964;
     background: #0b1928;
   }
+  html[data-theme='dark'] .wildcard-sheet-table td { border-color: #243f59; color: #cfdeeb; background: #0d1c2b; }
+  html[data-theme='dark'] .wildcard-sheet-table td.is-range { background: #102338; }
+  html[data-theme='dark'] .wildcard-sheet-table td.is-match,
+  html[data-theme='dark'] .wildcard-sheet-table td.is-sum { color: #6ad49b; background: #123629; }
 
-  @media (max-width: 760px) {
-    .wildcard-match-board,
-    .wildcard-before-after { grid-template-columns: 1fr; }
-    .wildcard-arrow,
-    .wildcard-before-after > div { transform: rotate(90deg); text-align: center; }
-    .wildcard-recipe-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  @media (max-width: 900px) {
+    .wildcard-sheet-workspace { grid-template-columns: 1fr; }
+    .wildcard-symbol-lab,
+    .wildcard-position-map { grid-template-columns: repeat(2,minmax(0,1fr)); }
   }
-  @media (max-width: 520px) {
-    .wildcard-hero { border-radius: 20px; }
-    .wildcard-hero__formula { align-items: flex-start; flex-direction: column; }
-    .wildcard-recipe-grid { grid-template-columns: 1fr; }
-    .wildcard-support-matrix header { flex-wrap: wrap; }
+  @media (max-width: 680px) {
+    .wildcard-sheet-hero { border-radius: 20px; }
+    .wildcard-sheet-hero__header { align-items: flex-start; padding: 1rem; }
+    .wildcard-excel-mark { flex-basis: 44px; width: 44px; height: 44px; font-size: 1.25rem; }
+    .wildcard-sheet-workspace { padding: 0 .8rem .9rem; }
+    .wildcard-formula-legend,
+    .wildcard-formula-anatomy__parts,
+    .wildcard-function-route__grid { grid-template-columns: 1fr; }
+    .wildcard-symbol-lab,
+    .wildcard-position-map { grid-template-columns: 1fr; }
+    .wildcard-mode-compare,
+    .wildcard-before-after { grid-template-columns: 1fr; }
+    .wildcard-mode-compare > div,
+    .wildcard-before-after > div { transform: rotate(90deg); text-align: center; }
+    .wildcard-trouble-stack article { grid-template-columns: 34px minmax(0,1fr); }
+    .wildcard-trouble-stack article > b { grid-column: 2; justify-self: start; }
   }
 `}</style>
