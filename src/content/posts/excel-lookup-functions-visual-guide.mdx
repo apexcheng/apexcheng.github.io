@@ -1,12 +1,13 @@
 ---
 title: "Excel 查找函数怎么选：VLOOKUP、XLOOKUP、INDEX、MATCH、XMATCH"
-description: "用一张商品表和可视化查找路径，讲清 VLOOKUP、XLOOKUP、INDEX、MATCH、XMATCH 的分工、公式写法、组合关系和选择方法。"
+description: "用五张内容相同、标注不同的案例表，逐个讲清 VLOOKUP、XLOOKUP、INDEX、MATCH、XMATCH 的公式参数、查找过程、返回结果和组合关系。"
 date: 2026-07-16T15:25:31+08:00
+updated: 2026-07-16T16:44:45+08:00
 category: "教程"
 tags:
   - "Excel"
   - "数据处理"
-minutes: 12
+minutes: 15
 featured: false
 series: "excel-functions"
 seriesOrder: 4
@@ -23,7 +24,7 @@ import HighlightBox from '../../components/HighlightBox.astro';
 <div class="lookup-route-hero" role="group" aria-label="Excel 五个查找匹配函数的两条使用路线">
   <header>
     <span>LOOKUP FUNCTION MAP</span>
-    <strong>查找函数只有两条主要路线</strong>
+    <strong>五个函数，只有两条主要路线</strong>
     <p>区别不是谁更高级，而是直接拿结果，还是把定位和取值拆开。</p>
   </header>
 
@@ -31,7 +32,7 @@ import HighlightBox from '../../components/HighlightBox.astro';
     <section class="is-direct">
       <span>路线 A · 一步查找</span>
       <div><b>查找值</b><i>→</i><strong>VLOOKUP / XLOOKUP</strong><i>→</i><b>返回结果</b></div>
-      <p>适合日常按 SKU、订单号或员工编号返回名称、价格、平台等数据。</p>
+      <p>适合按 SKU、订单号或员工编号直接返回名称、价格、平台等数据。</p>
     </section>
     <section class="is-position">
       <span>路线 B · 先定位再取值</span>
@@ -41,240 +42,322 @@ import HighlightBox from '../../components/HighlightBox.astro';
   </div>
 </div>
 
-## 统一案例：根据 SKU 查商品信息
+## 五个函数，五个独立案例
 
-整篇文章使用同一张商品资料表。现在要查找 SKU `K161`，并返回商品名称或价格。
+下面五个案例都使用相同的商品资料，但每个函数都会单独展示一张表。这样公式参数、查找区域、命中位置和返回结果可以在同一块画面中对应起来。
 
-<div class="lookup-sheet-board" role="group" aria-label="根据 K161 查找商品信息的示例数据表">
-  <div class="lookup-sheet-table-wrap">
-    <table class="lookup-sheet-table">
-      <thead>
-        <tr><th>位置</th><th>SKU</th><th>商品名称</th><th>平台</th><th>价格</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>1</td><td>X51C</td><td>便携键盘</td><td>天猫</td><td>159</td></tr>
-        <tr class="is-hit"><td>2</td><td>K161</td><td>蓝牙键盘</td><td>天猫</td><td>199</td></tr>
-        <tr><td>3</td><td>M30</td><td>无线鼠标</td><td>京东</td><td>99</td></tr>
-        <tr><td>4</td><td>P12</td><td>平板保护套</td><td>拼多多</td><td>139</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="lookup-sheet-result">
-    <div><small>查找值</small><strong>K161</strong><span>来自 G2</span></div>
-    <i>→</i>
-    <div><small>命中位置</small><strong>第 2 个</strong><span>不是工作表第 2 行</span></div>
-    <i>→</i>
-    <div class="is-result"><small>可返回</small><strong>蓝牙键盘 / 199</strong><span>根据目标列决定</span></div>
-  </div>
+<div class="lookup-role-map" role="group" aria-label="五个查找函数的功能分工">
+  <article><span>直接返回</span><strong>VLOOKUP</strong><p>在区域第一列查找，再按列序号向右返回。</p></article>
+  <article><span>直接返回</span><strong>XLOOKUP</strong><p>查找列和返回列分开写，方向更灵活。</p></article>
+  <article><span>返回位置</span><strong>MATCH</strong><p>返回目标在查找区域中排第几个。</p></article>
+  <article><span>按位置取值</span><strong>INDEX</strong><p>根据指定位置返回区域中的对应内容。</p></article>
+  <article><span>返回位置</span><strong>XMATCH</strong><p>更现代的位置查找函数，默认精确匹配。</p></article>
 </div>
 
-这里的“位置 2”是 `K161` 在查找区域 `B2:B5` 中排第 2 个，不是 Excel 工作表的真实行号。这个区别对理解 `MATCH`、`XMATCH` 和 `INDEX` 很重要。
+## VLOOKUP：在区域第一列查找，再向右返回
 
-## 五个函数分别负责什么
-
-<div class="lookup-role-map" role="group" aria-label="VLOOKUP XLOOKUP INDEX MATCH XMATCH 的功能分工">
-  <article>
-    <span>直接返回</span><strong>VLOOKUP</strong><p>在区域最左列查找，再按列序号向右返回。</p><small>老牌 · 兼容广</small>
-  </article>
-  <article>
-    <span>直接返回</span><strong>XLOOKUP</strong><p>查找区域和返回区域分开写，方向更灵活。</p><small>直观 · 推荐优先</small>
-  </article>
-  <article>
-    <span>返回位置</span><strong>MATCH</strong><p>告诉你目标在区域里排第几个，精确匹配通常写 0。</p><small>位置函数</small>
-  </article>
-  <article>
-    <span>返回位置</span><strong>XMATCH</strong><p>MATCH 的现代写法，默认就是精确匹配。</p><small>位置函数</small>
-  </article>
-  <article>
-    <span>按位置取值</span><strong>INDEX</strong><p>你给它一个位置，它从指定区域中返回对应内容。</p><small>常与 MATCH 组合</small>
-  </article>
-</div>
-
-## VLOOKUP：在最左列查找，再向右返回
-
-要根据 G2 中的 `K161` 返回价格，可以写：
+案例目标：在商品资料区域中找到 SKU `K161`，返回这条记录的价格。
 
 ```text
-=VLOOKUP(G2,B2:E5,4,FALSE)
+=VLOOKUP("K161",B2:E5,4,FALSE)
 ```
 
-<div class="lookup-formula-board" role="group" aria-label="VLOOKUP 公式参数与查找过程">
-  <div class="lookup-formula-line">
-    <span>=VLOOKUP(</span><b class="tone-orange">G2</b><span>,</span><b class="tone-blue">B2:E5</b><span>,</span><b class="tone-violet">4</b><span>,</span><b class="tone-green">FALSE</b><span>)</span>
-  </div>
-  <div class="lookup-formula-parts">
-    <div class="tone-orange"><small>查找谁</small><strong>G2：K161</strong></div>
-    <div class="tone-blue"><small>在哪查</small><strong>B2:E5</strong></div>
-    <div class="tone-violet"><small>返回哪列</small><strong>区域第 4 列</strong></div>
-    <div class="tone-green"><small>怎么匹配</small><strong>FALSE：精确</strong></div>
-  </div>
-  <div class="lookup-formula-path">
-    <span>在 B 列找到 K161</span><i>→</i><span>命中区域第 2 行</span><i>→</i><strong>从第 4 列返回 199</strong>
+<div class="lookup-case case-vlookup" role="group" aria-label="VLOOKUP 独立可视化案例">
+  <header class="lookup-case__header">
+    <div><span>CASE 01</span><strong>VLOOKUP 查价格</strong></div>
+    <p>在区域第一列找到 K161，再返回区域第 4 列。</p>
+  </header>
+
+  <div class="lookup-case__workspace">
+    <div class="lookup-case__table-wrap">
+      <table class="lookup-case__table">
+        <thead>
+          <tr>
+            <th>位置</th>
+            <th class="is-range-start is-lookup-column"><span class="table-marker">2</span>SKU<small>区域第 1 列</small></th>
+            <th class="is-range">商品名称<small>区域第 2 列</small></th>
+            <th class="is-range">平台<small>区域第 3 列</small></th>
+            <th class="is-range-end is-return-column"><span class="table-marker">3</span>价格<small>区域第 4 列</small></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td class="is-range-start is-lookup-column">X51C</td><td class="is-range">便携键盘</td><td class="is-range">天猫</td><td class="is-range-end is-return-column">159</td></tr>
+          <tr class="is-hit"><td>2</td><td class="is-range-start is-lookup-column">K161</td><td class="is-range">蓝牙键盘</td><td class="is-range">天猫</td><td class="is-range-end is-return-column is-result-cell">199</td></tr>
+          <tr><td>3</td><td class="is-range-start is-lookup-column">M30</td><td class="is-range">无线鼠标</td><td class="is-range">京东</td><td class="is-range-end is-return-column">99</td></tr>
+          <tr><td>4</td><td class="is-range-start is-lookup-column">P12</td><td class="is-range">平板保护套</td><td class="is-range">拼多多</td><td class="is-range-end is-return-column">139</td></tr>
+        </tbody>
+      </table>
+      <div class="table-range-caption"><b>1</b><span>指定查找区域 B2:E5</span></div>
+    </div>
+
+    <div class="lookup-case__explain">
+      <div class="lookup-case__formula">
+        <span>=VLOOKUP(</span><b class="tone-orange"><em>2</em>{'"K161"'}</b><span>,</span><b class="tone-blue"><em>1</em>B2:E5</b><span>,</span><b class="tone-violet"><em>3</em>4</b><span>,</span><b class="tone-green"><em>4</em>FALSE</b><span>)</span>
+      </div>
+
+      <div class="lookup-case__steps four-steps">
+        <article class="step-blue"><b>1</b><div><strong>指定一个区域</strong><p>`B2:E5` 是完整查找区域。</p></div></article>
+        <article class="step-orange"><b>2</b><div><strong>在区域第一列查找</strong><p>第一列 SKU 中找到 `K161`。</p></div></article>
+        <article class="step-violet"><b>3</b><div><strong>返回区域第 4 列</strong><p>同一行第 4 列是价格。</p></div></article>
+        <article class="step-green"><b>4</b><div><strong>使用精确查找</strong><p>`FALSE` 表示必须完全相同。</p></div></article>
+      </div>
+
+      <div class="lookup-case__path"><span>第一列找到 K161</span><i>→</i><span>锁定同一行</span><i>→</i><strong>返回第 4 列：199</strong></div>
+    </div>
   </div>
 </div>
 
-VLOOKUP 的关键限制是：**查找列必须位于所选区域的最左侧，返回值只能来自右边。** 此外，返回列依赖数字 `4`，表格列较多时容易数错。
+VLOOKUP 中的数字 `4` 表示所选区域 `B2:E5` 中的第 4 列，不是 Excel 工作表的 D 列或第 4 行。它的主要限制是：**查找列必须位于区域最左侧，返回值只能来自右边。**
 
-## XLOOKUP：查找列和返回列直接对应
+## XLOOKUP：在这列找，从那列返回
 
-相同需求使用 XLOOKUP：
+案例目标不变：根据 SKU `K161` 返回价格 `199`。XLOOKUP 不再选择一个大区域，也不需要数第几列。
 
 ```text
-=XLOOKUP(G2,B2:B5,E2:E5,"未找到")
+=XLOOKUP("K161",B2:B5,E2:E5,"未找到")
 ```
 
-<div class="lookup-formula-board is-xlookup" role="group" aria-label="XLOOKUP 公式参数与查找过程">
-  <div class="lookup-formula-line">
-    <span>=XLOOKUP(</span><b class="tone-orange">G2</b><span>,</span><b class="tone-blue">B2:B5</b><span>,</span><b class="tone-violet">E2:E5</b><span>,</span><b class="tone-green">{'"未找到"'}</b><span>)</span>
-  </div>
-  <div class="lookup-formula-parts">
-    <div class="tone-orange"><small>查找谁</small><strong>G2：K161</strong></div>
-    <div class="tone-blue"><small>在哪查</small><strong>SKU 列</strong></div>
-    <div class="tone-violet"><small>从哪返回</small><strong>价格列</strong></div>
-    <div class="tone-green"><small>找不到时</small><strong>显示“未找到”</strong></div>
-  </div>
-  <div class="lookup-formula-path">
-    <span>SKU 列找到 K161</span><i>→</i><span>保持同一行</span><i>→</i><strong>从价格列返回 199</strong>
+<div class="lookup-case case-xlookup" role="group" aria-label="XLOOKUP 独立可视化案例">
+  <header class="lookup-case__header">
+    <div><span>CASE 02</span><strong>XLOOKUP 查价格</strong></div>
+    <p>在 SKU 列查找 K161，再从价格列返回同一行结果。</p>
+  </header>
+
+  <div class="lookup-case__workspace">
+    <div class="lookup-case__table-wrap">
+      <table class="lookup-case__table">
+        <thead>
+          <tr>
+            <th>位置</th>
+            <th class="is-lookup-column"><span class="table-marker">2</span>SKU<small>查找列 B2:B5</small></th>
+            <th>商品名称</th>
+            <th>平台</th>
+            <th class="is-return-column"><span class="table-marker">3</span>价格<small>返回列 E2:E5</small></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td class="is-lookup-column">X51C</td><td>便携键盘</td><td>天猫</td><td class="is-return-column">159</td></tr>
+          <tr class="is-hit"><td>2</td><td class="is-lookup-column">K161</td><td>蓝牙键盘</td><td>天猫</td><td class="is-return-column is-result-cell">199</td></tr>
+          <tr><td>3</td><td class="is-lookup-column">M30</td><td>无线鼠标</td><td>京东</td><td class="is-return-column">99</td></tr>
+          <tr><td>4</td><td class="is-lookup-column">P12</td><td>平板保护套</td><td>拼多多</td><td class="is-return-column">139</td></tr>
+        </tbody>
+      </table>
+      <div class="column-bridge"><span>查找列命中 K161</span><i>→ 同一行 →</i><strong>返回价格 199</strong></div>
+    </div>
+
+    <div class="lookup-case__explain">
+      <div class="lookup-case__formula">
+        <span>=XLOOKUP(</span><b class="tone-orange"><em>1</em>{'"K161"'}</b><span>,</span><b class="tone-blue"><em>2</em>B2:B5</b><span>,</span><b class="tone-violet"><em>3</em>E2:E5</b><span>,</span><b class="tone-green"><em>4</em>{'"未找到"'}</b><span>)</span>
+      </div>
+
+      <div class="lookup-case__steps four-steps">
+        <article class="step-orange"><b>1</b><div><strong>指定查找值</strong><p>本例直接查找 `K161`。</p></div></article>
+        <article class="step-blue"><b>2</b><div><strong>指定查找列</strong><p>只在 SKU 列 `B2:B5` 查找。</p></div></article>
+        <article class="step-violet"><b>3</b><div><strong>指定返回列</strong><p>从价格列 `E2:E5` 返回。</p></div></article>
+        <article class="step-green"><b>4</b><div><strong>设置未找到提示</strong><p>没有匹配时显示“未找到”。</p></div></article>
+      </div>
+
+      <div class="lookup-case__path"><span>SKU 列找到 K161</span><i>→</i><span>保持相同行号</span><i>→</i><strong>价格列返回 199</strong></div>
+    </div>
   </div>
 </div>
 
-XLOOKUP 不需要数列号。查找区域和返回区域分开后，公式读起来就是：**在 SKU 列找 G2，再从价格列返回结果。**
+XLOOKUP 的公式可以直接读成：**在 B 列找 K161，再从 E 列返回结果。** 它不依赖列序号，也可以向左返回，因此通常比 VLOOKUP 更直观。
 
-它也可以向左返回。例如根据商品名称返回 SKU：
+## MATCH：查找目标排第几个
 
-```text
-=XLOOKUP("蓝牙键盘",C2:C5,B2:B5,"未找到")
-```
-
-<div class="lookup-compare-board" role="group" aria-label="VLOOKUP 和 XLOOKUP 的主要区别">
-  <section>
-    <span>VLOOKUP</span>
-    <strong>用一个大区域和列序号</strong>
-    <div><b>查找列</b><i>→</i><b>第 2 / 3 / 4 列</b></div>
-    <ul>
-      <li>只能从区域最左列开始查找。</li>
-      <li>返回列通过数字指定。</li>
-      <li>适合旧表格和兼容场景。</li>
-    </ul>
-  </section>
-  <section class="is-recommended">
-    <span>XLOOKUP</span>
-    <strong>查找区域和返回区域分开</strong>
-    <div><b>SKU 列</b><i>↔</i><b>任意返回列</b></div>
-    <ul>
-      <li>可以向左或向右返回。</li>
-      <li>不用计算返回列是第几列。</li>
-      <li>当前版本支持时通常更容易维护。</li>
-    </ul>
-  </section>
-</div>
-
-## MATCH 和 XMATCH：只返回“第几个”
-
-MATCH 和 XMATCH 不会直接返回商品名称或价格，它们只负责定位。
+MATCH 不会直接返回商品名称或价格。它只负责定位：`K161` 在 SKU 区域中排第几个？
 
 ```text
-=MATCH(G2,B2:B5,0)
+=MATCH("K161",B2:B5,0)
 ```
 
-```text
-=XMATCH(G2,B2:B5)
-```
+<div class="lookup-case case-match" role="group" aria-label="MATCH 独立可视化案例">
+  <header class="lookup-case__header">
+    <div><span>CASE 03</span><strong>MATCH 查位置</strong></div>
+    <p>在 SKU 列中找到 K161，返回它在查找区域中的相对位置。</p>
+  </header>
 
-两条公式都会返回 `2`。
+  <div class="lookup-case__workspace">
+    <div class="lookup-case__table-wrap">
+      <table class="lookup-case__table">
+        <thead>
+          <tr>
+            <th class="is-position-column">位置<small>返回结果</small></th>
+            <th class="is-lookup-column"><span class="table-marker">2</span>SKU<small>查找区域 B2:B5</small></th>
+            <th>商品名称</th>
+            <th>平台</th>
+            <th>价格</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="is-position-column">1</td><td class="is-lookup-column">X51C</td><td>便携键盘</td><td>天猫</td><td>159</td></tr>
+          <tr class="is-hit"><td class="is-position-column is-result-cell">2</td><td class="is-lookup-column">K161</td><td>蓝牙键盘</td><td>天猫</td><td>199</td></tr>
+          <tr><td class="is-position-column">3</td><td class="is-lookup-column">M30</td><td>无线鼠标</td><td>京东</td><td>99</td></tr>
+          <tr><td class="is-position-column">4</td><td class="is-lookup-column">P12</td><td>平板保护套</td><td>拼多多</td><td>139</td></tr>
+        </tbody>
+      </table>
+      <div class="position-result-card"><small>最终结果</small><strong>2</strong><span>K161 在 B2:B5 中排第 2 个</span></div>
+    </div>
 
-<div class="lookup-position-board" role="group" aria-label="MATCH 和 XMATCH 返回相对位置 2">
-  <header><span>查找区域 B2:B5</span><strong>目标：K161</strong></header>
-  <div class="lookup-position-ruler">
-    <span><small>1</small><b>X51C</b></span>
-    <span class="is-hit"><small>2</small><b>K161</b></span>
-    <span><small>3</small><b>M30</b></span>
-    <span><small>4</small><b>P12</b></span>
-  </div>
-  <div class="lookup-position-results">
-    <article><code>MATCH(G2,B2:B5,0)</code><strong>2</strong><p>第三个参数写 0，表示精确匹配。</p></article>
-    <article><code>XMATCH(G2,B2:B5)</code><strong>2</strong><p>默认使用精确匹配，写法更短。</p></article>
+    <div class="lookup-case__explain">
+      <div class="lookup-case__formula">
+        <span>=MATCH(</span><b class="tone-orange"><em>1</em>{'"K161"'}</b><span>,</span><b class="tone-blue"><em>2</em>B2:B5</b><span>,</span><b class="tone-green"><em>3</em>0</b><span>)</span>
+      </div>
+
+      <div class="lookup-case__steps three-steps">
+        <article class="step-orange"><b>1</b><div><strong>查找 K161</strong><p>指定要寻找的目标值。</p></div></article>
+        <article class="step-blue"><b>2</b><div><strong>在 SKU 列查找</strong><p>搜索范围是 `B2:B5`。</p></div></article>
+        <article class="step-green"><b>3</b><div><strong>使用精确匹配</strong><p>第三个参数 `0` 表示精确。</p></div></article>
+      </div>
+
+      <div class="lookup-case__path"><span>区域第 1 个：X51C</span><i>→</i><span>区域第 2 个：K161</span><i>→</i><strong>返回位置 2</strong></div>
+    </div>
   </div>
 </div>
 
-这两个函数最容易被误解的地方是：返回的 `2` 只是目标在当前查找区域中的相对位置。
+MATCH 返回的 `2` 不是工作表第 2 行，也不是商品价格。它表示：**K161 在查找区域 `B2:B5` 中排第 2 个。**
 
 ## INDEX：根据位置取回内容
 
-INDEX 的作用很直接：从一个区域中取第几个值。
+INDEX 不负责按关键词查找。它只接受一个区域和一个位置，然后返回对应内容。
 
 ```text
 =INDEX(C2:C5,2)
 ```
 
-在商品名称列 `C2:C5` 中，第 2 个值是 `蓝牙键盘`，因此公式返回蓝牙键盘。
+<div class="lookup-case case-index" role="group" aria-label="INDEX 独立可视化案例">
+  <header class="lookup-case__header">
+    <div><span>CASE 04</span><strong>INDEX 按位置取值</strong></div>
+    <p>从商品名称列 C2:C5 中取第 2 个值。</p>
+  </header>
 
-真正实用的写法，是让 MATCH 或 XMATCH 动态提供这个位置。
+  <div class="lookup-case__workspace">
+    <div class="lookup-case__table-wrap">
+      <table class="lookup-case__table">
+        <thead>
+          <tr>
+            <th class="is-position-column"><span class="table-marker">2</span>位置<small>指定第几个</small></th>
+            <th>SKU</th>
+            <th class="is-return-column"><span class="table-marker">1</span>商品名称<small>取值区域 C2:C5</small></th>
+            <th>平台</th>
+            <th>价格</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="is-position-column">1</td><td>X51C</td><td class="is-return-column">便携键盘</td><td>天猫</td><td>159</td></tr>
+          <tr class="is-hit"><td class="is-position-column">2</td><td>K161</td><td class="is-return-column is-result-cell">蓝牙键盘</td><td>天猫</td><td>199</td></tr>
+          <tr><td class="is-position-column">3</td><td>M30</td><td class="is-return-column">无线鼠标</td><td>京东</td><td>99</td></tr>
+          <tr><td class="is-position-column">4</td><td>P12</td><td class="is-return-column">平板保护套</td><td>拼多多</td><td>139</td></tr>
+        </tbody>
+      </table>
+      <div class="position-result-card is-text-result"><small>最终结果</small><strong>蓝牙键盘</strong><span>C2:C5 中的第 2 个值</span></div>
+    </div>
 
-<div class="lookup-composition-board" role="group" aria-label="INDEX 与 MATCH 或 XMATCH 组合查找">
+    <div class="lookup-case__explain">
+      <div class="lookup-case__formula">
+        <span>=INDEX(</span><b class="tone-blue"><em>1</em>C2:C5</b><span>,</span><b class="tone-orange"><em>2</em>2</b><span>)</span>
+      </div>
+
+      <div class="lookup-case__steps two-steps">
+        <article class="step-blue"><b>1</b><div><strong>指定取值区域</strong><p>本例从商品名称列 `C2:C5` 取值。</p></div></article>
+        <article class="step-orange"><b>2</b><div><strong>指定位置 2</strong><p>取这段区域中的第 2 个内容。</p></div></article>
+      </div>
+
+      <div class="lookup-case__path"><span>C2:C5 第 1 个：便携键盘</span><i>→</i><span>第 2 个：蓝牙键盘</span><i>→</i><strong>返回蓝牙键盘</strong></div>
+    </div>
+  </div>
+</div>
+
+INDEX 单独使用时，位置 `2` 是直接写在公式里的。真正用于动态查找时，通常让 MATCH 或 XMATCH 自动计算这个位置。
+
+## XMATCH：更现代的位置查找
+
+XMATCH 的核心作用和 MATCH 一样：返回目标在查找区域中的相对位置。
+
+```text
+=XMATCH("K161",B2:B5)
+```
+
+<div class="lookup-case case-xmatch" role="group" aria-label="XMATCH 独立可视化案例">
+  <header class="lookup-case__header">
+    <div><span>CASE 05</span><strong>XMATCH 查位置</strong></div>
+    <p>在 SKU 列找到 K161，默认使用精确匹配并返回位置 2。</p>
+  </header>
+
+  <div class="lookup-case__workspace">
+    <div class="lookup-case__table-wrap">
+      <table class="lookup-case__table">
+        <thead>
+          <tr>
+            <th class="is-position-column">位置<small>返回结果</small></th>
+            <th class="is-lookup-column"><span class="table-marker">2</span>SKU<small>查找区域 B2:B5</small></th>
+            <th>商品名称</th>
+            <th>平台</th>
+            <th>价格</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="is-position-column">1</td><td class="is-lookup-column">X51C</td><td>便携键盘</td><td>天猫</td><td>159</td></tr>
+          <tr class="is-hit"><td class="is-position-column is-result-cell">2</td><td class="is-lookup-column">K161</td><td>蓝牙键盘</td><td>天猫</td><td>199</td></tr>
+          <tr><td class="is-position-column">3</td><td class="is-lookup-column">M30</td><td>无线鼠标</td><td>京东</td><td>99</td></tr>
+          <tr><td class="is-position-column">4</td><td class="is-lookup-column">P12</td><td>平板保护套</td><td>拼多多</td><td>139</td></tr>
+        </tbody>
+      </table>
+      <div class="position-result-card"><small>最终结果</small><strong>2</strong><span>K161 在 B2:B5 中排第 2 个</span></div>
+    </div>
+
+    <div class="lookup-case__explain">
+      <div class="lookup-case__formula">
+        <span>=XMATCH(</span><b class="tone-orange"><em>1</em>{'"K161"'}</b><span>,</span><b class="tone-blue"><em>2</em>B2:B5</b><span>)</span>
+      </div>
+
+      <div class="lookup-case__steps two-steps">
+        <article class="step-orange"><b>1</b><div><strong>查找 K161</strong><p>指定要寻找的目标值。</p></div></article>
+        <article class="step-blue"><b>2</b><div><strong>在 SKU 列查找</strong><p>默认就是精确匹配，不必再写 `0`。</p></div></article>
+      </div>
+
+      <div class="lookup-case__path"><span>区域第 1 个：X51C</span><i>→</i><span>区域第 2 个：K161</span><i>→</i><strong>返回位置 2</strong></div>
+
+      <div class="match-mini-compare"><code>{'=MATCH("K161",B2:B5,0)'}</code><i>→</i><code>{'=XMATCH("K161",B2:B5)'}</code></div>
+    </div>
+  </div>
+</div>
+
+MATCH 和 XMATCH 都可以完成这个案例。当前版本支持 XMATCH 时，新公式通常更简洁；需要兼容旧文件时，MATCH 仍然很常见。
+
+## 组合应用：INDEX + MATCH / XMATCH
+
+单个函数看懂后，组合公式就很简单：位置函数负责找出 `2`，INDEX 再根据位置 `2` 返回商品名称。
+
+<div class="lookup-composition-board" role="group" aria-label="INDEX MATCH 和 INDEX XMATCH 组合查找">
   <section>
-    <span>第一步 · 定位</span>
-    <code>{'=MATCH(G2,B2:B5,0)'}</code>
-    <strong>返回位置 2</strong>
+    <span>第一步 · 找位置</span>
+    <code>{'=MATCH("K161",B2:B5,0)'}</code>
+    <strong>返回 2</strong>
   </section>
   <i>→</i>
   <section>
-    <span>第二步 · 取值</span>
-    <code>{'=INDEX(C2:C5,2)'}</code>
+    <span>第二步 · 按位置取值</span>
+    <code>=INDEX(C2:C5,2)</code>
     <strong>返回蓝牙键盘</strong>
   </section>
-  <i>→</i>
-  <section class="is-complete">
-    <span>组合公式</span>
-    <code>{'=INDEX(C2:C5,MATCH(G2,B2:B5,0))'}</code>
-    <strong>动态完成查找</strong>
-  </section>
 </div>
 
-使用 XMATCH 时，只需要把中间的 MATCH 替换掉：
-
 ```text
-=INDEX(C2:C5,XMATCH(G2,B2:B5))
+=INDEX(C2:C5,MATCH("K161",B2:B5,0))
+=INDEX(C2:C5,XMATCH("K161",B2:B5))
 ```
 
-这种组合的理解方式是：
-
-```text
-MATCH / XMATCH：K161 在第几个？
-INDEX：那就取商品名称列的第几个。
-```
-
-## MATCH 和 XMATCH 怎么选
-
-<div class="lookup-compare-board is-position-compare" role="group" aria-label="MATCH 和 XMATCH 的选择对比">
-  <section>
-    <span>MATCH</span>
-    <strong>经典位置函数</strong>
-    <ul>
-      <li>精确匹配通常明确写第三个参数 `0`。</li>
-      <li>旧文件和现有公式中很常见。</li>
-      <li>适合需要兼容旧写法的场景。</li>
-    </ul>
-  </section>
-  <section class="is-recommended">
-    <span>XMATCH</span>
-    <strong>更直观的位置函数</strong>
-    <ul>
-      <li>默认就是精确匹配。</li>
-      <li>和 XLOOKUP 的参数思路更接近。</li>
-      <li>当前版本支持时，写新公式更简洁。</li>
-    </ul>
-  </section>
-</div>
+两条组合公式得到的结果都是 `蓝牙键盘`。区别只是中间使用 MATCH 还是 XMATCH 计算位置。
 
 ## 最后到底怎么选
 
 <div class="lookup-choice-board" role="group" aria-label="五个查找匹配函数的选择建议">
-  <article><span>日常直接返回结果</span><strong>XLOOKUP</strong><p>版本支持时优先考虑，公式最容易读懂。</p></article>
+  <article><span>直接返回结果</span><strong>XLOOKUP</strong><p>当前版本支持时优先考虑，查找列和返回列最直观。</p></article>
   <article><span>旧文件或兼容优先</span><strong>VLOOKUP</strong><p>适合查找列在左、返回列在右的普通表格。</p></article>
-  <article><span>只需要目标位置</span><strong>XMATCH / MATCH</strong><p>返回第几个，不直接返回名称或金额。</p></article>
-  <article><span>定位和取值分开</span><strong>INDEX + XMATCH</strong><p>逻辑清楚，也可以使用 INDEX + MATCH。</p></article>
+  <article><span>只需要目标位置</span><strong>XMATCH / MATCH</strong><p>返回目标排第几个，不直接返回名称或金额。</p></article>
+  <article><span>定位和取值分开</span><strong>INDEX + XMATCH</strong><p>先找到位置，再从指定列取回内容。</p></article>
 </div>
 
 ## 五个容易出错的地方
@@ -282,8 +365,8 @@ INDEX：那就取商品名称列的第几个。
 <div class="lookup-warning-stack" role="group" aria-label="查找匹配函数常见错误">
   <article><span>01</span><div><strong>VLOOKUP 忘记写 FALSE</strong><p>做普通精确查找时，最后一个参数应明确写 `FALSE`。</p></div><b>匹配方式</b></article>
   <article><span>02</span><div><strong>把 VLOOKUP 的列序号当成工作表列号</strong><p>数字 4 表示所选区域中的第 4 列，不是 Excel 的 D 列。</p></div><b>区域相对位置</b></article>
-  <article><span>03</span><div><strong>把 MATCH 返回值当成真实行号</strong><p>返回 2 表示在查找区域中排第 2 个，不代表工作表第 2 行。</p></div><b>相对位置</b></article>
-  <article><span>04</span><div><strong>INDEX 区域和查找区域没有对齐</strong><p>两段区域的顺序和长度应保持对应，否则位置 2 可能取到另一条数据。</p></div><b>区域对应</b></article>
+  <article><span>03</span><div><strong>把 MATCH / XMATCH 返回值当成真实行号</strong><p>返回 2 表示在查找区域中排第 2 个，不代表工作表第 2 行。</p></div><b>相对位置</b></article>
+  <article><span>04</span><div><strong>把 INDEX 当成关键词查找函数</strong><p>INDEX 根据位置取值，它本身不会寻找 K161 在哪里。</p></div><b>函数分工</b></article>
   <article><span>05</span><div><strong>忽略重复查找值</strong><p>存在多个相同 SKU 时，普通正向查找通常先返回第一条匹配记录。</p></div><b>数据唯一性</b></article>
 </div>
 
@@ -300,22 +383,19 @@ INDEX：那就取商品名称列的第几个。
 
 <style>{`
   .lookup-route-hero,
-  .lookup-sheet-board,
   .lookup-role-map,
-  .lookup-formula-board,
-  .lookup-compare-board,
-  .lookup-position-board,
+  .lookup-case,
   .lookup-composition-board,
   .lookup-choice-board,
   .lookup-warning-stack {
     --lookup-blue: #176fe6;
-    --lookup-orange: #df6f22;
+    --lookup-orange: #df4d31;
     --lookup-violet: #7651c7;
     --lookup-green: #16865a;
     --lookup-navy: #102743;
     --lookup-text: #34495f;
     --lookup-muted: #6d8195;
-    margin: 1.45rem 0 2.1rem;
+    margin: 1.45rem 0 2.2rem;
     color: var(--lookup-text);
   }
 
@@ -343,80 +423,112 @@ INDEX：那就取商品名称列的第几个。
   .lookup-route-lanes i { color: #88a1bb; font-size: .7rem; font-style: normal; font-weight: 900; }
   .lookup-route-lanes p { margin: 0; color: var(--lookup-muted); font-size: .66rem; line-height: 1.55; }
 
-  .lookup-sheet-board { display: grid; gap: .75rem; padding: 1rem; border: 1px solid #cbdbea; border-radius: 20px; background: #f8fbff; }
-  .lookup-sheet-table-wrap { overflow-x: auto; }
-  .lookup-sheet-table { min-width: 560px; margin: 0; border-collapse: separate; border-spacing: 0; overflow: hidden; border: 1px solid #c8d8e7; border-radius: 13px; background: #fff; font-size: .68rem; }
-  .lookup-sheet-table th,
-  .lookup-sheet-table td { padding: .52rem .65rem; border-right: 1px solid #dfe8f0; border-bottom: 1px solid #dfe8f0; text-align: left; white-space: nowrap; }
-  .lookup-sheet-table th { color: #fff; background: var(--lookup-blue); font-weight: 850; }
-  .lookup-sheet-table tr.is-hit td { color: #136d46; background: #eaf8f1; font-weight: 850; }
-  .lookup-sheet-result { display: grid; grid-template-columns: 1fr auto 1fr auto 1.2fr; gap: .55rem; align-items: center; }
-  .lookup-sheet-result div { padding: .72rem; border: 1px solid #d3dfeb; border-radius: 11px; background: #fff; }
-  .lookup-sheet-result div.is-result { border-color: #b9dec9; background: #eef9f3; }
-  .lookup-sheet-result small { display: block; color: var(--lookup-blue); font-size: .56rem; font-weight: 900; }
-  .lookup-sheet-result strong { display: block; margin: .18rem 0; color: var(--lookup-navy); font-size: .78rem; }
-  .lookup-sheet-result span { color: var(--lookup-muted); font-size: .57rem; }
-  .lookup-sheet-result i { color: #89a3bd; font-style: normal; font-weight: 900; }
-
   .lookup-role-map { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .55rem; }
   .lookup-role-map article { min-width: 0; padding: .78rem; border: 1px solid #d1dfec; border-radius: 14px; background: linear-gradient(145deg, #fff, #f8fbff); }
   .lookup-role-map span { color: var(--lookup-blue); font-size: .55rem; font-weight: 900; }
   .lookup-role-map strong { display: block; margin: .24rem 0; color: var(--lookup-navy); font-size: .82rem; }
-  .lookup-role-map p { margin: 0 0 .55rem; color: var(--lookup-muted); font-size: .61rem; line-height: 1.5; }
-  .lookup-role-map small { color: var(--lookup-green); font-size: .53rem; font-weight: 800; }
+  .lookup-role-map p { margin: 0; color: var(--lookup-muted); font-size: .61rem; line-height: 1.5; }
 
-  .lookup-formula-board { padding: 1rem; border: 1px solid #cdddeb; border-radius: 18px; background: #f8fbff; }
-  .lookup-formula-board.is-xlookup { border-color: #c7dccc; background: #f6fbf8; }
-  .lookup-formula-line { overflow-x: auto; padding: .8rem; border: 1px solid #cedcea; border-radius: 11px; color: #192a3c; background: #fff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: clamp(.78rem, 2vw, 1rem); white-space: nowrap; }
-  .lookup-formula-parts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; margin-top: .65rem; }
-  .lookup-formula-parts div { padding: .62rem; border: 1px solid currentColor; border-radius: 10px; background: #fff; }
-  .lookup-formula-parts small { display: block; font-size: .54rem; font-weight: 900; }
-  .lookup-formula-parts strong { display: block; margin-top: .18rem; color: var(--lookup-navy); font-size: .63rem; }
-  .lookup-formula-path { display: grid; grid-template-columns: 1fr auto 1fr auto 1.25fr; gap: .45rem; align-items: center; margin-top: .65rem; }
-  .lookup-formula-path span,
-  .lookup-formula-path strong { padding: .62rem; border: 1px solid #d5e1ec; border-radius: 9px; background: #fff; font-size: .63rem; }
-  .lookup-formula-path strong { color: var(--lookup-green); background: #eef9f3; }
-  .lookup-formula-path i { color: #89a4bd; font-style: normal; font-weight: 900; }
+  .lookup-case {
+    padding: clamp(.8rem, 2vw, 1.05rem);
+    border: 1px solid #c8d9ea;
+    border-radius: 22px;
+    background: linear-gradient(145deg, #f8fbff, #f2f7fd);
+    box-shadow: 0 14px 34px rgba(31, 77, 126, .08);
+  }
+  .lookup-case__header { display: flex; justify-content: space-between; gap: 1rem; align-items: end; margin-bottom: .85rem; }
+  .lookup-case__header span { color: var(--lookup-orange); font-size: .58rem; font-weight: 900; letter-spacing: .08em; }
+  .lookup-case__header strong { display: block; margin-top: .18rem; color: var(--lookup-navy); font-size: 1rem; }
+  .lookup-case__header p { max-width: 340px; margin: 0; color: var(--lookup-muted); font-size: .64rem; line-height: 1.45; text-align: right; }
+  .lookup-case__workspace { display: grid; grid-template-columns: minmax(430px, 1.05fr) minmax(0, .95fr); gap: .85rem; align-items: stretch; }
+  .lookup-case__table-wrap { position: relative; display: grid; align-content: start; gap: .55rem; min-width: 0; padding: .65rem; border: 1px solid #d0deeb; border-radius: 15px; background: #fff; }
+  .lookup-case__table { width: 100%; margin: 0; border-collapse: separate; border-spacing: 0; overflow: hidden; border: 1px solid #c8d8e7; border-radius: 11px; background: #fff; table-layout: fixed; font-size: .62rem; }
+  .lookup-case__table th,
+  .lookup-case__table td { position: relative; padding: .5rem .4rem; border-right: 1px solid #dce6ef; border-bottom: 1px solid #dce6ef; text-align: left; white-space: nowrap; }
+  .lookup-case__table th { height: 44px; color: #fff; background: var(--lookup-blue); font-weight: 850; vertical-align: middle; }
+  .lookup-case__table th:first-child,
+  .lookup-case__table td:first-child { width: 12%; text-align: center; }
+  .lookup-case__table th:nth-child(2),
+  .lookup-case__table td:nth-child(2) { width: 17%; }
+  .lookup-case__table th:nth-child(3),
+  .lookup-case__table td:nth-child(3) { width: 27%; }
+  .lookup-case__table th:nth-child(4),
+  .lookup-case__table td:nth-child(4) { width: 18%; }
+  .lookup-case__table th:nth-child(5),
+  .lookup-case__table td:nth-child(5) { width: 16%; }
+  .lookup-case__table th small { display: block; margin-top: .12rem; color: rgba(255,255,255,.75); font-size: .45rem; font-weight: 650; }
+  .lookup-case__table tr.is-hit td { color: #126c45; background: #eaf8f1; font-weight: 850; }
+  .lookup-case__table .is-lookup-column { background-color: #edf5ff; }
+  .lookup-case__table th.is-lookup-column { color: #fff; background: #145fbf; }
+  .lookup-case__table .is-return-column { background-color: #f3edff; }
+  .lookup-case__table th.is-return-column { color: #fff; background: #6947ad; }
+  .lookup-case__table .is-position-column { background-color: #fff4ea; }
+  .lookup-case__table th.is-position-column { color: #fff; background: #d75b2f; }
+  .lookup-case__table tr.is-hit .is-lookup-column,
+  .lookup-case__table tr.is-hit .is-return-column,
+  .lookup-case__table tr.is-hit .is-position-column { color: #126c45; background: #dff5e9; }
+  .lookup-case__table .is-result-cell { box-shadow: inset 0 0 0 2px var(--lookup-green); font-weight: 950; }
+  .lookup-case__table .is-range { background-color: #f5f9ff; }
+  .lookup-case__table .is-range-start { border-left: 2px solid var(--lookup-blue); }
+  .lookup-case__table .is-range-end { border-right: 2px solid var(--lookup-blue); }
+  .lookup-case__table thead .is-range,
+  .lookup-case__table thead .is-range-start,
+  .lookup-case__table thead .is-range-end { border-top: 2px solid var(--lookup-blue); }
+  .lookup-case__table tbody tr:last-child .is-range,
+  .lookup-case__table tbody tr:last-child .is-range-start,
+  .lookup-case__table tbody tr:last-child .is-range-end { border-bottom: 2px solid var(--lookup-blue); }
+  .table-marker { position: absolute; top: 3px; right: 4px; display: grid; place-items: center; width: 19px; height: 19px; border: 2px solid #fff; border-radius: 999px; color: #fff; background: var(--lookup-orange); font-size: .52rem; font-weight: 950; box-shadow: 0 2px 5px rgba(0,0,0,.16); }
+  .table-range-caption,
+  .column-bridge { display: flex; gap: .45rem; align-items: center; padding: .48rem .58rem; border: 1px solid #bfd5eb; border-radius: 9px; color: #315d88; background: #edf6ff; font-size: .56rem; font-weight: 800; }
+  .table-range-caption b { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 999px; color: #fff; background: var(--lookup-orange); font-size: .52rem; }
+  .column-bridge { justify-content: center; color: #39617f; }
+  .column-bridge i { color: var(--lookup-orange); font-style: normal; }
+  .column-bridge strong { color: var(--lookup-green); }
+  .position-result-card { display: grid; grid-template-columns: auto auto 1fr; gap: .45rem; align-items: center; padding: .48rem .62rem; border: 1px solid #baddca; border-radius: 10px; background: #eef9f3; }
+  .position-result-card small { color: var(--lookup-green); font-size: .52rem; font-weight: 900; }
+  .position-result-card strong { color: var(--lookup-green); font-size: 1.15rem; }
+  .position-result-card span { color: #547363; font-size: .55rem; }
+  .position-result-card.is-text-result strong { font-size: .77rem; }
+
+  .lookup-case__explain { display: grid; gap: .62rem; align-content: center; min-width: 0; padding: .75rem; border: 1px solid #d0deeb; border-radius: 15px; background: rgba(255,255,255,.82); }
+  .lookup-case__formula { overflow-x: auto; padding: .72rem; border: 1px solid #cfddea; border-radius: 10px; color: #17283a; background: #fff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: clamp(.66rem, 1.8vw, .86rem); white-space: nowrap; }
+  .lookup-case__formula b { position: relative; }
+  .lookup-case__formula em { display: inline-grid; place-items: center; width: 17px; height: 17px; margin-right: .18rem; border-radius: 999px; color: #fff; background: #6e8ba8; font-size: .46rem; font-style: normal; }
+  .lookup-case__steps { display: grid; gap: .42rem; }
+  .lookup-case__steps.four-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lookup-case__steps.three-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lookup-case__steps.two-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lookup-case__steps article { display: grid; grid-template-columns: auto 1fr; gap: .42rem; min-width: 0; padding: .5rem; border: 1px solid #d5e1ec; border-radius: 9px; background: #fff; }
+  .lookup-case__steps article > b { display: grid; place-items: center; width: 21px; height: 21px; border-radius: 999px; color: #fff; background: #6e8ba8; font-size: .52rem; }
+  .lookup-case__steps strong { display: block; color: var(--lookup-navy); font-size: .59rem; }
+  .lookup-case__steps p { margin: .15rem 0 0; color: var(--lookup-muted); font-size: .52rem; line-height: 1.4; }
+  .lookup-case__steps .step-blue > b { background: var(--lookup-blue); }
+  .lookup-case__steps .step-orange > b { background: var(--lookup-orange); }
+  .lookup-case__steps .step-violet > b { background: var(--lookup-violet); }
+  .lookup-case__steps .step-green > b { background: var(--lookup-green); }
+  .lookup-case__path { display: grid; grid-template-columns: 1fr auto 1fr auto 1.15fr; gap: .35rem; align-items: center; }
+  .lookup-case__path span,
+  .lookup-case__path strong { padding: .48rem; border: 1px solid #d4e0eb; border-radius: 8px; background: #fff; font-size: .54rem; text-align: center; }
+  .lookup-case__path strong { color: var(--lookup-green); background: #eef9f3; }
+  .lookup-case__path i { color: var(--lookup-orange); font-style: normal; font-weight: 950; }
+  .match-mini-compare { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: .35rem; align-items: center; }
+  .match-mini-compare code { overflow-x: auto; padding: .45rem; border: 1px solid #d2dfeb; border-radius: 8px; color: #1c63a3; background: #fff; font-size: .53rem; white-space: nowrap; }
+  .match-mini-compare i { color: var(--lookup-orange); font-style: normal; font-weight: 900; }
   .tone-blue { color: var(--lookup-blue); }
   .tone-orange { color: var(--lookup-orange); }
   .tone-violet { color: var(--lookup-violet); }
   .tone-green { color: var(--lookup-green); }
+  .tone-blue em { background: var(--lookup-blue); }
+  .tone-orange em { background: var(--lookup-orange); }
+  .tone-violet em { background: var(--lookup-violet); }
+  .tone-green em { background: var(--lookup-green); }
 
-  .lookup-compare-board { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
-  .lookup-compare-board section { min-width: 0; padding: .95rem; border: 1px solid #dfd8d0; border-radius: 16px; background: #fff9f5; }
-  .lookup-compare-board section.is-recommended { border-color: #bcdcca; background: #f0faf5; }
-  .lookup-compare-board span { color: var(--lookup-orange); font-size: .61rem; font-weight: 900; }
-  .lookup-compare-board .is-recommended span { color: var(--lookup-green); }
-  .lookup-compare-board strong { display: block; margin: .25rem 0 .55rem; color: var(--lookup-navy); font-size: .82rem; }
-  .lookup-compare-board section > div { display: flex; gap: .4rem; align-items: center; margin-bottom: .55rem; }
-  .lookup-compare-board section > div b { padding: .35rem .48rem; border: 1px solid #d6e1eb; border-radius: 8px; background: #fff; font-size: .6rem; }
-  .lookup-compare-board section > div i { color: #8ca4ba; font-style: normal; font-weight: 900; }
-  .lookup-compare-board ul { margin: 0; padding-left: 1rem; color: var(--lookup-muted); font-size: .65rem; line-height: 1.65; }
-
-  .lookup-position-board { padding: 1rem; border: 1px solid #cfddeb; border-radius: 18px; background: #f8fbff; }
-  .lookup-position-board header { display: flex; justify-content: space-between; gap: .8rem; align-items: center; margin-bottom: .7rem; }
-  .lookup-position-board header span { color: var(--lookup-blue); font-size: .61rem; font-weight: 900; }
-  .lookup-position-board header strong { color: var(--lookup-navy); font-size: .78rem; }
-  .lookup-position-ruler { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; border: 1px solid #c9d8e7; border-radius: 12px; background: #fff; }
-  .lookup-position-ruler span { display: grid; text-align: center; border-right: 1px solid #dce6ef; }
-  .lookup-position-ruler span:last-child { border-right: 0; }
-  .lookup-position-ruler small { padding: .24rem; color: #71869a; background: #eef4fa; font-size: .53rem; }
-  .lookup-position-ruler b { padding: .58rem .3rem; color: var(--lookup-navy); font-size: .72rem; }
-  .lookup-position-ruler span.is-hit small,
-  .lookup-position-ruler span.is-hit b { color: #126d45; background: #e9f8f0; font-weight: 900; }
-  .lookup-position-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; margin-top: .7rem; }
-  .lookup-position-results article { min-width: 0; padding: .72rem; border: 1px solid #d1dfeb; border-radius: 11px; background: #fff; }
-  .lookup-position-results code { display: block; overflow-x: auto; color: #1a64a7; font-size: .61rem; white-space: nowrap; }
-  .lookup-position-results strong { display: block; margin: .3rem 0; color: var(--lookup-green); font-size: 1rem; }
-  .lookup-position-results p { margin: 0; color: var(--lookup-muted); font-size: .59rem; }
-
-  .lookup-composition-board { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.2fr); gap: .55rem; align-items: center; padding: 1rem; border: 1px solid #cfdaea; border-radius: 18px; background: #f8fbff; }
+  .lookup-composition-board { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: .55rem; align-items: center; padding: 1rem; border: 1px solid #cfdaea; border-radius: 18px; background: #f8fbff; }
   .lookup-composition-board section { min-width: 0; padding: .72rem; border: 1px solid #d2deea; border-radius: 11px; background: #fff; }
-  .lookup-composition-board section.is-complete { border-color: #b8ddc8; background: #eff9f4; }
   .lookup-composition-board span { color: var(--lookup-blue); font-size: .55rem; font-weight: 900; }
   .lookup-composition-board code { display: block; overflow-x: auto; margin: .35rem 0; color: #1a62a3; font-size: .58rem; white-space: nowrap; }
   .lookup-composition-board strong { color: var(--lookup-green); font-size: .65rem; }
-  .lookup-composition-board > i { color: #89a4bc; font-style: normal; font-weight: 900; }
+  .lookup-composition-board > i { color: var(--lookup-orange); font-style: normal; font-weight: 900; }
 
   .lookup-choice-board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; }
   .lookup-choice-board article { min-width: 0; padding: .82rem; border: 1px solid #d1dfeb; border-radius: 14px; background: linear-gradient(145deg, #fff, #f8fbff); }
@@ -432,11 +544,8 @@ INDEX：那就取商品名称列的第几个。
   .lookup-warning-stack article > b { padding: .27rem .42rem; border: 1px solid #ead8c9; border-radius: 999px; color: #9a5b26; background: #fff7ef; font-size: .53rem; white-space: nowrap; }
 
   html[data-theme='dark'] .lookup-route-hero,
-  html[data-theme='dark'] .lookup-sheet-board,
   html[data-theme='dark'] .lookup-role-map article,
-  html[data-theme='dark'] .lookup-formula-board,
-  html[data-theme='dark'] .lookup-compare-board section,
-  html[data-theme='dark'] .lookup-position-board,
+  html[data-theme='dark'] .lookup-case,
   html[data-theme='dark'] .lookup-composition-board,
   html[data-theme='dark'] .lookup-choice-board article,
   html[data-theme='dark'] .lookup-warning-stack article {
@@ -448,34 +557,40 @@ INDEX：那就取商品名称列的第几个。
     box-shadow: none;
   }
   html[data-theme='dark'] .lookup-route-lanes section,
-  html[data-theme='dark'] .lookup-sheet-table,
-  html[data-theme='dark'] .lookup-sheet-result div,
-  html[data-theme='dark'] .lookup-formula-line,
-  html[data-theme='dark'] .lookup-formula-parts div,
-  html[data-theme='dark'] .lookup-formula-path span,
-  html[data-theme='dark'] .lookup-position-ruler,
-  html[data-theme='dark'] .lookup-position-results article,
-  html[data-theme='dark'] .lookup-composition-board section,
-  html[data-theme='dark'] .lookup-compare-board section > div b {
+  html[data-theme='dark'] .lookup-case__table-wrap,
+  html[data-theme='dark'] .lookup-case__explain,
+  html[data-theme='dark'] .lookup-case__formula,
+  html[data-theme='dark'] .lookup-case__steps article,
+  html[data-theme='dark'] .lookup-case__path span,
+  html[data-theme='dark'] .lookup-case__path strong,
+  html[data-theme='dark'] .match-mini-compare code,
+  html[data-theme='dark'] .lookup-composition-board section {
     border-color: #2e4a62;
     background: #0a1826;
   }
+  html[data-theme='dark'] .lookup-case__table { border-color: #31516b; background: #0b1927; }
+  html[data-theme='dark'] .lookup-case__table td { border-color: #29475f; background: #0b1927; }
+  html[data-theme='dark'] .lookup-case__table .is-lookup-column,
+  html[data-theme='dark'] .lookup-case__table .is-return-column,
+  html[data-theme='dark'] .lookup-case__table .is-position-column { background: #10283d; }
+  html[data-theme='dark'] .lookup-case__table tr.is-hit td { color: #8fe0b6; background: #153c32; }
 
-  @media (max-width: 880px) {
+  @media (max-width: 940px) {
+    .lookup-case__workspace { grid-template-columns: 1fr; }
     .lookup-role-map { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .lookup-choice-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .lookup-formula-parts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-width: 720px) {
-    .lookup-route-lanes,
-    .lookup-compare-board,
-    .lookup-position-results { grid-template-columns: 1fr; }
-    .lookup-sheet-result,
-    .lookup-formula-path,
+    .lookup-route-lanes { grid-template-columns: 1fr; }
+    .lookup-case__header { align-items: start; flex-direction: column; }
+    .lookup-case__header p { max-width: none; text-align: left; }
+    .lookup-case__table-wrap { overflow-x: auto; }
+    .lookup-case__table { min-width: 560px; }
+    .lookup-case__steps.three-steps { grid-template-columns: 1fr; }
+    .lookup-case__path,
     .lookup-composition-board { grid-template-columns: 1fr; }
-    .lookup-sheet-result > i,
-    .lookup-formula-path > i,
+    .lookup-case__path i,
     .lookup-composition-board > i { transform: rotate(90deg); text-align: center; }
     .lookup-role-map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
@@ -483,8 +598,11 @@ INDEX：那就取商品名称列的第几个。
   @media (max-width: 520px) {
     .lookup-role-map,
     .lookup-choice-board,
-    .lookup-formula-parts { grid-template-columns: 1fr; }
+    .lookup-case__steps.four-steps,
+    .lookup-case__steps.two-steps { grid-template-columns: 1fr; }
     .lookup-warning-stack article { grid-template-columns: auto 1fr; }
     .lookup-warning-stack article > b { grid-column: 2; justify-self: start; }
+    .match-mini-compare { grid-template-columns: 1fr; }
+    .match-mini-compare i { transform: rotate(90deg); text-align: center; }
   }
 `}</style>
