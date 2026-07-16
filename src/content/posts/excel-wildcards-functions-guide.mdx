@@ -2,7 +2,7 @@
 title: "Excel 通配符使用指南：*、?、~ 和支持函数清单"
 description: "讲清 Excel 中 *、?、~ 三种通配符的含义，整理 COUNTIF、SUMIFS、XLOOKUP、MATCH、SEARCH 等支持通配符的常用函数，并给出前缀、包含、结尾和转义案例。"
 date: 2026-07-16T09:46:18+08:00
-updated: 2026-07-16T10:57:28+08:00
+updated: 2026-07-16T17:42:19+08:00
 category: "教程"
 tags:
   - "Excel"
@@ -240,30 +240,12 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 这类函数最简单，只需要把通配符写进条件中。
 
-<div class="wildcard-formula-anatomy" role="group" aria-label="SUMIF 公式参数说明">
-  <div class="wildcard-formula-anatomy__line">
-    <span>=SUMIF(</span><b class="tone-blue">C8:C17</b><span>,</span><b class="tone-orange">{'"K161*"'}</b><span>,</span><b class="tone-violet">D8:D17</b><span>)</span>
-  </div>
-  <div class="wildcard-formula-anatomy__parts">
-    <span class="tone-blue"><b>条件范围</b>检查 SKU</span>
-    <span class="tone-orange"><b>匹配条件</b>以 K161 开头</span>
-    <span class="tone-violet"><b>求和范围</b>汇总订单金额</span>
-  </div>
+<div class="wildcard-condition-family" role="group" aria-label="条件统计函数使用通配符的四种写法">
+  <article><span>统计数量</span><code>{'=COUNTIF(C8:C17,"K161*")'}</code><strong>命中 3 条</strong></article>
+  <article><span>汇总金额</span><code>{'=SUMIF(C8:C17,"K161*",D8:D17)'}</code><strong>结果 627</strong></article>
+  <article><span>计算平均</span><code>{'=AVERAGEIF(C8:C17,"K161*",D8:D17)'}</code><strong>结果 209</strong></article>
+  <article><span>条件来自单元格</span><code>{'=AVERAGEIF(C8:C17,F2&"*",D8:D17)'}</code><strong>F2 填写 K161</strong></article>
 </div>
-
-同一套逻辑可以直接换成计数、求和或平均值：
-
-```text
-=COUNTIF(C8:C17,"K161*")
-```
-
-```text
-=SUMIF(C8:C17,"K161*",D8:D17)
-```
-
-```text
-=AVERAGEIF(C8:C17,"K161*",D8:D17)
-```
 
 条件来自单元格时，不要把单元格引用放进引号：
 
@@ -276,6 +258,11 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 ### 2. 查找函数：先开启正确的匹配模式
 
 `XLOOKUP` 默认是精确匹配，但默认不会把 `*` 和 `?` 当成通配符。要使用通配符，必须把第五个参数设为 `2`：
+
+<div class="wildcard-lookup-link">
+  <div><span>需要先理解函数本身？</span><strong>VLOOKUP、XLOOKUP、INDEX、MATCH、XMATCH 已有单独的可视化专题。</strong></div>
+  <a href="/articles/excel-lookup-functions-visual-guide/">查看查找函数专题 →</a>
+</div>
 
 <div class="wildcard-mode-compare" role="group" aria-label="XLOOKUP 是否开启通配符模式的结果对比">
   <section>
@@ -417,7 +404,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   items={[
     {
       label: '统计或汇总',
-      title: '使用 IF / IFS 条件函数家族',
+      title: '使用 COUNTIF、SUMIF 等条件统计函数',
       description: '计数用 COUNTIF(S)，求和用 SUMIF(S)，平均值用 AVERAGEIF(S)，极值用 MAXIFS 或 MINIFS。',
     },
     {
@@ -462,7 +449,8 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   .wildcard-symbol-lab,
   .wildcard-position-map,
   .wildcard-function-route,
-  .wildcard-formula-anatomy,
+  .wildcard-condition-family,
+  .wildcard-lookup-link,
   .wildcard-mode-compare,
   .wildcard-before-after,
   .wildcard-trouble-stack,
@@ -514,7 +502,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   .wildcard-sheet-hero__header span {
     display: block;
     color: var(--wc-blue);
-    font-size: .64rem;
+    font-size: .75rem;
     font-weight: 900;
     letter-spacing: .14em;
   }
@@ -526,7 +514,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     line-height: 1.35;
   }
   .wildcard-sheet-hero__header strong code { color: var(--wc-orange); background: transparent; }
-  .wildcard-sheet-hero__header p { margin: 0; color: var(--wc-muted); font-size: .78rem; }
+  .wildcard-sheet-hero__header p { margin: 0; color: var(--wc-muted); font-size: .9rem; }
   .wildcard-sheet-workspace {
     display: grid;
     grid-template-columns: minmax(500px,1.45fr) minmax(290px,.8fr);
@@ -545,12 +533,12 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     margin: 0;
     border-collapse: separate;
     border-spacing: 0;
-    font-size: .66rem;
+    font-size: .88rem;
   }
   .wildcard-sheet-table th,
   .wildcard-sheet-table td {
-    min-width: 82px;
-    padding: .48rem .55rem;
+    min-width: 92px;
+    padding: .58rem .65rem;
     border-right: 1px solid #e0e7ee;
     border-bottom: 1px solid #e0e7ee;
     text-align: left;
@@ -590,7 +578,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     border-radius: 15px;
     color: #101820;
     font-family: ui-monospace,SFMono-Regular,Menlo,monospace;
-    font-size: clamp(.76rem,1.8vw,1rem);
+    font-size: clamp(.9rem,1.8vw,1.05rem);
     font-weight: 850;
     white-space: nowrap;
   }
@@ -599,13 +587,13 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   .tone-violet { color: var(--wc-violet); }
   .wildcard-formula-legend { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem; }
   .wildcard-formula-legend > div { min-width: 0; padding: .68rem; border-radius: 13px; }
-  .wildcard-formula-legend small { display: block; font-size: .57rem; font-weight: 800; }
-  .wildcard-formula-legend strong { display: block; margin: .2rem 0; color: var(--wc-navy); font-size: .68rem; }
-  .wildcard-formula-legend span { display: block; overflow-x: auto; font-family: ui-monospace,SFMono-Regular,Menlo,monospace; font-size: .58rem; white-space: nowrap; }
+  .wildcard-formula-legend small { display: block; font-size: .72rem; font-weight: 800; }
+  .wildcard-formula-legend strong { display: block; margin: .24rem 0; color: var(--wc-navy); font-size: .88rem; }
+  .wildcard-formula-legend span { display: block; overflow-x: auto; font-family: ui-monospace,SFMono-Regular,Menlo,monospace; font-size: .81rem; white-space: nowrap; }
   .wildcard-result-card { display: grid; gap: .55rem; padding: .85rem; border-color: #bee1ca; border-radius: 15px; background: linear-gradient(145deg,#fff,#f0faf4); }
   .wildcard-result-card > div { display: grid; grid-template-columns: 52px 1fr; gap: .55rem; align-items: center; }
-  .wildcard-result-card small { color: var(--wc-green); font-size: .62rem; font-weight: 900; }
-  .wildcard-result-card strong { color: var(--wc-navy); font-size: .69rem; }
+  .wildcard-result-card small { color: var(--wc-green); font-size: .75rem; font-weight: 900; }
+  .wildcard-result-card strong { color: var(--wc-navy); font-size: .86rem; }
   .wildcard-result-card .is-total { padding-top: .55rem; border-top: 1px dashed #a9d7b9; }
   .wildcard-result-card .is-total strong { color: var(--wc-green); font-size: 1.55rem; }
 
@@ -638,8 +626,8 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   }
   .wildcard-symbol-card.is-question header > code { background: var(--wc-violet); }
   .wildcard-symbol-card.is-escape header > code { background: var(--wc-orange); }
-  .wildcard-symbol-card header strong { display: block; color: var(--wc-navy); font-size: .82rem; }
-  .wildcard-symbol-card header span { display: block; margin-top: .16rem; color: var(--wc-muted); font-size: .61rem; }
+  .wildcard-symbol-card header strong { display: block; color: var(--wc-navy); font-size: 1rem; }
+  .wildcard-symbol-card header span { display: block; margin-top: .16rem; color: var(--wc-muted); font-size: .81rem; }
   .wildcard-token-demo,
   .wildcard-escape-demo {
     display: flex;
@@ -648,20 +636,20 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     margin: .8rem 0;
     min-height: 42px;
   }
-  .wildcard-token-demo span { padding: .48rem .6rem; border-radius: 9px; font-size: .66rem; font-weight: 850; }
+  .wildcard-token-demo span { padding: .5rem .65rem; border-radius: 9px; font-size: .84rem; font-weight: 850; }
   .token-fixed { color: var(--wc-blue); background: var(--wc-blue-soft); }
   .token-stretch { flex: 1; color: #417598; background: repeating-linear-gradient(135deg,#eef6fb,#eef6fb 8px,#e3f0f7 8px,#e3f0f7 16px); text-align: center; }
   .token-slot { display: grid; place-items: center; width: 34px; color: var(--wc-violet); background: var(--wc-violet-soft); outline: 2px dashed #b89cda; }
   .wildcard-escape-demo { justify-content: center; }
   .wildcard-escape-demo > span { min-width: 82px; padding: .45rem; border: 1px solid #e2d8cf; border-radius: 10px; background: #fffaf6; text-align: center; }
   .wildcard-escape-demo code { display: block; color: var(--wc-orange); font-size: .9rem; font-weight: 900; }
-  .wildcard-escape-demo small { color: var(--wc-muted); font-size: .56rem; }
+  .wildcard-escape-demo small { color: var(--wc-muted); font-size: .75rem; }
   .wildcard-test-list { display: grid; gap: .34rem; }
-  .wildcard-test-list > span { display: flex; justify-content: space-between; gap: .6rem; padding: .4rem .5rem; border-radius: 8px; background: #f7f9fb; font-size: .6rem; }
+  .wildcard-test-list > span { display: flex; justify-content: space-between; gap: .6rem; padding: .48rem .58rem; border-radius: 8px; background: #f7f9fb; font-size: .81rem; }
   .wildcard-test-list b { flex: none; }
   .wildcard-test-list .is-pass { color: var(--wc-green); background: var(--wc-green-soft); }
   .wildcard-test-list .is-fail { color: #a4663d; background: #fff6ed; }
-  .wildcard-symbol-card p { margin: .7rem 0 0; color: var(--wc-muted); font-size: .64rem; line-height: 1.55; }
+  .wildcard-symbol-card p { margin: .75rem 0 0; color: var(--wc-muted); font-size: .84rem; line-height: 1.58; }
 
   .wildcard-position-map {
     display: grid;
@@ -670,14 +658,14 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     margin: 1.2rem 0 1.7rem;
   }
   .wildcard-position-map article { min-width: 0; padding: .9rem; border: 1px solid var(--wc-line); border-radius: 15px; background: #fff; }
-  .wildcard-position-map article > span { color: var(--wc-blue); font-size: .62rem; font-weight: 900; }
+  .wildcard-position-map article > span { color: var(--wc-blue); font-size: .75rem; font-weight: 900; }
   .wildcard-position-track { display: flex; min-height: 34px; margin: .55rem 0; overflow: hidden; border: 1px solid #d8e3ed; border-radius: 9px; }
-  .wildcard-position-track > * { display: grid; flex: 1; place-items: center; min-width: 0; padding: .35rem; font-size: .57rem; font-style: normal; text-align: center; }
+  .wildcard-position-track > * { display: grid; flex: 1; place-items: center; min-width: 0; padding: .42rem; font-size: .76rem; font-style: normal; text-align: center; }
   .wildcard-position-track b { color: var(--wc-blue); background: var(--wc-blue-soft); }
   .wildcard-position-track i { color: #6f8193; background: repeating-linear-gradient(135deg,#f7f9fb,#f7f9fb 7px,#edf2f6 7px,#edf2f6 14px); }
   .wildcard-position-track em { flex: 0 0 36px; color: var(--wc-violet); background: var(--wc-violet-soft); font-weight: 900; }
-  .wildcard-position-map article > code { display: block; color: var(--wc-navy); font-size: .76rem; font-weight: 850; }
-  .wildcard-position-map p { margin: .38rem 0 0; color: var(--wc-muted); font-size: .61rem; line-height: 1.45; }
+  .wildcard-position-map article > code { display: block; color: var(--wc-navy); font-size: .9rem; font-weight: 850; }
+  .wildcard-position-map p { margin: .4rem 0 0; color: var(--wc-muted); font-size: .81rem; line-height: 1.5; }
 
   .wildcard-function-route {
     margin: 1.3rem 0 1.8rem;
@@ -687,38 +675,35 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     background: linear-gradient(145deg,#f7fbff,#fff);
   }
   .wildcard-function-route > header { padding: 1rem 1.1rem .8rem; }
-  .wildcard-function-route > header span { color: var(--wc-violet); font-size: .62rem; font-weight: 900; letter-spacing: .08em; }
+  .wildcard-function-route > header span { color: var(--wc-violet); font-size: .75rem; font-weight: 900; letter-spacing: .08em; }
   .wildcard-function-route > header strong { display: block; margin-top: .25rem; color: var(--wc-navy); font-size: 1.02rem; }
   .wildcard-function-route__grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; padding: 0 1rem 1rem; }
   .wildcard-function-route article { min-width: 0; padding: .85rem; border: 1px solid #d8e3ed; border-radius: 14px; background: rgba(255,255,255,.94); }
-  .wildcard-function-route article > span { color: var(--wc-blue); font-size: .6rem; font-weight: 900; }
-  .wildcard-function-route article > strong { display: block; margin: .25rem 0 .55rem; color: var(--wc-navy); font-size: .76rem; }
+  .wildcard-function-route article > span { color: var(--wc-blue); font-size: .72rem; font-weight: 900; }
+  .wildcard-function-route article > strong { display: block; margin: .28rem 0 .58rem; color: var(--wc-navy); font-size: .9rem; }
   .wildcard-function-route article > div { display: flex; flex-wrap: wrap; gap: .35rem; }
-  .wildcard-function-route article > div code { padding: .28rem .4rem; border: 1px solid #ccdef1; border-radius: 7px; color: #155fae; background: #eff6fe; font-size: .58rem; font-weight: 800; }
-  .wildcard-function-route article > small { display: block; margin-top: .55rem; color: var(--wc-muted); font-size: .58rem; line-height: 1.45; }
+  .wildcard-function-route article > div code { padding: .32rem .45rem; border: 1px solid #ccdef1; border-radius: 7px; color: #155fae; background: #eff6fe; font-size: .75rem; font-weight: 800; }
+  .wildcard-function-route article > small { display: block; margin-top: .58rem; color: var(--wc-muted); font-size: .81rem; line-height: 1.5; }
 
-  .wildcard-formula-anatomy {
+  .wildcard-condition-family {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: .7rem;
     margin: 1rem 0 1.3rem;
     padding: 1rem;
     border: 1px solid #d1deeb;
     border-radius: 18px;
     background: #fbfdff;
   }
-  .wildcard-formula-anatomy__line {
-    overflow-x: auto;
-    padding: .8rem;
-    border: 1px solid #d7e2ed;
-    border-radius: 12px;
-    color: #111923;
-    background: #fff;
-    font-family: ui-monospace,SFMono-Regular,Menlo,monospace;
-    font-size: clamp(.78rem,2vw,1.02rem);
-    font-weight: 850;
-    white-space: nowrap;
-  }
-  .wildcard-formula-anatomy__parts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem; margin-top: .7rem; }
-  .wildcard-formula-anatomy__parts span { padding: .55rem; border-radius: 9px; background: #fff; font-size: .59rem; }
-  .wildcard-formula-anatomy__parts b { display: block; margin-bottom: .16rem; font-size: .63rem; }
+  .wildcard-condition-family article { min-width: 0; padding: .85rem; border: 1px solid #d8e3ed; border-radius: 12px; background: #fff; }
+  .wildcard-condition-family span { color: var(--wc-blue); font-size: .75rem; font-weight: 900; }
+  .wildcard-condition-family code { display: block; overflow-x: auto; margin: .45rem 0; color: #155fae; font-size: .86rem; white-space: nowrap; }
+  .wildcard-condition-family strong { color: var(--wc-green); font-size: .84rem; }
+
+  .wildcard-lookup-link { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin: 1rem 0; padding: .9rem 1rem; border: 1px solid #cbdceb; border-radius: 14px; background: #f4f9ff; }
+  .wildcard-lookup-link span { display: block; color: var(--wc-blue); font-size: .75rem; font-weight: 900; }
+  .wildcard-lookup-link strong { display: block; margin-top: .2rem; color: var(--wc-navy); font-size: .88rem; }
+  .wildcard-lookup-link a { flex: none; padding: .55rem .7rem; border-radius: 9px; color: #fff; background: var(--wc-blue); font-size: .81rem; font-weight: 850; text-decoration: none; }
 
   .wildcard-mode-compare,
   .wildcard-before-after {
@@ -735,36 +720,37 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   .wildcard-mode-compare > div,
   .wildcard-before-after > div { color: #7e9ab8; font-size: 1.2rem; font-weight: 900; }
   .wildcard-mode-compare span,
-  .wildcard-before-after span { color: #a45c49; font-size: .62rem; font-weight: 900; }
+  .wildcard-before-after span { color: #a45c49; font-size: .75rem; font-weight: 900; }
   .wildcard-mode-compare .is-correct span,
   .wildcard-before-after .is-recommended span { color: var(--wc-green); }
   .wildcard-mode-compare code,
-  .wildcard-before-after code { display: block; overflow-x: auto; margin: .5rem 0; padding: .58rem; border: 1px solid #dce4eb; border-radius: 8px; color: #155fae; background: #fff; font-size: .59rem; white-space: nowrap; }
+  .wildcard-before-after code { display: block; overflow-x: auto; margin: .5rem 0; padding: .65rem; border: 1px solid #dce4eb; border-radius: 8px; color: #155fae; background: #fff; font-size: .84rem; white-space: nowrap; }
   .wildcard-mode-compare strong,
-  .wildcard-before-after strong { display: block; color: var(--wc-navy); font-size: .76rem; }
+  .wildcard-before-after strong { display: block; color: var(--wc-navy); font-size: .92rem; }
   .wildcard-mode-compare p,
-  .wildcard-before-after p { margin: .45rem 0 0; color: var(--wc-muted); font-size: .62rem; line-height: 1.5; }
+  .wildcard-before-after p { margin: .48rem 0 0; color: var(--wc-muted); font-size: .84rem; line-height: 1.55; }
   .wildcard-step-chain { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; margin: .6rem 0; }
-  .wildcard-step-chain i { padding: .3rem .4rem; border-radius: 7px; color: #6c4f48; background: #f8ece8; font-size: .57rem; font-style: normal; font-weight: 850; }
+  .wildcard-step-chain i { padding: .34rem .45rem; border-radius: 7px; color: #6c4f48; background: #f8ece8; font-size: .75rem; font-style: normal; font-weight: 850; }
   .wildcard-before-after .is-recommended .wildcard-step-chain i { color: var(--wc-green); background: var(--wc-green-soft); }
-  .wildcard-step-chain b { color: #9badbd; font-size: .6rem; }
+  .wildcard-step-chain b { color: #9badbd; font-size: .75rem; }
 
   .wildcard-trouble-stack { display: grid; gap: .65rem; margin: 1.15rem 0 2rem; }
   .wildcard-trouble-stack article { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: .75rem; align-items: start; padding: .85rem; border: 1px solid #d8e2ec; border-radius: 14px; background: #fff; }
-  .wildcard-trouble-stack article > span { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: #fff; background: linear-gradient(145deg,#f28b4e,#d85a2a); font-size: .58rem; font-weight: 900; }
-  .wildcard-trouble-stack h3 { margin: 0 0 .25rem; color: var(--wc-navy); font-size: .75rem; }
-  .wildcard-trouble-stack p { margin: 0; color: var(--wc-muted); font-size: .63rem; line-height: 1.55; }
-  .wildcard-trouble-stack article > b { align-self: center; padding: .28rem .48rem; border-radius: 999px; color: #a85f35; background: #fff3e8; font-size: .54rem; white-space: nowrap; }
+  .wildcard-trouble-stack article > span { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; color: #fff; background: linear-gradient(145deg,#f28b4e,#d85a2a); font-size: .72rem; font-weight: 900; }
+  .wildcard-trouble-stack h3 { margin: 0 0 .25rem; color: var(--wc-navy); font-size: .92rem; }
+  .wildcard-trouble-stack p { margin: 0; color: var(--wc-muted); font-size: .81rem; line-height: 1.58; }
+  .wildcard-trouble-stack article > b { align-self: center; padding: .32rem .5rem; border-radius: 999px; color: #a85f35; background: #fff3e8; font-size: .72rem; white-space: nowrap; }
 
   .wildcard-final-check { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; margin: 1.2rem 0 .8rem; padding: .85rem; border: 1px solid #bedfca; border-radius: 15px; background: linear-gradient(145deg,#fff,#f1faf4); }
-  .wildcard-final-check span { padding: .3rem .48rem; border-radius: 999px; color: var(--wc-green); background: #e5f5eb; font-size: .57rem; font-weight: 850; }
-  .wildcard-final-check strong { flex: 1 1 260px; color: var(--wc-navy); font-size: .7rem; }
+  .wildcard-final-check span { padding: .34rem .52rem; border-radius: 999px; color: var(--wc-green); background: #e5f5eb; font-size: .75rem; font-weight: 850; }
+  .wildcard-final-check strong { flex: 1 1 260px; color: var(--wc-navy); font-size: .88rem; }
 
   html[data-theme='dark'] .wildcard-sheet-hero,
   html[data-theme='dark'] .wildcard-symbol-card,
   html[data-theme='dark'] .wildcard-position-map article,
   html[data-theme='dark'] .wildcard-function-route,
-  html[data-theme='dark'] .wildcard-formula-anatomy,
+  html[data-theme='dark'] .wildcard-condition-family,
+  html[data-theme='dark'] .wildcard-lookup-link,
   html[data-theme='dark'] .wildcard-mode-compare section,
   html[data-theme='dark'] .wildcard-before-after section,
   html[data-theme='dark'] .wildcard-trouble-stack article,
@@ -782,8 +768,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   html[data-theme='dark'] .wildcard-formula-legend > div,
   html[data-theme='dark'] .wildcard-result-card,
   html[data-theme='dark'] .wildcard-function-route article,
-  html[data-theme='dark'] .wildcard-formula-anatomy__line,
-  html[data-theme='dark'] .wildcard-formula-anatomy__parts span,
+  html[data-theme='dark'] .wildcard-condition-family article,
   html[data-theme='dark'] .wildcard-mode-compare code,
   html[data-theme='dark'] .wildcard-before-after code {
     border-color: #2c4964;
@@ -805,7 +790,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     .wildcard-excel-mark { flex-basis: 44px; width: 44px; height: 44px; font-size: 1.25rem; }
     .wildcard-sheet-workspace { padding: 0 .8rem .9rem; }
     .wildcard-formula-legend,
-    .wildcard-formula-anatomy__parts,
+    .wildcard-condition-family,
     .wildcard-function-route__grid { grid-template-columns: 1fr; }
     .wildcard-symbol-lab,
     .wildcard-position-map { grid-template-columns: 1fr; }
@@ -815,5 +800,6 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     .wildcard-before-after > div { transform: rotate(90deg); text-align: center; }
     .wildcard-trouble-stack article { grid-template-columns: 34px minmax(0,1fr); }
     .wildcard-trouble-stack article > b { grid-column: 2; justify-self: start; }
+    .wildcard-lookup-link { align-items: flex-start; flex-direction: column; }
   }
 `}</style>
