@@ -2,7 +2,7 @@
 title: "Excel 公式教学可视化：让数据、参数、命中结果连起来"
 description: "从 19 个常用 Excel 函数中提炼 7 种可复用的教学视觉模式，覆盖条件统计、文本处理、查找匹配、结果反馈和复杂公式简化。"
 date: 2026-07-16T11:20:08+08:00
-updated: 2026-07-16T11:41:47+08:00
+updated: 2026-07-16T17:52:30+08:00
 category: "视觉实验室"
 tags:
   - "文章设计"
@@ -226,6 +226,74 @@ Excel 教程最常见的问题，不是公式写错，而是读者只能看到�
 
 查找函数最容易讲成一串参数。把“查找值、命中行、返回列、最终结果”连起来后，读者才会真正理解这些函数之间的关系。
 
+## 扩展模式：一个函数，一张独立案例板
+
+当文章需要逐个教会多个函数时，只有一张总关系图还不够。更适合的做法是：**每个函数使用一张独立数据表，完整展示公式、参数、命中过程和最终结果。**
+
+下面用 `XLOOKUP` 展示一张完整案例板。正式文章可以复用相同的数据内容，但每个函数都要重新绘制一张表，并根据当前函数调整高亮区域。
+
+<div class="formula-single-case" role="group" aria-label="XLOOKUP 单函数独立案例板示例">
+  <header>
+    <div><span>CASE · XLOOKUP</span><strong>在 SKU 列查找，从价格列返回</strong></div>
+    <p>目标：根据 K161 返回商品价格 199。</p>
+  </header>
+
+  <div class="formula-single-case__workspace">
+    <div class="formula-single-case__table-wrap">
+      <table class="formula-single-case__table">
+        <thead>
+          <tr><th>位置</th><th class="is-lookup">SKU<small>查找列</small></th><th>商品名称</th><th>平台</th><th class="is-return">价格<small>返回列</small></th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td class="is-lookup">X51C</td><td>便携键盘</td><td>天猫</td><td class="is-return">159</td></tr>
+          <tr class="is-hit"><td>2</td><td class="is-lookup">K161</td><td>蓝牙键盘</td><td>天猫</td><td class="is-return is-result">199</td></tr>
+          <tr><td>3</td><td class="is-lookup">M30</td><td>无线鼠标</td><td>京东</td><td class="is-return">99</td></tr>
+          <tr><td>4</td><td class="is-lookup">P12</td><td>平板保护套</td><td>拼多多</td><td class="is-return">139</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="formula-single-case__explain">
+      <div class="formula-single-case__formula">
+        <span>=XLOOKUP(</span><b class="tone-orange">{'"K161"'}</b><span>,</span><b class="tone-blue">B2:B5</b><span>,</span><b class="tone-violet">E2:E5</b><span>)</span>
+      </div>
+      <div class="formula-single-case__steps">
+        <article><b>1</b><div><strong>查找谁</strong><p>查找值是 K161。</p></div></article>
+        <article><b>2</b><div><strong>在哪里找</strong><p>在 SKU 列 B2:B5 中查找。</p></div></article>
+        <article><b>3</b><div><strong>从哪里返回</strong><p>从价格列 E2:E5 返回相同行结果。</p></div></article>
+      </div>
+      <div class="formula-single-case__path"><span>SKU 列命中 K161</span><i>→</i><span>保持第 2 行</span><i>→</i><strong>返回价格 199</strong></div>
+    </div>
+  </div>
+</div>
+
+<div class="formula-single-case-map" role="group" aria-label="五个查找函数的独立案例板重点">
+  <article><span>VLOOKUP</span><strong>完整区域 + 第一列 + 返回列号</strong><p>强调区域第一列查找、向右返回以及精确匹配参数。</p></article>
+  <article><span>XLOOKUP</span><strong>查找列 + 返回列</strong><p>强调两个范围独立书写，不需要计算返回列号。</p></article>
+  <article><span>MATCH</span><strong>查找区域 + 位置编号</strong><p>最终结果是相对位置，不是商品内容。</p></article>
+  <article><span>INDEX</span><strong>取值区域 + 指定位置</strong><p>给定第几个，就从目标区域取回第几个值。</p></article>
+  <article><span>XMATCH</span><strong>查找区域 + 默认精确匹配</strong><p>同样返回位置，但写法更现代、参数更直接。</p></article>
+</div>
+
+这里最重要的复用原则是：五张表的数据可以相同，但不能只复制同一张图。每张表必须针对当前函数重新标出查找区域、返回区域、位置编号或结果单元格。
+
+## 可读性标准：教学内容不能缩成缩略图
+
+视觉块不是海报缩略图。读者需要真正阅读表格、公式和步骤说明，因此应先保证字号，再决定一行放几列。
+
+<div class="formula-readability-scale" role="group" aria-label="公式教学视觉字号建议">
+  <article><span>11–12px</span><strong>编号与小标签</strong><p>只用于 CASE、步骤编号和短辅助标签。</p></article>
+  <article><span>12–13px</span><strong>辅助说明</strong><p>参数补充、表头说明和次要提示。</p></article>
+  <article><span>13–14px</span><strong>教学正文</strong><p>步骤解释、卡片正文和查找过程。</p></article>
+  <article><span>14–15px</span><strong>表格内容</strong><p>数据样本、表头和实际命中记录。</p></article>
+  <article><span>15–17px</span><strong>公式</strong><p>允许横向滚动，不为塞下一行而缩字。</p></article>
+  <article><span>18px+</span><strong>最终结果</strong><p>让读者快速确认公式最终得到什么。</p></article>
+</div>
+
+<HighlightBox eyebrow="可读性底线" title="放不下时减少列数或允许横向滚动，不要继续缩小文字">
+  桌面端可以调整为两列或三列，移动端应把横向关系改成纵向阅读。教学正文不应为了“一屏放完”被压缩到难以辨认。
+</HighlightBox>
+
 ## 跨函数表达一：错误公式必须配实际结果
 
 只写“错误”和“正确”仍然比较抽象。更有效的结构是：**公式 → 实际结果 → 原因 → 正确写法。**
@@ -307,6 +375,9 @@ Excel 教程最常见的问题，不是公式写错，而是读者只能看到�
   .formula-transform-flow,
   .formula-search-board,
   .formula-lookup-board,
+  .formula-single-case,
+  .formula-single-case-map,
+  .formula-readability-scale,
   .formula-error-compare,
   .formula-simplify,
   .formula-design-rules {
@@ -329,53 +400,54 @@ Excel 教程最常见的问题，不是公式写错，而是读者只能看到�
     box-shadow: 0 18px 45px rgba(38, 88, 145, .1);
   }
   .formula-pattern-hero header { text-align: center; }
-  .formula-pattern-hero header span { color: var(--fp-blue); font-size: .66rem; font-weight: 900; letter-spacing: .14em; }
+  .formula-pattern-hero header span { color: var(--fp-blue); font-size: .72rem; font-weight: 900; letter-spacing: .14em; }
   .formula-pattern-hero header strong { display: block; margin: .45rem 0; color: var(--fp-navy); font-size: clamp(1.25rem, 3vw, 1.75rem); }
-  .formula-pattern-hero header p { margin: 0; color: var(--fp-muted); font-size: .82rem; }
+  .formula-pattern-hero header p { margin: 0; color: var(--fp-muted); font-size: .88rem; }
   .formula-pattern-hero__flow { display: grid; grid-template-columns: repeat(7, auto); gap: .55rem; align-items: center; margin-top: 1.15rem; }
   .formula-pattern-hero__flow div { min-width: 0; padding: .8rem; border: 1px solid #d1e0f0; border-radius: 13px; background: rgba(255,255,255,.88); }
-  .formula-pattern-hero__flow small { color: var(--fp-blue); font-size: .58rem; font-weight: 900; }
-  .formula-pattern-hero__flow b { display: block; margin: .2rem 0; color: var(--fp-navy); font-size: .76rem; }
-  .formula-pattern-hero__flow span { display: block; color: var(--fp-muted); font-size: .62rem; line-height: 1.45; }
+  .formula-pattern-hero__flow small { color: var(--fp-blue); font-size: .72rem; font-weight: 900; }
+  .formula-pattern-hero__flow b { display: block; margin: .2rem 0; color: var(--fp-navy); font-size: .9rem; }
+  .formula-pattern-hero__flow span { display: block; color: var(--fp-muted); font-size: .81rem; line-height: 1.5; }
   .formula-pattern-hero__flow i { color: #87a6c8; font-style: normal; font-weight: 900; }
 
   .formula-function-overview { padding: 1rem; border: 1px solid #c9daeb; border-radius: 20px; background: linear-gradient(145deg,#fff,#f5f9ff); }
   .formula-function-overview > header { display: flex; justify-content: space-between; gap: 1rem; align-items: end; margin-bottom: .85rem; }
   .formula-function-overview > header div { display: flex; align-items: baseline; gap: .55rem; }
   .formula-function-overview > header strong { color: var(--fp-green); font-size: 1.8rem; line-height: 1; }
-  .formula-function-overview > header span { color: var(--fp-navy); font-size: .72rem; font-weight: 850; }
-  .formula-function-overview > header p { margin: 0; color: var(--fp-muted); font-size: .67rem; text-align: right; }
+  .formula-function-overview > header span { color: var(--fp-navy); font-size: .84rem; font-weight: 850; }
+  .formula-function-overview > header p { margin: 0; color: var(--fp-muted); font-size: .81rem; text-align: right; }
   .formula-function-categories { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .7rem; }
   .formula-function-categories article { min-width: 0; padding: .8rem; border: 1px solid #d2dfec; border-radius: 14px; background: #fff; }
-  .formula-function-categories article > span { color: var(--fp-blue); font-size: .65rem; font-weight: 900; }
+  .formula-function-categories article > span { color: var(--fp-blue); font-size: .81rem; font-weight: 900; }
   .formula-function-categories article > div { display: flex; flex-wrap: wrap; gap: .3rem; margin: .55rem 0; }
-  .formula-function-categories code { padding: .24rem .38rem; border: 1px solid #cbdced; border-radius: 7px; color: #205f9b; background: #f1f7fd; font-size: .58rem; font-weight: 800; }
-  .formula-function-categories p { margin: 0; color: var(--fp-muted); font-size: .64rem; line-height: 1.5; }
-  .formula-pattern-map { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .45rem; margin-top: .75rem; }
-  .formula-pattern-map span { display: grid; grid-template-columns: auto 1fr; gap: .18rem .4rem; align-items: center; padding: .55rem; border: 1px solid #d4e1ee; border-radius: 10px; color: var(--fp-navy); background: #f9fcff; font-size: .62rem; font-weight: 800; }
-  .formula-pattern-map b { grid-row: 1 / span 2; color: var(--fp-blue); font-size: .62rem; }
-  .formula-pattern-map small { color: var(--fp-muted); font-size: .53rem; font-weight: 700; }
+  .formula-function-categories code { padding: .28rem .42rem; border: 1px solid #cbdced; border-radius: 7px; color: #205f9b; background: #f1f7fd; font-size: .72rem; font-weight: 800; }
+  .formula-function-categories p { margin: 0; color: var(--fp-muted); font-size: .81rem; line-height: 1.55; }
+  .formula-pattern-map { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem; margin-top: .75rem; }
+  .formula-pattern-map span { display: grid; grid-template-columns: auto 1fr; gap: .18rem .4rem; align-items: center; padding: .65rem; border: 1px solid #d4e1ee; border-radius: 10px; color: var(--fp-navy); background: #f9fcff; font-size: .78rem; font-weight: 800; }
+  .formula-pattern-map b { grid-row: 1 / span 2; color: var(--fp-blue); font-size: .78rem; }
+  .formula-pattern-map small { color: var(--fp-muted); font-size: .7rem; font-weight: 700; }
 
   .formula-map-board { display: grid; grid-template-columns: minmax(250px, .8fr) minmax(0, 1.2fr); gap: 1rem; padding: 1rem; border: 1px solid #cbdced; border-radius: 20px; background: #f8fbff; }
   .formula-map-table { overflow: hidden; border: 1px solid #c9d8e8; border-radius: 13px; background: #fff; }
   .formula-map-table > div { display: grid; grid-template-columns: 1.2fr .8fr; }
   .formula-map-table span,
-  .formula-map-table b { padding: .52rem .65rem; border-bottom: 1px solid #e0e8f0; font-size: .7rem; }
+  .formula-map-table b { padding: .62rem .7rem; border-bottom: 1px solid #e0e8f0; font-size: .88rem; }
+  .formula-map-table span { padding: .62rem .7rem; font-size: .88rem; }
   .formula-map-table b { border-left: 1px solid #e0e8f0; text-align: right; }
   .formula-map-table__head { color: #fff; background: var(--fp-blue); font-weight: 850; }
   .formula-map-table__head span { border-bottom: 0; }
   .formula-map-table .is-hit span,
   .formula-map-table .is-hit b { color: #147045; background: #eaf8f1; font-weight: 850; }
   .formula-map-main { display: grid; gap: .75rem; align-content: center; }
-  .formula-map-line { overflow-x: auto; padding: .85rem; border: 1px solid #cfdceb; border-radius: 12px; color: #172536; background: #fff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: clamp(.82rem, 2vw, 1.05rem); white-space: nowrap; }
+  .formula-map-line { overflow-x: auto; padding: .9rem; border: 1px solid #cfdceb; border-radius: 12px; color: #172536; background: #fff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: clamp(.95rem, 2vw, 1.08rem); white-space: nowrap; }
   .formula-map-legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
   .formula-map-legend div { padding: .7rem; border: 1px solid currentColor; border-radius: 11px; background: #fff; }
-  .formula-map-legend small { display: block; font-size: .58rem; font-weight: 900; }
-  .formula-map-legend strong { display: block; margin-top: .18rem; color: var(--fp-navy); font-size: .68rem; }
+  .formula-map-legend small { display: block; font-size: .72rem; font-weight: 900; }
+  .formula-map-legend strong { display: block; margin-top: .18rem; color: var(--fp-navy); font-size: .84rem; }
   .formula-map-result { display: grid; grid-template-columns: auto 1fr auto; gap: .7rem; align-items: center; padding: .85rem; border: 1px solid #b9dfcb; border-radius: 12px; background: #eef9f3; }
-  .formula-map-result span { color: var(--fp-green); font-size: .66rem; font-weight: 900; }
-  .formula-map-result b { color: #49695a; font-size: .7rem; }
-  .formula-map-result strong { color: var(--fp-green); font-size: 1.15rem; }
+  .formula-map-result span { color: var(--fp-green); font-size: .78rem; font-weight: 900; }
+  .formula-map-result b { color: #49695a; font-size: .84rem; }
+  .formula-map-result strong { color: var(--fp-green); font-size: 1.25rem; }
   .tone-blue { color: var(--fp-blue); }
   .tone-orange { color: var(--fp-orange); }
   .tone-violet { color: var(--fp-violet); }
@@ -386,71 +458,116 @@ Excel 教程最常见的问题，不是公式写错，而是读者只能看到�
   .formula-design-rules article { padding: .95rem; border: 1px solid #d1dfed; border-radius: 16px; background: linear-gradient(145deg, #fff, #f8fbff); }
   .formula-slot-lab header { display: flex; align-items: center; gap: .6rem; }
   .formula-slot-lab header code { display: grid; place-items: center; width: 35px; height: 35px; border-radius: 10px; color: #fff; background: var(--fp-blue); font-size: 1rem; font-weight: 900; }
-  .formula-slot-lab header strong { color: var(--fp-navy); font-size: .8rem; }
+  .formula-slot-lab header strong { color: var(--fp-navy); font-size: .94rem; }
   .formula-slots { display: flex; align-items: stretch; margin: .8rem 0; }
   .formula-slots b,
   .formula-slots i,
   .formula-slots em,
-  .formula-slots span { display: grid; place-items: center; min-height: 38px; padding: .35rem .55rem; border: 1px solid #c8d8e9; font-size: .68rem; font-style: normal; }
+  .formula-slots span { display: grid; place-items: center; min-height: 42px; padding: .4rem .58rem; border: 1px solid #c8d8e9; font-size: .82rem; font-style: normal; }
   .formula-slots b { color: #155faf; background: #eaf4ff; }
   .formula-slots i { flex: 1; color: #9a5d17; background: #fff3df; }
   .formula-slots em { min-width: 42px; color: #7144b1; background: #f2ebff; font-weight: 900; }
-  .formula-slot-lab p { margin: 0; color: var(--fp-muted); font-size: .68rem; line-height: 1.55; }
+  .formula-slot-lab p { margin: 0; color: var(--fp-muted); font-size: .81rem; line-height: 1.6; }
 
   .formula-text-ruler { padding: 1rem; border: 1px solid #cdddeb; border-radius: 18px; background: #f8fbff; }
   .formula-text-ruler > header { display: flex; align-items: center; gap: .6rem; margin-bottom: .8rem; }
-  .formula-text-ruler > header span { color: var(--fp-blue); font-size: .62rem; font-weight: 900; }
-  .formula-text-ruler > header strong { color: var(--fp-navy); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1rem; }
+  .formula-text-ruler > header span { color: var(--fp-blue); font-size: .78rem; font-weight: 900; }
+  .formula-text-ruler > header strong { color: var(--fp-navy); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.05rem; }
   .formula-character-ruler { display: grid; grid-template-columns: repeat(7,minmax(38px,1fr)); overflow: hidden; border: 1px solid #c9d9e9; border-radius: 12px; background: #fff; }
   .formula-character-ruler span { display: grid; text-align: center; border-right: 1px solid #dce6ef; }
   .formula-character-ruler span:last-child { border-right: 0; }
-  .formula-character-ruler small { padding: .22rem; color: #7990a7; background: #eef4fa; font-size: .53rem; }
-  .formula-character-ruler b { padding: .58rem .25rem; color: var(--fp-navy); font-size: .8rem; }
-  .formula-ruler-results { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .5rem; margin-top: .75rem; }
+  .formula-character-ruler small { padding: .25rem; color: #7990a7; background: #eef4fa; font-size: .72rem; }
+  .formula-character-ruler b { padding: .62rem .25rem; color: var(--fp-navy); font-size: .92rem; }
+  .formula-ruler-results { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .55rem; margin-top: .75rem; }
   .formula-ruler-results article { min-width: 0; padding: .65rem; border: 1px solid #d4e1ed; border-radius: 11px; background: #fff; }
-  .formula-ruler-results code { display: block; overflow-x: auto; color: #1c67aa; font-size: .58rem; white-space: nowrap; }
-  .formula-ruler-results span { display: block; margin: .3rem 0; color: var(--fp-muted); font-size: .56rem; }
-  .formula-ruler-results strong { color: var(--fp-green); font-size: .8rem; }
+  .formula-ruler-results code { display: block; overflow-x: auto; color: #1c67aa; font-size: .82rem; white-space: nowrap; }
+  .formula-ruler-results span { display: block; margin: .32rem 0; color: var(--fp-muted); font-size: .78rem; }
+  .formula-ruler-results strong { color: var(--fp-green); font-size: .96rem; }
 
   .formula-transform-flow { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .7rem; }
   .formula-transform-flow article { min-width: 0; padding: .9rem; border: 1px solid #d1deeb; border-radius: 15px; background: linear-gradient(145deg,#fff,#f8fbff); }
-  .formula-transform-flow article > span { color: var(--fp-blue); font-size: .63rem; font-weight: 900; }
+  .formula-transform-flow article > span { color: var(--fp-blue); font-size: .78rem; font-weight: 900; }
   .formula-transform-flow article > div:not(.formula-join-values) { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: .35rem; align-items: center; margin: .75rem 0; }
   .formula-transform-flow code,
-  .formula-transform-flow strong { overflow-x: auto; padding: .5rem; border: 1px solid #d3e0ec; border-radius: 8px; background: #fff; font-size: .64rem; white-space: nowrap; }
+  .formula-transform-flow strong { overflow-x: auto; padding: .55rem; border: 1px solid #d3e0ec; border-radius: 8px; background: #fff; font-size: .82rem; white-space: nowrap; }
+  .formula-transform-flow code { font-size: .82rem; }
   .formula-transform-flow strong { color: var(--fp-green); }
   .formula-transform-flow i { color: #84a0bc; font-style: normal; font-weight: 900; }
-  .formula-transform-flow p { margin: 0; color: var(--fp-muted); font-size: .63rem; line-height: 1.5; }
+  .formula-transform-flow p { margin: 0; color: var(--fp-muted); font-size: .81rem; line-height: 1.55; }
   .formula-transform-flow .is-join { display: grid; gap: .55rem; }
   .formula-join-values { display: flex; flex-wrap: wrap; gap: .3rem; }
-  .formula-transform-flow .is-join > b { color: var(--fp-orange); font-size: .58rem; }
+  .formula-transform-flow .is-join > b { color: var(--fp-orange); font-size: .75rem; }
 
   .formula-search-board { padding: 1rem; border: 1px solid #cdddeb; border-radius: 18px; background: #f8fbff; }
   .formula-search-text { display: flex; flex-wrap: wrap; overflow: hidden; border: 1px solid #cad9e8; border-radius: 11px; background: #fff; }
-  .formula-search-text span { flex: 1 0 auto; padding: .55rem .42rem; border-right: 1px solid #dce6ef; color: #50667d; font-size: .57rem; text-align: center; }
+  .formula-search-text span { flex: 1 0 auto; padding: .6rem .46rem; border-right: 1px solid #dce6ef; color: #50667d; font-size: .78rem; text-align: center; }
   .formula-search-text .is-found { color: #986018; background: #fff2d9; font-weight: 900; }
   .formula-search-results { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem; margin-top: .75rem; }
   .formula-search-results article { min-width: 0; padding: .7rem; border: 1px solid #c4dfd1; border-radius: 11px; background: #f2faf6; }
   .formula-search-results article.is-error { border-color: #ead0c6; background: #fff6f2; }
-  .formula-search-results code { display: block; overflow-x: auto; color: #1d639f; font-size: .57rem; white-space: nowrap; }
-  .formula-search-results strong { display: block; margin: .35rem 0; color: var(--fp-green); font-size: .9rem; }
+  .formula-search-results code { display: block; overflow-x: auto; color: #1d639f; font-size: .82rem; white-space: nowrap; }
+  .formula-search-results strong { display: block; margin: .35rem 0; color: var(--fp-green); font-size: 1.05rem; }
   .formula-search-results .is-error strong { color: #b35d43; }
-  .formula-search-results p { margin: 0; color: var(--fp-muted); font-size: .6rem; line-height: 1.45; }
+  .formula-search-results p { margin: 0; color: var(--fp-muted); font-size: .81rem; line-height: 1.55; }
 
   .formula-lookup-board { display: grid; grid-template-columns: minmax(300px,1fr) minmax(0,1fr); gap: .8rem; padding: 1rem; border: 1px solid #cdddeb; border-radius: 18px; background: #f8fbff; }
   .formula-lookup-table { overflow: hidden; border: 1px solid #c8d8e8; border-radius: 12px; background: #fff; }
   .formula-lookup-table header,
   .formula-lookup-table > div { display: grid; grid-template-columns: .5fr .8fr 1.2fr .6fr; }
-  .formula-lookup-table header { color: #fff; background: var(--fp-blue); font-size: .6rem; font-weight: 850; }
+  .formula-lookup-table header { color: #fff; background: var(--fp-blue); font-size: .84rem; font-weight: 850; }
   .formula-lookup-table span,
   .formula-lookup-table b,
-  .formula-lookup-table strong { padding: .52rem .48rem; border-right: 1px solid #e0e8f0; border-bottom: 1px solid #e0e8f0; font-size: .61rem; }
+  .formula-lookup-table strong { padding: .62rem .52rem; border-right: 1px solid #e0e8f0; border-bottom: 1px solid #e0e8f0; font-size: .84rem; }
+  .formula-lookup-table span,
+  .formula-lookup-table b { padding: .62rem .52rem; font-size: .84rem; }
   .formula-lookup-table .is-hit > * { color: #146f46; background: #eaf8f1; font-weight: 850; }
   .formula-lookup-paths { display: grid; gap: .5rem; }
   .formula-lookup-paths article { padding: .7rem; border: 1px solid #d1dfec; border-radius: 11px; background: #fff; }
-  .formula-lookup-paths span { color: var(--fp-blue); font-size: .56rem; font-weight: 900; }
-  .formula-lookup-paths code { display: block; margin: .24rem 0; color: var(--fp-navy); font-size: .65rem; font-weight: 850; }
-  .formula-lookup-paths p { margin: 0; color: var(--fp-muted); font-size: .61rem; line-height: 1.45; }
+  .formula-lookup-paths span { color: var(--fp-blue); font-size: .75rem; font-weight: 900; }
+  .formula-lookup-paths code { display: block; margin: .28rem 0; color: var(--fp-navy); font-size: .88rem; font-weight: 850; }
+  .formula-lookup-paths p { margin: 0; color: var(--fp-muted); font-size: .81rem; line-height: 1.55; }
+
+  .formula-single-case { padding: 1rem; border: 1px solid #cdddeb; border-radius: 20px; background: linear-gradient(145deg,#fff,#f5f9ff); }
+  .formula-single-case > header { display: flex; justify-content: space-between; gap: 1rem; align-items: end; margin-bottom: .85rem; }
+  .formula-single-case > header span { color: var(--fp-orange); font-size: .72rem; font-weight: 900; letter-spacing: .08em; }
+  .formula-single-case > header strong { display: block; margin-top: .2rem; color: var(--fp-navy); font-size: 1.05rem; }
+  .formula-single-case > header p { max-width: 340px; margin: 0; color: var(--fp-muted); font-size: .84rem; text-align: right; }
+  .formula-single-case__workspace { display: grid; grid-template-columns: minmax(430px,1.05fr) minmax(0,.95fr); gap: .85rem; }
+  .formula-single-case__table-wrap { min-width: 0; overflow-x: auto; padding: .7rem; border: 1px solid #d0deeb; border-radius: 14px; background: #fff; }
+  .formula-single-case__table { width: 100%; min-width: 650px; margin: 0; border-collapse: separate; border-spacing: 0; overflow: hidden; border: 1px solid #c8d8e7; border-radius: 11px; background: #fff; table-layout: fixed; font-size: .88rem; }
+  .formula-single-case__table th,
+  .formula-single-case__table td { padding: .62rem .52rem; border-right: 1px solid #dce6ef; border-bottom: 1px solid #dce6ef; text-align: left; white-space: nowrap; }
+  .formula-single-case__table th { color: #fff; background: var(--fp-blue); font-size: .9rem; }
+  .formula-single-case__table th small { display: block; margin-top: .15rem; color: rgba(255,255,255,.78); font-size: .7rem; }
+  .formula-single-case__table .is-lookup { background: #edf5ff; }
+  .formula-single-case__table th.is-lookup { background: #145fbf; }
+  .formula-single-case__table .is-return { background: #f3edff; }
+  .formula-single-case__table th.is-return { background: #6947ad; }
+  .formula-single-case__table tr.is-hit td { color: #126c45; background: #eaf8f1; font-weight: 850; }
+  .formula-single-case__table .is-result { box-shadow: inset 0 0 0 2px var(--fp-green); font-weight: 950; }
+  .formula-single-case__explain { display: grid; gap: .7rem; align-content: center; min-width: 0; padding: .85rem; border: 1px solid #d0deeb; border-radius: 14px; background: rgba(255,255,255,.82); }
+  .formula-single-case__formula { overflow-x: auto; padding: .9rem; border: 1px solid #cfddea; border-radius: 10px; color: #17283a; background: #fff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: clamp(.95rem,2vw,1.08rem); white-space: nowrap; }
+  .formula-single-case__steps { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .45rem; }
+  .formula-single-case__steps article { display: grid; grid-template-columns: auto 1fr; gap: .45rem; padding: .62rem; border: 1px solid #d5e1ec; border-radius: 9px; background: #fff; }
+  .formula-single-case__steps article > b { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 999px; color: #fff; background: var(--fp-blue); font-size: .75rem; }
+  .formula-single-case__steps strong { color: var(--fp-navy); font-size: .88rem; }
+  .formula-single-case__steps p { margin: .18rem 0 0; color: var(--fp-muted); font-size: .81rem; line-height: 1.5; }
+  .formula-single-case__path { display: grid; grid-template-columns: 1fr auto 1fr auto 1.1fr; gap: .35rem; align-items: center; }
+  .formula-single-case__path span,
+  .formula-single-case__path strong { padding: .62rem; border: 1px solid #d4e0eb; border-radius: 8px; background: #fff; font-size: .81rem; text-align: center; }
+  .formula-single-case__path strong { color: var(--fp-green); background: #eef9f3; }
+  .formula-single-case__path i { color: var(--fp-orange); font-style: normal; font-weight: 950; }
+  .formula-single-case-map { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .65rem; }
+  .formula-single-case-map article { padding: .85rem; border: 1px solid #d2dfec; border-radius: 13px; background: linear-gradient(145deg,#fff,#f8fbff); }
+  .formula-single-case-map span { color: var(--fp-blue); font-size: .75rem; font-weight: 900; }
+  .formula-single-case-map strong { display: block; margin: .28rem 0; color: var(--fp-navy); font-size: .9rem; }
+  .formula-single-case-map p { margin: 0; color: var(--fp-muted); font-size: .81rem; line-height: 1.55; }
+
+  .formula-readability-scale { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .65rem; }
+  .formula-readability-scale article { padding: .85rem; border: 1px solid #d2dfec; border-radius: 13px; background: linear-gradient(145deg,#fff,#f8fbff); }
+  .formula-readability-scale span { color: var(--fp-green); font-size: 1.1rem; font-weight: 950; }
+  .formula-readability-scale strong { display: block; margin: .28rem 0; color: var(--fp-navy); font-size: .9rem; }
+  .formula-readability-scale p { margin: 0; color: var(--fp-muted); font-size: .81rem; line-height: 1.55; }
 
   .formula-error-compare,
   .formula-simplify { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: .8rem; align-items: center; }
@@ -461,22 +578,22 @@ Excel 教程最常见的问题，不是公式写错，而是读者只能看到�
   .formula-error-compare > i,
   .formula-simplify > i { color: #85a1bd; font-style: normal; font-weight: 900; }
   .formula-error-compare span,
-  .formula-simplify span { color: #a45c42; font-size: .62rem; font-weight: 900; }
+  .formula-simplify span { color: #a45c42; font-size: .75rem; font-weight: 900; }
   .formula-error-compare .is-correct span,
   .formula-simplify .is-short span { color: var(--fp-green); }
   .formula-error-compare code,
-  .formula-simplify code { display: block; overflow-x: auto; margin: .55rem 0; padding: .55rem; border: 1px solid #dce3ea; border-radius: 9px; color: #165e9f; background: #fff; font-size: .64rem; white-space: nowrap; }
+  .formula-simplify code { display: block; overflow-x: auto; margin: .55rem 0; padding: .62rem; border: 1px solid #dce3ea; border-radius: 9px; color: #165e9f; background: #fff; font-size: .84rem; white-space: nowrap; }
   .formula-error-compare strong,
-  .formula-simplify strong { display: block; color: var(--fp-navy); font-size: .8rem; }
-  .formula-error-compare p { margin: .45rem 0 0; color: var(--fp-muted); font-size: .67rem; }
+  .formula-simplify strong { display: block; color: var(--fp-navy); font-size: .94rem; }
+  .formula-error-compare p { margin: .45rem 0 0; color: var(--fp-muted); font-size: .81rem; }
   .formula-simplify section > div { display: flex; flex-wrap: wrap; gap: .35rem; margin: .65rem 0; }
-  .formula-simplify section > div i { padding: .3rem .45rem; border: 1px solid #d0dcea; border-radius: 7px; color: #315c88; background: #f7fbff; font-size: .62rem; font-style: normal; font-weight: 800; }
-  .formula-simplify section > div b { color: #8aa1b9; font-size: .65rem; }
+  .formula-simplify section > div i { padding: .34rem .48rem; border: 1px solid #d0dcea; border-radius: 7px; color: #315c88; background: #f7fbff; font-size: .78rem; font-style: normal; font-weight: 800; }
+  .formula-simplify section > div b { color: #8aa1b9; font-size: .78rem; }
 
   .formula-design-rules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .formula-design-rules span { color: var(--fp-blue); font-size: .6rem; font-weight: 900; }
-  .formula-design-rules strong { display: block; margin: .28rem 0 .4rem; color: var(--fp-navy); font-size: .78rem; }
-  .formula-design-rules p { margin: 0; color: var(--fp-muted); font-size: .67rem; line-height: 1.55; }
+  .formula-design-rules span { color: var(--fp-blue); font-size: .75rem; font-weight: 900; }
+  .formula-design-rules strong { display: block; margin: .28rem 0 .4rem; color: var(--fp-navy); font-size: .92rem; }
+  .formula-design-rules p { margin: 0; color: var(--fp-muted); font-size: .81rem; line-height: 1.6; }
 
   html[data-theme='dark'] .formula-pattern-hero,
   html[data-theme='dark'] .formula-function-overview,
@@ -486,6 +603,9 @@ Excel 教程最常见的问题，不是公式写错，而是读者只能看到�
   html[data-theme='dark'] .formula-transform-flow article,
   html[data-theme='dark'] .formula-search-board,
   html[data-theme='dark'] .formula-lookup-board,
+  html[data-theme='dark'] .formula-single-case,
+  html[data-theme='dark'] .formula-single-case-map article,
+  html[data-theme='dark'] .formula-readability-scale article,
   html[data-theme='dark'] .formula-design-rules article,
   html[data-theme='dark'] .formula-error-compare section,
   html[data-theme='dark'] .formula-simplify section {
@@ -509,6 +629,12 @@ Excel 教程最常见的问题，不是公式写错，而是读者只能看到�
   html[data-theme='dark'] .formula-search-results article,
   html[data-theme='dark'] .formula-lookup-table,
   html[data-theme='dark'] .formula-lookup-paths article,
+  html[data-theme='dark'] .formula-single-case__table-wrap,
+  html[data-theme='dark'] .formula-single-case__explain,
+  html[data-theme='dark'] .formula-single-case__formula,
+  html[data-theme='dark'] .formula-single-case__steps article,
+  html[data-theme='dark'] .formula-single-case__path span,
+  html[data-theme='dark'] .formula-single-case__path strong,
   html[data-theme='dark'] .formula-error-compare code,
   html[data-theme='dark'] .formula-simplify code { border-color: #2d4962; background: #0b1927; }
 
@@ -519,17 +645,25 @@ Excel 教程最常见的问题，不是公式写错，而是读者只能看到�
     .formula-simplify > i { transform: rotate(90deg); text-align: center; }
     .formula-map-board,
     .formula-lookup-board,
+    .formula-single-case__workspace,
     .formula-error-compare,
     .formula-simplify { grid-template-columns: 1fr; }
     .formula-function-categories,
     .formula-slot-lab,
-    .formula-transform-flow { grid-template-columns: 1fr; }
+    .formula-transform-flow,
+    .formula-single-case-map,
+    .formula-readability-scale { grid-template-columns: 1fr; }
     .formula-pattern-map,
     .formula-ruler-results { grid-template-columns: repeat(2,minmax(0,1fr)); }
   }
   @media (max-width: 520px) {
     .formula-function-overview > header { align-items: flex-start; flex-direction: column; }
     .formula-function-overview > header p { text-align: left; }
+    .formula-single-case > header { align-items: flex-start; flex-direction: column; }
+    .formula-single-case > header p { max-width: none; text-align: left; }
+    .formula-single-case__steps,
+    .formula-single-case__path { grid-template-columns: 1fr; }
+    .formula-single-case__path i { transform: rotate(90deg); text-align: center; }
     .formula-pattern-map,
     .formula-ruler-results,
     .formula-search-results { grid-template-columns: 1fr; }
