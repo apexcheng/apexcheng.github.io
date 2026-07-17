@@ -34,6 +34,10 @@ describe('site layout', () => {
     expect(globalCssSource).toMatch(/\.nav-search-panel\s*\{[^}]*top:\s*100%;/s);
     expect(globalCssSource).toMatch(/\.nav-search-panel\s*\{[^}]*padding:\s*4px 0 0;/s);
     expect(globalCssSource).toContain('.nav-search-panel::before');
+    expect(globalCssSource).toContain('scaleY(0.92)');
+    expect(layoutSource).toContain("search.addEventListener('mouseenter'");
+    expect(layoutSource).toContain("search.addEventListener('mouseleave', scheduleClose)");
+    expect(layoutSource).toContain('}, 400);');
   });
 
   it('keeps switchable themes with visual system as the default', () => {

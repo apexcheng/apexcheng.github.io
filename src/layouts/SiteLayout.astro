@@ -194,6 +194,7 @@ const searchItems = [
         var toggle = search.querySelector('[data-search-toggle]');
         var input = search.querySelector('[data-search-input]');
         var results = search.querySelector('[data-search-results]');
+        var closeTimer;
         var items = [];
 
         try {
@@ -214,8 +215,22 @@ const searchItems = [
         }
 
         function setOpen(isOpen) {
+          if (isOpen && closeTimer) {
+            window.clearTimeout(closeTimer);
+            closeTimer = undefined;
+          }
           search.classList.toggle('open', isOpen);
           toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+
+        function scheduleClose() {
+          if (closeTimer) window.clearTimeout(closeTimer);
+          closeTimer = window.setTimeout(function () {
+            if (!search.matches(':hover') && !search.matches(':focus-within')) {
+              setOpen(false);
+            }
+            closeTimer = undefined;
+          }, 400);
         }
 
         function render(query) {
@@ -249,8 +264,18 @@ const searchItems = [
           input.focus();
         });
 
-        input.addEventListener('focus', function () {
+        search.addEventListener('mouseenter', function () {
           setOpen(true);
+        });
+
+        search.addEventListener('mouseleave', scheduleClose);
+
+        search.addEventListener('focusin', function () {
+          setOpen(true);
+        });
+
+        search.addEventListener('focusout', function (event) {
+          if (!search.contains(event.relatedTarget)) scheduleClose();
         });
 
         input.addEventListener('input', function () {
@@ -266,6 +291,7 @@ const searchItems = [
 
         document.addEventListener('click', function (event) {
           if (!search.contains(event.target)) {
+            if (closeTimer) window.clearTimeout(closeTimer);
             setOpen(false);
           }
         });
