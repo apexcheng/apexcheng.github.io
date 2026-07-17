@@ -14,17 +14,17 @@ const visualPosts = posts.filter((post) => post.data.category === '视觉实验�
 const seriesOrder = ['excel-functions', 'yingdao-agent-development', 'personal-blog'];
 const seriesDetails = {
   'excel-functions': {
-    label: 'FORMULA / PRACTICE',
+    label: '函数方法 / 实战练习',
     note: '从函数知识地图到真实表格，把抽象语法变成可以观察的数据路径。',
     tags: ['Excel', '可视化', '练习工作簿'],
   },
   'yingdao-agent-development': {
-    label: 'AGENT / DELIVERY',
+    label: '智能体开发 / 真实交付',
     note: '让 Agent 参与页面探测、代码编写、同步验证与最终交付。',
     tags: ['AI Agent', '影刀 RPA', '自动化'],
   },
   'personal-blog': {
-    label: 'SYSTEM / PUBLISH',
+    label: '内容系统 / 持续发布',
     note: '拆解内容、代码与发布链路，理解一套个人知识系统如何持续运转。',
     tags: ['Astro', 'MDX', 'GitHub Pages'],
   },
@@ -44,7 +44,7 @@ const topics = [
     id: 'excel',
     number: '01',
     title: 'Excel',
-    eyebrow: 'FORMULA AS A PATH',
+    eyebrow: '把公式变成路径',
     mark: 'ƒx',
     description: '不只解释函数语法，也把查找、清洗和计算过程变成看得见的数据路径。',
     href: withBase('/series/excel-functions/'),
@@ -52,17 +52,17 @@ const topics = [
   {
     id: 'visual',
     number: '02',
-    title: 'Visual Lab',
-    eyebrow: 'EXPERIMENTAL DISPLAY',
-    mark: 'LAB',
+    title: '视觉实验室',
+    eyebrow: '持续试验内容表达',
+    mark: '实验',
     description: '测试文章组件、图表、代码块与新的网页化表达方式。',
     href: withBase('/articles/category/' + encodeURIComponent('视觉实验室') + '/'),
   },
   {
     id: 'automation',
     number: '03',
-    title: 'Automation',
-    eyebrow: 'REPEATABLE SYSTEM',
+    title: '自动化',
+    eyebrow: '建立可复用系统',
     mark: 'RPA',
     description: '把浏览器操作、数据处理和重复工作重组为稳定、可复用的流程。',
     href: withBase('/articles/automation-agent-workflow/'),
@@ -70,8 +70,8 @@ const topics = [
   {
     id: 'agents',
     number: '04',
-    title: 'AI Agents',
-    eyebrow: 'THINK / ACT / VERIFY',
+    title: 'AI 智能体',
+    eyebrow: '理解 / 执行 / 验证',
     mark: 'AI',
     description: '关注 Agent 如何理解目标、形成判断、调用工具并完成验证交付。',
     href: withBase('/series/yingdao-agent-development/'),
@@ -79,9 +79,9 @@ const topics = [
   {
     id: 'workflow',
     number: '05',
-    title: 'Workflow',
-    eyebrow: 'TOOLS INTO OUTCOMES',
-    mark: 'FLOW',
+    title: '工作流',
+    eyebrow: '让工具形成结果',
+    mark: '流程',
     description: '连接工具、数据、人工确认与最终结果，记录真实工作流的设计过程。',
     href: withBase('/articles/ai-product-image-workflow-in-practice/'),
   },
@@ -104,7 +104,7 @@ const formatDate = (date: Date) =>
       content="黄撑的技术笔记首页重设计原型：Excel、AI Agent、自动化、工作流与视觉实验。"
     />
     <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#070908" />
+    <meta name="theme-color" content="#0b1120" />
     <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg?v=3')} />
     <title>首页重设计原型 | {siteMeta.siteName}</title>
     <script is:inline>
@@ -122,15 +122,15 @@ const formatDate = (date: Date) =>
         <span class="brand-symbol">C</span>
         <span class="brand-copy">
           <strong>黄撑的技术笔记</strong>
-          <small>DIGITAL CONTENT GALLERY</small>
+          <small>技术内容数字展厅</small>
         </span>
       </a>
 
       <nav class="prototype-nav" aria-label="原型页导航">
-        <a href="#topics">Topics</a>
-        <a href="#series">Series</a>
-        <a href="#visual-lab">Visual Lab</a>
-        <a href="#latest">Latest</a>
+        <a href="#topics">内容方向</a>
+        <a href="#series">精选系列</a>
+        <a href="#visual-lab">视觉实验室</a>
+        <a href="#latest">最近更新</a>
       </nav>
 
       <a class="back-home" href={withBase('/')}>
@@ -144,8 +144,8 @@ const formatDate = (date: Date) =>
         <div class="hero-grid">
           <div class="hero-copy">
             <div class="hero-kicker" data-hero-reveal>
-              <span>HOME REDESIGN / PROTOTYPE 01</span>
-              <span>2026 · HUANG CHENG</span>
+              <span>首页重设计 / 方向原型 01</span>
+              <span>2026 · 黄撑</span>
             </div>
 
             <h1 aria-label="把复杂技术，做成看得懂、用得上的体验。">
@@ -170,16 +170,16 @@ const formatDate = (date: Date) =>
             </div>
 
             <div class="hero-index" data-hero-reveal aria-label="内容范围">
-              <span><b>05</b> CONTENT FIELDS</span>
-              <span><b>{posts.length}</b> PUBLIC NOTES</span>
-              <span><b>{featuredSeries.length}</b> READING SERIES</span>
+              <span><b>05</b> 内容方向</span>
+              <span><b>{posts.length}</b> 公开文章</span>
+              <span><b>{featuredSeries.length}</b> 连载系列</span>
             </div>
           </div>
 
           <div class="hero-specimen" data-hero-reveal aria-label="技术知识核心视觉">
             <div class="specimen-label specimen-label-top">
-              <span>KNOWLEDGE CORE</span>
-              <span>LIVE / 01</span>
+              <span>知识核心</span>
+              <span>当前展品 / 01</span>
             </div>
 
             <div class="specimen-stage">
@@ -189,17 +189,17 @@ const formatDate = (date: Date) =>
               <div class="orbit orbit-inner" data-depth="4" aria-hidden="true"></div>
 
               <span class="orbit-node node-excel" aria-hidden="true">EXCEL</span>
-              <span class="orbit-node node-agent" aria-hidden="true">AGENT</span>
-              <span class="orbit-node node-playwright" aria-hidden="true">PLAYWRIGHT</span>
-              <span class="orbit-node node-flow" aria-hidden="true">FLOW</span>
+              <span class="orbit-node node-agent" aria-hidden="true">AI 智能体</span>
+              <span class="orbit-node node-playwright" aria-hidden="true">浏览器</span>
+              <span class="orbit-node node-flow" aria-hidden="true">工作流</span>
 
               <div class="material-core" data-depth="5" aria-hidden="true">
                 <svg class="core-mesh" viewBox="0 0 320 320" role="presentation">
                   <defs>
                     <linearGradient id="mesh-gradient" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0" stop-color="#aafbf4" stop-opacity=".92"></stop>
-                      <stop offset=".52" stop-color="#5bd8d0" stop-opacity=".66"></stop>
-                      <stop offset="1" stop-color="#b58b69" stop-opacity=".72"></stop>
+                      <stop offset="0" stop-color="#bfdbfe" stop-opacity=".92"></stop>
+                      <stop offset=".52" stop-color="#5eead4" stop-opacity=".72"></stop>
+                      <stop offset="1" stop-color="#c4b5fd" stop-opacity=".72"></stop>
                     </linearGradient>
                   </defs>
                   <g fill="none" stroke="url(#mesh-gradient)" stroke-width="1.25">
@@ -210,7 +210,7 @@ const formatDate = (date: Date) =>
                     <path d="M160 26 101 130 205 286"></path>
                     <path d="m265 88-120 130"></path>
                   </g>
-                  <g fill="#b8fff9">
+                  <g fill="#dbeafe">
                     <circle cx="160" cy="26" r="3"></circle>
                     <circle cx="265" cy="88" r="3"></circle>
                     <circle cx="282" cy="203" r="3"></circle>
@@ -228,9 +228,9 @@ const formatDate = (date: Date) =>
                   </g>
                 </svg>
                 <div class="core-reading">
-                  <span>INPUT</span>
+                  <span>输入</span>
                   <strong>01</strong>
-                  <span>OUTPUT</span>
+                  <span>输出</span>
                 </div>
               </div>
 
@@ -251,29 +251,29 @@ const formatDate = (date: Date) =>
         </div>
 
         <a class="scroll-cue" href="#topics" aria-label="向下浏览内容主题" data-hero-reveal>
-          <span>SCROLL TO EXPLORE</span>
+          <span>向下滚动，进入展厅</span>
           <i aria-hidden="true"></i>
         </a>
       </section>
 
       <section class="signal-strip" aria-label="博客内容关键词">
         <div>
-          <span>EXCEL FORMULAS</span>
+          <span>EXCEL 函数</span>
           <i></i>
-          <span>AI AGENTS</span>
+          <span>AI 智能体</span>
           <i></i>
-          <span>BROWSER AUTOMATION</span>
+          <span>浏览器自动化</span>
           <i></i>
-          <span>WORKFLOW DESIGN</span>
+          <span>工作流设计</span>
           <i></i>
-          <span>VISUAL EXPERIMENTS</span>
+          <span>视觉实验</span>
         </div>
       </section>
 
       <section class="gallery-section topics-section" id="topics">
         <div class="section-heading" data-reveal>
           <div>
-            <p class="section-label">01 / CONTENT FIELDS</p>
+            <p class="section-label">01 / 内容方向</p>
             <h2>从一个方向，<br />进入这座技术展厅。</h2>
           </div>
           <p>
@@ -305,7 +305,7 @@ const formatDate = (date: Date) =>
       <section class="gallery-section series-section" id="series" data-series-stage>
         <div class="section-heading series-heading" data-reveal>
           <div>
-            <p class="section-label">02 / FEATURED SERIES</p>
+            <p class="section-label">02 / 精选系列</p>
             <h2>不是零散文章，<br />而是一条完整路线。</h2>
           </div>
           <p>
@@ -316,7 +316,7 @@ const formatDate = (date: Date) =>
         <div class="series-layout">
           <aside class="series-instrument" data-reveal aria-label="当前精选系列">
             <div class="instrument-head">
-              <span>SELECTED ROUTE</span>
+              <span>已选阅读路线</span>
               <span data-series-count>01 / {String(featuredSeries.length).padStart(2, '0')}</span>
             </div>
             <div class="instrument-dial" aria-hidden="true">
@@ -326,7 +326,7 @@ const formatDate = (date: Date) =>
               <strong data-series-number>01</strong>
             </div>
             <div class="instrument-copy">
-              <p>CURRENT CHAPTER</p>
+              <p>当前章节</p>
               <h3 data-series-title>{featuredSeries[0]?.title}</h3>
               <span data-series-note>{featuredSeries[0]?.detail.note}</span>
             </div>
@@ -356,7 +356,7 @@ const formatDate = (date: Date) =>
                   {series.detail.tags.map((tag) => <span>{tag}</span>)}
                 </div>
                 <div class="chapter-visual" aria-hidden="true">
-                  <span class="chapter-word">{series.id === 'excel-functions' ? 'FORMULA' : series.id === 'personal-blog' ? 'SYSTEM' : 'AGENT'}</span>
+                  <span class="chapter-word">{series.id === 'excel-functions' ? '公式' : series.id === 'personal-blog' ? '系统' : '智能体'}</span>
                   <div class="chapter-lines">
                     <i></i><i></i><i></i><i></i>
                   </div>
@@ -374,7 +374,7 @@ const formatDate = (date: Date) =>
       <section class="gallery-section lab-section" id="visual-lab">
         <div class="section-heading" data-reveal>
           <div>
-            <p class="section-label">03 / VISUAL LAB</p>
+            <p class="section-label">03 / 视觉实验室</p>
             <h2>把内容表达，<br />当作一场持续实验。</h2>
           </div>
           <p>
@@ -390,7 +390,7 @@ const formatDate = (date: Date) =>
               data-reveal
             >
               <div class="lab-card-head">
-                <span>EXPERIMENT / {String(index + 1).padStart(2, '0')}</span>
+                <span>实验 / {String(index + 1).padStart(2, '0')}</span>
                 <span aria-hidden="true">↗</span>
               </div>
 
@@ -403,7 +403,7 @@ const formatDate = (date: Date) =>
                     <i></i><i></i><i></i><i></i>
                     <i></i><i></i><i></i><i></i>
                   </div>
-                  <div class="formula-trace"><i></i><span>MATCH FOUND</span></div>
+                  <div class="formula-trace"><i></i><span>已找到匹配</span></div>
                 </div>
               )}
 
@@ -450,7 +450,7 @@ const formatDate = (date: Date) =>
       <section class="gallery-section latest-section" id="latest">
         <div class="section-heading latest-heading" data-reveal>
           <div>
-            <p class="section-label">04 / LATEST NOTES</p>
+            <p class="section-label">04 / 最近更新</p>
             <h2>近期发布，<br />保持少量而清晰。</h2>
           </div>
           <a href={withBase('/articles/')}>进入文章库 <span aria-hidden="true">↗</span></a>
@@ -466,7 +466,7 @@ const formatDate = (date: Date) =>
               </div>
               <div class="latest-meta">
                 <span>{formatDate(post.data.date)}</span>
-                <span>{post.data.minutes} MIN</span>
+                <span>{post.data.minutes} 分钟</span>
                 <b aria-hidden="true">↗</b>
               </div>
             </a>
@@ -475,7 +475,7 @@ const formatDate = (date: Date) =>
       </section>
 
       <section class="closing-section">
-        <p class="section-label" data-reveal>END OF CURRENT EXHIBITION</p>
+        <p class="section-label" data-reveal>本期内容展览到这里</p>
         <h2 data-reveal>继续拆解，<br /><span>持续发布。</span></h2>
         <p data-reveal>
           记录真实问题、判断过程和最终做法，让每一次实践都能成为下一次行动的起点。
@@ -495,8 +495,8 @@ const formatDate = (date: Date) =>
 
     <footer class="prototype-footer">
       <div>
-        <span>© 2026 HUANG CHENG</span>
-        <span>TECH NOTES / PERSONAL ARCHIVE</span>
+        <span>© 2026 黄撑</span>
+        <span>技术笔记 / 个人档案</span>
       </div>
       <div>
         <a href={withBase('/series/')}>系列</a>
@@ -650,20 +650,24 @@ const formatDate = (date: Date) =>
 
 <style>
   :root {
-    --bg: #070908;
-    --bg-soft: #0c0f0e;
-    --panel: rgba(18, 22, 21, 0.78);
-    --panel-strong: #111514;
-    --ink: #f0ede5;
-    --muted: #9c9e98;
-    --soft: #686d68;
-    --line: rgba(239, 237, 228, 0.14);
-    --line-strong: rgba(239, 237, 228, 0.28);
-    --cyan: #69e3d9;
-    --cyan-soft: rgba(105, 227, 217, 0.14);
-    --copper: #b58b69;
-    --serif: 'Iowan Old Style', 'Baskerville', 'Noto Serif SC', 'Songti SC', 'STSong', serif;
-    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --bg: #0b1120;
+    --bg-soft: #101827;
+    --panel: rgba(17, 24, 39, 0.74);
+    --panel-strong: #111827;
+    --ink: #e5edf7;
+    --muted: #a8b4c7;
+    --soft: #8190a5;
+    --line: rgba(122, 167, 255, 0.18);
+    --line-strong: rgba(122, 167, 255, 0.32);
+    --blue: #7aa7ff;
+    --cyan: #5eead4;
+    --cyan-soft: rgba(94, 234, 212, 0.14);
+    --violet: #c4b5fd;
+    --copper: var(--violet);
+    --sans: Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --serif: var(--sans);
+    --radius: 18px;
+    --shadow: 0 28px 80px rgba(2, 6, 23, 0.32);
     --page-pad: clamp(24px, 5.6vw, 88px);
     --content-width: 1500px;
   }
@@ -676,13 +680,17 @@ const formatDate = (date: Date) =>
     background: var(--bg);
     color: var(--ink);
     font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
   }
 
   body {
     background:
-      radial-gradient(circle at 76% 9%, rgba(31, 79, 74, 0.16), transparent 26rem),
-      linear-gradient(180deg, #070908 0%, #090b0a 48%, #070908 100%);
+      radial-gradient(circle at 14% 7%, rgba(56, 189, 248, 0.13), transparent 34rem),
+      radial-gradient(circle at 88% 8%, rgba(196, 181, 253, 0.14), transparent 38rem),
+      radial-gradient(circle at 72% 78%, rgba(94, 234, 212, 0.07), transparent 34rem),
+      linear-gradient(155deg, #0b1120 0%, #0e1a2c 48%, #11152a 100%);
     margin: 0;
     min-width: 320px;
     overflow-x: clip;
@@ -691,13 +699,13 @@ const formatDate = (date: Date) =>
 
   body::before {
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
-    background-size: 72px 72px;
+      linear-gradient(rgba(148, 163, 184, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.025) 1px, transparent 1px);
+    background-size: 96px 96px;
     content: '';
     inset: 0;
-    mask-image: linear-gradient(to bottom, black, transparent 42%);
-    opacity: 0.52;
+    mask-image: linear-gradient(to bottom, black, transparent 68%);
+    opacity: 0.34;
     pointer-events: none;
     position: absolute;
     z-index: 0;
@@ -705,7 +713,7 @@ const formatDate = (date: Date) =>
 
   ::selection {
     background: var(--cyan);
-    color: #06100f;
+    color: #07111f;
   }
 
   a {
@@ -725,15 +733,15 @@ const formatDate = (date: Date) =>
 
   .ambient {
     border-radius: 50%;
-    filter: blur(1px);
-    opacity: 0.34;
+    filter: blur(24px);
+    opacity: 0.46;
     pointer-events: none;
     position: fixed;
     z-index: 0;
   }
 
   .ambient-one {
-    background: radial-gradient(circle, rgba(71, 199, 189, 0.14), transparent 68%);
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.16), transparent 68%);
     height: 48vw;
     right: -18vw;
     top: 12vh;
@@ -741,7 +749,7 @@ const formatDate = (date: Date) =>
   }
 
   .ambient-two {
-    background: radial-gradient(circle, rgba(181, 139, 105, 0.09), transparent 68%);
+    background: radial-gradient(circle, rgba(196, 181, 253, 0.13), transparent 68%);
     bottom: -18vw;
     height: 44vw;
     left: -16vw;
@@ -749,7 +757,7 @@ const formatDate = (date: Date) =>
   }
 
   .pointer-glow {
-    background: radial-gradient(circle, rgba(105, 227, 217, 0.085), rgba(105, 227, 217, 0.025) 36%, transparent 70%);
+    background: radial-gradient(circle, rgba(94, 234, 212, 0.1), rgba(122, 167, 255, 0.035) 38%, transparent 72%);
     border-radius: 50%;
     height: 420px;
     left: 0;
@@ -774,7 +782,7 @@ const formatDate = (date: Date) =>
   }
 
   .scroll-progress i {
-    background: linear-gradient(90deg, var(--cyan), #b6fff9, var(--copper));
+    background: linear-gradient(90deg, var(--cyan), var(--blue), var(--violet));
     display: block;
     height: 100%;
     transform: scaleX(0);
@@ -785,7 +793,7 @@ const formatDate = (date: Date) =>
   .prototype-header {
     align-items: center;
     backdrop-filter: blur(18px);
-    background: rgba(7, 9, 8, 0.72);
+    background: rgba(11, 17, 32, 0.76);
     border-bottom: 1px solid var(--line);
     display: flex;
     gap: 42px;
@@ -808,14 +816,13 @@ const formatDate = (date: Date) =>
 
   .brand-symbol {
     align-items: center;
-    background:
-      linear-gradient(135deg, rgba(105, 227, 217, 0.24), transparent 54%),
-      #101514;
-    border: 1px solid rgba(105, 227, 217, 0.44);
-    border-radius: 50%;
-    color: var(--ink);
+    background: linear-gradient(135deg, #111827, #2563eb 62%, #0e7490);
+    border: 0;
+    border-radius: 11px;
+    box-shadow: 0 10px 28px rgba(37, 99, 235, 0.28);
+    color: #fff;
     display: inline-flex;
-    font-family: var(--serif);
+    font-family: var(--sans);
     font-size: 20px;
     height: 38px;
     justify-content: center;
@@ -824,11 +831,7 @@ const formatDate = (date: Date) =>
   }
 
   .brand-symbol::after {
-    border: 1px solid rgba(181, 139, 105, 0.4);
-    border-radius: 50%;
-    content: '';
-    inset: 4px;
-    position: absolute;
+    display: none;
   }
 
   .brand-copy {
@@ -855,7 +858,7 @@ const formatDate = (date: Date) =>
     font-size: 11px;
     gap: 30px;
     letter-spacing: 0.12em;
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   .prototype-nav a,
@@ -877,6 +880,7 @@ const formatDate = (date: Date) =>
     gap: 20px;
     height: 42px;
     padding: 0 16px;
+    background: rgba(17, 24, 39, 0.54);
   }
 
   main,
@@ -898,9 +902,9 @@ const formatDate = (date: Date) =>
 
   .hero::before {
     background:
-      radial-gradient(circle, rgba(105, 227, 217, 0.1), transparent 58%),
-      radial-gradient(circle at 46% 42%, rgba(181, 139, 105, 0.08), transparent 38%);
-    border: 1px solid rgba(255, 255, 255, 0.035);
+      radial-gradient(circle, rgba(94, 234, 212, 0.11), transparent 58%),
+      radial-gradient(circle at 46% 42%, rgba(196, 181, 253, 0.11), transparent 40%);
+    border: 1px solid rgba(122, 167, 255, 0.06);
     border-radius: 50%;
     content: '';
     height: min(74vw, 1100px);
@@ -938,9 +942,9 @@ const formatDate = (date: Date) =>
   .hero h1 {
     font-family: var(--serif);
     font-size: clamp(58px, 5.5vw, 100px);
-    font-weight: 400;
-    letter-spacing: -0.055em;
-    line-height: 0.96;
+    font-weight: 650;
+    letter-spacing: -0.045em;
+    line-height: 1;
     margin: 0;
     max-width: 900px;
   }
@@ -951,13 +955,16 @@ const formatDate = (date: Date) =>
   }
 
   .hero h1 .accent-line {
-    color: var(--cyan);
-    font-style: italic;
+    -webkit-background-clip: text;
+    background: linear-gradient(90deg, var(--cyan), var(--blue) 58%, var(--violet));
+    background-clip: text;
+    color: transparent;
+    font-style: normal;
     padding-left: clamp(0px, 4vw, 64px);
   }
 
   .hero-lead {
-    color: #b7bab3;
+    color: var(--muted);
     font-size: clamp(16px, 1.25vw, 20px);
     line-height: 1.9;
     margin: 34px 0 0;
@@ -992,9 +999,10 @@ const formatDate = (date: Date) =>
   }
 
   .primary-action {
-    background: var(--ink);
-    border: 1px solid var(--ink);
-    color: #080a09;
+    background: linear-gradient(135deg, #2563eb, #0e7490);
+    border: 1px solid rgba(122, 167, 255, 0.42);
+    box-shadow: 0 14px 34px rgba(37, 99, 235, 0.22);
+    color: #fff;
   }
 
   .secondary-action {
@@ -1008,8 +1016,8 @@ const formatDate = (date: Date) =>
   }
 
   .primary-action:hover {
-    background: var(--cyan);
-    border-color: var(--cyan);
+    background: linear-gradient(135deg, #3b82f6, #0f8da5);
+    border-color: var(--blue);
   }
 
   .secondary-action:hover {
@@ -1039,12 +1047,17 @@ const formatDate = (date: Date) =>
     color: var(--ink);
     font-family: var(--serif);
     font-size: 16px;
-    font-weight: 400;
+    font-weight: 650;
     letter-spacing: 0;
   }
 
   .hero-specimen {
+    background:
+      radial-gradient(circle at 52% 48%, rgba(94, 234, 212, 0.08), transparent 42%),
+      rgba(17, 24, 39, 0.52);
     border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
     min-height: 660px;
     overflow: hidden;
     position: relative;
@@ -1086,8 +1099,8 @@ const formatDate = (date: Date) =>
 
   .specimen-aura {
     background:
-      radial-gradient(circle, rgba(105, 227, 217, 0.15), transparent 47%),
-      radial-gradient(circle at 63% 36%, rgba(181, 139, 105, 0.12), transparent 26%);
+      radial-gradient(circle, rgba(94, 234, 212, 0.16), transparent 48%),
+      radial-gradient(circle at 63% 36%, rgba(196, 181, 253, 0.14), transparent 28%);
     border-radius: 50%;
     filter: blur(7px);
     inset: 4%;
@@ -1102,7 +1115,7 @@ const formatDate = (date: Date) =>
   }
 
   .orbit {
-    border: 1px solid rgba(228, 238, 234, 0.16);
+    border: 1px solid rgba(147, 197, 253, 0.17);
     border-radius: 50%;
     left: 50%;
     position: absolute;
@@ -1114,7 +1127,7 @@ const formatDate = (date: Date) =>
   .orbit::after {
     background: var(--cyan);
     border-radius: 50%;
-    box-shadow: 0 0 14px rgba(105, 227, 217, 0.8);
+    box-shadow: 0 0 14px rgba(94, 234, 212, 0.72);
     content: '';
     height: 5px;
     left: 50%;
@@ -1144,7 +1157,7 @@ const formatDate = (date: Date) =>
   }
 
   .orbit-middle {
-    border-color: rgba(181, 139, 105, 0.22);
+    border-color: rgba(196, 181, 253, 0.24);
     height: 73%;
     transform:
       translate(-50%, -50%)
@@ -1173,13 +1186,14 @@ const formatDate = (date: Date) =>
   .orbit-middle::before,
   .orbit-middle::after {
     background: var(--copper);
-    box-shadow: 0 0 14px rgba(181, 139, 105, 0.7);
+    box-shadow: 0 0 14px rgba(196, 181, 253, 0.62);
   }
 
   .orbit-node {
-    background: rgba(7, 9, 8, 0.82);
+    background: rgba(15, 23, 42, 0.84);
     border: 1px solid var(--line-strong);
-    color: #a9aca6;
+    border-radius: 999px;
+    color: var(--muted);
     font-size: 8px;
     letter-spacing: 0.13em;
     padding: 7px 9px;
@@ -1215,14 +1229,14 @@ const formatDate = (date: Date) =>
   .material-core {
     align-items: center;
     background:
-      radial-gradient(circle at 34% 28%, rgba(160, 255, 246, 0.14), transparent 31%),
-      radial-gradient(circle at 68% 70%, rgba(181, 139, 105, 0.1), transparent 30%),
-      rgba(10, 20, 18, 0.68);
-    border: 1px solid rgba(105, 227, 217, 0.34);
+      radial-gradient(circle at 34% 28%, rgba(191, 219, 254, 0.16), transparent 32%),
+      radial-gradient(circle at 68% 70%, rgba(196, 181, 253, 0.12), transparent 31%),
+      rgba(15, 23, 42, 0.68);
+    border: 1px solid rgba(94, 234, 212, 0.3);
     border-radius: 50%;
     box-shadow:
-      0 0 70px rgba(105, 227, 217, 0.08),
-      inset 0 0 80px rgba(105, 227, 217, 0.045);
+      0 0 70px rgba(94, 234, 212, 0.1),
+      inset 0 0 80px rgba(122, 167, 255, 0.06);
     display: flex;
     height: 46%;
     justify-content: center;
@@ -1236,7 +1250,7 @@ const formatDate = (date: Date) =>
   }
 
   .core-mesh {
-    filter: drop-shadow(0 0 14px rgba(105, 227, 217, 0.22));
+    filter: drop-shadow(0 0 14px rgba(94, 234, 212, 0.22));
     height: 88%;
     opacity: 0.82;
     width: 88%;
@@ -1257,7 +1271,7 @@ const formatDate = (date: Date) =>
     color: var(--ink);
     font-family: var(--serif);
     font-size: 24px;
-    font-weight: 400;
+    font-weight: 650;
   }
 
   .specimen-axis {
@@ -1329,6 +1343,7 @@ const formatDate = (date: Date) =>
   }
 
   .signal-strip {
+    background: rgba(17, 24, 39, 0.36);
     border-bottom: 1px solid var(--line);
     border-top: 1px solid var(--line);
     overflow: hidden;
@@ -1352,7 +1367,7 @@ const formatDate = (date: Date) =>
   .signal-strip i {
     background: var(--cyan);
     border-radius: 50%;
-    box-shadow: 0 0 10px rgba(105, 227, 217, 0.7);
+    box-shadow: 0 0 10px rgba(94, 234, 212, 0.64);
     flex: 0 0 auto;
     height: 3px;
     width: 3px;
@@ -1384,9 +1399,9 @@ const formatDate = (date: Date) =>
   .closing-section h2 {
     font-family: var(--serif);
     font-size: clamp(48px, 5.3vw, 86px);
-    font-weight: 400;
-    letter-spacing: -0.04em;
-    line-height: 1.02;
+    font-weight: 650;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
     margin: 0;
   }
 
@@ -1406,9 +1421,11 @@ const formatDate = (date: Date) =>
 
   .topic-card {
     background:
-      linear-gradient(145deg, rgba(255, 255, 255, 0.026), transparent 58%),
+      linear-gradient(145deg, rgba(122, 167, 255, 0.055), transparent 58%),
       var(--panel);
+    backdrop-filter: blur(12px);
     border: 1px solid var(--line);
+    border-radius: var(--radius);
     display: flex;
     flex-direction: column;
     min-height: 360px;
@@ -1422,7 +1439,7 @@ const formatDate = (date: Date) =>
   }
 
   .topic-card::before {
-    background: radial-gradient(circle, rgba(105, 227, 217, 0.17), transparent 68%);
+    background: radial-gradient(circle, rgba(94, 234, 212, 0.17), transparent 68%);
     content: '';
     height: 260px;
     opacity: 0;
@@ -1437,8 +1454,8 @@ const formatDate = (date: Date) =>
   }
 
   .topic-card:hover {
-    border-color: rgba(105, 227, 217, 0.42);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+    border-color: rgba(94, 234, 212, 0.4);
+    box-shadow: var(--shadow);
     transform: translateY(-5px);
   }
 
@@ -1501,7 +1518,7 @@ const formatDate = (date: Date) =>
   }
 
   .topic-mark::after {
-    border-color: rgba(105, 227, 217, 0.16);
+    border-color: rgba(94, 234, 212, 0.18);
     height: 94px;
     width: 94px;
   }
@@ -1510,7 +1527,8 @@ const formatDate = (date: Date) =>
     color: var(--ink);
     font-family: var(--serif);
     font-size: 38px;
-    font-style: italic;
+    font-style: normal;
+    font-weight: 650;
     position: relative;
     z-index: 2;
   }
@@ -1518,7 +1536,7 @@ const formatDate = (date: Date) =>
   .topic-mark i {
     background: var(--cyan);
     border-radius: 50%;
-    box-shadow: 0 0 18px rgba(105, 227, 217, 0.82);
+    box-shadow: 0 0 18px rgba(94, 234, 212, 0.72);
     height: 5px;
     margin-left: -4px;
     margin-top: -20px;
@@ -1527,13 +1545,13 @@ const formatDate = (date: Date) =>
 
   .topic-visual .topic-mark::after,
   .topic-workflow .topic-mark::after {
-    border-color: rgba(181, 139, 105, 0.25);
+    border-color: rgba(196, 181, 253, 0.26);
   }
 
   .topic-visual .topic-mark i,
   .topic-workflow .topic-mark i {
     background: var(--copper);
-    box-shadow: 0 0 18px rgba(181, 139, 105, 0.72);
+    box-shadow: 0 0 18px rgba(196, 181, 253, 0.62);
   }
 
   .topic-copy {
@@ -1549,7 +1567,7 @@ const formatDate = (date: Date) =>
   .topic-copy h3 {
     font-family: var(--serif);
     font-size: clamp(28px, 2.5vw, 42px);
-    font-weight: 400;
+    font-weight: 600;
     letter-spacing: -0.025em;
     margin: 0;
   }
@@ -1573,8 +1591,8 @@ const formatDate = (date: Date) =>
 
   .series-section::before {
     background:
-      radial-gradient(circle at 18% 40%, rgba(181, 139, 105, 0.08), transparent 24rem),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent);
+      radial-gradient(circle at 18% 40%, rgba(196, 181, 253, 0.1), transparent 26rem),
+      linear-gradient(180deg, rgba(122, 167, 255, 0.035), transparent);
     border-bottom: 1px solid var(--line);
     border-top: 1px solid var(--line);
     content: '';
@@ -1599,9 +1617,12 @@ const formatDate = (date: Date) =>
 
   .series-instrument {
     background:
-      radial-gradient(circle at 50% 38%, rgba(105, 227, 217, 0.075), transparent 38%),
-      rgba(8, 11, 10, 0.78);
+      radial-gradient(circle at 50% 38%, rgba(94, 234, 212, 0.09), transparent 40%),
+      rgba(17, 24, 39, 0.78);
+    backdrop-filter: blur(12px);
     border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
     min-height: 620px;
     overflow: hidden;
     padding: 24px;
@@ -1659,7 +1680,7 @@ const formatDate = (date: Date) =>
   }
 
   .dial-ring-two {
-    border-color: rgba(181, 139, 105, 0.28);
+    border-color: rgba(196, 181, 253, 0.28);
     height: 68%;
     width: 68%;
   }
@@ -1679,7 +1700,7 @@ const formatDate = (date: Date) =>
     color: var(--ink);
     font-family: var(--serif);
     font-size: 78px;
-    font-weight: 400;
+    font-weight: 600;
     left: 50%;
     letter-spacing: -0.06em;
     position: absolute;
@@ -1702,7 +1723,7 @@ const formatDate = (date: Date) =>
   .instrument-copy h3 {
     font-family: var(--serif);
     font-size: 27px;
-    font-weight: 400;
+    font-weight: 600;
     line-height: 1.25;
     margin: 0 0 12px;
   }
@@ -1762,7 +1783,7 @@ const formatDate = (date: Date) =>
   .series-chapter > h3 {
     font-family: var(--serif);
     font-size: clamp(42px, 4vw, 68px);
-    font-weight: 400;
+    font-weight: 600;
     letter-spacing: -0.04em;
     line-height: 1.03;
     margin: 54px 0 20px;
@@ -1787,16 +1808,18 @@ const formatDate = (date: Date) =>
   .chapter-tags span {
     border: 1px solid var(--line);
     border-radius: 999px;
-    color: #9da19b;
+    color: var(--muted);
     font-size: 9px;
     letter-spacing: 0.08em;
     padding: 8px 11px;
   }
 
   .chapter-visual {
+    background: rgba(15, 23, 42, 0.38);
     align-items: center;
     border-bottom: 1px solid var(--line);
     border-top: 1px solid var(--line);
+    border-radius: var(--radius);
     display: flex;
     height: 220px;
     justify-content: center;
@@ -1806,7 +1829,7 @@ const formatDate = (date: Date) =>
   }
 
   .chapter-visual::before {
-    background: radial-gradient(circle, rgba(105, 227, 217, 0.12), transparent 65%);
+    background: radial-gradient(circle, rgba(94, 234, 212, 0.12), transparent 65%);
     content: '';
     height: 300px;
     left: 50%;
@@ -1817,7 +1840,7 @@ const formatDate = (date: Date) =>
   }
 
   .chapter-word {
-    color: rgba(239, 237, 228, 0.055);
+    color: rgba(191, 219, 254, 0.075);
     font-family: var(--serif);
     font-size: clamp(78px, 9vw, 150px);
     letter-spacing: -0.05em;
@@ -1831,7 +1854,7 @@ const formatDate = (date: Date) =>
   }
 
   .chapter-lines i {
-    background: linear-gradient(90deg, transparent, rgba(105, 227, 217, 0.48), transparent);
+    background: linear-gradient(90deg, transparent, rgba(94, 234, 212, 0.42), transparent);
     height: 1px;
     left: 6%;
     position: absolute;
@@ -1881,8 +1904,12 @@ const formatDate = (date: Date) =>
   }
 
   .lab-card {
-    background: var(--panel-strong);
+    background:
+      linear-gradient(145deg, rgba(122, 167, 255, 0.05), transparent 54%),
+      rgba(17, 24, 39, 0.8);
+    backdrop-filter: blur(12px);
     border: 1px solid var(--line);
+    border-radius: var(--radius);
     display: flex;
     flex-direction: column;
     min-height: 620px;
@@ -1896,8 +1923,8 @@ const formatDate = (date: Date) =>
   }
 
   .lab-card:hover {
-    border-color: rgba(105, 227, 217, 0.42);
-    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.25);
+    border-color: rgba(94, 234, 212, 0.4);
+    box-shadow: var(--shadow);
     transform: translateY(-5px);
   }
 
@@ -1932,9 +1959,11 @@ const formatDate = (date: Date) =>
   .lab-visual {
     background:
       linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+      rgba(15, 23, 42, 0.52);
     background-size: 30px 30px;
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--line);
+    border-radius: 14px;
     flex: 1;
     margin: 24px 0;
     min-height: 300px;
@@ -1948,8 +1977,9 @@ const formatDate = (date: Date) =>
 
   .formula-bar {
     align-items: center;
-    background: rgba(7, 9, 8, 0.86);
+    background: rgba(2, 6, 23, 0.72);
     border: 1px solid var(--line);
+    border-radius: 10px;
     color: var(--muted);
     display: flex;
     font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
@@ -1989,8 +2019,8 @@ const formatDate = (date: Date) =>
 
   .formula-grid > i:nth-of-type(2),
   .formula-grid > i:nth-of-type(7) {
-    background: rgba(105, 227, 217, 0.12);
-    box-shadow: inset 0 0 0 1px rgba(105, 227, 217, 0.36);
+    background: rgba(94, 234, 212, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(94, 234, 212, 0.34);
   }
 
   .formula-trace {
@@ -2007,7 +2037,7 @@ const formatDate = (date: Date) =>
 
   .formula-trace i {
     background: var(--cyan);
-    box-shadow: 0 0 12px rgba(105, 227, 217, 0.7);
+    box-shadow: 0 0 12px rgba(94, 234, 212, 0.62);
     height: 1px;
     width: 72px;
   }
@@ -2018,8 +2048,9 @@ const formatDate = (date: Date) =>
 
   .agent-node {
     align-items: center;
-    background: rgba(7, 9, 8, 0.9);
+    background: rgba(2, 6, 23, 0.82);
     border: 1px solid var(--line-strong);
+    border-radius: 10px;
     display: flex;
     gap: 10px;
     padding: 12px 14px;
@@ -2088,6 +2119,7 @@ const formatDate = (date: Date) =>
 
   .layout-frame {
     border: 1px solid var(--line-strong);
+    border-radius: 12px;
     height: 58%;
     left: 50%;
     position: absolute;
@@ -2097,17 +2129,17 @@ const formatDate = (date: Date) =>
   }
 
   .frame-back {
-    border-color: rgba(181, 139, 105, 0.26);
+    border-color: rgba(196, 181, 253, 0.28);
     transform: translate(-58%, -58%);
   }
 
   .frame-middle {
-    border-color: rgba(105, 227, 217, 0.2);
+    border-color: rgba(94, 234, 212, 0.22);
     transform: translate(-54%, -54%);
   }
 
   .frame-front {
-    background: rgba(7, 9, 8, 0.76);
+    background: rgba(2, 6, 23, 0.76);
     display: grid;
     gap: 13px;
     padding: 22px;
@@ -2139,7 +2171,7 @@ const formatDate = (date: Date) =>
   }
 
   .layout-axis {
-    background: linear-gradient(90deg, transparent, rgba(105, 227, 217, 0.5), transparent);
+    background: linear-gradient(90deg, transparent, rgba(94, 234, 212, 0.46), transparent);
     height: 1px;
     left: 8%;
     position: absolute;
@@ -2168,7 +2200,7 @@ const formatDate = (date: Date) =>
   .lab-card-copy h3 {
     font-family: var(--serif);
     font-size: clamp(24px, 2.4vw, 38px);
-    font-weight: 400;
+    font-weight: 600;
     letter-spacing: -0.025em;
     line-height: 1.18;
     margin: 0 0 12px;
@@ -2187,6 +2219,7 @@ const formatDate = (date: Date) =>
     display: flex;
     font-family: var(--serif);
     font-size: 24px;
+    font-weight: 600;
     justify-content: space-between;
     margin-top: 54px;
     padding: 0 0 18px;
@@ -2226,6 +2259,7 @@ const formatDate = (date: Date) =>
   .latest-item {
     align-items: center;
     border-bottom: 1px solid var(--line);
+    border-radius: 14px;
     display: grid;
     gap: 26px;
     grid-template-columns: 70px minmax(0, 1fr) auto;
@@ -2249,7 +2283,7 @@ const formatDate = (date: Date) =>
   }
 
   .latest-item:hover {
-    background: rgba(255, 255, 255, 0.018);
+    background: rgba(122, 167, 255, 0.055);
     padding-left: 20px;
     padding-right: 20px;
   }
@@ -2263,6 +2297,7 @@ const formatDate = (date: Date) =>
     color: var(--soft);
     font-family: var(--serif);
     font-size: 20px;
+    font-weight: 600;
   }
 
   .latest-copy p {
@@ -2275,7 +2310,7 @@ const formatDate = (date: Date) =>
   .latest-copy h3 {
     font-family: var(--serif);
     font-size: clamp(24px, 2.3vw, 38px);
-    font-weight: 400;
+    font-weight: 600;
     letter-spacing: -0.025em;
     line-height: 1.2;
     margin: 0;
@@ -2310,9 +2345,9 @@ const formatDate = (date: Date) =>
 
   .closing-section::before {
     background:
-      radial-gradient(circle, rgba(105, 227, 217, 0.1), transparent 52%),
-      radial-gradient(circle at 65% 52%, rgba(181, 139, 105, 0.08), transparent 24%);
-    border: 1px solid rgba(255, 255, 255, 0.04);
+      radial-gradient(circle, rgba(94, 234, 212, 0.12), transparent 52%),
+      radial-gradient(circle at 65% 52%, rgba(196, 181, 253, 0.12), transparent 26%);
+    border: 1px solid rgba(122, 167, 255, 0.06);
     border-radius: 50%;
     content: '';
     height: min(76vw, 980px);
@@ -2334,8 +2369,11 @@ const formatDate = (date: Date) =>
   }
 
   .closing-section h2 span {
-    color: var(--cyan);
-    font-style: italic;
+    -webkit-background-clip: text;
+    background: linear-gradient(90deg, var(--cyan), var(--blue), var(--violet));
+    background-clip: text;
+    color: transparent;
+    font-style: normal;
   }
 
   .closing-section > p:not(.section-label) {
@@ -2353,6 +2391,7 @@ const formatDate = (date: Date) =>
   .prototype-footer {
     align-items: center;
     border-top: 1px solid var(--line);
+    background: rgba(11, 17, 32, 0.46);
     color: var(--soft);
     display: flex;
     font-size: 8px;
@@ -2373,6 +2412,30 @@ const formatDate = (date: Date) =>
 
   .prototype-footer a:hover {
     color: var(--cyan);
+  }
+
+  .brand-copy small,
+  .prototype-nav,
+  .hero-kicker,
+  .hero-index,
+  .specimen-label,
+  .orbit-node,
+  .core-reading,
+  .specimen-caption,
+  .scroll-cue,
+  .signal-strip > div,
+  .section-label,
+  .topic-topline,
+  .instrument-head,
+  .instrument-copy p,
+  .chapter-meta,
+  .lab-card-head,
+  .formula-trace,
+  .lab-card-copy p,
+  .latest-copy p,
+  .latest-meta,
+  .prototype-footer {
+    letter-spacing: 0.06em;
   }
 
   .js [data-hero-reveal] {
