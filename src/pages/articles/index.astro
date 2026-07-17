@@ -14,6 +14,11 @@ const categoryCounts = Object.fromEntries(
   categoryMetaList.map((category) => [category.name, posts.filter((post) => post.data.category === category.name).length]),
 );
 const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags))).sort((a, b) => a.localeCompare(b));
+const tagCounts = Object.fromEntries(tags.map((tag) => [tag, posts.filter((post) => post.data.tags.includes(tag)).length]));
+const commonTags = [...tags]
+  .sort((a, b) => tagCounts[b] - tagCounts[a] || a.localeCompare(b))
+  .slice(0, 6);
+const otherTags = tags.filter((tag) => !commonTags.includes(tag));
 ---
 
 <SiteLayout title="文章列表" active="articles">
@@ -32,12 +37,26 @@ const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags))).sort((
           {category.name} <span>{categoryCounts[category.name]}</span>
         </a>
       ))}
-      <h2 class="filter-subtitle">标签</h2>
-      <div class="chips">
-        {tags.map((tag) => (
+      <h2 class="filter-subtitle">常用标签</h2>
+      <div class="chips filter-tags" id="article-filter-tags">
+        {commonTags.map((tag) => (
           <a href={withBase(`/articles/tag/${encodeURIComponent(tag)}/`)}>{tag}</a>
         ))}
+        {otherTags.map((tag) => (
+          <a href={withBase(`/articles/tag/${encodeURIComponent(tag)}/`)} data-extra-tag hidden>{tag}</a>
+        ))}
       </div>
+      {otherTags.length > 0 && (
+        <button
+          class="filter-tags-toggle"
+          type="button"
+          data-tags-toggle
+          aria-controls="article-filter-tags"
+          aria-expanded="false"
+        >
+          查看全部标签 <span aria-hidden="true">→</span>
+        </button>
+      )}
     </aside>
     <section>
       <p class="eyebrow">文章</p>
@@ -63,7 +82,24 @@ const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags))).sort((
       var sortOptions = Array.prototype.slice.call(page.querySelectorAll('[data-sort-option]'));
       var list = page.querySelector('[data-article-list]');
       var emptyState = page.querySelector('[data-empty-state]');
+      var tagsToggle = page.querySelector('[data-tags-toggle]');
+      var extraTags = Array.prototype.slice.call(page.querySelectorAll('[data-extra-tag]'));
       var currentSort = 'date';
+
+      if (tagsToggle) {
+        tagsToggle.addEventListener('click', function () {
+          var isExpanded = tagsToggle.getAttribute('aria-expanded') === 'true';
+
+          extraTags.forEach(function (tag) {
+            tag.hidden = isExpanded;
+          });
+
+          tagsToggle.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+          tagsToggle.innerHTML = isExpanded
+            ? '查看全部标签 <span aria-hidden="true">→</span>'
+            : '收起标签 <span aria-hidden="true">↑</span>';
+        });
+      }
 
       function setActiveFilter(category) {
         var activeFilter = null;
