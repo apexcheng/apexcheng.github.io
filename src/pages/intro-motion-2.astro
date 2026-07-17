@@ -1,0 +1,1231 @@
+---
+import { siteMeta } from '../data/site';
+import { withBase } from '../utils/paths';
+---
+
+<!doctype html>
+<html lang="zh-CN" class="liquid-page">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="液态字场：黄撑的技术笔记开屏动画方案 2。" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0b0813" />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg?v=3')} />
+    <title>液态字场 | {siteMeta.siteName}</title>
+  </head>
+
+  <body data-pagefind-ignore>
+    <main
+      class="liquid-opening"
+      data-liquid-opening
+      data-home-url={withBase('/')}
+      aria-label="黄撑的技术笔记液态字场开屏动画"
+    >
+      <canvas class="flow-field" data-flow-field aria-hidden="true"></canvas>
+
+      <svg class="filter-definitions" aria-hidden="true">
+        <defs>
+          <filter id="liquid-goo" x="-45%" y="-45%" width="190%" height="190%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur"></feGaussianBlur>
+            <feColorMatrix
+              in="blur"
+              mode="matrix"
+              values="
+                1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 26 -10"
+              result="goo"
+            ></feColorMatrix>
+            <feBlend in="SourceGraphic" in2="goo"></feBlend>
+          </filter>
+
+          <filter id="liquid-lettering" x="-25%" y="-35%" width="150%" height="170%">
+            <feTurbulence
+              data-letter-noise
+              type="fractalNoise"
+              baseFrequency="0.012 0.025"
+              numOctaves="2"
+              seed="8"
+              result="noise"
+            ></feTurbulence>
+            <feDisplacementMap
+              data-letter-displacement
+              in="SourceGraphic"
+              in2="noise"
+              scale="120"
+              xChannelSelector="R"
+              yChannelSelector="G"
+              result="distorted"
+            ></feDisplacementMap>
+            <feGaussianBlur in="distorted" stdDeviation="0.35"></feGaussianBlur>
+          </filter>
+        </defs>
+      </svg>
+
+      <div class="ambient ambient-violet" data-ambient-violet aria-hidden="true"></div>
+      <div class="ambient ambient-mint" data-ambient-mint aria-hidden="true"></div>
+      <div class="ambient ambient-peach" data-ambient-peach aria-hidden="true"></div>
+
+      <div class="liquid-cluster" data-liquid-cluster aria-hidden="true">
+        <span class="droplet droplet-a"></span>
+        <span class="droplet droplet-b"></span>
+        <span class="droplet droplet-c"></span>
+        <span class="droplet droplet-d"></span>
+        <span class="droplet droplet-e"></span>
+        <span class="droplet droplet-f"></span>
+        <span class="droplet droplet-g"></span>
+        <span class="droplet droplet-h"></span>
+      </div>
+
+      <div class="halo" data-halo aria-hidden="true">
+        <span></span>
+      </div>
+
+      <section class="wordmark" data-wordmark aria-labelledby="liquid-title">
+        <p class="wordmark-kicker" data-kicker>Ideas in motion · 02</p>
+
+        <div class="title-frame">
+          <h1 id="liquid-title" class="liquid-title" data-liquid-title>黄撑</h1>
+          <span class="title-echo" data-title-echo aria-hidden="true">黄撑</span>
+          <span class="title-sheen" data-title-sheen aria-hidden="true">黄撑</span>
+        </div>
+
+        <div class="wordmark-footer" data-wordmark-footer>
+          <span>让想法流动成形</span>
+          <span class="wordmark-rule" aria-hidden="true"></span>
+          <span>Huang Cheng</span>
+        </div>
+      </section>
+
+      <div class="scene-cover" data-scene-cover aria-hidden="true"></div>
+
+      <button class="skip-control" type="button" data-skip>
+        <span>跳过动画</span>
+        <i aria-hidden="true"></i>
+      </button>
+
+      <div class="sequence-meta" aria-hidden="true">
+        <span>开屏实验 02 · 液态字场</span>
+        <span data-time>14s</span>
+      </div>
+
+      <div class="timeline" aria-hidden="true">
+        <span class="timeline-track"></span>
+        <span class="timeline-fill" data-progress></span>
+      </div>
+
+      <div class="end-actions" data-end-actions aria-label="动画播放操作">
+        <button type="button" data-replay>重新播放</button>
+        <a href={withBase('/')} data-enter>进入博客 <span aria-hidden="true">↗</span></a>
+      </div>
+
+      <p class="sr-only" aria-live="polite" data-status>液态字场即将开始</p>
+
+      <noscript>
+        <style>
+          .scene-cover {
+            display: none;
+          }
+
+          .wordmark,
+          .wordmark-footer,
+          .end-actions {
+            opacity: 1 !important;
+            transform: none !important;
+          }
+
+          .liquid-title,
+          .title-echo {
+            clip-path: inset(0) !important;
+            filter: none !important;
+            opacity: 1 !important;
+          }
+        </style>
+      </noscript>
+    </main>
+
+    <style is:inline>
+      :root {
+        color-scheme: dark;
+        font-family:
+          Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+          "Noto Sans CJK SC", sans-serif;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        background: #0b0813;
+        color: #f8f6ff;
+      }
+
+      button,
+      a {
+        font: inherit;
+      }
+
+      button {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .liquid-opening {
+        background:
+          radial-gradient(circle at 48% 48%, rgba(62, 42, 86, 0.3), transparent 31%),
+          radial-gradient(circle at 85% 17%, rgba(42, 125, 131, 0.12), transparent 35%),
+          radial-gradient(circle at 12% 86%, rgba(151, 72, 107, 0.12), transparent 38%),
+          #0b0813;
+        height: 100svh;
+        isolation: isolate;
+        min-height: 520px;
+        overflow: hidden;
+        position: relative;
+        width: 100%;
+      }
+
+      .liquid-opening::before {
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+        background-size: 72px 72px;
+        content: "";
+        inset: 0;
+        mask-image: radial-gradient(circle at center, black, transparent 78%);
+        opacity: 0.28;
+        pointer-events: none;
+        position: absolute;
+        z-index: 1;
+      }
+
+      .liquid-opening::after {
+        background: radial-gradient(circle at center, transparent 42%, rgba(3, 2, 8, 0.65) 100%);
+        content: "";
+        inset: 0;
+        pointer-events: none;
+        position: absolute;
+        z-index: 7;
+      }
+
+      .filter-definitions {
+        height: 0;
+        left: 0;
+        pointer-events: none;
+        position: absolute;
+        top: 0;
+        width: 0;
+      }
+
+      .flow-field {
+        height: 100%;
+        inset: 0;
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        width: 100%;
+        z-index: 2;
+      }
+
+      .ambient {
+        border-radius: 999px;
+        filter: blur(38px);
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        transform: translate3d(0, 0, 0) scale(0.7);
+        will-change: opacity, transform;
+        z-index: 1;
+      }
+
+      .ambient-violet {
+        background: rgba(119, 83, 177, 0.26);
+        height: 62vmax;
+        left: 18%;
+        top: -31vmax;
+        width: 62vmax;
+      }
+
+      .ambient-mint {
+        background: rgba(47, 171, 165, 0.18);
+        height: 50vmax;
+        right: -26vmax;
+        top: 22%;
+        width: 50vmax;
+      }
+
+      .ambient-peach {
+        background: rgba(225, 112, 129, 0.14);
+        bottom: -30vmax;
+        height: 54vmax;
+        left: -18vmax;
+        width: 54vmax;
+      }
+
+      .liquid-cluster {
+        filter: url("#liquid-goo");
+        inset: 0;
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        will-change: opacity, transform;
+        z-index: 3;
+      }
+
+      .droplet {
+        border-radius: 50%;
+        box-shadow:
+          inset -18px -22px 42px rgba(20, 9, 36, 0.24),
+          inset 13px 11px 28px rgba(255, 255, 255, 0.22),
+          0 0 34px rgba(163, 128, 255, 0.13);
+        display: block;
+        height: clamp(92px, 14vmax, 230px);
+        left: 50%;
+        margin: calc(clamp(92px, 14vmax, 230px) / -2) 0 0 calc(clamp(92px, 14vmax, 230px) / -2);
+        mix-blend-mode: screen;
+        position: absolute;
+        top: 50%;
+        transform: translate3d(0, 0, 0) scale(0);
+        transform-origin: center;
+        width: clamp(92px, 14vmax, 230px);
+        will-change: opacity, transform;
+      }
+
+      .droplet-a,
+      .droplet-e {
+        background: linear-gradient(135deg, #b9fff1, #6d8ae8 58%, #9b63d6);
+      }
+
+      .droplet-b,
+      .droplet-f {
+        background: linear-gradient(135deg, #ffcab8, #c879cf 54%, #6558c7);
+      }
+
+      .droplet-c,
+      .droplet-g {
+        background: linear-gradient(135deg, #e8e2ff, #6bdbd1 58%, #5974d5);
+      }
+
+      .droplet-d,
+      .droplet-h {
+        background: linear-gradient(135deg, #d8a8ef, #f09aaf 47%, #6dd5ce);
+      }
+
+      .droplet-b,
+      .droplet-f {
+        height: clamp(76px, 11vmax, 190px);
+        margin: calc(clamp(76px, 11vmax, 190px) / -2) 0 0 calc(clamp(76px, 11vmax, 190px) / -2);
+        width: clamp(76px, 11vmax, 190px);
+      }
+
+      .droplet-c,
+      .droplet-g {
+        height: clamp(62px, 9vmax, 156px);
+        margin: calc(clamp(62px, 9vmax, 156px) / -2) 0 0 calc(clamp(62px, 9vmax, 156px) / -2);
+        width: clamp(62px, 9vmax, 156px);
+      }
+
+      .droplet-d,
+      .droplet-h {
+        height: clamp(48px, 7vmax, 122px);
+        margin: calc(clamp(48px, 7vmax, 122px) / -2) 0 0 calc(clamp(48px, 7vmax, 122px) / -2);
+        width: clamp(48px, 7vmax, 122px);
+      }
+
+      .halo {
+        align-items: center;
+        display: flex;
+        inset: 0;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        transform: scale(0.72);
+        will-change: opacity, transform;
+        z-index: 4;
+      }
+
+      .halo::before,
+      .halo::after,
+      .halo span {
+        border: 1px solid rgba(223, 232, 255, 0.13);
+        border-radius: 50%;
+        content: "";
+        position: absolute;
+      }
+
+      .halo::before {
+        height: min(56vw, 680px);
+        width: min(56vw, 680px);
+      }
+
+      .halo::after {
+        border-color: rgba(145, 224, 216, 0.1);
+        height: min(42vw, 510px);
+        transform: rotate(38deg) scaleY(0.74);
+        width: min(42vw, 510px);
+      }
+
+      .halo span {
+        border-color: rgba(215, 150, 236, 0.12);
+        height: min(69vw, 820px);
+        transform: rotate(-24deg) scaleY(0.54);
+        width: min(69vw, 820px);
+      }
+
+      .wordmark {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        inset: 0;
+        justify-content: center;
+        opacity: 0;
+        padding: 8vh 7vw 13vh;
+        pointer-events: none;
+        position: absolute;
+        transform: translateY(30px) scale(0.94);
+        will-change: opacity, transform;
+        z-index: 6;
+      }
+
+      .wordmark-kicker {
+        color: rgba(223, 221, 240, 0.58);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.34em;
+        margin: 0 0 clamp(18px, 3vh, 32px);
+        opacity: 0;
+        text-transform: uppercase;
+        transform: translateY(12px);
+        will-change: opacity, transform;
+      }
+
+      .title-frame {
+        align-items: center;
+        display: grid;
+        justify-items: center;
+        position: relative;
+      }
+
+      .liquid-title,
+      .title-echo,
+      .title-sheen {
+        font-family:
+          "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC",
+          "Source Han Sans SC", ui-sans-serif, sans-serif;
+        font-size: clamp(108px, 19vw, 290px);
+        font-weight: 700;
+        grid-area: 1 / 1;
+        letter-spacing: -0.08em;
+        line-height: 0.9;
+        margin: 0;
+        padding-right: 0.08em;
+        white-space: nowrap;
+      }
+
+      .liquid-title {
+        -webkit-background-clip: text;
+        background:
+          linear-gradient(
+            112deg,
+            #fcf7ff 4%,
+            #d8fcf7 24%,
+            #aa92e9 49%,
+            #f4abc0 69%,
+            #fff6ed 92%
+          );
+        background-clip: text;
+        clip-path: inset(50% 0 50%);
+        color: transparent;
+        filter: url("#liquid-lettering");
+        opacity: 0;
+        position: relative;
+        text-shadow:
+          0 0 38px rgba(172, 144, 241, 0.18),
+          0 0 90px rgba(79, 210, 197, 0.08);
+        will-change: clip-path, filter, opacity, transform;
+        z-index: 2;
+      }
+
+      .title-echo {
+        -webkit-text-stroke: 1px rgba(224, 236, 255, 0.24);
+        clip-path: inset(50% 0 50%);
+        color: transparent;
+        filter: blur(14px);
+        opacity: 0;
+        transform: scale(1.045);
+        will-change: clip-path, opacity, transform;
+        z-index: 1;
+      }
+
+      .title-sheen {
+        -webkit-background-clip: text;
+        background: linear-gradient(
+          90deg,
+          transparent 28%,
+          rgba(255, 255, 255, 0.12) 40%,
+          #ffffff 49%,
+          rgba(202, 255, 248, 0.68) 56%,
+          transparent 72%
+        );
+        background-clip: text;
+        color: transparent;
+        opacity: 0;
+        transform: translateX(-38%);
+        will-change: opacity, transform;
+        z-index: 3;
+      }
+
+      .wordmark-footer {
+        align-items: center;
+        color: rgba(230, 229, 242, 0.62);
+        display: flex;
+        font-size: clamp(11px, 0.9vw, 13px);
+        gap: 18px;
+        letter-spacing: 0.2em;
+        margin-top: clamp(26px, 4.4vh, 48px);
+        opacity: 0;
+        text-transform: uppercase;
+        transform: translateY(14px);
+        will-change: opacity, transform;
+      }
+
+      .wordmark-rule {
+        background: linear-gradient(90deg, transparent, rgba(211, 225, 241, 0.62), transparent);
+        height: 1px;
+        width: clamp(42px, 7vw, 108px);
+      }
+
+      .scene-cover {
+        background: #0b0813;
+        inset: 0;
+        opacity: 1;
+        pointer-events: none;
+        position: absolute;
+        will-change: opacity;
+        z-index: 20;
+      }
+
+      .skip-control,
+      .end-actions button,
+      .end-actions a {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        color: rgba(229, 228, 242, 0.56);
+        cursor: pointer;
+        display: inline-flex;
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        line-height: 1;
+        text-decoration: none;
+        transition:
+          color 220ms ease,
+          border-color 220ms ease,
+          background-color 220ms ease;
+      }
+
+      .skip-control {
+        gap: 13px;
+        opacity: 0;
+        padding: 12px 0;
+        position: absolute;
+        right: clamp(24px, 4.8vw, 74px);
+        top: clamp(20px, 4vw, 54px);
+        will-change: opacity;
+        z-index: 30;
+      }
+
+      .skip-control i {
+        background: currentColor;
+        height: 1px;
+        position: relative;
+        width: 23px;
+      }
+
+      .skip-control i::after {
+        border-right: 1px solid currentColor;
+        border-top: 1px solid currentColor;
+        content: "";
+        height: 5px;
+        position: absolute;
+        right: 0;
+        top: -2px;
+        transform: rotate(45deg);
+        width: 5px;
+      }
+
+      .skip-control:hover,
+      .skip-control:focus-visible,
+      .end-actions button:hover,
+      .end-actions button:focus-visible,
+      .end-actions a:hover,
+      .end-actions a:focus-visible {
+        color: #ffffff;
+      }
+
+      .skip-control:focus-visible,
+      .end-actions button:focus-visible,
+      .end-actions a:focus-visible {
+        outline: 1px solid rgba(189, 226, 235, 0.72);
+        outline-offset: 7px;
+      }
+
+      .sequence-meta {
+        bottom: clamp(27px, 3.8vh, 43px);
+        color: rgba(203, 203, 222, 0.38);
+        display: flex;
+        font-size: 10px;
+        justify-content: space-between;
+        left: clamp(26px, 4.8vw, 72px);
+        letter-spacing: 0.2em;
+        position: absolute;
+        right: clamp(26px, 4.8vw, 72px);
+        text-transform: uppercase;
+        z-index: 10;
+      }
+
+      .timeline {
+        bottom: clamp(17px, 2.4vh, 28px);
+        height: 1px;
+        left: clamp(26px, 4.8vw, 72px);
+        overflow: hidden;
+        position: absolute;
+        right: clamp(26px, 4.8vw, 72px);
+        z-index: 10;
+      }
+
+      .timeline-track,
+      .timeline-fill {
+        inset: 0;
+        position: absolute;
+        transform-origin: left center;
+      }
+
+      .timeline-track {
+        background: rgba(205, 208, 230, 0.1);
+      }
+
+      .timeline-fill {
+        background: linear-gradient(90deg, #9d85d9, #78d8d0 62%, #f1a9ba);
+        box-shadow: 0 0 12px rgba(117, 220, 210, 0.36);
+        transform: scaleX(0);
+        will-change: transform;
+      }
+
+      .end-actions {
+        align-items: center;
+        bottom: clamp(55px, 7vh, 82px);
+        display: flex;
+        gap: 10px;
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        right: clamp(26px, 4.8vw, 72px);
+        transform: translateY(10px);
+        transition:
+          opacity 420ms ease,
+          transform 420ms ease;
+        z-index: 30;
+      }
+
+      .end-actions.is-visible {
+        opacity: 1;
+        pointer-events: auto;
+        transform: none;
+      }
+
+      .end-actions button,
+      .end-actions a {
+        border: 1px solid rgba(218, 219, 239, 0.16);
+        border-radius: 999px;
+        justify-content: center;
+        min-height: 38px;
+        padding: 0 17px;
+      }
+
+      .end-actions a {
+        background: rgba(233, 239, 246, 0.1);
+        border-color: rgba(214, 231, 236, 0.24);
+        color: rgba(247, 249, 253, 0.9);
+        gap: 9px;
+      }
+
+      .end-actions button:hover,
+      .end-actions a:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(222, 234, 239, 0.38);
+      }
+
+      .sr-only {
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        height: 1px;
+        overflow: hidden;
+        position: absolute;
+        white-space: nowrap;
+        width: 1px;
+      }
+
+      @media (max-width: 720px) {
+        .liquid-opening {
+          min-height: 480px;
+        }
+
+        .liquid-opening::before {
+          background-size: 48px 48px;
+        }
+
+        .ambient {
+          filter: blur(28px);
+        }
+
+        .halo::before {
+          height: 86vw;
+          width: 86vw;
+        }
+
+        .halo::after {
+          height: 68vw;
+          width: 68vw;
+        }
+
+        .halo span {
+          height: 108vw;
+          width: 108vw;
+        }
+
+        .wordmark {
+          padding: 7vh 24px 14vh;
+        }
+
+        .wordmark-kicker {
+          font-size: 9px;
+          letter-spacing: 0.25em;
+          margin-bottom: 26px;
+        }
+
+        .liquid-title,
+        .title-echo,
+        .title-sheen {
+          font-size: clamp(96px, 34vw, 150px);
+        }
+
+        .wordmark-footer {
+          flex-wrap: wrap;
+          font-size: 10px;
+          gap: 10px;
+          justify-content: center;
+          letter-spacing: 0.14em;
+          margin-top: 30px;
+          max-width: 300px;
+        }
+
+        .wordmark-rule {
+          width: 40px;
+        }
+
+        .skip-control {
+          font-size: 11px;
+          right: 22px;
+          top: 18px;
+        }
+
+        .sequence-meta {
+          bottom: 33px;
+          left: 22px;
+          letter-spacing: 0.12em;
+          right: 22px;
+        }
+
+        .sequence-meta span:first-child {
+          max-width: calc(100vw - 90px);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .timeline {
+          bottom: 22px;
+          left: 22px;
+          right: 22px;
+        }
+
+        .end-actions {
+          bottom: 57px;
+          left: 22px;
+          right: auto;
+        }
+
+        .end-actions button,
+        .end-actions a {
+          font-size: 11px;
+          min-height: 36px;
+          padding: 0 14px;
+        }
+      }
+
+      @media (max-height: 620px) and (min-width: 721px) {
+        .wordmark {
+          padding-bottom: 18vh;
+        }
+
+        .liquid-title,
+        .title-echo,
+        .title-sheen {
+          font-size: clamp(96px, 25vh, 170px);
+        }
+
+        .wordmark-kicker {
+          margin-bottom: 18px;
+        }
+
+        .wordmark-footer {
+          margin-top: 24px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .flow-field,
+        .liquid-cluster {
+          display: none;
+        }
+
+        .ambient {
+          opacity: 0.52 !important;
+          transform: scale(1) !important;
+        }
+
+        .halo {
+          opacity: 0.42 !important;
+          transform: none !important;
+        }
+
+        .scene-cover {
+          display: none;
+        }
+
+        .wordmark,
+        .wordmark-kicker,
+        .wordmark-footer {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+
+        .liquid-title,
+        .title-echo {
+          clip-path: inset(0) !important;
+          filter: none !important;
+          opacity: 1 !important;
+          transform: none !important;
+        }
+
+        .title-sheen,
+        .skip-control {
+          display: none;
+        }
+
+        .timeline-fill {
+          transform: scaleX(1) !important;
+        }
+      }
+    </style>
+
+    <script is:inline>
+      (function () {
+        var root = document.querySelector('[data-liquid-opening]');
+        if (!root) return;
+
+        var canvas = root.querySelector('[data-flow-field]');
+        var context = canvas.getContext('2d', { alpha: true });
+        var droplets = Array.from(root.querySelectorAll('.droplet'));
+        var cluster = root.querySelector('[data-liquid-cluster]');
+        var halo = root.querySelector('[data-halo]');
+        var wordmark = root.querySelector('[data-wordmark]');
+        var title = root.querySelector('[data-liquid-title]');
+        var titleEcho = root.querySelector('[data-title-echo]');
+        var titleSheen = root.querySelector('[data-title-sheen]');
+        var kicker = root.querySelector('[data-kicker]');
+        var wordmarkFooter = root.querySelector('[data-wordmark-footer]');
+        var violet = root.querySelector('[data-ambient-violet]');
+        var mint = root.querySelector('[data-ambient-mint]');
+        var peach = root.querySelector('[data-ambient-peach]');
+        var cover = root.querySelector('[data-scene-cover]');
+        var progress = root.querySelector('[data-progress]');
+        var time = root.querySelector('[data-time]');
+        var skip = root.querySelector('[data-skip]');
+        var replay = root.querySelector('[data-replay]');
+        var enter = root.querySelector('[data-enter]');
+        var endActions = root.querySelector('[data-end-actions]');
+        var status = root.querySelector('[data-status]');
+        var noise = root.querySelector('[data-letter-noise]');
+        var displacement = root.querySelector('[data-letter-displacement]');
+        var params = new URLSearchParams(window.location.search);
+        var returnKey = 'site-intro-return-v1';
+        var requestedSeconds = Number(params.get('duration'));
+        var total = Number.isFinite(requestedSeconds) && requestedSeconds >= 3
+          ? Math.min(requestedSeconds, 30) * 1000
+          : 14000;
+        var previewPeak = params.get('frame') === 'peak';
+        var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var finePointer = window.matchMedia('(pointer: fine)').matches;
+        var start = performance.now();
+        var pausedAt = 0;
+        var frameId = 0;
+        var finishing = false;
+        var currentStage = '';
+        var pointerX = 0;
+        var pointerY = 0;
+        var viewportWidth = 0;
+        var viewportHeight = 0;
+        var pixelRatio = 1;
+        var particles = [];
+        var dropletSettings = [
+          { angle: -2.72, radius: 0.74, speed: 0.00017, scale: 1.06 },
+          { angle: -1.96, radius: 0.63, speed: -0.00022, scale: 0.96 },
+          { angle: -1.18, radius: 0.82, speed: 0.00019, scale: 0.9 },
+          { angle: -0.35, radius: 0.68, speed: -0.00025, scale: 1.04 },
+          { angle: 0.42, radius: 0.78, speed: 0.0002, scale: 0.94 },
+          { angle: 1.2, radius: 0.66, speed: -0.00018, scale: 1.08 },
+          { angle: 2.02, radius: 0.84, speed: 0.00023, scale: 0.88 },
+          { angle: 2.78, radius: 0.7, speed: -0.00021, scale: 1.02 },
+        ];
+
+        function resolveReturnUrl(value) {
+          try {
+            var target = new URL(value || root.dataset.homeUrl, window.location.origin);
+            if (target.origin !== window.location.origin) return root.dataset.homeUrl;
+            return target.pathname + target.search + target.hash;
+          } catch (error) {
+            return root.dataset.homeUrl;
+          }
+        }
+
+        var returnUrl = resolveReturnUrl(params.get('return'));
+        enter.href = returnUrl;
+
+        function rememberReturn() {
+          try {
+            sessionStorage.setItem(returnKey, returnUrl);
+          } catch (error) {}
+        }
+
+        function clamp(value, min, max) {
+          return Math.max(min, Math.min(max, value));
+        }
+
+        function smooth(value) {
+          var n = clamp(value, 0, 1);
+          return n * n * (3 - 2 * n);
+        }
+
+        function phase(value, from, to) {
+          return smooth((value - from) / (to - from));
+        }
+
+        function mix(from, to, amount) {
+          return from + (to - from) * amount;
+        }
+
+        function setStage(message) {
+          if (message === currentStage) return;
+          currentStage = message;
+          status.textContent = message;
+        }
+
+        function resizeCanvas() {
+          var rect = root.getBoundingClientRect();
+          viewportWidth = rect.width;
+          viewportHeight = rect.height;
+          pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+          canvas.width = Math.max(1, Math.round(viewportWidth * pixelRatio));
+          canvas.height = Math.max(1, Math.round(viewportHeight * pixelRatio));
+          canvas.style.width = viewportWidth + 'px';
+          canvas.style.height = viewportHeight + 'px';
+          context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+          var count = viewportWidth < 720 ? 48 : 96;
+          particles = Array.from({ length: count }, function (_, index) {
+            return {
+              x: Math.random() * viewportWidth,
+              y: Math.random() * viewportHeight,
+              previousX: 0,
+              previousY: 0,
+              speed: 0.34 + Math.random() * 0.52,
+              width: 0.35 + Math.random() * 0.75,
+              tint: index % 7,
+            };
+          });
+        }
+
+        function drawFlow(now, visibility, release) {
+          context.clearRect(0, 0, viewportWidth, viewportHeight);
+          if (reducedMotion || visibility <= 0) return;
+
+          context.save();
+          context.globalCompositeOperation = 'screen';
+          context.lineCap = 'round';
+
+          particles.forEach(function (particle, index) {
+            particle.previousX = particle.x;
+            particle.previousY = particle.y;
+
+            var fieldX = particle.x * 0.0034;
+            var fieldY = particle.y * 0.0038;
+            var angle =
+              Math.sin(fieldX + now * 0.00023) * 1.15 +
+              Math.cos(fieldY - now * 0.00019) * 1.05 +
+              Math.sin((fieldX + fieldY) * 0.72) * 0.55;
+            var pointerDistanceX = particle.x - (viewportWidth * 0.5 + pointerX * 18);
+            var pointerDistanceY = particle.y - (viewportHeight * 0.5 + pointerY * 16);
+            var pointerDistance = Math.max(90, Math.hypot(pointerDistanceX, pointerDistanceY));
+            var pointerPull = finePointer ? clamp(160 / pointerDistance, 0, 0.8) : 0;
+
+            particle.x +=
+              (Math.cos(angle) * particle.speed + (-pointerDistanceY / pointerDistance) * pointerPull) *
+              (1 + release * 1.5);
+            particle.y +=
+              (Math.sin(angle) * particle.speed + (pointerDistanceX / pointerDistance) * pointerPull) *
+              (1 + release * 1.5);
+
+            if (particle.x < -12) particle.x = viewportWidth + 12;
+            if (particle.x > viewportWidth + 12) particle.x = -12;
+            if (particle.y < -12) particle.y = viewportHeight + 12;
+            if (particle.y > viewportHeight + 12) particle.y = -12;
+
+            var alpha = visibility * (0.08 + (index % 5) * 0.012) * (1 - release * 0.45);
+            context.beginPath();
+            context.lineWidth = particle.width;
+            context.strokeStyle = particle.tint < 3
+              ? 'rgba(126, 226, 216,' + alpha + ')'
+              : particle.tint < 5
+                ? 'rgba(177, 142, 235,' + alpha + ')'
+                : 'rgba(242, 156, 181,' + alpha + ')';
+            context.moveTo(particle.previousX, particle.previousY);
+            context.lineTo(particle.x, particle.y);
+            context.stroke();
+          });
+
+          context.restore();
+        }
+
+        function positionDroplets(now, gather, release, visibility) {
+          var centerX = pointerX * 4;
+          var centerY = pointerY * 3;
+          var outerRadius = Math.max(viewportWidth, viewportHeight) * 0.62;
+          var gatheredRadius = Math.min(viewportWidth, viewportHeight) * 0.055;
+          var releasedRadius = Math.max(viewportWidth, viewportHeight) * 0.42;
+
+          droplets.forEach(function (droplet, index) {
+            var setting = dropletSettings[index];
+            var orbit = setting.angle + now * setting.speed;
+            var radius = mix(outerRadius * setting.radius, gatheredRadius * (0.6 + index * 0.08), gather);
+            radius = mix(radius, releasedRadius * (0.48 + setting.radius * 0.34), release);
+            var wobble = Math.sin(now * 0.0012 + index * 1.7) * 9 * visibility;
+            var x = Math.cos(orbit + release * 0.55) * radius + centerX + wobble;
+            var y = Math.sin(orbit) * radius * 0.62 + centerY + Math.cos(now * 0.001 + index) * 6;
+            var scale = (0.18 + visibility * 0.82) * setting.scale;
+            scale *= 1 + gather * 0.16 - release * 0.18;
+
+            droplet.style.opacity = String(0.2 + visibility * 0.8);
+            droplet.style.transform =
+              'translate3d(' + x + 'px,' + y + 'px,0) scale(' + scale + ')';
+          });
+        }
+
+        function render(value, now) {
+          var p = clamp(value, 0, 1);
+          var opening = phase(p, 0, 0.08);
+          var fieldWake = phase(p, 0.03, 0.22);
+          var dropletWake = phase(p, 0.08, 0.26);
+          var gather = phase(p, 0.18, 0.48);
+          var titleIn = phase(p, 0.39, 0.64);
+          var settle = phase(p, 0.52, 0.75);
+          var footerIn = phase(p, 0.64, 0.78);
+          var release = phase(p, 0.78, 0.97);
+          var sheen = phase(p, 0.58, 0.78);
+          var kickerOut = phase(p, 0.38, 0.52);
+
+          cover.style.opacity = String(1 - opening);
+          canvas.style.opacity = String(fieldWake * (1 - release * 0.28));
+          cluster.style.opacity = String(dropletWake * (1 - release * 0.62));
+          halo.style.opacity = String(titleIn * 0.5 + settle * 0.12);
+          halo.style.transform =
+            'translate3d(' + pointerX * 2 + 'px,' + pointerY * 2 + 'px,0) rotate(' +
+            (p * 8 - 3) + 'deg) scale(' + (0.72 + titleIn * 0.28 + release * 0.08) + ')';
+
+          violet.style.opacity = String(opening * (0.22 + settle * 0.38));
+          mint.style.opacity = String(fieldWake * (0.15 + gather * 0.33));
+          peach.style.opacity = String(dropletWake * (0.12 + release * 0.26));
+          violet.style.transform =
+            'translate3d(' + pointerX * -5 + 'px,' + pointerY * -4 + 'px,0) scale(' +
+            (0.72 + settle * 0.3) + ')';
+          mint.style.transform =
+            'translate3d(' + pointerX * 7 + 'px,' + pointerY * 5 + 'px,0) scale(' +
+            (0.7 + gather * 0.34) + ')';
+          peach.style.transform =
+            'translate3d(' + pointerX * -4 + 'px,' + pointerY * 6 + 'px,0) scale(' +
+            (0.72 + release * 0.32) + ')';
+
+          wordmark.style.opacity = String(titleIn);
+          wordmark.style.transform =
+            'translate3d(' + pointerX * 0.7 + 'px,' +
+            ((1 - titleIn) * 30 + pointerY * 0.55) + 'px,0) scale(' +
+            (0.94 + titleIn * 0.06) + ')';
+          kicker.style.opacity = String(phase(p, 0.12, 0.25) * (1 - kickerOut));
+          kicker.style.transform =
+            'translateY(' + ((1 - phase(p, 0.12, 0.25)) * 12 - kickerOut * 8) + 'px)';
+
+          var titleClip = (1 - titleIn) * 50;
+          title.style.opacity = String(titleIn);
+          title.style.clipPath = 'inset(' + titleClip + '% 0 ' + titleClip + '%)';
+          title.style.transform =
+            'scale(' + (0.9 + titleIn * 0.1) + ') translateY(' +
+            ((1 - settle) * Math.sin(now * 0.002) * 3) + 'px)';
+          titleEcho.style.opacity = String(titleIn * (0.46 - settle * 0.2));
+          titleEcho.style.clipPath = 'inset(' + titleClip + '% 0 ' + titleClip + '%)';
+          titleEcho.style.transform =
+            'scale(' + (1.1 - settle * 0.055 + release * 0.015) + ')';
+
+          var sheenPulse = Math.sin(sheen * Math.PI);
+          titleSheen.style.opacity = String(sheenPulse * 0.86);
+          titleSheen.style.transform = 'translateX(' + mix(-38, 38, sheen) + '%)';
+          wordmarkFooter.style.opacity = String(footerIn);
+          wordmarkFooter.style.transform = 'translateY(' + ((1 - footerIn) * 14) + 'px)';
+
+          var distortion = mix(128, 7, settle) + Math.sin(now * 0.0024) * (1 - settle) * 8;
+          displacement.setAttribute('scale', String(distortion));
+          noise.setAttribute(
+            'baseFrequency',
+            (0.009 + (1 - settle) * 0.012).toFixed(4) + ' ' +
+            (0.018 + (1 - settle) * 0.02).toFixed(4)
+          );
+
+          skip.style.opacity = String(phase(p, 0.03, 0.13) * (1 - phase(p, 0.9, 1)));
+          progress.style.transform = 'scaleX(' + p + ')';
+          time.textContent = Math.max(0, Math.ceil((total * (1 - p)) / 1000)) + 's';
+
+          positionDroplets(now, gather, release, dropletWake);
+          drawFlow(now, fieldWake, release);
+
+          if (p < 0.18) setStage('柔光流场正在苏醒');
+          else if (p < 0.45) setStage('液态光滴正在汇聚');
+          else if (p < 0.7) setStage('文字正在流动中凝结');
+          else if (p < 0.9) setStage('珠光正在掠过字面');
+          else setStage('液态字场播放完毕');
+        }
+
+        function completeSequence() {
+          if (finishing) return;
+          finishing = true;
+          window.cancelAnimationFrame(frameId);
+          render(1, performance.now());
+          skip.hidden = true;
+          endActions.classList.add('is-visible');
+          setStage('液态字场播放完毕，可以重新播放或进入博客');
+        }
+
+        function tick(now) {
+          var p = clamp((now - start) / total, 0, 1);
+          render(p, now);
+
+          if (p < 1) {
+            frameId = window.requestAnimationFrame(tick);
+            return;
+          }
+
+          completeSequence();
+        }
+
+        function restart() {
+          finishing = false;
+          skip.hidden = false;
+          endActions.classList.remove('is-visible');
+          pointerX = 0;
+          pointerY = 0;
+          start = performance.now();
+          render(0, start);
+          frameId = window.requestAnimationFrame(tick);
+        }
+
+        skip.addEventListener('click', completeSequence);
+        replay.addEventListener('click', restart);
+        enter.addEventListener('click', rememberReturn);
+
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') {
+            completeSequence();
+          }
+
+          if ((event.key === 'r' || event.key === 'R') && finishing && !reducedMotion) {
+            restart();
+          }
+
+          if (event.key === 'Enter' && finishing) {
+            rememberReturn();
+            window.location.href = returnUrl;
+          }
+        });
+
+        if (finePointer && !reducedMotion) {
+          root.addEventListener('pointermove', function (event) {
+            pointerX = ((event.clientX / window.innerWidth) - 0.5) * 2;
+            pointerY = ((event.clientY / window.innerHeight) - 0.5) * 2;
+          });
+
+          root.addEventListener('pointerleave', function () {
+            pointerX = 0;
+            pointerY = 0;
+          });
+        }
+
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden) {
+            pausedAt = performance.now();
+            window.cancelAnimationFrame(frameId);
+            return;
+          }
+
+          if (pausedAt && !finishing && !reducedMotion && !previewPeak) {
+            start += performance.now() - pausedAt;
+            pausedAt = 0;
+            frameId = window.requestAnimationFrame(tick);
+          }
+        });
+
+        window.addEventListener('resize', resizeCanvas, { passive: true });
+        resizeCanvas();
+
+        if (reducedMotion) {
+          render(1, performance.now());
+          skip.hidden = true;
+          endActions.classList.add('is-visible');
+          setStage('已显示液态字场静态画面');
+          return;
+        }
+
+        if (previewPeak) {
+          render(0.69, performance.now());
+          skip.hidden = true;
+          endActions.classList.add('is-visible');
+          setStage('液态字场关键画面预览');
+          return;
+        }
+
+        render(0, start);
+        frameId = window.requestAnimationFrame(tick);
+      })();
+    </script>
+  </body>
+</html>

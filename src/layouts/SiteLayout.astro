@@ -42,7 +42,11 @@ const searchItems = [
 ---
 
 <!doctype html>
-<html lang="zh-CN">
+<html
+  lang="zh-CN"
+  data-page-kind={active === 'home' ? 'home' : 'content'}
+  data-default-intro-url={withBase('/intro-motion-3/')}
+>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -59,6 +63,36 @@ const searchItems = [
         } catch (error) {
           document.documentElement.dataset.theme = 'light';
           document.documentElement.dataset.styleTheme = 'visual-system';
+        }
+      })();
+    </script>
+    <script is:inline>
+      (function () {
+        var page = document.documentElement;
+        var introPath = page.dataset.defaultIntroUrl;
+        var currentPath = window.location.pathname + window.location.search + window.location.hash;
+        var seenKey = 'site-intro-seen-v1';
+        var returnKey = 'site-intro-return-v1';
+
+        if (!introPath) return;
+
+        try {
+          var returnPath = sessionStorage.getItem(returnKey);
+          if (returnPath) sessionStorage.removeItem(returnKey);
+          if (returnPath === currentPath) return;
+
+          var isHome = page.dataset.pageKind === 'home';
+          var hasSeenIntro = localStorage.getItem(seenKey) === '1';
+          if (!isHome && hasSeenIntro) return;
+
+          var introUrl = new URL(introPath, window.location.origin);
+          introUrl.searchParams.set('return', currentPath);
+          localStorage.setItem(seenKey, '1');
+          sessionStorage.setItem(returnKey, currentPath);
+          window.location.replace(introUrl.href);
+        } catch (error) {
+          // Storage may be unavailable in strict privacy modes. In that case,
+          // keep the requested page visible instead of risking a redirect loop.
         }
       })();
     </script>
@@ -86,19 +120,49 @@ const searchItems = [
           <a href={withBase(siteMeta.rssPath)}>RSS</a>
           <a class:list={[active === 'about' && 'active']} href={withBase('/about/')}>关于我</a>
         </nav>
-        <div class="theme-menu" data-theme-menu>
-          <button class="theme-button" type="button" aria-label="选择主题" title="选择主题" aria-expanded="false" data-theme-menu-toggle>
-            <span class="theme-current-icon" aria-hidden="true" data-current-theme-icon>
-              <svg viewBox="0 0 24 24"><path d="M4 18h16"></path><path d="M6 18a6 6 0 0 1 12 0"></path><path d="M12 4v3"></path><path d="m5.64 7.64 2.12 2.12"></path><path d="m18.36 7.64-2.12 2.12"></path><path d="M2 13h3"></path><path d="M19 13h3"></path></svg>
-            </span>
-          </button>
-          <div class="theme-menu-panel" role="menu">
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="index" data-theme-value="light">晨曦手札</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="light">素笺经典</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="index-gradient" data-theme-value="light">晨曦渐变</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic-gradient" data-theme-value="light">素笺渐变</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="visual-system" data-theme-value="light">视觉晶蓝</button>
-            <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="dark">玄墨经典</button>
+        <div class="header-controls">
+          <div class="theme-menu" data-theme-menu>
+            <button class="theme-button" type="button" aria-label="选择主题" title="选择主题" aria-expanded="false" data-theme-menu-toggle>
+              <span class="theme-current-icon" aria-hidden="true" data-current-theme-icon>
+                <svg viewBox="0 0 24 24"><path d="M4 18h16"></path><path d="M6 18a6 6 0 0 1 12 0"></path><path d="M12 4v3"></path><path d="m5.64 7.64 2.12 2.12"></path><path d="m18.36 7.64-2.12 2.12"></path><path d="M2 13h3"></path><path d="M19 13h3"></path></svg>
+              </span>
+            </button>
+            <div class="theme-menu-panel" role="menu">
+              <button type="button" role="menuitem" data-theme-option data-style-theme-value="index" data-theme-value="light">晨曦手札</button>
+              <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="light">素笺经典</button>
+              <button type="button" role="menuitem" data-theme-option data-style-theme-value="index-gradient" data-theme-value="light">晨曦渐变</button>
+              <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic-gradient" data-theme-value="light">素笺渐变</button>
+              <button type="button" role="menuitem" data-theme-option data-style-theme-value="visual-system" data-theme-value="light">视觉晶蓝</button>
+              <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="dark">玄墨经典</button>
+            </div>
+          </div>
+          <div class="intro-menu" data-intro-menu>
+            <button
+              class="intro-button"
+              type="button"
+              aria-label="选择开屏动画"
+              title="选择开屏动画"
+              aria-controls="intro-menu-panel"
+              aria-expanded="false"
+              data-intro-menu-toggle
+            >开屏</button>
+            <div class="intro-menu-panel" id="intro-menu-panel" role="menu" aria-label="开屏动画方案">
+              <button type="button" role="menuitem" data-intro-option data-intro-url={withBase('/intro-motion-1/')}>
+                <span class="intro-option-title">方案一 · 光轨序章</span>
+                <span class="intro-option-note">深空材质与环轨聚焦</span>
+              </button>
+              <button type="button" role="menuitem" data-intro-option data-intro-url={withBase('/intro-motion-2/')}>
+                <span class="intro-option-title">方案二 · 液态字场</span>
+                <span class="intro-option-note">珠光文字与柔性流场</span>
+              </button>
+              <button type="button" role="menuitem" data-intro-option data-intro-url={withBase('/intro-motion-3/')}>
+                <span class="intro-option-heading">
+                  <span class="intro-option-title">方案三 · 天体序章</span>
+                  <span class="intro-option-default">默认</span>
+                </span>
+                <span class="intro-option-note">星轨、日蚀与沉浸光门</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -183,6 +247,92 @@ const searchItems = [
 
         document.addEventListener('click', function (event) {
           if (!themeMenu.contains(event.target)) setOpen(false);
+        });
+      })();
+    </script>
+    <script is:inline>
+      (function () {
+        var introMenu = document.querySelector('[data-intro-menu]');
+        if (!introMenu) return;
+
+        var introButton = introMenu.querySelector('[data-intro-menu-toggle]');
+        var introOptions = Array.from(introMenu.querySelectorAll('[data-intro-option]'));
+        var themeMenu = document.querySelector('[data-theme-menu]');
+        var themeButton = document.querySelector('[data-theme-menu-toggle]');
+        var seenKey = 'site-intro-seen-v1';
+        var returnKey = 'site-intro-return-v1';
+
+        function setOpen(isOpen, moveFocus) {
+          introMenu.classList.toggle('open', isOpen);
+          introButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          if (isOpen && moveFocus && introOptions[0]) introOptions[0].focus();
+        }
+
+        function closeThemeMenu() {
+          if (!themeMenu || !themeButton) return;
+          themeMenu.classList.remove('open');
+          themeButton.setAttribute('aria-expanded', 'false');
+        }
+
+        function openIntro(introPath) {
+          if (!introPath) return;
+          var currentPath = window.location.pathname + window.location.search + window.location.hash;
+          var introUrl = new URL(introPath, window.location.origin);
+          introUrl.searchParams.set('return', currentPath);
+
+          try {
+            localStorage.setItem(seenKey, '1');
+            sessionStorage.setItem(returnKey, currentPath);
+          } catch (error) {}
+
+          window.location.href = introUrl.href;
+        }
+
+        introButton.addEventListener('click', function () {
+          var nextOpen = !introMenu.classList.contains('open');
+          closeThemeMenu();
+          setOpen(nextOpen, false);
+        });
+
+        introButton.addEventListener('keydown', function (event) {
+          if (event.key !== 'ArrowDown') return;
+          event.preventDefault();
+          closeThemeMenu();
+          setOpen(true, true);
+        });
+
+        introOptions.forEach(function (option, index) {
+          option.addEventListener('click', function () {
+            openIntro(option.getAttribute('data-intro-url'));
+          });
+
+          option.addEventListener('keydown', function (event) {
+            if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+            event.preventDefault();
+            var direction = event.key === 'ArrowDown' ? 1 : -1;
+            var nextIndex = (index + direction + introOptions.length) % introOptions.length;
+            introOptions[nextIndex].focus();
+          });
+        });
+
+        if (themeButton) {
+          themeButton.addEventListener('click', function () {
+            setOpen(false, false);
+          });
+        }
+
+        introMenu.addEventListener('focusout', function (event) {
+          if (!introMenu.contains(event.relatedTarget)) setOpen(false, false);
+        });
+
+        document.addEventListener('keydown', function (event) {
+          if (event.key !== 'Escape' || !introMenu.classList.contains('open')) return;
+          setOpen(false, false);
+          introButton.focus();
+        });
+
+        document.addEventListener('click', function (event) {
+          if (!introMenu.contains(event.target)) setOpen(false, false);
         });
       })();
     </script>

@@ -83,6 +83,25 @@ describe('site layout', () => {
     expect(layoutSource).not.toMatch(/href=["']\/(?:articles|search|projects|guides|about|rss\.xml)/);
   });
 
+  it('offers all three intro animations beside the theme menu', () => {
+    expect(layoutSource).toContain('class="header-controls"');
+    expect(layoutSource).toContain('data-intro-menu-toggle');
+    expect(layoutSource).toContain("withBase('/intro-motion-1/')");
+    expect(layoutSource).toContain("withBase('/intro-motion-2/')");
+    expect(layoutSource).toContain("withBase('/intro-motion-3/')");
+    expect(layoutSource.indexOf('data-theme-menu')).toBeLessThan(layoutSource.indexOf('data-intro-menu'));
+    expect(globalCssSource).toContain('.intro-menu-panel');
+  });
+
+  it('uses intro three for first visits and every homepage entry without looping on return', () => {
+    expect(layoutSource).toContain("data-default-intro-url={withBase('/intro-motion-3/')}");
+    expect(layoutSource).toContain("var seenKey = 'site-intro-seen-v1'");
+    expect(layoutSource).toContain("var returnKey = 'site-intro-return-v1'");
+    expect(layoutSource).toContain("if (!isHome && hasSeenIntro) return");
+    expect(layoutSource).toContain("if (returnPath === currentPath) return");
+    expect(layoutSource).toContain("introUrl.searchParams.set('return', currentPath)");
+  });
+
   it('keeps mobile layout rules for the main navigation and article page', () => {
     const pageContentBlock = globalCssSource.match(/\.page-content\s*\{[^}]*\}/s)?.[0] ?? '';
     const articleShellBlock = globalCssSource.match(/\.article-shell\s*\{[^}]*\}/s)?.[0] ?? '';
