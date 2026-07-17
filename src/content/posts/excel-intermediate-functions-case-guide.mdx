@@ -1,0 +1,537 @@
+---
+title: "Excel 中级函数案例详解：动态数组、日期计算与批量处理"
+description: "用三张真实 Excel 示例表讲解 REPLACE、FILTER、LET、BYROW、MAP、REDUCE 等 18 个中级函数，展示公式区域、动态结果和批量计算过程。"
+date: 2026-07-17T10:10:02+08:00
+category: "教程"
+tags:
+  - "Excel"
+  - "数据处理"
+minutes: 26
+featured: false
+series: "excel-functions"
+seriesOrder: 5
+draft: false
+private: false
+---
+
+import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
+
+前面的文章已经解决了函数分类、39 个基础函数、查找匹配和通配符。这一篇继续完成剩下的 **18 个中级函数**。
+
+中级函数并不是单纯把公式写得更长，而是开始解决三类问题：**按日期周期计算、让结果自动扩展、把同一套规则批量应用到多行多列。**
+
+<div class="intermediate-hero" role="group" aria-label="Excel 18 个中级函数案例学习总览">
+  <div class="intermediate-hero__intro">
+    <span>EXCEL INTERMEDIATE PRACTICE</span>
+    <strong>从单个公式，走向会自动扩展的整张表</strong>
+    <p>全文使用三张独立示例表。每一组先看源数据和代表性计算过程，再查看 6 个函数的紧凑案例。</p>
+  </div>
+  <div class="intermediate-hero__metrics">
+    <div><b>18</b><span>中级函数</span></div>
+    <div><b>3</b><span>函数分组</span></div>
+    <div><b>3</b><span>示例工作表</span></div>
+    <div><b>4</b><span>综合练习</span></div>
+  </div>
+  <div class="intermediate-route">
+    <div><span>01</span><strong>文本与日期</strong><small>编码替换、周数和周期</small></div>
+    <i>→</i>
+    <div><span>02</span><strong>动态数组</strong><small>筛选、去重、排序和转换</small></div>
+    <i>→</i>
+    <div><span>03</span><strong>批量计算</strong><small>逐行、逐列、逐项和累计</small></div>
+  </div>
+</div>
+
+<DecisionFlow
+  title="中级函数的阅读方法"
+  items={[
+    {
+      label: 'Step 1',
+      title: '先看源数据形状',
+      description: '确认公式处理的是一个单元格、一列数据、整张表，还是一个行列矩阵。',
+    },
+    {
+      label: 'Step 2',
+      title: '再看结果会不会扩展',
+      description: '动态数组只写一个公式，也可能返回多行多列结果。',
+    },
+    {
+      label: 'Step 3',
+      title: '识别批量处理方向',
+      description: 'BYROW 按行、BYCOL 按列、MAP 按元素、REDUCE 按顺序累计。',
+    },
+    {
+      label: 'Step 4',
+      title: '最后再组合函数',
+      description: '先理解每个函数负责什么，再把筛选、排序、判断和错误处理串起来。',
+    },
+  ]}
+/>
+
+## 一、文本与日期：把固定格式转换成可统计字段
+
+这一组函数适合处理编码、平台标记、周报日期和活动周期。先建立 `编码日期表`：
+
+<div class="intermediate-sheet-wrap" role="group" aria-label="编码日期表，包含 A 到 D 列和 1 到 5 行">
+  <div class="intermediate-sheet-title"><span>工作表 01</span><strong>编码日期表</strong><small>用于文本替换、拼接和日期周期计算</small></div>
+  <table class="intermediate-sheet date-sheet">
+    <thead>
+      <tr class="sheet-column-letters"><th class="sheet-corner"></th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+      <tr class="sheet-field-row"><th class="sheet-row-number">1</th><th>商品编码</th><th>上架日期</th><th>平台</th><th>店铺</th></tr>
+    </thead>
+    <tbody>
+      <tr><th>2</th><td>BOW-KB-001</td><td>2026/7/1</td><td>淘宝</td><td>旗舰店</td></tr>
+      <tr><th>3</th><td>BOW-MS-002</td><td>2026/7/2</td><td>京东</td><td>数码店</td></tr>
+      <tr><th>4</th><td>BOW-CS-003</td><td>2026/7/5</td><td>拼多多</td><td>配件店</td></tr>
+      <tr><th>5</th><td>BOW-KB-004</td><td>2026/7/8</td><td>淘宝</td><td>键盘店</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="date-process-board" role="group" aria-label="上架日期转换为星期、周数、间隔天数和三个月后日期">
+  <div class="date-process-board__source"><span>来源</span><strong>B2 = 2026/7/1</strong><small>同一个真实日期值</small></div>
+  <i>→</i>
+  <div><code>=WEEKDAY(B2,2)</code><strong>3</strong><small>星期三</small></div>
+  <div><code>=WEEKNUM(B2,2)</code><strong>27</strong><small>第 27 周</small></div>
+  <div><code>=DATEDIF(B2,DATE(2026,7,15),"d")</code><strong>14</strong><small>相差 14 天</small></div>
+  <div><code>=EDATE(B2,3)</code><strong>2026/10/1</strong><small>三个月后</small></div>
+</div>
+
+<div class="intermediate-case-grid">
+  <article class="intermediate-case is-date">
+    <header><code>REPLACE</code><span>按字符位置替换</span></header>
+    <p>把商品编码开头的 `BOW` 统一替换成 `SKU`。</p>
+    <div class="intermediate-case__formula"><code>=REPLACE(A2,1,3,"SKU")</code></div>
+    <dl><div><dt>结果</dt><dd>SKU-KB-001</dd></div><div><dt>关键点</dt><dd>从第 1 个字符开始，替换 3 个字符。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-date">
+    <header><code>CONCAT</code><span>直接拼接文本</span></header>
+    <p>把平台、店铺和商品编码拼成统一标记。</p>
+    <div class="intermediate-case__formula"><code>=CONCAT(C2,"-",D2,"-",A2)</code></div>
+    <dl><div><dt>结果</dt><dd>淘宝-旗舰店-BOW-KB-001</dd></div><div><dt>关键点</dt><dd>CONCAT 不会自动增加分隔符，需要在公式中自己写。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-date">
+    <header><code>WEEKDAY</code><span>返回星期序号</span></header>
+    <p>判断 B2 是一周中的第几天。</p>
+    <div class="intermediate-case__formula"><code>=WEEKDAY(B2,2)</code></div>
+    <dl><div><dt>结果</dt><dd>3</dd></div><div><dt>关键点</dt><dd>第二个参数写 2 时，星期一为 1，星期日为 7。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-date">
+    <header><code>WEEKNUM</code><span>返回年度周数</span></header>
+    <p>把上架日期转换成周报使用的周数。</p>
+    <div class="intermediate-case__formula"><code>=WEEKNUM(B2,2)</code></div>
+    <dl><div><dt>结果</dt><dd>27</dd></div><div><dt>关键点</dt><dd>参数 2 表示每周从星期一开始。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-date">
+    <header><code>DATEDIF</code><span>计算日期间隔</span></header>
+    <p>计算上架日期到 2026/7/15 相差多少天。</p>
+    <div class="intermediate-case__formula"><code>=DATEDIF(B2,DATE(2026,7,15),"d")</code></div>
+    <dl><div><dt>结果</dt><dd>14</dd></div><div><dt>关键点</dt><dd>`"d"` 返回完整天数，也可以使用 `"m"` 或 `"y"`。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-date">
+    <header><code>EDATE</code><span>按月份移动日期</span></header>
+    <p>计算上架日期三个月后的日期。</p>
+    <div class="intermediate-case__formula"><code>=EDATE(B2,3)</code></div>
+    <dl><div><dt>结果</dt><dd>2026/10/1</dd></div><div><dt>关键点</dt><dd>它按自然月份移动，比直接加 90 天更适合月度周期。</dd></div></dl>
+  </article>
+</div>
+
+## 二、动态数组：一个公式返回多行多列
+
+动态数组函数的关键变化是：公式通常只写在一个单元格里，结果会自动向下或向右扩展。下面建立 `运营明细`：
+
+<div class="intermediate-sheet-wrap" role="group" aria-label="运营明细工作表，包含 A 到 D 列和 1 到 7 行">
+  <div class="intermediate-sheet-title"><span>工作表 02</span><strong>运营明细</strong><small>用于筛选、去重、排序、编号和行列转换</small></div>
+  <table class="intermediate-sheet operation-sheet">
+    <thead>
+      <tr class="sheet-column-letters"><th class="sheet-corner"></th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+      <tr class="sheet-field-row"><th class="sheet-row-number">1</th><th>SKU</th><th>平台</th><th>状态</th><th>销量</th></tr>
+    </thead>
+    <tbody>
+      <tr><th>2</th><td>KB001</td><td>淘宝</td><td>正常</td><td>12</td></tr>
+      <tr><th>3</th><td>MS002</td><td>京东</td><td>缺货</td><td>5</td></tr>
+      <tr><th>4</th><td>KB001</td><td>拼多多</td><td>正常</td><td>8</td></tr>
+      <tr class="is-alert"><th>5</th><td>CS003</td><td>淘宝</td><td>异常</td><td>15</td></tr>
+      <tr><th>6</th><td>KB004</td><td>京东</td><td>正常</td><td>6</td></tr>
+      <tr class="is-alert"><th>7</th><td>MS002</td><td>淘宝</td><td>异常</td><td>9</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="dynamic-array-board" role="group" aria-label="FILTER 和 SORTBY 生成动态异常清单">
+  <section>
+    <span>源数据 A2:D7</span>
+    <strong>6 行运营明细</strong>
+    <p>第 5、7 行状态为“异常”。</p>
+  </section>
+  <i>→</i>
+  <section class="is-formula">
+    <span>筛选并排序</span>
+    <code>=SORTBY(FILTER(A2:D7,C2:C7="异常"),FILTER(D2:D7,C2:C7="异常"),-1)</code>
+    <p>先筛出异常行，再按销量从大到小排列。</p>
+  </section>
+  <i>→</i>
+  <section class="is-result">
+    <span>动态结果</span>
+    <strong>CS003 · 15</strong>
+    <strong>MS002 · 9</strong>
+    <p>源数据变化后，结果区域会重新扩展。</p>
+  </section>
+</div>
+
+<div class="intermediate-case-grid">
+  <article class="intermediate-case is-array">
+    <header><code>FILTER</code><span>按条件返回记录</span></header>
+    <p>自动生成所有状态为异常的完整记录。</p>
+    <div class="intermediate-case__formula"><code>=FILTER(A2:D7,C2:C7="异常","暂无异常")</code></div>
+    <dl><div><dt>结果</dt><dd>返回第 5、7 行</dd></div><div><dt>关键点</dt><dd>返回的是多行多列，不只是记录数量。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-array">
+    <header><code>UNIQUE</code><span>自动去重</span></header>
+    <p>从 SKU 列生成不重复清单。</p>
+    <div class="intermediate-case__formula"><code>=UNIQUE(A2:A7)</code></div>
+    <dl><div><dt>结果</dt><dd>KB001、MS002、CS003、KB004</dd></div><div><dt>关键点</dt><dd>源数据增加新 SKU 后，去重结果自动扩展。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-array">
+    <header><code>SORT</code><span>按结果中的列排序</span></header>
+    <p>按第 4 列销量从大到小排列整张表。</p>
+    <div class="intermediate-case__formula"><code>=SORT(A2:D7,4,-1)</code></div>
+    <dl><div><dt>结果</dt><dd>15、12、9、8、6、5</dd></div><div><dt>关键点</dt><dd>4 表示按结果区域中的第 4 列排序。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-array">
+    <header><code>SORTBY</code><span>按指定区域排序</span></header>
+    <p>使用 D 列销量作为排序依据，移动整张记录。</p>
+    <div class="intermediate-case__formula"><code>=SORTBY(A2:D7,D2:D7,-1)</code></div>
+    <dl><div><dt>结果</dt><dd>销量从 15 排到 5</dd></div><div><dt>关键点</dt><dd>排序依据单独写，比记“第几列”更直观。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-array">
+    <header><code>SEQUENCE</code><span>生成连续序号</span></header>
+    <p>为 6 条记录生成从 1 开始的连续编号。</p>
+    <div class="intermediate-case__formula"><code>=SEQUENCE(6,1,1,1)</code></div>
+    <dl><div><dt>结果</dt><dd>1、2、3、4、5、6</dd></div><div><dt>关键点</dt><dd>四个参数依次是行数、列数、起始值和步长。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-array">
+    <header><code>TRANSPOSE</code><span>行列转换</span></header>
+    <p>把 A2:D3 的两行四列转换成四行两列。</p>
+    <div class="intermediate-case__formula"><code>=TRANSPOSE(A2:D3)</code></div>
+    <dl><div><dt>结果</dt><dd>4 行 × 2 列</dd></div><div><dt>关键点</dt><dd>新结果保持公式关联，不需要复制后再转置粘贴。</dd></div></dl>
+  </article>
+</div>
+
+## 三、批量计算：把同一规则应用到整张矩阵
+
+这一组函数解决的是“不要再向下复制几百行公式”。下面建立 `七天销量`，C～I 列分别代表星期一到星期日：
+
+<div class="intermediate-sheet-wrap is-wide" role="group" aria-label="七天销量工作表，包含 A 到 I 列和 1 到 5 行">
+  <div class="intermediate-sheet-title"><span>工作表 03</span><strong>七天销量</strong><small>列较多，移动端可横向查看</small></div>
+  <table class="intermediate-sheet weekly-sheet">
+    <thead>
+      <tr class="sheet-column-letters"><th class="sheet-corner"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th></tr>
+      <tr class="sheet-field-row"><th class="sheet-row-number">1</th><th>SKU</th><th>库存</th><th>周一</th><th>周二</th><th>周三</th><th>周四</th><th>周五</th><th>周六</th><th>周日</th></tr>
+    </thead>
+    <tbody>
+      <tr><th>2</th><td>KB001</td><td>30</td><td>2</td><td>3</td><td>4</td><td>2</td><td>5</td><td>3</td><td>1</td></tr>
+      <tr class="is-warning"><th>3</th><td>MS002</td><td>8</td><td>0</td><td>1</td><td>0</td><td>2</td><td>1</td><td>0</td><td>1</td></tr>
+      <tr><th>4</th><td>CS003</td><td>15</td><td>3</td><td>2</td><td>4</td><td>3</td><td>2</td><td>4</td><td>2</td></tr>
+      <tr class="is-warning"><th>5</th><td>KB004</td><td>5</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="batch-direction-board" role="group" aria-label="BYROW BYCOL MAP REDUCE 的批量处理方向">
+  <article>
+    <span>按行</span><strong>BYROW</strong><p>每个 SKU 的七天销量分别求和。</p><code>20 · 5 · 20 · 0</code>
+  </article>
+  <article>
+    <span>按列</span><strong>BYCOL</strong><p>每天的全部 SKU 销量分别求和。</p><code>5 · 6 · 8 · 7 · 8 · 7 · 4</code>
+  </article>
+  <article>
+    <span>逐项</span><strong>MAP</strong><p>把库存数字逐个转换成状态。</p><code>正常 · 预警 · 正常 · 预警</code>
+  </article>
+  <article>
+    <span>累计</span><strong>REDUCE</strong><p>从初始值开始，把一行销量依次累加。</p><code>0 → 2 → 5 → 9 → 11 → 16 → 19 → 20</code>
+  </article>
+</div>
+
+<div class="intermediate-case-grid">
+  <article class="intermediate-case is-batch">
+    <header><code>LET</code><span>命名中间结果</span></header>
+    <p>先计算七天销量和日均销量，再返回保留一位小数的结果。</p>
+    <div class="intermediate-case__formula"><code>=LET(七天销量,SUM(C2:I2),日均,七天销量/7,ROUND(日均,1))</code></div>
+    <dl><div><dt>结果</dt><dd>2.9</dd></div><div><dt>关键点</dt><dd>给中间结果命名，避免在长公式里重复计算。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-batch">
+    <header><code>MAKEARRAY</code><span>按行列规则生成数组</span></header>
+    <p>根据行号和列号生成一个 3 × 3 乘法表。</p>
+    <div class="intermediate-case__formula"><code>=MAKEARRAY(3,3,LAMBDA(r,c,r*c))</code></div>
+    <dl><div><dt>结果</dt><dd>1 2 3 / 2 4 6 / 3 6 9</dd></div><div><dt>关键点</dt><dd>`r` 和 `c` 分别代表当前结果单元格的行号与列号。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-batch">
+    <header><code>BYROW</code><span>逐行计算</span></header>
+    <p>分别计算每个 SKU 的七天总销量。</p>
+    <div class="intermediate-case__formula"><code>=BYROW(C2:I5,LAMBDA(row,SUM(row)))</code></div>
+    <dl><div><dt>结果</dt><dd>20、5、20、0</dd></div><div><dt>关键点</dt><dd>每一行执行一次 SUM，结果自动向下扩展。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-batch">
+    <header><code>BYCOL</code><span>逐列计算</span></header>
+    <p>分别计算星期一到星期日的总销量。</p>
+    <div class="intermediate-case__formula"><code>=BYCOL(C2:I5,LAMBDA(col,SUM(col)))</code></div>
+    <dl><div><dt>结果</dt><dd>5、6、8、7、8、7、4</dd></div><div><dt>关键点</dt><dd>同一计算规则沿列方向执行，结果向右扩展。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-batch">
+    <header><code>MAP</code><span>逐项批量处理</span></header>
+    <p>把库存低于 10 的商品批量标记为“预警”。</p>
+    <div class="intermediate-case__formula"><code>=MAP(B2:B5,LAMBDA(x,IF(x&lt;10,"预警","正常")))</code></div>
+    <dl><div><dt>结果</dt><dd>正常、预警、正常、预警</dd></div><div><dt>关键点</dt><dd>数组中的每个库存值都会单独进入同一套 IF 规则。</dd></div></dl>
+  </article>
+
+  <article class="intermediate-case is-batch">
+    <header><code>REDUCE</code><span>逐项累计</span></header>
+    <p>从 0 开始，依次累加 KB001 的七天销量。</p>
+    <div class="intermediate-case__formula"><code>=REDUCE(0,C2:I2,LAMBDA(total,x,total+x))</code></div>
+    <dl><div><dt>结果</dt><dd>20</dd></div><div><dt>关键点</dt><dd>`total` 保存上一步结果，`x` 表示当前处理的数字。</dd></div></dl>
+  </article>
+</div>
+
+## 四个综合练习
+
+单个函数掌握后，再把不同函数家族组合起来。下面四个练习都能从本文三张示例表直接继续完成。
+
+<div class="intermediate-practice-grid">
+  <article>
+    <span>练习 01 · 周报字段</span>
+    <strong>生成“第 27 周-淘宝-BOW-KB-001”</strong>
+    <code>=CONCAT("第",WEEKNUM(B2,2),"周-",C2,"-",A2)</code>
+    <p>WEEKNUM 负责周数，CONCAT 负责组合成可用于报表的字段。</p>
+  </article>
+  <article>
+    <span>练习 02 · 异常清单</span>
+    <strong>筛出异常记录，并按销量从高到低排列</strong>
+    <code>=LET(异常,FILTER(A2:D7,C2:C7="异常"),SORTBY(异常,INDEX(异常,,4),-1))</code>
+    <p>FILTER 生成结果，LET 命名结果，SORTBY 再按第 4 列排序。</p>
+  </article>
+  <article>
+    <span>练习 03 · SKU 销量状态</span>
+    <strong>批量判断每个 SKU 的七天销量是否为 0</strong>
+    <code>=BYROW(C2:I5,LAMBDA(row,IF(SUM(row)=0,"无销量","有销量")))</code>
+    <p>BYROW 逐行处理，SUM 汇总，IF 把数字转换成状态。</p>
+  </article>
+  <article>
+    <span>练习 04 · 库存预警清单</span>
+    <strong>只返回库存低于 10 的 SKU 和库存</strong>
+    <code>=FILTER(A2:B5,B2:B5&lt;10,"暂无预警")</code>
+    <p>这里不需要先用 MAP 生成状态，FILTER 可以直接使用库存条件。</p>
+  </article>
+</div>
+
+## 最后怎么判断自己是否学会
+
+<div class="intermediate-checklist">
+  <div><b>01</b><strong>看到“按周、按月或间隔天数”</strong><span>能想到 WEEKDAY、WEEKNUM、DATEDIF 和 EDATE。</span></div>
+  <div><b>02</b><strong>看到“自动生成一张新清单”</strong><span>能想到 FILTER、UNIQUE、SORT、SORTBY 和 SEQUENCE。</span></div>
+  <div><b>03</b><strong>看到“同一规则要计算很多行”</strong><span>能区分 BYROW、BYCOL 和 MAP 的处理方向。</span></div>
+  <div><b>04</b><strong>看到“长公式重复计算”</strong><span>能用 LET 命名区域或中间结果。</span></div>
+  <div><b>05</b><strong>看到“结果要逐步累计”</strong><span>能想到 REDUCE，而不是继续嵌套很多加法。</span></div>
+  <div><b>06</b><strong>看到“需要规则生成整片矩阵”</strong><span>知道 MAKEARRAY 使用行号和列号生成每个单元格。</span></div>
+</div>
+
+<HighlightBox eyebrow="完成标准" title="中级函数的核心是减少手工整理和公式复制">
+  不需要脱离场景默写 18 个公式。真正的掌握标准是：知道结果应该向哪个方向扩展、规则应该按行还是按列执行，以及多个函数组合时每一层分别负责什么。
+</HighlightBox>
+
+## 继续阅读
+
+- [Excel 常用函数：从基础到中级的完整清单](/articles/excel-functions-from-basic-to-intermediate/)
+- [Excel 基础函数案例详解](/articles/excel-basic-functions-case-guide/)
+- [Excel 查找函数怎么选](/articles/excel-lookup-functions-visual-guide/)
+- [Excel 通配符使用指南](/articles/excel-wildcards-functions-guide/)
+
+<style>{`
+  .intermediate-hero,
+  .intermediate-sheet-wrap,
+  .date-process-board,
+  .dynamic-array-board,
+  .batch-direction-board,
+  .intermediate-practice-grid,
+  .intermediate-checklist {
+    --im-blue: #146ce8;
+    --im-cyan: #05a6cf;
+    --im-green: #169b72;
+    --im-violet: #6859db;
+    --im-orange: #d8752f;
+    --im-navy: #091d3d;
+    --im-text: #203148;
+    --im-muted: #66788d;
+    margin: 1.6rem 0 2.2rem;
+    color: var(--im-text);
+  }
+
+  .intermediate-hero { position: relative; overflow: hidden; padding: clamp(1.1rem,3vw,1.8rem); border: 1px solid #c2d7f7; border-radius: 28px; background: radial-gradient(circle at 92% 8%,rgba(104,89,219,.14),transparent 28%),radial-gradient(circle at 8% 92%,rgba(5,166,207,.1),transparent 25%),linear-gradient(145deg,#fff,#f5f8ff 58%,#f2f1ff); box-shadow: 0 22px 62px rgba(57,83,151,.12); }
+  .intermediate-hero__intro { max-width: 790px; margin: 0 auto 1.2rem; text-align: center; }
+  .intermediate-hero__intro > span { color: var(--im-violet); font-size: .75rem; font-weight: 900; letter-spacing: .15em; }
+  .intermediate-hero__intro strong { display: block; margin: .45rem 0 .55rem; color: var(--im-navy); font-size: clamp(1.35rem,3vw,2rem); line-height: 1.25; }
+  .intermediate-hero__intro p { margin: 0; color: var(--im-muted); font-size: .94rem; line-height: 1.75; }
+  .intermediate-hero__metrics { display: grid; grid-template-columns: repeat(4,1fr); overflow: hidden; border: 1px solid #d0dcf4; border-radius: 16px; background: rgba(255,255,255,.86); }
+  .intermediate-hero__metrics div { padding: .85rem .6rem; text-align: center; }
+  .intermediate-hero__metrics div + div { border-left: 1px solid #dfe6f4; }
+  .intermediate-hero__metrics b { display: block; color: var(--im-violet); font-size: 1.28rem; }
+  .intermediate-hero__metrics span { color: var(--im-muted); font-size: .8rem; font-weight: 800; }
+  .intermediate-route { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: .65rem; align-items: stretch; margin-top: 1rem; }
+  .intermediate-route > div { padding: .85rem; border: 1px solid #d8e1f2; border-radius: 13px; background: rgba(255,255,255,.9); text-align: center; }
+  .intermediate-route span { color: var(--im-violet); font-size: .74rem; font-weight: 900; }
+  .intermediate-route strong { display: block; margin: .28rem 0; color: var(--im-navy); font-size: .94rem; }
+  .intermediate-route small { color: var(--im-muted); font-size: .78rem; line-height: 1.45; }
+  .intermediate-route i { display: grid; place-items: center; color: var(--im-violet); font-style: normal; font-weight: 900; }
+
+  .intermediate-sheet-wrap { overflow-x: auto; padding: 1rem; border: 1px solid #cbdcf0; border-radius: 19px; background: linear-gradient(145deg,#f8fbff,#fff); }
+  .intermediate-sheet-title { display: flex; gap: .55rem; align-items: baseline; margin-bottom: .75rem; }
+  .intermediate-sheet-title span { color: var(--im-blue); font-size: .76rem; font-weight: 900; }
+  .intermediate-sheet-title strong { color: var(--im-navy); font-size: 1rem; }
+  .intermediate-sheet-title small { margin-left: auto; color: var(--im-muted); font-size: .76rem; }
+  .intermediate-sheet { width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; font-size: .88rem; }
+  .intermediate-sheet th,
+  .intermediate-sheet td { min-width: 118px; padding: .6rem .68rem; border-right: 1px solid #cfdae8; border-bottom: 1px solid #cfdae8; color: #26394f; background: #fff; text-align: left; white-space: nowrap; }
+  .intermediate-sheet tr > *:first-child { min-width: 42px; width: 42px; border-left: 1px solid #cfdae8; color: #52677c; background: #f0f3f6; text-align: center; }
+  .intermediate-sheet thead tr:first-child > * { border-top: 1px solid #cfdae8; }
+  .intermediate-sheet .sheet-column-letters th { min-width: 118px; padding: .35rem; color: #43586e; background: #e9edf2; font-size: .78rem; font-weight: 850; text-align: center; }
+  .intermediate-sheet .sheet-column-letters .sheet-corner { min-width: 42px; background: #dde3e9; }
+  .intermediate-sheet .sheet-field-row th { color: #fff; background: #1d6fd5; font-size: .84rem; font-weight: 900; text-align: center; }
+  .intermediate-sheet .sheet-field-row .sheet-row-number { color: #43586e; background: #e9edf2; }
+  .intermediate-sheet tbody th { font-size: .8rem; font-weight: 850; }
+  .intermediate-sheet .is-alert td { color: #a44f17; background: #fff2e8; font-weight: 850; }
+  .intermediate-sheet .is-warning td { color: #9a6510; background: #fff8e9; font-weight: 850; }
+  .weekly-sheet th,
+  .weekly-sheet td { min-width: 76px; text-align: center; }
+  .weekly-sheet th:nth-child(2),
+  .weekly-sheet td:nth-child(2) { min-width: 94px; }
+
+  .date-process-board { display: grid; grid-template-columns: minmax(150px,1fr) auto repeat(4,minmax(130px,.8fr)); gap: .65rem; align-items: stretch; padding: 1rem; border: 1px solid #cddcf0; border-radius: 19px; background: linear-gradient(145deg,#f8fbff,#fff); }
+  .date-process-board > div { display: grid; align-content: center; min-width: 0; padding: .75rem; border: 1px solid #d7e2ef; border-radius: 11px; background: #fff; text-align: center; }
+  .date-process-board span { color: var(--im-blue); font-size: .76rem; font-weight: 900; }
+  .date-process-board code { overflow-x: auto; color: #165fa9; font-size: .8rem; white-space: nowrap; }
+  .date-process-board strong { margin-top: .3rem; color: var(--im-navy); font-size: .94rem; }
+  .date-process-board small { margin-top: .2rem; color: var(--im-muted); font-size: .76rem; }
+  .date-process-board > i { display: grid; place-items: center; color: var(--im-blue); font-style: normal; font-weight: 900; }
+
+  .dynamic-array-board { display: grid; grid-template-columns: minmax(0,.75fr) auto minmax(0,1.45fr) auto minmax(0,.8fr); gap: .65rem; align-items: stretch; padding: 1rem; border: 1px solid #cec9f0; border-radius: 19px; background: linear-gradient(145deg,#faf9ff,#fff); }
+  .dynamic-array-board section { min-width: 0; padding: .85rem; border: 1px solid #dedaf5; border-radius: 12px; background: #fff; }
+  .dynamic-array-board span { color: var(--im-violet); font-size: .76rem; font-weight: 900; }
+  .dynamic-array-board strong { display: block; margin: .3rem 0; color: var(--im-navy); font-size: .94rem; }
+  .dynamic-array-board code { display: block; overflow-x: auto; margin: .35rem 0; color: #594dc2; font-size: .8rem; white-space: nowrap; }
+  .dynamic-array-board p { margin: 0; color: var(--im-muted); font-size: .8rem; line-height: 1.55; }
+  .dynamic-array-board .is-result { border-color: #bfe1d2; background: #eff9f4; }
+  .dynamic-array-board .is-result span,
+  .dynamic-array-board .is-result strong { color: var(--im-green); }
+  .dynamic-array-board > i { display: grid; place-items: center; color: var(--im-violet); font-style: normal; font-weight: 900; }
+
+  .batch-direction-board { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .7rem; }
+  .batch-direction-board article { min-width: 0; padding: .9rem; border: 1px solid #d3ddf0; border-radius: 15px; background: linear-gradient(145deg,#fff,#f7f9ff); }
+  .batch-direction-board span { color: var(--im-violet); font-size: .74rem; font-weight: 900; }
+  .batch-direction-board strong { display: block; margin: .25rem 0; color: var(--im-navy); font-size: 1rem; }
+  .batch-direction-board p { min-height: 3em; margin: 0 0 .55rem; color: var(--im-muted); font-size: .8rem; line-height: 1.55; }
+  .batch-direction-board code { display: block; overflow-x: auto; padding: .55rem; border: 1px solid #e0e5f2; border-radius: 8px; color: #594dc2; background: #fff; font-size: .76rem; white-space: nowrap; }
+
+  .intermediate-case-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .85rem; margin: 1rem 0 2.2rem; }
+  .intermediate-case { min-width: 0; padding: 1rem; border: 1px solid #d4e2f2; border-radius: 17px; background: linear-gradient(145deg,#fff,#f8fbff); box-shadow: 0 10px 26px rgba(42,91,150,.06); }
+  .intermediate-case.is-date { border-color: #c9e1ec; background: linear-gradient(145deg,#fff,#f5fbfd); }
+  .intermediate-case.is-array { border-color: #d4cff2; background: linear-gradient(145deg,#fff,#f8f7ff); }
+  .intermediate-case.is-batch { border-color: #cbded8; background: linear-gradient(145deg,#fff,#f5fbf8); }
+  .intermediate-case header { display: flex; justify-content: space-between; gap: .75rem; align-items: center; }
+  .intermediate-case header code { padding: .38rem .58rem; border: 1px solid #c8d8f0; border-radius: 9px; color: #0d65ce; background: #eef6ff; font-size: .92rem; font-weight: 900; }
+  .intermediate-case.is-array header code { color: #584bc2; background: #f2f0ff; }
+  .intermediate-case.is-batch header code { color: #10795b; background: #ebfaf5; }
+  .intermediate-case header span { color: var(--im-navy); font-size: .92rem; font-weight: 850; }
+  .intermediate-case > p { min-height: 2.9em; margin: .72rem 0; color: var(--im-muted); font-size: .88rem; line-height: 1.65; }
+  .intermediate-case__formula { overflow-x: auto; padding: .75rem; border: 1px solid #d8e4f2; border-radius: 11px; background: #fff; }
+  .intermediate-case__formula code { color: #155fa9; font-size: .88rem; white-space: nowrap; }
+  .intermediate-case.is-array .intermediate-case__formula code { color: #584bc2; }
+  .intermediate-case.is-batch .intermediate-case__formula code { color: #10795b; }
+  .intermediate-case dl { display: grid; gap: .45rem; margin: .65rem 0 0; }
+  .intermediate-case dl > div { display: grid; grid-template-columns: 54px minmax(0,1fr); gap: .55rem; }
+  .intermediate-case dt { color: var(--im-blue); font-size: .78rem; font-weight: 900; }
+  .intermediate-case dd { margin: 0; color: #5d6f84; font-size: .84rem; line-height: 1.58; }
+
+  .intermediate-practice-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .8rem; }
+  .intermediate-practice-grid article { min-width: 0; padding: 1rem; border: 1px solid #d1ddf0; border-radius: 17px; background: linear-gradient(145deg,#fff,#f7f9ff); }
+  .intermediate-practice-grid span { color: var(--im-violet); font-size: .76rem; font-weight: 900; }
+  .intermediate-practice-grid strong { display: block; margin: .35rem 0 .65rem; color: var(--im-navy); font-size: .96rem; }
+  .intermediate-practice-grid code { display: block; overflow-x: auto; padding: .72rem; border: 1px solid #dfe4f2; border-radius: 10px; color: #574bc0; background: #fff; font-size: .82rem; white-space: nowrap; }
+  .intermediate-practice-grid p { margin: .62rem 0 0; color: var(--im-muted); font-size: .84rem; line-height: 1.6; }
+
+  .intermediate-checklist { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
+  .intermediate-checklist > div { display: grid; grid-template-columns: 38px minmax(0,1fr); gap: .12rem .7rem; padding: .9rem; border: 1px solid #d3e0ef; border-radius: 15px; background: linear-gradient(145deg,#fff,#f8fbff); }
+  .intermediate-checklist b { grid-row: 1 / 3; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; color: #fff; background: linear-gradient(145deg,var(--im-violet),var(--im-blue)); font-size: .72rem; }
+  .intermediate-checklist strong { color: var(--im-navy); font-size: .9rem; }
+  .intermediate-checklist span { color: var(--im-muted); font-size: .82rem; line-height: 1.55; }
+
+  html[data-theme='dark'] .intermediate-hero,
+  html[data-theme='dark'] .intermediate-sheet-wrap,
+  html[data-theme='dark'] .date-process-board,
+  html[data-theme='dark'] .dynamic-array-board,
+  html[data-theme='dark'] .batch-direction-board article,
+  html[data-theme='dark'] .intermediate-case,
+  html[data-theme='dark'] .intermediate-practice-grid article,
+  html[data-theme='dark'] .intermediate-checklist > div {
+    --im-navy: #edf6ff;
+    --im-text: #dbe8f5;
+    --im-muted: #9cadbf;
+    border-color: #29445f;
+    background: linear-gradient(145deg,#0d1a2a,#10243a);
+    box-shadow: none;
+  }
+  html[data-theme='dark'] .intermediate-hero__metrics,
+  html[data-theme='dark'] .intermediate-route > div,
+  html[data-theme='dark'] .date-process-board > div,
+  html[data-theme='dark'] .dynamic-array-board section,
+  html[data-theme='dark'] .batch-direction-board code,
+  html[data-theme='dark'] .intermediate-case__formula,
+  html[data-theme='dark'] .intermediate-practice-grid code { border-color: #2b4864; background: #0c1a2a; }
+  html[data-theme='dark'] .intermediate-sheet th,
+  html[data-theme='dark'] .intermediate-sheet td { border-color: #2c465f; color: #dce9f6; background: #0e1c2c; }
+  html[data-theme='dark'] .intermediate-sheet tr > *:first-child,
+  html[data-theme='dark'] .intermediate-sheet .sheet-column-letters th,
+  html[data-theme='dark'] .intermediate-sheet .sheet-field-row .sheet-row-number { color: #aab9c8; background: #17293b; }
+  html[data-theme='dark'] .intermediate-sheet .sheet-field-row th { background: #185da8; }
+  html[data-theme='dark'] .intermediate-sheet .is-alert td { color: #ffc18f; background: #49301e; }
+  html[data-theme='dark'] .intermediate-sheet .is-warning td { color: #ffd787; background: #473b20; }
+  html[data-theme='dark'] .dynamic-array-board .is-result { background: #153c32; }
+
+  @media (max-width: 960px) {
+    .date-process-board { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .date-process-board > i { display: none; }
+    .dynamic-array-board { grid-template-columns: 1fr; }
+    .dynamic-array-board > i { transform: rotate(90deg); }
+    .batch-direction-board { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  }
+  @media (max-width: 680px) {
+    .intermediate-hero { border-radius: 21px; }
+    .intermediate-hero__metrics { grid-template-columns: repeat(2,1fr); }
+    .intermediate-hero__metrics div:nth-child(3) { border-top: 1px solid #dfe6f4; border-left: 0; }
+    .intermediate-hero__metrics div:nth-child(4) { border-top: 1px solid #dfe6f4; }
+    .intermediate-route { grid-template-columns: 1fr; }
+    .intermediate-route i { transform: rotate(90deg); }
+    .intermediate-sheet-title { align-items: flex-start; flex-wrap: wrap; }
+    .intermediate-sheet-title small { width: 100%; margin-left: 0; }
+    .date-process-board,
+    .batch-direction-board,
+    .intermediate-case-grid,
+    .intermediate-practice-grid,
+    .intermediate-checklist { grid-template-columns: 1fr; }
+    .intermediate-case > p,
+    .batch-direction-board p { min-height: 0; }
+  }
+`}</style>

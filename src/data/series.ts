@@ -18,7 +18,7 @@ export const seriesMetaList = [
   {
     id: 'excel-functions',
     title: 'Excel 函数学习与实战',
-    description: '从函数知识地图、基础案例到通配符和查找匹配专题，用真实表格掌握常用 Excel 函数。',
+    description: '从函数知识地图、基础案例到查找匹配、通配符和中级函数案例，用真实表格掌握常用 Excel 函数。',
     order: 3,
   },
 ] as const satisfies readonly {
