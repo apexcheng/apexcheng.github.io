@@ -27,6 +27,11 @@ describe('site layout', () => {
     expect(layoutSource).toContain('data-site-search');
     expect(layoutSource).toContain('data-search-input');
     expect(layoutSource).toContain('data-search-results');
+    expect(layoutSource).toContain('data-search-filter');
+    expect(layoutSource).toContain('查看全部文章');
+    expect(layoutSource).toContain('matches.map(resultHtml)');
+    expect(layoutSource).toContain("panel.addEventListener('wheel'");
+    expect(globalCssSource).toContain('overscroll-behavior: contain');
   });
 
   it('keeps the hover path connected between the search button and panel', () => {

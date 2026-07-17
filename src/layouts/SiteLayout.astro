@@ -76,7 +76,7 @@ const searchItems = [
           <a class:list={[active === 'articles' && 'active']} href={withBase('/articles/')}>文章</a>
           <a class:list={[active === 'series' && 'active']} href={withBase('/series/')}>系列</a>
           <a class:list={[active === 'projects' && 'active']} href={withBase('/projects/')}>项目</a>
-          <div class="nav-search" data-site-search data-search-items={JSON.stringify(searchItems)}>
+          <div class="nav-search" data-site-search data-search-items={JSON.stringify(searchItems)} data-articles-url={withBase('/articles/')}>
             <button class="nav-search-trigger" type="button" aria-label="搜索文章和项目" aria-expanded="false" data-search-toggle>搜索</button>
             <div class="nav-search-panel">
               <input data-search-input type="search" placeholder="搜索文章 / 项目" autocomplete="off" aria-label="搜索文章和项目" />
@@ -192,8 +192,10 @@ const searchItems = [
         if (!search) return;
 
         var toggle = search.querySelector('[data-search-toggle]');
+        var panel = search.querySelector('.nav-search-panel');
         var input = search.querySelector('[data-search-input]');
         var results = search.querySelector('[data-search-results]');
+        var articlesUrl = search.getAttribute('data-articles-url') || '#';
         var closeTimer;
         var items = [];
 
@@ -233,28 +235,55 @@ const searchItems = [
           }, 200);
         }
 
-        function render(query) {
-          var normalizedQuery = query.trim().toLowerCase();
-          var matches = items
-            .filter(function (item) {
-              return !normalizedQuery || itemText(item).includes(normalizedQuery);
-            })
-            .slice(0, 6);
-
-          if (!matches.length) {
-            results.innerHTML = '<p class="nav-search-empty">没有找到匹配内容</p>';
-            return;
-          }
-
-          results.innerHTML = matches.map(function (item) {
-            return [
+        function resultHtml(item) {
+          return [
               '<a class="nav-search-result" href="' + escapeHtml(item.href) + '">',
               '<span>' + escapeHtml(item.type) + '</span>',
               '<b>' + escapeHtml(item.title) + '</b>',
               '<small>' + escapeHtml(item.description) + '</small>',
               '</a>',
             ].join('');
-          }).join('');
+        }
+
+        function render(query) {
+          var normalizedQuery = query.trim().toLowerCase();
+
+          if (!normalizedQuery) {
+            var filters = ['生活', '实践', '教程', '视觉实验室'];
+            var recentItems = items.filter(function (item) {
+              return item.type === '文章';
+            }).slice(0, 6);
+
+            results.innerHTML = [
+              '<section class="nav-search-section">',
+              '<div class="nav-search-section-head"><strong>快速筛选</strong></div>',
+              '<div class="nav-search-filters">',
+              filters.map(function (filter) {
+                return '<button type="button" data-search-filter="' + escapeHtml(filter) + '">' + escapeHtml(filter) + '</button>';
+              }).join(''),
+              '</div>',
+              '</section>',
+              '<section class="nav-search-section">',
+              '<div class="nav-search-section-head"><strong>最近更新</strong><span>' + recentItems.length + ' 篇</span></div>',
+              recentItems.map(resultHtml).join(''),
+              '</section>',
+              '<a class="nav-search-all-link" href="' + escapeHtml(articlesUrl) + '">查看全部文章 <span aria-hidden="true">→</span></a>',
+            ].join('');
+            results.scrollTop = 0;
+            return;
+          }
+
+          var matches = items.filter(function (item) {
+            return itemText(item).includes(normalizedQuery);
+          });
+
+          results.innerHTML = [
+            '<div class="nav-search-section-head nav-search-match-head"><strong>搜索结果</strong><span>' + matches.length + ' 条</span></div>',
+            matches.length
+              ? matches.map(resultHtml).join('')
+              : '<p class="nav-search-empty">没有找到匹配内容</p>',
+          ].join('');
+          results.scrollTop = 0;
         }
 
         render('');
@@ -281,6 +310,23 @@ const searchItems = [
         input.addEventListener('input', function () {
           render(input.value);
         });
+
+        results.addEventListener('click', function (event) {
+          var filter = event.target.closest('[data-search-filter]');
+          if (!filter) return;
+          input.value = filter.getAttribute('data-search-filter') || '';
+          render(input.value);
+          input.focus();
+        });
+
+        panel.addEventListener('wheel', function (event) {
+          if (event.ctrlKey) return;
+          event.preventDefault();
+          var distance = event.deltaY;
+          if (event.deltaMode === 1) distance *= 18;
+          if (event.deltaMode === 2) distance *= results.clientHeight;
+          results.scrollTop += distance;
+        }, { passive: false });
 
         document.addEventListener('keydown', function (event) {
           if (event.key === 'Escape') {
