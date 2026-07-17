@@ -221,6 +221,7 @@ p {
   height: 76px;
   padding: 0 6.4vw;
   position: relative;
+  z-index: 100;
 }
 
 .brand {
@@ -368,9 +369,9 @@ p {
   transform: translateY(-10px) scaleY(0.92);
   transform-origin: top right;
   transition:
-    opacity 0.2s ease,
-    transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
-    visibility 0s linear 0.24s;
+    opacity 0.3s ease,
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0s linear 0.3s;
   visibility: hidden;
   will-change: opacity, transform;
   z-index: 20;

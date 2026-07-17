@@ -37,7 +37,9 @@ describe('site layout', () => {
     expect(globalCssSource).toContain('scaleY(0.92)');
     expect(layoutSource).toContain("search.addEventListener('mouseenter'");
     expect(layoutSource).toContain("search.addEventListener('mouseleave', scheduleClose)");
-    expect(layoutSource).toContain('}, 400);');
+    expect(layoutSource).toContain('}, 200);');
+    expect(globalCssSource).toContain('transform 0.3s cubic-bezier');
+    expect(globalCssSource).toMatch(/\.site-header\s*\{[^}]*z-index:\s*100;/s);
   });
 
   it('keeps switchable themes with visual system as the default', () => {

@@ -230,7 +230,7 @@ const searchItems = [
               setOpen(false);
             }
             closeTimer = undefined;
-          }, 400);
+          }, 200);
         }
 
         function render(query) {
@@ -312,9 +312,15 @@ const searchItems = [
       }
 
       .terminal-panel > .copy-code-button {
-        right: 16px;
-        top: 10px;
-        z-index: 20;
+        background: transparent;
+        border-color: transparent;
+        border-radius: 6px;
+        color: #64748b;
+        height: 28px;
+        right: 10px;
+        top: 7px;
+        width: 28px;
+        z-index: 2;
       }
 
       .copy-code-button {
@@ -344,8 +350,19 @@ const searchItems = [
         color: #ffffff;
       }
 
+      .terminal-panel > .copy-code-button:hover {
+        background: rgba(148, 163, 184, 0.1);
+        border-color: rgba(148, 163, 184, 0.16);
+        color: #cbd5e1;
+      }
+
       .copy-code-button.is-copied {
         color: #ffffff;
+      }
+
+      .terminal-panel > .copy-code-button.is-copied {
+        background: rgba(34, 197, 94, 0.12);
+        color: #86efac;
       }
     </style>
     <script is:inline>
