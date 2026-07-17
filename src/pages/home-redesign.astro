@@ -1,0 +1,2841 @@
+---
+import { getCollection } from 'astro:content';
+import { seriesMetaList } from '../data/series';
+import { siteMeta } from '../data/site';
+import { withBase } from '../utils/paths';
+
+const posts = (await getCollection('posts'))
+  .filter((post) => !post.data.draft && !post.data.private)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const latestPosts = posts.filter((post) => post.data.category !== '视觉实验室').slice(0, 4);
+const visualPosts = posts.filter((post) => post.data.category === '视觉实验室').slice(0, 3);
+
+const seriesOrder = ['excel-functions', 'yingdao-agent-development', 'personal-blog'];
+const seriesDetails = {
+  'excel-functions': {
+    label: 'FORMULA / PRACTICE',
+    note: '从函数知识地图到真实表格，把抽象语法变成可以观察的数据路径。',
+    tags: ['Excel', '可视化', '练习工作簿'],
+  },
+  'yingdao-agent-development': {
+    label: 'AGENT / DELIVERY',
+    note: '让 Agent 参与页面探测、代码编写、同步验证与最终交付。',
+    tags: ['AI Agent', '影刀 RPA', '自动化'],
+  },
+  'personal-blog': {
+    label: 'SYSTEM / PUBLISH',
+    note: '拆解内容、代码与发布链路，理解一套个人知识系统如何持续运转。',
+    tags: ['Astro', 'MDX', 'GitHub Pages'],
+  },
+};
+
+const featuredSeries = seriesOrder
+  .map((seriesId) => seriesMetaList.find((series) => series.id === seriesId))
+  .filter((series) => series !== undefined)
+  .map((series) => ({
+    ...series,
+    postCount: posts.filter((post) => post.data.series === series.id).length,
+    detail: seriesDetails[series.id],
+  }));
+
+const topics = [
+  {
+    id: 'excel',
+    number: '01',
+    title: 'Excel',
+    eyebrow: 'FORMULA AS A PATH',
+    mark: 'ƒx',
+    description: '不只解释函数语法，也把查找、清洗和计算过程变成看得见的数据路径。',
+    href: withBase('/series/excel-functions/'),
+  },
+  {
+    id: 'visual',
+    number: '02',
+    title: 'Visual Lab',
+    eyebrow: 'EXPERIMENTAL DISPLAY',
+    mark: 'LAB',
+    description: '测试文章组件、图表、代码块与新的网页化表达方式。',
+    href: withBase('/articles/category/' + encodeURIComponent('视觉实验室') + '/'),
+  },
+  {
+    id: 'automation',
+    number: '03',
+    title: 'Automation',
+    eyebrow: 'REPEATABLE SYSTEM',
+    mark: 'RPA',
+    description: '把浏览器操作、数据处理和重复工作重组为稳定、可复用的流程。',
+    href: withBase('/articles/automation-agent-workflow/'),
+  },
+  {
+    id: 'agents',
+    number: '04',
+    title: 'AI Agents',
+    eyebrow: 'THINK / ACT / VERIFY',
+    mark: 'AI',
+    description: '关注 Agent 如何理解目标、形成判断、调用工具并完成验证交付。',
+    href: withBase('/series/yingdao-agent-development/'),
+  },
+  {
+    id: 'workflow',
+    number: '05',
+    title: 'Workflow',
+    eyebrow: 'TOOLS INTO OUTCOMES',
+    mark: 'FLOW',
+    description: '连接工具、数据、人工确认与最终结果，记录真实工作流的设计过程。',
+    href: withBase('/articles/ai-product-image-workflow-in-practice/'),
+  },
+];
+
+const formatDate = (date: Date) =>
+  new Intl.DateTimeFormat('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+---
+
+<!doctype html>
+<html lang="zh-CN" class="redesign-page">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="黄撑的技术笔记首页重设计原型：Excel、AI Agent、自动化、工作流与视觉实验。"
+    />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#070908" />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg?v=3')} />
+    <title>首页重设计原型 | {siteMeta.siteName}</title>
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
+  </head>
+  <body data-pagefind-ignore>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+    <div class="pointer-glow" data-pointer-glow aria-hidden="true"></div>
+    <div class="scroll-progress" aria-hidden="true"><i data-scroll-progress></i></div>
+
+    <header class="prototype-header">
+      <a class="prototype-brand" href="#top" aria-label="返回原型页顶部">
+        <span class="brand-symbol">C</span>
+        <span class="brand-copy">
+          <strong>黄撑的技术笔记</strong>
+          <small>DIGITAL CONTENT GALLERY</small>
+        </span>
+      </a>
+
+      <nav class="prototype-nav" aria-label="原型页导航">
+        <a href="#topics">Topics</a>
+        <a href="#series">Series</a>
+        <a href="#visual-lab">Visual Lab</a>
+        <a href="#latest">Latest</a>
+      </nav>
+
+      <a class="back-home" href={withBase('/')}>
+        <span>当前首页</span>
+        <span aria-hidden="true">↗</span>
+      </a>
+    </header>
+
+    <main>
+      <section class="hero" id="top" data-parallax-zone>
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <div class="hero-kicker" data-hero-reveal>
+              <span>HOME REDESIGN / PROTOTYPE 01</span>
+              <span>2026 · HUANG CHENG</span>
+            </div>
+
+            <h1 aria-label="把复杂技术，做成看得懂、用得上的体验。">
+              <span data-hero-reveal>把复杂技术，</span>
+              <span data-hero-reveal>做成看得懂、</span>
+              <span class="accent-line" data-hero-reveal>用得上的体验。</span>
+            </h1>
+
+            <p class="hero-lead" data-hero-reveal>
+              Excel、AI Agent、浏览器自动化与工作流实践，在这里被拆解、验证，再以更直观的方式重新陈列。
+            </p>
+
+            <div class="hero-actions" data-hero-reveal>
+              <a class="primary-action" href="#topics">
+                <span>进入内容展厅</span>
+                <span aria-hidden="true">↓</span>
+              </a>
+              <a class="secondary-action" href={withBase('/articles/')}>
+                <span>浏览全部文章</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+
+            <div class="hero-index" data-hero-reveal aria-label="内容范围">
+              <span><b>05</b> CONTENT FIELDS</span>
+              <span><b>{posts.length}</b> PUBLIC NOTES</span>
+              <span><b>{featuredSeries.length}</b> READING SERIES</span>
+            </div>
+          </div>
+
+          <div class="hero-specimen" data-hero-reveal aria-label="技术知识核心视觉">
+            <div class="specimen-label specimen-label-top">
+              <span>KNOWLEDGE CORE</span>
+              <span>LIVE / 01</span>
+            </div>
+
+            <div class="specimen-stage">
+              <div class="specimen-aura" data-depth="1" aria-hidden="true"></div>
+              <div class="orbit orbit-outer" data-depth="2" aria-hidden="true"></div>
+              <div class="orbit orbit-middle" data-depth="3" aria-hidden="true"></div>
+              <div class="orbit orbit-inner" data-depth="4" aria-hidden="true"></div>
+
+              <span class="orbit-node node-excel" aria-hidden="true">EXCEL</span>
+              <span class="orbit-node node-agent" aria-hidden="true">AGENT</span>
+              <span class="orbit-node node-playwright" aria-hidden="true">PLAYWRIGHT</span>
+              <span class="orbit-node node-flow" aria-hidden="true">FLOW</span>
+
+              <div class="material-core" data-depth="5" aria-hidden="true">
+                <svg class="core-mesh" viewBox="0 0 320 320" role="presentation">
+                  <defs>
+                    <linearGradient id="mesh-gradient" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#aafbf4" stop-opacity=".92"></stop>
+                      <stop offset=".52" stop-color="#5bd8d0" stop-opacity=".66"></stop>
+                      <stop offset="1" stop-color="#b58b69" stop-opacity=".72"></stop>
+                    </linearGradient>
+                  </defs>
+                  <g fill="none" stroke="url(#mesh-gradient)" stroke-width="1.25">
+                    <path d="M160 26 265 88 282 203 205 286 92 268 34 166 75 62Z"></path>
+                    <path d="M160 26 190 104 265 88 221 165 282 203 190 207 205 286 145 218 92 268 103 185 34 166 101 130 75 62 139 101Z"></path>
+                    <path d="m139 101 51 3 31 61-31 42-45 11-42-33-2-55Z"></path>
+                    <path d="M75 62 190 104 282 203 145 218 34 166Z"></path>
+                    <path d="M160 26 101 130 205 286"></path>
+                    <path d="m265 88-120 130"></path>
+                  </g>
+                  <g fill="#b8fff9">
+                    <circle cx="160" cy="26" r="3"></circle>
+                    <circle cx="265" cy="88" r="3"></circle>
+                    <circle cx="282" cy="203" r="3"></circle>
+                    <circle cx="205" cy="286" r="3"></circle>
+                    <circle cx="92" cy="268" r="3"></circle>
+                    <circle cx="34" cy="166" r="3"></circle>
+                    <circle cx="75" cy="62" r="3"></circle>
+                    <circle cx="190" cy="104" r="2.4"></circle>
+                    <circle cx="221" cy="165" r="2.4"></circle>
+                    <circle cx="190" cy="207" r="2.4"></circle>
+                    <circle cx="145" cy="218" r="2.4"></circle>
+                    <circle cx="103" cy="185" r="2.4"></circle>
+                    <circle cx="101" cy="130" r="2.4"></circle>
+                    <circle cx="139" cy="101" r="2.4"></circle>
+                  </g>
+                </svg>
+                <div class="core-reading">
+                  <span>INPUT</span>
+                  <strong>01</strong>
+                  <span>OUTPUT</span>
+                </div>
+              </div>
+
+              <div class="specimen-axis axis-x" aria-hidden="true"></div>
+              <div class="specimen-axis axis-y" aria-hidden="true"></div>
+            </div>
+
+            <div class="specimen-caption">
+              <span>目标</span>
+              <i></i>
+              <span>判断</span>
+              <i></i>
+              <span>执行</span>
+              <i></i>
+              <span>验证</span>
+            </div>
+          </div>
+        </div>
+
+        <a class="scroll-cue" href="#topics" aria-label="向下浏览内容主题" data-hero-reveal>
+          <span>SCROLL TO EXPLORE</span>
+          <i aria-hidden="true"></i>
+        </a>
+      </section>
+
+      <section class="signal-strip" aria-label="博客内容关键词">
+        <div>
+          <span>EXCEL FORMULAS</span>
+          <i></i>
+          <span>AI AGENTS</span>
+          <i></i>
+          <span>BROWSER AUTOMATION</span>
+          <i></i>
+          <span>WORKFLOW DESIGN</span>
+          <i></i>
+          <span>VISUAL EXPERIMENTS</span>
+        </div>
+      </section>
+
+      <section class="gallery-section topics-section" id="topics">
+        <div class="section-heading" data-reveal>
+          <div>
+            <p class="section-label">01 / CONTENT FIELDS</p>
+            <h2>从一个方向，<br />进入这座技术展厅。</h2>
+          </div>
+          <p>
+            首页不按发布日期堆满文章，而是先展示长期关注的五个内容方向。每个入口都代表一类正在持续积累的实践。
+          </p>
+        </div>
+
+        <div class="topic-grid">
+          {topics.map((topic) => (
+            <a class:list={['topic-card', 'topic-' + topic.id]} href={topic.href} data-reveal>
+              <div class="topic-topline">
+                <span>{topic.number}</span>
+                <span>{topic.eyebrow}</span>
+                <span aria-hidden="true">↗</span>
+              </div>
+              <div class="topic-mark" aria-hidden="true">
+                <span>{topic.mark}</span>
+                <i></i>
+              </div>
+              <div class="topic-copy">
+                <h3>{topic.title}</h3>
+                <p>{topic.description}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section class="gallery-section series-section" id="series" data-series-stage>
+        <div class="section-heading series-heading" data-reveal>
+          <div>
+            <p class="section-label">02 / FEATURED SERIES</p>
+            <h2>不是零散文章，<br />而是一条完整路线。</h2>
+          </div>
+          <p>
+            每个系列像一件被逐层拆开的机械结构：先建立整体认识，再进入案例、工具和真实交付。
+          </p>
+        </div>
+
+        <div class="series-layout">
+          <aside class="series-instrument" data-reveal aria-label="当前精选系列">
+            <div class="instrument-head">
+              <span>SELECTED ROUTE</span>
+              <span data-series-count>01 / {String(featuredSeries.length).padStart(2, '0')}</span>
+            </div>
+            <div class="instrument-dial" aria-hidden="true">
+              <div class="dial-ring dial-ring-one"></div>
+              <div class="dial-ring dial-ring-two"></div>
+              <div class="dial-hand"></div>
+              <strong data-series-number>01</strong>
+            </div>
+            <div class="instrument-copy">
+              <p>CURRENT CHAPTER</p>
+              <h3 data-series-title>{featuredSeries[0]?.title}</h3>
+              <span data-series-note>{featuredSeries[0]?.detail.note}</span>
+            </div>
+            <div class="instrument-progress" aria-hidden="true">
+              <i data-series-progress></i>
+            </div>
+          </aside>
+
+          <div class="series-chapters">
+            {featuredSeries.map((series, index) => (
+              <article
+                class:list={['series-chapter', index === 0 && 'is-active']}
+                data-series-chapter
+                data-series-index={index}
+                data-series-title={series.title}
+                data-series-note={series.detail.note}
+                data-reveal
+              >
+                <div class="chapter-meta">
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <span>{series.detail.label}</span>
+                  <span>{series.postCount} 篇文章</span>
+                </div>
+                <h3>{series.title}</h3>
+                <p>{series.detail.note}</p>
+                <div class="chapter-tags" aria-label="系列关键词">
+                  {series.detail.tags.map((tag) => <span>{tag}</span>)}
+                </div>
+                <div class="chapter-visual" aria-hidden="true">
+                  <span class="chapter-word">{series.id === 'excel-functions' ? 'FORMULA' : series.id === 'personal-blog' ? 'SYSTEM' : 'AGENT'}</span>
+                  <div class="chapter-lines">
+                    <i></i><i></i><i></i><i></i>
+                  </div>
+                </div>
+                <a href={withBase('/series/' + series.id + '/')}>
+                  <span>查看阅读路线</span>
+                  <span aria-hidden="true">↗</span>
+                </a>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="gallery-section lab-section" id="visual-lab">
+        <div class="section-heading" data-reveal>
+          <div>
+            <p class="section-label">03 / VISUAL LAB</p>
+            <h2>把内容表达，<br />当作一场持续实验。</h2>
+          </div>
+          <p>
+            公式、流程和代码不一定只能以长段文字出现。视觉实验室用组件、动效与图表寻找更直观的讲解方式。
+          </p>
+        </div>
+
+        <div class="lab-grid">
+          {visualPosts.map((post, index) => (
+            <a
+              class:list={['lab-card', 'lab-card-' + (index + 1)]}
+              href={withBase('/articles/' + post.slug + '/')}
+              data-reveal
+            >
+              <div class="lab-card-head">
+                <span>EXPERIMENT / {String(index + 1).padStart(2, '0')}</span>
+                <span aria-hidden="true">↗</span>
+              </div>
+
+              {index === 0 && (
+                <div class="lab-visual formula-visual" aria-hidden="true">
+                  <div class="formula-bar"><span>fx</span><b>=XLOOKUP(E2,A:A,C:C)</b></div>
+                  <div class="formula-grid">
+                    <span>A</span><span>B</span><span>C</span><span>D</span>
+                    <i></i><i></i><i></i><i></i>
+                    <i></i><i></i><i></i><i></i>
+                    <i></i><i></i><i></i><i></i>
+                  </div>
+                  <div class="formula-trace"><i></i><span>MATCH FOUND</span></div>
+                </div>
+              )}
+
+              {index === 1 && (
+                <div class="lab-visual agent-visual" aria-hidden="true">
+                  <div class="agent-node node-goal"><span>01</span><b>目标</b></div>
+                  <i class="agent-line line-one"></i>
+                  <div class="agent-node node-think"><span>02</span><b>判断</b></div>
+                  <i class="agent-line line-two"></i>
+                  <div class="agent-node node-act"><span>03</span><b>执行</b></div>
+                  <i class="agent-line line-three"></i>
+                  <div class="agent-node node-check"><span>04</span><b>验证</b></div>
+                </div>
+              )}
+
+              {index === 2 && (
+                <div class="lab-visual layout-visual" aria-hidden="true">
+                  <div class="layout-frame frame-back"></div>
+                  <div class="layout-frame frame-middle"></div>
+                  <div class="layout-frame frame-front">
+                    <span></span><span></span><span></span>
+                    <i></i><i></i>
+                  </div>
+                  <div class="layout-axis axis-one"></div>
+                  <div class="layout-axis axis-two"></div>
+                </div>
+              )}
+
+              <div class="lab-card-copy">
+                <p>{post.data.tags.slice(0, 2).join(' · ')}</p>
+                <h3>{post.data.title}</h3>
+                <span>{post.data.description}</span>
+              </div>
+            </a>
+          ))}
+        </div>
+
+        <a class="lab-index-link" href={withBase('/articles/category/' + encodeURIComponent('视觉实验室') + '/')} data-reveal>
+          <span>查看全部视觉实验</span>
+          <span aria-hidden="true">↗</span>
+        </a>
+      </section>
+
+      <section class="gallery-section latest-section" id="latest">
+        <div class="section-heading latest-heading" data-reveal>
+          <div>
+            <p class="section-label">04 / LATEST NOTES</p>
+            <h2>近期发布，<br />保持少量而清晰。</h2>
+          </div>
+          <a href={withBase('/articles/')}>进入文章库 <span aria-hidden="true">↗</span></a>
+        </div>
+
+        <div class="latest-list">
+          {latestPosts.map((post, index) => (
+            <a class="latest-item" href={withBase('/articles/' + post.slug + '/')} data-reveal>
+              <span class="latest-number">{String(index + 1).padStart(2, '0')}</span>
+              <div class="latest-copy">
+                <p>{post.data.category} · {post.data.tags[0]}</p>
+                <h3>{post.data.title}</h3>
+              </div>
+              <div class="latest-meta">
+                <span>{formatDate(post.data.date)}</span>
+                <span>{post.data.minutes} MIN</span>
+                <b aria-hidden="true">↗</b>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section class="closing-section">
+        <p class="section-label" data-reveal>END OF CURRENT EXHIBITION</p>
+        <h2 data-reveal>继续拆解，<br /><span>持续发布。</span></h2>
+        <p data-reveal>
+          记录真实问题、判断过程和最终做法，让每一次实践都能成为下一次行动的起点。
+        </p>
+        <div class="closing-actions" data-reveal>
+          <a class="primary-action" href={withBase('/articles/')}>
+            <span>继续阅读</span>
+            <span aria-hidden="true">↗</span>
+          </a>
+          <a class="secondary-action" href={siteMeta.githubUrl}>
+            <span>GitHub</span>
+            <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="prototype-footer">
+      <div>
+        <span>© 2026 HUANG CHENG</span>
+        <span>TECH NOTES / PERSONAL ARCHIVE</span>
+      </div>
+      <div>
+        <a href={withBase('/series/')}>系列</a>
+        <a href={withBase('/projects/')}>项目</a>
+        <a href={withBase('/rss.xml')}>RSS</a>
+        <a href={withBase('/about/')}>关于我</a>
+      </div>
+    </footer>
+
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        var reveals = Array.from(document.querySelectorAll('[data-reveal]'));
+
+        requestAnimationFrame(function () {
+          root.classList.add('is-ready');
+        });
+
+        if (reduceMotion.matches || !('IntersectionObserver' in window)) {
+          reveals.forEach(function (element) {
+            element.classList.add('is-visible');
+          });
+        } else {
+          var revealObserver = new IntersectionObserver(
+            function (entries, observer) {
+              entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+              });
+            },
+            { rootMargin: '0px 0px -10% 0px', threshold: 0.12 }
+          );
+
+          reveals.forEach(function (element) {
+            revealObserver.observe(element);
+          });
+        }
+
+        var scrollProgress = document.querySelector('[data-scroll-progress]');
+        var scrollTicking = false;
+
+        function updateScrollProgress() {
+          var distance = document.documentElement.scrollHeight - window.innerHeight;
+          var progress = distance > 0 ? window.scrollY / distance : 0;
+          if (scrollProgress) scrollProgress.style.transform = 'scaleX(' + progress + ')';
+          scrollTicking = false;
+        }
+
+        window.addEventListener(
+          'scroll',
+          function () {
+            if (scrollTicking) return;
+            scrollTicking = true;
+            requestAnimationFrame(updateScrollProgress);
+          },
+          { passive: true }
+        );
+        updateScrollProgress();
+
+        var pointerGlow = document.querySelector('[data-pointer-glow]');
+        var parallaxZone = document.querySelector('[data-parallax-zone]');
+        var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+        var pointerFrame = 0;
+        var pointerX = window.innerWidth * 0.72;
+        var pointerY = window.innerHeight * 0.35;
+
+        function renderPointer() {
+          if (pointerGlow) {
+            pointerGlow.style.transform =
+              'translate3d(' + (pointerX - 210) + 'px,' + (pointerY - 210) + 'px,0)';
+          }
+          pointerFrame = 0;
+        }
+
+        if (!reduceMotion.matches && finePointer.matches) {
+          window.addEventListener(
+            'pointermove',
+            function (event) {
+              pointerX = event.clientX;
+              pointerY = event.clientY;
+              if (!pointerFrame) pointerFrame = requestAnimationFrame(renderPointer);
+            },
+            { passive: true }
+          );
+
+          if (parallaxZone) {
+            parallaxZone.addEventListener(
+              'pointermove',
+              function (event) {
+                var bounds = parallaxZone.getBoundingClientRect();
+                var x = (event.clientX - bounds.left) / bounds.width - 0.5;
+                var y = (event.clientY - bounds.top) / bounds.height - 0.5;
+                parallaxZone.style.setProperty('--parallax-x', String(x));
+                parallaxZone.style.setProperty('--parallax-y', String(y));
+              },
+              { passive: true }
+            );
+
+            parallaxZone.addEventListener('pointerleave', function () {
+              parallaxZone.style.setProperty('--parallax-x', '0');
+              parallaxZone.style.setProperty('--parallax-y', '0');
+            });
+          }
+        } else if (pointerGlow) {
+          pointerGlow.hidden = true;
+        }
+
+        var chapters = Array.from(document.querySelectorAll('[data-series-chapter]'));
+        var seriesNumber = document.querySelector('[data-series-number]');
+        var seriesCount = document.querySelector('[data-series-count]');
+        var seriesTitle = document.querySelector('[data-series-title]');
+        var seriesNote = document.querySelector('[data-series-note]');
+        var seriesProgress = document.querySelector('[data-series-progress]');
+
+        function setActiveChapter(chapter) {
+          var index = Number(chapter.getAttribute('data-series-index') || 0);
+          chapters.forEach(function (item) {
+            item.classList.toggle('is-active', item === chapter);
+          });
+          if (seriesNumber) seriesNumber.textContent = String(index + 1).padStart(2, '0');
+          if (seriesCount) {
+            seriesCount.textContent =
+              String(index + 1).padStart(2, '0') + ' / ' + String(chapters.length).padStart(2, '0');
+          }
+          if (seriesTitle) seriesTitle.textContent = chapter.getAttribute('data-series-title') || '';
+          if (seriesNote) seriesNote.textContent = chapter.getAttribute('data-series-note') || '';
+          if (seriesProgress) {
+            seriesProgress.style.transform = 'scaleX(' + (index + 1) / chapters.length + ')';
+          }
+        }
+
+        if ('IntersectionObserver' in window && chapters.length > 0) {
+          var chapterObserver = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) setActiveChapter(entry.target);
+              });
+            },
+            { rootMargin: '-28% 0px -48% 0px', threshold: 0 }
+          );
+          chapters.forEach(function (chapter) {
+            chapterObserver.observe(chapter);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
+
+<style>
+  :root {
+    --bg: #070908;
+    --bg-soft: #0c0f0e;
+    --panel: rgba(18, 22, 21, 0.78);
+    --panel-strong: #111514;
+    --ink: #f0ede5;
+    --muted: #9c9e98;
+    --soft: #686d68;
+    --line: rgba(239, 237, 228, 0.14);
+    --line-strong: rgba(239, 237, 228, 0.28);
+    --cyan: #69e3d9;
+    --cyan-soft: rgba(105, 227, 217, 0.14);
+    --copper: #b58b69;
+    --serif: 'Iowan Old Style', 'Baskerville', 'Noto Serif SC', 'Songti SC', 'STSong', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --page-pad: clamp(24px, 5.6vw, 88px);
+    --content-width: 1500px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 76% 9%, rgba(31, 79, 74, 0.16), transparent 26rem),
+      linear-gradient(180deg, #070908 0%, #090b0a 48%, #070908 100%);
+    margin: 0;
+    min-width: 320px;
+    overflow-x: clip;
+    position: relative;
+  }
+
+  body::before {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+    background-size: 72px 72px;
+    content: '';
+    inset: 0;
+    mask-image: linear-gradient(to bottom, black, transparent 42%);
+    opacity: 0.52;
+    pointer-events: none;
+    position: absolute;
+    z-index: 0;
+  }
+
+  ::selection {
+    background: var(--cyan);
+    color: #06100f;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 5px;
+  }
+
+  .ambient {
+    border-radius: 50%;
+    filter: blur(1px);
+    opacity: 0.34;
+    pointer-events: none;
+    position: fixed;
+    z-index: 0;
+  }
+
+  .ambient-one {
+    background: radial-gradient(circle, rgba(71, 199, 189, 0.14), transparent 68%);
+    height: 48vw;
+    right: -18vw;
+    top: 12vh;
+    width: 48vw;
+  }
+
+  .ambient-two {
+    background: radial-gradient(circle, rgba(181, 139, 105, 0.09), transparent 68%);
+    bottom: -18vw;
+    height: 44vw;
+    left: -16vw;
+    width: 44vw;
+  }
+
+  .pointer-glow {
+    background: radial-gradient(circle, rgba(105, 227, 217, 0.085), rgba(105, 227, 217, 0.025) 36%, transparent 70%);
+    border-radius: 50%;
+    height: 420px;
+    left: 0;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    position: fixed;
+    top: 0;
+    transition: opacity 0.2s ease;
+    width: 420px;
+    will-change: transform;
+    z-index: 2;
+  }
+
+  .scroll-progress {
+    background: rgba(255, 255, 255, 0.055);
+    height: 2px;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 80;
+  }
+
+  .scroll-progress i {
+    background: linear-gradient(90deg, var(--cyan), #b6fff9, var(--copper));
+    display: block;
+    height: 100%;
+    transform: scaleX(0);
+    transform-origin: left center;
+    width: 100%;
+  }
+
+  .prototype-header {
+    align-items: center;
+    backdrop-filter: blur(18px);
+    background: rgba(7, 9, 8, 0.72);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    gap: 42px;
+    height: 80px;
+    left: 0;
+    padding: 0 var(--page-pad);
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 70;
+  }
+
+  .prototype-brand {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    margin-right: auto;
+    min-width: 0;
+  }
+
+  .brand-symbol {
+    align-items: center;
+    background:
+      linear-gradient(135deg, rgba(105, 227, 217, 0.24), transparent 54%),
+      #101514;
+    border: 1px solid rgba(105, 227, 217, 0.44);
+    border-radius: 50%;
+    color: var(--ink);
+    display: inline-flex;
+    font-family: var(--serif);
+    font-size: 20px;
+    height: 38px;
+    justify-content: center;
+    position: relative;
+    width: 38px;
+  }
+
+  .brand-symbol::after {
+    border: 1px solid rgba(181, 139, 105, 0.4);
+    border-radius: 50%;
+    content: '';
+    inset: 4px;
+    position: absolute;
+  }
+
+  .brand-copy {
+    display: grid;
+    gap: 3px;
+  }
+
+  .brand-copy strong {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .brand-copy small {
+    color: var(--soft);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+  }
+
+  .prototype-nav {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    font-size: 11px;
+    gap: 30px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .prototype-nav a,
+  .back-home {
+    transition: color 0.2s ease;
+  }
+
+  .prototype-nav a:hover,
+  .back-home:hover {
+    color: var(--cyan);
+  }
+
+  .back-home {
+    align-items: center;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    display: flex;
+    font-size: 12px;
+    gap: 20px;
+    height: 42px;
+    padding: 0 16px;
+  }
+
+  main,
+  .prototype-footer {
+    position: relative;
+    z-index: 3;
+  }
+
+  .hero {
+    --parallax-x: 0;
+    --parallax-y: 0;
+    align-items: center;
+    display: flex;
+    min-height: 100svh;
+    overflow: hidden;
+    padding: 132px var(--page-pad) 74px;
+    position: relative;
+  }
+
+  .hero::before {
+    background:
+      radial-gradient(circle, rgba(105, 227, 217, 0.1), transparent 58%),
+      radial-gradient(circle at 46% 42%, rgba(181, 139, 105, 0.08), transparent 38%);
+    border: 1px solid rgba(255, 255, 255, 0.035);
+    border-radius: 50%;
+    content: '';
+    height: min(74vw, 1100px);
+    position: absolute;
+    right: min(-29vw, -260px);
+    top: min(-29vw, -240px);
+    width: min(74vw, 1100px);
+  }
+
+  .hero-grid {
+    align-items: center;
+    display: grid;
+    gap: clamp(46px, 6vw, 110px);
+    grid-template-columns: minmax(0, 0.95fr) minmax(460px, 0.82fr);
+    margin: 0 auto;
+    max-width: var(--content-width);
+    width: 100%;
+  }
+
+  .hero-copy {
+    position: relative;
+    z-index: 4;
+  }
+
+  .hero-kicker {
+    color: var(--muted);
+    display: flex;
+    font-size: 10px;
+    justify-content: space-between;
+    letter-spacing: 0.16em;
+    margin-bottom: 32px;
+    max-width: 690px;
+  }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(58px, 6.25vw, 112px);
+    font-weight: 400;
+    letter-spacing: -0.055em;
+    line-height: 0.96;
+    margin: 0;
+    max-width: 900px;
+  }
+
+  .hero h1 > span {
+    display: block;
+  }
+
+  .hero h1 .accent-line {
+    color: var(--cyan);
+    font-style: italic;
+    padding-left: clamp(0px, 4vw, 64px);
+  }
+
+  .hero-lead {
+    color: #b7bab3;
+    font-size: clamp(16px, 1.25vw, 20px);
+    line-height: 1.9;
+    margin: 34px 0 0;
+    max-width: 660px;
+  }
+
+  .hero-actions,
+  .closing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 34px;
+  }
+
+  .primary-action,
+  .secondary-action {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 13px;
+    font-weight: 650;
+    gap: 34px;
+    height: 52px;
+    justify-content: space-between;
+    min-width: 176px;
+    padding: 0 20px;
+    transition:
+      background 0.25s ease,
+      border-color 0.25s ease,
+      color 0.25s ease,
+      transform 0.25s ease;
+  }
+
+  .primary-action {
+    background: var(--ink);
+    border: 1px solid var(--ink);
+    color: #080a09;
+  }
+
+  .secondary-action {
+    border: 1px solid var(--line-strong);
+    color: var(--ink);
+  }
+
+  .primary-action:hover,
+  .secondary-action:hover {
+    transform: translateY(-3px);
+  }
+
+  .primary-action:hover {
+    background: var(--cyan);
+    border-color: var(--cyan);
+  }
+
+  .secondary-action:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+
+  .hero-index {
+    border-top: 1px solid var(--line);
+    color: var(--soft);
+    display: flex;
+    font-size: 9px;
+    gap: clamp(20px, 3vw, 48px);
+    letter-spacing: 0.13em;
+    margin-top: 54px;
+    max-width: 690px;
+    padding-top: 18px;
+  }
+
+  .hero-index span {
+    align-items: baseline;
+    display: flex;
+    gap: 8px;
+  }
+
+  .hero-index b {
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .hero-specimen {
+    border: 1px solid var(--line);
+    min-height: 660px;
+    overflow: hidden;
+    position: relative;
+    z-index: 3;
+  }
+
+  .hero-specimen::before {
+    background:
+      linear-gradient(90deg, transparent 49.8%, rgba(255, 255, 255, 0.04) 50%, transparent 50.2%),
+      linear-gradient(transparent 49.8%, rgba(255, 255, 255, 0.04) 50%, transparent 50.2%);
+    content: '';
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .specimen-label {
+    color: var(--soft);
+    display: flex;
+    font-size: 9px;
+    justify-content: space-between;
+    letter-spacing: 0.16em;
+    left: 22px;
+    position: absolute;
+    right: 22px;
+    top: 20px;
+  }
+
+  .specimen-stage {
+    height: min(40vw, 590px);
+    left: 50%;
+    min-height: 500px;
+    min-width: 500px;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -51%);
+    width: min(40vw, 590px);
+  }
+
+  .specimen-aura {
+    background:
+      radial-gradient(circle, rgba(105, 227, 217, 0.15), transparent 47%),
+      radial-gradient(circle at 63% 36%, rgba(181, 139, 105, 0.12), transparent 26%);
+    border-radius: 50%;
+    filter: blur(7px);
+    inset: 4%;
+    position: absolute;
+    transform:
+      translate3d(
+        calc(var(--parallax-x) * 6px),
+        calc(var(--parallax-y) * 6px),
+        0
+      );
+    transition: transform 0.3s ease-out;
+  }
+
+  .orbit {
+    border: 1px solid rgba(228, 238, 234, 0.16);
+    border-radius: 50%;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transition: transform 0.35s ease-out;
+  }
+
+  .orbit::before,
+  .orbit::after {
+    background: var(--cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 14px rgba(105, 227, 217, 0.8);
+    content: '';
+    height: 5px;
+    left: 50%;
+    position: absolute;
+    top: -3px;
+    width: 5px;
+  }
+
+  .orbit::after {
+    bottom: -3px;
+    left: auto;
+    right: 28%;
+    top: auto;
+  }
+
+  .orbit-outer {
+    height: 94%;
+    transform:
+      translate(-50%, -50%)
+      rotate(-12deg)
+      translate3d(
+        calc(var(--parallax-x) * 8px),
+        calc(var(--parallax-y) * 8px),
+        0
+      );
+    width: 94%;
+  }
+
+  .orbit-middle {
+    border-color: rgba(181, 139, 105, 0.22);
+    height: 73%;
+    transform:
+      translate(-50%, -50%)
+      rotate(24deg)
+      translate3d(
+        calc(var(--parallax-x) * 12px),
+        calc(var(--parallax-y) * 12px),
+        0
+      );
+    width: 73%;
+  }
+
+  .orbit-inner {
+    height: 52%;
+    transform:
+      translate(-50%, -50%)
+      rotate(-36deg)
+      translate3d(
+        calc(var(--parallax-x) * 16px),
+        calc(var(--parallax-y) * 16px),
+        0
+      );
+    width: 52%;
+  }
+
+  .orbit-middle::before,
+  .orbit-middle::after {
+    background: var(--copper);
+    box-shadow: 0 0 14px rgba(181, 139, 105, 0.7);
+  }
+
+  .orbit-node {
+    background: rgba(7, 9, 8, 0.82);
+    border: 1px solid var(--line-strong);
+    color: #a9aca6;
+    font-size: 8px;
+    letter-spacing: 0.13em;
+    padding: 7px 9px;
+    position: absolute;
+    transition: transform 0.35s ease-out;
+    z-index: 5;
+  }
+
+  .node-excel {
+    left: 2%;
+    top: 48%;
+    transform: translate3d(calc(var(--parallax-x) * 14px), calc(var(--parallax-y) * 14px), 0);
+  }
+
+  .node-agent {
+    right: 7%;
+    top: 24%;
+    transform: translate3d(calc(var(--parallax-x) * 18px), calc(var(--parallax-y) * 18px), 0);
+  }
+
+  .node-playwright {
+    bottom: 10%;
+    left: 21%;
+    transform: translate3d(calc(var(--parallax-x) * 10px), calc(var(--parallax-y) * 10px), 0);
+  }
+
+  .node-flow {
+    bottom: 27%;
+    right: 2%;
+    transform: translate3d(calc(var(--parallax-x) * 22px), calc(var(--parallax-y) * 22px), 0);
+  }
+
+  .material-core {
+    align-items: center;
+    background:
+      radial-gradient(circle at 34% 28%, rgba(160, 255, 246, 0.14), transparent 31%),
+      radial-gradient(circle at 68% 70%, rgba(181, 139, 105, 0.1), transparent 30%),
+      rgba(10, 20, 18, 0.68);
+    border: 1px solid rgba(105, 227, 217, 0.34);
+    border-radius: 50%;
+    box-shadow:
+      0 0 70px rgba(105, 227, 217, 0.08),
+      inset 0 0 80px rgba(105, 227, 217, 0.045);
+    display: flex;
+    height: 46%;
+    justify-content: center;
+    left: 27%;
+    position: absolute;
+    top: 27%;
+    transform: translate3d(calc(var(--parallax-x) * 20px), calc(var(--parallax-y) * 20px), 0);
+    transition: transform 0.35s ease-out;
+    width: 46%;
+    z-index: 4;
+  }
+
+  .core-mesh {
+    filter: drop-shadow(0 0 14px rgba(105, 227, 217, 0.22));
+    height: 88%;
+    opacity: 0.82;
+    width: 88%;
+  }
+
+  .core-reading {
+    align-items: center;
+    color: var(--soft);
+    display: flex;
+    font-size: 7px;
+    inset: auto 11%;
+    justify-content: space-between;
+    letter-spacing: 0.14em;
+    position: absolute;
+  }
+
+  .core-reading strong {
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 400;
+  }
+
+  .specimen-axis {
+    background: rgba(255, 255, 255, 0.07);
+    left: 50%;
+    position: absolute;
+    top: 50%;
+  }
+
+  .axis-x {
+    height: 1px;
+    transform: translate(-50%, -50%);
+    width: 102%;
+  }
+
+  .axis-y {
+    height: 102%;
+    transform: translate(-50%, -50%);
+    width: 1px;
+  }
+
+  .specimen-caption {
+    align-items: center;
+    bottom: 22px;
+    color: var(--soft);
+    display: flex;
+    font-size: 9px;
+    gap: 9px;
+    left: 22px;
+    letter-spacing: 0.12em;
+    position: absolute;
+  }
+
+  .specimen-caption i {
+    background: rgba(255, 255, 255, 0.18);
+    height: 1px;
+    width: 22px;
+  }
+
+  .scroll-cue {
+    align-items: center;
+    bottom: 34px;
+    color: var(--soft);
+    display: flex;
+    font-size: 8px;
+    gap: 14px;
+    left: var(--page-pad);
+    letter-spacing: 0.17em;
+    position: absolute;
+  }
+
+  .scroll-cue i {
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    height: 34px;
+    position: relative;
+    width: 18px;
+  }
+
+  .scroll-cue i::after {
+    background: var(--cyan);
+    border-radius: 50%;
+    content: '';
+    height: 3px;
+    left: 6px;
+    position: absolute;
+    top: 7px;
+    width: 3px;
+  }
+
+  .signal-strip {
+    border-bottom: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+    overflow: hidden;
+    padding: 18px var(--page-pad);
+    position: relative;
+  }
+
+  .signal-strip > div {
+    align-items: center;
+    color: var(--soft);
+    display: flex;
+    font-size: 9px;
+    gap: clamp(24px, 3vw, 56px);
+    justify-content: space-between;
+    letter-spacing: 0.17em;
+    margin: 0 auto;
+    max-width: var(--content-width);
+    white-space: nowrap;
+  }
+
+  .signal-strip i {
+    background: var(--cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(105, 227, 217, 0.7);
+    flex: 0 0 auto;
+    height: 3px;
+    width: 3px;
+  }
+
+  .gallery-section {
+    margin: 0 auto;
+    max-width: calc(var(--content-width) + var(--page-pad) * 2);
+    padding: clamp(110px, 11vw, 190px) var(--page-pad);
+    position: relative;
+  }
+
+  .section-heading {
+    align-items: end;
+    display: grid;
+    gap: clamp(40px, 10vw, 180px);
+    grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.58fr);
+    margin-bottom: clamp(62px, 7vw, 110px);
+  }
+
+  .section-label {
+    color: var(--cyan);
+    font-size: 9px;
+    letter-spacing: 0.19em;
+    margin: 0 0 20px;
+  }
+
+  .section-heading h2,
+  .closing-section h2 {
+    font-family: var(--serif);
+    font-size: clamp(48px, 5.3vw, 86px);
+    font-weight: 400;
+    letter-spacing: -0.04em;
+    line-height: 1.02;
+    margin: 0;
+  }
+
+  .section-heading > p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.95;
+    margin: 0;
+    max-width: 520px;
+  }
+
+  .topic-grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .topic-card {
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.026), transparent 58%),
+      var(--panel);
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    min-height: 360px;
+    overflow: hidden;
+    padding: 22px;
+    position: relative;
+    transition:
+      border-color 0.35s ease,
+      box-shadow 0.35s ease,
+      transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .topic-card::before {
+    background: radial-gradient(circle, rgba(105, 227, 217, 0.17), transparent 68%);
+    content: '';
+    height: 260px;
+    opacity: 0;
+    position: absolute;
+    right: -90px;
+    top: -100px;
+    transform: scale(0.72);
+    transition:
+      opacity 0.35s ease,
+      transform 0.45s ease;
+    width: 260px;
+  }
+
+  .topic-card:hover {
+    border-color: rgba(105, 227, 217, 0.42);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+    transform: translateY(-5px);
+  }
+
+  .topic-card:hover::before {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .topic-excel {
+    grid-column: span 7;
+  }
+
+  .topic-visual {
+    grid-column: span 5;
+  }
+
+  .topic-automation,
+  .topic-agents,
+  .topic-workflow {
+    grid-column: span 4;
+  }
+
+  .topic-topline {
+    align-items: center;
+    color: var(--soft);
+    display: grid;
+    font-size: 8px;
+    grid-template-columns: auto 1fr auto;
+    letter-spacing: 0.16em;
+    position: relative;
+    z-index: 2;
+  }
+
+  .topic-topline span:nth-child(2) {
+    margin-left: 18px;
+  }
+
+  .topic-topline span:last-child {
+    color: var(--ink);
+    font-size: 14px;
+  }
+
+  .topic-mark {
+    align-items: center;
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    min-height: 160px;
+    position: relative;
+  }
+
+  .topic-mark::before,
+  .topic-mark::after {
+    border: 1px solid rgba(255, 255, 255, 0.085);
+    border-radius: 50%;
+    content: '';
+    height: 132px;
+    position: absolute;
+    width: 132px;
+  }
+
+  .topic-mark::after {
+    border-color: rgba(105, 227, 217, 0.16);
+    height: 94px;
+    width: 94px;
+  }
+
+  .topic-mark span {
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 38px;
+    font-style: italic;
+    position: relative;
+    z-index: 2;
+  }
+
+  .topic-mark i {
+    background: var(--cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 18px rgba(105, 227, 217, 0.82);
+    height: 5px;
+    margin-left: -4px;
+    margin-top: -20px;
+    width: 5px;
+  }
+
+  .topic-visual .topic-mark::after,
+  .topic-workflow .topic-mark::after {
+    border-color: rgba(181, 139, 105, 0.25);
+  }
+
+  .topic-visual .topic-mark i,
+  .topic-workflow .topic-mark i {
+    background: var(--copper);
+    box-shadow: 0 0 18px rgba(181, 139, 105, 0.72);
+  }
+
+  .topic-copy {
+    border-top: 1px solid var(--line);
+    display: grid;
+    gap: 18px;
+    grid-template-columns: minmax(0, 0.65fr) minmax(200px, 1fr);
+    padding-top: 20px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .topic-copy h3 {
+    font-family: var(--serif);
+    font-size: clamp(28px, 2.5vw, 42px);
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    margin: 0;
+  }
+
+  .topic-copy p {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.75;
+    margin: 0;
+  }
+
+  .topic-automation .topic-copy,
+  .topic-agents .topic-copy,
+  .topic-workflow .topic-copy {
+    grid-template-columns: 1fr;
+  }
+
+  .series-section {
+    max-width: none;
+  }
+
+  .series-section::before {
+    background:
+      radial-gradient(circle at 18% 40%, rgba(181, 139, 105, 0.08), transparent 24rem),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent);
+    border-bottom: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+    content: '';
+    inset: 0;
+    position: absolute;
+  }
+
+  .series-heading,
+  .series-layout {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: var(--content-width);
+    position: relative;
+  }
+
+  .series-layout {
+    align-items: start;
+    display: grid;
+    gap: clamp(54px, 8vw, 130px);
+    grid-template-columns: minmax(320px, 0.7fr) minmax(0, 1fr);
+  }
+
+  .series-instrument {
+    background:
+      radial-gradient(circle at 50% 38%, rgba(105, 227, 217, 0.075), transparent 38%),
+      rgba(8, 11, 10, 0.78);
+    border: 1px solid var(--line);
+    min-height: 620px;
+    overflow: hidden;
+    padding: 24px;
+    position: sticky;
+    top: 116px;
+  }
+
+  .instrument-head {
+    color: var(--soft);
+    display: flex;
+    font-size: 8px;
+    justify-content: space-between;
+    letter-spacing: 0.17em;
+  }
+
+  .instrument-dial {
+    height: 300px;
+    margin: 52px auto 30px;
+    position: relative;
+    width: 300px;
+  }
+
+  .dial-ring {
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .dial-ring-one {
+    height: 100%;
+    width: 100%;
+  }
+
+  .dial-ring-one::before,
+  .dial-ring-one::after {
+    background: var(--cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 16px rgba(105, 227, 217, 0.76);
+    content: '';
+    height: 5px;
+    left: 50%;
+    position: absolute;
+    top: -3px;
+    width: 5px;
+  }
+
+  .dial-ring-one::after {
+    bottom: -3px;
+    left: auto;
+    right: 50%;
+    top: auto;
+  }
+
+  .dial-ring-two {
+    border-color: rgba(181, 139, 105, 0.28);
+    height: 68%;
+    width: 68%;
+  }
+
+  .dial-hand {
+    background: linear-gradient(90deg, transparent, rgba(105, 227, 217, 0.5));
+    height: 1px;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: rotate(-34deg);
+    transform-origin: left center;
+    width: 42%;
+  }
+
+  .instrument-dial strong {
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 78px;
+    font-weight: 400;
+    left: 50%;
+    letter-spacing: -0.06em;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -52%);
+  }
+
+  .instrument-copy {
+    border-top: 1px solid var(--line);
+    padding-top: 22px;
+  }
+
+  .instrument-copy p {
+    color: var(--cyan);
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    margin: 0 0 12px;
+  }
+
+  .instrument-copy h3 {
+    font-family: var(--serif);
+    font-size: 27px;
+    font-weight: 400;
+    line-height: 1.25;
+    margin: 0 0 12px;
+  }
+
+  .instrument-copy > span {
+    color: var(--muted);
+    display: block;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  .instrument-progress {
+    background: rgba(255, 255, 255, 0.08);
+    bottom: 0;
+    height: 2px;
+    left: 0;
+    position: absolute;
+    right: 0;
+  }
+
+  .instrument-progress i {
+    background: linear-gradient(90deg, var(--cyan), var(--copper));
+    display: block;
+    height: 100%;
+    transform: scaleX(0.333);
+    transform-origin: left center;
+    transition: transform 0.45s ease;
+    width: 100%;
+  }
+
+  .series-chapters {
+    display: grid;
+    gap: 22vh;
+    padding-bottom: 12vh;
+  }
+
+  .series-chapter {
+    border-top: 1px solid var(--line);
+    min-height: 70vh;
+    opacity: 0.48;
+    padding: 24px 0 0;
+    transition: opacity 0.45s ease;
+  }
+
+  .series-chapter.is-active {
+    opacity: 1;
+  }
+
+  .chapter-meta {
+    color: var(--soft);
+    display: grid;
+    font-size: 8px;
+    grid-template-columns: 56px 1fr auto;
+    letter-spacing: 0.16em;
+  }
+
+  .series-chapter > h3 {
+    font-family: var(--serif);
+    font-size: clamp(42px, 4vw, 68px);
+    font-weight: 400;
+    letter-spacing: -0.04em;
+    line-height: 1.03;
+    margin: 54px 0 20px;
+    max-width: 720px;
+  }
+
+  .series-chapter > p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.9;
+    margin: 0;
+    max-width: 610px;
+  }
+
+  .chapter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .chapter-tags span {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: #9da19b;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    padding: 8px 11px;
+  }
+
+  .chapter-visual {
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+    display: flex;
+    height: 220px;
+    justify-content: center;
+    margin: 58px 0 28px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .chapter-visual::before {
+    background: radial-gradient(circle, rgba(105, 227, 217, 0.12), transparent 65%);
+    content: '';
+    height: 300px;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+  }
+
+  .chapter-word {
+    color: rgba(239, 237, 228, 0.055);
+    font-family: var(--serif);
+    font-size: clamp(78px, 9vw, 150px);
+    letter-spacing: -0.05em;
+    position: relative;
+    white-space: nowrap;
+  }
+
+  .chapter-lines {
+    inset: 0;
+    position: absolute;
+  }
+
+  .chapter-lines i {
+    background: linear-gradient(90deg, transparent, rgba(105, 227, 217, 0.48), transparent);
+    height: 1px;
+    left: 6%;
+    position: absolute;
+    right: 6%;
+    top: 24%;
+    transform: rotate(8deg);
+  }
+
+  .chapter-lines i:nth-child(2) {
+    top: 42%;
+    transform: rotate(-5deg);
+  }
+
+  .chapter-lines i:nth-child(3) {
+    top: 60%;
+    transform: rotate(3deg);
+  }
+
+  .chapter-lines i:nth-child(4) {
+    top: 76%;
+    transform: rotate(-8deg);
+  }
+
+  .series-chapter > a {
+    align-items: center;
+    color: var(--ink);
+    display: flex;
+    font-size: 12px;
+    justify-content: space-between;
+    letter-spacing: 0.04em;
+    padding: 8px 0;
+    transition: color 0.2s ease;
+  }
+
+  .series-chapter > a:hover {
+    color: var(--cyan);
+  }
+
+  .lab-section {
+    max-width: calc(var(--content-width) + var(--page-pad) * 2);
+  }
+
+  .lab-grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .lab-card {
+    background: var(--panel-strong);
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    min-height: 620px;
+    overflow: hidden;
+    padding: 22px;
+    position: relative;
+    transition:
+      border-color 0.35s ease,
+      box-shadow 0.35s ease,
+      transform 0.35s ease;
+  }
+
+  .lab-card:hover {
+    border-color: rgba(105, 227, 217, 0.42);
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.25);
+    transform: translateY(-5px);
+  }
+
+  .lab-card-1 {
+    grid-column: span 7;
+  }
+
+  .lab-card-2 {
+    grid-column: span 5;
+  }
+
+  .lab-card-3 {
+    grid-column: 4 / span 6;
+    min-height: 560px;
+  }
+
+  .lab-card-head {
+    color: var(--soft);
+    display: flex;
+    font-size: 8px;
+    justify-content: space-between;
+    letter-spacing: 0.17em;
+    position: relative;
+    z-index: 4;
+  }
+
+  .lab-card-head span:last-child {
+    color: var(--ink);
+    font-size: 14px;
+  }
+
+  .lab-visual {
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 30px 30px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    flex: 1;
+    margin: 24px 0;
+    min-height: 300px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .formula-visual {
+    padding: 34px;
+  }
+
+  .formula-bar {
+    align-items: center;
+    background: rgba(7, 9, 8, 0.86);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    display: flex;
+    font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+    font-size: 11px;
+    gap: 14px;
+    height: 42px;
+    padding: 0 14px;
+  }
+
+  .formula-bar span {
+    color: var(--cyan);
+  }
+
+  .formula-bar b {
+    font-weight: 450;
+  }
+
+  .formula-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin-top: 22px;
+  }
+
+  .formula-grid > * {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    border-right: 1px solid rgba(255, 255, 255, 0.09);
+    display: flex;
+    height: 42px;
+    justify-content: center;
+  }
+
+  .formula-grid > span {
+    color: var(--soft);
+    font-size: 9px;
+  }
+
+  .formula-grid > i:nth-of-type(2),
+  .formula-grid > i:nth-of-type(7) {
+    background: rgba(105, 227, 217, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(105, 227, 217, 0.36);
+  }
+
+  .formula-trace {
+    align-items: center;
+    bottom: 38px;
+    color: var(--cyan);
+    display: flex;
+    font-size: 8px;
+    gap: 12px;
+    letter-spacing: 0.14em;
+    position: absolute;
+    right: 36px;
+  }
+
+  .formula-trace i {
+    background: var(--cyan);
+    box-shadow: 0 0 12px rgba(105, 227, 217, 0.7);
+    height: 1px;
+    width: 72px;
+  }
+
+  .agent-visual {
+    min-height: 360px;
+  }
+
+  .agent-node {
+    align-items: center;
+    background: rgba(7, 9, 8, 0.9);
+    border: 1px solid var(--line-strong);
+    display: flex;
+    gap: 10px;
+    padding: 12px 14px;
+    position: absolute;
+    z-index: 2;
+  }
+
+  .agent-node span {
+    color: var(--cyan);
+    font-size: 8px;
+  }
+
+  .agent-node b {
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .node-goal {
+    left: 10%;
+    top: 14%;
+  }
+
+  .node-think {
+    right: 10%;
+    top: 33%;
+  }
+
+  .node-act {
+    bottom: 24%;
+    left: 16%;
+  }
+
+  .node-check {
+    bottom: 9%;
+    right: 13%;
+  }
+
+  .agent-line {
+    background: linear-gradient(90deg, var(--cyan), transparent);
+    height: 1px;
+    left: 27%;
+    position: absolute;
+    top: 27%;
+    transform: rotate(22deg);
+    transform-origin: left;
+    width: 49%;
+  }
+
+  .line-two {
+    left: 26%;
+    top: 57%;
+    transform: rotate(-17deg);
+    width: 52%;
+  }
+
+  .line-three {
+    left: 31%;
+    top: 75%;
+    transform: rotate(15deg);
+    width: 48%;
+  }
+
+  .layout-visual {
+    min-height: 330px;
+  }
+
+  .layout-frame {
+    border: 1px solid var(--line-strong);
+    height: 58%;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 64%;
+  }
+
+  .frame-back {
+    border-color: rgba(181, 139, 105, 0.26);
+    transform: translate(-58%, -58%);
+  }
+
+  .frame-middle {
+    border-color: rgba(105, 227, 217, 0.2);
+    transform: translate(-54%, -54%);
+  }
+
+  .frame-front {
+    background: rgba(7, 9, 8, 0.76);
+    display: grid;
+    gap: 13px;
+    padding: 22px;
+  }
+
+  .frame-front span {
+    background: rgba(255, 255, 255, 0.09);
+    display: block;
+    height: 7px;
+  }
+
+  .frame-front span:nth-child(1) {
+    background: var(--cyan);
+    width: 34%;
+  }
+
+  .frame-front span:nth-child(2) {
+    width: 76%;
+  }
+
+  .frame-front span:nth-child(3) {
+    width: 55%;
+  }
+
+  .frame-front i {
+    border: 1px solid var(--line);
+    display: block;
+    height: 34px;
+  }
+
+  .layout-axis {
+    background: linear-gradient(90deg, transparent, rgba(105, 227, 217, 0.5), transparent);
+    height: 1px;
+    left: 8%;
+    position: absolute;
+    right: 8%;
+    top: 22%;
+    transform: rotate(7deg);
+  }
+
+  .axis-two {
+    top: 76%;
+    transform: rotate(-6deg);
+  }
+
+  .lab-card-copy {
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+  }
+
+  .lab-card-copy p {
+    color: var(--cyan);
+    font-size: 8px;
+    letter-spacing: 0.13em;
+    margin: 0 0 12px;
+  }
+
+  .lab-card-copy h3 {
+    font-family: var(--serif);
+    font-size: clamp(24px, 2.4vw, 38px);
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    line-height: 1.18;
+    margin: 0 0 12px;
+  }
+
+  .lab-card-copy > span {
+    color: var(--muted);
+    display: block;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  .lab-index-link {
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    font-family: var(--serif);
+    font-size: 24px;
+    justify-content: space-between;
+    margin-top: 54px;
+    padding: 0 0 18px;
+    transition:
+      border-color 0.25s ease,
+      color 0.25s ease;
+  }
+
+  .lab-index-link:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+
+  .latest-heading {
+    align-items: end;
+  }
+
+  .latest-heading > a {
+    border-bottom: 1px solid var(--line-strong);
+    font-size: 12px;
+    justify-self: end;
+    padding-bottom: 8px;
+    transition:
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .latest-heading > a:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+
+  .latest-list {
+    border-top: 1px solid var(--line);
+  }
+
+  .latest-item {
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    gap: 26px;
+    grid-template-columns: 70px minmax(0, 1fr) auto;
+    min-height: 150px;
+    padding: 24px 10px;
+    position: relative;
+    transition:
+      background 0.25s ease,
+      padding 0.25s ease;
+  }
+
+  .latest-item::before {
+    background: var(--cyan);
+    content: '';
+    height: 0;
+    left: 0;
+    position: absolute;
+    top: 50%;
+    transition: height 0.25s ease;
+    width: 2px;
+  }
+
+  .latest-item:hover {
+    background: rgba(255, 255, 255, 0.018);
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .latest-item:hover::before {
+    height: 60%;
+    top: 20%;
+  }
+
+  .latest-number {
+    color: var(--soft);
+    font-family: var(--serif);
+    font-size: 20px;
+  }
+
+  .latest-copy p {
+    color: var(--cyan);
+    font-size: 8px;
+    letter-spacing: 0.14em;
+    margin: 0 0 10px;
+  }
+
+  .latest-copy h3 {
+    font-family: var(--serif);
+    font-size: clamp(24px, 2.3vw, 38px);
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .latest-meta {
+    align-items: center;
+    color: var(--soft);
+    display: flex;
+    font-size: 8px;
+    gap: 24px;
+    letter-spacing: 0.13em;
+  }
+
+  .latest-meta b {
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  .closing-section {
+    align-items: center;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    min-height: 92vh;
+    overflow: hidden;
+    padding: 150px var(--page-pad);
+    position: relative;
+    text-align: center;
+  }
+
+  .closing-section::before {
+    background:
+      radial-gradient(circle, rgba(105, 227, 217, 0.1), transparent 52%),
+      radial-gradient(circle at 65% 52%, rgba(181, 139, 105, 0.08), transparent 24%);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 50%;
+    content: '';
+    height: min(76vw, 980px);
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(76vw, 980px);
+  }
+
+  .closing-section > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .closing-section h2 {
+    font-size: clamp(64px, 8.8vw, 148px);
+    line-height: 0.92;
+  }
+
+  .closing-section h2 span {
+    color: var(--cyan);
+    font-style: italic;
+  }
+
+  .closing-section > p:not(.section-label) {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.9;
+    margin: 34px auto 0;
+    max-width: 570px;
+  }
+
+  .closing-actions {
+    justify-content: center;
+  }
+
+  .prototype-footer {
+    align-items: center;
+    border-top: 1px solid var(--line);
+    color: var(--soft);
+    display: flex;
+    font-size: 8px;
+    justify-content: space-between;
+    letter-spacing: 0.15em;
+    min-height: 112px;
+    padding: 28px var(--page-pad);
+  }
+
+  .prototype-footer > div {
+    display: flex;
+    gap: 28px;
+  }
+
+  .prototype-footer a {
+    transition: color 0.2s ease;
+  }
+
+  .prototype-footer a:hover {
+    color: var(--cyan);
+  }
+
+  .js [data-hero-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity 0.75s cubic-bezier(0.2, 0.8, 0.2, 1),
+      transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .js.is-ready [data-hero-reveal] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .js.is-ready .hero-kicker {
+    transition-delay: 0.08s;
+  }
+
+  .js.is-ready .hero h1 span:nth-child(1) {
+    transition-delay: 0.14s;
+  }
+
+  .js.is-ready .hero h1 span:nth-child(2) {
+    transition-delay: 0.22s;
+  }
+
+  .js.is-ready .hero h1 span:nth-child(3) {
+    transition-delay: 0.3s;
+  }
+
+  .js.is-ready .hero-lead {
+    transition-delay: 0.38s;
+  }
+
+  .js.is-ready .hero-actions {
+    transition-delay: 0.46s;
+  }
+
+  .js.is-ready .hero-index {
+    transition-delay: 0.54s;
+  }
+
+  .js.is-ready .hero-specimen {
+    transition-delay: 0.24s;
+  }
+
+  .js.is-ready .scroll-cue {
+    transition-delay: 0.62s;
+  }
+
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(36px);
+    transition:
+      opacity 0.72s cubic-bezier(0.2, 0.8, 0.2, 1),
+      transform 0.72s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .js [data-reveal].is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .topic-grid [data-reveal]:nth-child(2),
+  .lab-grid [data-reveal]:nth-child(2) {
+    transition-delay: 0.08s;
+  }
+
+  .topic-grid [data-reveal]:nth-child(3),
+  .lab-grid [data-reveal]:nth-child(3) {
+    transition-delay: 0.16s;
+  }
+
+  .topic-grid [data-reveal]:nth-child(4) {
+    transition-delay: 0.24s;
+  }
+
+  .topic-grid [data-reveal]:nth-child(5) {
+    transition-delay: 0.32s;
+  }
+
+  @media (max-width: 1180px) {
+    .hero-grid {
+      gap: 42px;
+      grid-template-columns: minmax(0, 1fr) minmax(420px, 0.78fr);
+    }
+
+    .hero-specimen {
+      min-height: 580px;
+    }
+
+    .specimen-stage {
+      min-height: 450px;
+      min-width: 450px;
+    }
+
+    .topic-copy {
+      grid-template-columns: 1fr;
+    }
+
+    .series-layout {
+      grid-template-columns: minmax(300px, 0.62fr) minmax(0, 1fr);
+    }
+
+    .instrument-dial {
+      height: 250px;
+      width: 250px;
+    }
+  }
+
+  @media (max-width: 920px) {
+    .prototype-header {
+      gap: 20px;
+    }
+
+    .prototype-nav {
+      display: none;
+    }
+
+    .hero {
+      min-height: auto;
+      padding-bottom: 120px;
+      padding-top: 140px;
+    }
+
+    .hero-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-copy {
+      max-width: 780px;
+    }
+
+    .hero-specimen {
+      min-height: min(86vw, 690px);
+    }
+
+    .specimen-stage {
+      height: min(76vw, 600px);
+      min-height: 0;
+      min-width: 0;
+      width: min(76vw, 600px);
+    }
+
+    .section-heading {
+      align-items: start;
+      gap: 32px;
+      grid-template-columns: 1fr;
+    }
+
+    .section-heading > p {
+      max-width: 650px;
+    }
+
+    .topic-excel,
+    .topic-visual,
+    .topic-automation,
+    .topic-agents {
+      grid-column: span 6;
+    }
+
+    .topic-workflow {
+      grid-column: 4 / span 6;
+    }
+
+    .series-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .series-instrument {
+      min-height: auto;
+      position: relative;
+      top: 0;
+    }
+
+    .instrument-dial {
+      height: 270px;
+      width: 270px;
+    }
+
+    .series-chapters {
+      gap: 88px;
+      padding-bottom: 0;
+    }
+
+    .series-chapter {
+      min-height: auto;
+      opacity: 1;
+    }
+
+    .lab-card-1,
+    .lab-card-2 {
+      grid-column: span 6;
+    }
+
+    .lab-card-3 {
+      grid-column: 3 / span 8;
+    }
+
+    .latest-heading > a {
+      justify-self: start;
+    }
+  }
+
+  @media (max-width: 640px) {
+    :root {
+      --page-pad: 20px;
+    }
+
+    .prototype-header {
+      height: 70px;
+    }
+
+    .brand-copy small {
+      display: none;
+    }
+
+    .brand-symbol {
+      height: 34px;
+      width: 34px;
+    }
+
+    .back-home {
+      gap: 10px;
+      height: 38px;
+      padding: 0 13px;
+    }
+
+    .hero {
+      padding-bottom: 104px;
+      padding-top: 118px;
+    }
+
+    .hero-kicker {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(46px, 14.2vw, 72px);
+      line-height: 0.99;
+    }
+
+    .hero h1 .accent-line {
+      padding-left: 0;
+    }
+
+    .hero-lead {
+      font-size: 15px;
+      line-height: 1.8;
+      margin-top: 26px;
+    }
+
+    .hero-actions,
+    .closing-actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .primary-action,
+    .secondary-action {
+      width: 100%;
+    }
+
+    .hero-index {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 40px;
+    }
+
+    .hero-index span:last-child {
+      grid-column: 1 / -1;
+    }
+
+    .hero-specimen {
+      min-height: calc(100vw - 40px);
+    }
+
+    .specimen-stage {
+      height: 105vw;
+      width: 105vw;
+    }
+
+    .orbit-node {
+      font-size: 7px;
+      padding: 5px 7px;
+    }
+
+    .specimen-caption {
+      bottom: 14px;
+      gap: 6px;
+      left: 14px;
+    }
+
+    .specimen-caption i {
+      width: 10px;
+    }
+
+    .signal-strip {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .signal-strip > div {
+      animation: strip-drift 24s linear infinite;
+      gap: 34px;
+      justify-content: flex-start;
+      padding-left: 20px;
+      width: max-content;
+    }
+
+    .gallery-section {
+      padding-bottom: 110px;
+      padding-top: 110px;
+    }
+
+    .section-heading {
+      margin-bottom: 54px;
+    }
+
+    .section-heading h2,
+    .closing-section h2 {
+      font-size: clamp(42px, 13vw, 64px);
+    }
+
+    .section-heading > p {
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .topic-excel,
+    .topic-visual,
+    .topic-automation,
+    .topic-agents,
+    .topic-workflow {
+      grid-column: 1 / -1;
+    }
+
+    .topic-card {
+      min-height: 340px;
+    }
+
+    .topic-mark {
+      min-height: 145px;
+    }
+
+    .series-instrument {
+      min-height: 540px;
+      padding: 18px;
+    }
+
+    .instrument-dial {
+      height: min(72vw, 270px);
+      width: min(72vw, 270px);
+    }
+
+    .series-chapter > h3 {
+      font-size: 40px;
+      margin-top: 38px;
+    }
+
+    .chapter-meta {
+      gap: 8px;
+      grid-template-columns: 38px 1fr;
+    }
+
+    .chapter-meta span:last-child {
+      grid-column: 2;
+    }
+
+    .chapter-visual {
+      height: 170px;
+      margin-top: 42px;
+    }
+
+    .lab-card-1,
+    .lab-card-2,
+    .lab-card-3 {
+      grid-column: 1 / -1;
+      min-height: 540px;
+    }
+
+    .formula-visual {
+      padding: 18px;
+    }
+
+    .formula-bar {
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .latest-item {
+      align-items: start;
+      gap: 12px;
+      grid-template-columns: 36px minmax(0, 1fr);
+      min-height: 136px;
+      padding: 22px 0;
+    }
+
+    .latest-item:hover {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+
+    .latest-meta {
+      gap: 14px;
+      grid-column: 2;
+    }
+
+    .closing-section {
+      min-height: 84vh;
+      padding-bottom: 120px;
+      padding-top: 120px;
+    }
+
+    .prototype-footer {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 24px;
+      line-height: 1.7;
+    }
+
+    .prototype-footer > div {
+      flex-wrap: wrap;
+      gap: 12px 20px;
+    }
+  }
+
+  @keyframes strip-drift {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-40%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    .js [data-hero-reveal],
+    .js [data-reveal] {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+
+    .pointer-glow {
+      display: none;
+    }
+  }
+</style>
