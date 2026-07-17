@@ -17,7 +17,7 @@ const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags))).sort((
 const tagCounts = Object.fromEntries(tags.map((tag) => [tag, posts.filter((post) => post.data.tags.includes(tag)).length]));
 const commonTags = [...tags]
   .sort((a, b) => tagCounts[b] - tagCounts[a] || a.localeCompare(b))
-  .slice(0, 6);
+  .slice(0, 15);
 const otherTags = tags.filter((tag) => !commonTags.includes(tag));
 ---
 

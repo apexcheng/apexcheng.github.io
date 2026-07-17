@@ -1296,12 +1296,14 @@ h3 {
 .two-column-page {
   display: grid;
   gap: 30px;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 300px 1fr;
 }
 
 .filter-panel {
   align-self: start;
   box-shadow: 0 14px 34px rgba(47, 39, 27, 0.06);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
   padding: 18px;
   position: sticky;
   top: 24px;
@@ -3052,6 +3054,8 @@ html[data-theme='dark'] .report-dashboard {
   }
 
   .filter-panel {
+    max-height: none;
+    overflow: visible;
     position: static;
   }
 
