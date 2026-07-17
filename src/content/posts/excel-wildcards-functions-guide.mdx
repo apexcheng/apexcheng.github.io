@@ -2,7 +2,7 @@
 title: "Excel 通配符使用指南：*、?、~ 和支持函数清单"
 description: "讲清 Excel 中 *、?、~ 三种通配符的含义，整理 COUNTIF、SUMIFS、XLOOKUP、MATCH、SEARCH 等支持通配符的常用函数，并给出前缀、包含、结尾和转义案例。"
 date: 2026-07-16T09:46:18+08:00
-updated: 2026-07-16T17:42:19+08:00
+updated: 2026-07-17T09:22:27+08:00
 category: "教程"
 tags:
   - "Excel"
@@ -36,39 +36,54 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     <div class="wildcard-sheet-table-wrap">
       <table class="wildcard-sheet-table">
         <thead>
-          <tr>
-            <th aria-label="行号"></th>
+          <tr class="sheet-column-letters">
+            <th class="sheet-corner" aria-hidden="true"></th>
+            <th>A</th>
+            <th>B</th>
+            <th>C</th>
+            <th>D</th>
+            <th>E</th>
+          </tr>
+          <tr class="sheet-field-row">
+            <th class="sheet-row-number">7</th>
             <th>订单号</th>
             <th>平台</th>
-            <th class="is-range">SKU</th>
-            <th>订单金额</th>
+            <th class="is-condition-column">SKU</th>
+            <th class="is-sum-column">订单金额</th>
             <th>客服响应分钟</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>8</td><td>TM001</td><td>天猫</td><td class="is-range is-match">K161-BK</td><td class="is-sum">199.00</td><td>4</td></tr>
-          <tr><td>9</td><td>PDD002</td><td>拼多多</td><td class="is-range">X51C-BK</td><td>159.00</td><td>8</td></tr>
-          <tr><td>10</td><td>JD003</td><td>京东</td><td class="is-range">M30-BK</td><td>99.00</td><td>3</td></tr>
-          <tr><td>11</td><td>TM004</td><td>天猫</td><td class="is-range">P12-BK</td><td>149.00</td><td>5</td></tr>
-          <tr><td>12</td><td>PDD005</td><td>拼多多</td><td class="is-range is-match">K161-WH</td><td class="is-sum">219.00</td><td>12</td></tr>
-          <tr><td>13</td><td>JD006</td><td>京东</td><td class="is-range">X51C-BK</td><td>169.00</td><td>6</td></tr>
-          <tr><td>14</td><td>TM007</td><td>天猫</td><td class="is-range">M30-WH</td><td>109.00</td><td>2</td></tr>
-          <tr><td>15</td><td>PDD008</td><td>拼多多</td><td class="is-range">P12-BL</td><td>139.00</td><td>10</td></tr>
-          <tr><td>16</td><td>TM009</td><td>天猫</td><td class="is-range is-match">K161-BK</td><td class="is-sum">209.00</td><td>7</td></tr>
-          <tr><td>17</td><td>PDD010</td><td>拼多多</td><td class="is-range">M30-BK</td><td>89.00</td><td>9</td></tr>
+          <tr class="is-hit"><th class="sheet-row-number">8</th><td>TM001</td><td>天猫</td><td class="is-condition-column is-match">K161-BK</td><td class="is-sum-column is-sum">199.00</td><td>4</td></tr>
+          <tr><th class="sheet-row-number">9</th><td>PDD002</td><td>拼多多</td><td class="is-condition-column">X51C-BK</td><td class="is-sum-column">159.00</td><td>8</td></tr>
+          <tr><th class="sheet-row-number">10</th><td>JD003</td><td>京东</td><td class="is-condition-column">M30-BK</td><td class="is-sum-column">99.00</td><td>3</td></tr>
+          <tr><th class="sheet-row-number">11</th><td>TM004</td><td>天猫</td><td class="is-condition-column">P12-BK</td><td class="is-sum-column">149.00</td><td>5</td></tr>
+          <tr class="is-hit"><th class="sheet-row-number">12</th><td>PDD005</td><td>拼多多</td><td class="is-condition-column is-match">K161-WH</td><td class="is-sum-column is-sum">219.00</td><td>12</td></tr>
+          <tr><th class="sheet-row-number">13</th><td>JD006</td><td>京东</td><td class="is-condition-column">X51C-BK</td><td class="is-sum-column">169.00</td><td>6</td></tr>
+          <tr><th class="sheet-row-number">14</th><td>TM007</td><td>天猫</td><td class="is-condition-column">M30-WH</td><td class="is-sum-column">109.00</td><td>2</td></tr>
+          <tr><th class="sheet-row-number">15</th><td>PDD008</td><td>拼多多</td><td class="is-condition-column">P12-BL</td><td class="is-sum-column">139.00</td><td>10</td></tr>
+          <tr class="is-hit"><th class="sheet-row-number">16</th><td>TM009</td><td>天猫</td><td class="is-condition-column is-match">K161-BK</td><td class="is-sum-column is-sum">209.00</td><td>7</td></tr>
+          <tr><th class="sheet-row-number">17</th><td>PDD010</td><td>拼多多</td><td class="is-condition-column">M30-BK</td><td class="is-sum-column">89.00</td><td>9</td></tr>
         </tbody>
       </table>
+
+      <div class="wildcard-sheet-legend">
+        <span class="legend-blue"><b>1</b>条件范围 C8:C17</span>
+        <span class="legend-orange"><b>2</b>条件：以 K161 开头</span>
+        <span class="legend-violet"><b>3</b>求和范围 D8:D17</span>
+      </div>
     </div>
 
     <div class="wildcard-formula-panel">
+      <div class="wildcard-formula-heading"><span>▦</span><strong>SUMIF 公式</strong></div>
       <div class="wildcard-formula-line" aria-label="SUMIF 公式参数拆解">
-        <span>=SUMIF(</span><b class="tone-blue">C8:C17</b><span>,</span><b class="tone-orange">{'"K161*"'}</b><span>,</span><b class="tone-violet">D8:D17</b><span>)</span>
+        <span>=SUMIF(</span><b class="tone-blue"><em>1</em>C8:C17</b><span>,</span><b class="tone-orange"><em>2</em>{'"K161*"'}</b><span>,</span><b class="tone-violet"><em>3</em>D8:D17</b><span>)</span>
       </div>
 
       <div class="wildcard-formula-legend">
-        <div class="tone-blue"><small>检查哪里</small><strong>SKU 列</strong><span>C8:C17</span></div>
-        <div class="tone-orange"><small>匹配什么</small><strong>以 K161 开头</strong><span>{'"K161*"'}</span></div>
-        <div class="tone-violet"><small>汇总哪里</small><strong>订单金额列</strong><span>D8:D17</span></div>
+        <div class="tone-blue"><b>1</b><section><small>检查哪里</small><strong>SKU 列</strong><span>C8:C17</span></section></div>
+        <div class="tone-orange"><b>2</b><section><small>匹配什么</small><strong>以 K161 开头</strong><span>{'"K161*"'}</span></section></div>
+        <div class="tone-violet"><b>3</b><section><small>汇总哪里</small><strong>订单金额列</strong><span>D8:D17</span></section></div>
       </div>
 
       <div class="wildcard-result-card">
@@ -76,11 +91,15 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
         <div><small>金额</small><strong>199 + 219 + 209</strong></div>
         <div class="is-total"><small>结果</small><strong>627</strong></div>
       </div>
+
+      <div class="wildcard-result-path"><span>C 列匹配 3 行</span><i>→</i><span>保持相同行</span><i>→</i><strong>D 列汇总：627</strong></div>
     </div>
   </div>
 </div>
 
 这个案例里，`C8:C17`、`"K161*"`、`D8:D17` 分别回答三个问题：**检查哪里、匹配什么、汇总哪里**。理解这三个问题，比单独背公式参数更容易。
+
+表格上方的 `A～E` 和左侧的 `7～17` 是 Excel 的列标与行号，不属于数据本身。字段标题放在第 7 行，公式从第 8 行开始计算，因此 SKU 对应 `C8:C17`，订单金额对应 `D8:D17`。
 
 ## Excel 只有三种通配符
 
@@ -253,7 +272,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 =AVERAGEIF(C8:C17,F2&"*",D8:D17)
 ```
 
-假设 F2 是 `K161`，`F2&"*"` 会拼成 `K161*`。
+假设 F2 是 `K161`，`F2&"*"` 会拼成 `K161*`。这里的 F2 是额外的条件输入单元格，不属于上方 `A:E` 数据区域。
 
 ### 2. 查找函数：先开启正确的匹配模式
 
@@ -289,7 +308,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 传统查找函数使用精确匹配参数时，也能识别通配符：
 
 ```text
-=VLOOKUP("K161*",A2:D100,4,FALSE)
+=VLOOKUP("K161*",C8:D17,2,FALSE)
 ```
 
 ```text
@@ -308,7 +327,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 =SEARCH("K?61",C8)
 ```
 
-如果 C8 是 `K161-黑色`，结果为 `1`。如果找不到，会返回 `#VALUE!`。
+上方案例中的 C8 是 `K161-BK`，结果为 `1`。如果找不到，会返回 `#VALUE!`。
 
 实际判断时，通常会和 `ISNUMBER` 组合：
 
@@ -517,54 +536,178 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   .wildcard-sheet-hero__header p { margin: 0; color: var(--wc-muted); font-size: .9rem; }
   .wildcard-sheet-workspace {
     display: grid;
-    grid-template-columns: minmax(500px,1.45fr) minmax(290px,.8fr);
+    grid-template-columns: minmax(0,1.08fr) minmax(0,.92fr);
     gap: 1rem;
     padding: 0 1.1rem 1.2rem;
   }
   .wildcard-sheet-table-wrap {
-    overflow-x: auto;
+    display: grid;
+    align-content: start;
+    gap: .7rem;
+    min-width: 0;
+    padding: .75rem;
     border: 1px solid #cbd9e8;
     border-radius: 17px;
     background: #fff;
   }
   .wildcard-sheet-table {
-    width: max-content;
-    min-width: 100%;
+    width: 100%;
     margin: 0;
+    overflow: hidden;
     border-collapse: separate;
     border-spacing: 0;
+    border: 1px solid #c8d8e7;
+    border-radius: 11px;
+    table-layout: fixed;
     font-size: .88rem;
   }
   .wildcard-sheet-table th,
   .wildcard-sheet-table td {
-    min-width: 92px;
-    padding: .58rem .65rem;
+    position: relative;
+    padding: .56rem .45rem;
     border-right: 1px solid #e0e7ee;
     border-bottom: 1px solid #e0e7ee;
     text-align: left;
     white-space: nowrap;
   }
   .wildcard-sheet-table th:first-child,
-  .wildcard-sheet-table td:first-child { min-width: 32px; width: 32px; color: #728093; text-align: center; }
-  .wildcard-sheet-table th {
+  .wildcard-sheet-table td:first-child { width: 7%; text-align: center; }
+  .wildcard-sheet-table th:nth-child(2),
+  .wildcard-sheet-table td:nth-child(2) { width: 18%; }
+  .wildcard-sheet-table th:nth-child(3),
+  .wildcard-sheet-table td:nth-child(3) { width: 14%; }
+  .wildcard-sheet-table th:nth-child(4),
+  .wildcard-sheet-table td:nth-child(4) { width: 22%; }
+  .wildcard-sheet-table th:nth-child(5),
+  .wildcard-sheet-table td:nth-child(5) { width: 20%; }
+  .wildcard-sheet-table th:nth-child(6),
+  .wildcard-sheet-table td:nth-child(6) { width: 19%; }
+  .wildcard-sheet-table .sheet-column-letters th {
+    height: 30px;
+    padding: .25rem .4rem;
+    color: #26384b;
+    background: #f2f4f6;
+    font-size: .78rem;
+    font-weight: 750;
+    text-align: center;
+  }
+  .wildcard-sheet-table .sheet-column-letters .sheet-corner {
+    background: linear-gradient(135deg, transparent 49%, #b7bec6 50%, #b7bec6 100%), #eef1f3;
+  }
+  .wildcard-sheet-table .sheet-field-row th {
+    height: 48px;
+    padding: .5rem .4rem;
     color: #fff;
     background: linear-gradient(180deg,#1971d8,#0e5ebd);
+    font-size: .86rem;
+    font-weight: 850;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .wildcard-sheet-table .sheet-row-number {
+    color: #33475a;
+    background: #f2f4f6;
+    font-size: .78rem;
+    font-weight: 750;
+    text-align: center;
+  }
+  .wildcard-sheet-table .sheet-field-row .sheet-row-number {
+    color: #33475a;
+    background: #f2f4f6;
+  }
+  .wildcard-sheet-table .is-condition-column {
+    background: var(--wc-blue-soft);
+    box-shadow: inset 2px 0 var(--wc-blue), inset -2px 0 var(--wc-blue);
+  }
+  .wildcard-sheet-table .is-sum-column {
+    background: var(--wc-violet-soft);
+    box-shadow: inset 2px 0 var(--wc-violet), inset -2px 0 var(--wc-violet);
+  }
+  .wildcard-sheet-table .sheet-field-row .is-condition-column {
+    background: #145fbf;
+  }
+  .wildcard-sheet-table .sheet-field-row .is-sum-column {
+    background: #6947ad;
+  }
+  .wildcard-sheet-table tbody tr:first-child .is-condition-column {
+    border-top: 2px solid var(--wc-blue);
+  }
+  .wildcard-sheet-table tbody tr:first-child .is-sum-column {
+    border-top: 2px solid var(--wc-violet);
+  }
+  .wildcard-sheet-table tbody tr:last-child .is-condition-column {
+    border-bottom: 2px solid var(--wc-blue);
+  }
+  .wildcard-sheet-table tbody tr:last-child .is-sum-column {
+    border-bottom: 2px solid var(--wc-violet);
+  }
+  .wildcard-sheet-table tr.is-hit td {
+    color: #126c45;
+    background: #eaf8f1;
     font-weight: 850;
   }
-  .wildcard-sheet-table th.is-range { box-shadow: inset 2px 0 var(--wc-blue), inset -2px 0 var(--wc-blue); }
-  .wildcard-sheet-table td.is-range {
-    box-shadow: inset 2px 0 rgba(21,105,216,.95), inset -2px 0 rgba(21,105,216,.95);
-    background: #fbfdff;
+  .wildcard-sheet-table tr.is-hit .sheet-row-number {
+    color: #126c45;
+    background: #e4f4eb;
+    font-weight: 900;
+  }
+  .wildcard-sheet-table tr.is-hit .is-condition-column,
+  .wildcard-sheet-table tr.is-hit .is-sum-column {
+    color: #126c45;
+    background: #dff5e9;
   }
   .wildcard-sheet-table td.is-match,
   .wildcard-sheet-table td.is-sum {
     color: var(--wc-green);
-    background: var(--wc-green-soft);
+    box-shadow: inset 0 0 0 2px var(--wc-green);
     font-weight: 900;
   }
+  .wildcard-sheet-table tbody tr:last-child th,
   .wildcard-sheet-table tbody tr:last-child td { border-bottom: 0; }
   .wildcard-sheet-table tr > *:last-child { border-right: 0; }
-  .wildcard-formula-panel { display: flex; min-width: 0; flex-direction: column; gap: .8rem; }
+  .wildcard-sheet-legend { display: flex; flex-wrap: wrap; gap: .42rem; }
+  .wildcard-sheet-legend span {
+    display: inline-flex;
+    gap: .36rem;
+    align-items: center;
+    padding: .44rem .52rem;
+    border: 1px solid #d2deea;
+    border-radius: 9px;
+    background: #f8fbff;
+    font-size: .76rem;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+  .wildcard-sheet-legend b {
+    display: grid;
+    place-items: center;
+    width: 21px;
+    height: 21px;
+    border-radius: 999px;
+    color: #fff;
+    background: #6e8ba8;
+    font-size: .68rem;
+  }
+  .wildcard-sheet-legend .legend-blue { color: #245f9d; border-color: #bcd3ea; background: #edf6ff; }
+  .wildcard-sheet-legend .legend-blue b { background: var(--wc-blue); }
+  .wildcard-sheet-legend .legend-orange { color: #9b482f; border-color: #efd0c5; background: #fff5f1; }
+  .wildcard-sheet-legend .legend-orange b { background: var(--wc-orange); }
+  .wildcard-sheet-legend .legend-violet { color: #6243a0; border-color: #d7caef; background: #f7f2ff; }
+  .wildcard-sheet-legend .legend-violet b { background: var(--wc-violet); }
+
+  .wildcard-formula-panel {
+    display: grid;
+    align-content: center;
+    gap: .72rem;
+    min-width: 0;
+    padding: .82rem;
+    border: 1px solid #cbd9e8;
+    border-radius: 17px;
+    background: rgba(255,255,255,.86);
+  }
+  .wildcard-formula-heading { display: flex; gap: .5rem; align-items: center; color: var(--wc-navy); }
+  .wildcard-formula-heading span { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 6px; color: #fff; background: var(--wc-green); font-size: .82rem; }
+  .wildcard-formula-heading strong { font-size: .96rem; }
   .wildcard-formula-line,
   .wildcard-result-card,
   .wildcard-formula-legend > div {
@@ -574,21 +717,50 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   }
   .wildcard-formula-line {
     overflow-x: auto;
-    padding: .85rem .9rem;
-    border-radius: 15px;
+    padding: .95rem .82rem;
+    border-radius: 11px;
     color: #101820;
     font-family: ui-monospace,SFMono-Regular,Menlo,monospace;
     font-size: clamp(.9rem,1.8vw,1.05rem);
     font-weight: 850;
+    line-height: 2.05;
     white-space: nowrap;
   }
+  .wildcard-formula-line b { position: relative; display: inline-block; margin: .34rem .24rem; padding: .05rem .18rem; border-radius: 6px; }
+  .wildcard-formula-line em {
+    position: absolute;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    color: #fff;
+    background: #6e8ba8;
+    box-shadow: 0 2px 5px rgba(0,0,0,.18);
+    font-size: .68rem;
+    font-style: normal;
+    line-height: 1;
+  }
+  .wildcard-formula-line b:nth-of-type(1) em { top: -.55rem; left: -.5rem; }
+  .wildcard-formula-line b:nth-of-type(2) em { top: -.55rem; right: -.5rem; }
+  .wildcard-formula-line b:nth-of-type(3) em { right: -.5rem; bottom: -.55rem; }
   .tone-blue { color: var(--wc-blue); }
   .tone-orange { color: var(--wc-orange); }
   .tone-violet { color: var(--wc-violet); }
-  .wildcard-formula-legend { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem; }
-  .wildcard-formula-legend > div { min-width: 0; padding: .68rem; border-radius: 13px; }
+  .tone-blue em { background: var(--wc-blue); }
+  .tone-orange em { background: var(--wc-orange); }
+  .tone-violet em { background: var(--wc-violet); }
+  .wildcard-formula-legend { display: grid; gap: .46rem; }
+  .wildcard-formula-legend > div { display: grid; grid-template-columns: auto minmax(0,1fr); gap: .52rem; min-width: 0; padding: .58rem; border-radius: 10px; }
+  .wildcard-formula-legend > div > b { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; color: #fff; background: #6e8ba8; font-size: .76rem; }
+  .wildcard-formula-legend .tone-blue > b { background: var(--wc-blue); }
+  .wildcard-formula-legend .tone-orange > b { background: var(--wc-orange); }
+  .wildcard-formula-legend .tone-violet > b { background: var(--wc-violet); }
+  .wildcard-formula-legend section { min-width: 0; }
   .wildcard-formula-legend small { display: block; font-size: .72rem; font-weight: 800; }
-  .wildcard-formula-legend strong { display: block; margin: .24rem 0; color: var(--wc-navy); font-size: .88rem; }
+  .wildcard-formula-legend strong { display: inline; margin-right: .35rem; color: var(--wc-navy); font-size: .88rem; }
   .wildcard-formula-legend span { display: block; overflow-x: auto; font-family: ui-monospace,SFMono-Regular,Menlo,monospace; font-size: .81rem; white-space: nowrap; }
   .wildcard-result-card { display: grid; gap: .55rem; padding: .85rem; border-color: #bee1ca; border-radius: 15px; background: linear-gradient(145deg,#fff,#f0faf4); }
   .wildcard-result-card > div { display: grid; grid-template-columns: 52px 1fr; gap: .55rem; align-items: center; }
@@ -596,6 +768,11 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   .wildcard-result-card strong { color: var(--wc-navy); font-size: .86rem; }
   .wildcard-result-card .is-total { padding-top: .55rem; border-top: 1px dashed #a9d7b9; }
   .wildcard-result-card .is-total strong { color: var(--wc-green); font-size: 1.55rem; }
+  .wildcard-result-path { display: grid; grid-template-columns: 1fr auto 1fr auto 1.15fr; gap: .34rem; align-items: center; }
+  .wildcard-result-path span,
+  .wildcard-result-path strong { padding: .58rem; border: 1px solid #d4e0eb; border-radius: 8px; background: #fff; font-size: .78rem; line-height: 1.45; text-align: center; }
+  .wildcard-result-path strong { color: var(--wc-green); border-color: #baddca; background: #eef9f3; }
+  .wildcard-result-path i { color: var(--wc-orange); font-style: normal; font-weight: 950; }
 
   .wildcard-symbol-lab {
     display: grid;
@@ -764,9 +941,13 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     box-shadow: none;
   }
   html[data-theme='dark'] .wildcard-sheet-table-wrap,
+  html[data-theme='dark'] .wildcard-formula-panel,
   html[data-theme='dark'] .wildcard-formula-line,
   html[data-theme='dark'] .wildcard-formula-legend > div,
   html[data-theme='dark'] .wildcard-result-card,
+  html[data-theme='dark'] .wildcard-result-path span,
+  html[data-theme='dark'] .wildcard-result-path strong,
+  html[data-theme='dark'] .wildcard-sheet-legend span,
   html[data-theme='dark'] .wildcard-function-route article,
   html[data-theme='dark'] .wildcard-condition-family article,
   html[data-theme='dark'] .wildcard-mode-compare code,
@@ -774,10 +955,17 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     border-color: #2c4964;
     background: #0b1928;
   }
+  html[data-theme='dark'] .wildcard-sheet-table { border-color: #31516b; background: #0b1927; }
   html[data-theme='dark'] .wildcard-sheet-table td { border-color: #243f59; color: #cfdeeb; background: #0d1c2b; }
-  html[data-theme='dark'] .wildcard-sheet-table td.is-range { background: #102338; }
+  html[data-theme='dark'] .wildcard-sheet-table .sheet-column-letters th,
+  html[data-theme='dark'] .wildcard-sheet-table .sheet-row-number { color: #c9d8e5; border-color: #29475f; background: #16283a; }
+  html[data-theme='dark'] .wildcard-sheet-table .sheet-column-letters .sheet-corner { background: linear-gradient(135deg, transparent 49%, #617588 50%, #617588 100%), #16283a; }
+  html[data-theme='dark'] .wildcard-sheet-table .is-condition-column,
+  html[data-theme='dark'] .wildcard-sheet-table .is-sum-column { background: #10283d; }
+  html[data-theme='dark'] .wildcard-sheet-table tr.is-hit td { color: #8fe0b6; background: #153c32; }
+  html[data-theme='dark'] .wildcard-sheet-table tr.is-hit .sheet-row-number { color: #8fe0b6; background: #17382f; }
   html[data-theme='dark'] .wildcard-sheet-table td.is-match,
-  html[data-theme='dark'] .wildcard-sheet-table td.is-sum { color: #6ad49b; background: #123629; }
+  html[data-theme='dark'] .wildcard-sheet-table td.is-sum { color: #8fe0b6; }
 
   @media (max-width: 900px) {
     .wildcard-sheet-workspace { grid-template-columns: 1fr; }
@@ -789,7 +977,8 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     .wildcard-sheet-hero__header { align-items: flex-start; padding: 1rem; }
     .wildcard-excel-mark { flex-basis: 44px; width: 44px; height: 44px; font-size: 1.25rem; }
     .wildcard-sheet-workspace { padding: 0 .8rem .9rem; }
-    .wildcard-formula-legend,
+    .wildcard-sheet-table-wrap { overflow-x: auto; }
+    .wildcard-sheet-table { min-width: 720px; table-layout: fixed; }
     .wildcard-condition-family,
     .wildcard-function-route__grid { grid-template-columns: 1fr; }
     .wildcard-symbol-lab,
@@ -801,5 +990,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     .wildcard-trouble-stack article { grid-template-columns: 34px minmax(0,1fr); }
     .wildcard-trouble-stack article > b { grid-column: 2; justify-self: start; }
     .wildcard-lookup-link { align-items: flex-start; flex-direction: column; }
+    .wildcard-result-path { grid-template-columns: 1fr; }
+    .wildcard-result-path i { transform: rotate(90deg); text-align: center; }
   }
 `}</style>
