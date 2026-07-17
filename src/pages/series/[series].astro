@@ -38,23 +38,47 @@ const totalMinutes = posts.reduce((sum, post) => sum + post.data.minutes, 0);
       </div>
     </header>
 
-    {series.resource && (
-      <aside class="series-resource-card" aria-label="系列配套下载">
-        <div class="series-resource-content">
-          <p class="eyebrow">配套下载</p>
-          <h2>{series.resource.title}</h2>
-          <p>{series.resource.description}</p>
-          <span>{series.resource.meta}</span>
+    <aside class="series-detail-sidebar" aria-label="系列导览">
+      <section class="series-overview-card">
+        <div class="series-overview-heading">
+          <div>
+            <p class="eyebrow">系列导览</p>
+            <h2>学习进度一览</h2>
+          </div>
+          <span>{posts.length} 篇</span>
         </div>
-        <a
-          class="series-resource-download"
-          href={withBase(series.resource.href)}
-          download
-        >
-          下载练习工作簿 <span aria-hidden="true">↓</span>
-        </a>
-      </aside>
-    )}
+        <p class="series-overview-tip">建议按顺序阅读，也可以从当前最需要的主题开始。</p>
+        <ol class="series-overview-list">
+          {posts.map((post, index) => (
+            <li>
+              <a href={withBase(`/articles/${post.slug}/`)}>
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <strong>{post.data.title}</strong>
+                <span aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {series.resource && (
+        <section class="series-resource-card" aria-label="系列配套下载">
+          <div class="series-resource-content">
+            <p class="eyebrow">配套下载</p>
+            <h2>{series.resource.title}</h2>
+            <p>{series.resource.description}</p>
+            <span>{series.resource.meta}</span>
+          </div>
+          <a
+            class="series-resource-download"
+            href={withBase(series.resource.href)}
+            download
+          >
+            下载练习工作簿 <span aria-hidden="true">↓</span>
+          </a>
+        </section>
+      )}
+    </aside>
 
     <section class="series-route-section">
       <div class="series-route-heading">
