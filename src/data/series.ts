@@ -18,14 +18,26 @@ export const seriesMetaList = [
   {
     id: 'excel-functions',
     title: 'Excel 函数学习与实战',
-    description: '从函数知识地图、基础案例到查找匹配、通配符和中级函数案例，用真实表格掌握常用 Excel 函数。',
+    description: '从函数知识地图、基础案例到查找匹配、通配符和中级函数案例，用真实表格和配套练习工作簿掌握常用 Excel 函数。',
     order: 3,
+    resource: {
+      title: 'Excel 函数学习系列练习工作簿',
+      description: '15 个工作表、71 道练习，覆盖 39 个基础函数、18 个中级函数、通配符和综合应用，并附参考答案。',
+      href: '/files/excel-functions/excel-functions-practice-workbook.xlsx',
+      meta: 'XLSX · 15 个工作表 · 含参考答案',
+    },
   },
 ] as const satisfies readonly {
   id: SeriesId;
   title: string;
   description: string;
   order: number;
+  resource?: {
+    title: string;
+    description: string;
+    href: string;
+    meta: string;
+  };
 }[];
 
 export function getSeriesMeta(seriesId: SeriesId) {

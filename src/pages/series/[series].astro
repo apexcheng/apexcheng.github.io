@@ -38,6 +38,24 @@ const totalMinutes = posts.reduce((sum, post) => sum + post.data.minutes, 0);
       </div>
     </header>
 
+    {series.resource && (
+      <aside class="series-resource-card" aria-label="系列配套下载">
+        <div class="series-resource-content">
+          <p class="eyebrow">配套下载</p>
+          <h2>{series.resource.title}</h2>
+          <p>{series.resource.description}</p>
+          <span>{series.resource.meta}</span>
+        </div>
+        <a
+          class="series-resource-download"
+          href={withBase(series.resource.href)}
+          download
+        >
+          下载练习工作簿 <span aria-hidden="true">↓</span>
+        </a>
+      </aside>
+    )}
+
     <section class="series-route-section">
       <div class="series-route-heading">
         <p class="eyebrow">阅读路线</p>
