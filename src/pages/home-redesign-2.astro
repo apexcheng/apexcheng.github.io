@@ -1,0 +1,1898 @@
+---
+import { getCollection } from 'astro:content';
+import { categoryMetaList } from '../data/categories';
+import { seriesMetaList } from '../data/series';
+import { siteMeta } from '../data/site';
+import { withBase } from '../utils/paths';
+
+const posts = (await getCollection('posts'))
+  .filter((post) => !post.data.draft && !post.data.private)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const latestPosts = posts.filter((post) => post.data.category !== '视觉实验室').slice(0, 3);
+const archivePosts = posts.filter((post) => post.data.category !== '视觉实验室').slice(0, 6);
+const visualPosts = posts.filter((post) => post.data.category === '视觉实验室').slice(0, 3);
+
+const categoryDetails = [
+  {
+    id: 'life',
+    name: '生活',
+    accent: 'coral',
+    description: '记录生活判断与思考',
+    action: '阅读生活笔记',
+  },
+  {
+    id: 'practice',
+    name: '实践',
+    accent: 'cyan',
+    description: '真实项目复盘与技术实现',
+    action: '查看实践记录',
+  },
+  {
+    id: 'tutorial',
+    name: '教程',
+    accent: 'coral',
+    description: '系统化方法与步骤拆解',
+    action: '浏览教程',
+  },
+  {
+    id: 'lab',
+    name: '视觉实验室',
+    accent: 'cyan',
+    description: '图表、代码与页面的表达实验',
+    action: '进入实验室',
+  },
+].map((category) => ({
+  ...category,
+  href: withBase(`/articles/category/${encodeURIComponent(category.name)}/`),
+  count: posts.filter((post) => post.data.category === category.name).length,
+}));
+
+const featuredSeries = seriesMetaList.map((series) => ({
+  ...series,
+  count: posts.filter((post) => post.data.series === series.id).length,
+  href: withBase(`/series/${series.id}/`),
+}));
+
+const searchItems = posts.map((post) => ({
+  title: post.data.title,
+  description: post.data.description,
+  category: post.data.category,
+  href: withBase(`/articles/${post.slug}/`),
+  keywords: post.data.tags.join(' '),
+}));
+
+const formatDate = (date: Date) => date.toISOString().slice(0, 10);
+const paperTexture = withBase('/images/home-redesign-2/paper-texture.webp');
+const linedPaper = withBase('/images/home-redesign-2/lined-paper.webp');
+const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
+---
+
+<!doctype html>
+<html lang="zh-CN" class="paper-page">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="黄撑的技术笔记首页重设计第二套：以纸张、手记和真实工作痕迹组织生活、实践、教程与视觉实验。"
+    />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#f8f4eb" />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg?v=3')} />
+    <title>首页方案二 · 纸张手记 | {siteMeta.siteName}</title>
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      try {
+        if (localStorage.getItem('home-redesign-2-theme') === 'night') {
+          document.documentElement.dataset.paperTheme = 'night';
+        }
+      } catch (error) {}
+    </script>
+  </head>
+  <body
+    data-pagefind-ignore
+    style={`--paper-texture: url("${paperTexture}"); --lined-paper: url("${linedPaper}"); --grid-paper: url("${gridPaper}");`}
+  >
+    <header class="paper-header">
+      <div class="header-inner">
+        <a class="paper-brand" href="#top" aria-label="返回方案二顶部">
+          <span class="brand-mark">C</span>
+          <strong>{siteMeta.siteName}</strong>
+        </a>
+
+        <nav class="paper-nav" aria-label="主导航">
+          <a class="active" href={withBase('/')}>首页</a>
+          <a href={withBase('/articles/')}>文章</a>
+          <a href={withBase('/series/')}>系列</a>
+          <a href={withBase('/projects/')}>项目</a>
+          <button type="button" data-search-open>搜索</button>
+          <a href={withBase(siteMeta.rssPath)}>RSS</a>
+          <a href={withBase('/about/')}>关于我</a>
+        </nav>
+
+        <div class="header-actions">
+          <button class="header-button" type="button" data-theme-toggle aria-label="切换纸张明暗主题">
+            主题
+          </button>
+          <div class="intro-picker" data-intro-picker>
+            <button
+              class="header-button"
+              type="button"
+              aria-expanded="false"
+              aria-controls="paper-intro-menu"
+              data-intro-toggle
+            >开屏</button>
+            <div class="intro-menu" id="paper-intro-menu" role="menu">
+              <a role="menuitem" href={withBase('/intro-motion-2/')}>液态字场</a>
+              <a role="menuitem" href={withBase('/intro-motion-3/')}>天体序章</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="paper-hero shell">
+        <div class="hero-copy" data-reveal>
+          <p class="hand-note">记录生活判断，沉淀可复用的方法</p>
+          <h1>把真实问题，拆成<br /><span>看得懂、做得到</span>的方法。</h1>
+          <p class="hero-lead">
+            这里记录生活里的判断、真实项目中的技术实践，<br class="desktop-only" />以及不断整理完善的方法。
+          </p>
+          <div class="hero-actions">
+            <a class="primary-action" href={withBase('/articles/')}>开始阅读</a>
+            <a class="text-action" href={withBase('/series/')}>查看系列 <span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+
+        <aside class="recent-board" aria-label="最近在做" data-reveal>
+          <h2>最近在做</h2>
+          <div class="ink-stroke" aria-hidden="true"></div>
+          <div class="recent-list">
+            {latestPosts.map((post, index) => (
+              <a class="recent-item" href={withBase(`/articles/${post.slug}/`)}>
+                <span class:list={['recent-dot', index === 1 ? 'coral' : 'cyan']} aria-hidden="true"></span>
+                <div>
+                  <div class="recent-title-row">
+                    <h3>{post.data.title}</h3>
+                    <time datetime={formatDate(post.data.date)}>{formatDate(post.data.date)}</time>
+                  </div>
+                  <p>{post.data.description}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+          <a class="small-link" href={withBase('/articles/')}>查看全部动态 <span aria-hidden="true">→</span></a>
+        </aside>
+      </section>
+
+      <section class="direction-section shell" aria-labelledby="direction-title">
+        <div class="section-hand-label" id="direction-title">正在持续整理</div>
+        <div class="direction-board" data-reveal>
+          <article class="direction-card direction-life">
+            <div class="direction-heading">
+              <h2>生活 <span>/</span></h2>
+              <p>记录生活判断与思考</p>
+            </div>
+            <div class="paper-visual lined-note" aria-hidden="true">
+              <span class="note-date">2026-07-18</span>
+              <p>把一天的注意力，<br />放在最重要的三件事上。</p>
+            </div>
+            <a href={categoryDetails[0].href}>{categoryDetails[0].action} <span aria-hidden="true">→</span></a>
+          </article>
+
+          <article class="direction-card direction-practice">
+            <div class="direction-heading">
+              <h2>实践 <span>/</span></h2>
+              <p>真实项目复盘与技术实现</p>
+            </div>
+            <div class="code-sheet" aria-label="Agent 实践代码片段">
+              <pre><code><span class="line-no">1</span> <span class="code-blue">from</span> agent <span class="code-blue">import</span> run_agent
+<span class="line-no">2</span> <span class="code-blue">from</span> rpa <span class="code-blue">import</span> run_flow
+<span class="line-no">3</span> <span class="code-blue">from</span> notes <span class="code-blue">import</span> publish
+<span class="line-no">4</span>
+<span class="line-no">5</span> TODAY = [<span class="code-green">"pricing"</span>, <span class="code-green">"stock"</span>]
+<span class="line-no">6</span>
+<span class="line-no">7</span> <span class="code-blue">for</span> task <span class="code-blue">in</span> TODAY:
+<span class="line-no">8</span>     result = run_agent(task)
+<span class="line-no">9</span>     publish(run_flow(result))</code></pre>
+            </div>
+            <a href={categoryDetails[1].href}>{categoryDetails[1].action} <span aria-hidden="true">→</span></a>
+          </article>
+
+          <article class="direction-card direction-tutorial">
+            <div class="direction-heading">
+              <h2>教程 <span>/</span></h2>
+              <p>系统化方法与步骤拆解</p>
+            </div>
+            <div class="paper-visual grid-note" aria-hidden="true">
+              <strong>工作流设计清单</strong>
+              <ol>
+                <li>明确目标与边界</li>
+                <li>输入 / 输出定义</li>
+                <li>分解任务与依赖</li>
+                <li>选择工具与顺序</li>
+                <li>验证与迭代</li>
+              </ol>
+            </div>
+            <a href={categoryDetails[2].href}>{categoryDetails[2].action} <span aria-hidden="true">→</span></a>
+          </article>
+
+          <article class="direction-card direction-lab">
+            <div class="direction-heading">
+              <h2>视觉实验室</h2>
+              <p>图表、代码与页面的表达实验</p>
+            </div>
+            <div class="sheet-preview" aria-label="表格与图表预览">
+              <div class="mini-table">
+                <div class="table-head"><span>主题</span><span>状态</span><span>进度</span></div>
+                <div><span>Agent 工作流</span><span>进行中</span><b>60%</b></div>
+                <div><span>内容自动化</span><span>设计中</span><b>45%</b></div>
+                <div><span>知识图谱卡片</span><span>设计中</span><b>30%</b></div>
+              </div>
+              <div class="mini-chart" aria-hidden="true">
+                <i style="--value: 38%"></i><i style="--value: 62%"></i><i style="--value: 82%"></i><i style="--value: 55%"></i>
+              </div>
+            </div>
+            <a href={categoryDetails[3].href}>{categoryDetails[3].action} <span aria-hidden="true">→</span></a>
+          </article>
+        </div>
+      </section>
+
+      <section class="series-section shell" id="series">
+        <div class="section-heading" data-reveal>
+          <div>
+            <p class="hand-note">把零散内容，整理成一条路线</p>
+            <h2>正在形成的阅读系列</h2>
+          </div>
+          <a href={withBase('/series/')}>查看全部系列 <span aria-hidden="true">→</span></a>
+        </div>
+
+        <div class="series-grid">
+          {featuredSeries.map((series, index) => (
+            <a class:list={['series-folder', index === 1 && 'cyan', index === 2 && 'blue']} href={series.href} data-reveal>
+              <div class="folder-tab">系列 {String(index + 1).padStart(2, '0')}</div>
+              <div class="folder-meta">
+                <span>{series.count} 篇文章</span>
+                <span>持续更新</span>
+              </div>
+              <h3>{series.title}</h3>
+              <p>{series.description}</p>
+              <span class="folder-action">打开阅读路线 <i aria-hidden="true">→</i></span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section class="lab-section shell" id="visual-lab">
+        <div class="section-heading" data-reveal>
+          <div>
+            <p class="hand-note cyan-note">把复杂关系，画到一眼能懂</p>
+            <h2>最近的视觉实验</h2>
+          </div>
+          <a href={categoryDetails[3].href}>进入视觉实验室 <span aria-hidden="true">→</span></a>
+        </div>
+
+        <div class="lab-list">
+          {visualPosts.map((post, index) => (
+            <a class="lab-row" href={withBase(`/articles/${post.slug}/`)} data-reveal>
+              <span class="lab-index">0{index + 1}</span>
+              <div class="lab-copy">
+                <span>{post.data.tags.slice(0, 2).join(' · ')}</span>
+                <h3>{post.data.title}</h3>
+                <p>{post.data.description}</p>
+              </div>
+              <div class:list={['lab-swatch', index === 1 && 'coral', index === 2 && 'ink']} aria-hidden="true">
+                <i></i><i></i><i></i>
+              </div>
+              <span class="lab-arrow" aria-hidden="true">→</span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section class="archive-section shell" id="latest">
+        <div class="section-heading" data-reveal>
+          <div>
+            <p class="hand-note">最近写下来的内容</p>
+            <h2>文章归档</h2>
+          </div>
+          <a href={withBase('/articles/')}>浏览全部文章 <span aria-hidden="true">→</span></a>
+        </div>
+
+        <div class="archive-list">
+          {archivePosts.map((post, index) => (
+            <a class="archive-row" href={withBase(`/articles/${post.slug}/`)} data-reveal>
+              <span class="archive-no">{String(index + 1).padStart(2, '0')}</span>
+              <div>
+                <span class="archive-category">{post.data.category}</span>
+                <h3>{post.data.title}</h3>
+              </div>
+              <p>{post.data.description}</p>
+              <time datetime={formatDate(post.data.date)}>{formatDate(post.data.date)}</time>
+              <span aria-hidden="true">↗</span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section class="closing-section shell" data-reveal>
+        <p>持续记录真实问题、判断过程和最后做法。</p>
+        <a href={withBase('/articles/')}>从最新一篇开始 <span aria-hidden="true">→</span></a>
+      </section>
+    </main>
+
+    <footer class="paper-footer">
+      <div class="shell">
+        <span>© 2026 黄撑</span>
+        <span>个人记录 · 真实实践 · 持续整理</span>
+        <a href={siteMeta.githubUrl}>GitHub ↗</a>
+      </div>
+    </footer>
+
+    <div class="search-overlay" data-search-overlay aria-hidden="true">
+      <button class="search-backdrop" type="button" aria-label="关闭搜索" data-search-close></button>
+      <section class="search-sheet" role="dialog" aria-modal="true" aria-labelledby="search-title">
+        <div class="search-head">
+          <div>
+            <p class="hand-note">在手记里找一找</p>
+            <h2 id="search-title">搜索文章</h2>
+          </div>
+          <button type="button" data-search-close>关闭</button>
+        </div>
+        <input
+          type="search"
+          placeholder="输入标题、分类或关键词"
+          autocomplete="off"
+          aria-label="搜索文章"
+          data-search-input
+        />
+        <div
+          class="search-results"
+          data-search-results
+          data-items={JSON.stringify(searchItems)}
+          data-all-articles={withBase('/articles/')}
+          aria-live="polite"
+        ></div>
+      </section>
+    </div>
+
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        var themeToggle = document.querySelector('[data-theme-toggle]');
+        var introPicker = document.querySelector('[data-intro-picker]');
+        var introToggle = document.querySelector('[data-intro-toggle]');
+        var searchOverlay = document.querySelector('[data-search-overlay]');
+        var searchInput = document.querySelector('[data-search-input]');
+        var searchResults = document.querySelector('[data-search-results]');
+        var searchOpeners = document.querySelectorAll('[data-search-open]');
+        var searchClosers = document.querySelectorAll('[data-search-close]');
+
+        function setNight(isNight) {
+          root.dataset.paperTheme = isNight ? 'night' : 'day';
+          try {
+            localStorage.setItem('home-redesign-2-theme', isNight ? 'night' : 'day');
+          } catch (error) {}
+        }
+
+        if (themeToggle) {
+          themeToggle.addEventListener('click', function () {
+            setNight(root.dataset.paperTheme !== 'night');
+          });
+        }
+
+        function setIntroOpen(isOpen) {
+          if (!introPicker || !introToggle) return;
+          introPicker.classList.toggle('open', isOpen);
+          introToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+
+        if (introToggle) {
+          introToggle.addEventListener('click', function () {
+            setIntroOpen(!introPicker.classList.contains('open'));
+          });
+        }
+
+        document.addEventListener('click', function (event) {
+          if (introPicker && !introPicker.contains(event.target)) setIntroOpen(false);
+        });
+
+        function renderResults(query) {
+          if (!searchResults) return;
+          var items = [];
+          try {
+            items = JSON.parse(searchResults.dataset.items || '[]');
+          } catch (error) {}
+
+          var keyword = query.trim().toLowerCase();
+          var matches = items.filter(function (item) {
+            if (!keyword) return true;
+            return [item.title, item.description, item.category, item.keywords]
+              .join(' ')
+              .toLowerCase()
+              .includes(keyword);
+          }).slice(0, 6);
+
+          if (!matches.length) {
+            searchResults.innerHTML = '<p class="search-empty">没有找到相关内容，换个关键词试试。</p>';
+            return;
+          }
+
+          searchResults.innerHTML = matches.map(function (item) {
+            return '<a href="' + item.href + '">' +
+              '<span>' + item.category + '</span>' +
+              '<strong>' + item.title + '</strong>' +
+              '<p>' + item.description + '</p>' +
+              '</a>';
+          }).join('') + '<a class="search-all" href="' + searchResults.dataset.allArticles + '">浏览全部文章 →</a>';
+        }
+
+        function setSearchOpen(isOpen) {
+          if (!searchOverlay) return;
+          searchOverlay.classList.toggle('open', isOpen);
+          searchOverlay.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+          document.body.classList.toggle('search-open', isOpen);
+          if (isOpen) {
+            renderResults(searchInput ? searchInput.value : '');
+            window.setTimeout(function () { if (searchInput) searchInput.focus(); }, 120);
+          }
+        }
+
+        searchOpeners.forEach(function (button) {
+          button.addEventListener('click', function () { setSearchOpen(true); });
+        });
+        searchClosers.forEach(function (button) {
+          button.addEventListener('click', function () { setSearchOpen(false); });
+        });
+        if (searchInput) {
+          searchInput.addEventListener('input', function () { renderResults(searchInput.value); });
+        }
+
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') {
+            setIntroOpen(false);
+            setSearchOpen(false);
+          }
+        });
+
+        var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var revealItems = document.querySelectorAll('[data-reveal]');
+        if (reducedMotion || !('IntersectionObserver' in window)) {
+          revealItems.forEach(function (item) { item.classList.add('visible'); });
+        } else {
+          var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            });
+          }, { threshold: 0.12 });
+          revealItems.forEach(function (item) { observer.observe(item); });
+        }
+      })();
+    </script>
+  </body>
+</html>
+
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #f8f4eb;
+    --paper-soft: #fcfaf5;
+    --paper-card: rgba(255, 253, 248, 0.88);
+    --ink: #111c2e;
+    --ink-soft: #5d6270;
+    --line: rgba(82, 70, 53, 0.2);
+    --line-strong: rgba(82, 70, 53, 0.34);
+    --blue: #0667e8;
+    --blue-soft: #55a5e4;
+    --cyan: #35b8c2;
+    --coral: #f06f45;
+    --shadow: 0 18px 50px rgba(70, 55, 37, 0.09);
+    --serif: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
+    --sans: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    --hand: "Kaiti SC", "STKaiti", KaiTi, var(--serif);
+  }
+
+  :root[data-paper-theme='night'] {
+    color-scheme: dark;
+    --paper: #171b22;
+    --paper-soft: #20252d;
+    --paper-card: rgba(35, 40, 48, 0.92);
+    --ink: #f3eee3;
+    --ink-soft: #b9b4aa;
+    --line: rgba(235, 225, 207, 0.16);
+    --line-strong: rgba(235, 225, 207, 0.3);
+    --blue: #65a7ff;
+    --blue-soft: #79bde8;
+    --cyan: #58cbd0;
+    --coral: #ff8e68;
+    --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--paper);
+    background-image: var(--paper-texture);
+    background-repeat: repeat;
+    background-size: 900px auto;
+    color: var(--ink);
+    font-family: var(--serif);
+    margin: 0;
+    min-width: 320px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  :root[data-paper-theme='night'] body {
+    background-blend-mode: multiply;
+    background-image: none;
+  }
+
+  body.search-open {
+    overflow: hidden;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button,
+  input {
+    font: inherit;
+  }
+
+  button {
+    color: inherit;
+  }
+
+  .shell {
+    margin: 0 auto;
+    max-width: 1370px;
+    padding-left: 44px;
+    padding-right: 44px;
+    width: 100%;
+  }
+
+  .paper-header {
+    backdrop-filter: blur(14px);
+    background: color-mix(in srgb, var(--paper-soft) 89%, transparent);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .header-inner {
+    align-items: center;
+    display: grid;
+    gap: 28px;
+    grid-template-columns: auto 1fr auto;
+    height: 84px;
+    margin: 0 auto;
+    max-width: 1470px;
+    padding: 0 44px;
+  }
+
+  .paper-brand {
+    align-items: center;
+    display: inline-flex;
+    gap: 16px;
+    white-space: nowrap;
+  }
+
+  .paper-brand strong {
+    font-size: 21px;
+    letter-spacing: 0.01em;
+  }
+
+  .brand-mark {
+    align-items: center;
+    background: linear-gradient(145deg, #1567f2, #10b4b8);
+    border-radius: 11px;
+    box-shadow: 0 8px 18px rgba(20, 103, 232, 0.2);
+    color: #fff;
+    display: inline-flex;
+    font-family: var(--sans);
+    font-size: 22px;
+    font-weight: 700;
+    height: 44px;
+    justify-content: center;
+    width: 44px;
+  }
+
+  .paper-nav {
+    align-items: stretch;
+    display: flex;
+    gap: clamp(22px, 2.7vw, 46px);
+    height: 100%;
+    justify-content: center;
+  }
+
+  .paper-nav a,
+  .paper-nav button {
+    align-items: center;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 16px;
+    padding: 0;
+    position: relative;
+  }
+
+  .paper-nav a::after,
+  .paper-nav button::after {
+    background: var(--blue);
+    bottom: 18px;
+    content: '';
+    height: 2px;
+    left: 50%;
+    position: absolute;
+    transform: translateX(-50%) scaleX(0);
+    transition: transform 0.24s ease;
+    width: 28px;
+  }
+
+  .paper-nav a:hover::after,
+  .paper-nav button:hover::after,
+  .paper-nav .active::after {
+    transform: translateX(-50%) scaleX(1);
+  }
+
+  .paper-nav .active {
+    color: var(--blue);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  .header-button {
+    background: color-mix(in srgb, var(--paper-soft) 86%, transparent);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    min-height: 42px;
+    padding: 0 18px;
+    transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  }
+
+  .header-button:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+    transform: translateY(-1px);
+  }
+
+  .intro-picker {
+    position: relative;
+  }
+
+  .intro-menu {
+    background: var(--paper-soft);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    display: grid;
+    gap: 3px;
+    min-width: 160px;
+    opacity: 0;
+    padding: 7px;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    transform: translateY(-5px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .intro-picker.open .intro-menu {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .intro-menu a {
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 14px;
+    padding: 11px 12px;
+  }
+
+  .intro-menu a:hover {
+    background: color-mix(in srgb, var(--blue) 9%, transparent);
+    color: var(--blue);
+  }
+
+  .paper-hero {
+    display: grid;
+    gap: clamp(48px, 6vw, 92px);
+    grid-template-columns: minmax(0, 1.62fr) minmax(360px, 0.86fr);
+    padding-bottom: 62px;
+    padding-top: 64px;
+  }
+
+  .hero-copy {
+    padding: 20px 0 0 8px;
+  }
+
+  .hand-note {
+    color: var(--coral);
+    font-family: var(--hand);
+    font-size: 20px;
+    letter-spacing: 0.11em;
+    margin: 0 0 25px;
+    transform: rotate(-1.2deg);
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(55px, 5.25vw, 78px);
+    font-weight: 700;
+    letter-spacing: -0.045em;
+    line-height: 1.26;
+    margin: 0;
+  }
+
+  .hero-copy h1 span {
+    display: inline-block;
+    position: relative;
+  }
+
+  .hero-copy h1 span::after {
+    background: var(--blue-soft);
+    bottom: 2px;
+    content: '';
+    height: 3px;
+    left: -8px;
+    opacity: 0.55;
+    position: absolute;
+    transform: rotate(-0.7deg);
+    width: calc(100% + 18px);
+  }
+
+  .hero-lead {
+    color: var(--ink-soft);
+    font-size: 19px;
+    line-height: 1.85;
+    margin: 31px 0 28px;
+  }
+
+  .hero-actions {
+    align-items: center;
+    display: flex;
+    gap: 34px;
+  }
+
+  .primary-action {
+    background: var(--blue);
+    border: 1px solid var(--blue);
+    border-radius: 6px;
+    box-shadow: 0 11px 25px rgba(6, 103, 232, 0.18);
+    color: #fff;
+    display: inline-flex;
+    font-size: 17px;
+    justify-content: center;
+    min-width: 146px;
+    padding: 15px 26px;
+    transition: box-shadow 0.24s ease, transform 0.24s ease;
+  }
+
+  .primary-action:hover {
+    box-shadow: 0 15px 30px rgba(6, 103, 232, 0.25);
+    transform: translateY(-2px);
+  }
+
+  .text-action,
+  .small-link,
+  .section-heading > a,
+  .direction-card > a {
+    color: var(--blue);
+    font-family: var(--serif);
+  }
+
+  .text-action span,
+  .small-link span,
+  .section-heading > a span,
+  .direction-card > a span {
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+
+  .text-action:hover span,
+  .small-link:hover span,
+  .section-heading > a:hover span,
+  .direction-card > a:hover span {
+    transform: translateX(4px);
+  }
+
+  .recent-board {
+    border-left: 1px solid var(--line-strong);
+    padding: 8px 0 0 32px;
+  }
+
+  .recent-board h2 {
+    font-family: var(--hand);
+    font-size: 23px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    margin: 0;
+    transform: rotate(-1.1deg);
+  }
+
+  .ink-stroke {
+    background: var(--cyan);
+    height: 2px;
+    margin: 7px 0 11px;
+    opacity: 0.58;
+    transform: rotate(-1.3deg);
+    width: 106px;
+  }
+
+  .recent-item {
+    display: grid;
+    gap: 13px;
+    grid-template-columns: 9px minmax(0, 1fr);
+    padding: 17px 0 20px;
+  }
+
+  .recent-item + .recent-item {
+    border-top: 1px solid var(--line);
+  }
+
+  .recent-dot {
+    background: var(--cyan);
+    border-radius: 50%;
+    height: 8px;
+    margin-top: 9px;
+    width: 8px;
+  }
+
+  .recent-dot.coral {
+    background: var(--coral);
+  }
+
+  .recent-title-row {
+    align-items: start;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .recent-title-row h3 {
+    font-size: 16px;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .recent-title-row time {
+    color: var(--ink-soft);
+    font-family: var(--sans);
+    font-size: 11px;
+    padding-top: 4px;
+  }
+
+  .recent-item p {
+    color: var(--ink-soft);
+    display: -webkit-box;
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 6px 0 0;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .small-link {
+    display: inline-flex;
+    font-size: 14px;
+    margin: 4px 0 0 17px;
+  }
+
+  .direction-section {
+    padding-bottom: 105px;
+    position: relative;
+  }
+
+  .section-hand-label {
+    display: inline-block;
+    font-family: var(--hand);
+    font-size: 22px;
+    letter-spacing: 0.1em;
+    margin: 0 0 -9px 36px;
+    padding: 0 8px 6px;
+    position: relative;
+    transform: rotate(-1.2deg);
+    z-index: 2;
+  }
+
+  .section-hand-label::after {
+    background: var(--cyan);
+    bottom: 0;
+    content: '';
+    height: 2px;
+    left: 0;
+    opacity: 0.62;
+    position: absolute;
+    transform: rotate(0.8deg);
+    width: 178px;
+  }
+
+  .direction-board {
+    background: color-mix(in srgb, var(--paper-soft) 88%, transparent);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 37px 25px 28px;
+    position: relative;
+  }
+
+  .direction-board::before,
+  .direction-board::after {
+    background: color-mix(in srgb, var(--paper-soft) 80%, transparent);
+    border: 1px solid var(--line);
+    content: '';
+    inset: 10px -14px -10px 12px;
+    pointer-events: none;
+    position: absolute;
+    transform: rotate(0.35deg);
+    z-index: -1;
+  }
+
+  .direction-board::after {
+    inset: 18px 10px -16px -8px;
+    transform: rotate(-0.25deg);
+  }
+
+  .direction-card {
+    display: flex;
+    min-height: 380px;
+    flex-direction: column;
+    padding: 0 24px;
+  }
+
+  .direction-card + .direction-card {
+    border-left: 1px solid var(--line);
+  }
+
+  .direction-heading h2 {
+    font-size: 23px;
+    margin: 0 0 5px;
+  }
+
+  .direction-heading h2 span {
+    color: var(--coral);
+    margin-left: 6px;
+  }
+
+  .direction-practice .direction-heading h2 span {
+    color: var(--cyan);
+  }
+
+  .direction-heading p {
+    color: var(--ink-soft);
+    font-size: 13px;
+    margin: 0;
+  }
+
+  .paper-visual,
+  .code-sheet,
+  .sheet-preview {
+    margin: 23px 0 20px;
+  }
+
+  .lined-note {
+    background-image: var(--lined-paper);
+    background-position: center;
+    background-size: cover;
+    color: #1e2734;
+    font-family: var(--hand);
+    min-height: 198px;
+    padding: 42px 34px 30px;
+    transform: rotate(-1.8deg);
+  }
+
+  .note-date {
+    display: block;
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    margin-bottom: 11px;
+  }
+
+  .lined-note p {
+    font-size: 17px;
+    line-height: 2.05;
+    margin: 0;
+  }
+
+  .code-sheet {
+    background: #111d2d;
+    border: 1px solid #273b53;
+    border-radius: 5px;
+    box-shadow: 0 8px 17px rgba(12, 24, 40, 0.18);
+    color: #e2e8f0;
+    min-height: 198px;
+    overflow: hidden;
+    padding: 16px 12px;
+    transform: rotate(0.3deg);
+  }
+
+  .code-sheet pre {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 10px;
+    line-height: 1.7;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .line-no {
+    color: #64748b;
+    display: inline-block;
+    margin-right: 9px;
+    text-align: right;
+    width: 13px;
+  }
+
+  .code-blue {
+    color: #7dd3fc;
+  }
+
+  .code-green {
+    color: #bef264;
+  }
+
+  .grid-note {
+    background-image: var(--grid-paper);
+    background-position: center;
+    background-size: cover;
+    color: #242832;
+    font-family: var(--hand);
+    min-height: 198px;
+    padding: 30px 35px;
+    transform: rotate(1.1deg);
+  }
+
+  .grid-note strong {
+    display: block;
+    font-size: 17px;
+    margin-bottom: 10px;
+  }
+
+  .grid-note ol {
+    font-size: 13px;
+    line-height: 1.75;
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  .sheet-preview {
+    background: #fffdf8;
+    border: 1px solid #d8d4ca;
+    box-shadow: 0 8px 19px rgba(74, 57, 34, 0.08);
+    color: #263144;
+    min-height: 198px;
+    padding: 16px;
+    transform: rotate(-0.5deg);
+  }
+
+  .mini-table {
+    border: 1px solid #cfd5dc;
+    font-family: var(--sans);
+    font-size: 8px;
+  }
+
+  .mini-table > div {
+    display: grid;
+    grid-template-columns: 1.6fr 0.85fr 0.6fr;
+  }
+
+  .mini-table span,
+  .mini-table b {
+    border-right: 1px solid #d9dee4;
+    border-top: 1px solid #d9dee4;
+    font-weight: 500;
+    padding: 5px 4px;
+  }
+
+  .mini-table .table-head span {
+    background: #f1f4f7;
+    border-top: 0;
+    font-weight: 700;
+  }
+
+  .mini-chart {
+    align-items: end;
+    border-bottom: 1px solid #d7dce3;
+    display: flex;
+    gap: 11px;
+    height: 70px;
+    justify-content: center;
+    margin: 13px 8px 0;
+  }
+
+  .mini-chart i {
+    background: var(--cyan);
+    height: var(--value);
+    width: 15px;
+  }
+
+  .direction-card > a {
+    font-size: 14px;
+    margin-top: auto;
+  }
+
+  .series-section,
+  .lab-section,
+  .archive-section {
+    border-top: 1px solid var(--line);
+    padding-bottom: 112px;
+    padding-top: 96px;
+  }
+
+  .section-heading {
+    align-items: end;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 48px;
+  }
+
+  .section-heading .hand-note {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .section-heading h2 {
+    font-size: clamp(34px, 3vw, 46px);
+    letter-spacing: -0.03em;
+    margin: 0;
+  }
+
+  .section-heading > a {
+    font-size: 15px;
+    padding-bottom: 7px;
+  }
+
+  .series-grid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .series-folder {
+    background: color-mix(in srgb, var(--paper-card) 93%, transparent);
+    border: 1px solid var(--line);
+    box-shadow: 0 14px 40px rgba(75, 58, 36, 0.07);
+    min-height: 330px;
+    padding: 42px 33px 31px;
+    position: relative;
+    transition: box-shadow 0.26s ease, transform 0.26s ease;
+  }
+
+  .series-folder::before {
+    background: var(--coral);
+    content: '';
+    height: 3px;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+
+  .series-folder.cyan::before {
+    background: var(--cyan);
+  }
+
+  .series-folder.blue::before {
+    background: var(--blue);
+  }
+
+  .series-folder:hover {
+    box-shadow: 0 20px 48px rgba(75, 58, 36, 0.12);
+    transform: translateY(-4px) rotate(-0.2deg);
+  }
+
+  .folder-tab {
+    background: var(--paper-card);
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    font-family: var(--hand);
+    font-size: 14px;
+    left: 26px;
+    padding: 7px 18px;
+    position: absolute;
+    top: -32px;
+  }
+
+  .folder-meta {
+    color: var(--ink-soft);
+    display: flex;
+    font-family: var(--sans);
+    font-size: 11px;
+    justify-content: space-between;
+  }
+
+  .series-folder h3 {
+    font-size: 26px;
+    line-height: 1.45;
+    margin: 31px 0 15px;
+  }
+
+  .series-folder p {
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.8;
+    margin: 0;
+  }
+
+  .folder-action {
+    bottom: 31px;
+    color: var(--blue);
+    font-size: 14px;
+    left: 33px;
+    position: absolute;
+  }
+
+  .folder-action i {
+    display: inline-block;
+    font-style: normal;
+    margin-left: 5px;
+    transition: transform 0.2s ease;
+  }
+
+  .series-folder:hover .folder-action i {
+    transform: translateX(4px);
+  }
+
+  .cyan-note {
+    color: var(--cyan);
+  }
+
+  .lab-list {
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .lab-row {
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    gap: 28px;
+    grid-template-columns: 46px minmax(0, 1.4fr) 280px 24px;
+    min-height: 168px;
+    padding: 24px 18px;
+    transition: background-color 0.24s ease, padding-left 0.24s ease;
+  }
+
+  .lab-row:hover {
+    background: color-mix(in srgb, var(--paper-card) 58%, transparent);
+    padding-left: 28px;
+  }
+
+  .lab-index {
+    color: var(--ink-soft);
+    font-family: var(--sans);
+    font-size: 12px;
+  }
+
+  .lab-copy > span {
+    color: var(--cyan);
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  .lab-copy h3 {
+    font-size: 23px;
+    margin: 8px 0 7px;
+  }
+
+  .lab-copy p {
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  .lab-swatch {
+    align-items: end;
+    background: #eef7f7;
+    border: 1px solid #c7dcdd;
+    display: flex;
+    gap: 16px;
+    height: 92px;
+    justify-content: center;
+    padding: 17px;
+  }
+
+  .lab-swatch i {
+    background: var(--cyan);
+    height: 30%;
+    width: 28px;
+  }
+
+  .lab-swatch i:nth-child(2) {
+    height: 72%;
+  }
+
+  .lab-swatch i:nth-child(3) {
+    height: 48%;
+  }
+
+  .lab-swatch.coral {
+    background: #fbf0ea;
+    border-color: #ecd2c3;
+  }
+
+  .lab-swatch.coral i {
+    background: var(--coral);
+  }
+
+  .lab-swatch.ink {
+    background: #172333;
+    border-color: #2c4259;
+  }
+
+  .lab-swatch.ink i {
+    background: #77baf1;
+  }
+
+  .lab-arrow {
+    color: var(--blue);
+    font-size: 19px;
+  }
+
+  .archive-list {
+    display: grid;
+  }
+
+  .archive-row {
+    align-items: center;
+    border-top: 1px solid var(--line);
+    display: grid;
+    gap: 28px;
+    grid-template-columns: 42px minmax(250px, 0.9fr) minmax(0, 1.15fr) 94px 20px;
+    min-height: 122px;
+    padding: 20px 12px;
+    transition: color 0.2s ease, padding-left 0.2s ease;
+  }
+
+  .archive-row:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .archive-row:hover {
+    color: var(--blue);
+    padding-left: 22px;
+  }
+
+  .archive-no,
+  .archive-row time {
+    color: var(--ink-soft);
+    font-family: var(--sans);
+    font-size: 11px;
+  }
+
+  .archive-category {
+    color: var(--coral);
+    font-family: var(--sans);
+    font-size: 11px;
+  }
+
+  .archive-row h3 {
+    font-size: 19px;
+    margin: 6px 0 0;
+  }
+
+  .archive-row p {
+    color: var(--ink-soft);
+    display: -webkit-box;
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 0;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .closing-section {
+    align-items: center;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 112px;
+    padding-top: 112px;
+  }
+
+  .closing-section p {
+    font-family: var(--hand);
+    font-size: clamp(28px, 3vw, 42px);
+    margin: 0;
+    transform: rotate(-0.7deg);
+  }
+
+  .closing-section a {
+    background: var(--blue);
+    border-radius: 5px;
+    color: #fff;
+    padding: 14px 22px;
+  }
+
+  .paper-footer {
+    border-top: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-family: var(--sans);
+    font-size: 12px;
+  }
+
+  .paper-footer .shell {
+    align-items: center;
+    display: flex;
+    gap: 26px;
+    justify-content: space-between;
+    min-height: 90px;
+  }
+
+  .search-overlay {
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    position: fixed;
+    transition: opacity 0.24s ease;
+    z-index: 100;
+  }
+
+  .search-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .search-backdrop {
+    backdrop-filter: blur(7px);
+    background: rgba(25, 28, 34, 0.35);
+    border: 0;
+    inset: 0;
+    position: absolute;
+    width: 100%;
+  }
+
+  .search-sheet {
+    background-color: var(--paper-soft);
+    background-image: var(--paper-texture);
+    border: 1px solid var(--line-strong);
+    box-shadow: 0 28px 90px rgba(32, 24, 14, 0.24);
+    left: 50%;
+    max-height: min(760px, calc(100vh - 80px));
+    max-width: 760px;
+    overflow: auto;
+    padding: 34px;
+    position: absolute;
+    top: 40px;
+    transform: translate(-50%, -14px);
+    transition: transform 0.24s ease;
+    width: calc(100% - 40px);
+  }
+
+  .search-overlay.open .search-sheet {
+    transform: translate(-50%, 0);
+  }
+
+  .search-head {
+    align-items: start;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .search-head .hand-note {
+    font-size: 15px;
+    margin: 0 0 5px;
+  }
+
+  .search-head h2 {
+    font-size: 31px;
+    margin: 0;
+  }
+
+  .search-head button {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    cursor: pointer;
+    padding: 8px 13px;
+  }
+
+  .search-sheet input {
+    background: color-mix(in srgb, var(--paper-card) 85%, transparent);
+    border: 0;
+    border-bottom: 2px solid var(--ink);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 19px;
+    margin: 28px 0 16px;
+    outline: none;
+    padding: 15px 4px;
+    width: 100%;
+  }
+
+  .search-results {
+    display: grid;
+  }
+
+  .search-results > a:not(.search-all) {
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    gap: 4px;
+    padding: 17px 4px;
+  }
+
+  .search-results > a:not(.search-all):hover strong {
+    color: var(--blue);
+  }
+
+  .search-results span {
+    color: var(--coral);
+    font-family: var(--sans);
+    font-size: 10px;
+  }
+
+  .search-results strong {
+    font-size: 17px;
+  }
+
+  .search-results p {
+    color: var(--ink-soft);
+    font-size: 12px;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .search-all {
+    color: var(--blue);
+    padding: 19px 4px 4px;
+  }
+
+  .search-empty {
+    padding: 35px 4px;
+  }
+
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.46s ease, transform 0.46s ease;
+  }
+
+  .js [data-reveal].visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 1120px) {
+    .header-inner {
+      gap: 18px;
+      grid-template-columns: auto 1fr;
+    }
+
+    .paper-nav {
+      gap: 24px;
+      justify-content: flex-end;
+    }
+
+    .header-actions {
+      display: none;
+    }
+
+    .paper-hero {
+      gap: 42px;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
+    }
+
+    .hero-copy h1 {
+      font-size: clamp(48px, 5.5vw, 64px);
+    }
+
+    .direction-board {
+      gap: 0;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .direction-card {
+      min-height: 390px;
+      padding: 24px 34px;
+    }
+
+    .direction-card + .direction-card {
+      border-left: 0;
+    }
+
+    .direction-card:nth-child(even) {
+      border-left: 1px solid var(--line);
+    }
+
+    .direction-card:nth-child(n + 3) {
+      border-top: 1px solid var(--line);
+    }
+
+    .lab-row {
+      grid-template-columns: 42px minmax(0, 1fr) 220px 20px;
+    }
+  }
+
+  @media (max-width: 820px) {
+    .shell {
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+
+    .paper-header {
+      position: relative;
+    }
+
+    .header-inner {
+      height: auto;
+      padding: 17px 24px 0;
+    }
+
+    .paper-brand strong {
+      font-size: 18px;
+    }
+
+    .brand-mark {
+      border-radius: 9px;
+      font-size: 18px;
+      height: 38px;
+      width: 38px;
+    }
+
+    .paper-nav {
+      border-top: 1px solid var(--line);
+      gap: 25px;
+      grid-column: 1 / -1;
+      justify-content: flex-start;
+      margin-top: 14px;
+      overflow-x: auto;
+      padding: 0 1px;
+      scrollbar-width: none;
+    }
+
+    .paper-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .paper-nav a,
+    .paper-nav button {
+      font-size: 14px;
+      min-height: 50px;
+      white-space: nowrap;
+    }
+
+    .paper-nav a::after,
+    .paper-nav button::after {
+      bottom: 7px;
+    }
+
+    .paper-hero {
+      grid-template-columns: 1fr;
+      padding-bottom: 72px;
+      padding-top: 43px;
+    }
+
+    .hero-copy {
+      padding-left: 0;
+    }
+
+    .hero-copy h1 {
+      font-size: clamp(43px, 10.5vw, 62px);
+    }
+
+    .recent-board {
+      border-left: 0;
+      border-top: 1px solid var(--line-strong);
+      padding: 28px 0 0;
+    }
+
+    .series-grid {
+      gap: 54px;
+      grid-template-columns: 1fr;
+    }
+
+    .lab-row {
+      grid-template-columns: 36px minmax(0, 1fr) 18px;
+    }
+
+    .lab-swatch {
+      display: none;
+    }
+
+    .archive-row {
+      align-items: start;
+      gap: 12px 18px;
+      grid-template-columns: 32px minmax(0, 1fr) 70px;
+      padding: 20px 4px;
+    }
+
+    .archive-row p {
+      grid-column: 2 / -1;
+    }
+
+    .archive-row > span:last-child {
+      display: none;
+    }
+
+    .closing-section {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 35px;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .shell {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .header-inner {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .paper-brand {
+      gap: 10px;
+    }
+
+    .paper-brand strong {
+      font-size: 16px;
+    }
+
+    .hand-note {
+      font-size: 17px;
+      letter-spacing: 0.05em;
+    }
+
+    .hero-copy h1 {
+      font-size: clamp(38px, 11.2vw, 52px);
+      line-height: 1.3;
+    }
+
+    .hero-lead {
+      font-size: 16px;
+    }
+
+    .desktop-only {
+      display: none;
+    }
+
+    .hero-actions {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .recent-title-row {
+      grid-template-columns: 1fr;
+    }
+
+    .direction-section {
+      padding-bottom: 80px;
+    }
+
+    .section-hand-label {
+      margin-left: 10px;
+    }
+
+    .direction-board {
+      grid-template-columns: 1fr;
+      padding: 25px 13px 15px;
+    }
+
+    .direction-card {
+      min-height: 370px;
+      padding: 27px 15px;
+    }
+
+    .direction-card:nth-child(even) {
+      border-left: 0;
+    }
+
+    .direction-card + .direction-card {
+      border-top: 1px solid var(--line);
+    }
+
+    .section-heading {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .section-heading h2 {
+      font-size: 32px;
+    }
+
+    .series-section,
+    .lab-section,
+    .archive-section {
+      padding-bottom: 82px;
+      padding-top: 76px;
+    }
+
+    .series-folder {
+      min-height: 350px;
+      padding-left: 25px;
+      padding-right: 25px;
+    }
+
+    .folder-action {
+      left: 25px;
+    }
+
+    .lab-row {
+      gap: 14px;
+      grid-template-columns: 26px minmax(0, 1fr) 16px;
+      padding-left: 2px;
+      padding-right: 2px;
+    }
+
+    .lab-copy h3 {
+      font-size: 19px;
+    }
+
+    .archive-row {
+      grid-template-columns: 28px minmax(0, 1fr);
+    }
+
+    .archive-row time {
+      grid-column: 2;
+    }
+
+    .archive-row p {
+      grid-column: 2;
+    }
+
+    .closing-section {
+      padding-bottom: 82px;
+      padding-top: 82px;
+    }
+
+    .paper-footer .shell {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 10px;
+      justify-content: center;
+      min-height: 120px;
+    }
+
+    .search-sheet {
+      max-height: calc(100vh - 24px);
+      padding: 24px 19px;
+      top: 12px;
+      width: calc(100% - 24px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    .js [data-reveal] {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+</style>
