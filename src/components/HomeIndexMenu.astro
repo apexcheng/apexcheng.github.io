@@ -12,24 +12,32 @@ const homeOptions = [
     title: '轻晶蓝',
     note: '当前正式首页',
     href: withBase('/'),
+    styleTheme: 'visual-system',
+    theme: 'light',
   },
   {
     id: 'home-redesign',
     title: '数字展厅',
     note: '沉浸式技术展厅',
     href: withBase('/home-redesign/'),
+    styleTheme: '',
+    theme: '',
   },
   {
     id: 'home-redesign-2',
     title: '纸张手记',
     note: '温和的纸张与手记感',
     href: withBase('/home-redesign-2/'),
+    styleTheme: 'index-gradient',
+    theme: 'light',
   },
   {
     id: 'home-redesign-3',
     title: '个人工作台',
     note: '清晰直接的知识工作台',
     href: withBase('/home-redesign-3/'),
+    styleTheme: 'visual-system',
+    theme: 'light',
   },
 ] as const;
 ---
@@ -48,6 +56,8 @@ const homeOptions = [
         class:list={['home-index-option', current === option.id && 'active']}
         href={option.href}
         role="menuitem"
+        data-style-theme={option.styleTheme || undefined}
+        data-theme={option.theme || undefined}
       >
         <span>
           <strong>{option.title}</strong>
@@ -95,6 +105,17 @@ const homeOptions = [
     });
 
     options.forEach(function (option, index) {
+      option.addEventListener('click', function () {
+        var styleTheme = option.getAttribute('data-style-theme');
+        var theme = option.getAttribute('data-theme');
+        if (!styleTheme || !theme) return;
+
+        try {
+          localStorage.setItem('styleTheme', styleTheme);
+          localStorage.setItem('theme', theme);
+        } catch (error) {}
+      });
+
       option.addEventListener('keydown', function (event) {
         if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
         event.preventDefault();

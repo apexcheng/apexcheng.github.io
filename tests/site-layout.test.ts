@@ -107,6 +107,15 @@ describe('site layout', () => {
     expect(homeIndexSource).toContain("title: '个人工作台'");
   });
 
+  it('binds the three retained home designs to their matching site themes', () => {
+    expect(homeIndexSource).toContain("styleTheme: 'visual-system'");
+    expect(homeIndexSource).toContain("styleTheme: 'index-gradient'");
+    expect(homeIndexSource.match(/styleTheme: 'visual-system'/g)).toHaveLength(2);
+    expect(homeIndexSource).toContain("localStorage.setItem('styleTheme', styleTheme)");
+    expect(homeIndexSource).toContain("localStorage.setItem('theme', theme)");
+    expect(homeIndexSource).toContain("styleTheme: ''");
+  });
+
   it('uses intro three for first visits and direct homepage entries without intercepting internal home links', () => {
     expect(layoutSource).toContain("data-home-url={withBase('/')}");
     expect(layoutSource).toContain("data-default-intro-url={withBase('/intro-motion-3/')}");
