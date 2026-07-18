@@ -2,9 +2,14 @@
 import { getCollection } from 'astro:content';
 import {
   ArrowRight,
+  Bot,
   BookOpen,
+  BrainCircuit,
+  ChartNoAxesColumnIncreasing,
+  CircleCheck,
   CodeXml,
   Coffee,
+  FileInput,
   Folder,
   Image,
   Search,
@@ -189,57 +194,56 @@ const formatDate = (date: Date) =>
                 <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
                 <span>workbench.py</span>
               </div>
-              <pre><code><span class="code-comment"># 把实践沉淀成可复用方法</span>
+              <pre><code><span class="code-comment"># 记录生活判断、工具实践与系统学习</span>
 
 <span class="code-keyword">from</span> agent <span class="code-keyword">import</span> run_agent
 <span class="code-keyword">from</span> rpa <span class="code-keyword">import</span> run_flow
 <span class="code-keyword">from</span> notes <span class="code-keyword">import</span> publish
 
-TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"stock"</span>, <span class="code-string">"reviews"</span>]
+TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"stock"</span>, <span class="code-string">"rev"</span>]
 
 <span class="code-keyword">def</span> <span class="code-function">workbench</span>():
     <span class="code-keyword">for</span> task <span class="code-keyword">in</span> TODAY:
-        publish(run_flow(run_agent(task)))
+        result = run_agent(task)
+        publish(run_flow(result))
 
     <span class="code-keyword">return</span> <span class="code-string">"notes synced"</span></code></pre>
             </article>
 
             <article class="data-window workbench-panel">
               <div class="panel-title">
-                <div>
-                  <span>今日数据速览</span>
-                  <strong>Excel</strong>
+                <div class="panel-heading-inline">
+                  <ChartNoAxesColumnIncreasing size={15} stroke-width={2} />
+                  <strong>今日数据速览 · Excel</strong>
                 </div>
-                <span>07 / 18</span>
               </div>
               <table>
                 <thead>
-                  <tr><th>主题</th><th>进度</th><th>状态</th></tr>
+                  <tr><th>日期</th><th>主题</th><th>进度</th><th>状态</th></tr>
                 </thead>
                 <tbody>
-                  <tr><td>pricing</td><td>80%</td><td>进行中</td></tr>
-                  <tr><td>stock</td><td>65%</td><td>进行中</td></tr>
-                  <tr><td>reviews</td><td>100%</td><td>已完成</td></tr>
-                  <tr><td>notes</td><td>90%</td><td>整理中</td></tr>
+                  <tr><td>07-18</td><td>pricing</td><td>80%</td><td>进行中</td></tr>
+                  <tr><td>07-18</td><td>stock</td><td>65%</td><td>进行中</td></tr>
+                  <tr><td>07-17</td><td>reviews</td><td>100%</td><td>已完成</td></tr>
+                  <tr><td>07-16</td><td>tools</td><td>90%</td><td>已完成</td></tr>
                 </tbody>
               </table>
             </article>
 
             <article class="flow-window workbench-panel">
               <div class="panel-title">
-                <div>
-                  <span>Agent 工作流</span>
-                  <strong>从目标到结果</strong>
+                <div class="panel-heading-inline">
+                  <Workflow size={15} stroke-width={2} />
+                  <strong>Agent 工作流</strong>
                 </div>
-                <span>04 步</span>
               </div>
               <ol>
-                <li><b>01</b><span>输入<small>目标与资料</small></span></li>
-                <li><b>02</b><span>理解<small>拆解与判断</small></span></li>
-                <li><b>03</b><span>执行<small>Agent / RPA</small></span></li>
-                <li><b>04</b><span>输出<small>记录与验证</small></span></li>
+                <li><b><FileInput size={13} /></b><span>输入<small>主题 / 数据 / 文档</small></span></li>
+                <li><b><BrainCircuit size={13} /></b><span>理解<small>拆解与分析</small></span></li>
+                <li><b><Bot size={13} /></b><span>执行<small>Agent / RPA / AI</small></span></li>
+                <li><b><CircleCheck size={13} /></b><span>输出<small>记录 / 表格 / 文章</small></span></li>
               </ol>
-              <p>把想法变成能执行、能复用的知识和工具。</p>
+              <p>把想法变成可复用的知识和工具</p>
             </article>
           </div>
         </div>
@@ -1194,6 +1198,17 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     gap: 1px;
   }
 
+  .panel-heading-inline {
+    display: flex !important;
+    min-height: 25px;
+    align-items: center;
+    gap: 7px !important;
+  }
+
+  .panel-heading-inline svg {
+    color: var(--blue);
+  }
+
   .panel-title span {
     color: var(--faint);
     font-size: 10px;
@@ -1272,7 +1287,8 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .flow-window > p {
     margin: 10px 0 0;
     color: var(--blue);
-    font-size: 11px;
+    font-family: KaiTi, STKaiti, "Kaiti SC", serif;
+    font-size: 12px;
     text-align: right;
   }
 
