@@ -59,7 +59,7 @@ const searchItems = [
         try {
           var savedTheme = localStorage.getItem('theme');
           var savedStyleTheme = localStorage.getItem('styleTheme');
-          if (!['index', 'classic', 'index-gradient', 'classic-gradient', 'visual-system'].includes(savedStyleTheme)) savedStyleTheme = '';
+          if (!['index-gradient', 'visual-system'].includes(savedStyleTheme)) savedStyleTheme = '';
           document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';
           document.documentElement.dataset.styleTheme = savedStyleTheme || 'visual-system';
         } catch (error) {
@@ -152,12 +152,9 @@ const searchItems = [
               <span aria-hidden="true">主题</span>
             </button>
             <div class="theme-menu-panel" role="menu">
-              <button type="button" role="menuitem" data-theme-option data-style-theme-value="index" data-theme-value="light">晨曦手札</button>
-              <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="light">素笺经典</button>
               <button type="button" role="menuitem" data-theme-option data-style-theme-value="index-gradient" data-theme-value="light">晨曦渐变</button>
-              <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic-gradient" data-theme-value="light">素笺渐变</button>
               <button type="button" role="menuitem" data-theme-option data-style-theme-value="visual-system" data-theme-value="light">视觉晶蓝</button>
-              <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="dark">玄墨经典</button>
+              <button type="button" role="menuitem" data-theme-option data-style-theme-value="visual-system" data-theme-value="dark">玄墨经典</button>
             </div>
           </div>
           <div class="intro-menu" data-intro-menu>
@@ -205,7 +202,7 @@ const searchItems = [
 
         function currentStyleTheme() {
           var styleTheme = document.documentElement.dataset.styleTheme;
-          return ['index', 'classic', 'index-gradient', 'classic-gradient', 'visual-system'].includes(styleTheme) ? styleTheme : 'visual-system';
+          return ['index-gradient', 'visual-system'].includes(styleTheme) ? styleTheme : 'visual-system';
         }
 
         function setOpen(isOpen) {
@@ -217,10 +214,7 @@ const searchItems = [
         function updateThemeButton() {
           if (!themeButton) return;
           var themeLabels = {
-            index: '晨曦手札',
-            classic: '素笺经典',
             'index-gradient': '晨曦渐变',
-            'classic-gradient': '素笺渐变',
             'visual-system': '视觉晶蓝',
             dark: '玄墨经典',
           };
@@ -239,7 +233,7 @@ const searchItems = [
 
         themeOptions.forEach(function (option) {
           option.addEventListener('click', function () {
-            var nextStyleTheme = option.getAttribute('data-style-theme-value') || 'classic';
+            var nextStyleTheme = option.getAttribute('data-style-theme-value') || 'visual-system';
             var nextTheme = option.getAttribute('data-theme-value') || 'light';
             document.documentElement.dataset.styleTheme = nextStyleTheme;
             document.documentElement.dataset.theme = nextTheme;

@@ -51,30 +51,26 @@ describe('site layout', () => {
   it('keeps switchable themes with visual system as the default', () => {
     expect(layoutSource).toContain("localStorage.getItem('styleTheme')");
     expect(layoutSource).toContain("document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light'");
-    expect(layoutSource).toContain("['index', 'classic', 'index-gradient', 'classic-gradient', 'visual-system'].includes(savedStyleTheme)");
+    expect(layoutSource).toContain("['index-gradient', 'visual-system'].includes(savedStyleTheme)");
     expect(layoutSource).toContain("document.documentElement.dataset.styleTheme = savedStyleTheme || 'visual-system'");
     expect(layoutSource).toContain('data-theme-menu-toggle');
     expect(layoutSource).toContain('data-theme-option');
     expect(layoutSource).toContain('主题');
-    expect(layoutSource.indexOf('晨曦手札')).toBeLessThan(layoutSource.indexOf('素笺经典'));
-    expect(layoutSource.indexOf('素笺经典')).toBeLessThan(layoutSource.indexOf('晨曦渐变'));
-    expect(layoutSource.indexOf('晨曦渐变')).toBeLessThan(layoutSource.indexOf('素笺渐变'));
-    expect(layoutSource.indexOf('素笺渐变')).toBeLessThan(layoutSource.indexOf('视觉晶蓝'));
+    expect(layoutSource.indexOf('晨曦渐变')).toBeLessThan(layoutSource.indexOf('视觉晶蓝'));
     expect(layoutSource.indexOf('视觉晶蓝')).toBeLessThan(layoutSource.indexOf('玄墨经典'));
-    expect(layoutSource).not.toContain('晨曦手札 · 渐变');
-    expect(layoutSource).not.toContain('素笺经典 · 渐变');
+    expect(layoutSource).not.toContain('晨曦手札');
+    expect(layoutSource).not.toContain('素笺经典');
+    expect(layoutSource).not.toContain('素笺渐变');
     expect(layoutSource).not.toContain('秋夜手札');
     expect(layoutSource).not.toContain('data-style-toggle');
     expect(layoutSource).not.toContain('data-theme-toggle');
-    expect(globalCssSource).toContain("html[data-style-theme='index']");
+    expect(globalCssSource).not.toContain("html[data-style-theme='index']");
     expect(globalCssSource).toContain("html[data-style-theme='index-gradient']");
     expect(globalCssSource).toContain("html[data-style-theme='index-gradient'] body");
-    expect(globalCssSource).toContain("html[data-style-theme='classic-gradient']");
-    expect(globalCssSource).toContain("html[data-style-theme='classic-gradient'] body");
+    expect(globalCssSource).not.toContain("html[data-style-theme='classic-gradient']");
     expect(globalCssSource).toContain("html[data-style-theme='visual-system']");
     expect(globalCssSource).toContain("html[data-style-theme='visual-system'] body");
     expect(globalCssSource).toContain('--display-font');
-    expect(globalCssSource).toContain('linear-gradient(135deg, #ece7d8 0%, #f8f1df 46%, #dfe7d6 100%)');
   });
 
   it('keeps navigation compatible with the GitHub Pages base path', () => {
