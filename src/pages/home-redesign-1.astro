@@ -1,5 +1,16 @@
 ---
 import { getCollection } from 'astro:content';
+import {
+  ArrowRight,
+  BookOpen,
+  CodeXml,
+  Coffee,
+  Folder,
+  Image,
+  Search,
+  Sun,
+  Workflow,
+} from '@lucide/astro';
 import { categoryMetaList } from '../data/categories';
 import { seriesMetaList } from '../data/series';
 import { siteMeta } from '../data/site';
@@ -28,8 +39,6 @@ const featuredSeries = seriesOrder
     note: seriesNotes[series.id],
   }));
 
-const categoryLabels = ['Life', 'Do', 'Learn', 'Lab'];
-const categoryNotes = ['生活判断', '真实项目', '系统教程', '表达实验'];
 const categoryCounts = categoryMetaList.map(
   (category) => posts.filter((post) => post.data.category === category.name).length,
 );
@@ -88,15 +97,24 @@ const formatDate = (date: Date) =>
         <a href={withBase('/articles/')}>文章</a>
         <a href={withBase('/series/')}>系列</a>
         <a href={withBase('/projects/')}>项目</a>
-        <button type="button" aria-expanded="false" data-search-toggle>搜索</button>
+        <button type="button" aria-expanded="false" data-search-toggle>
+          搜索
+          <Search size={16} stroke-width={1.9} />
+        </button>
         <a href={withBase(siteMeta.rssPath)}>RSS</a>
         <a href={withBase('/about/')}>关于我</a>
       </nav>
 
       <div class="header-controls">
-        <button type="button" data-theme-toggle aria-label="切换浅色或深色主题">主题</button>
+        <button type="button" data-theme-toggle aria-label="切换浅色或深色主题">
+          <Sun size={16} stroke-width={1.9} />
+          主题
+        </button>
         <div class="intro-control" data-intro-control>
-          <button type="button" aria-expanded="false" data-intro-toggle>开屏</button>
+          <button type="button" aria-expanded="false" data-intro-toggle>
+            <Workflow size={16} stroke-width={1.9} />
+            开屏
+          </button>
           <div class="intro-panel" data-intro-panel>
             <a href={withBase('/intro-motion-2/?return=%2Fhome-redesign-1%2F')}>
               <strong>液态字场</strong>
@@ -148,8 +166,14 @@ const formatDate = (date: Date) =>
               记录生活判断、项目实践、系统教程和视觉实验。
             </p>
             <div class="hero-actions">
-              <a class="button button-primary" href={withBase('/articles/')}>开始阅读</a>
-              <a class="button button-secondary" href={withBase('/projects/')}>查看项目</a>
+              <a class="button button-primary" href={withBase('/articles/')}>
+                开始阅读
+                <ArrowRight size={17} stroke-width={2} />
+              </a>
+              <a class="button button-secondary" href={withBase('/projects/')}>
+                <Folder size={17} stroke-width={1.9} />
+                查看项目
+              </a>
             </div>
             <div class="hero-stats" aria-label="站点统计">
               <span><strong>{posts.length}</strong>公开文章</span>
@@ -227,7 +251,10 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
             <h2>从这些方向开始</h2>
             <p>按长期内容主题组织，快速找到你关心的内容。</p>
           </div>
-          <a href={withBase('/articles/')}>查看全部主题</a>
+          <a href={withBase('/articles/')}>
+            查看全部主题
+            <ArrowRight size={15} stroke-width={2} />
+          </a>
         </div>
 
         <div class="topic-grid">
@@ -237,12 +264,16 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
               href={withBase(`/articles/category/${encodeURIComponent(category.name)}/`)}
               data-reveal
             >
-              <div class="topic-topline">
-                <span>{categoryLabels[index]}</span>
-                <span>{String(index + 1).padStart(2, '0')}</span>
+              <div class="topic-card-head">
+                <span class="topic-icon" aria-hidden="true">
+                  {index === 0 && <Coffee size={23} stroke-width={1.8} />}
+                  {index === 1 && <CodeXml size={23} stroke-width={1.8} />}
+                  {index === 2 && <BookOpen size={23} stroke-width={1.8} />}
+                  {index === 3 && <Image size={23} stroke-width={1.8} />}
+                </span>
+                <h3>{category.name}</h3>
+                <ArrowRight size={19} stroke-width={1.8} />
               </div>
-              <div class="topic-mark" aria-hidden="true">{categoryNotes[index]}</div>
-              <h3>{category.name}</h3>
               <p>{category.description.split('\n')[0]}</p>
               <span class="topic-meta">{categoryCounts[index]} 篇内容 · 持续更新</span>
             </a>
@@ -648,6 +679,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .site-nav button {
     position: relative;
     display: inline-flex;
+    gap: 5px;
     min-height: 42px;
     align-items: center;
     padding: 0;
@@ -691,8 +723,12 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .header-controls > button,
   .intro-control > button,
   .menu-toggle {
+    display: inline-flex;
     min-width: 62px;
     min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     padding: 0 14px;
     border: 1px solid var(--line);
     border-radius: 12px;
@@ -984,6 +1020,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     min-height: 50px;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     padding: 0 22px;
     border: 1px solid var(--line);
     border-radius: 12px;
@@ -1323,7 +1360,10 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   }
 
   .topics-heading a {
+    display: inline-flex;
     flex: 0 0 auto;
+    align-items: center;
+    gap: 5px;
     color: var(--blue);
     font-size: 12px;
     font-weight: 720;
@@ -1339,24 +1379,13 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     position: relative;
     display: grid;
     min-height: 220px;
-    grid-template-rows: auto 1fr auto auto auto;
+    grid-template-rows: auto 1fr auto;
     padding: 18px;
     overflow: hidden;
     border: 1px solid var(--line);
     border-radius: 18px;
     background: color-mix(in srgb, var(--surface) 94%, transparent);
     transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-  }
-
-  .topic-card::before {
-    position: absolute;
-    top: -72px;
-    right: -64px;
-    width: 170px;
-    height: 170px;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--topic-color) 12%, transparent);
-    content: '';
   }
 
   .topic-card:hover,
@@ -1371,34 +1400,36 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .topic-3 { --topic-color: var(--violet); }
   .topic-4 { --topic-color: var(--orange); }
 
-  .topic-topline {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    justify-content: space-between;
-    color: var(--faint);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+  .topic-card-head {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 18px;
   }
 
-  .topic-mark {
-    align-self: center;
+  .topic-icon {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    place-items: center;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--topic-color) 14%, var(--surface));
     color: var(--topic-color);
-    font-size: 16px;
-    font-weight: 760;
-    letter-spacing: -0.03em;
+  }
+
+  .topic-card-head > svg {
+    color: var(--muted);
   }
 
   .topic-card h3 {
-    margin-bottom: 6px;
+    margin-bottom: 0;
     font-size: 21px;
     letter-spacing: -0.035em;
   }
 
   .topic-card p {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     color: var(--muted);
     font-size: 13px;
     line-height: 1.65;
