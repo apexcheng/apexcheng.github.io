@@ -54,6 +54,8 @@ function startCosmicOpening(root) {
   let camera = null;
   let world = null;
   let earthSpin = null;
+  let earthSurface = null;
+  let atmosphere = null;
   let earthMaterial = null;
   let cloudMaterial = null;
   let cityMaterial = null;
@@ -78,9 +80,30 @@ function startCosmicOpening(root) {
   let targetPointerY = 0;
   let pointerInfluence = 0;
   let targetPointerInfluence = 0;
+  let earthDragPointerId = null;
+  let isDraggingEarth = false;
+  let earthDragMoved = false;
+  let earthDragStartX = 0;
+  let earthDragStartY = 0;
+  let earthDragLastX = 0;
+  let earthDragLastY = 0;
+  let earthDragLastAt = 0;
+  let earthManualRotationX = 0;
+  let earthManualRotationY = 0;
+  let earthRotationVelocityX = 0;
+  let earthRotationVelocityY = 0;
+  let earthAutoRotationY = -1.58;
+  let earthAutoRotationOffsetY = 0;
+  let latestEarthSceneTime = 0;
+  let earthScale = 1;
+  let targetEarthScale = 1;
+  let lastRenderAt = 0;
+  let suppressDoubleClickUntil = 0;
   let randomSeed = 20260717;
 
   const ripples = [];
+  const earthRaycaster = new THREE.Raycaster();
+  const earthPointer = new THREE.Vector2();
   const cameraPosition = new THREE.Vector3();
   const cameraTarget = new THREE.Vector3();
   const cameraKeysDesktop = createKeys([
@@ -388,8 +411,8 @@ function startCosmicOpening(root) {
       opacity: 0,
     });
 
-    const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-    earthSpin.add(earth);
+    earthSurface = new THREE.Mesh(earthGeometry, earthMaterial);
+    earthSpin.add(earthSurface);
 
     if (lights) {
       cityMaterial = new THREE.ShaderMaterial({
@@ -483,7 +506,7 @@ function startCosmicOpening(root) {
       ].join('\n'),
     });
 
-    const atmosphere = new THREE.Mesh(
+    atmosphere = new THREE.Mesh(
       new THREE.SphereGeometry(2.095, widthSegments, heightSegments),
       atmosphereMaterial
     );
@@ -522,6 +545,154 @@ function startCosmicOpening(root) {
     if (stars && stars.material && stars.material.uniforms) {
       stars.material.uniforms.pointScale.value = isMobile ? 44 : 62;
     }
+  }
+
+  function isEarthAtPointer(event) {
+    if (!earthSurface || !camera || currentProgress < 0.035) return false;
+
+    const bounds = canvas.getBoundingClientRect();
+    if (
+      event.clientX < bounds.left
+      || event.clientX > bounds.right
+      || event.clientY < bounds.top
+      || event.clientY > bounds.bottom
+    ) {
+      return false;
+    }
+
+    earthPointer.set(
+      (event.clientX - bounds.left) / Math.max(1, bounds.width) * 2 - 1,
+      -((event.clientY - bounds.top) / Math.max(1, bounds.height)) * 2 + 1
+    );
+    earthRaycaster.setFromCamera(earthPointer, camera);
+    return earthRaycaster.intersectObject(earthSurface, false).length > 0;
+  }
+
+  function updateEarthHover(event) {
+    if (isDraggingEarth || reducedMotion.matches || event.pointerType === 'touch') return;
+    root.classList.toggle('is-earth-hovered', isEarthAtPointer(event));
+  }
+
+  function beginEarthDrag(event) {
+    isDraggingEarth = true;
+    earthDragPointerId = event.pointerId;
+    earthDragMoved = false;
+    earthDragStartX = event.clientX;
+    earthDragStartY = event.clientY;
+    earthDragLastX = event.clientX;
+    earthDragLastY = event.clientY;
+    earthDragLastAt = performance.now();
+    earthRotationVelocityX = 0;
+    earthRotationVelocityY = 0;
+    targetPointerInfluence = 0;
+    root.classList.remove('is-earth-hovered');
+    root.classList.add('is-earth-dragging');
+
+    try {
+      root.setPointerCapture(event.pointerId);
+    } catch (error) {}
+  }
+
+  function moveEarthDrag(event) {
+    if (!isDraggingEarth || event.pointerId !== earthDragPointerId) return false;
+
+    const now = performance.now();
+    const deltaTime = Math.max(8, now - earthDragLastAt);
+    const deltaX = event.clientX - earthDragLastX;
+    const deltaY = event.clientY - earthDragLastY;
+    const horizontalRotation = deltaX * 0.0064;
+    const verticalRotation = deltaY * 0.0054;
+
+    earthManualRotationY += horizontalRotation;
+    earthManualRotationX = clamp(
+      earthManualRotationX + verticalRotation,
+      -0.42,
+      0.42
+    );
+    earthRotationVelocityY = clamp(
+      earthRotationVelocityY * 0.35 + horizontalRotation / deltaTime * 0.65,
+      -0.012,
+      0.012
+    );
+    earthRotationVelocityX = clamp(
+      earthRotationVelocityX * 0.35 + verticalRotation / deltaTime * 0.65,
+      -0.01,
+      0.01
+    );
+    earthDragLastX = event.clientX;
+    earthDragLastY = event.clientY;
+    earthDragLastAt = now;
+
+    if (Math.hypot(event.clientX - earthDragStartX, event.clientY - earthDragStartY) > 4) {
+      earthDragMoved = true;
+    }
+
+    renderScene(currentProgress, now);
+    return true;
+  }
+
+  function endEarthDrag(event, cancelled) {
+    if (!isDraggingEarth) return;
+    if (event && event.pointerId !== earthDragPointerId) return;
+
+    const pointerId = earthDragPointerId;
+    const moved = earthDragMoved;
+    isDraggingEarth = false;
+    earthDragPointerId = null;
+    earthAutoRotationOffsetY = earthAutoRotationY
+      - (-1.58 + latestEarthSceneTime * 0.000032);
+
+    if (cancelled || !moved) {
+      earthRotationVelocityX = 0;
+      earthRotationVelocityY = 0;
+    }
+    if (moved) suppressDoubleClickUntil = performance.now() + 480;
+
+    root.classList.remove('is-earth-dragging');
+    try {
+      if (pointerId !== null && root.hasPointerCapture(pointerId)) {
+        root.releasePointerCapture(pointerId);
+      }
+    } catch (error) {}
+
+    if (event && event.pointerType !== 'touch') updateEarthHover(event);
+    scheduleFrame();
+  }
+
+  function handleScenePointerDown(event) {
+    if (event.target instanceof Element && event.target.closest('button, a')) return;
+
+    const primaryPointer = event.pointerType !== 'mouse' || event.button === 0;
+    if (
+      primaryPointer
+      && !reducedMotion.matches
+      && isEarthAtPointer(event)
+    ) {
+      event.preventDefault();
+      beginEarthDrag(event);
+      return;
+    }
+
+    addRipple(event);
+  }
+
+  function handleEarthWheel(event) {
+    if (reducedMotion.matches || !isEarthAtPointer(event)) return;
+
+    event.preventDefault();
+    const deltaMultiplier = event.deltaMode === 1
+      ? 16
+      : event.deltaMode === 2
+        ? height
+        : 1;
+    const normalizedDelta = event.deltaY * deltaMultiplier;
+    targetEarthScale = clamp(
+      targetEarthScale * Math.exp(-normalizedDelta * 0.00115),
+      0.76,
+      1.38
+    );
+    root.classList.add('is-earth-hovered');
+    scheduleFrame();
   }
 
   function addRipple(event) {
@@ -580,6 +751,11 @@ function startCosmicOpening(root) {
   function renderScene(progress, time) {
     if (!renderer || !scene || !camera) return;
 
+    const frameDelta = lastRenderAt
+      ? clamp(time - lastRenderAt, 0, 34)
+      : 0;
+    lastRenderAt = time;
+
     pointerX += (targetPointerX - pointerX) * 0.035;
     pointerY += (targetPointerY - pointerY) * 0.035;
     pointerInfluence += (targetPointerInfluence - pointerInfluence) * 0.05;
@@ -600,13 +776,40 @@ function startCosmicOpening(root) {
     const sceneTime = progress * duration + idleTime;
     const reveal = ease(phase(progress, 0.015, 0.11));
     const warp = band(progress, 0.54, 0.62, 0.74, 0.83);
+    latestEarthSceneTime = sceneTime;
+
+    if (!isDraggingEarth && frameDelta > 0) {
+      earthManualRotationY += earthRotationVelocityY * frameDelta;
+      const nextManualRotationX = earthManualRotationX + earthRotationVelocityX * frameDelta;
+      earthManualRotationX = clamp(nextManualRotationX, -0.42, 0.42);
+      if (earthManualRotationX !== nextManualRotationX) earthRotationVelocityX = 0;
+
+      const inertiaDamping = Math.pow(0.84, frameDelta / 16.667);
+      earthRotationVelocityX *= inertiaDamping;
+      earthRotationVelocityY *= inertiaDamping;
+      if (Math.abs(earthRotationVelocityX) < 0.00001) earthRotationVelocityX = 0;
+      if (Math.abs(earthRotationVelocityY) < 0.00001) earthRotationVelocityY = 0;
+    }
+
+    const scaleEasing = frameDelta > 0
+      ? 1 - Math.pow(0.76, frameDelta / 16.667)
+      : 1;
+    earthScale += (targetEarthScale - earthScale) * scaleEasing;
+    if (Math.abs(targetEarthScale - earthScale) < 0.0001) earthScale = targetEarthScale;
 
     if (earthSpin) {
-      earthSpin.rotation.y = -1.58 + sceneTime * 0.000032;
-      earthSpin.rotation.x = 0.08 + Math.sin(sceneTime * 0.00022) * 0.018;
+      if (!isDraggingEarth) {
+        earthAutoRotationY = -1.58 + sceneTime * 0.000032 + earthAutoRotationOffsetY;
+      }
+      earthSpin.rotation.y = earthAutoRotationY + earthManualRotationY;
+      earthSpin.rotation.x = 0.08
+        + (isDraggingEarth ? 0 : Math.sin(sceneTime * 0.00022) * 0.018)
+        + earthManualRotationX;
+      earthSpin.scale.setScalar(earthScale);
       const cloudLayer = earthSpin.getObjectByName('cloud-layer');
       if (cloudLayer) cloudLayer.rotation.y = sceneTime * 0.000007;
     }
+    if (atmosphere) atmosphere.scale.setScalar(earthScale);
 
     if (earthMaterial) earthMaterial.opacity = reveal;
     if (cloudMaterial) cloudMaterial.opacity = reveal * 0.58;
@@ -711,6 +914,7 @@ function startCosmicOpening(root) {
   function playSequence() {
     cancelAnimationFrame(animationFrame);
     animationFrame = 0;
+    endEarthDrag(null, true);
     root.classList.add('is-playing');
     root.classList.remove('is-finished');
     skipButton.hidden = false;
@@ -719,6 +923,17 @@ function startCosmicOpening(root) {
     lastChapter = '';
     finishedAt = 0;
     isIdle = false;
+    earthManualRotationX = 0;
+    earthManualRotationY = 0;
+    earthRotationVelocityX = 0;
+    earthRotationVelocityY = 0;
+    earthAutoRotationY = -1.58;
+    earthAutoRotationOffsetY = 0;
+    latestEarthSceneTime = 0;
+    earthScale = 1;
+    targetEarthScale = 1;
+    lastRenderAt = 0;
+    suppressDoubleClickUntil = 0;
     enterButton.style.removeProperty('--magnet-x');
     enterButton.style.removeProperty('--magnet-y');
     interactionHint.classList.remove('is-visible');
@@ -764,21 +979,38 @@ function startCosmicOpening(root) {
   });
 
   window.addEventListener('pointermove', (event) => {
+    if (moveEarthDrag(event)) {
+      event.preventDefault();
+      return;
+    }
     if (reducedMotion.matches || event.pointerType === 'touch') return;
     targetPointerX = event.clientX / Math.max(1, width) - 0.5;
     targetPointerY = event.clientY / Math.max(1, height) - 0.5;
     targetPointerInfluence = 1;
-  }, { passive: true });
+    updateEarthHover(event);
+  }, { passive: false });
 
   root.addEventListener('pointerleave', () => {
     targetPointerX = 0;
     targetPointerY = 0;
     targetPointerInfluence = 0;
+    if (!isDraggingEarth) root.classList.remove('is-earth-hovered');
   }, { passive: true });
 
-  root.addEventListener('pointerdown', addRipple, { passive: true });
+  root.addEventListener('pointerdown', handleScenePointerDown);
+  root.addEventListener('wheel', handleEarthWheel, { passive: false });
+
+  window.addEventListener('pointerup', (event) => {
+    if (isDraggingEarth) event.preventDefault();
+    endEarthDrag(event, false);
+  }, { passive: false });
+
+  window.addEventListener('pointercancel', (event) => {
+    endEarthDrag(event, true);
+  });
 
   root.addEventListener('dblclick', (event) => {
+    if (performance.now() < suppressDoubleClickUntil) return;
     if (!isPlaying && initialized) return;
     if (event.target instanceof Element && event.target.closest('button, a')) return;
     event.preventDefault();
@@ -813,6 +1045,7 @@ function startCosmicOpening(root) {
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
+      endEarthDrag(null, true);
       cancelAnimationFrame(animationFrame);
       animationFrame = 0;
       return;
@@ -826,6 +1059,7 @@ function startCosmicOpening(root) {
 
   reducedMotion.addEventListener('change', () => {
     if (reducedMotion.matches) {
+      endEarthDrag(null, true);
       cancelAnimationFrame(animationFrame);
       animationFrame = 0;
       finishSequence();
