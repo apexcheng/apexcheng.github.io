@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 const layoutSource = readFileSync('src/layouts/SiteLayout.astro', 'utf8');
 const globalCssSource = readFileSync('src/styles/global.css', 'utf8');
 const homeIndexSource = readFileSync('src/components/HomeIndexMenu.astro', 'utf8');
+const homeIntroStateSource = readFileSync('src/components/HomeIntroState.astro', 'utf8');
 
 describe('site layout', () => {
   it('keeps shared site metadata as the personal blog brand', () => {
@@ -119,15 +120,18 @@ describe('site layout', () => {
   });
 
   it('uses intro three for first visits and direct homepage entries without intercepting internal home links', () => {
-    expect(layoutSource).toContain("data-home-url={withBase('/')}");
-    expect(layoutSource).toContain("data-default-intro-url={withBase('/intro-motion-3/')}");
-    expect(layoutSource).toContain("var seenKey = 'site-intro-seen-v1'");
-    expect(layoutSource).toContain("var returnKey = 'site-intro-return-v1'");
-    expect(layoutSource).toContain("var internalHomeKey = 'site-intro-internal-home-v1'");
-    expect(layoutSource).toContain('if (isInternalHomeNavigation) return');
-    expect(layoutSource).toContain("if (!isHome && hasSeenIntro) return");
-    expect(layoutSource).toContain("if (returnPath === currentPath) return");
-    expect(layoutSource).toContain("introUrl.searchParams.set('return', currentPath)");
+    expect(layoutSource).toContain("import HomeIntroState from '../components/HomeIntroState.astro'");
+    expect(layoutSource).toContain("<HomeIntroState pageKind={active === 'home' ? 'home' : 'content'} />");
+    expect(homeIntroStateSource).toContain("data-home-url={withBase('/')}");
+    expect(homeIntroStateSource).toContain("data-default-intro-url={withBase('/intro-motion-3/')}");
+    expect(homeIntroStateSource).toContain("var seenKey = 'site-intro-seen-v1'");
+    expect(homeIntroStateSource).toContain("var returnKey = 'site-intro-return-v1'");
+    expect(homeIntroStateSource).toContain("var internalHomeKey = 'site-intro-internal-home-v1'");
+    expect(homeIntroStateSource).toContain("if (pageKind === 'standalone') return");
+    expect(homeIntroStateSource).toContain('if (isInternalHomeNavigation) return');
+    expect(homeIntroStateSource).toContain("if (!isHome && hasSeenIntro) return");
+    expect(homeIntroStateSource).toContain("if (returnPath === currentPath) return");
+    expect(homeIntroStateSource).toContain("introUrl.searchParams.set('return', currentPath)");
   });
 
   it('keeps mobile layout rules for the main navigation and article page', () => {

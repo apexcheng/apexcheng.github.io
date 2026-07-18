@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest';
 
 const indexSource = readFileSync('src/pages/index.astro', 'utf8');
 const homeSource = readFileSync('src/pages/home-redesign-1.astro', 'utf8');
+const paperHomeSource = readFileSync('src/pages/home-redesign-2.astro', 'utf8');
+const workbenchHomeSource = readFileSync('src/pages/home-redesign-3.astro', 'utf8');
+const exhibitionHomeSource = readFileSync('src/pages/home-redesign.astro', 'utf8');
 const aboutSource = readFileSync('src/pages/about.astro', 'utf8');
 const projectsSource = readFileSync('src/pages/projects.astro', 'utf8');
 const articlesSource = readFileSync('src/pages/articles/index.astro', 'utf8');
@@ -29,6 +32,25 @@ describe('front page structure', () => {
     expect(homeSource).toContain('查看项目');
     expect(projectsSource).toContain('项目记录');
     expect(projectsSource).toContain('projects.map');
+  });
+
+  it('keeps homepage intro returns and internal home navigation state consistent', () => {
+    expect(homeSource).toContain("<HomeIntroState pageKind={isOfficialHome ? 'home' : 'standalone'} />");
+    expect(paperHomeSource).toContain('<HomeIntroState pageKind="standalone" />');
+    expect(workbenchHomeSource).toContain('<HomeIntroState pageKind="standalone" />');
+    expect(exhibitionHomeSource).toContain('<HomeIntroState pageKind="standalone" />');
+    expect(paperHomeSource).toContain("const introReturn = encodeURIComponent(withBase('/home-redesign-2/'))");
+    expect(paperHomeSource).toContain('`/intro-motion-2/?return=${introReturn}`');
+    expect(paperHomeSource).toContain('`/intro-motion-3/?return=${introReturn}`');
+  });
+
+  it('renders current dates at runtime instead of freezing homepage dates', () => {
+    expect(homeSource).not.toContain('2026-07-18');
+    expect(homeSource).toContain('data-current-date');
+    expect(homeSource).toContain("item.setAttribute('datetime', value)");
+    expect(workbenchHomeSource).not.toContain("new Date('2026-07-18T12:00:00+08:00')");
+    expect(workbenchHomeSource).toContain('data-current-full-date');
+    expect(workbenchHomeSource).toContain("currentDate.setAttribute('datetime', dateValue)");
   });
 
   it('keeps about links tied to real site metadata', () => {

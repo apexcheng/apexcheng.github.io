@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import HomeIntroState from '../components/HomeIntroState.astro';
 import HomeIndexMenu from '../components/HomeIndexMenu.astro';
 import { categoryMetaList } from '../data/categories';
 import { seriesMetaList } from '../data/series';
@@ -64,6 +65,7 @@ const searchItems = posts.map((post) => ({
 }));
 
 const formatDate = (date: Date) => date.toISOString().slice(0, 10);
+const introReturn = encodeURIComponent(withBase('/home-redesign-2/'));
 const paperTexture = withBase('/images/home-redesign-2/paper-texture.webp');
 const linedPaper = withBase('/images/home-redesign-2/lined-paper.webp');
 const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
@@ -90,6 +92,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
         }
       } catch (error) {}
     </script>
+    <HomeIntroState pageKind="standalone" />
   </head>
   <body
     data-pagefind-ignore
@@ -125,8 +128,8 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
               data-intro-toggle
             >开屏</button>
             <div class="intro-menu" id="paper-intro-menu" role="menu">
-              <a role="menuitem" href={withBase('/intro-motion-2/')}>液态字场</a>
-              <a role="menuitem" href={withBase('/intro-motion-3/')}>天体序章</a>
+              <a role="menuitem" href={withBase(`/intro-motion-2/?return=${introReturn}`)}>液态字场</a>
+              <a role="menuitem" href={withBase(`/intro-motion-3/?return=${introReturn}`)}>天体序章</a>
             </div>
           </div>
           <HomeIndexMenu current="home-redesign-2" />

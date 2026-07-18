@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import HomeIntroState from '../components/HomeIntroState.astro';
 import HomeIndexMenu from '../components/HomeIndexMenu.astro';
 import { seriesMetaList } from '../data/series';
 import { siteMeta } from '../data/site';
@@ -62,13 +63,6 @@ const searchItems = posts.map((post) => ({
   keywords: post.data.tags.join(' '),
 }));
 
-const fullDate = new Intl.DateTimeFormat('zh-CN', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  weekday: 'long',
-}).format(new Date('2026-07-18T12:00:00+08:00'));
-
 const formatDate = (date: Date) => date.toISOString().slice(0, 10);
 const introHref = `${withBase('/intro-motion-3/')}?return=${encodeURIComponent(withBase('/home-redesign-3/'))}`;
 ---
@@ -94,6 +88,7 @@ const introHref = `${withBase('/intro-motion-3/')}?return=${encodeURIComponent(w
         }
       } catch (error) {}
     </script>
+    <HomeIntroState pageKind="standalone" />
   </head>
   <body data-pagefind-ignore>
     <header class="site-header">
@@ -136,7 +131,7 @@ const introHref = `${withBase('/intro-motion-3/')}?return=${encodeURIComponent(w
               <a class="button primary" href={withBase('/articles/')}>进入文章库</a>
               <a class="button secondary" href={withBase('/projects/')}>查看项目记录</a>
             </div>
-            <p class="today-line">今天是 {fullDate}，继续记录与实践。</p>
+            <p class="today-line">今天是 <time data-current-full-date>今天</time>，继续记录与实践。</p>
           </div>
 
           <div class="workbench" data-reveal>
@@ -370,6 +365,23 @@ const introHref = `${withBase('/intro-motion-3/')}?return=${encodeURIComponent(w
         var openSearch = document.querySelector('[data-search-open]');
         var searchInput = document.querySelector('[data-search-input]');
         var searchResults = document.querySelector('[data-search-results]');
+        var currentDate = document.querySelector('[data-current-full-date]');
+
+        if (currentDate) {
+          var now = new Date();
+          var dateValue = [
+            now.getFullYear(),
+            String(now.getMonth() + 1).padStart(2, '0'),
+            String(now.getDate()).padStart(2, '0'),
+          ].join('-');
+          currentDate.textContent = new Intl.DateTimeFormat('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            weekday: 'long',
+          }).format(now);
+          currentDate.setAttribute('datetime', dateValue);
+        }
 
         function updateToneButton() {
           if (!toneToggle) return;

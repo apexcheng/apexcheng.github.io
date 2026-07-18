@@ -16,6 +16,7 @@ import {
   Sun,
   Workflow,
 } from '@lucide/astro';
+import HomeIntroState from '../components/HomeIntroState.astro';
 import HomeIndexMenu from '../components/HomeIndexMenu.astro';
 import { categoryMetaList } from '../data/categories';
 import { seriesMetaList } from '../data/series';
@@ -91,6 +92,7 @@ const introReturn = encodeURIComponent(isOfficialHome ? withBase('/') : withBase
       }
       document.documentElement.classList.add('js');
     </script>
+    <HomeIntroState pageKind={isOfficialHome ? 'home' : 'standalone'} />
   </head>
   <body data-pagefind-ignore>
     <header class="site-header" data-header>
@@ -167,7 +169,7 @@ const introReturn = encodeURIComponent(isOfficialHome ? withBase('/') : withBase
           <div class="hero-copy" data-reveal>
             <div class="hero-kicker">
               <span>你好，我是黄撑</span>
-              <span>2026-07-18</span>
+              <time data-current-date data-date-offset="0">今日</time>
             </div>
             <h1>
               <span>把复杂技术，</span>
@@ -229,10 +231,10 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
                   <tr><th>日期</th><th>主题</th><th>进度</th><th>状态</th></tr>
                 </thead>
                 <tbody>
-                  <tr><td>2026-07-18</td><td>pricing</td><td>80%</td><td>进行中</td></tr>
-                  <tr><td>2026-07-18</td><td>stock</td><td>65%</td><td>进行中</td></tr>
-                  <tr><td>2026-07-17</td><td>reviews</td><td>100%</td><td>已完成</td></tr>
-                  <tr><td>2026-07-16</td><td>tools</td><td>90%</td><td>已完成</td></tr>
+                  <tr><td><time data-current-date data-date-offset="0">今日</time></td><td>pricing</td><td>80%</td><td>进行中</td></tr>
+                  <tr><td><time data-current-date data-date-offset="0">今日</time></td><td>stock</td><td>65%</td><td>进行中</td></tr>
+                  <tr><td><time data-current-date data-date-offset="-1">昨日</time></td><td>reviews</td><td>100%</td><td>已完成</td></tr>
+                  <tr><td><time data-current-date data-date-offset="-2">前日</time></td><td>tools</td><td>90%</td><td>已完成</td></tr>
                 </tbody>
               </table>
             </article>
@@ -433,6 +435,19 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
         var searchClose = document.querySelector('[data-search-close]');
         var searchInput = document.querySelector('[data-search-input]');
         var searchResults = document.querySelector('[data-search-results]');
+
+        document.querySelectorAll('[data-current-date]').forEach(function (item) {
+          var date = new Date();
+          var offset = Number(item.getAttribute('data-date-offset') || '0');
+          date.setDate(date.getDate() + offset);
+          var value = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0'),
+          ].join('-');
+          item.textContent = value;
+          item.setAttribute('datetime', value);
+        });
 
         function setSearchOpen(open) {
           if (!searchPanel || !searchToggle) return;
@@ -974,7 +989,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     letter-spacing: 0.08em;
   }
 
-  .hero-kicker span:last-child {
+  .hero-kicker time:last-child {
     display: inline-flex;
     align-items: center;
     gap: 18px;
@@ -982,7 +997,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     font-weight: 600;
   }
 
-  .hero-kicker span:last-child::before {
+  .hero-kicker time:last-child::before {
     width: 1px;
     height: 14px;
     background: var(--line-strong);

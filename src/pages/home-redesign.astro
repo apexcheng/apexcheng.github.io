@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import HomeIntroState from '../components/HomeIntroState.astro';
 import HomeIndexMenu from '../components/HomeIndexMenu.astro';
 import { seriesMetaList } from '../data/series';
 import { siteMeta } from '../data/site';
@@ -111,6 +112,7 @@ const formatDate = (date: Date) =>
     <script is:inline>
       document.documentElement.classList.add('js');
     </script>
+    <HomeIntroState pageKind="standalone" />
   </head>
   <body data-pagefind-ignore>
     <div class="ambient ambient-one" aria-hidden="true"></div>
