@@ -123,9 +123,7 @@ const searchItems = [
         <div class="header-controls">
           <div class="theme-menu" data-theme-menu>
             <button class="theme-button" type="button" aria-label="选择主题" title="选择主题" aria-expanded="false" data-theme-menu-toggle>
-              <span class="theme-current-icon" aria-hidden="true" data-current-theme-icon>
-                <svg viewBox="0 0 24 24"><path d="M4 18h16"></path><path d="M6 18a6 6 0 0 1 12 0"></path><path d="M12 4v3"></path><path d="m5.64 7.64 2.12 2.12"></path><path d="m18.36 7.64-2.12 2.12"></path><path d="M2 13h3"></path><path d="M19 13h3"></path></svg>
-              </span>
+              <span aria-hidden="true">主题</span>
             </button>
             <div class="theme-menu-panel" role="menu">
               <button type="button" role="menuitem" data-theme-option data-style-theme-value="index" data-theme-value="light">晨曦手札</button>
@@ -147,17 +145,13 @@ const searchItems = [
               data-intro-menu-toggle
             >开屏</button>
             <div class="intro-menu-panel" id="intro-menu-panel" role="menu" aria-label="开屏动画方案">
-              <button type="button" role="menuitem" data-intro-option data-intro-url={withBase('/intro-motion-1/')}>
-                <span class="intro-option-title">方案一 · 光轨序章</span>
-                <span class="intro-option-note">深空材质与环轨聚焦</span>
-              </button>
               <button type="button" role="menuitem" data-intro-option data-intro-url={withBase('/intro-motion-2/')}>
                 <span class="intro-option-title">方案二 · 液态字场</span>
                 <span class="intro-option-note">珠光文字与柔性流场</span>
               </button>
               <button type="button" role="menuitem" data-intro-option data-intro-url={withBase('/intro-motion-3/')}>
                 <span class="intro-option-heading">
-                  <span class="intro-option-title">方案三 · 天体序章</span>
+                  <span class="intro-option-title">天体序章</span>
                   <span class="intro-option-default">默认</span>
                 </span>
                 <span class="intro-option-note">星轨、日蚀与沉浸光门</span>
@@ -203,19 +197,9 @@ const searchItems = [
             'visual-system': '视觉晶蓝',
             dark: '玄墨经典',
           };
-          var themeIcons = {
-            index: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>',
-            classic: '<svg viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 0 4 18.5z"></path><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 1 2.5-2.5z"></path></svg>',
-            'index-gradient': '<svg viewBox="0 0 24 24"><path d="M4 18h16"></path><path d="M6 18a6 6 0 0 1 12 0"></path><path d="M12 4v3"></path><path d="m5.64 7.64 2.12 2.12"></path><path d="m18.36 7.64-2.12 2.12"></path><path d="M2 13h3"></path><path d="M19 13h3"></path></svg>',
-            'classic-gradient': '<svg viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5z"></path><path d="m3 13 9 5 9-5"></path><path d="m3 18 9 5 9-5"></path></svg>',
-            'visual-system': '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"></rect><rect x="13" y="4" width="7" height="7" rx="2"></rect><rect x="4" y="13" width="7" height="7" rx="2"></rect><path d="M14 17h6"></path><path d="M17 14v6"></path></svg>',
-            dark: '<svg viewBox="0 0 24 24"><path d="M20 14.5A7.5 7.5 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>',
-          };
           var iconKey = currentTheme() === 'dark' ? 'dark' : currentStyleTheme();
           var label = themeLabels[iconKey] || '视觉晶蓝';
           var mode = currentTheme() === 'dark' ? '深色' : '浅色';
-          var currentIcon = themeButton.querySelector('[data-current-theme-icon]');
-          if (currentIcon) currentIcon.innerHTML = themeIcons[iconKey] || themeIcons['visual-system'];
           themeButton.setAttribute('aria-label', '当前主题：' + label + ' ' + mode + '，点击选择主题');
           themeButton.setAttribute('title', '当前主题：' + label + ' ' + mode);
         }

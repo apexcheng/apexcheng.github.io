@@ -83,12 +83,16 @@ describe('site layout', () => {
     expect(layoutSource).not.toMatch(/href=["']\/(?:articles|search|projects|guides|about|rss\.xml)/);
   });
 
-  it('offers all three intro animations beside the theme menu', () => {
+  it('offers the two retained intro animations beside the theme menu', () => {
     expect(layoutSource).toContain('class="header-controls"');
     expect(layoutSource).toContain('data-intro-menu-toggle');
-    expect(layoutSource).toContain("withBase('/intro-motion-1/')");
+    expect(layoutSource).not.toContain("withBase('/intro-motion-1/')");
     expect(layoutSource).toContain("withBase('/intro-motion-2/')");
     expect(layoutSource).toContain("withBase('/intro-motion-3/')");
+    expect(layoutSource).toContain('<span aria-hidden="true">主题</span>');
+    expect(layoutSource).toContain('>开屏</button>');
+    expect(layoutSource).toContain('<span class="intro-option-title">天体序章</span>');
+    expect(layoutSource).not.toContain('方案三 · 天体序章');
     expect(layoutSource.indexOf('data-theme-menu')).toBeLessThan(layoutSource.indexOf('data-intro-menu'));
     expect(globalCssSource).toContain('.intro-menu-panel');
   });

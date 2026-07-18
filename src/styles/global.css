@@ -564,10 +564,7 @@ p {
     transform 0.16s ease;
 }
 
-.theme-button {
-  width: 34px;
-}
-
+.theme-button,
 .intro-button {
   letter-spacing: 0.04em;
   padding: 0 11px;
@@ -588,24 +585,6 @@ p {
   border-color: var(--blue);
   outline: 2px solid color-mix(in srgb, var(--blue) 24%, transparent);
   outline-offset: 2px;
-}
-
-.theme-button svg {
-  display: block;
-  fill: none;
-  height: 16px;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8;
-  width: 16px;
-}
-
-.theme-current-icon {
-  align-items: center;
-  display: inline-flex;
-  justify-content: center;
-  line-height: 1;
 }
 
 .theme-menu-panel {
