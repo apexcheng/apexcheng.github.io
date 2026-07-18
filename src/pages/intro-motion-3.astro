@@ -87,8 +87,10 @@ import { withBase } from '../utils/paths';
         <div class="progress-track">
           <span class="progress-fill" data-progress></span>
         </div>
-        <span class="time-left" data-time>24 秒</span>
+        <span class="time-left" data-time>10 秒</span>
       </div>
+
+      <p class="interaction-hint" data-interaction-hint aria-hidden="true">双击画面跳过</p>
 
       <p class="sr-only" aria-live="polite" data-status>天体序章即将开始</p>
 
@@ -164,6 +166,7 @@ import { withBase } from '../utils/paths';
         min-height: 560px;
         overflow: hidden;
         position: relative;
+        user-select: none;
         width: 100%;
       }
 
@@ -412,6 +415,8 @@ import { withBase } from '../utils/paths';
       }
 
       .enter-button {
+        --magnet-x: 0px;
+        --magnet-y: 0px;
         align-items: center;
         background: rgba(225, 242, 247, 0.94);
         border: 1px solid rgba(255, 255, 255, 0.7);
@@ -431,13 +436,14 @@ import { withBase } from '../utils/paths';
         transition:
           box-shadow 260ms ease,
           transform 260ms ease;
+        transform: translate3d(var(--magnet-x), var(--magnet-y), 0);
       }
 
       .enter-button:hover {
         box-shadow:
           0 20px 64px rgba(82, 182, 190, 0.3),
           inset 0 1px 0 rgba(255, 255, 255, 0.95);
-        transform: translateY(-2px);
+        transform: translate3d(var(--magnet-x), calc(var(--magnet-y) - 2px), 0);
       }
 
       .enter-orbit {
@@ -445,7 +451,12 @@ import { withBase } from '../utils/paths';
         border-radius: 50%;
         height: 22px;
         position: relative;
+        transition: transform 720ms cubic-bezier(0.2, 0.75, 0.2, 1);
         width: 22px;
+      }
+
+      .enter-button:hover .enter-orbit {
+        transform: rotate(112deg);
       }
 
       .enter-orbit::after {
@@ -511,6 +522,24 @@ import { withBase } from '../utils/paths';
       .time-left {
         font-variant-numeric: tabular-nums;
         text-align: right;
+      }
+
+      .interaction-hint {
+        bottom: max(24px, env(safe-area-inset-bottom));
+        color: rgba(205, 219, 235, 0.3);
+        font-size: 9px;
+        letter-spacing: 0.2em;
+        margin: 0;
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        right: max(24px, env(safe-area-inset-right));
+        text-transform: uppercase;
+        z-index: 20;
+      }
+
+      .interaction-hint.is-visible {
+        animation: hint-reveal 3.2s ease 0.35s both;
       }
 
       .sr-only {
@@ -615,6 +644,10 @@ import { withBase } from '../utils/paths';
           left: max(20px, env(safe-area-inset-left));
           right: max(20px, env(safe-area-inset-right));
         }
+
+        .interaction-hint {
+          display: none;
+        }
       }
 
       @media (max-height: 640px) {
@@ -643,6 +676,24 @@ import { withBase } from '../utils/paths';
         .enter-button {
           transition: none;
         }
+
+        .interaction-hint {
+          display: none;
+        }
+      }
+
+      @keyframes hint-reveal {
+        0%,
+        100% {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+
+        18%,
+        72% {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
     </style>
 
@@ -661,6 +712,7 @@ import { withBase } from '../utils/paths';
         var timeLeft = root.querySelector('[data-time]');
         var chapterName = root.querySelector('[data-chapter]');
         var status = root.querySelector('[data-status]');
+        var interactionHint = root.querySelector('[data-interaction-hint]');
         var params = new URLSearchParams(window.location.search);
         var returnKey = 'site-intro-return-v1';
         var prologues = {
@@ -670,7 +722,7 @@ import { withBase } from '../utils/paths';
           four: root.querySelector('[data-prologue="four"]'),
         };
 
-        var duration = 24000;
+        var duration = 10000;
         var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
         var width = 0;
         var height = 0;
@@ -684,8 +736,13 @@ import { withBase } from '../utils/paths';
         var pointerY = 0;
         var targetPointerX = 0;
         var targetPointerY = 0;
+        var pointerCanvasX = 0;
+        var pointerCanvasY = 0;
+        var pointerInfluence = 0;
+        var targetPointerInfluence = 0;
         var stars = [];
         var dust = [];
+        var ripples = [];
         var randomSeed = 20260717;
 
         function resolveReturnUrl(value) {
@@ -774,6 +831,10 @@ import { withBase } from '../utils/paths';
           canvas.style.width = width + 'px';
           canvas.style.height = height + 'px';
           context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+          if (!pointerCanvasX && !pointerCanvasY) {
+            pointerCanvasX = width * 0.5;
+            pointerCanvasY = height * 0.5;
+          }
           createField();
           drawSpace(currentProgress, performance.now());
         }
@@ -799,8 +860,14 @@ import { withBase } from '../utils/paths';
             }
 
             var flicker = 0.72 + Math.sin(time * 0.0017 + index * 2.31) * 0.28;
-            var alpha = awake * (0.12 + nearness * 0.74) * flicker;
-            var starSize = star.size * (0.45 + nearness * 1.8);
+            var pointerSpark = pointerInfluence * clamp(
+              1 - Math.hypot(starX - pointerCanvasX, starY - pointerCanvasY)
+                / Math.max(130, Math.min(width, height) * 0.22),
+              0,
+              1
+            );
+            var alpha = awake * (0.12 + nearness * 0.74) * flicker * (1 + pointerSpark * 0.48);
+            var starSize = star.size * (0.45 + nearness * 1.8) * (1 + pointerSpark * 0.28);
             var red = star.tone > 0.72 ? 198 : 174;
             var green = star.tone > 0.72 ? 191 : 220;
             var blue = star.tone > 0.72 ? 236 : 239;
@@ -1018,11 +1085,12 @@ import { withBase } from '../utils/paths';
         }
 
         function drawFinalOrbit(progress, time) {
-          var finaleAmount = ease(phase(progress, 0.77, 0.94));
+          var finaleAmount = ease(phase(progress, 0.69, 0.86));
           if (finaleAmount <= 0.001) return;
 
-          var orbitX = width < 720 ? width * 0.68 : width * 0.77;
-          var orbitY = height * 0.36;
+          var orbitX = (width < 720 ? width * 0.68 : width * 0.77)
+            + pointerX * width * 0.018 * pointerInfluence;
+          var orbitY = height * 0.36 + pointerY * height * 0.014 * pointerInfluence;
           var orbitRadius = Math.min(width, height) * (width < 720 ? 0.22 : 0.29);
           var bodyRadius = orbitRadius * 0.5;
           var halo = context.createRadialGradient(
@@ -1111,15 +1179,57 @@ import { withBase } from '../utils/paths';
           context.restore();
         }
 
+        function drawPointerGlow(progress) {
+          var glowAmount = band(progress, 0.03, 0.12, 0.72, 0.86) * pointerInfluence;
+          if (glowAmount <= 0.001) return;
+
+          var radius = Math.max(130, Math.min(width, height) * 0.24);
+          var glow = context.createRadialGradient(
+            pointerCanvasX,
+            pointerCanvasY,
+            0,
+            pointerCanvasX,
+            pointerCanvasY,
+            radius
+          );
+          glow.addColorStop(0, 'rgba(134,222,224,' + (0.055 * glowAmount).toFixed(3) + ')');
+          glow.addColorStop(0.34, 'rgba(91,149,196,' + (0.026 * glowAmount).toFixed(3) + ')');
+          glow.addColorStop(1, 'rgba(30,53,93,0)');
+          context.fillStyle = glow;
+          context.fillRect(0, 0, width, height);
+        }
+
+        function drawRipples(time) {
+          ripples = ripples.filter(function (ripple) {
+            var rippleProgress = (time - ripple.startedAt) / 820;
+            if (rippleProgress >= 1) return false;
+
+            var easedProgress = ease(clamp(rippleProgress, 0, 1));
+            var radius = 12 + easedProgress * Math.max(width, height) * 0.18;
+            var alpha = (1 - easedProgress) * 0.18;
+            context.strokeStyle = 'rgba(151,226,228,' + alpha.toFixed(3) + ')';
+            context.lineWidth = 0.7 + (1 - easedProgress) * 0.8;
+            context.beginPath();
+            context.arc(ripple.x, ripple.y, radius, 0, Math.PI * 2);
+            context.stroke();
+            return true;
+          });
+        }
+
         function drawSpace(progress, time) {
           if (!context) return;
 
           pointerX += (targetPointerX - pointerX) * 0.04;
           pointerY += (targetPointerY - pointerY) * 0.04;
+          pointerInfluence += (targetPointerInfluence - pointerInfluence) * 0.055;
 
-          var finaleAmount = ease(phase(progress, 0.76, 0.96));
-          var centerX = width * (0.55 + pointerX * 0.018 - finaleAmount * 0.07);
-          var centerY = height * (0.47 + pointerY * 0.015 - finaleAmount * 0.05);
+          var finaleAmount = ease(phase(progress, 0.69, 0.86));
+          var baseCenterX = width * (0.55 - finaleAmount * 0.07);
+          var baseCenterY = height * (0.47 - finaleAmount * 0.05);
+          var centerX = baseCenterX + pointerX * width * 0.042 * pointerInfluence;
+          var centerY = baseCenterY + pointerY * height * 0.034 * pointerInfluence;
+          var starCenterX = baseCenterX + pointerX * width * 0.016 * pointerInfluence;
+          var starCenterY = baseCenterY + pointerY * height * 0.013 * pointerInfluence;
 
           var background = context.createRadialGradient(
             centerX,
@@ -1149,22 +1259,24 @@ import { withBase } from '../utils/paths';
           context.fillStyle = violetGlow;
           context.fillRect(0, 0, width, height);
 
-          drawStarField(progress, time, centerX, centerY);
+          drawPointerGlow(progress);
+          drawStarField(progress, time, starCenterX, starCenterY);
 
           var bodyRadius = Math.min(width, height) * 0.2;
           drawOrbitLines(progress, time, centerX, centerY, bodyRadius);
           drawOrbitDust(progress, time, centerX, centerY, bodyRadius);
           drawCelestialBody(progress, time, centerX, centerY);
           drawPortal(progress, centerX, centerY);
+          drawRipples(time);
           drawFinalOrbit(progress, time);
         }
 
         function renderInterface(progress) {
-          var one = band(progress, 0.025, 0.075, 0.145, 0.205);
-          var two = band(progress, 0.19, 0.245, 0.31, 0.37);
-          var three = band(progress, 0.365, 0.425, 0.505, 0.565);
-          var four = band(progress, 0.56, 0.625, 0.69, 0.755);
-          var finaleAmount = ease(phase(progress, 0.76, 0.92));
+          var one = band(progress, 0.02, 0.07, 0.13, 0.18);
+          var two = band(progress, 0.15, 0.21, 0.28, 0.34);
+          var three = band(progress, 0.31, 0.37, 0.47, 0.53);
+          var four = band(progress, 0.5, 0.56, 0.65, 0.72);
+          var finaleAmount = ease(phase(progress, 0.69, 0.86));
 
           setLayer(prologues.one, one, (1 - one) * 28, 0.992 + one * 0.008);
           setLayer(prologues.two, two, (1 - two) * 28, 0.992 + two * 0.008);
@@ -1177,10 +1289,10 @@ import { withBase } from '../utils/paths';
           timeLeft.textContent = Math.max(0, Math.ceil((1 - progress) * duration / 1000)) + ' 秒';
 
           var chapter = '正在唤醒';
-          if (progress >= 0.18) chapter = '校准轨道';
-          if (progress >= 0.38) chapter = '进入日蚀';
-          if (progress >= 0.58) chapter = '穿越光门';
-          if (progress >= 0.78) chapter = '已经抵达';
+          if (progress >= 0.14) chapter = '校准轨道';
+          if (progress >= 0.3) chapter = '进入日蚀';
+          if (progress >= 0.48) chapter = '穿越光门';
+          if (progress >= 0.68) chapter = '已经抵达';
 
           chapterName.textContent = chapter;
           if (chapter !== lastChapter) {
@@ -1193,9 +1305,12 @@ import { withBase } from '../utils/paths';
           isPlaying = false;
           cancelAnimationFrame(animationFrame);
           currentProgress = 1;
+          ripples = [];
           drawSpace(1, performance.now());
           renderInterface(1);
+          root.classList.remove('is-playing');
           root.classList.add('is-finished');
+          interactionHint.classList.remove('is-visible');
           skipButton.hidden = true;
           replayButton.hidden = reducedMotion.matches;
           status.textContent = '天体序章播放完成，可以进入博客';
@@ -1218,11 +1333,18 @@ import { withBase } from '../utils/paths';
 
         function playSequence() {
           cancelAnimationFrame(animationFrame);
+          root.classList.add('is-playing');
           root.classList.remove('is-finished');
           skipButton.hidden = false;
           replayButton.hidden = true;
           currentProgress = 0;
           lastChapter = '';
+          ripples = [];
+          enterButton.style.removeProperty('--magnet-x');
+          enterButton.style.removeProperty('--magnet-y');
+          interactionHint.classList.remove('is-visible');
+          void interactionHint.offsetWidth;
+          interactionHint.classList.add('is-visible');
           startedAt = performance.now();
           isPlaying = true;
           renderInterface(0);
@@ -1235,10 +1357,47 @@ import { withBase } from '../utils/paths';
         replayButton.addEventListener('click', playSequence);
 
         window.addEventListener('pointermove', function (event) {
-          if (reducedMotion.matches) return;
+          if (reducedMotion.matches || event.pointerType === 'touch') return;
           targetPointerX = event.clientX / Math.max(1, width) - 0.5;
           targetPointerY = event.clientY / Math.max(1, height) - 0.5;
+          pointerCanvasX = event.clientX;
+          pointerCanvasY = event.clientY;
+          targetPointerInfluence = 1;
         }, { passive: true });
+
+        root.addEventListener('pointerleave', function () {
+          targetPointerX = 0;
+          targetPointerY = 0;
+          targetPointerInfluence = 0;
+        }, { passive: true });
+
+        root.addEventListener('pointerdown', function (event) {
+          if (!isPlaying || reducedMotion.matches || event.pointerType === 'touch') return;
+          if (event.target.closest && event.target.closest('button, a')) return;
+          ripples.push({ x: event.clientX, y: event.clientY, startedAt: performance.now() });
+          if (ripples.length > 3) ripples.shift();
+        }, { passive: true });
+
+        root.addEventListener('dblclick', function (event) {
+          if (!isPlaying) return;
+          if (event.target.closest && event.target.closest('button, a')) return;
+          event.preventDefault();
+          finishSequence();
+        });
+
+        enterButton.addEventListener('pointermove', function (event) {
+          if (reducedMotion.matches || event.pointerType === 'touch') return;
+          var bounds = enterButton.getBoundingClientRect();
+          var magnetX = (event.clientX - bounds.left) / bounds.width - 0.5;
+          var magnetY = (event.clientY - bounds.top) / bounds.height - 0.5;
+          enterButton.style.setProperty('--magnet-x', (magnetX * 7).toFixed(2) + 'px');
+          enterButton.style.setProperty('--magnet-y', (magnetY * 5).toFixed(2) + 'px');
+        });
+
+        enterButton.addEventListener('pointerleave', function () {
+          enterButton.style.removeProperty('--magnet-x');
+          enterButton.style.removeProperty('--magnet-y');
+        });
 
         window.addEventListener('resize', resizeCanvas, { passive: true });
 
