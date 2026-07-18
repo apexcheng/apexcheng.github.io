@@ -1,0 +1,843 @@
+---
+import { getCollection } from 'astro:content';
+import { seriesMetaList } from '../data/series';
+import { siteMeta } from '../data/site';
+import { withBase } from '../utils/paths';
+
+const posts = (await getCollection('posts'))
+  .filter((post) => !post.data.draft && !post.data.private)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const heroPost =
+  posts.find((post) => post.slug === 'excel-lookup-functions-visual-guide') ?? posts[0];
+const latestPosts = posts.filter((post) => post.data.category !== '视觉实验室').slice(0, 4);
+const visualPosts = posts.filter((post) => post.data.category === '视觉实验室').slice(0, 2);
+
+const categoryCards = [
+  {
+    id: 'life',
+    title: '生活',
+    description: '记录生活中的观察与思考，把日常过成实验室。',
+    href: withBase('/articles/category/' + encodeURIComponent('生活') + '/'),
+    linkLabel: '查看最新',
+    count: posts.filter((post) => post.data.category === '生活').length,
+  },
+  {
+    id: 'practice',
+    title: '实践',
+    description: '真实项目与问题实践，从结果回溯到方法。',
+    href: withBase('/articles/category/' + encodeURIComponent('实践') + '/'),
+    linkLabel: '查看项目',
+    count: posts.filter((post) => post.data.category === '实践').length,
+  },
+  {
+    id: 'tutorial',
+    title: '教程',
+    description: '把复杂的工具与概念，拆解成可操作的步骤。',
+    href: withBase('/articles/category/' + encodeURIComponent('教程') + '/'),
+    linkLabel: '查看教程',
+    count: posts.filter((post) => post.data.category === '教程').length,
+  },
+  {
+    id: 'lab',
+    title: '视觉实验室',
+    description: '测试文章结构、图表、代码与新的网页表达方式。',
+    href: withBase('/articles/category/' + encodeURIComponent('视觉实验室') + '/'),
+    linkLabel: '查看实验',
+    count: posts.filter((post) => post.data.category === '视觉实验室').length,
+  },
+];
+
+const seriesCards = seriesMetaList.map((series) => ({
+  ...series,
+  postCount: posts.filter((post) => post.data.series === series.id).length,
+}));
+
+const searchItems = posts.map((post) => ({
+  title: post.data.title,
+  category: post.data.category,
+  description: post.data.description,
+  href: withBase('/articles/' + post.slug + '/'),
+  keywords: post.data.tags.join(' '),
+}));
+
+const fullDate = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  weekday: 'long',
+}).format(new Date('2026-07-18T12:00:00+08:00'));
+
+const formatDate = (date: Date) => date.toISOString().slice(0, 10);
+const introHref = `${withBase('/intro-motion-3/')}?return=${encodeURIComponent(withBase('/home-redesign-3/'))}`;
+---
+
+<!doctype html>
+<html lang="zh-CN" class="home-r3">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="黄撑的个人知识工作台首页原型：记录真实问题、判断过程与可以继续使用的方法。"
+    />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#f7f9fd" />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg?v=3')} />
+    <title>首页重设计 · 第三套 | {siteMeta.siteName}</title>
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      try {
+        if (localStorage.getItem('home-redesign-3-tone') === 'paper') {
+          document.documentElement.dataset.tone = 'paper';
+        }
+      } catch (error) {}
+    </script>
+  </head>
+  <body data-pagefind-ignore>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="返回第三套首页顶部">
+        <span class="brand-mark">C</span>
+        <strong>{siteMeta.siteName}</strong>
+      </a>
+
+      <nav class="main-nav" aria-label="主导航">
+        <a class="active" href="#top">首页</a>
+        <a href={withBase('/articles/')}>文章</a>
+        <a href={withBase('/series/')}>系列</a>
+        <a href={withBase('/projects/')}>项目</a>
+        <button type="button" data-search-open>搜索</button>
+        <a href={withBase('/rss.xml')}>RSS</a>
+        <a href={withBase('/about/')}>关于我</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" data-tone-toggle aria-pressed="false">主题</button>
+        <a href={introHref}>开屏</a>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero-section">
+        <div class="hero-layout">
+          <div class="hero-copy" data-reveal>
+            <p class="hello">你好，我是黄撑 <span aria-hidden="true">👋</span></p>
+            <h1>
+              <span>把复杂的事，</span>
+              <span>整理成可以继续</span>
+              <span class="accent">使用的方法。</span>
+            </h1>
+            <p class="hero-lead">
+              记录真实问题、判断过程和最后的做法，<br />让每一次实践都成为下一次行动的起点。
+            </p>
+            <div class="hero-actions">
+              <a class="button primary" href={withBase('/articles/')}>进入文章库</a>
+              <a class="button secondary" href={withBase('/projects/')}>查看项目记录</a>
+            </div>
+            <p class="today-line">今天是 {fullDate}，继续记录与实践。</p>
+          </div>
+
+          <div class="workbench" data-reveal>
+            <h2>本周工作台</h2>
+            <article class="workbench-feature">
+              <div class="feature-copy">
+                <span class="tag blue">精选文章</span>
+                <h3><a href={withBase('/articles/' + heroPost.slug + '/')}>{heroPost.data.title}</a></h3>
+                <p>{heroPost.data.description}</p>
+                <div class="feature-meta">
+                  <span>{heroPost.data.tags[0]}</span>
+                  <span>{formatDate(heroPost.data.date)}</span>
+                  <span>{heroPost.data.minutes} 分钟阅读</span>
+                </div>
+              </div>
+
+              <div class="lookup-demo" aria-label="Excel 查找结果示例">
+                <div class="demo-tabs"><b>数据表</b><span>结果预览</span></div>
+                <div class="demo-body">
+                  <table>
+                    <thead><tr><th>产品</th><th>地区</th><th>销量</th></tr></thead>
+                    <tbody>
+                      <tr><td>键盘</td><td>华东</td><td>1280</td></tr>
+                      <tr><td>鼠标</td><td>华南</td><td>980</td></tr>
+                      <tr><td>显示器</td><td>华北</td><td>1560</td></tr>
+                      <tr><td>耳机</td><td>华东</td><td>760</td></tr>
+                      <tr><td>键盘</td><td>华北</td><td>910</td></tr>
+                    </tbody>
+                  </table>
+                  <dl class="lookup-result">
+                    <div><dt>产品</dt><dd>键盘</dd></div>
+                    <div><dt>地区</dt><dd>华东</dd></div>
+                    <div><dt>销量</dt><dd class="result-value">1280</dd></div>
+                  </dl>
+                </div>
+              </div>
+            </article>
+
+            <div class="workbench-row">
+              <article class="flow-card">
+                <div class="card-head"><span class="tag cyan">Agent 流程</span><b>每日复盘 Agent 流程</b></div>
+                <ol class="flow-steps" aria-label="Agent 工作流程">
+                  <li><span>01</span>收集</li>
+                  <li><span>02</span>思考</li>
+                  <li><span>03</span>执行</li>
+                  <li><span>04</span>记录</li>
+                  <li><span>05</span>归档</li>
+                </ol>
+                <p>持续把想法落地为可复用的步骤。</p>
+              </article>
+
+              <article class="project-card">
+                <div class="card-head"><span class="tag orange">项目记录</span><b>个人知识库重构计划</b></div>
+                <p>整理、打通与沉淀，让知识真正可检索、可复用、可持续。</p>
+                <div class="project-progress"><span>进度 45%</span><i><b></b></i></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section topic-section" aria-labelledby="topics-title">
+        <div class="topic-grid">
+          {categoryCards.map((category) => (
+            <a class:list={['topic-card', category.id]} href={category.href} data-reveal>
+              <div class="topic-copy">
+                <h2 id={category.id === 'life' ? 'topics-title' : undefined}>{category.title}</h2>
+                <p>{category.description}</p>
+                <span>{category.linkLabel} · {category.count} 篇</span>
+              </div>
+
+              {category.id === 'life' && (
+                <img
+                  src={withBase('/home-redesign-3/life-workbench.webp')}
+                  alt="窗边的笔记本、钢笔与浅绿色咖啡杯"
+                  width="960"
+                  height="720"
+                  loading="lazy"
+                />
+              )}
+
+              {category.id === 'practice' && (
+                <div class="code-card" aria-label="自动化流程代码预览">
+                  <pre><code><span>def</span> run_flow(task):
+  context = gather(task)
+  plan = plan_next(context)
+  result = execute(plan)
+  return summarize(result)</code></pre>
+                  <small>Python · 最近更新 2026-07-17</small>
+                </div>
+              )}
+
+              {category.id === 'tutorial' && (
+                <ol class="tutorial-steps">
+                  <li><span>1</span>目标拆解</li>
+                  <li><span>2</span>知识准备</li>
+                  <li><span>3</span>动手实践</li>
+                  <li><span>4</span>总结沉淀</li>
+                </ol>
+              )}
+
+              {category.id === 'lab' && (
+                <div class="lab-preview" aria-label="视觉主题与阅读趋势预览">
+                  <div class="swatches"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                  <div class="mini-chart">
+                    <small>阅读趋势</small>
+                    <span style="--height: 30%"></span><span style="--height: 48%"></span>
+                    <span style="--height: 42%"></span><span style="--height: 72%"></span>
+                    <span style="--height: 60%"></span><span style="--height: 88%"></span>
+                    <span style="--height: 68%"></span>
+                  </div>
+                </div>
+              )}
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section class="content-section series-section" id="series" aria-labelledby="series-title">
+        <div class="section-head" data-reveal>
+          <div><h2 id="series-title">精选系列</h2><p>系统化整理与持续更新的主题集合</p></div>
+          <a href={withBase('/series/')}>查看全部系列</a>
+        </div>
+
+        <div class="series-grid">
+          {seriesCards.map((series, index) => (
+            <a class="series-card" href={withBase('/series/' + series.id + '/')} data-reveal>
+              <span class:list={['series-mark', 'mark-' + (index + 1)]}>
+                {series.id === 'excel-functions' ? 'X' : series.id === 'personal-blog' ? 'KB' : 'A'}
+              </span>
+              <div>
+                <h3>{series.title}</h3>
+                <p>{series.description}</p>
+              </div>
+              <small>{series.postCount} 篇文章</small>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section class="content-section visual-section" id="visual-lab" aria-labelledby="visual-title">
+        <div class="section-head" data-reveal>
+          <div><h2 id="visual-title">视觉实验室</h2><p>用页面、图表与交互，把复杂内容讲得更直观</p></div>
+          <a href={withBase('/articles/category/' + encodeURIComponent('视觉实验室') + '/')}>全部实验</a>
+        </div>
+
+        <div class="visual-grid">
+          {visualPosts.map((post, index) => (
+            <a class="visual-card" href={withBase('/articles/' + post.slug + '/')} data-reveal>
+              <div class="visual-copy">
+                <span>视觉实验 · 0{index + 1}</span>
+                <h3>{post.data.title}</h3>
+                <p>{post.data.description}</p>
+                <small>{post.data.tags.slice(0, 2).join(' · ')}</small>
+              </div>
+
+              {index === 0 ? (
+                <div class="formula-panel" aria-label="公式查找路径示例">
+                  <p><b>fx</b>=XLOOKUP(E2,A:A,C:C)</p>
+                  <table>
+                    <tbody>
+                      <tr><th>商品</th><th>编码</th><th>结果</th></tr>
+                      <tr><td>GK68</td><td>10032</td><td class="hit">已匹配</td></tr>
+                      <tr><td>G98</td><td>10047</td><td>待检查</td></tr>
+                      <tr><td>X51</td><td>10058</td><td>已匹配</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div class="decision-panel" aria-label="目标到验证的决策流程">
+                  <span><b>01</b>目标</span>
+                  <span><b>02</b>判断</span>
+                  <span><b>03</b>执行</span>
+                  <span><b>04</b>验证</span>
+                </div>
+              )}
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section class="content-section latest-section" id="latest" aria-labelledby="latest-title">
+        <div class="section-head" data-reveal>
+          <div><h2 id="latest-title">最近更新</h2><p>正在持续整理的新内容</p></div>
+          <a href={withBase('/articles/')}>进入文章库</a>
+        </div>
+        <div class="latest-list">
+          {latestPosts.map((post, index) => (
+            <a class="latest-item" href={withBase('/articles/' + post.slug + '/')} data-reveal>
+              <span>0{index + 1}</span>
+              <div><small>{post.data.category} · {post.data.tags[0]}</small><h3>{post.data.title}</h3></div>
+              <time datetime={formatDate(post.data.date)}>{formatDate(post.data.date)}</time>
+              <b>{post.data.minutes} 分钟</b>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section class="closing-section" data-reveal>
+        <div>
+          <p>黄撑的个人知识工作台</p>
+          <h2>持续记录真实问题、判断过程和最终做法。</h2>
+        </div>
+        <a class="button primary" href={withBase('/articles/')}>继续阅读</a>
+      </section>
+    </main>
+
+    <footer>
+      <span>© 2026 黄撑</span>
+      <nav aria-label="页脚导航">
+        <a href={withBase('/series/')}>系列</a>
+        <a href={withBase('/projects/')}>项目</a>
+        <a href={siteMeta.githubUrl}>GitHub</a>
+        <a href={withBase('/about/')}>关于我</a>
+      </nav>
+    </footer>
+
+    <dialog class="search-dialog" data-search-dialog>
+      <form method="dialog" class="search-shell">
+        <div class="search-head"><strong>搜索文章</strong><button value="cancel" aria-label="关闭搜索">关闭</button></div>
+        <input type="search" placeholder="输入标题、分类或标签" autocomplete="off" data-search-input />
+        <div class="search-results" data-search-results></div>
+      </form>
+    </dialog>
+
+    <script is:inline define:vars={{ searchItems }}>
+      (function () {
+        var root = document.documentElement;
+        var toneToggle = document.querySelector('[data-tone-toggle]');
+        var dialog = document.querySelector('[data-search-dialog]');
+        var openSearch = document.querySelector('[data-search-open]');
+        var searchInput = document.querySelector('[data-search-input]');
+        var searchResults = document.querySelector('[data-search-results]');
+
+        function updateToneButton() {
+          if (!toneToggle) return;
+          var isPaper = root.dataset.tone === 'paper';
+          toneToggle.setAttribute('aria-pressed', String(isPaper));
+          toneToggle.title = isPaper ? '切换到晶蓝主题' : '切换到纸张主题';
+        }
+
+        if (toneToggle) {
+          updateToneButton();
+          toneToggle.addEventListener('click', function () {
+            var next = root.dataset.tone === 'paper' ? '' : 'paper';
+            if (next) root.dataset.tone = next;
+            else delete root.dataset.tone;
+            updateToneButton();
+            try {
+              localStorage.setItem('home-redesign-3-tone', next);
+            } catch (error) {}
+          });
+        }
+
+        function escapeHtml(value) {
+          return value.replace(/[&<>"]/g, function (character) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[character];
+          });
+        }
+
+        function renderResults(query) {
+          if (!searchResults) return;
+          var normalized = query.trim().toLowerCase();
+          var matches = searchItems.filter(function (item) {
+            if (!normalized) return true;
+            return [item.title, item.category, item.description, item.keywords]
+              .join(' ')
+              .toLowerCase()
+              .includes(normalized);
+          }).slice(0, 7);
+
+          searchResults.innerHTML = matches.length
+            ? matches.map(function (item) {
+                return '<a href="' + item.href + '"><small>' + escapeHtml(item.category) + '</small><strong>'
+                  + escapeHtml(item.title) + '</strong><span>' + escapeHtml(item.description) + '</span></a>';
+              }).join('')
+            : '<p>没有找到匹配文章。</p>';
+        }
+
+        if (openSearch && dialog && searchInput) {
+          openSearch.addEventListener('click', function () {
+            renderResults('');
+            dialog.showModal();
+            requestAnimationFrame(function () { searchInput.focus(); });
+          });
+          searchInput.addEventListener('input', function () { renderResults(searchInput.value); });
+          dialog.addEventListener('click', function (event) {
+            if (event.target === dialog) dialog.close();
+          });
+        }
+
+        var reveals = Array.from(document.querySelectorAll('[data-reveal]'));
+        var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        requestAnimationFrame(function () { root.classList.add('ready'); });
+
+        if (reducedMotion || !('IntersectionObserver' in window)) {
+          reveals.forEach(function (element) { element.classList.add('visible'); });
+        } else {
+          var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            });
+          }, { threshold: 0.12, rootMargin: '0px 0px -7% 0px' });
+          reveals.forEach(function (element) { observer.observe(element); });
+        }
+      })();
+    </script>
+  </body>
+</html>
+
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-soft: #f7f9fd;
+    --ink: #101d36;
+    --muted: #53627b;
+    --soft: #7b8aa3;
+    --line: #dce4f0;
+    --line-strong: #c9d5e6;
+    --blue: #2161f3;
+    --blue-soft: #edf3ff;
+    --cyan: #10a7b8;
+    --cyan-soft: #e8f9fb;
+    --violet: #7657f6;
+    --orange: #ff7849;
+    --orange-soft: #fff2ec;
+    --shadow: 0 18px 44px rgba(33, 73, 128, 0.09);
+    --radius: 14px;
+    --page-pad: clamp(28px, 3.2vw, 52px);
+    --content-width: 1416px;
+    color-scheme: light;
+    font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  :root[data-tone='paper'] {
+    --bg: #fbfaf7;
+    --surface: #fffefb;
+    --surface-soft: #f6f3ec;
+    --line: #e5e0d6;
+    --line-strong: #d8d0c2;
+    --blue-soft: #eef2fa;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); color: var(--ink); min-width: 320px; text-rendering: optimizeLegibility; }
+  body { background: var(--bg); margin: 0; overflow-x: clip; }
+  body, button, input { font: inherit; }
+  a { color: inherit; text-decoration: none; }
+  button { color: inherit; }
+  a, button { -webkit-tap-highlight-color: transparent; }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 97, 243, 0.35); outline-offset: 3px; }
+  ::selection { background: #cfe0ff; color: #0b2f82; }
+
+  .site-header {
+    align-items: center;
+    backdrop-filter: blur(18px);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    gap: 28px;
+    grid-template-columns: minmax(240px, 1fr) auto minmax(160px, 1fr);
+    height: 66px;
+    padding: 0 var(--page-pad);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .brand { align-items: center; display: flex; gap: 14px; justify-self: start; }
+  .brand-mark {
+    align-items: center;
+    background: linear-gradient(140deg, #2f72ff, #1557e9);
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(33, 97, 243, 0.2);
+    color: #fff;
+    display: inline-flex;
+    font-size: 18px;
+    font-weight: 700;
+    height: 36px;
+    justify-content: center;
+    width: 36px;
+  }
+  .brand strong { font-size: 18px; letter-spacing: -0.02em; }
+
+  .main-nav { align-items: stretch; display: flex; gap: 32px; height: 100%; }
+  .main-nav a, .main-nav button {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #263754;
+    cursor: pointer;
+    display: flex;
+    font-size: 14px;
+    padding: 2px 0 0;
+    position: relative;
+  }
+  .main-nav a::after, .main-nav button::after {
+    background: var(--blue);
+    bottom: 0;
+    content: '';
+    height: 2px;
+    left: 50%;
+    position: absolute;
+    transform: translateX(-50%) scaleX(0);
+    transition: transform 0.2s ease;
+    width: 26px;
+  }
+  .main-nav a:hover::after, .main-nav button:hover::after, .main-nav .active::after { transform: translateX(-50%) scaleX(1); }
+  .main-nav .active { color: var(--blue); font-weight: 650; }
+
+  .header-actions { display: flex; gap: 10px; justify-self: end; }
+  .header-actions a, .header-actions button {
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 13px;
+    min-width: 62px;
+    padding: 8px 15px;
+    text-align: center;
+    transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  }
+  .header-actions a:hover, .header-actions button:hover { border-color: var(--blue); color: var(--blue); transform: translateY(-1px); }
+
+  .hero-section {
+    background:
+      radial-gradient(circle at 83% 7%, rgba(69, 132, 255, 0.08), transparent 25rem),
+      radial-gradient(circle at 52% 42%, rgba(68, 182, 255, 0.045), transparent 32rem),
+      linear-gradient(180deg, #fbfdff 0%, var(--surface-soft) 100%);
+    border-bottom: 1px solid #edf2f8;
+    padding: 34px var(--page-pad) 30px;
+  }
+
+  .hero-layout {
+    display: grid;
+    gap: clamp(42px, 4.4vw, 70px);
+    grid-template-columns: minmax(400px, 0.72fr) minmax(660px, 1.28fr);
+    margin: 0 auto;
+    max-width: var(--content-width);
+  }
+
+  .hero-copy { align-self: center; padding: 30px 0 12px; }
+  .hello { color: #33435f; font-size: 16px; font-weight: 600; margin: 0 0 24px; }
+  .hero-copy h1 { font-size: clamp(48px, 4.45vw, 68px); font-weight: 760; letter-spacing: -0.055em; line-height: 1.18; margin: 0; }
+  .hero-copy h1 span { display: block; white-space: nowrap; }
+  .hero-copy h1 .accent { color: var(--blue); }
+  .hero-lead { color: var(--muted); font-size: 17px; line-height: 1.85; margin: 22px 0 0; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 24px; }
+
+  .button {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: 650;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 24px;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .button:hover { transform: translateY(-2px); }
+  .button.primary { background: linear-gradient(135deg, #2d6cff, #1557e9); box-shadow: 0 12px 24px rgba(33, 97, 243, 0.2); color: #fff; }
+  .button.primary:hover { box-shadow: 0 16px 30px rgba(33, 97, 243, 0.28); }
+  .button.secondary { background: var(--surface); border: 1px solid var(--line-strong); color: #273753; }
+  .today-line { color: #65748d; font-size: 13px; margin: 26px 0 0; }
+
+  .workbench h2 { font-size: 17px; margin: 0 0 14px; }
+  .workbench-feature, .flow-card, .project-card, .topic-card, .series-card, .visual-card {
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  .workbench-feature {
+    box-shadow: var(--shadow);
+    display: grid;
+    gap: 28px;
+    grid-template-columns: minmax(0, 0.82fr) minmax(390px, 1.18fr);
+    min-height: 254px;
+    padding: 18px;
+  }
+  .feature-copy { display: flex; flex-direction: column; padding: 2px 0 2px 4px; }
+  .tag { align-self: flex-start; border-radius: 7px; display: inline-flex; font-size: 11px; font-weight: 700; padding: 5px 9px; }
+  .tag.blue { background: var(--blue-soft); color: var(--blue); }
+  .tag.cyan { background: var(--cyan-soft); color: var(--cyan); }
+  .tag.orange { background: var(--orange-soft); color: var(--orange); }
+  .feature-copy h3 { font-size: clamp(20px, 1.55vw, 25px); line-height: 1.32; margin: 12px 0 8px; }
+  .feature-copy h3 a:hover { color: var(--blue); }
+  .feature-copy > p { color: var(--muted); font-size: 13px; line-height: 1.7; margin: 0; }
+  .feature-meta { color: #667790; display: flex; flex-wrap: wrap; font-size: 11px; gap: 9px; margin-top: auto; padding-top: 12px; }
+  .feature-meta span { border: 1px solid var(--line); border-radius: 999px; padding: 5px 8px; }
+
+  .lookup-demo { border-left: 1px solid var(--line); min-width: 0; padding-left: 18px; }
+  .demo-tabs { color: #8b99ad; display: flex; font-size: 11px; gap: 20px; height: 28px; }
+  .demo-tabs b { border-bottom: 2px solid var(--blue); color: #273753; padding: 2px 9px 7px; }
+  .demo-body { display: grid; gap: 18px; grid-template-columns: minmax(220px, 1.25fr) minmax(150px, 0.75fr); }
+  .demo-body table, .formula-panel table { border-collapse: collapse; font-size: 11px; width: 100%; }
+  .demo-body th, .demo-body td, .formula-panel th, .formula-panel td { border: 1px solid #d9e2f0; padding: 6px 8px; text-align: center; }
+  .demo-body th { background: #eaf1ff; color: #31415d; }
+  .lookup-result { border: 1px solid var(--line); border-radius: 10px; margin: 0; overflow: hidden; }
+  .lookup-result::before { background: var(--surface-soft); border-bottom: 1px solid var(--line); color: #33435f; content: '查找结果'; display: block; font-size: 11px; font-weight: 700; padding: 9px 10px; }
+  .lookup-result > div { align-items: center; display: grid; font-size: 11px; grid-template-columns: 1fr 1.15fr; padding: 6px 9px; }
+  .lookup-result dt { color: #65748d; }
+  .lookup-result dd { border: 1px solid var(--line); border-radius: 6px; margin: 0; padding: 5px 7px; }
+  .lookup-result .result-value { color: var(--blue); font-weight: 750; }
+
+  .workbench-row { display: grid; gap: 16px; grid-template-columns: 1.08fr 0.92fr; margin-top: 16px; }
+  .flow-card, .project-card { min-height: 176px; padding: 16px 18px; }
+  .card-head { align-items: center; display: flex; gap: 16px; }
+  .card-head b { font-size: 14px; }
+  .flow-card > p, .project-card > p { color: var(--muted); font-size: 12px; line-height: 1.65; margin: 12px 0 0; }
+  .flow-steps { display: grid; gap: 9px; grid-template-columns: repeat(5, 1fr); list-style: none; margin: 17px 0 0; padding: 0; }
+  .flow-steps li { color: #33435f; font-size: 11px; position: relative; text-align: center; }
+  .flow-steps li:not(:last-child)::after { background: #cbd8ee; content: ''; height: 1px; position: absolute; right: -8px; top: 17px; width: 15px; }
+  .flow-steps span { align-items: center; background: var(--blue-soft); border-radius: 9px; color: var(--blue); display: flex; font-size: 10px; font-weight: 750; height: 34px; justify-content: center; margin: 0 auto 6px; width: 38px; }
+  .project-card { display: flex; flex-direction: column; }
+  .project-progress { align-items: center; color: #57677f; display: grid; font-size: 11px; gap: 12px; grid-template-columns: auto 1fr; margin-top: auto; padding-top: 14px; }
+  .project-progress i { background: #fde9df; border-radius: 999px; height: 5px; overflow: hidden; }
+  .project-progress i b { background: linear-gradient(90deg, var(--orange), #f6a178); display: block; height: 100%; width: 45%; }
+
+  .content-section { margin: 0 auto; max-width: var(--content-width); padding: 42px var(--page-pad) 0; }
+  .topic-section { max-width: calc(var(--content-width) + var(--page-pad) * 2); padding-top: 24px; }
+  .topic-grid { display: grid; gap: 16px; grid-template-columns: repeat(4, 1fr); }
+  .topic-card { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr) 142px; min-height: 218px; overflow: hidden; padding: 18px; transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease; }
+  .topic-card:hover, .series-card:hover, .visual-card:hover { border-color: #b9cbe7; box-shadow: 0 16px 34px rgba(33, 73, 128, 0.09); transform: translateY(-3px); }
+  .topic-card.practice, .topic-card.tutorial, .topic-card.lab { grid-template-columns: minmax(0, 0.8fr) minmax(120px, 1.2fr); }
+  .topic-copy { display: flex; flex-direction: column; min-width: 0; }
+  .topic-copy h2 { font-size: 24px; margin: 0 0 13px; }
+  .life .topic-copy h2 { color: var(--cyan); }
+  .practice .topic-copy h2 { color: var(--blue); }
+  .tutorial .topic-copy h2 { color: var(--violet); }
+  .lab .topic-copy h2 { color: var(--orange); }
+  .topic-copy p { color: var(--muted); font-size: 13px; line-height: 1.65; margin: 0; }
+  .topic-copy span { color: var(--blue); font-size: 12px; margin-top: auto; }
+  .topic-card > img { align-self: stretch; border-radius: 10px; height: 100%; object-fit: cover; width: 100%; }
+  .code-card { align-self: center; background: #0e1c30; border-radius: 10px; color: #e4edf9; overflow: hidden; }
+  .code-card pre { font: 10px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 0; overflow: hidden; padding: 13px 12px 9px; }
+  .code-card code span { color: #78b7ff; }
+  .code-card small { background: #f1f6ff; color: #60718a; display: block; font-size: 9px; padding: 7px 9px; }
+  .tutorial-steps { align-self: center; list-style: none; margin: 0; padding: 0; }
+  .tutorial-steps li { align-items: center; color: #33435f; display: flex; font-size: 11px; gap: 9px; padding: 7px 0; }
+  .tutorial-steps span { align-items: center; background: #f0edff; border-radius: 50%; color: var(--violet); display: inline-flex; font-size: 9px; font-weight: 750; height: 22px; justify-content: center; width: 22px; }
+  .lab-preview { align-self: center; display: grid; gap: 9px; }
+  .swatches { display: grid; gap: 7px; grid-template-columns: repeat(4, 1fr); }
+  .swatches i { aspect-ratio: 1; background: #1f2f4a; border-radius: 50%; }
+  .swatches i:nth-child(2) { background: #3476f6; }.swatches i:nth-child(3) { background: #a8d8d6; }.swatches i:nth-child(4) { background: #d9eff0; }
+  .swatches i:nth-child(5) { background: #f97959; }.swatches i:nth-child(6) { background: #ffd298; }.swatches i:nth-child(7) { background: #e9d8ff; }.swatches i:nth-child(8) { background: #eef2f7; }
+  .mini-chart { align-items: end; background: var(--surface-soft); border: 1px solid var(--line); border-radius: 9px; display: flex; gap: 5px; height: 84px; padding: 27px 10px 10px; position: relative; }
+  .mini-chart small { color: #54647c; font-size: 9px; left: 10px; position: absolute; top: 8px; }
+  .mini-chart span { background: linear-gradient(180deg, #5a83ff, #2f67ef); border-radius: 3px 3px 0 0; height: var(--height); width: 9px; }
+
+  .section-head { align-items: end; display: flex; justify-content: space-between; margin-bottom: 19px; }
+  .section-head > div { align-items: baseline; display: flex; gap: 18px; }
+  .section-head h2 { font-size: 24px; letter-spacing: -0.02em; margin: 0; }
+  .section-head p { color: var(--soft); font-size: 13px; margin: 0; }
+  .section-head > a { color: var(--blue); font-size: 13px; }
+  .section-head > a:hover { text-decoration: underline; text-underline-offset: 5px; }
+
+  .series-grid { display: grid; gap: 16px; grid-template-columns: repeat(3, 1fr); }
+  .series-card { align-items: center; display: grid; gap: 16px; grid-template-columns: auto 1fr auto; min-height: 118px; padding: 19px; transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease; }
+  .series-mark { align-items: center; background: linear-gradient(140deg, #4fcf96, #1e9f63); border-radius: 10px; color: #fff; display: flex; font-size: 16px; font-weight: 800; height: 42px; justify-content: center; width: 42px; }
+  .series-mark.mark-2 { background: linear-gradient(140deg, #17263e, #0d1728); }
+  .series-mark.mark-3 { background: linear-gradient(140deg, #7e6cff, #5b42e7); }
+  .series-card h3 { font-size: 15px; margin: 0 0 5px; }
+  .series-card p { color: var(--muted); display: -webkit-box; font-size: 11px; line-height: 1.55; margin: 0; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .series-card small { color: #6c7c94; font-size: 10px; white-space: nowrap; }
+
+  .visual-section { padding-top: 64px; }
+  .visual-grid { display: grid; gap: 18px; grid-template-columns: repeat(2, 1fr); }
+  .visual-card { display: grid; gap: 28px; grid-template-columns: minmax(0, 0.88fr) minmax(280px, 1.12fr); min-height: 270px; padding: 24px; transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease; }
+  .visual-copy { display: flex; flex-direction: column; }
+  .visual-copy > span { color: var(--blue); font-size: 11px; font-weight: 700; }
+  .visual-copy h3 { font-size: 22px; line-height: 1.35; margin: 14px 0 10px; }
+  .visual-copy p { color: var(--muted); font-size: 13px; line-height: 1.7; margin: 0; }
+  .visual-copy small { color: #73829a; margin-top: auto; }
+  .formula-panel, .decision-panel { align-self: stretch; background: #101d31; border-radius: 12px; color: #e8eff9; padding: 16px; }
+  .formula-panel > p { background: #1a2a42; border-radius: 7px; font: 11px/1.5 ui-monospace, monospace; margin: 0 0 14px; padding: 10px; }
+  .formula-panel > p b { color: #75b2ff; margin-right: 8px; }
+  .formula-panel th, .formula-panel td { border-color: #33445e; color: #cfdaea; }
+  .formula-panel th { background: #182941; }
+  .formula-panel .hit { color: #75e2b3; }
+  .decision-panel { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); place-content: center; }
+  .decision-panel span { align-items: center; background: #1a2b45; border: 1px solid #2b4364; border-radius: 9px; color: #dce6f3; display: flex; font-size: 12px; gap: 10px; padding: 13px; }
+  .decision-panel b { color: #72b2ff; font-size: 10px; }
+
+  .latest-section { padding-bottom: 70px; padding-top: 64px; }
+  .latest-list { border-top: 1px solid var(--line); }
+  .latest-item { align-items: center; border-bottom: 1px solid var(--line); display: grid; gap: 22px; grid-template-columns: 42px minmax(0, 1fr) 110px 72px; min-height: 92px; transition: background 0.2s ease, padding 0.2s ease; }
+  .latest-item:hover { background: var(--surface-soft); padding: 0 14px; }
+  .latest-item > span { color: #8c9ab0; font-size: 12px; }
+  .latest-item small { color: var(--blue); font-size: 10px; }
+  .latest-item h3 { font-size: 17px; margin: 6px 0 0; }
+  .latest-item time, .latest-item > b { color: #6b7a91; font-size: 11px; font-weight: 500; }
+
+  .closing-section { align-items: center; background: linear-gradient(130deg, #edf4ff, #f7fbff 55%, #f1f0ff); border: 1px solid #d9e5f8; border-radius: 18px; display: flex; justify-content: space-between; margin: 0 auto 64px; max-width: calc(var(--content-width) - var(--page-pad) * 2); padding: 34px 40px; }
+  .closing-section p { color: var(--blue); font-size: 12px; font-weight: 700; margin: 0 0 8px; }
+  .closing-section h2 { font-size: clamp(22px, 2vw, 30px); letter-spacing: -0.03em; margin: 0; }
+
+  footer { align-items: center; border-top: 1px solid var(--line); color: #6a7990; display: flex; font-size: 12px; justify-content: space-between; margin: 0 var(--page-pad); padding: 24px 0 34px; }
+  footer nav { display: flex; gap: 24px; }
+  footer a:hover { color: var(--blue); }
+
+  .search-dialog { background: transparent; border: 0; height: 100%; margin: 0; max-height: none; max-width: none; padding: 9vh 20px 20px; width: 100%; }
+  .search-dialog::backdrop { backdrop-filter: blur(5px); background: rgba(18, 30, 50, 0.32); }
+  .search-shell { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 30px 80px rgba(16, 29, 54, 0.22); margin: 0 auto; max-width: 680px; padding: 20px; }
+  .search-head { align-items: center; display: flex; justify-content: space-between; margin-bottom: 14px; }
+  .search-head strong { font-size: 18px; }
+  .search-head button { background: transparent; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; font-size: 12px; padding: 6px 11px; }
+  .search-shell input { background: var(--surface-soft); border: 1px solid var(--line-strong); border-radius: 10px; color: var(--ink); font-size: 14px; padding: 13px 14px; width: 100%; }
+  .search-results { display: grid; gap: 2px; margin-top: 12px; max-height: 58vh; overflow-y: auto; overscroll-behavior: contain; }
+  .search-results a { border-radius: 10px; display: grid; gap: 4px; padding: 11px 12px; }
+  .search-results a:hover { background: var(--surface-soft); }
+  .search-results small { color: var(--blue); font-size: 10px; }
+  .search-results strong { font-size: 14px; }
+  .search-results span { color: var(--muted); display: -webkit-box; font-size: 11px; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
+  .search-results > p { color: var(--muted); text-align: center; }
+
+  .js [data-reveal] { opacity: 0; transform: translateY(16px); transition: opacity 0.52s ease, transform 0.52s ease; }
+  .js.ready [data-reveal].visible { opacity: 1; transform: none; }
+  .js.ready .hero-copy[data-reveal], .js.ready .workbench[data-reveal] { opacity: 1; transform: none; }
+  .js.ready .hero-copy[data-reveal] { transition-delay: 0.06s; }
+  .js.ready .workbench[data-reveal] { transition-delay: 0.13s; }
+
+  @media (max-width: 1240px) {
+    .site-header { gap: 18px; grid-template-columns: auto 1fr auto; }
+    .main-nav { gap: 21px; justify-content: center; }
+    .hero-layout { grid-template-columns: minmax(330px, 0.65fr) minmax(600px, 1.35fr); }
+    .hero-copy h1 { font-size: clamp(44px, 4.3vw, 56px); }
+    .topic-card, .topic-card.practice, .topic-card.tutorial, .topic-card.lab { grid-template-columns: 1fr; }
+    .topic-card { min-height: 300px; }
+    .topic-card > img, .code-card, .tutorial-steps, .lab-preview { align-self: end; height: 132px; width: 100%; }
+    .tutorial-steps { display: grid; grid-template-columns: repeat(2, 1fr); }
+    .series-card { grid-template-columns: auto 1fr; }
+    .series-card small { grid-column: 2; }
+    .visual-card { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 980px) {
+    .site-header { height: auto; min-height: 66px; padding-bottom: 10px; padding-top: 10px; }
+    .brand strong { display: none; }
+    .main-nav { justify-content: start; order: 3; overflow-x: auto; grid-column: 1 / -1; padding: 0 2px 2px; scrollbar-width: none; }
+    .main-nav::-webkit-scrollbar { display: none; }
+    .main-nav a, .main-nav button { height: 34px; white-space: nowrap; }
+    .header-actions { grid-column: 3; }
+    .hero-section { padding-top: 42px; }
+    .hero-layout { grid-template-columns: 1fr; }
+    .hero-copy { max-width: 670px; }
+    .hero-copy h1 { font-size: clamp(46px, 8vw, 68px); }
+    .workbench-feature { grid-template-columns: minmax(0, 0.8fr) minmax(360px, 1.2fr); }
+    .topic-grid { grid-template-columns: repeat(2, 1fr); }
+    .topic-card, .topic-card.practice, .topic-card.tutorial, .topic-card.lab { grid-template-columns: minmax(0, 0.8fr) minmax(140px, 1.2fr); min-height: 220px; }
+    .series-grid { grid-template-columns: 1fr; }
+    .series-card { grid-template-columns: auto 1fr auto; }
+    .series-card small { grid-column: auto; }
+    .closing-section { margin-left: var(--page-pad); margin-right: var(--page-pad); }
+  }
+
+  @media (max-width: 680px) {
+    :root { --page-pad: 18px; }
+    .site-header { grid-template-columns: auto 1fr auto; }
+    .header-actions a, .header-actions button { min-width: 54px; padding: 7px 11px; }
+    .hero-section { padding-bottom: 22px; }
+    .hero-copy { padding-top: 8px; }
+    .hello { margin-bottom: 18px; }
+    .hero-copy h1 { font-size: clamp(39px, 11vw, 52px); line-height: 1.2; }
+    .hero-copy h1 span { white-space: normal; }
+    .hero-lead { font-size: 15px; }
+    .hero-lead br { display: none; }
+    .hero-actions .button { flex: 1; min-width: 140px; }
+    .workbench-feature { gap: 22px; grid-template-columns: 1fr; }
+    .lookup-demo { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; padding-top: 16px; }
+    .demo-body { grid-template-columns: minmax(190px, 1.2fr) minmax(120px, 0.8fr); }
+    .workbench-row { grid-template-columns: 1fr; }
+    .topic-grid { grid-template-columns: 1fr; }
+    .topic-card, .topic-card.practice, .topic-card.tutorial, .topic-card.lab { grid-template-columns: minmax(0, 0.8fr) minmax(130px, 1.2fr); min-height: 214px; }
+    .section-head { align-items: flex-start; gap: 15px; }
+    .section-head > div { align-items: flex-start; display: grid; gap: 5px; }
+    .section-head p { line-height: 1.5; }
+    .visual-grid { grid-template-columns: 1fr; }
+    .visual-card { grid-template-columns: 1fr; }
+    .latest-item { gap: 12px; grid-template-columns: 28px minmax(0, 1fr) auto; min-height: 94px; }
+    .latest-item time { grid-column: 3; grid-row: 1; }
+    .latest-item > b { display: none; }
+    .closing-section { align-items: flex-start; display: grid; gap: 22px; padding: 28px 24px; }
+    footer { align-items: flex-start; gap: 18px; }
+    footer nav { flex-wrap: wrap; gap: 12px 18px; justify-content: flex-end; }
+  }
+
+  @media (max-width: 430px) {
+    .demo-body { grid-template-columns: 1fr; }
+    .topic-card, .topic-card.practice, .topic-card.tutorial, .topic-card.lab { grid-template-columns: 1fr; min-height: 320px; }
+    .topic-card > img, .code-card, .tutorial-steps, .lab-preview { height: 142px; }
+    .series-card { align-items: start; grid-template-columns: auto 1fr; }
+    .series-card small { grid-column: 2; }
+    .decision-panel { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    .js [data-reveal] { opacity: 1; transform: none; }
+  }
+</style>
