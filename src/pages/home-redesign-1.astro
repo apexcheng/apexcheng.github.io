@@ -872,7 +872,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
 
   .hero {
     position: relative;
-    padding: clamp(50px, 4.5vw, 68px) clamp(24px, 5vw, 76px) clamp(22px, 2.4vw, 34px);
+    padding: clamp(46px, 4vw, 60px) clamp(24px, 5vw, 76px) clamp(22px, 2.4vw, 34px);
     border-bottom: 1px solid var(--line);
   }
 
@@ -1017,7 +1017,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     display: flex;
     flex-wrap: wrap;
     gap: 25px;
-    margin-top: 32px;
+    margin-top: 24px;
     padding-top: 18px;
     border-top: 1px solid var(--line);
   }
@@ -1107,11 +1107,11 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
 
   .code-window pre {
     margin: 0;
-    padding: 20px 19px 22px;
+    padding: 17px 19px 18px;
     overflow: hidden;
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
     font-size: clamp(10px, 0.9vw, 12.5px);
-    line-height: 1.62;
+    line-height: 1.55;
     white-space: pre-wrap;
   }
 
@@ -1129,17 +1129,17 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   }
 
   .data-window {
-    top: 10%;
-    right: 0;
+    top: 11%;
+    right: 13%;
     width: 49%;
-    padding: 16px;
+    padding: 12px;
     transform: translate3d(calc(var(--workbench-x) * 10px), calc(var(--workbench-y) * 7px), 36px);
   }
 
   .flow-window {
     right: -2%;
-    bottom: 2%;
-    width: 68%;
+    bottom: 7.5%;
+    width: 65%;
     padding: 16px;
     transform: translate3d(calc(var(--workbench-x) * 13px), calc(var(--workbench-y) * 10px), 58px);
   }
@@ -1149,7 +1149,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 
   .panel-title div {
@@ -1178,7 +1178,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
 
   .data-window th,
   .data-window td {
-    padding: 6px 8px;
+    padding: 4px 7px;
     border: 1px solid var(--line);
   }
 
@@ -1288,7 +1288,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .topics-section {
     width: 100%;
     max-width: none;
-    padding-top: 26px;
+    padding-top: 18px;
     padding-right: clamp(24px, 5vw, 76px);
     padding-bottom: clamp(64px, 6vw, 88px);
     padding-left: clamp(24px, 5vw, 76px);
@@ -1306,7 +1306,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     align-items: end;
     justify-content: space-between;
     gap: 30px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
 
   .topics-heading h2 {
@@ -1926,6 +1926,12 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
       grid-template-columns: 1fr;
       gap: 16px;
       margin-bottom: 34px;
+    }
+
+    .topics-heading {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .section-head > p,
