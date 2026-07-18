@@ -222,10 +222,10 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
                   <tr><th>日期</th><th>主题</th><th>进度</th><th>状态</th></tr>
                 </thead>
                 <tbody>
-                  <tr><td>07-18</td><td>pricing</td><td>80%</td><td>进行中</td></tr>
-                  <tr><td>07-18</td><td>stock</td><td>65%</td><td>进行中</td></tr>
-                  <tr><td>07-17</td><td>reviews</td><td>100%</td><td>已完成</td></tr>
-                  <tr><td>07-16</td><td>tools</td><td>90%</td><td>已完成</td></tr>
+                  <tr><td>2026-07-18</td><td>pricing</td><td>80%</td><td>进行中</td></tr>
+                  <tr><td>2026-07-18</td><td>stock</td><td>65%</td><td>进行中</td></tr>
+                  <tr><td>2026-07-17</td><td>reviews</td><td>100%</td><td>已完成</td></tr>
+                  <tr><td>2026-07-16</td><td>tools</td><td>90%</td><td>已完成</td></tr>
                 </tbody>
               </table>
             </article>
@@ -238,9 +238,9 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
                 </div>
               </div>
               <ol>
-                <li><b><FileInput size={13} /></b><span>输入<small>主题 / 数据 / 文档</small></span></li>
-                <li><b><BrainCircuit size={13} /></b><span>理解<small>拆解与分析</small></span></li>
-                <li><b><Bot size={13} /></b><span>执行<small>Agent / RPA / AI</small></span></li>
+                <li><b><FileInput size={13} /></b><span>输入<small>主题 / 数据 / 文档</small></span><ArrowRight class="step-arrow" size={13} /></li>
+                <li><b><BrainCircuit size={13} /></b><span>理解<small>拆解与分析</small></span><ArrowRight class="step-arrow" size={13} /></li>
+                <li><b><Bot size={13} /></b><span>执行<small>Agent / RPA / AI</small></span><ArrowRight class="step-arrow" size={13} /></li>
                 <li><b><CircleCheck size={13} /></b><span>输出<small>记录 / 表格 / 文章</small></span></li>
               </ol>
               <p>把想法变成可复用的知识和工具</p>
@@ -1250,6 +1250,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   }
 
   .flow-window li {
+    position: relative;
     display: flex;
     min-height: 66px;
     align-items: center;
@@ -1258,6 +1259,13 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     border: 1px solid var(--line);
     border-radius: 11px;
     background: var(--page);
+  }
+
+  .step-arrow {
+    position: absolute;
+    z-index: 2;
+    right: -12px;
+    color: var(--faint);
   }
 
   .flow-window li b {
@@ -1967,6 +1975,10 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
 
     .flow-window ol {
       grid-template-columns: repeat(2, 1fr);
+    }
+
+    .step-arrow {
+      display: none;
     }
 
     .section-head {
