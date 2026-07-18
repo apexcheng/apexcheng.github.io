@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const homeSource = readFileSync('src/pages/index.astro', 'utf8');
+const indexSource = readFileSync('src/pages/index.astro', 'utf8');
+const homeSource = readFileSync('src/pages/home-redesign-1.astro', 'utf8');
 const aboutSource = readFileSync('src/pages/about.astro', 'utf8');
 const projectsSource = readFileSync('src/pages/projects.astro', 'utf8');
 const articlesSource = readFileSync('src/pages/articles/index.astro', 'utf8');
@@ -13,9 +14,11 @@ const rssSource = readFileSync('src/pages/rss.xml.ts', 'utf8');
 
 describe('front page structure', () => {
   it('keeps the home hero as the first-page reading entry', () => {
-    expect(homeSource).toContain('<section class="hero-grid">');
-    expect(homeSource).toContain('生活观察 · 实践复盘 · 系统教程');
-    expect(homeSource).toContain('记录生活判断、工具实践与系统学习的个人博客');
+    expect(indexSource).toContain("import HomeRedesignOne from './home-redesign-1.astro'");
+    expect(indexSource).toContain('<HomeRedesignOne />');
+    expect(homeSource).toContain('<section class="hero" id="top">');
+    expect(homeSource).toContain('把复杂技术，');
+    expect(homeSource).toContain('记录生活判断、项目实践、系统教程和视觉实验。');
     expect(homeSource).toContain('class="hero-actions"');
     expect(homeSource).toContain("withBase('/articles/')");
     expect(homeSource).toContain("withBase('/projects/')");
@@ -23,7 +26,7 @@ describe('front page structure', () => {
 
   it('keeps home project entry aligned with the projects page', () => {
     expect(homeSource).toContain("withBase('/projects/')");
-    expect(homeSource).toContain('查看项目记录');
+    expect(homeSource).toContain('查看项目');
     expect(projectsSource).toContain('项目记录');
     expect(projectsSource).toContain('projects.map');
   });

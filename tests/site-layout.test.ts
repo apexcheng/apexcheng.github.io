@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 
 const layoutSource = readFileSync('src/layouts/SiteLayout.astro', 'utf8');
 const globalCssSource = readFileSync('src/styles/global.css', 'utf8');
+const homeIndexSource = readFileSync('src/components/HomeIndexMenu.astro', 'utf8');
 
 describe('site layout', () => {
   it('keeps shared site metadata as the personal blog brand', () => {
@@ -95,6 +96,19 @@ describe('site layout', () => {
     expect(layoutSource).not.toContain('方案三 · 天体序章');
     expect(layoutSource.indexOf('data-theme-menu')).toBeLessThan(layoutSource.indexOf('data-intro-menu'));
     expect(globalCssSource).toContain('.intro-menu-panel');
+  });
+
+  it('offers four switchable home designs after the intro menu', () => {
+    expect(layoutSource.indexOf('data-intro-menu')).toBeLessThan(layoutSource.indexOf('<HomeIndexMenu />'));
+    expect(homeIndexSource).toContain('>index</button>');
+    expect(homeIndexSource).toContain("href: withBase('/')");
+    expect(homeIndexSource).toContain("href: withBase('/home-redesign/')");
+    expect(homeIndexSource).toContain("href: withBase('/home-redesign-2/')");
+    expect(homeIndexSource).toContain("href: withBase('/home-redesign-3/')");
+    expect(homeIndexSource).toContain("title: '轻晶蓝'");
+    expect(homeIndexSource).toContain("title: '数字展厅'");
+    expect(homeIndexSource).toContain("title: '纸张手记'");
+    expect(homeIndexSource).toContain("title: '个人工作台'");
   });
 
   it('uses intro three for first visits and direct homepage entries without intercepting internal home links', () => {

@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import HomeIndexMenu from '../components/HomeIndexMenu.astro';
 import { seriesMetaList } from '../data/series';
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
@@ -133,10 +134,13 @@ const formatDate = (date: Date) =>
         <a href="#latest">最近更新</a>
       </nav>
 
-      <a class="back-home" href={withBase('/')}>
-        <span>当前首页</span>
-        <span aria-hidden="true">↗</span>
-      </a>
+      <div class="prototype-actions">
+        <a class="back-home" href={withBase('/')}>
+          <span>当前首页</span>
+          <span aria-hidden="true">↗</span>
+        </a>
+        <HomeIndexMenu current="home-redesign" />
+      </div>
     </header>
 
     <main>
@@ -881,6 +885,22 @@ const formatDate = (date: Date) =>
     height: 42px;
     padding: 0 16px;
     background: rgba(17, 24, 39, 0.54);
+  }
+
+  .prototype-actions {
+    --home-index-height: 42px;
+    --home-index-radius: 999px;
+    --home-index-padding: 15px;
+    --home-index-bg: rgba(17, 24, 39, 0.54);
+    --home-index-panel-bg: #111827;
+    --home-index-text: #f8fafc;
+    --home-index-muted: #94a3b8;
+    --home-index-color: #cbd5e1;
+    --home-index-border: rgba(148, 163, 184, 0.28);
+    --home-index-accent: var(--cyan);
+    align-items: center;
+    display: flex;
+    gap: 8px;
   }
 
   main,
@@ -2663,6 +2683,14 @@ const formatDate = (date: Date) =>
       gap: 10px;
       height: 38px;
       padding: 0 13px;
+    }
+
+    .prototype-actions {
+      --home-index-height: 38px;
+    }
+
+    .back-home span:first-child {
+      display: none;
     }
 
     .hero {

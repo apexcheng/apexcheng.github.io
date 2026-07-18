@@ -16,6 +16,7 @@ import {
   Sun,
   Workflow,
 } from '@lucide/astro';
+import HomeIndexMenu from '../components/HomeIndexMenu.astro';
 import { categoryMetaList } from '../data/categories';
 import { seriesMetaList } from '../data/series';
 import { siteMeta } from '../data/site';
@@ -61,6 +62,9 @@ const formatDate = (date: Date) =>
     month: '2-digit',
     day: '2-digit',
   }).format(date);
+
+const isOfficialHome = Astro.url.pathname === withBase('/');
+const introReturn = encodeURIComponent(isOfficialHome ? withBase('/') : withBase('/home-redesign-1/'));
 ---
 
 <!doctype html>
@@ -70,12 +74,14 @@ const formatDate = (date: Date) =>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="黄撑的技术笔记首页重设计第一套：轻晶蓝个人知识工作台。"
+      content={isOfficialHome
+        ? '黄撑的个人博客，记录生活判断、项目实践、AI Agent、RPA、自动化与数据处理经验。'
+        : '黄撑的技术笔记首页重设计第一套：轻晶蓝个人知识工作台。'}
     />
-    <meta name="robots" content="noindex, nofollow" />
+    <meta name="robots" content={isOfficialHome ? 'index, follow' : 'noindex, nofollow'} />
     <meta name="theme-color" content="#f6f8fc" />
     <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg?v=3')} />
-    <title>首页重设计 01 | {siteMeta.siteName}</title>
+    <title>{isOfficialHome ? siteMeta.siteName : `首页重设计 01 | ${siteMeta.siteName}`}</title>
     <script is:inline>
       try {
         document.documentElement.dataset.theme =
@@ -121,16 +127,17 @@ const formatDate = (date: Date) =>
             开屏
           </button>
           <div class="intro-panel" data-intro-panel>
-            <a href={withBase('/intro-motion-2/?return=%2Fhome-redesign-1%2F')}>
+            <a href={withBase(`/intro-motion-2/?return=${introReturn}`)}>
               <strong>液态字场</strong>
               <span>珠光文字与柔性流场</span>
             </a>
-            <a href={withBase('/intro-motion-3/?return=%2Fhome-redesign-1%2F')}>
+            <a href={withBase(`/intro-motion-3/?return=${introReturn}`)}>
               <strong>天体序章</strong>
               <span>星轨、日蚀与沉浸光门</span>
             </a>
           </div>
         </div>
+        <HomeIndexMenu current="home-redesign-1" />
       </div>
 
       <section
@@ -719,6 +726,10 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   }
 
   .header-controls {
+    --home-index-height: 40px;
+    --home-index-radius: 12px;
+    --home-index-padding: 14px;
+    --home-index-bg: color-mix(in srgb, var(--surface) 84%, transparent);
     display: flex;
     justify-self: end;
     gap: 9px;

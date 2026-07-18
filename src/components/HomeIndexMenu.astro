@@ -1,0 +1,233 @@
+---
+import { withBase } from '../utils/paths';
+
+interface Props {
+  current?: 'home-redesign' | 'home-redesign-1' | 'home-redesign-2' | 'home-redesign-3';
+}
+
+const { current } = Astro.props;
+const homeOptions = [
+  {
+    id: 'home-redesign-1',
+    title: '轻晶蓝',
+    note: '当前正式首页',
+    href: withBase('/'),
+  },
+  {
+    id: 'home-redesign',
+    title: '数字展厅',
+    note: '沉浸式技术展厅',
+    href: withBase('/home-redesign/'),
+  },
+  {
+    id: 'home-redesign-2',
+    title: '纸张手记',
+    note: '温和的纸张与手记感',
+    href: withBase('/home-redesign-2/'),
+  },
+  {
+    id: 'home-redesign-3',
+    title: '个人工作台',
+    note: '清晰直接的知识工作台',
+    href: withBase('/home-redesign-3/'),
+  },
+] as const;
+---
+
+<div class="home-index-menu" data-home-index-menu>
+  <button
+    class="home-index-button"
+    type="button"
+    aria-label="选择首页样式"
+    aria-expanded="false"
+    data-home-index-toggle
+  >index</button>
+  <div class="home-index-panel" role="menu" aria-label="首页样式">
+    {homeOptions.map((option) => (
+      <a
+        class:list={['home-index-option', current === option.id && 'active']}
+        href={option.href}
+        role="menuitem"
+      >
+        <span>
+          <strong>{option.title}</strong>
+          {current === option.id && <em>当前</em>}
+        </span>
+        <small>{option.note}</small>
+      </a>
+    ))}
+  </div>
+</div>
+
+<script is:inline>
+  document.querySelectorAll('[data-home-index-menu]').forEach(function (menu) {
+    var toggle = menu.querySelector('[data-home-index-toggle]');
+    var options = Array.from(menu.querySelectorAll('.home-index-option'));
+    if (!toggle) return;
+
+    function setOpen(isOpen, focusFirst) {
+      menu.classList.toggle('open', isOpen);
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      if (isOpen && focusFirst && options[0]) options[0].focus();
+    }
+
+    function closeOtherMenus() {
+      document
+        .querySelectorAll('[data-theme-menu], [data-intro-menu], [data-intro-control], [data-intro-picker]')
+        .forEach(function (item) {
+          item.classList.remove('open');
+          var button = item.querySelector('[aria-expanded="true"]');
+          if (button) button.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    toggle.addEventListener('click', function () {
+      var nextOpen = !menu.classList.contains('open');
+      closeOtherMenus();
+      setOpen(nextOpen, false);
+    });
+
+    toggle.addEventListener('keydown', function (event) {
+      if (event.key !== 'ArrowDown') return;
+      event.preventDefault();
+      closeOtherMenus();
+      setOpen(true, true);
+    });
+
+    options.forEach(function (option, index) {
+      option.addEventListener('keydown', function (event) {
+        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+        event.preventDefault();
+        var direction = event.key === 'ArrowDown' ? 1 : -1;
+        var nextIndex = (index + direction + options.length) % options.length;
+        options[nextIndex].focus();
+      });
+    });
+
+    menu.addEventListener('focusout', function (event) {
+      if (!menu.contains(event.relatedTarget)) setOpen(false, false);
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key !== 'Escape' || !menu.classList.contains('open')) return;
+      setOpen(false, false);
+      toggle.focus();
+    });
+
+    document.addEventListener('click', function (event) {
+      if (!menu.contains(event.target)) setOpen(false, false);
+    });
+  });
+</script>
+
+<style>
+  .home-index-menu {
+    position: relative;
+  }
+
+  .home-index-button {
+    box-sizing: border-box;
+    display: inline-flex;
+    height: var(--home-index-height, 34px);
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--home-index-padding, 11px);
+    border: 1px solid var(--home-index-border, var(--line, #d8e0eb));
+    border-radius: var(--home-index-radius, 10px);
+    background: var(--home-index-bg, var(--surface, var(--paper, rgba(255, 255, 255, 0.9))));
+    color: var(--home-index-color, var(--muted, inherit));
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--home-index-font-size, 12px);
+    font-weight: 760;
+    letter-spacing: 0.04em;
+    transition: border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  }
+
+  .home-index-button:hover,
+  .home-index-button:focus-visible {
+    border-color: var(--home-index-accent, var(--blue, #3b6ff5));
+    color: var(--home-index-accent, var(--blue, #3b6ff5));
+    outline: 0;
+    transform: translateY(-1px);
+  }
+
+  .home-index-panel {
+    position: absolute;
+    top: calc(100% + 9px);
+    right: 0;
+    z-index: 120;
+    display: grid;
+    width: min(260px, calc(100vw - 32px));
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid var(--home-index-border, var(--line, #d8e0eb));
+    border-radius: 14px;
+    background: var(--home-index-panel-bg, var(--surface, var(--paper, #fff)));
+    box-shadow: 0 22px 60px rgba(15, 23, 42, 0.18);
+    color: var(--home-index-text, var(--ink, #172033));
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px) scale(0.98);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+
+  .home-index-menu.open .home-index-panel {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .home-index-option {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+    padding: 10px 11px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: inherit;
+    text-decoration: none;
+    text-align: left;
+    transition: background 0.16s ease, transform 0.16s ease;
+  }
+
+  .home-index-option:hover,
+  .home-index-option:focus-visible {
+    background: var(--home-index-hover, color-mix(in srgb, var(--home-index-accent, var(--blue, #3b6ff5)) 10%, transparent));
+    outline: 0;
+    transform: translateX(2px);
+  }
+
+  .home-index-option.active {
+    background: var(--home-index-active, color-mix(in srgb, var(--home-index-accent, var(--blue, #3b6ff5)) 8%, transparent));
+  }
+
+  .home-index-option span {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .home-index-option strong {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .home-index-option em {
+    padding: 2px 7px;
+    border: 1px solid var(--home-index-accent, var(--blue, #3b6ff5));
+    border-radius: 999px;
+    color: var(--home-index-accent, var(--blue, #3b6ff5));
+    font-size: 10px;
+    font-style: normal;
+    line-height: 1.3;
+  }
+
+  .home-index-option small {
+    color: var(--home-index-muted, var(--muted, #667085));
+    font-size: 11px;
+    line-height: 1.45;
+  }
+</style>

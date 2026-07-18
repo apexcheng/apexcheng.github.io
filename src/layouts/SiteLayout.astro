@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { getCollection } from 'astro:content';
+import HomeIndexMenu from '../components/HomeIndexMenu.astro';
 import { projects } from '../data/projects';
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
@@ -183,6 +184,7 @@ const searchItems = [
               </button>
             </div>
           </div>
+          <HomeIndexMenu />
         </div>
       </header>
       <div data-pagefind-body>

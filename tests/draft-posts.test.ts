@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const schemaSource = readFileSync('src/content.config.ts', 'utf8');
-const homeSource = readFileSync('src/pages/index.astro', 'utf8');
+const homeSource = readFileSync('src/pages/home-redesign-1.astro', 'utf8');
 const articlesSource = readFileSync('src/pages/articles/index.astro', 'utf8');
 const articleDetailSource = readFileSync('src/pages/articles/[...slug].astro', 'utf8');
 const rssSource = readFileSync('src/pages/rss.xml.ts', 'utf8');

@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import HomeIndexMenu from '../components/HomeIndexMenu.astro';
 import { seriesMetaList } from '../data/series';
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
@@ -114,6 +115,7 @@ const introHref = `${withBase('/intro-motion-3/')}?return=${encodeURIComponent(w
       <div class="header-actions">
         <button type="button" data-tone-toggle aria-pressed="false">主题</button>
         <a href={introHref}>开屏</a>
+        <HomeIndexMenu current="home-redesign-3" />
       </div>
     </header>
 
@@ -549,7 +551,17 @@ const introHref = `${withBase('/intro-motion-3/')}?return=${encodeURIComponent(w
   .main-nav a:hover::after, .main-nav button:hover::after, .main-nav .active::after { transform: translateX(-50%) scaleX(1); }
   .main-nav .active { color: var(--blue); font-weight: 650; }
 
-  .header-actions { display: flex; gap: 10px; justify-self: end; }
+  .header-actions {
+    --home-index-height: 35px;
+    --home-index-radius: 999px;
+    --home-index-padding: 15px;
+    --home-index-font-size: 13px;
+    --home-index-bg: var(--surface);
+    --home-index-border: var(--line-strong);
+    display: flex;
+    gap: 10px;
+    justify-self: end;
+  }
   .header-actions a, .header-actions button {
     background: var(--surface);
     border: 1px solid var(--line-strong);

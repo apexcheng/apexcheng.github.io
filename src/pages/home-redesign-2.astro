@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import HomeIndexMenu from '../components/HomeIndexMenu.astro';
 import { categoryMetaList } from '../data/categories';
 import { seriesMetaList } from '../data/series';
 import { siteMeta } from '../data/site';
@@ -128,6 +129,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
               <a role="menuitem" href={withBase('/intro-motion-3/')}>天体序章</a>
             </div>
           </div>
+          <HomeIndexMenu current="home-redesign-2" />
         </div>
       </div>
     </header>
@@ -654,6 +656,12 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
   }
 
   .header-actions {
+    --home-index-height: 42px;
+    --home-index-radius: 10px;
+    --home-index-padding: 18px;
+    --home-index-font-size: 15px;
+    --home-index-bg: color-mix(in srgb, var(--paper-soft) 86%, transparent);
+    --home-index-border: var(--line-strong);
     display: flex;
     gap: 12px;
   }
