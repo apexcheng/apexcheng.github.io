@@ -45,6 +45,7 @@ const searchItems = [
 <html
   lang="zh-CN"
   data-page-kind={active === 'home' ? 'home' : 'content'}
+  data-home-url={withBase('/')}
   data-default-intro-url={withBase('/intro-motion-3/')}
 >
   <head>
@@ -70,19 +71,43 @@ const searchItems = [
       (function () {
         var page = document.documentElement;
         var introPath = page.dataset.defaultIntroUrl;
+        var homePath = page.dataset.homeUrl;
         var currentPath = window.location.pathname + window.location.search + window.location.hash;
         var seenKey = 'site-intro-seen-v1';
         var returnKey = 'site-intro-return-v1';
+        var internalHomeKey = 'site-intro-internal-home-v1';
 
-        if (!introPath) return;
+        if (!introPath || !homePath) return;
+
+        document.addEventListener('click', function (event) {
+          if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+          var link = event.target.closest && event.target.closest('a[href]');
+          if (!link || link.target === '_blank' || link.hasAttribute('download')) return;
+
+          var target = new URL(link.href, window.location.origin);
+          var homeUrl = new URL(homePath, window.location.origin);
+          if (target.origin !== homeUrl.origin || target.pathname !== homeUrl.pathname) return;
+
+          try {
+            sessionStorage.setItem(internalHomeKey, String(Date.now()));
+          } catch (error) {}
+        });
 
         try {
+          var internalHomeAt = Number(sessionStorage.getItem(internalHomeKey));
+          if (internalHomeAt) sessionStorage.removeItem(internalHomeKey);
+
           var returnPath = sessionStorage.getItem(returnKey);
           if (returnPath) sessionStorage.removeItem(returnKey);
           if (returnPath === currentPath) return;
 
           var isHome = page.dataset.pageKind === 'home';
           var hasSeenIntro = localStorage.getItem(seenKey) === '1';
+          var isInternalHomeNavigation = isHome
+            && internalHomeAt > 0
+            && Date.now() - internalHomeAt < 15000;
+          if (isInternalHomeNavigation) return;
           if (!isHome && hasSeenIntro) return;
 
           var introUrl = new URL(introPath, window.location.origin);

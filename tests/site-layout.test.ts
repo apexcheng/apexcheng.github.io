@@ -97,10 +97,13 @@ describe('site layout', () => {
     expect(globalCssSource).toContain('.intro-menu-panel');
   });
 
-  it('uses intro three for first visits and every homepage entry without looping on return', () => {
+  it('uses intro three for first visits and direct homepage entries without intercepting internal home links', () => {
+    expect(layoutSource).toContain("data-home-url={withBase('/')}");
     expect(layoutSource).toContain("data-default-intro-url={withBase('/intro-motion-3/')}");
     expect(layoutSource).toContain("var seenKey = 'site-intro-seen-v1'");
     expect(layoutSource).toContain("var returnKey = 'site-intro-return-v1'");
+    expect(layoutSource).toContain("var internalHomeKey = 'site-intro-internal-home-v1'");
+    expect(layoutSource).toContain('if (isInternalHomeNavigation) return');
     expect(layoutSource).toContain("if (!isHome && hasSeenIntro) return");
     expect(layoutSource).toContain("if (returnPath === currentPath) return");
     expect(layoutSource).toContain("introUrl.searchParams.set('return', currentPath)");

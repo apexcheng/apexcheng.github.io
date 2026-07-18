@@ -87,10 +87,10 @@ import { withBase } from '../utils/paths';
         <div class="progress-track">
           <span class="progress-fill" data-progress></span>
         </div>
-        <span class="time-left" data-time>10 秒</span>
+        <span class="time-left" data-time>20 秒</span>
       </div>
 
-      <p class="interaction-hint" data-interaction-hint aria-hidden="true">双击画面跳过</p>
+      <p class="interaction-hint" data-interaction-hint aria-hidden="true">双击画面直接进入</p>
 
       <p class="sr-only" aria-live="polite" data-status>天体序章即将开始</p>
 
@@ -722,7 +722,7 @@ import { withBase } from '../utils/paths';
           four: root.querySelector('[data-prologue="four"]'),
         };
 
-        var duration = 10000;
+        var duration = 20000;
         var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
         var width = 0;
         var height = 0;
@@ -1382,7 +1382,10 @@ import { withBase } from '../utils/paths';
           if (!isPlaying) return;
           if (event.target.closest && event.target.closest('button, a')) return;
           event.preventDefault();
-          finishSequence();
+          try {
+            sessionStorage.setItem(returnKey, returnUrl);
+          } catch (error) {}
+          window.location.assign(returnUrl);
         });
 
         enterButton.addEventListener('pointermove', function (event) {
