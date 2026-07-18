@@ -51,13 +51,15 @@ describe('site layout', () => {
   it('keeps switchable themes with visual system as the default', () => {
     expect(layoutSource).toContain("localStorage.getItem('styleTheme')");
     expect(layoutSource).toContain("document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light'");
-    expect(layoutSource).toContain("['index-gradient', 'visual-system'].includes(savedStyleTheme)");
+    expect(layoutSource).toContain("if (savedTheme === 'dark') savedStyleTheme = 'classic'");
+    expect(layoutSource).toContain("['classic', 'index-gradient', 'visual-system'].includes(savedStyleTheme)");
     expect(layoutSource).toContain("document.documentElement.dataset.styleTheme = savedStyleTheme || 'visual-system'");
     expect(layoutSource).toContain('data-theme-menu-toggle');
     expect(layoutSource).toContain('data-theme-option');
     expect(layoutSource).toContain('主题');
     expect(layoutSource.indexOf('晨曦渐变')).toBeLessThan(layoutSource.indexOf('视觉晶蓝'));
     expect(layoutSource.indexOf('视觉晶蓝')).toBeLessThan(layoutSource.indexOf('玄墨经典'));
+    expect(layoutSource).toContain('data-style-theme-value="classic" data-theme-value="dark">玄墨经典</button>');
     expect(layoutSource).not.toContain('晨曦手札');
     expect(layoutSource).not.toContain('素笺经典');
     expect(layoutSource).not.toContain('素笺渐变');

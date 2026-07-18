@@ -59,7 +59,8 @@ const searchItems = [
         try {
           var savedTheme = localStorage.getItem('theme');
           var savedStyleTheme = localStorage.getItem('styleTheme');
-          if (!['index-gradient', 'visual-system'].includes(savedStyleTheme)) savedStyleTheme = '';
+          if (savedTheme === 'dark') savedStyleTheme = 'classic';
+          if (!['classic', 'index-gradient', 'visual-system'].includes(savedStyleTheme)) savedStyleTheme = '';
           document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';
           document.documentElement.dataset.styleTheme = savedStyleTheme || 'visual-system';
         } catch (error) {
@@ -154,7 +155,7 @@ const searchItems = [
             <div class="theme-menu-panel" role="menu">
               <button type="button" role="menuitem" data-theme-option data-style-theme-value="index-gradient" data-theme-value="light">晨曦渐变</button>
               <button type="button" role="menuitem" data-theme-option data-style-theme-value="visual-system" data-theme-value="light">视觉晶蓝</button>
-              <button type="button" role="menuitem" data-theme-option data-style-theme-value="visual-system" data-theme-value="dark">玄墨经典</button>
+              <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="dark">玄墨经典</button>
             </div>
           </div>
           <div class="intro-menu" data-intro-menu>
@@ -202,7 +203,7 @@ const searchItems = [
 
         function currentStyleTheme() {
           var styleTheme = document.documentElement.dataset.styleTheme;
-          return ['index-gradient', 'visual-system'].includes(styleTheme) ? styleTheme : 'visual-system';
+          return ['classic', 'index-gradient', 'visual-system'].includes(styleTheme) ? styleTheme : 'visual-system';
         }
 
         function setOpen(isOpen) {
