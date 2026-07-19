@@ -92,7 +92,7 @@ import { withBase } from '../utils/paths';
       </div>
 
       <p class="interaction-hint" data-interaction-hint aria-hidden="true">
-        拖动旋转 · 滚轮缩放 · 双击进入
+        任意拖动视角 · 滚轮缩放 · 双击进入
       </p>
 
       <p class="sr-only" aria-live="polite" data-status>天体序章即将开始</p>
@@ -194,11 +194,11 @@ import { withBase } from '../utils/paths';
         opacity: 1;
       }
 
-      .cosmic-opening.is-earth-hovered .cosmic-canvas {
+      .cosmic-opening.is-scene-ready .cosmic-canvas {
         cursor: grab;
       }
 
-      .cosmic-opening.is-earth-dragging .cosmic-canvas {
+      .cosmic-opening.is-scene-dragging .cosmic-canvas {
         cursor: grabbing;
       }
 
