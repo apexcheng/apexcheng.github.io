@@ -104,6 +104,10 @@ function startCosmicOpening(root) {
   let suppressDoubleClickUntil = 0;
   let randomSeed = 20260717;
 
+  const minimumViewDistanceScale = 0.2;
+  const maximumViewDistanceScale = 2.4;
+  const wheelZoomSensitivity = 0.00072;
+
   const ripples = [];
   const celestialBodies = [];
   const celestialMaterials = [];
@@ -573,13 +577,13 @@ function startCosmicOpening(root) {
       '#8e7550', '#d8c38f', '#b7a16e', '#eee0ae', '#9e865b', '#d4bd86',
     ], false);
     const bodyDefinitions = [
-      { name: 'mercury', radius: 0.34, orbit: 4.2, color: 0x8d8379, phase: 0.4, speed: 0.000007, incline: 0.12 },
-      { name: 'venus', radius: 0.52, orbit: 7.1, color: 0xc89358, phase: 2.1, speed: 0.0000052, incline: 0.18 },
-      { name: 'mars', radius: 0.43, orbit: 15.2, color: 0xa9482c, phase: -0.85, speed: 0.0000032, incline: 0.22 },
-      { name: 'jupiter', radius: 2.25, orbit: 21.2, color: 0xffffff, map: jupiterTexture, phase: 0.92, speed: 0.00000135, incline: 0.28 },
-      { name: 'saturn', radius: 1.9, orbit: 26.6, color: 0xffffff, map: saturnTexture, phase: 2.65, speed: 0.000001, incline: 0.32, ring: true },
-      { name: 'uranus', radius: 1.02, orbit: 32.4, color: 0x8fd2d2, phase: -0.42, speed: 0.00000072, incline: 0.38 },
-      { name: 'neptune', radius: 1, orbit: 38.2, color: 0x315dbe, phase: 1.72, speed: 0.00000055, incline: 0.42 },
+      { name: 'mercury', radius: 0.5, orbit: 4.2, color: 0x8d8379, phase: 0.4, speed: 0.00009, incline: 0.12 },
+      { name: 'venus', radius: 0.72, orbit: 7.1, color: 0xc89358, phase: 2.1, speed: 0.000067, incline: 0.18 },
+      { name: 'mars', radius: 0.58, orbit: 15.2, color: 0xa9482c, phase: -0.85, speed: 0.00005, incline: 0.22 },
+      { name: 'jupiter', radius: 2.35, orbit: 21.2, color: 0xffffff, map: jupiterTexture, phase: 0.92, speed: 0.000035, incline: 0.28 },
+      { name: 'saturn', radius: 2, orbit: 26.6, color: 0xffffff, map: saturnTexture, phase: 2.65, speed: 0.000029, incline: 0.32, ring: true },
+      { name: 'uranus', radius: 1.18, orbit: 32.4, color: 0x8fd2d2, phase: -0.42, speed: 0.000023, incline: 0.38 },
+      { name: 'neptune', radius: 1.16, orbit: 38.2, color: 0x315dbe, phase: 1.72, speed: 0.000019, incline: 0.42 },
     ];
 
     [4.2, 7.1, 12, 15.2, 21.2, 26.6, 32.4, 38.2].forEach((radius) => {
@@ -1005,9 +1009,9 @@ function startCosmicOpening(root) {
         : 1;
     const normalizedDelta = event.deltaY * deltaMultiplier;
     targetViewDistanceScale = clamp(
-      targetViewDistanceScale * Math.exp(normalizedDelta * 0.00105),
-      0.62,
-      1.55
+      targetViewDistanceScale * Math.exp(normalizedDelta * wheelZoomSensitivity),
+      minimumViewDistanceScale,
+      maximumViewDistanceScale
     );
     scheduleFrame();
   }
@@ -1212,7 +1216,7 @@ function startCosmicOpening(root) {
       material.opacity = ease(phase(progress, 0.35, 0.56)) * 0.74;
     });
     orbitMaterials.forEach((material, index) => {
-      material.opacity = orbitReveal * (index === 2 ? 0.25 : 0.13);
+      material.opacity = orbitReveal * (index === 2 ? 0.28 : 0.18);
     });
     if (asteroidBelt && asteroidBeltMaterial) {
       asteroidBelt.rotation.y = sceneTime * 0.0000018;
