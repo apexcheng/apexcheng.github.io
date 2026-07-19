@@ -63,6 +63,7 @@ function startCosmicOpening(root) {
   let moon = null;
   let moonMaterial = null;
   let stars = null;
+  let cosmicObjects = null;
   let warpLines = null;
   let warpMaterial = null;
   let animationFrame = 0;
@@ -95,13 +96,17 @@ function startCosmicOpening(root) {
   let earthAutoRotationY = -1.58;
   let earthAutoRotationOffsetY = 0;
   let latestEarthSceneTime = 0;
-  let earthScale = 1;
-  let targetEarthScale = 1;
+  let viewDistanceScale = 1;
+  let targetViewDistanceScale = 1;
   let lastRenderAt = 0;
   let suppressDoubleClickUntil = 0;
   let randomSeed = 20260717;
 
   const ripples = [];
+  const celestialBodies = [];
+  const celestialMaterials = [];
+  const asteroids = [];
+  const asteroidMaterials = [];
   const earthRaycaster = new THREE.Raycaster();
   const earthPointer = new THREE.Vector2();
   const cameraPosition = new THREE.Vector3();
@@ -249,6 +254,9 @@ function startCosmicOpening(root) {
     stars = createStarField(isMobile ? 950 : 1850);
     scene.add(stars);
 
+    cosmicObjects = createCosmicObjects();
+    scene.add(cosmicObjects);
+
     const warp = createWarpField(isMobile ? 110 : 220);
     warpLines = warp.lines;
     warpMaterial = warp.material;
@@ -360,6 +368,106 @@ function startCosmicOpening(root) {
       lines: new THREE.LineSegments(geometry, material),
       material,
     };
+  }
+
+  function createAsteroidGeometry(variant) {
+    const geometry = new THREE.IcosahedronGeometry(1, 1);
+    const positions = geometry.attributes.position;
+
+    for (let index = 0; index < positions.count; index += 1) {
+      const x = positions.getX(index);
+      const y = positions.getY(index);
+      const z = positions.getZ(index);
+      const distortion = 1
+        + Math.sin((index + 1) * (1.37 + variant * 0.23)) * 0.13
+        + Math.cos((index + 3) * (0.73 + variant * 0.17)) * 0.08;
+      positions.setXYZ(index, x * distortion, y * distortion, z * distortion);
+    }
+
+    geometry.computeVertexNormals();
+    return geometry;
+  }
+
+  function createCosmicObjects() {
+    const group = new THREE.Group();
+    const bodyDefinitions = [
+      { radius: 1.18, position: [-10.8, 4.3, -15.5], color: 0x8d5e4b, emissive: 0x130604 },
+      { radius: 0.74, position: [9.4, -3.4, -17.5], color: 0x416e83, emissive: 0x041018 },
+      { radius: 0.46, position: [-7.5, -4.5, -8.2], color: 0x857f73, emissive: 0x0d0c0a },
+    ];
+
+    bodyDefinitions.forEach((definition, index) => {
+      const material = new THREE.MeshPhongMaterial({
+        color: definition.color,
+        emissive: definition.emissive,
+        shininess: index === 1 ? 18 : 5,
+        transparent: true,
+        opacity: 0,
+      });
+      const body = new THREE.Mesh(
+        new THREE.SphereGeometry(
+          definition.radius,
+          isMobile ? 24 : 40,
+          isMobile ? 16 : 28
+        ),
+        material
+      );
+      body.position.set(...definition.position);
+      body.rotation.set(index * 0.7, index * 1.1, index * 0.35);
+      body.userData.rotationSpeed = 0.000004 + index * 0.0000015;
+      celestialBodies.push(body);
+      celestialMaterials.push(material);
+      group.add(body);
+    });
+
+    const geometries = [0, 1, 2].map(createAsteroidGeometry);
+    [0x57524b, 0x6b6257, 0x484b4e].forEach((color) => {
+      asteroidMaterials.push(new THREE.MeshPhongMaterial({
+        color,
+        specular: 0x262421,
+        shininess: 3,
+        flatShading: true,
+        transparent: true,
+        opacity: 0,
+      }));
+    });
+
+    const asteroidCount = isMobile ? 9 : 18;
+    for (let index = 0; index < asteroidCount; index += 1) {
+      const side = index % 2 === 0 ? -1 : 1;
+      const foreground = index < (isMobile ? 2 : 4);
+      const asteroid = new THREE.Mesh(
+        geometries[index % geometries.length],
+        asteroidMaterials[index % asteroidMaterials.length]
+      );
+      const baseScale = foreground
+        ? 0.22 + random() * 0.34
+        : 0.12 + random() * 0.3;
+      asteroid.scale.set(
+        baseScale * (0.72 + random() * 0.56),
+        baseScale * (0.66 + random() * 0.62),
+        baseScale * (0.72 + random() * 0.58)
+      );
+      asteroid.position.set(
+        side * (foreground ? 5.8 + random() * 5.5 : 4.8 + random() * 9.5),
+        (random() * 2 - 1) * (foreground ? 5.2 : 6.8),
+        foreground ? 2.5 + random() * 5.2 : -2.5 - random() * 24
+      );
+      asteroid.rotation.set(random() * Math.PI, random() * Math.PI, random() * Math.PI);
+      asteroid.userData.basePosition = asteroid.position.clone();
+      asteroid.userData.baseRotation = asteroid.rotation.clone();
+      asteroid.userData.driftPhase = random() * Math.PI * 2;
+      asteroid.userData.driftAmount = 0.12 + random() * 0.36;
+      asteroid.userData.rotationSpeed = new THREE.Vector3(
+        0.00001 + random() * 0.000025,
+        0.000012 + random() * 0.00003,
+        0.000008 + random() * 0.00002
+      );
+      asteroids.push(asteroid);
+      group.add(asteroid);
+    }
+
+    return group;
   }
 
   async function loadTexture(name, colorSpace) {
@@ -686,10 +794,10 @@ function startCosmicOpening(root) {
         ? height
         : 1;
     const normalizedDelta = event.deltaY * deltaMultiplier;
-    targetEarthScale = clamp(
-      targetEarthScale * Math.exp(-normalizedDelta * 0.00115),
-      0.76,
-      1.38
+    targetViewDistanceScale = clamp(
+      targetViewDistanceScale * Math.exp(normalizedDelta * 0.00105),
+      0.62,
+      1.55
     );
     root.classList.add('is-earth-hovered');
     scheduleFrame();
@@ -769,7 +877,18 @@ function startCosmicOpening(root) {
     cameraPosition.y -= pointerY * 0.34 * pointerInfluence;
     cameraTarget.x += pointerX * 0.22 * pointerInfluence;
     cameraTarget.y -= pointerY * 0.16 * pointerInfluence;
-    camera.position.copy(cameraPosition);
+
+    const zoomEasing = frameDelta > 0
+      ? 1 - Math.pow(0.76, frameDelta / 16.667)
+      : 1;
+    viewDistanceScale += (targetViewDistanceScale - viewDistanceScale) * zoomEasing;
+    if (Math.abs(targetViewDistanceScale - viewDistanceScale) < 0.0001) {
+      viewDistanceScale = targetViewDistanceScale;
+    }
+
+    camera.position.copy(cameraTarget).add(
+      cameraPosition.sub(cameraTarget).multiplyScalar(viewDistanceScale)
+    );
     camera.lookAt(cameraTarget);
 
     const idleTime = !isPlaying && finishedAt ? (time - finishedAt) * 0.12 : 0;
@@ -791,12 +910,6 @@ function startCosmicOpening(root) {
       if (Math.abs(earthRotationVelocityY) < 0.00001) earthRotationVelocityY = 0;
     }
 
-    const scaleEasing = frameDelta > 0
-      ? 1 - Math.pow(0.76, frameDelta / 16.667)
-      : 1;
-    earthScale += (targetEarthScale - earthScale) * scaleEasing;
-    if (Math.abs(targetEarthScale - earthScale) < 0.0001) earthScale = targetEarthScale;
-
     if (earthSpin) {
       if (!isDraggingEarth) {
         earthAutoRotationY = -1.58 + sceneTime * 0.000032 + earthAutoRotationOffsetY;
@@ -805,11 +918,9 @@ function startCosmicOpening(root) {
       earthSpin.rotation.x = 0.08
         + (isDraggingEarth ? 0 : Math.sin(sceneTime * 0.00022) * 0.018)
         + earthManualRotationX;
-      earthSpin.scale.setScalar(earthScale);
       const cloudLayer = earthSpin.getObjectByName('cloud-layer');
       if (cloudLayer) cloudLayer.rotation.y = sceneTime * 0.000007;
     }
-    if (atmosphere) atmosphere.scale.setScalar(earthScale);
 
     if (earthMaterial) earthMaterial.opacity = reveal;
     if (cloudMaterial) cloudMaterial.opacity = reveal * 0.58;
@@ -827,6 +938,34 @@ function startCosmicOpening(root) {
       moon.rotation.y = sceneTime * 0.000018;
       moonMaterial.opacity = moonAmount * 0.76;
     }
+
+    const cosmicReveal = ease(phase(progress, 0.055, 0.2));
+    celestialMaterials.forEach((material, index) => {
+      material.opacity = cosmicReveal * (index === 2 ? 0.42 : 0.56);
+    });
+    celestialBodies.forEach((body) => {
+      body.rotation.y = sceneTime * body.userData.rotationSpeed;
+    });
+    asteroidMaterials.forEach((material) => {
+      material.opacity = cosmicReveal * 0.78;
+    });
+    asteroids.forEach((asteroid) => {
+      const phaseOffset = asteroid.userData.driftPhase;
+      const driftAmount = asteroid.userData.driftAmount;
+      const basePosition = asteroid.userData.basePosition;
+      const baseRotation = asteroid.userData.baseRotation;
+      const rotationSpeed = asteroid.userData.rotationSpeed;
+      asteroid.position.set(
+        basePosition.x + Math.sin(sceneTime * 0.00008 + phaseOffset) * driftAmount,
+        basePosition.y + Math.cos(sceneTime * 0.000065 + phaseOffset) * driftAmount * 0.7,
+        basePosition.z + Math.sin(sceneTime * 0.000045 + phaseOffset) * driftAmount * 0.45
+      );
+      asteroid.rotation.set(
+        baseRotation.x + sceneTime * rotationSpeed.x,
+        baseRotation.y + sceneTime * rotationSpeed.y,
+        baseRotation.z + sceneTime * rotationSpeed.z
+      );
+    });
 
     if (stars) {
       stars.rotation.y = sceneTime * 0.0000028 + pointerX * 0.025 * pointerInfluence;
@@ -930,8 +1069,8 @@ function startCosmicOpening(root) {
     earthAutoRotationY = -1.58;
     earthAutoRotationOffsetY = 0;
     latestEarthSceneTime = 0;
-    earthScale = 1;
-    targetEarthScale = 1;
+    viewDistanceScale = 1;
+    targetViewDistanceScale = 1;
     lastRenderAt = 0;
     suppressDoubleClickUntil = 0;
     enterButton.style.removeProperty('--magnet-x');
