@@ -64,6 +64,11 @@ function startCosmicOpening(root) {
   let moonMaterial = null;
   let stars = null;
   let cosmicObjects = null;
+  let sunSurface = null;
+  let sunMaterial = null;
+  let sunLight = null;
+  let asteroidBelt = null;
+  let asteroidBeltMaterial = null;
   let warpLines = null;
   let warpMaterial = null;
   let animationFrame = 0;
@@ -102,47 +107,56 @@ function startCosmicOpening(root) {
   const ripples = [];
   const celestialBodies = [];
   const celestialMaterials = [];
+  const planetRingMaterials = [];
+  const orbitMaterials = [];
+  const sunGlowSprites = [];
   const asteroids = [];
   const asteroidMaterials = [];
+  const solarCenter = new THREE.Vector3(-12, 0, 0);
   const cameraPosition = new THREE.Vector3();
   const cameraTarget = new THREE.Vector3();
   const cameraOrbitOffset = new THREE.Vector3();
   const cameraOrbitSpherical = new THREE.Spherical();
+  const sunWorldPosition = new THREE.Vector3();
+  const earthWorldPosition = new THREE.Vector3();
+  const earthToSunDirection = new THREE.Vector3();
   const cameraKeysDesktop = createKeys([
     [0, -1.8, 0.8, 16.8],
     [0.18, -0.8, 0.35, 11.8],
-    [0.36, 2.7, 1.1, 7.9],
-    [0.54, -3.1, 0.35, 7.4],
-    [0.7, 1.1, -0.65, 9.2],
-    [0.8, 0, 0, 17.2],
-    [1, 0, 0.2, 10.3],
+    [0.34, 3.4, 1.4, 14.5],
+    [0.5, 6.4, 2.8, 23],
+    [0.66, 9.2, 5.8, 34],
+    [0.8, -4, 15, 55],
+    [0.9, -12, 32, 94],
+    [1, -12, 27, 86],
   ]);
   const targetKeysDesktop = createKeys([
     [0, -2.5, -0.35, 0],
-    [0.18, -0.9, -0.1, 0],
-    [0.36, 0, 0, 0],
-    [0.54, 0, 0.08, 0],
-    [0.7, 0, 0, 0],
-    [0.8, -0.2, 0, 0],
-    [1, -2.35, 0.28, 0],
+    [0.18, -0.5, -0.1, 0],
+    [0.34, -3, 0, 0],
+    [0.5, -8, 0, -0.8],
+    [0.66, -14, 0, -0.5],
+    [0.8, -12, 0, 0],
+    [1, -12, 0, 0],
   ]);
   const cameraKeysMobile = createKeys([
     [0, -0.5, 0.8, 18.5],
     [0.18, -0.3, 0.3, 13.8],
-    [0.36, 1.5, 1.25, 10.4],
-    [0.54, -1.6, 0.25, 10],
-    [0.7, 0.5, -0.4, 12.2],
-    [0.8, 0, 0, 19],
-    [1, 0, 0.8, 12.7],
+    [0.34, 2.2, 1.4, 17.5],
+    [0.5, 4.6, 3.4, 28],
+    [0.66, 6.2, 8.5, 43],
+    [0.8, -7, 25, 78],
+    [0.9, -12, 46, 128],
+    [1, -12, 40, 116],
   ]);
   const targetKeysMobile = createKeys([
     [0, -0.85, 0.5, 0],
     [0.18, -0.35, 0.35, 0],
-    [0.36, 0, 0.35, 0],
-    [0.54, 0, 0.25, 0],
-    [0.7, 0, 0.35, 0],
-    [0.8, -0.1, 0.45, 0],
-    [1, -0.75, 0.8, 0],
+    [0.34, -3, 0.35, 0],
+    [0.5, -8, 0.25, -0.8],
+    [0.66, -14, 0.35, -0.5],
+    [0.8, -12, 0.45, 0],
+    [1, -12, 0.8, 0],
   ]);
 
   function resolveReturnUrl(value) {
@@ -234,15 +248,15 @@ function startCosmicOpening(root) {
     scene.background = new THREE.Color(0x01030a);
     scene.fog = new THREE.FogExp2(0x01030a, 0.003);
 
-    camera = new THREE.PerspectiveCamera(43, width / height, 0.1, 260);
+    camera = new THREE.PerspectiveCamera(43, width / height, 0.1, 360);
     scene.add(camera);
 
     const ambient = new THREE.HemisphereLight(0x29486c, 0x010207, 0.28);
     scene.add(ambient);
 
-    const sun = new THREE.DirectionalLight(0xfff4df, 3.8);
-    sun.position.set(-7.5, 4.5, 8);
-    scene.add(sun);
+    const keyLight = new THREE.DirectionalLight(0xfff4df, 2.5);
+    keyLight.position.set(-7.5, 4.5, 8);
+    scene.add(keyLight);
 
     const rim = new THREE.PointLight(0x5bbdd8, 17, 34, 2);
     rim.position.set(5.5, -2.6, 5);
@@ -385,37 +399,266 @@ function startCosmicOpening(root) {
     return geometry;
   }
 
+  function createGlowTexture() {
+    const glowCanvas = document.createElement('canvas');
+    glowCanvas.width = 256;
+    glowCanvas.height = 256;
+    const context = glowCanvas.getContext('2d');
+    if (!context) return null;
+
+    const gradient = context.createRadialGradient(128, 128, 0, 128, 128, 128);
+    gradient.addColorStop(0, 'rgba(255, 255, 236, 1)');
+    gradient.addColorStop(0.08, 'rgba(255, 222, 145, 0.96)');
+    gradient.addColorStop(0.28, 'rgba(255, 142, 61, 0.44)');
+    gradient.addColorStop(0.62, 'rgba(255, 92, 28, 0.12)');
+    gradient.addColorStop(1, 'rgba(255, 70, 18, 0)');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 256, 256);
+
+    const texture = new THREE.CanvasTexture(glowCanvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }
+
+  function createBandTexture(colors, withStorm) {
+    const textureCanvas = document.createElement('canvas');
+    textureCanvas.width = 512;
+    textureCanvas.height = 256;
+    const context = textureCanvas.getContext('2d');
+    if (!context) return null;
+
+    const gradient = context.createLinearGradient(0, 0, 0, textureCanvas.height);
+    colors.forEach((color, index) => {
+      gradient.addColorStop(index / Math.max(1, colors.length - 1), color);
+    });
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, textureCanvas.width, textureCanvas.height);
+
+    for (let index = 0; index < 18; index += 1) {
+      context.fillStyle = index % 2 === 0
+        ? 'rgba(255,255,255,0.055)'
+        : 'rgba(64,31,18,0.06)';
+      context.fillRect(0, index * 15, textureCanvas.width, 5 + index % 4);
+    }
+
+    if (withStorm) {
+      context.save();
+      context.translate(365, 157);
+      context.scale(1.9, 0.72);
+      context.fillStyle = 'rgba(132, 47, 25, 0.62)';
+      context.beginPath();
+      context.arc(0, 0, 23, 0, Math.PI * 2);
+      context.fill();
+      context.restore();
+    }
+
+    const texture = new THREE.CanvasTexture(textureCanvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    return texture;
+  }
+
+  function createOrbit(radius) {
+    const points = [];
+    const segments = isMobile ? 96 : 160;
+    for (let index = 0; index < segments; index += 1) {
+      const angle = index / segments * Math.PI * 2;
+      points.push(new THREE.Vector3(
+        Math.cos(angle) * radius,
+        0,
+        Math.sin(angle) * radius * 0.96
+      ));
+    }
+
+    const material = new THREE.LineBasicMaterial({
+      color: 0x7bacc1,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    orbitMaterials.push(material);
+    return new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(points), material);
+  }
+
   function createCosmicObjects() {
     const group = new THREE.Group();
+    group.position.copy(solarCenter);
+
+    sunMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      uniforms: {
+        time: { value: 0 },
+        opacity: { value: 0 },
+      },
+      vertexShader: [
+        'varying vec3 vPosition;',
+        'varying vec3 vNormal;',
+        'void main() {',
+        '  vPosition = position;',
+        '  vNormal = normalize(normalMatrix * normal);',
+        '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+        '}',
+      ].join('\n'),
+      fragmentShader: [
+        'uniform float time;',
+        'uniform float opacity;',
+        'varying vec3 vPosition;',
+        'varying vec3 vNormal;',
+        'void main() {',
+        '  vec3 p = normalize(vPosition);',
+        '  float flow = sin(p.x * 13.0 + time * 0.9)',
+        '    + sin(p.y * 17.0 - time * 0.7)',
+        '    + sin((p.x + p.z) * 21.0 + time * 0.52);',
+        '  flow = flow / 6.0 + 0.5;',
+        '  float limb = pow(max(dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0), 0.32);',
+        '  vec3 deep = vec3(1.0, 0.16, 0.015);',
+        '  vec3 hot = vec3(1.0, 0.94, 0.54);',
+        '  vec3 color = mix(deep, hot, clamp(flow + limb * 0.38, 0.0, 1.0));',
+        '  gl_FragColor = vec4(color * 1.35, opacity);',
+        '}',
+      ].join('\n'),
+    });
+    sunSurface = new THREE.Mesh(
+      new THREE.SphereGeometry(3.3, isMobile ? 36 : 56, isMobile ? 24 : 38),
+      sunMaterial
+    );
+    sunSurface.visible = false;
+    group.add(sunSurface);
+
+    const glowTexture = createGlowTexture();
+    if (glowTexture) {
+      [
+        { scale: 13, opacity: 0.72, color: 0xffc169 },
+        { scale: 23, opacity: 0.34, color: 0xff7a2f },
+        { scale: 39, opacity: 0.14, color: 0xff4f1f },
+      ].forEach((definition) => {
+        const material = new THREE.SpriteMaterial({
+          map: glowTexture,
+          color: definition.color,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        const sprite = new THREE.Sprite(material);
+        sprite.scale.set(definition.scale, definition.scale, 1);
+        sprite.userData.targetOpacity = definition.opacity;
+        sunGlowSprites.push(sprite);
+        group.add(sprite);
+      });
+
+      const flareMaterial = new THREE.SpriteMaterial({
+        map: glowTexture,
+        color: 0xffcf8c,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      const flare = new THREE.Sprite(flareMaterial);
+      flare.scale.set(36, 1.4, 1);
+      flare.userData.targetOpacity = 0.2;
+      sunGlowSprites.push(flare);
+      group.add(flare);
+    }
+
+    sunLight = new THREE.PointLight(0xffbd72, 0, 112, 1.35);
+    group.add(sunLight);
+
+    const jupiterTexture = createBandTexture([
+      '#5b3827', '#c79a72', '#ead0a7', '#8b5940', '#d9b88c', '#70432f', '#caa077',
+    ], true);
+    const saturnTexture = createBandTexture([
+      '#8e7550', '#d8c38f', '#b7a16e', '#eee0ae', '#9e865b', '#d4bd86',
+    ], false);
     const bodyDefinitions = [
-      { radius: 1.18, position: [-10.8, 4.3, -15.5], color: 0x8d5e4b, emissive: 0x130604 },
-      { radius: 0.74, position: [9.4, -3.4, -17.5], color: 0x416e83, emissive: 0x041018 },
-      { radius: 0.46, position: [-7.5, -4.5, -8.2], color: 0x857f73, emissive: 0x0d0c0a },
+      { name: 'mercury', radius: 0.34, orbit: 4.2, color: 0x8d8379, phase: 0.4, speed: 0.000007, incline: 0.12 },
+      { name: 'venus', radius: 0.52, orbit: 7.1, color: 0xc89358, phase: 2.1, speed: 0.0000052, incline: 0.18 },
+      { name: 'mars', radius: 0.43, orbit: 15.2, color: 0xa9482c, phase: -0.85, speed: 0.0000032, incline: 0.22 },
+      { name: 'jupiter', radius: 2.25, orbit: 21.2, color: 0xffffff, map: jupiterTexture, phase: 0.92, speed: 0.00000135, incline: 0.28 },
+      { name: 'saturn', radius: 1.9, orbit: 26.6, color: 0xffffff, map: saturnTexture, phase: 2.65, speed: 0.000001, incline: 0.32, ring: true },
+      { name: 'uranus', radius: 1.02, orbit: 32.4, color: 0x8fd2d2, phase: -0.42, speed: 0.00000072, incline: 0.38 },
+      { name: 'neptune', radius: 1, orbit: 38.2, color: 0x315dbe, phase: 1.72, speed: 0.00000055, incline: 0.42 },
     ];
 
+    [4.2, 7.1, 12, 15.2, 21.2, 26.6, 32.4, 38.2].forEach((radius) => {
+      group.add(createOrbit(radius));
+    });
+
     bodyDefinitions.forEach((definition, index) => {
-      const material = new THREE.MeshPhongMaterial({
+      const material = new THREE.MeshStandardMaterial({
         color: definition.color,
-        emissive: definition.emissive,
-        shininess: index === 1 ? 18 : 5,
+        map: definition.map || null,
+        emissive: definition.name === 'neptune' ? 0x07122d : 0x070402,
+        roughness: definition.name === 'venus' ? 0.82 : 0.68,
+        metalness: 0,
         transparent: true,
         opacity: 0,
       });
       const body = new THREE.Mesh(
         new THREE.SphereGeometry(
           definition.radius,
-          isMobile ? 24 : 40,
-          isMobile ? 16 : 28
+          isMobile ? 26 : 44,
+          isMobile ? 18 : 30
         ),
         material
       );
-      body.position.set(...definition.position);
-      body.rotation.set(index * 0.7, index * 1.1, index * 0.35);
-      body.userData.rotationSpeed = 0.000004 + index * 0.0000015;
+      body.name = definition.name;
+      body.visible = false;
+      body.userData.orbitRadius = definition.orbit;
+      body.userData.orbitPhase = definition.phase;
+      body.userData.orbitSpeed = definition.speed;
+      body.userData.orbitIncline = definition.incline;
+      body.userData.rotationSpeed = 0.000014 - index * 0.0000012;
+      body.userData.revealIndex = index;
+
+      if (definition.ring) {
+        const ringMaterial = new THREE.MeshBasicMaterial({
+          color: 0xcbb982,
+          transparent: true,
+          opacity: 0,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        });
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(2.45, 4.05, isMobile ? 64 : 104),
+          ringMaterial
+        );
+        ring.rotation.x = Math.PI / 2;
+        ring.rotation.z = -0.18;
+        body.rotation.z = 0.28;
+        body.add(ring);
+        planetRingMaterials.push(ringMaterial);
+      }
+
       celestialBodies.push(body);
       celestialMaterials.push(material);
       group.add(body);
     });
+
+    const beltCount = isMobile ? 110 : 260;
+    const beltPositions = new Float32Array(beltCount * 3);
+    for (let index = 0; index < beltCount; index += 1) {
+      const angle = random() * Math.PI * 2;
+      const radius = 17.2 + random() * 2.1;
+      const offset = index * 3;
+      beltPositions[offset] = Math.cos(angle) * radius;
+      beltPositions[offset + 1] = (random() * 2 - 1) * 0.42;
+      beltPositions[offset + 2] = Math.sin(angle) * radius * 0.96;
+    }
+    const beltGeometry = new THREE.BufferGeometry();
+    beltGeometry.setAttribute('position', new THREE.BufferAttribute(beltPositions, 3));
+    asteroidBeltMaterial = new THREE.PointsMaterial({
+      color: 0xb6aa99,
+      size: isMobile ? 0.09 : 0.12,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+    asteroidBelt = new THREE.Points(beltGeometry, asteroidBeltMaterial);
+    group.add(asteroidBelt);
 
     const geometries = [0, 1, 2].map(createAsteroidGeometry);
     [0x57524b, 0x6b6257, 0x484b4e].forEach((color) => {
@@ -429,26 +672,26 @@ function startCosmicOpening(root) {
       }));
     });
 
-    const asteroidCount = isMobile ? 9 : 18;
+    const asteroidCount = isMobile ? 7 : 14;
     for (let index = 0; index < asteroidCount; index += 1) {
-      const side = index % 2 === 0 ? -1 : 1;
-      const foreground = index < (isMobile ? 2 : 4);
       const asteroid = new THREE.Mesh(
         geometries[index % geometries.length],
         asteroidMaterials[index % asteroidMaterials.length]
       );
-      const baseScale = foreground
-        ? 0.22 + random() * 0.34
-        : 0.12 + random() * 0.3;
+      const baseScale = index < 3
+        ? 0.24 + random() * 0.32
+        : 0.1 + random() * 0.22;
       asteroid.scale.set(
         baseScale * (0.72 + random() * 0.56),
         baseScale * (0.66 + random() * 0.62),
         baseScale * (0.72 + random() * 0.58)
       );
+      const angle = random() * Math.PI * 2;
+      const radius = index < 3 ? 10 + random() * 8 : 17 + random() * 3.2;
       asteroid.position.set(
-        side * (foreground ? 5.8 + random() * 5.5 : 4.8 + random() * 9.5),
-        (random() * 2 - 1) * (foreground ? 5.2 : 6.8),
-        foreground ? 2.5 + random() * 5.2 : -2.5 - random() * 24
+        Math.cos(angle) * radius,
+        (random() * 2 - 1) * (index < 3 ? 3.4 : 1.4),
+        Math.sin(angle) * radius * 0.96
       );
       asteroid.rotation.set(random() * Math.PI, random() * Math.PI, random() * Math.PI);
       asteroid.userData.basePosition = asteroid.position.clone();
@@ -494,7 +737,12 @@ function startCosmicOpening(root) {
 
     world = new THREE.Group();
     world.rotation.z = -0.13;
-    scene.add(world);
+    world.position.set(12, 0, 0);
+    if (cosmicObjects) {
+      cosmicObjects.add(world);
+    } else {
+      scene.add(world);
+    }
 
     earthSpin = new THREE.Group();
     earthSpin.rotation.x = 0.08;
@@ -526,7 +774,7 @@ function startCosmicOpening(root) {
         blending: THREE.AdditiveBlending,
         uniforms: {
           lightsMap: { value: lights },
-          sunDirection: { value: new THREE.Vector3(-7.5, 4.5, 8).normalize() },
+          sunDirection: { value: new THREE.Vector3(-1, 0, 0) },
           opacity: { value: 0 },
         },
         vertexShader: [
@@ -877,7 +1125,20 @@ function startCosmicOpening(root) {
     const idleTime = !isPlaying && finishedAt ? (time - finishedAt) * 0.12 : 0;
     const sceneTime = progress * duration + idleTime;
     const reveal = ease(phase(progress, 0.015, 0.11));
-    const warp = band(progress, 0.54, 0.62, 0.74, 0.83);
+    const sunReveal = ease(phase(progress, 0.2, 0.4));
+    const systemReveal = ease(phase(progress, 0.28, 0.7));
+    const orbitReveal = ease(phase(progress, 0.6, 0.82));
+    const warp = band(progress, 0.48, 0.57, 0.7, 0.8);
+
+    if (world) {
+      const earthOrbitAngle = sceneTime * 0.0000022;
+      world.position.set(
+        Math.cos(earthOrbitAngle) * 12,
+        Math.sin(earthOrbitAngle * 0.7) * 0.16,
+        Math.sin(earthOrbitAngle) * 11.52
+      );
+    }
+
     if (earthSpin) {
       earthSpin.rotation.y = -1.58 + sceneTime * 0.000032;
       earthSpin.rotation.x = 0.08
@@ -891,6 +1152,34 @@ function startCosmicOpening(root) {
     if (cityMaterial) cityMaterial.uniforms.opacity.value = reveal * 1.1;
     if (atmosphereMaterial) atmosphereMaterial.uniforms.opacity.value = reveal * 0.72;
 
+    if (sunSurface && sunMaterial) {
+      sunSurface.visible = sunReveal > 0.002;
+      sunSurface.rotation.y = sceneTime * 0.000006;
+      sunSurface.rotation.z = sceneTime * 0.0000018;
+      sunMaterial.uniforms.time.value = sceneTime * 0.001;
+      sunMaterial.uniforms.opacity.value = sunReveal;
+    }
+    sunGlowSprites.forEach((sprite, index) => {
+      const pulse = 0.94 + Math.sin(sceneTime * 0.00055 + index * 1.3) * 0.06;
+      sprite.material.opacity = sunReveal * sprite.userData.targetOpacity * pulse;
+      if (index === sunGlowSprites.length - 1) {
+        sprite.material.rotation = Math.sin(sceneTime * 0.00008) * 0.08;
+      }
+    });
+    if (sunLight) {
+      sunLight.intensity = sunReveal * (isMobile ? 310 : 440);
+    }
+
+    if (cityMaterial && earthSurface && sunSurface) {
+      sunSurface.getWorldPosition(sunWorldPosition);
+      earthSurface.getWorldPosition(earthWorldPosition);
+      earthToSunDirection
+        .copy(sunWorldPosition)
+        .sub(earthWorldPosition)
+        .normalize();
+      cityMaterial.uniforms.sunDirection.value.copy(earthToSunDirection);
+    }
+
     if (moon && moonMaterial) {
       const moonAmount = band(progress, 0.16, 0.24, 0.6, 0.75);
       const moonAngle = -0.32 + progress * 0.72;
@@ -903,15 +1192,34 @@ function startCosmicOpening(root) {
       moonMaterial.opacity = moonAmount * 0.76;
     }
 
-    const cosmicReveal = ease(phase(progress, 0.055, 0.2));
-    celestialMaterials.forEach((material, index) => {
-      material.opacity = cosmicReveal * (index === 2 ? 0.42 : 0.56);
-    });
-    celestialBodies.forEach((body) => {
+    celestialBodies.forEach((body, index) => {
+      const bodyReveal = ease(phase(
+        progress,
+        0.25 + body.userData.revealIndex * 0.025,
+        0.4 + body.userData.revealIndex * 0.03
+      ));
+      const orbitAngle = body.userData.orbitPhase + sceneTime * body.userData.orbitSpeed;
+      body.position.set(
+        Math.cos(orbitAngle) * body.userData.orbitRadius,
+        Math.sin(orbitAngle * 1.4) * body.userData.orbitIncline,
+        Math.sin(orbitAngle) * body.userData.orbitRadius * 0.96
+      );
+      body.visible = bodyReveal > 0.002;
       body.rotation.y = sceneTime * body.userData.rotationSpeed;
+      celestialMaterials[index].opacity = bodyReveal * 0.96;
     });
+    planetRingMaterials.forEach((material) => {
+      material.opacity = ease(phase(progress, 0.35, 0.56)) * 0.74;
+    });
+    orbitMaterials.forEach((material, index) => {
+      material.opacity = orbitReveal * (index === 2 ? 0.25 : 0.13);
+    });
+    if (asteroidBelt && asteroidBeltMaterial) {
+      asteroidBelt.rotation.y = sceneTime * 0.0000018;
+      asteroidBeltMaterial.opacity = systemReveal * 0.62;
+    }
     asteroidMaterials.forEach((material) => {
-      material.opacity = cosmicReveal * 0.78;
+      material.opacity = systemReveal * 0.78;
     });
     asteroids.forEach((asteroid) => {
       const phaseOffset = asteroid.userData.driftPhase;
@@ -942,7 +1250,7 @@ function startCosmicOpening(root) {
       warpMaterial.opacity = warp * 0.46;
     }
 
-    renderer.toneMappingExposure = 1.08 + warp * 0.18;
+    renderer.toneMappingExposure = 1.08 + sunReveal * 0.06 + warp * 0.18;
     updateRipples(time);
     renderer.render(scene, camera);
   }
@@ -967,9 +1275,10 @@ function startCosmicOpening(root) {
 
     let chapter = '正在唤醒';
     if (progress >= 0.14) chapter = '进入近地轨道';
-    if (progress >= 0.3) chapter = '掠过昼夜线';
-    if (progress >= 0.48) chapter = '加速航行';
-    if (progress >= 0.68) chapter = '已经抵达';
+    if (progress >= 0.3) chapter = '迎向太阳光';
+    if (progress >= 0.48) chapter = '穿越行星轨道';
+    if (progress >= 0.68) chapter = '展开太阳系';
+    if (progress >= 0.86) chapter = '已经抵达';
 
     chapterName.textContent = chapter;
     if (chapter !== lastChapter) {
