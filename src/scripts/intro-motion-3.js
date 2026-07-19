@@ -104,9 +104,9 @@ function startCosmicOpening(root) {
   let suppressDoubleClickUntil = 0;
   let randomSeed = 20260717;
 
-  const minimumViewDistanceScale = 0.2;
-  const maximumViewDistanceScale = 2.4;
-  const wheelZoomSensitivity = 0.00072;
+  const minimumViewDistanceScale = 0.18;
+  const maximumViewDistanceScale = 6.8;
+  const wheelZoomSensitivity = 0.00058;
 
   const ripples = [];
   const celestialBodies = [];
@@ -116,9 +116,12 @@ function startCosmicOpening(root) {
   const sunGlowSprites = [];
   const asteroids = [];
   const asteroidMaterials = [];
-  const solarCenter = new THREE.Vector3(-12, 0, 0);
+  const solarCenter = new THREE.Vector3(-18, 0, 0);
   const cameraPosition = new THREE.Vector3();
   const cameraTarget = new THREE.Vector3();
+  const cameraBasePosition = new THREE.Vector3();
+  const cameraBaseTarget = new THREE.Vector3();
+  const localCameraTarget = new THREE.Vector3();
   const cameraOrbitOffset = new THREE.Vector3();
   const cameraOrbitSpherical = new THREE.Spherical();
   const sunWorldPosition = new THREE.Vector3();
@@ -127,40 +130,38 @@ function startCosmicOpening(root) {
   const cameraKeysDesktop = createKeys([
     [0, -1.8, 0.8, 16.8],
     [0.18, -0.8, 0.35, 11.8],
-    [0.34, 3.4, 1.4, 14.5],
-    [0.5, 6.4, 2.8, 23],
-    [0.66, 9.2, 5.8, 34],
-    [0.8, -4, 15, 55],
-    [0.9, -12, 32, 94],
-    [1, -12, 27, 86],
+    [0.34, 3.8, 1.6, 16.5],
+    [0.5, 8.5, 3.2, 23.5],
+    [0.66, 14.5, 6.5, 31],
+    [0.8, 13.5, 8.5, 37],
+    [1, 12, 8, 34],
   ]);
   const targetKeysDesktop = createKeys([
     [0, -2.5, -0.35, 0],
     [0.18, -0.5, -0.1, 0],
-    [0.34, -3, 0, 0],
-    [0.5, -8, 0, -0.8],
-    [0.66, -14, 0, -0.5],
-    [0.8, -12, 0, 0],
-    [1, -12, 0, 0],
+    [0.34, -2.8, 0, 0],
+    [0.5, -5.5, 0, -0.8],
+    [0.66, -7.5, 0, -0.6],
+    [0.8, -7, 0, 0],
+    [1, -6, 0, 0],
   ]);
   const cameraKeysMobile = createKeys([
     [0, -0.5, 0.8, 18.5],
     [0.18, -0.3, 0.3, 13.8],
-    [0.34, 2.2, 1.4, 17.5],
-    [0.5, 4.6, 3.4, 28],
-    [0.66, 6.2, 8.5, 43],
-    [0.8, -7, 25, 78],
-    [0.9, -12, 46, 128],
-    [1, -12, 40, 116],
+    [0.34, 3, 1.8, 20],
+    [0.5, 7, 4.2, 29],
+    [0.66, 11, 8.5, 39],
+    [0.8, 10, 11, 47],
+    [1, 9, 10, 43],
   ]);
   const targetKeysMobile = createKeys([
     [0, -0.85, 0.5, 0],
     [0.18, -0.35, 0.35, 0],
-    [0.34, -3, 0.35, 0],
-    [0.5, -8, 0.25, -0.8],
-    [0.66, -14, 0.35, -0.5],
-    [0.8, -12, 0.45, 0],
-    [1, -12, 0.8, 0],
+    [0.34, -2.8, 0.35, 0],
+    [0.5, -5.5, 0.25, -0.8],
+    [0.66, -7.5, 0.35, -0.5],
+    [0.8, -7, 0.45, 0],
+    [1, -6, 0.8, 0],
   ]);
 
   function resolveReturnUrl(value) {
@@ -250,9 +251,9 @@ function startCosmicOpening(root) {
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x01030a);
-    scene.fog = new THREE.FogExp2(0x01030a, 0.003);
+    scene.fog = new THREE.FogExp2(0x01030a, 0.0018);
 
-    camera = new THREE.PerspectiveCamera(43, width / height, 0.1, 360);
+    camera = new THREE.PerspectiveCamera(43, width / height, 0.1, 900);
     scene.add(camera);
 
     const ambient = new THREE.HemisphereLight(0x29486c, 0x010207, 0.28);
@@ -289,7 +290,7 @@ function startCosmicOpening(root) {
     const color = new THREE.Color();
 
     for (let index = 0; index < count; index += 1) {
-      const radius = 20 + random() * 118;
+      const radius = 35 + random() * 265;
       const theta = random() * Math.PI * 2;
       const phi = Math.acos(2 * random() - 1);
       const offset = index * 3;
@@ -567,7 +568,7 @@ function startCosmicOpening(root) {
       group.add(flare);
     }
 
-    sunLight = new THREE.PointLight(0xffbd72, 0, 112, 1.35);
+    sunLight = new THREE.PointLight(0xffbd72, 0, 280, 1.25);
     group.add(sunLight);
 
     const jupiterTexture = createBandTexture([
@@ -577,16 +578,16 @@ function startCosmicOpening(root) {
       '#8e7550', '#d8c38f', '#b7a16e', '#eee0ae', '#9e865b', '#d4bd86',
     ], false);
     const bodyDefinitions = [
-      { name: 'mercury', radius: 0.5, orbit: 4.2, color: 0x8d8379, phase: 0.4, speed: 0.00009, incline: 0.12 },
-      { name: 'venus', radius: 0.72, orbit: 7.1, color: 0xc89358, phase: 2.1, speed: 0.000067, incline: 0.18 },
-      { name: 'mars', radius: 0.58, orbit: 15.2, color: 0xa9482c, phase: -0.85, speed: 0.00005, incline: 0.22 },
-      { name: 'jupiter', radius: 2.35, orbit: 21.2, color: 0xffffff, map: jupiterTexture, phase: 0.92, speed: 0.000035, incline: 0.28 },
-      { name: 'saturn', radius: 2, orbit: 26.6, color: 0xffffff, map: saturnTexture, phase: 2.65, speed: 0.000029, incline: 0.32, ring: true },
-      { name: 'uranus', radius: 1.18, orbit: 32.4, color: 0x8fd2d2, phase: -0.42, speed: 0.000023, incline: 0.38 },
-      { name: 'neptune', radius: 1.16, orbit: 38.2, color: 0x315dbe, phase: 1.72, speed: 0.000019, incline: 0.42 },
+      { name: 'mercury', radius: 0.5, orbit: 6, color: 0x8d8379, phase: 1.1, speed: 0.00009, incline: 0.18, rotationSpeed: 0.000022 },
+      { name: 'venus', radius: 0.72, orbit: 11, color: 0xc89358, phase: 0.5, speed: 0.000067, incline: 0.24, rotationSpeed: -0.000018 },
+      { name: 'mars', radius: 0.58, orbit: 27, color: 0xa9482c, phase: -0.35, speed: 0.00005, incline: 0.32, rotationSpeed: 0.000034 },
+      { name: 'jupiter', radius: 2.35, orbit: 44, color: 0xffffff, map: jupiterTexture, phase: 1.1, speed: 0.000035, incline: 0.4, rotationSpeed: 0.000056 },
+      { name: 'saturn', radius: 2, orbit: 60, color: 0xffffff, map: saturnTexture, phase: 2.45, speed: 0.000029, incline: 0.48, ring: true, rotationSpeed: 0.000047 },
+      { name: 'uranus', radius: 1.18, orbit: 80, color: 0x8fd2d2, phase: -1.05, speed: 0.000023, incline: 0.56, rotationSpeed: -0.000031 },
+      { name: 'neptune', radius: 1.16, orbit: 102, color: 0x315dbe, phase: 0.78, speed: 0.000019, incline: 0.64, rotationSpeed: 0.000038 },
     ];
 
-    [4.2, 7.1, 12, 15.2, 21.2, 26.6, 32.4, 38.2].forEach((radius) => {
+    [6, 11, 18, 27, 44, 60, 80, 102].forEach((radius) => {
       group.add(createOrbit(radius));
     });
 
@@ -614,7 +615,7 @@ function startCosmicOpening(root) {
       body.userData.orbitPhase = definition.phase;
       body.userData.orbitSpeed = definition.speed;
       body.userData.orbitIncline = definition.incline;
-      body.userData.rotationSpeed = 0.000014 - index * 0.0000012;
+      body.userData.rotationSpeed = definition.rotationSpeed;
       body.userData.revealIndex = index;
 
       if (definition.ring) {
@@ -645,7 +646,7 @@ function startCosmicOpening(root) {
     const beltPositions = new Float32Array(beltCount * 3);
     for (let index = 0; index < beltCount; index += 1) {
       const angle = random() * Math.PI * 2;
-      const radius = 17.2 + random() * 2.1;
+      const radius = 34 + random() * 4.4;
       const offset = index * 3;
       beltPositions[offset] = Math.cos(angle) * radius;
       beltPositions[offset + 1] = (random() * 2 - 1) * 0.42;
@@ -741,7 +742,7 @@ function startCosmicOpening(root) {
 
     world = new THREE.Group();
     world.rotation.z = -0.13;
-    world.position.set(12, 0, 0);
+    world.position.set(18, 0, 0);
     if (cosmicObjects) {
       cosmicObjects.add(world);
     } else {
@@ -1083,8 +1084,26 @@ function startCosmicOpening(root) {
 
     const cameraKeys = isMobile ? cameraKeysMobile : cameraKeysDesktop;
     const targetKeys = isMobile ? targetKeysMobile : targetKeysDesktop;
-    sampleVector(cameraKeys, progress, cameraPosition);
-    sampleVector(targetKeys, progress, cameraTarget);
+    sampleVector(cameraKeys, progress, cameraBasePosition);
+    sampleVector(targetKeys, progress, cameraBaseTarget);
+
+    if (world) {
+      world.getWorldPosition(earthWorldPosition);
+    } else {
+      earthWorldPosition.set(0, 0, 0);
+    }
+
+    const systemFocusAmount = ease(clamp(
+      (viewDistanceScale - 1.25) / (maximumViewDistanceScale - 1.25),
+      0,
+      1
+    ));
+    localCameraTarget.copy(earthWorldPosition).add(cameraBaseTarget);
+    cameraTarget.copy(localCameraTarget).lerp(solarCenter, systemFocusAmount);
+    cameraPosition
+      .copy(cameraTarget)
+      .add(cameraBasePosition)
+      .sub(cameraBaseTarget);
 
     cameraPosition.x += pointerX * 0.52 * pointerInfluence;
     cameraPosition.y -= pointerY * 0.34 * pointerInfluence;
@@ -1135,16 +1154,16 @@ function startCosmicOpening(root) {
     const warp = band(progress, 0.48, 0.57, 0.7, 0.8);
 
     if (world) {
-      const earthOrbitAngle = sceneTime * 0.0000022;
+      const earthOrbitAngle = sceneTime * 0.000012;
       world.position.set(
-        Math.cos(earthOrbitAngle) * 12,
-        Math.sin(earthOrbitAngle * 0.7) * 0.16,
-        Math.sin(earthOrbitAngle) * 11.52
+        Math.cos(earthOrbitAngle) * 18,
+        Math.sin(earthOrbitAngle * 0.7) * 0.28,
+        Math.sin(earthOrbitAngle) * 17.28
       );
     }
 
     if (earthSpin) {
-      earthSpin.rotation.y = -1.58 + sceneTime * 0.000032;
+      earthSpin.rotation.y = -1.58 + sceneTime * 0.000045;
       earthSpin.rotation.x = 0.08
         + Math.sin(sceneTime * 0.00022) * 0.018;
       const cloudLayer = earthSpin.getObjectByName('cloud-layer');
@@ -1215,12 +1234,13 @@ function startCosmicOpening(root) {
     planetRingMaterials.forEach((material) => {
       material.opacity = ease(phase(progress, 0.35, 0.56)) * 0.74;
     });
+    const zoomedSystemReveal = ease(clamp((viewDistanceScale - 1.08) / 2.35, 0, 1));
     orbitMaterials.forEach((material, index) => {
-      material.opacity = orbitReveal * (index === 2 ? 0.28 : 0.18);
+      material.opacity = orbitReveal * zoomedSystemReveal * (index === 2 ? 0.28 : 0.18);
     });
     if (asteroidBelt && asteroidBeltMaterial) {
       asteroidBelt.rotation.y = sceneTime * 0.0000018;
-      asteroidBeltMaterial.opacity = systemReveal * 0.62;
+      asteroidBeltMaterial.opacity = systemReveal * zoomedSystemReveal * 0.62;
     }
     asteroidMaterials.forEach((material) => {
       material.opacity = systemReveal * 0.78;
