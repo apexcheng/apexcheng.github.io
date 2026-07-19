@@ -37,10 +37,15 @@ import { withBase } from '../utils/paths';
           <span class="mark-index">03</span>
         </div>
 
-        <button class="skip-button" type="button" data-skip>
-          <span>跳过动画</span>
-          <span class="skip-arrow" aria-hidden="true"></span>
-        </button>
+        <div class="sequence-controls">
+          <button class="exit-explore-button" type="button" data-exit-explore hidden>
+            返回落版
+          </button>
+          <button class="skip-button" type="button" data-skip>
+            <span>跳过动画</span>
+            <span class="skip-arrow" aria-hidden="true"></span>
+          </button>
+        </div>
       </header>
 
       <section class="prologue prologue-one" data-prologue="one">
@@ -79,6 +84,10 @@ import { withBase } from '../utils/paths';
             <span>进入博客</span>
             <span class="enter-orbit" aria-hidden="true"></span>
           </a>
+          <button class="explore-button" type="button" data-explore hidden>
+            <span>自由探索</span>
+            <span class="explore-dot" aria-hidden="true"></span>
+          </button>
           <button class="replay-button" type="button" data-replay hidden>重新播放</button>
         </div>
       </section>
@@ -88,11 +97,12 @@ import { withBase } from '../utils/paths';
         <div class="progress-track">
           <span class="progress-fill" data-progress></span>
         </div>
-        <span class="time-left" data-time>20 秒</span>
+        <span class="time-left" data-time>12 秒</span>
       </div>
 
       <p class="interaction-hint" data-interaction-hint aria-hidden="true">
-        左键环视 · Shift / 右键平移 · 滚轮与 WASD / QE 飞行 · 双击进入
+        <span class="hint-desktop">拖动环视 · 滚轮前后移动 · WASD / QE 飞行</span>
+        <span class="hint-mobile">拖动环视</span>
       </p>
 
       <p class="sr-only" aria-live="polite" data-status>天体序章即将开始</p>
@@ -194,7 +204,7 @@ import { withBase } from '../utils/paths';
         opacity: 1;
       }
 
-      .cosmic-opening.is-scene-ready .cosmic-canvas {
+      .cosmic-opening.is-exploring .cosmic-canvas {
         cursor: grab;
       }
 
@@ -254,6 +264,12 @@ import { withBase } from '../utils/paths';
         letter-spacing: 0.2em;
       }
 
+      .sequence-controls {
+        align-items: center;
+        display: flex;
+        gap: 24px;
+      }
+
       .mark-dot {
         background: #9ce7e0;
         border-radius: 50%;
@@ -269,6 +285,8 @@ import { withBase } from '../utils/paths';
       }
 
       .skip-button,
+      .exit-explore-button,
+      .explore-button,
       .replay-button {
         align-items: center;
         background: transparent;
@@ -292,6 +310,8 @@ import { withBase } from '../utils/paths';
       }
 
       .skip-button:focus-visible,
+      .exit-explore-button:focus-visible,
+      .explore-button:focus-visible,
       .replay-button:focus-visible,
       .enter-button:focus-visible {
         outline: 1px solid rgba(144, 225, 226, 0.8);
@@ -385,6 +405,13 @@ import { withBase } from '../utils/paths';
         z-index: 12;
       }
 
+      .cosmic-opening.is-exploring .finale {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transform: translate3d(0, 20px, 0) scale(0.99) !important;
+        visibility: hidden !important;
+      }
+
       .finale-kicker {
         color: rgba(137, 218, 214, 0.72);
         font-size: 11px;
@@ -434,6 +461,7 @@ import { withBase } from '../utils/paths';
       .finale-actions {
         align-items: center;
         display: flex;
+        flex-wrap: wrap;
         gap: 24px;
         margin-top: clamp(24px, 4vh, 42px);
       }
@@ -506,6 +534,47 @@ import { withBase } from '../utils/paths';
         color: #ffffff;
       }
 
+      .explore-button {
+        border: 1px solid rgba(189, 219, 231, 0.24);
+        border-radius: 999px;
+        color: rgba(226, 238, 247, 0.76);
+        font-size: 12px;
+        gap: 12px;
+        letter-spacing: 0.1em;
+        min-height: 50px;
+        padding: 0 20px;
+        transition:
+          background 220ms ease,
+          border-color 220ms ease,
+          color 220ms ease;
+      }
+
+      .explore-button:hover {
+        background: rgba(151, 213, 221, 0.08);
+        border-color: rgba(178, 227, 231, 0.48);
+        color: #ffffff;
+      }
+
+      .explore-dot {
+        background: #8dded8;
+        border-radius: 50%;
+        box-shadow: 0 0 12px rgba(141, 222, 216, 0.72);
+        height: 5px;
+        width: 5px;
+      }
+
+      .exit-explore-button {
+        color: rgba(220, 231, 242, 0.58);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        padding: 10px 0;
+        transition: color 220ms ease;
+      }
+
+      .exit-explore-button:hover {
+        color: #ffffff;
+      }
+
       .sequence-foot {
         align-items: center;
         bottom: max(24px, env(safe-area-inset-bottom));
@@ -518,7 +587,12 @@ import { withBase } from '../utils/paths';
         letter-spacing: 0.16em;
         position: absolute;
         text-transform: uppercase;
+        transition: opacity 280ms ease;
         z-index: 20;
+      }
+
+      .cosmic-opening.is-exploring .sequence-foot {
+        opacity: 0;
       }
 
       .chapter-name {
@@ -564,6 +638,10 @@ import { withBase } from '../utils/paths';
 
       .interaction-hint.is-visible {
         animation: hint-reveal 3.2s ease 0.35s both;
+      }
+
+      .hint-mobile {
+        display: none;
       }
 
       .sr-only {
@@ -652,13 +730,21 @@ import { withBase } from '../utils/paths';
         }
 
         .finale-actions {
-          gap: 20px;
+          gap: 14px 18px;
           margin-top: 26px;
         }
 
-        .enter-button {
+        .enter-button,
+        .explore-button {
           min-height: 46px;
+        }
+
+        .enter-button {
           padding: 0 16px 0 20px;
+        }
+
+        .explore-button {
+          padding: 0 16px;
         }
 
         .sequence-foot {
@@ -670,7 +756,19 @@ import { withBase } from '../utils/paths';
         }
 
         .interaction-hint {
+          bottom: max(72px, calc(env(safe-area-inset-bottom) + 48px));
+          font-size: 9px;
+          left: 20px;
+          letter-spacing: 0.16em;
+          right: auto;
+        }
+
+        .hint-desktop {
           display: none;
+        }
+
+        .hint-mobile {
+          display: inline;
         }
       }
 
