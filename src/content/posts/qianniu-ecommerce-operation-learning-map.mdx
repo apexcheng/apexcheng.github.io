@@ -1,0 +1,1312 @@
+---
+title: 从一条商品链接开始：用千牛看懂电商运营完整链路
+description: 不背后台按钮，用“商品上架—流量成交—订单履约—售后评价—持续优化”一条链路，看懂 SKU、价格、营销、推广、ERP 和售后之间的关系。
+date: 2026-07-20T16:07:53+08:00
+category: 教程
+tags:
+  - 千牛工作台
+  - 电商运营
+minutes: 13
+featured: false
+draft: false
+private: false
+---
+
+import Callout from '../../components/Callout.astro';
+import FeatureCard from '../../components/FeatureCard.astro';
+import VisualGrid from '../../components/VisualGrid.astro';
+import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
+
+打开千牛工作台，最容易看到的是一堆模块：商品、订单、营销、退款、评价、数据……
+
+如果按按钮一个个背，新人很快就会迷路。更简单的理解方式，是把它看成一条完整的生意链路：**先把商品放到货架上，再把商品交到用户手里，最后根据结果继续优化。**
+
+<div class="qeo-source-note">
+  <span>阅读边界</span>
+  <p>本文讲的是后台功能背后的经营逻辑，不是实时规则手册。活动名称、补贴比例、功能入口和适用条件可能调整，实际操作仍以店铺当前后台和官方规则为准。</p>
+</div>
+
+<div class="qeo-hero">
+  <div class="qeo-hero__copy">
+    <span class="qeo-kicker">QIANNIU LEARNING MAP</span>
+    <h2>不要先学按钮，先看懂一件商品经历了什么</h2>
+    <p>千牛不是很多孤立工具的集合。商品、营销、订单、售后和评价，其实都在处理同一件事：让一件商品完成从“被看见”到“被交付”，再回到下一轮优化。</p>
+    <div class="qeo-hero__verdict">
+      <span>真正要学会的</span>
+      <strong>理解业务链路 · 找到上下游 · 遇到新问题会自己推演</strong>
+    </div>
+  </div>
+
+  <div class="qeo-stage-map" aria-label="商品经营的三个阶段">
+    <div class="qeo-stage-map__head">
+      <span>一条商品经营链路</span>
+      <strong>3 个核心阶段</strong>
+    </div>
+    <div class="qeo-stage-card is-blue">
+      <span>01</span>
+      <div><small>把货放上去</small><strong>商品上架与成交</strong><p>SKU、内容、价格、营销和推广。</p></div>
+    </div>
+    <i>↓</i>
+    <div class="qeo-stage-card is-cyan">
+      <span>02</span>
+      <div><small>把承诺交出去</small><strong>订单履约与售后</strong><p>ERP、仓库、物流、退款和评价。</p></div>
+    </div>
+    <i>↓</i>
+    <div class="qeo-stage-card is-violet">
+      <span>03</span>
+      <div><small>让下一轮更好</small><strong>数据反馈与优化</strong><p>商品、销售、推广和服务持续改进。</p></div>
+    </div>
+  </div>
+</div>
+
+## 一、先把商品放到货架上
+
+这一阶段解决的核心问题是：
+
+> **我们到底卖什么，用户为什么能找到它、点开它，并愿意付款？**
+
+### 一条链接先要回答：卖的到底是什么
+
+SPU、SKU、商品代码和 69 码经常一起出现，但它们并不是同一层的东西。
+
+<div class="qeo-identity-map" aria-label="SPU、SKU、商品代码、69码和组合商品的关系">
+  <div class="qeo-identity-top">
+    <span>商品家族</span>
+    <strong>SPU：某型号无线键盘</strong>
+    <p>描述“这是什么产品”，不负责区分具体颜色和套装。</p>
+  </div>
+  <div class="qeo-identity-arrow">向下拆成可售规格</div>
+  <div class="qeo-sku-row">
+    <div><span>SKU 01</span><strong>黑色键盘</strong><small>独立价格与库存</small></div>
+    <div><span>SKU 02</span><strong>白色键盘</strong><small>独立价格与库存</small></div>
+    <div><span>SKU 03</span><strong>键盘＋鼠标</strong><small>组合销售规格</small></div>
+  </div>
+  <div class="qeo-code-row">
+    <div><span>商品代码</span><p>店铺、ERP 或仓库内部识别商品的编号，通常会跟具体 SKU 建立关系。</p></div>
+    <div><span>69 码</span><p>印在实物包装上的商品条码，方便扫码、入库和流通，不等于 SKU 本身。</p></div>
+    <div><span>组合商品</span><p>把多个商品组合成一个销售方案，可能由多个原始 SKU 扣减库存。</p></div>
+  </div>
+</div>
+
+<Callout title="先记住这个区别">
+  SPU 负责描述“这是什么商品”，SKU 负责描述“用户实际买哪一个规格”；商品代码和 69 码主要负责识别，组合商品负责把多个商品组织成新的销售方案。
+</Callout>
+
+### 标题、主图、详情页：三道成交门
+
+商品内容不是为了把页面填满，而是在成交链路中分别承担不同任务。
+
+<div class="qeo-content-funnel" aria-label="标题、主图和详情页的作用">
+  <div class="qeo-funnel-card">
+    <span>SEARCH</span>
+    <strong>标题</strong>
+    <p>让平台和用户知道商品是什么，让用户搜索时有机会找到它。</p>
+    <em>先被找到</em>
+  </div>
+  <i>→</i>
+  <div class="qeo-funnel-card is-focus">
+    <span>CLICK</span>
+    <strong>主图</strong>
+    <p>在一排商品里快速传达外观、卖点和价格感知，让用户愿意点进来。</p>
+    <em>再被点击</em>
+  </div>
+  <i>→</i>
+  <div class="qeo-funnel-card is-success">
+    <span>BUY</span>
+    <strong>详情页</strong>
+    <p>讲清参数、场景、区别和服务，回答用户为什么值得购买。</p>
+    <em>最后成交</em>
+  </div>
+</div>
+
+商品属性和商品卖点也不一样：
+
+| 内容 | 回答的问题 | 键盘示例 |
+| --- | --- | --- |
+| 商品属性 | 它客观上是什么 | 双模连接、84键、矮轴、支持 Windows/macOS |
+| 商品卖点 | 用户为什么要选它 | 办公更安静、多设备切换方便、体积小不占桌面 |
+
+卖点必须建立在真实属性上。商品明明不静音，却为了搜索和转化写成“静音键盘”，短期可能带来点击，后面却会变成退款、差评和纠纷。
+
+### 价格不是填一个数字，而是搭一套到手价
+
+假设我们希望商品最终卖 **70 元**，至少可以有两种表达方式。
+
+<div class="qeo-price-board" aria-label="两种到手价方案对比">
+  <div class="qeo-price-plan">
+    <div class="qeo-price-plan__head"><span>方案 A</span><strong>普通长期优惠</strong></div>
+    <div class="qeo-price-formula"><b>¥100</b><i>－</i><b>¥30</b><i>＝</i><strong>¥70</strong></div>
+    <dl>
+      <div><dt>销售价</dt><dd>100 元</dd></div>
+      <div><dt>长期优惠</dt><dd>30 元</dd></div>
+      <div><dt>用户看到</dt><dd>到手 70 元</dd></div>
+    </dl>
+    <p>这里说的“优惠券体系”是一种经营概念，不一定真的使用优惠券工具，也可能通过超级立减、价格计划或其他长期在线优惠实现。</p>
+  </div>
+
+  <div class="qeo-price-plan is-subsidy">
+    <div class="qeo-price-plan__head"><span>方案 B</span><strong>优惠＋补贴标识</strong></div>
+    <div class="qeo-price-formula is-long"><b>¥109.42</b><i>－</i><b>¥21.90</b><i>× 80%</i><strong>≈ ¥70</strong></div>
+    <dl>
+      <div><dt>优惠后</dt><dd>87.52 元</dd></div>
+      <div><dt>示例补贴</dt><dd>20%</dd></div>
+      <div><dt>用户看到</dt><dd>到手约 70 元＋补贴标识</dd></div>
+    </dl>
+    <p>同样做到约 70 元，但补贴标识会改变用户对价格的感知，因此它不仅是计算方式，也可能成为一种营销表达。</p>
+  </div>
+</div>
+
+<Callout title="这只是价格结构示例">
+  上面的 20% 只用于解释计算关系，不代表所有时间、地区和类目都执行同一比例。活动规则变化时，先看当前后台，再核对实际承担方和最终结算金额。
+</Callout>
+
+在这套经营方式里，**价格计划承担兜底价的角色**：当长期优惠、活动或其他工具异常失效时，商品不至于突然恢复成不合理价格。
+
+### 营销工具、营销活动、推广：解决的是三件事
+
+<div class="qeo-marketing-grid">
+  <div>
+    <span>HOW</span>
+    <strong>营销工具</strong>
+    <p>商家具体怎么设置优惠和销售规则。</p>
+    <small>价格计划、优惠券、赠品、淘金币、限购、分期</small>
+  </div>
+  <div>
+    <span>WHEN / WHERE</span>
+    <strong>营销活动</strong>
+    <p>平台在某个时间或场景组织的促销项目。</p>
+    <small>618、双11、国家补贴、平台大促、类目活动</small>
+  </div>
+  <div>
+    <span>WHO CAN SEE</span>
+    <strong>推广</strong>
+    <p>让更多潜在用户看到已经上架的商品。</p>
+    <small>搜索推广、单品计划、全店推广、直播、内容、站外</small>
+  </div>
+</div>
+
+<VisualGrid columns={3}>
+  <FeatureCard title="搜索推广" meta="关键词" description="用户搜索某个词时，让商品获得更靠前或更多展示。">
+    <ul>
+      <li>控制更精确</li>
+      <li>链接和关键词多时维护成本高</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="单品计划" meta="单链接" description="给出预算和目标 ROI，由平台为一个商品自动寻找流量。">
+    <ul>
+      <li>搜索、推荐等渠道自动分配</li>
+      <li>重点看这个商品整体回报</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="全店推广" meta="多链接" description="给出全店预算和目标 ROI，让平台在多个商品之间自动分配。">
+    <ul>
+      <li>保证目标更偏向整体</li>
+      <li>不代表每条链接都单独赚钱</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
+
+推广还可以发生在直播、短视频、种草内容和站外渠道。不同渠道的人群不同：一个商品搜索推广效果一般，不代表它在直播间也卖不好。
+
+<div class="qeo-discount-flow" aria-label="商家让利和平台让利">
+  <div><span>商品价格</span><strong>¥100</strong></div>
+  <i>－</i>
+  <div class="is-question"><span>优惠金额</span><strong>¥30</strong><small>商家出？平台出？共同承担？</small></div>
+  <i>＝</i>
+  <div class="is-result"><span>买家到手</span><strong>¥70</strong></div>
+</div>
+
+用户只看到便宜了 30 元，但运营还必须追问：**这 30 元到底由谁承担？** 同样是到手 70 元，商家实收、利润和活动价值可能完全不同。
+
+<HighlightBox eyebrow="第一阶段" title="把货放到架子上，不等于商品会自己卖出去">
+  商品上架后，还要用标题、主图和详情页承接用户，用价格和营销促进成交，再通过推广获取更多曝光。这一整段都属于“把货放在架子上卖”的阶段。
+</HighlightBox>
+
+## 二、用户付款后，把商品真正交出去
+
+这一阶段解决的核心问题是：
+
+> **用户已经付款，商品如何经过平台、ERP、仓库和物流，最终安全到达用户手里？**
+
+### 一笔订单，是一次需要完成的交付承诺
+
+订单不只是一个订单号，它至少记录：商品、SKU、买家、地址、金额、优惠、状态、时间和物流。
+
+<div class="qeo-order-rail" aria-label="订单从付款到收货的履约流程">
+  <div><span>01</span><strong>买家付款</strong><small>付款时间</small></div><i>→</i>
+  <div><span>02</span><strong>平台订单</strong><small>商品与地址</small></div><i>→</i>
+  <div><span>03</span><strong>ERP 接单</strong><small>审核与分仓</small></div><i>→</i>
+  <div><span>04</span><strong>仓库发货</strong><small>拣货与出库</small></div><i>→</i>
+  <div><span>05</span><strong>物流运输</strong><small>揽收与配送</small></div><i>→</i>
+  <div><span>06</span><strong>用户收货</strong><small>签收与确认</small></div>
+</div>
+
+创建时间、付款时间、发货时间、揽收时间和签收时间分别描述不同节点。比如平台显示“已发货”，不一定代表快递已经真实揽收；买家签收，也不一定等于交易已经自动确认收货。
+
+### 千牛、ERP、仓库、物流：不是四套重复系统
+
+<VisualGrid columns={4}>
+  <FeatureCard title="千牛" meta="平台侧" description="查看商品、订单、时效、售后、买家沟通和平台状态。" />
+  <FeatureCard title="ERP" meta="协同中枢" description="同步订单、匹配库存、审核订单、分配仓库并回传物流。" />
+  <FeatureCard title="仓库" meta="实物执行" description="拣货、复核、打包、出库，决定商品是否真的离开仓库。" />
+  <FeatureCard title="物流" meta="运输网络" description="完成揽收、中转、派送、签收、拦截和退回。" />
+</VisualGrid>
+
+所以千牛出现“待发货”时，不能只看一个状态。还要继续判断：ERP 是否同步、库存是否足够、仓库是否打单、订单是否被退款拦截、快递是否已经揽收。
+
+### 一笔订单里，至少有三套金额
+
+<div class="qeo-money-grid" aria-label="付款金额、商家实收和开票利润的关系">
+  <div><span>BUYER</span><strong>买家付款</strong><p>用户在收银台实际支付多少钱。</p><small>商品＋运费－各种优惠</small></div>
+  <div><span>MERCHANT</span><strong>商家实收</strong><p>平台结算给商家的金额。</p><small>受优惠承担、平台费用、退款等影响</small></div>
+  <div><span>FINANCE</span><strong>开票与利润</strong><p>开票口径和经营利润还要继续计算。</p><small>税率、成本、推广、物流、售后</small></div>
+</div>
+
+```text
+买家付款金额 ≠ 商家实收金额 ≠ 商品利润 ≠ 一定等于开票金额
+```
+
+### 有发货，就会有退款、退货和其他售后
+
+售后类型不同，本质上是在回答两个问题：**货现在在哪里，钱应该怎么处理？**
+
+| 售后类型 | 货通常在哪里 | 主要处理什么 |
+| --- | --- | --- |
+| 未发货退款 | 仓库或尚未出库 | 停止发货、拦截 ERP 或仓库流程并退款 |
+| 未收货退款 | 运输途中、派送中或退回中 | 核实物流、判断能否拦截以及货物最终去向 |
+| 已收货退款 / 退款不退货 | 用户手中 | 核实问题和证据，判断全额或部分退款是否合理 |
+| 退货退款 | 用户退回仓库途中 | 确认退货条件、运费责任、仓库收货和退款节点 |
+| 退运费 | 商品不变 | 核实运费、运费险和是否重复赔付 |
+| 换货 | 旧商品退回，新商品重新发出 | 管理两条物流和新商品库存 |
+| 维修 | 商品进入检测或维修流程 | 判断保修范围、周期、费用和寄回方式 |
+| 补寄 | 原商品留在用户手里 | 补发缺少的商品或配件，并防止重复补寄 |
+
+### 纠纷不是一句客服回复，而是一张持续流转的工单
+
+买家可能因为物流、商品质量、活动价格、客服服务等问题发起诉求。一个诉求就是一个需要跟进到结束的任务。
+
+<DecisionFlow
+  title="售后任务如何流转"
+  items={[
+    {
+      label: 'Seller',
+      title: '等待卖家回复',
+      description: '先核实订单、聊天、物流和商品情况，再提出处理方案。',
+    },
+    {
+      label: 'Buyer',
+      title: '等待买家认可',
+      description: '买家接受方案就进入执行；不接受则继续协商或申请介入。',
+    },
+    {
+      label: 'Platform',
+      title: '平台介入中',
+      description: '平台查看双方记录和证据，可能直接判定，也可能要求继续补充信息。',
+    },
+    {
+      label: 'Action',
+      title: '等待卖家执行',
+      description: '按确认结果退款、补寄、换货、维修、补偿或处理物流。',
+    },
+    {
+      label: 'Close',
+      title: '买家确认、继续跟进或完结',
+      description: '买家仍不满意时可能再次进入协商；问题解决后任务完结，也可能被撤销。',
+    },
+  ]}
+/>
+
+### 评价，是整条交付链路留下的回声
+
+<div class="qeo-feedback-grid">
+  <div><span>商品评价</span><strong>商品本身好不好</strong><p>质量、功能、外观、参数和描述是否符合预期。</p></div>
+  <div><span>服务评价</span><strong>沟通和售后好不好</strong><p>回复速度、解决能力、承诺是否清楚并兑现。</p></div>
+  <div><span>物流评价</span><strong>交付过程好不好</strong><p>发货速度、包装、配送和签收体验。</p></div>
+</div>
+
+好评能够提高其他用户的信任和转化；差评则像一份问题报告，帮助我们发现商品、客服、物流和供应链哪里需要改进。运营可以通过提升真实体验、合规邀请评价，让链接积累更多有参考价值的内容，但不能把“优化评价”理解成制造虚假评价。
+
+<HighlightBox eyebrow="第二阶段" title="成交不是终点，真正的考验是把承诺完成">
+  订单、ERP、仓库、物流、售后和评价，共同决定用户最终拿到什么、体验如何。前面商品页面写出的每一句承诺，都会在这一阶段接受验证。
+</HighlightBox>
+
+## 三、运营，就是让整条链路不断变好
+
+运营不是只负责上架、做活动或投推广，而是围绕商品销售全过程持续发现问题并优化。
+
+<div class="qeo-operation-board" aria-label="运营的四个优化方向">
+  <div class="qeo-operation-board__center">
+    <span>OPERATION</span>
+    <strong>卖得更多、更好、更稳定</strong>
+    <p>每个环节的数据和反馈，都会进入下一轮经营决策。</p>
+  </div>
+  <div class="qeo-operation-card is-product"><span>01</span><strong>商品端</strong><p>标题、主图、详情页、属性、卖点、价格。</p></div>
+  <div class="qeo-operation-card is-sales"><span>02</span><strong>销售端</strong><p>优惠体系、平台活动、补贴标识、赠品和成交理由。</p></div>
+  <div class="qeo-operation-card is-traffic"><span>03</span><strong>推广端</strong><p>渠道、关键词、预算、点击率、转化率和 ROI。</p></div>
+  <div class="qeo-operation-card is-service"><span>04</span><strong>服务端</strong><p>发货效率、退款原因、售后处理、客服和评价。</p></div>
+</div>
+
+### 市场和竞品，决定内容应该往哪里优化
+
+标题、主图和详情页不是凭感觉写出来的。
+
+- **市场**告诉我们：用户正在找什么，需求是在增长还是下降。
+- **竞品**告诉我们：别人正在强调什么，用户对它们哪里满意、哪里不满意。
+- **商品属性**决定我们能说什么。
+- **商品卖点**决定用户为什么选择我们。
+
+比如 GK84 原来的关键词只有“矮轴”“机械键盘”，分析用户场景后，还可能研究“静音键盘”“办公键盘”等需求词。但是否适合增加，仍要看商品真实特征、搜索数据和竞品情况，而不是看到热词就直接堆进标题。
+
+### 数据不是报表，而是问题定位器
+
+<div class="qeo-diagnosis" aria-label="从经营现象定位问题">
+  <div><span>01</span><strong>没有曝光</strong><p>先看推广、关键词、活动资格和商品基础权重。</p><em>用户没看见</em></div>
+  <div><span>02</span><strong>有曝光，没点击</strong><p>先看标题、主图、价格感知和展示人群是否匹配。</p><em>用户没兴趣</em></div>
+  <div><span>03</span><strong>有点击，没成交</strong><p>先看详情页、评价、客服、库存、优惠和购买门槛。</p><em>用户不放心</em></div>
+  <div><span>04</span><strong>有成交，退款高</strong><p>先看商品质量、描述预期、物流、客服和售后原因。</p><em>承诺没兑现</em></div>
+</div>
+
+这就是运营和“只看销售额”的区别：不是看到结果就结束，而是沿着链路找到问题发生在哪个环节。
+
+### 真正要训练的，不是记住按钮
+
+平台会改版，活动会变化，工作中也一定会遇到没有培训过的新功能。新人真正需要掌握的是一套学习方法。
+
+<DecisionFlow
+  title="面对陌生后台功能时的学习顺序"
+  items={[
+    {
+      label: 'Question 1',
+      title: '它解决什么经营问题？',
+      description: '先判断它属于商品、流量、订单、物流、售后还是数据环节。',
+    },
+    {
+      label: 'Question 2',
+      title: '它的上游和下游是什么？',
+      description: '弄清信息从哪里来，操作完成后会影响哪个系统和哪个角色。',
+    },
+    {
+      label: 'Question 3',
+      title: '它管理什么对象和状态？',
+      description: '找出商品、订单、金额、库存、物流或工单等关键对象。',
+    },
+    {
+      label: 'Question 4',
+      title: '操作错误会造成什么风险？',
+      description: '退款、改价、发货、库存等高风险动作，不理解时不要直接尝试。',
+    },
+    {
+      label: 'Question 5',
+      title: '怎么验证自己的理解？',
+      description: '结合后台提示、官方规则、历史案例和负责人确认，把猜测变成可靠结论。',
+    },
+  ]}
+/>
+
+<div class="qeo-final">
+  <span>最终理解</span>
+  <h3>运营不是做某一个环节，而是持续优化一整条商品经营链路</h3>
+  <div class="qeo-final__rail">
+    <b>商品上架</b><i>→</i><b>流量获取</b><i>→</i><b>用户成交</b><i>→</i><b>订单履约</b><i>→</i><b>售后评价</b><i>↺</i><strong>继续优化</strong>
+  </div>
+  <p>把每个后台模块放回这条链路里，复杂的功能就不再是需要死记的按钮，而会变成一套能够理解、推演和解决问题的经营系统。</p>
+</div>
+
+---
+
+参考：<a href="https://apps.apple.com/cn/app/%E5%8D%83%E7%89%9B-%E6%B7%98%E5%AE%9D%E5%A4%A9%E7%8C%AB%E5%95%86%E5%AE%B6%E6%A1%8C%E9%9D%A2%E7%89%88/id6449173707?mt=12">千牛淘宝天猫商家桌面版官方产品说明</a>。官方产品说明将千牛能力分为工作台、商品、订单物流售后、客服、营销推广等方向；本文在此基础上，结合实际经营场景重新整理成一条更适合新人理解的学习链路。
+
+<style>{`
+.qeo-source-note {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.8rem;
+  align-items: start;
+  margin: 1.25rem 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(14, 116, 144, 0.2);
+  border-radius: 18px;
+  background: rgba(236, 254, 255, 0.72);
+}
+
+.qeo-source-note span {
+  padding: 0.22rem 0.5rem;
+  border-radius: 999px;
+  color: #0e7490;
+  background: #cffafe;
+  font-size: 0.7rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.qeo-source-note p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.88rem;
+}
+
+.qeo-hero {
+  display: grid;
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: 1rem;
+  align-items: stretch;
+  margin: 1.4rem 0 2rem;
+  padding: 1.25rem;
+  border-radius: 30px;
+  color: #e2e8f0;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(14, 165, 233, 0.2), transparent 30%),
+    radial-gradient(circle at 88% 12%, rgba(139, 92, 246, 0.18), transparent 28%),
+    linear-gradient(135deg, #0f172a, #172554 56%, #1e1b4b);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+
+.qeo-hero__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.55rem;
+}
+
+.qeo-kicker {
+  color: #7dd3fc;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.qeo-hero h2 {
+  margin: 0.65rem 0 0.7rem;
+  color: #f8fafc;
+  font-size: clamp(1.45rem, 3vw, 2.15rem);
+  line-height: 1.2;
+}
+
+.qeo-hero p {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+.qeo-hero__verdict {
+  margin-top: 1rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.54);
+}
+
+.qeo-hero__verdict span,
+.qeo-hero__verdict strong {
+  display: block;
+}
+
+.qeo-hero__verdict span {
+  color: #7dd3fc;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.qeo-hero__verdict strong {
+  margin-top: 0.25rem;
+  color: #f8fafc;
+  font-size: 0.9rem;
+}
+
+.qeo-stage-map {
+  display: grid;
+  align-content: center;
+  gap: 0.55rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.qeo-stage-map__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: #cbd5e1;
+  font-size: 0.72rem;
+}
+
+.qeo-stage-map__head strong {
+  color: #f8fafc;
+}
+
+.qeo-stage-map > i {
+  color: #94a3b8;
+  text-align: center;
+  font-style: normal;
+}
+
+.qeo-stage-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.8rem;
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.94);
+}
+
+.qeo-stage-card > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 14px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.qeo-stage-card.is-cyan > span {
+  color: #0e7490;
+  background: #cffafe;
+}
+
+.qeo-stage-card.is-violet > span {
+  color: #6d28d9;
+  background: #ede9fe;
+}
+
+.qeo-stage-card small,
+.qeo-stage-card strong,
+.qeo-stage-card p {
+  display: block;
+  margin: 0;
+}
+
+.qeo-stage-card small {
+  color: #64748b;
+  font-size: 0.68rem;
+}
+
+.qeo-stage-card strong {
+  margin-top: 0.08rem;
+  color: #0f172a;
+  font-size: 0.92rem;
+}
+
+.qeo-stage-card p {
+  margin-top: 0.18rem;
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.qeo-identity-map,
+.qeo-price-board,
+.qeo-marketing-grid,
+.qeo-money-grid,
+.qeo-operation-board,
+.qeo-final {
+  margin: 1.2rem 0 1.5rem;
+}
+
+.qeo-identity-map {
+  padding: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 26px;
+  background: linear-gradient(145deg, rgba(248, 250, 252, 0.96), rgba(239, 246, 255, 0.86));
+}
+
+.qeo-identity-top {
+  max-width: 25rem;
+  margin: 0 auto;
+  padding: 0.9rem 1rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 18px;
+  text-align: center;
+  background: #eff6ff;
+}
+
+.qeo-identity-top span,
+.qeo-identity-top strong,
+.qeo-identity-top p {
+  display: block;
+  margin: 0;
+}
+
+.qeo-identity-top span {
+  color: #2563eb;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.qeo-identity-top strong {
+  margin-top: 0.25rem;
+  color: #0f172a;
+}
+
+.qeo-identity-top p {
+  margin-top: 0.2rem;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.qeo-identity-arrow {
+  padding: 0.55rem;
+  color: #64748b;
+  text-align: center;
+  font-size: 0.72rem;
+}
+
+.qeo-sku-row,
+.qeo-code-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.qeo-sku-row > div,
+.qeo-code-row > div {
+  padding: 0.8rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.qeo-sku-row span,
+.qeo-sku-row strong,
+.qeo-sku-row small {
+  display: block;
+}
+
+.qeo-sku-row span,
+.qeo-code-row span {
+  color: #0e7490;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.qeo-sku-row strong {
+  margin-top: 0.2rem;
+  color: #0f172a;
+  font-size: 0.88rem;
+}
+
+.qeo-sku-row small,
+.qeo-code-row p {
+  margin: 0.22rem 0 0;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.qeo-code-row {
+  margin-top: 0.7rem;
+}
+
+.qeo-content-funnel {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  gap: 0.55rem;
+  align-items: center;
+  margin: 1rem 0 1.3rem;
+}
+
+.qeo-content-funnel > i,
+.qeo-order-rail > i,
+.qeo-discount-flow > i,
+.qeo-final__rail > i {
+  color: #94a3b8;
+  font-style: normal;
+  text-align: center;
+}
+
+.qeo-funnel-card {
+  padding: 0.9rem;
+  border: 1px solid #dbeafe;
+  border-radius: 20px;
+  background: #eff6ff;
+}
+
+.qeo-funnel-card.is-focus {
+  border-color: #bae6fd;
+  background: #ecfeff;
+}
+
+.qeo-funnel-card.is-success {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.qeo-funnel-card span,
+.qeo-funnel-card strong,
+.qeo-funnel-card em {
+  display: block;
+}
+
+.qeo-funnel-card span {
+  color: #2563eb;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.qeo-funnel-card strong {
+  margin-top: 0.22rem;
+  color: #0f172a;
+}
+
+.qeo-funnel-card p {
+  min-height: 3.7rem;
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.qeo-funnel-card em {
+  margin-top: 0.5rem;
+  color: #0f766e;
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.qeo-price-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.qeo-price-plan {
+  padding: 1rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #eff6ff, #f8fafc);
+}
+
+.qeo-price-plan.is-subsidy {
+  border-color: #c4b5fd;
+  background: linear-gradient(145deg, #f5f3ff, #faf5ff);
+}
+
+.qeo-price-plan__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.qeo-price-plan__head span {
+  padding: 0.2rem 0.48rem;
+  border-radius: 999px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 0.67rem;
+  font-weight: 900;
+}
+
+.qeo-price-plan__head strong {
+  color: #0f172a;
+  font-size: 0.86rem;
+}
+
+.qeo-price-formula {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+  align-items: baseline;
+  justify-content: center;
+  margin: 0.9rem 0;
+  padding: 0.85rem;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.qeo-price-formula b {
+  color: #334155;
+  font-size: 1rem;
+}
+
+.qeo-price-formula i {
+  color: #64748b;
+  font-style: normal;
+}
+
+.qeo-price-formula strong {
+  color: #0f766e;
+  font-size: 1.22rem;
+}
+
+.qeo-price-plan dl {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.qeo-price-plan dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.32rem;
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.34);
+}
+
+.qeo-price-plan dt,
+.qeo-price-plan dd {
+  margin: 0;
+  color: #475569;
+  font-size: 0.76rem;
+}
+
+.qeo-price-plan dd {
+  color: #0f172a;
+  font-weight: 800;
+  text-align: right;
+}
+
+.qeo-price-plan > p {
+  margin: 0.8rem 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.qeo-marketing-grid,
+.qeo-money-grid,
+.qeo-feedback-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.qeo-marketing-grid > div,
+.qeo-money-grid > div,
+.qeo-feedback-grid > div {
+  padding: 0.95rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 20px;
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.qeo-marketing-grid span,
+.qeo-marketing-grid strong,
+.qeo-marketing-grid small,
+.qeo-money-grid span,
+.qeo-money-grid strong,
+.qeo-money-grid small,
+.qeo-feedback-grid span,
+.qeo-feedback-grid strong {
+  display: block;
+}
+
+.qeo-marketing-grid span,
+.qeo-money-grid span,
+.qeo-feedback-grid span {
+  color: #2563eb;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.qeo-marketing-grid strong,
+.qeo-money-grid strong,
+.qeo-feedback-grid strong {
+  margin-top: 0.25rem;
+  color: #0f172a;
+}
+
+.qeo-marketing-grid p,
+.qeo-money-grid p,
+.qeo-feedback-grid p {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.qeo-marketing-grid small,
+.qeo-money-grid small {
+  margin-top: 0.55rem;
+  color: #0f766e;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.qeo-discount-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1.4fr auto 1fr;
+  gap: 0.6rem;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.qeo-discount-flow > div {
+  padding: 0.85rem;
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  text-align: center;
+  background: #eff6ff;
+}
+
+.qeo-discount-flow > div.is-question {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.qeo-discount-flow > div.is-result {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.qeo-discount-flow span,
+.qeo-discount-flow strong,
+.qeo-discount-flow small {
+  display: block;
+}
+
+.qeo-discount-flow span {
+  color: #64748b;
+  font-size: 0.68rem;
+}
+
+.qeo-discount-flow strong {
+  margin-top: 0.2rem;
+  color: #0f172a;
+  font-size: 1.05rem;
+}
+
+.qeo-discount-flow small {
+  margin-top: 0.24rem;
+  color: #92400e;
+  font-size: 0.68rem;
+}
+
+.qeo-order-rail {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr auto 1fr auto 1fr;
+  gap: 0.42rem;
+  align-items: center;
+  margin: 1.15rem 0 1.4rem;
+  padding: 0.95rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(248, 250, 252, 0.96), rgba(236, 254, 255, 0.72));
+}
+
+.qeo-order-rail > div {
+  padding: 0.75rem 0.5rem;
+  border-radius: 16px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.qeo-order-rail span,
+.qeo-order-rail strong,
+.qeo-order-rail small {
+  display: block;
+}
+
+.qeo-order-rail span {
+  color: #0284c7;
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.qeo-order-rail strong {
+  margin-top: 0.16rem;
+  color: #0f172a;
+  font-size: 0.8rem;
+}
+
+.qeo-order-rail small {
+  margin-top: 0.2rem;
+  color: #64748b;
+  font-size: 0.66rem;
+}
+
+.qeo-money-grid > div:nth-child(2) {
+  border-color: #bae6fd;
+  background: #ecfeff;
+}
+
+.qeo-money-grid > div:nth-child(3) {
+  border-color: #ddd6fe;
+  background: #f5f3ff;
+}
+
+.qeo-feedback-grid {
+  margin: 1rem 0 1.4rem;
+}
+
+.qeo-feedback-grid > div:nth-child(2) span {
+  color: #7c3aed;
+}
+
+.qeo-feedback-grid > div:nth-child(3) span {
+  color: #0f766e;
+}
+
+.qeo-operation-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.1), transparent 35%),
+    linear-gradient(145deg, #f8fafc, #f5f3ff);
+}
+
+.qeo-operation-board__center {
+  grid-column: 1 / -1;
+  padding: 1rem;
+  border-radius: 20px;
+  color: #e2e8f0;
+  text-align: center;
+  background: linear-gradient(135deg, #0f172a, #1e3a8a);
+}
+
+.qeo-operation-board__center span,
+.qeo-operation-board__center strong {
+  display: block;
+}
+
+.qeo-operation-board__center span {
+  color: #7dd3fc;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.qeo-operation-board__center strong {
+  margin-top: 0.26rem;
+  color: #f8fafc;
+  font-size: 1.08rem;
+}
+
+.qeo-operation-board__center p {
+  margin: 0.35rem 0 0;
+  color: #cbd5e1;
+  font-size: 0.78rem;
+}
+
+.qeo-operation-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.7rem;
+  align-items: start;
+  padding: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.qeo-operation-card > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 12px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 0.67rem;
+  font-weight: 900;
+}
+
+.qeo-operation-card strong {
+  color: #0f172a;
+  font-size: 0.86rem;
+}
+
+.qeo-operation-card p {
+  grid-column: 2;
+  margin: -0.45rem 0 0;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.qeo-operation-card.is-sales > span {
+  color: #7c3aed;
+  background: #ede9fe;
+}
+
+.qeo-operation-card.is-traffic > span {
+  color: #0e7490;
+  background: #cffafe;
+}
+
+.qeo-operation-card.is-service > span {
+  color: #047857;
+  background: #d1fae5;
+}
+
+.qeo-diagnosis {
+  display: grid;
+  gap: 0.6rem;
+  margin: 1rem 0 1.4rem;
+}
+
+.qeo-diagnosis > div {
+  display: grid;
+  grid-template-columns: auto minmax(7rem, 0.8fr) 1.6fr auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.82rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.88);
+}
+
+.qeo-diagnosis span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 11px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.qeo-diagnosis strong {
+  color: #0f172a;
+  font-size: 0.84rem;
+}
+
+.qeo-diagnosis p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.qeo-diagnosis em {
+  padding: 0.22rem 0.5rem;
+  border-radius: 999px;
+  color: #0f766e;
+  background: #ccfbf1;
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.qeo-final {
+  padding: 1.2rem;
+  border-radius: 28px;
+  color: #e2e8f0;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(14, 165, 233, 0.18), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(139, 92, 246, 0.16), transparent 28%),
+    linear-gradient(135deg, #0f172a, #1e293b);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.2);
+}
+
+.qeo-final > span {
+  display: inline-flex;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  color: #bae6fd;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.qeo-final h3 {
+  margin: 0.65rem 0 0.8rem;
+  color: #f8fafc;
+}
+
+.qeo-final__rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  padding: 0.8rem;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.qeo-final__rail b {
+  color: #cbd5e1;
+  font-size: 0.76rem;
+}
+
+.qeo-final__rail strong {
+  color: #7dd3fc;
+  font-size: 0.8rem;
+}
+
+.qeo-final p {
+  margin: 0.85rem 0 0;
+  color: #cbd5e1;
+}
+
+@media (max-width: 980px) {
+  .qeo-hero,
+  .qeo-price-board {
+    grid-template-columns: 1fr;
+  }
+
+  .qeo-content-funnel,
+  .qeo-order-rail,
+  .qeo-discount-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .qeo-content-funnel > i,
+  .qeo-order-rail > i,
+  .qeo-discount-flow > i {
+    transform: rotate(90deg);
+  }
+
+  .qeo-sku-row,
+  .qeo-code-row,
+  .qeo-marketing-grid,
+  .qeo-money-grid,
+  .qeo-feedback-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qeo-funnel-card p {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .qeo-source-note {
+    grid-template-columns: 1fr;
+  }
+
+  .qeo-hero,
+  .qeo-identity-map,
+  .qeo-operation-board,
+  .qeo-final {
+    padding: 0.9rem;
+    border-radius: 21px;
+  }
+
+  .qeo-stage-map,
+  .qeo-price-plan,
+  .qeo-order-rail {
+    border-radius: 18px;
+  }
+
+  .qeo-operation-board {
+    grid-template-columns: 1fr;
+  }
+
+  .qeo-operation-board__center {
+    grid-column: auto;
+  }
+
+  .qeo-diagnosis > div {
+    grid-template-columns: auto 1fr;
+  }
+
+  .qeo-diagnosis p,
+  .qeo-diagnosis em {
+    grid-column: 2;
+  }
+
+  .qeo-diagnosis em {
+    justify-self: start;
+  }
+}
+`}</style>
