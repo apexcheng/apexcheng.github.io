@@ -92,6 +92,7 @@ function startCosmicOpening(root) {
   let isPlaying = false;
   let isIdle = false;
   let isExploring = false;
+  let shouldResumeSequenceAfterExplore = false;
   let initialized = false;
   let skipRequested = false;
   let lastChapter = '';
@@ -1208,7 +1209,6 @@ function startCosmicOpening(root) {
   }
 
   function handleScenePointerDown(event) {
-    if (!isExploring) return;
     if (event.target instanceof Element && event.target.closest('button, a')) return;
 
     const primaryPointer = event.pointerType !== 'mouse'
@@ -1216,14 +1216,18 @@ function startCosmicOpening(root) {
       || event.button === 2;
     if (!primaryPointer || reducedMotion.matches) return;
 
+    enterExploreMode(true);
+    if (!isExploring) return;
     event.preventDefault();
     beginSceneDrag(event);
   }
 
   function handleSceneWheel(event) {
-    if (!isExploring || reducedMotion.matches) return;
+    if (reducedMotion.matches) return;
     if (event.target instanceof Element && event.target.closest('button, a')) return;
 
+    enterExploreMode(true);
+    if (!isExploring) return;
     event.preventDefault();
     const deltaMultiplier = event.deltaMode === 1
       ? 16
@@ -1559,6 +1563,7 @@ function startCosmicOpening(root) {
     isPlaying = false;
     isIdle = false;
     isExploring = false;
+    shouldResumeSequenceAfterExplore = false;
     currentProgress = 1;
     finishedAt = now;
     freeCameraActive = false;
@@ -1608,6 +1613,7 @@ function startCosmicOpening(root) {
     finishedAt = 0;
     isIdle = false;
     isExploring = false;
+    shouldResumeSequenceAfterExplore = false;
     cameraOrbitPitch = 0;
     cameraOrbitYaw = 0;
     cameraOrbitVelocityPitch = 0;
@@ -1622,6 +1628,8 @@ function startCosmicOpening(root) {
     enterButton.style.removeProperty('--magnet-x');
     enterButton.style.removeProperty('--magnet-y');
     interactionHint.classList.remove('is-visible');
+    void interactionHint.offsetWidth;
+    interactionHint.classList.add('is-visible');
     startedAt = performance.now();
     isPlaying = true;
     renderInterface(0);
@@ -1661,18 +1669,31 @@ function startCosmicOpening(root) {
     playSequence();
   });
 
-  function enterExploreMode() {
-    if (!initialized || isPlaying || reducedMotion.matches || isExploring) return;
+  function enterExploreMode(fromDirectInteraction = false) {
+    if (!initialized || reducedMotion.matches || isExploring) return;
 
+    const now = performance.now();
+    shouldResumeSequenceAfterExplore = isPlaying && currentProgress < 1;
+    isPlaying = false;
     isExploring = true;
     isIdle = true;
+    finishedAt = now;
+    root.classList.remove('is-playing');
     root.classList.add('is-exploring');
+    skipButton.hidden = true;
     exitExploreButton.hidden = false;
+    exitExploreButton.textContent = shouldResumeSequenceAfterExplore ? '继续播放' : '返回落版';
     activateFreeCamera();
     interactionHint.classList.remove('is-visible');
     void interactionHint.offsetWidth;
     interactionHint.classList.add('is-visible');
-    status.textContent = '已进入太阳系自由探索模式';
+    status.textContent = shouldResumeSequenceAfterExplore
+      ? '已暂停序章并进入太阳系自由探索模式'
+      : '已进入太阳系自由探索模式';
+    if (fromDirectInteraction) {
+      exploreButton.hidden = true;
+      replayButton.hidden = true;
+    }
     scheduleFrame();
   }
 
@@ -1691,14 +1712,32 @@ function startCosmicOpening(root) {
     targetPointerInfluence = 0;
     root.classList.remove('is-exploring');
     exitExploreButton.hidden = true;
+    exitExploreButton.textContent = '返回落版';
     interactionHint.classList.remove('is-visible');
     lastRenderAt = 0;
+
+    if (shouldResumeSequenceAfterExplore && currentProgress < 1) {
+      shouldResumeSequenceAfterExplore = false;
+      finishedAt = 0;
+      isPlaying = true;
+      root.classList.add('is-playing');
+      skipButton.hidden = false;
+      startedAt = performance.now() - currentProgress * duration;
+      renderInterface(currentProgress);
+      status.textContent = '已返回并继续播放天体序章';
+      scheduleFrame();
+      return;
+    }
+
+    shouldResumeSequenceAfterExplore = false;
     renderInterface(1);
     renderScene(1, performance.now());
+    replayButton.hidden = reducedMotion.matches;
+    exploreButton.hidden = reducedMotion.matches;
     status.textContent = '已返回天体序章落版';
   }
 
-  exploreButton.addEventListener('click', enterExploreMode);
+  exploreButton.addEventListener('click', () => enterExploreMode(false));
   exitExploreButton.addEventListener('click', leaveExploreMode);
 
   window.addEventListener('pointermove', (event) => {
@@ -1775,11 +1814,13 @@ function startCosmicOpening(root) {
         return;
       }
     }
-    if (!isExploring || !moveKeyCodes.has(event.code) || reducedMotion.matches) {
+    if (!moveKeyCodes.has(event.code) || reducedMotion.matches) {
       return;
     }
     if (event.target instanceof Element && event.target.closest('button, a, input, textarea')) return;
 
+    enterExploreMode(true);
+    if (!isExploring) return;
     activateFreeCamera();
     pressedMoveKeys.add(event.code);
     event.preventDefault();
