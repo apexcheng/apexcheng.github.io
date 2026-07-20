@@ -122,7 +122,8 @@ function startCosmicOpening(root) {
   const initialOrbitAngle = 0.36;
   const orbitMotionDelay = 1800;
   const maximumFreeCameraDistance = 720;
-  const wheelTravelSensitivity = 0.032;
+  const wheelTravelSensitivity = 0.024;
+  const zoomAnchorLockDuration = 220;
   const earthOrbitDefinition = {
     name: 'earth',
     orbit: 18,
@@ -139,6 +140,7 @@ function startCosmicOpening(root) {
   const sunGlowSprites = [];
   const asteroids = [];
   const asteroidMaterials = [];
+  const zoomTargets = [];
   const pressedMoveKeys = new Set();
   const moveKeyCodes = new Set([
     'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'ShiftLeft', 'ShiftRight',
@@ -157,9 +159,20 @@ function startCosmicOpening(root) {
   const cameraLocalUp = new THREE.Vector3(0, 1, 0);
   const cameraMove = new THREE.Vector3();
   const cameraLookTarget = new THREE.Vector3();
+  const zoomPointer = new THREE.Vector2();
+  const zoomRaycaster = new THREE.Raycaster();
+  const zoomAnchorWorld = new THREE.Vector3();
+  const zoomAnchorLocal = new THREE.Vector3();
+  const zoomObjectCenter = new THREE.Vector3();
+  const zoomDirection = new THREE.Vector3();
+  const zoomProposedPosition = new THREE.Vector3();
+  const zoomWorldScale = new THREE.Vector3();
   const sunWorldPosition = new THREE.Vector3();
   const earthWorldPosition = new THREE.Vector3();
   const earthToSunDirection = new THREE.Vector3();
+  let zoomAnchorObject = null;
+  let zoomAnchorRadius = 0;
+  let zoomAnchorLockedUntil = 0;
   const cameraKeysDesktop = createKeys([
     [0, -1.8, 0.8, 16.8],
     [0.18, -0.8, 0.35, 11.8],
@@ -635,7 +648,9 @@ function startCosmicOpening(root) {
       new THREE.SphereGeometry(3.3, isMobile ? 36 : 56, isMobile ? 24 : 38),
       sunMaterial
     );
+    sunSurface.userData.zoomRadius = 3.3;
     sunSurface.visible = false;
+    zoomTargets.push(sunSurface);
     group.add(sunSurface);
 
     const glowTexture = createGlowTexture();
@@ -755,6 +770,7 @@ function startCosmicOpening(root) {
       body.userData.orbitInclination = definition.inclination;
       body.userData.rotationSpeed = definition.rotationSpeed;
       body.userData.revealIndex = index;
+      body.userData.zoomRadius = definition.radius;
       body.rotation.z = THREE.MathUtils.degToRad(definition.tilt);
 
       if (definition.ring) {
@@ -782,6 +798,7 @@ function startCosmicOpening(root) {
 
       celestialBodies.push(body);
       celestialMaterials.push(material);
+      zoomTargets.push(body);
       group.add(body);
     });
 
@@ -851,7 +868,9 @@ function startCosmicOpening(root) {
         0.000012 + random() * 0.00003,
         0.000008 + random() * 0.00002
       );
+      asteroid.userData.zoomRadius = baseScale * 1.25;
       asteroids.push(asteroid);
+      zoomTargets.push(asteroid);
       group.add(asteroid);
     }
 
@@ -913,6 +932,8 @@ function startCosmicOpening(root) {
     });
 
     earthSurface = new THREE.Mesh(earthGeometry, earthMaterial);
+    earthSurface.userData.zoomRadius = 2;
+    zoomTargets.push(earthSurface);
     earthSpin.add(earthSurface);
 
     if (lights) {
@@ -1026,7 +1047,9 @@ function startCosmicOpening(root) {
         new THREE.SphereGeometry(0.42, isMobile ? 36 : 52, isMobile ? 24 : 36),
         moonMaterial
       );
+      moon.userData.zoomRadius = 0.42;
       moon.position.set(5.6, 1.4, -4.3);
+      zoomTargets.push(moon);
       world.add(moon);
     }
   }
@@ -1081,6 +1104,136 @@ function startCosmicOpening(root) {
     targetFreeCameraPosition.copy(solarCenter).add(cameraMove);
   }
 
+  function clearZoomAnchor() {
+    zoomAnchorObject = null;
+    zoomAnchorRadius = 0;
+    zoomAnchorLockedUntil = 0;
+  }
+
+  function isZoomTargetVisible(object) {
+    let current = object;
+    while (current) {
+      if (!current.visible) return false;
+      current = current.parent;
+    }
+
+    const materials = Array.isArray(object.material)
+      ? object.material
+      : [object.material];
+    return materials.some((material) => (
+      material
+      && (!material.transparent || typeof material.opacity !== 'number' || material.opacity > 0.04)
+    ));
+  }
+
+  function getZoomTargetRadius(object) {
+    object.getWorldScale(zoomWorldScale);
+    const scale = Math.max(
+      Math.abs(zoomWorldScale.x),
+      Math.abs(zoomWorldScale.y),
+      Math.abs(zoomWorldScale.z)
+    );
+    return Math.max(0.08, (object.userData.zoomRadius || 0.5) * scale);
+  }
+
+  function updateLockedZoomAnchor() {
+    if (!zoomAnchorObject) return;
+    zoomAnchorWorld.copy(zoomAnchorLocal);
+    zoomAnchorObject.localToWorld(zoomAnchorWorld);
+    zoomAnchorRadius = getZoomTargetRadius(zoomAnchorObject);
+  }
+
+  function resolveZoomAnchor(event, time) {
+    if (time < zoomAnchorLockedUntil) {
+      updateLockedZoomAnchor();
+      zoomAnchorLockedUntil = time + zoomAnchorLockDuration;
+      return;
+    }
+
+    const bounds = canvas.getBoundingClientRect();
+    zoomPointer.set(
+      ((event.clientX - bounds.left) / Math.max(1, bounds.width)) * 2 - 1,
+      -((event.clientY - bounds.top) / Math.max(1, bounds.height)) * 2 + 1
+    );
+    zoomRaycaster.setFromCamera(zoomPointer, camera);
+
+    const hit = zoomRaycaster
+      .intersectObjects(zoomTargets, false)
+      .find((intersection) => isZoomTargetVisible(intersection.object));
+
+    if (hit) {
+      zoomAnchorObject = hit.object;
+      zoomAnchorWorld.copy(hit.point);
+      zoomAnchorLocal.copy(hit.point);
+      zoomAnchorObject.worldToLocal(zoomAnchorLocal);
+      zoomAnchorRadius = getZoomTargetRadius(zoomAnchorObject);
+    } else {
+      zoomAnchorObject = null;
+      zoomAnchorRadius = 0;
+      camera.getWorldDirection(cameraForward).normalize();
+      const focusDistance = clamp(
+        camera.position.distanceTo(solarCenter) * 0.48,
+        12,
+        128
+      );
+      const rayAlignment = Math.max(
+        0.24,
+        zoomRaycaster.ray.direction.dot(cameraForward)
+      );
+      zoomAnchorWorld
+        .copy(zoomRaycaster.ray.origin)
+        .addScaledVector(zoomRaycaster.ray.direction, focusDistance / rayAlignment);
+    }
+
+    zoomAnchorLockedUntil = time + zoomAnchorLockDuration;
+  }
+
+  function moveCameraTowardZoomAnchor(normalizedDelta) {
+    updateLockedZoomAnchor();
+    zoomDirection.copy(zoomAnchorWorld).sub(targetFreeCameraPosition);
+    const distanceToAnchor = zoomDirection.length();
+    if (distanceToAnchor < 0.001) return;
+
+    const zoomingIn = normalizedDelta < 0;
+    const distanceFactor = clamp(distanceToAnchor / 32, 0.22, 2.8);
+    let travel = clamp(
+      Math.abs(normalizedDelta) * wheelTravelSensitivity * distanceFactor,
+      0.018,
+      22
+    );
+    if (zoomingIn) {
+      travel = Math.min(travel, distanceToAnchor * 0.82);
+    } else {
+      travel *= 0.88;
+    }
+
+    zoomDirection.multiplyScalar((zoomingIn ? 1 : -1) / distanceToAnchor);
+
+    if (zoomingIn && zoomAnchorObject) {
+      zoomAnchorObject.getWorldPosition(zoomObjectCenter);
+      const safeDistance = zoomAnchorRadius * 1.42 + 0.28;
+      cameraMove.copy(targetFreeCameraPosition).sub(zoomObjectCenter);
+      const currentDistanceSquared = cameraMove.lengthSq();
+      if (currentDistanceSquared <= safeDistance * safeDistance) return;
+
+      const projection = cameraMove.dot(zoomDirection);
+      const discriminant = projection * projection
+        - (currentDistanceSquared - safeDistance * safeDistance);
+      if (discriminant >= 0) {
+        const distanceToSafetyBoundary = -projection - Math.sqrt(discriminant);
+        if (distanceToSafetyBoundary <= 0) return;
+        travel = Math.min(travel, distanceToSafetyBoundary * 0.985);
+      }
+    }
+
+    zoomProposedPosition
+      .copy(targetFreeCameraPosition)
+      .addScaledVector(zoomDirection, travel);
+
+    targetFreeCameraPosition.copy(zoomProposedPosition);
+    clampFreeCameraPosition();
+  }
+
   function updateKeyboardCameraMovement(frameDelta) {
     if (!isExploring || !freeCameraActive || frameDelta <= 0 || pressedMoveKeys.size === 0) return;
 
@@ -1106,6 +1259,7 @@ function startCosmicOpening(root) {
   }
 
   function beginSceneDrag(event) {
+    clearZoomAnchor();
     activateFreeCamera();
     isDraggingScene = true;
     sceneDragPointerId = event.pointerId;
@@ -1235,12 +1389,8 @@ function startCosmicOpening(root) {
         : 1;
     const normalizedDelta = event.deltaY * deltaMultiplier;
     activateFreeCamera();
-    updateFreeCameraAxes();
-    targetFreeCameraPosition.addScaledVector(
-      cameraForward,
-      -normalizedDelta * wheelTravelSensitivity
-    );
-    clampFreeCameraPosition();
+    resolveZoomAnchor(event, performance.now());
+    moveCameraTowardZoomAnchor(normalizedDelta);
     scheduleFrame();
   }
 
@@ -1635,6 +1785,7 @@ function startCosmicOpening(root) {
     freeCameraPosition.set(0, 0, 0);
     targetFreeCameraPosition.set(0, 0, 0);
     freeCameraBaseForward.set(0, 0, -1);
+    clearZoomAnchor();
     pressedMoveKeys.clear();
     lastRenderAt = 0;
     suppressDoubleClickUntil = 0;
@@ -1719,6 +1870,7 @@ function startCosmicOpening(root) {
     cameraOrbitVelocityPitch = 0;
     cameraOrbitVelocityYaw = 0;
     targetPointerInfluence = 0;
+    clearZoomAnchor();
     root.classList.remove('is-exploring');
     exitExploreButton.hidden = true;
     exitExploreButton.textContent = '返回落版';
@@ -1802,6 +1954,7 @@ function startCosmicOpening(root) {
   });
 
   window.addEventListener('resize', () => {
+    clearZoomAnchor();
     resizeRenderer();
     renderScene(currentProgress, performance.now());
   }, { passive: true });
@@ -1825,6 +1978,7 @@ function startCosmicOpening(root) {
     enterExploreMode(true);
     if (!isExploring) return;
     activateFreeCamera();
+    clearZoomAnchor();
     pressedMoveKeys.add(event.code);
     event.preventDefault();
     scheduleFrame();
