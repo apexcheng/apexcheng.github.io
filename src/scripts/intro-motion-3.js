@@ -92,7 +92,6 @@ function startCosmicOpening(root) {
   let isPlaying = false;
   let isIdle = false;
   let isExploring = false;
-  let shouldResumeSequenceAfterExplore = false;
   let initialized = false;
   let skipRequested = false;
   let lastChapter = '';
@@ -1559,22 +1558,37 @@ function startCosmicOpening(root) {
 
   function finishSequence(time) {
     const now = typeof time === 'number' ? time : performance.now();
-    endSceneDrag(null, true);
+    const wasExploring = isExploring;
+
     isPlaying = false;
-    isIdle = false;
-    isExploring = false;
-    shouldResumeSequenceAfterExplore = false;
+    isIdle = wasExploring && !reducedMotion.matches;
     currentProgress = 1;
     finishedAt = now;
-    freeCameraActive = false;
-    pressedMoveKeys.clear();
+
+    if (!wasExploring) {
+      endSceneDrag(null, true);
+      freeCameraActive = false;
+      pressedMoveKeys.clear();
+    }
+
     renderInterface(1);
     renderScene(1, now);
     root.classList.remove('is-playing');
-    root.classList.remove('is-exploring');
     root.classList.add('is-finished');
-    interactionHint.classList.remove('is-visible');
     skipButton.hidden = true;
+
+    if (wasExploring) {
+      replayButton.hidden = true;
+      exploreButton.hidden = true;
+      exitExploreButton.hidden = false;
+      exitExploreButton.textContent = '返回落版';
+      status.textContent = '天体序章播放完成，继续自由探索太阳系';
+      scheduleFrame();
+      return;
+    }
+
+    root.classList.remove('is-exploring');
+    interactionHint.classList.remove('is-visible');
     replayButton.hidden = reducedMotion.matches;
     exploreButton.hidden = reducedMotion.matches;
     exitExploreButton.hidden = true;
@@ -1613,7 +1627,6 @@ function startCosmicOpening(root) {
     finishedAt = 0;
     isIdle = false;
     isExploring = false;
-    shouldResumeSequenceAfterExplore = false;
     cameraOrbitPitch = 0;
     cameraOrbitYaw = 0;
     cameraOrbitVelocityPitch = 0;
@@ -1672,25 +1685,20 @@ function startCosmicOpening(root) {
   function enterExploreMode(fromDirectInteraction = false) {
     if (!initialized || reducedMotion.matches || isExploring) return;
 
-    const now = performance.now();
-    shouldResumeSequenceAfterExplore = isPlaying && currentProgress < 1;
-    isPlaying = false;
+    const exploringDuringSequence = isPlaying && currentProgress < 1;
     isExploring = true;
-    isIdle = true;
-    finishedAt = now;
-    root.classList.remove('is-playing');
+    isIdle = !isPlaying;
     root.classList.add('is-exploring');
-    skipButton.hidden = true;
     exitExploreButton.hidden = false;
-    exitExploreButton.textContent = shouldResumeSequenceAfterExplore ? '继续播放' : '返回落版';
+    exitExploreButton.textContent = exploringDuringSequence ? '返回自动镜头' : '返回落版';
     activateFreeCamera();
     interactionHint.classList.remove('is-visible');
     void interactionHint.offsetWidth;
     interactionHint.classList.add('is-visible');
-    status.textContent = shouldResumeSequenceAfterExplore
-      ? '已暂停序章并进入太阳系自由探索模式'
+    status.textContent = exploringDuringSequence
+      ? '已接管镜头，天体序章继续播放'
       : '已进入太阳系自由探索模式';
-    if (fromDirectInteraction) {
+    if (fromDirectInteraction && !isPlaying) {
       exploreButton.hidden = true;
       replayButton.hidden = true;
     }
@@ -1700,6 +1708,7 @@ function startCosmicOpening(root) {
   function leaveExploreMode() {
     if (!isExploring) return;
 
+    const sequenceStillPlaying = isPlaying && currentProgress < 1;
     endSceneDrag(null, true);
     isExploring = false;
     isIdle = false;
@@ -1716,20 +1725,14 @@ function startCosmicOpening(root) {
     interactionHint.classList.remove('is-visible');
     lastRenderAt = 0;
 
-    if (shouldResumeSequenceAfterExplore && currentProgress < 1) {
-      shouldResumeSequenceAfterExplore = false;
-      finishedAt = 0;
-      isPlaying = true;
-      root.classList.add('is-playing');
-      skipButton.hidden = false;
-      startedAt = performance.now() - currentProgress * duration;
+    if (sequenceStillPlaying) {
       renderInterface(currentProgress);
-      status.textContent = '已返回并继续播放天体序章';
+      renderScene(currentProgress, performance.now());
+      status.textContent = '已返回自动镜头，天体序章继续播放';
       scheduleFrame();
       return;
     }
 
-    shouldResumeSequenceAfterExplore = false;
     renderInterface(1);
     renderScene(1, performance.now());
     replayButton.hidden = reducedMotion.matches;

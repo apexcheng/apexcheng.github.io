@@ -405,7 +405,7 @@ import { withBase } from '../utils/paths';
         z-index: 12;
       }
 
-      .cosmic-opening.is-exploring .finale {
+      .cosmic-opening.is-exploring:not(.is-playing) .finale {
         opacity: 0 !important;
         pointer-events: none !important;
         transform: translate3d(0, 20px, 0) scale(0.99) !important;
@@ -591,7 +591,7 @@ import { withBase } from '../utils/paths';
         z-index: 20;
       }
 
-      .cosmic-opening.is-exploring .sequence-foot {
+      .cosmic-opening.is-exploring:not(.is-playing) .sequence-foot {
         opacity: 0;
       }
 
