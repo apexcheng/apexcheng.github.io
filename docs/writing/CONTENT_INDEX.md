@@ -8,6 +8,7 @@
 
 | 文件 | 分类 | 主题概览 | 适合什么时候参考 |
 | --- | --- | --- | --- |
+| `src/content/posts/visual-lab/user-backend-journey-map.mdx` | `视觉实验室` | 前台体验与后台系统双层流程卡，把用户动作设为第一视觉层、后台工作设为第二视觉层，并说明信息层级、适用场景和组件用法 | 写用户体验与后台系统对应、客户诉求与内部处理、业务动作与系统动作等双层流程内容时参考 |
 | `src/content/posts/visual-lab/excel-formula-visual-patterns.mdx` | `视觉实验室` | 从 19 个函数中归纳 7 种基础教学视觉关系，并沉淀单函数独立案例板、教学字号底线、横向滚动和移动端可读性规则 | 写 Excel、WPS、SQL、正则表达式、条件统计、文本处理和查找匹配教程，需要解释数据如何流过公式或逐个讲解函数时参考 |
 | `src/content/posts/visual-lab/article-visual-system-demo.mdx` | `视觉实验室` | 文章视觉系统实战 Demo，展示从文字草稿到视觉文章的编排流程、内容关系路由、风险看板和自审面板 | 验证新文章是否遵守“先做视觉方案，再写 MDX”的规则，或需要学习三个高视觉模板的风格而不是骨架时参考 |
 | `src/content/posts/visual-lab/mdx-design-patterns-gallery.mdx` | `视觉实验室` | 开头结论卡、Bento 宫格、指标看板、对比面板、问题链路、时间线、案例拆解卡、决策树等文章视觉模式 | 写 MDX 文章、做复杂排版、判断什么时候不用表格或流程图时优先参考 |

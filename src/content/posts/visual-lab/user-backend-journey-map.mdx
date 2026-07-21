@@ -1,0 +1,79 @@
+---
+title: "前台体验 × 后台系统：双层流程卡设计"
+description: "把用户动作放在第一视觉层，把后台工作放在第二视觉层，用三组双层卡片讲清一段购物经历如何对应后台系统。"
+date: 2026-07-21T15:02:21+08:00
+category: "视觉实验室"
+tags:
+  - "文章设计"
+  - "信息设计"
+minutes: 5
+featured: false
+draft: false
+private: false
+---
+
+import UserBackendJourneyMap from '../../../components/UserBackendJourneyMap.astro';
+import FeatureCard from '../../../components/FeatureCard.astro';
+import VisualGrid from '../../../components/VisualGrid.astro';
+import HighlightBox from '../../../components/HighlightBox.astro';
+
+这套视觉块来自《从一条商品链接开始：用千牛看懂电商运营完整链路》。它要解决的不是“流程怎么画得更复杂”，而是一个更基础的问题：**读者第一眼到底应该先看用户做了什么，还是先看后台做了什么？**
+
+原版虽然同时写了用户动作和后台工作，但两者的视觉重量接近，读者更容易先看到后台标题。改造后，用户动作成为大字号高亮色带，后台工作被放到下方浅色区域，阅读顺序自然变成：
+
+> 用户经历了什么 → 后台对应什么 → 运营为什么这样做
+
+## 完整效果
+
+<UserBackendJourneyMap />
+
+## 这套设计解决了什么
+
+<VisualGrid columns={3}>
+  <FeatureCard title="先看到用户" meta="PRIMARY" description="用户动作使用高饱和色带、大字号和白色文字，成为每张卡片的第一视觉层。" />
+  <FeatureCard title="再理解后台" meta="SECONDARY" description="后台工作放在浅色内容区，用图标、标签、标题和说明形成稳定的第二层信息。" />
+  <FeatureCard title="最后串成旅程" meta="FLOW" description="蓝、青、紫分别对应成交、履约和反馈，编号与箭头把三次对应关系串成完整购物经历。" />
+</VisualGrid>
+
+## 信息层级怎么安排
+
+| 层级 | 展示内容 | 视觉处理 | 读者得到什么 |
+| --- | --- | --- | --- |
+| 第一层 | 用户搜、看、选、付 | 大字号、高对比色带 | 先理解真实购物动作 |
+| 第二层 | 后台准备商品与成交条件 | 浅色内容区、图标和标签 | 找到前台动作对应的后台工作 |
+| 第三层 | 链接、SKU、价格、ERP 等 | 小字号辅助说明 | 需要时再进入具体术语 |
+
+<HighlightBox eyebrow="设计判断" title="强调用户视角，不等于删除后台信息">
+  真正需要改变的是视觉优先级，而不是内容数量。用户动作负责建立直觉，后台工作负责解释机制，具体术语负责补充细节。三层都保留，但不能拥有相同的视觉重量。
+</HighlightBox>
+
+## 适合哪些内容
+
+这套双层流程卡适合表达“外部体验与内部系统之间的对应关系”，例如：
+
+- 用户下单，对应订单、库存、仓库和物流。
+- 客户发起诉求，对应客服判断、任务流转和售后执行。
+- 员工提交申请，对应审批、财务和系统状态变化。
+- 用户点击一个按钮，对应接口、数据处理和结果返回。
+
+它不适合普通的单线操作步骤。如果内容只有“第一步、第二步、第三步”，使用普通步骤卡会更简单；只有同时存在**前台动作与后台工作两层关系**时，这种结构才有价值。
+
+## 在文章中使用
+
+正式文章位于 `src/content/posts/` 时：
+
+```mdx
+import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro';
+
+<UserBackendJourneyMap />
+```
+
+视觉实验室文章位于 `src/content/posts/visual-lab/` 时：
+
+```mdx
+import UserBackendJourneyMap from '../../../components/UserBackendJourneyMap.astro';
+
+<UserBackendJourneyMap />
+```
+
+正式使用效果：<a href="/articles/qianniu-ecommerce-operation-learning-map/">从一条商品链接开始：用千牛看懂电商运营完整链路</a>。

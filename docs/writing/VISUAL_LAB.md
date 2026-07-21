@@ -21,6 +21,7 @@ src/content/posts/visual-lab/
 
 | 文件 | 用途 |
 | --- | --- |
+| `src/content/posts/visual-lab/user-backend-journey-map.mdx` | 前台体验与后台系统双层流程卡，展示如何把用户动作放在第一视觉层、后台工作放在第二视觉层，并用三阶段色彩与编号串成完整旅程 |
 | `src/content/posts/visual-lab/excel-formula-visual-patterns.mdx` | Excel 公式教学可视化模式，覆盖 19 个函数和 7 种基础视觉关系，并补充单函数独立案例板、教学字号底线、横向滚动与移动端可读性规则 |
 | `src/content/posts/visual-lab/article-visual-system-demo.mdx` | 文章视觉系统实战 Demo，展示一篇文章如何先做视觉方案，再用总览、流程、路由、风险和审查面板组织成视觉文章 |
 | `src/content/posts/visual-lab/mdx-design-patterns-gallery.mdx` | MDX 文章视觉模式参考，展示结论卡、Bento、指标看板、对比面板、问题链路、时间线、案例拆解、决策树和总结横幅 |
