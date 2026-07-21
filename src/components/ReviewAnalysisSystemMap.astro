@@ -1,0 +1,377 @@
+<section class="review-system-map" aria-label="评价分析 Agent 系统总览">
+  <header class="system-hero">
+    <div class="hero-meta">
+      <span class="case-label">CASE STUDY</span>
+      <span class="version-label">review-analysis-reporter · v4.2.1</span>
+    </div>
+    <h2>评价分析不是写一份总结，而是完成一条可验证的业务闭环</h2>
+    <p>
+      两张来源表先被统一成一个事实包，Agent 只负责基于事实写报告；日报发布并发送成功后，系统才允许回写处理状态。
+    </p>
+    <a
+      class="project-link"
+      href="https://github.com/apexcheng/review-analysis-reporter-skill"
+      target="_blank"
+      rel="noreferrer"
+      aria-label="在 GitHub 查看评价分析报告员项目"
+    >
+      查看 GitHub 项目
+      <span aria-hidden="true">↗</span>
+    </a>
+  </header>
+
+  <div class="system-metrics" aria-label="系统关键能力">
+    <article>
+      <span>DATA SOURCES</span>
+      <strong>2 张表</strong>
+      <small>首次评价与追加评价统一分析</small>
+    </article>
+    <article>
+      <span>REPORT MODES</span>
+      <strong>2 种模式</strong>
+      <small>日报与周期对比各自保持独立边界</small>
+    </article>
+    <article>
+      <span>SOURCE OF TRUTH</span>
+      <strong>1 个事实包</strong>
+      <small>报告只能使用本次事实包中的信息</small>
+    </article>
+    <article class="metric-accent">
+      <span>WRITEBACK GATE</span>
+      <strong>发送成功后</strong>
+      <small>日报确认群消息送达，才修改业务状态</small>
+    </article>
+  </div>
+
+  <div class="system-flow" aria-label="评价分析主链路">
+    <article class="flow-node source-node">
+      <span class="node-index">01 · INPUT</span>
+      <h3>两类评价来源</h3>
+      <div class="source-list">
+        <span>首次评价</span>
+        <span>追加评价</span>
+      </div>
+      <p>不同内容字段、不同统计时间，先分别读取。</p>
+    </article>
+
+    <span class="flow-arrow" aria-hidden="true">→</span>
+
+    <article class="flow-node">
+      <span class="node-index">02 · FACT</span>
+      <h3>Python 事实引擎</h3>
+      <p>字段映射、筛选、去重、统计，并输出统一 JSON 事实包。</p>
+    </article>
+
+    <span class="flow-arrow" aria-hidden="true">→</span>
+
+    <article class="flow-node">
+      <span class="node-index">03 · NARRATIVE</span>
+      <h3>Agent 生成报告</h3>
+      <p>不重判情绪，不补充外部事实，只把事实包整理成可读结论。</p>
+    </article>
+
+    <span class="flow-arrow" aria-hidden="true">→</span>
+
+    <article class="flow-node">
+      <span class="node-index">04 · DELIVERY</span>
+      <h3>文档与群消息</h3>
+      <p>报告先落盘，再发布在线文档，并发送到业务群。</p>
+    </article>
+
+    <span class="flow-arrow" aria-hidden="true">→</span>
+
+    <article class="flow-node gate-node">
+      <span class="node-index">05 · STATE</span>
+      <h3>状态回写闸门</h3>
+      <p>日报 Webhook 成功才按来源表回写；发送失败则保留原状态。</p>
+    </article>
+  </div>
+
+  <footer class="system-rule">
+    <span>核心边界</span>
+    <strong>模型负责解释事实，脚本负责固定口径，日报发送结果决定能不能改变业务状态。</strong>
+  </footer>
+</section>
+
+<style>
+  .review-system-map {
+    --accent: #ec4899;
+    --accent-dark: #be185d;
+    --ink: #09090b;
+    --surface: #fafafa;
+    --surface-strong: #ffffff;
+    --muted: #52525b;
+    --line: #e4e4e7;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: 0 26px 70px rgba(24, 24, 27, 0.1);
+    color: var(--ink);
+    container-name: review-system-map;
+    container-type: inline-size;
+    margin: 34px 0;
+    overflow: hidden;
+  }
+
+  .system-hero {
+    padding: clamp(26px, 5vw, 48px);
+  }
+
+  .hero-meta {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .case-label,
+  .version-label,
+  .system-metrics span,
+  .node-index {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+  }
+
+  .case-label {
+    background: var(--ink);
+    border-radius: 999px;
+    color: white;
+    padding: 7px 10px;
+  }
+
+  .version-label {
+    color: #71717a;
+  }
+
+  .system-hero h2 {
+    color: var(--ink);
+    font-size: clamp(32px, 5.2vw, 54px);
+    letter-spacing: -0.05em;
+    line-height: 1.08;
+    margin: 18px 0 16px;
+    max-width: 980px;
+  }
+
+  .system-hero p {
+    color: var(--muted);
+    font-size: clamp(15px, 2vw, 18px);
+    line-height: 1.75;
+    margin: 0;
+    max-width: 820px;
+  }
+
+  .project-link {
+    align-items: center;
+    background: var(--accent);
+    border-radius: 12px;
+    color: white;
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: 800;
+    gap: 8px;
+    margin-top: 24px;
+    padding: 12px 16px;
+    text-decoration: none;
+    transition: background-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .project-link:hover,
+  .project-link:focus-visible {
+    background: var(--accent-dark);
+    box-shadow: 0 10px 24px rgba(190, 24, 93, 0.24);
+  }
+
+  .project-link:focus-visible {
+    outline: 3px solid rgba(236, 72, 153, 0.32);
+    outline-offset: 3px;
+  }
+
+  .system-metrics {
+    background: #18181b;
+    display: grid;
+    gap: 1px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .system-metrics article {
+    background: #18181b;
+    min-width: 0;
+    padding: 22px clamp(18px, 3vw, 28px);
+  }
+
+  .system-metrics span {
+    color: #a1a1aa;
+    display: block;
+  }
+
+  .system-metrics strong {
+    color: #fafafa;
+    display: block;
+    font-size: 22px;
+    margin-top: 8px;
+  }
+
+  .system-metrics small {
+    color: #a1a1aa;
+    display: block;
+    line-height: 1.55;
+    margin-top: 7px;
+  }
+
+  .system-metrics .metric-accent {
+    background: var(--accent);
+  }
+
+  .metric-accent span,
+  .metric-accent small {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .system-flow {
+    align-items: stretch;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1.08fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    padding: clamp(24px, 4vw, 38px);
+  }
+
+  .flow-node {
+    background: var(--surface-strong);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    min-width: 0;
+    padding: 18px;
+  }
+
+  .flow-node h3 {
+    color: var(--ink);
+    font-size: 18px;
+    margin: 11px 0 8px;
+  }
+
+  .flow-node p {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .node-index {
+    color: #71717a;
+  }
+
+  .source-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 10px;
+  }
+
+  .source-list span {
+    background: #f4f4f5;
+    border: 1px solid #e4e4e7;
+    border-radius: 999px;
+    color: #3f3f46;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 8px;
+  }
+
+  .gate-node {
+    border-color: rgba(236, 72, 153, 0.46);
+    box-shadow: inset 0 3px 0 var(--accent);
+  }
+
+  .gate-node .node-index {
+    color: var(--accent-dark);
+  }
+
+  .flow-arrow {
+    align-self: center;
+    color: #a1a1aa;
+    font-size: 18px;
+  }
+
+  .system-rule {
+    align-items: center;
+    background: #f4f4f5;
+    border-top: 1px solid var(--line);
+    display: grid;
+    gap: 14px;
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 20px clamp(24px, 4vw, 38px);
+  }
+
+  .system-rule span {
+    background: var(--ink);
+    border-radius: 999px;
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 7px 9px;
+    white-space: nowrap;
+  }
+
+  .system-rule strong {
+    color: #27272a;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  @container review-system-map (max-width: 920px) {
+    .system-metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .system-flow {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .flow-arrow {
+      display: none;
+    }
+  }
+
+  @container review-system-map (max-width: 560px) {
+    .review-system-map {
+      border-radius: 18px;
+      margin-left: -8px;
+      margin-right: -8px;
+    }
+
+    .system-hero {
+      padding: 26px 18px;
+    }
+
+    .system-hero h2 {
+      font-size: 34px;
+    }
+
+    .system-metrics,
+    .system-flow {
+      grid-template-columns: 1fr;
+    }
+
+    .system-flow {
+      padding: 22px 18px;
+    }
+
+    .system-rule {
+      align-items: start;
+      grid-template-columns: 1fr;
+      padding: 18px;
+    }
+
+    .system-rule span {
+      justify-self: start;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .project-link {
+      transition: none;
+    }
+  }
+</style>
