@@ -28,6 +28,7 @@
 | `src/content/posts/ulike-customer-service-rpa-flow-detail.mdx` | `实践` | Ulike 客服售后自动化细节拆解，覆盖静默单推送、已发货仅退款、赠品发货留言三条 RPA 实操流程 | 写电商客服售后RPA、订单/物流/ERP跨系统流程、客服自动化动作拆解时参考 |
 | `src/content/posts/how-to-use-yingdao-rpa-correctly.mdx` | `实践` | 从 40+ 个影刀小应用出发，复盘影刀正确用法、人机协作、经营看板、供应链预警和企业版判断，并用深色决策树风展示新需求是否值得做影刀 | 写影刀RPA复盘、正确使用影刀、日报升级经营看板、自动化治理、需求判断决策树时参考 |
 | `src/content/posts/yingdao-agent-development-knowledge-base.mdx` | `教程` | 影刀 × Agent 开发总览，覆盖开发知识库、问题查询、真实项目规则、浏览器元素探索、代码同步和知识库更新闭环 | 写影刀编码版、Agent 辅助开发、影刀知识库、浏览器元素探索和外部代码同步时参考 |
+| `src/content/posts/yingdao-xbot-ai-agent-development-guide.mdx` | `教程` | 影刀 × xbot × Agent 完整开发工作流，围绕 yingdao-xbot-ai-agent 项目讲清双目录上下文、专项文档路由、页面探索、最小修改、同步验证、分层排错和知识修正闭环 | 写影刀编码版、xbot API、AI Agent 开发治理、真实项目同步与影刀环境验收时参考 |
 | `src/content/posts/automation-agent-workflow.mdx` | `实践` | Agent 工作流、任务类型判断、决策树、大任务 TASK.md 状态文件、失败边界、Mermaid 流程图 | 写 Agent 流程、自动化协作、任务拆解决策、大任务阶段管理、可维护性文章时参考 |
 | `src/content/posts/browser-agent-shared-chrome-runtime.mdx` | `实践` | Browser Agent 本地共享浏览器运行时，覆盖真实 Chrome、固定 Profile、CDP、自愈启动、跨 Skill 接入和页面隔离边界 | 写浏览器自动化基础设施、Playwright CDP、共享登录状态、Chrome 生命周期和多 Agent 复用时参考 |
 | `src/content/posts/gbrain-openclaw-long-term-brain-setup.mdx` | `实践` | GBrain 接入 OpenClaw 的实战配置，覆盖 Context Engine 自动召回、Signal Detector 后台写入、PostgreSQL 多会话并发、Brain source 路由与高频踩坑 | 写 Agent 长期记忆、GBrain、OpenClaw Context Engine、自动记忆闭环和多进程存储选型时参考 |
