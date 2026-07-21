@@ -1,0 +1,839 @@
+---
+title: "用 Agent 开发影刀：从知识库到真实项目的完整工作流"
+description: "以 yingdao-xbot-ai-agent 项目为基础，讲清 Agent 如何读取影刀规则、查询 xbot API、探索页面元素、修改真实项目、同步代码并回到影刀完成验证。"
+date: 2026-07-21T20:26:00+08:00
+category: "教程"
+tags:
+  - "影刀RPA"
+  - "Agent"
+  - "xbot"
+  - "知识库"
+minutes: 18
+featured: false
+draft: false
+private: false
+series: "yingdao-agent-development"
+seriesOrder: 2
+---
+
+import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
+
+<div class="yxa-hero">
+  <div class="yxa-hero__copy">
+    <span class="yxa-kicker">YINGDAO × XBOT × AI AGENT</span>
+    <h2>不是让 AI 猜影刀代码，而是给它一套能查、能改、能同步、能验证的开发环境</h2>
+    <p>知识库负责提供规则、API、示例和排错依据；Agent 在真实影刀项目中做最小修改；同步工具把外部代码交回影刀；最终仍由影刀运行结果完成验收。</p>
+    <div class="yxa-hero__actions">
+      <a class="yxa-button is-primary" href="https://github.com/apexcheng/yingdao-xbot-ai-agent">查看项目源码 →</a>
+      <a class="yxa-button" href="https://github.com/apexcheng/yingdao-xbot-ai-agent#快速开始">从快速开始阅读</a>
+    </div>
+    <div class="yxa-repo-meta" aria-label="项目摘要">
+      <span>PUBLIC REPOSITORY</span>
+      <strong>apexcheng/yingdao-xbot-ai-agent</strong>
+      <small>影刀编码版 · xbot API · RPA 自动化 · Agent 开发规则</small>
+    </div>
+  </div>
+
+  <div class="yxa-workbench" aria-label="影刀 Agent 开发工作台">
+    <div class="yxa-workbench__bar">
+      <span></span><span></span><span></span>
+      <em>agent-workbench / ready</em>
+    </div>
+    <div class="yxa-workbench__grid">
+      <div class="yxa-console is-knowledge">
+        <small>01 / KNOWLEDGE</small>
+        <strong>知识与索引</strong>
+        <p>AGENTS.md · llms.txt</p>
+      </div>
+      <div class="yxa-console is-api">
+        <small>02 / XBOT API</small>
+        <strong>专项文档</strong>
+        <p>浏览器 · Excel · Windows</p>
+      </div>
+      <div class="yxa-console is-agent">
+        <small>03 / CODING</small>
+        <strong>真实项目</strong>
+        <p>定位现状 · 最小修改</p>
+      </div>
+      <div class="yxa-console is-runtime">
+        <small>04 / RUNTIME</small>
+        <strong>同步与验证</strong>
+        <p>prepare · 影刀内运行</p>
+      </div>
+    </div>
+    <div class="yxa-workbench__status">
+      <span><i></i> API 必须有依据</span>
+      <span><i></i> 未验证必须标记</span>
+    </div>
+  </div>
+</div>
+
+<HighlightBox eyebrow="核心判断" title="真正缺的不是另一个 AI，而是 AI 可以依赖的影刀开发上下文">
+  普通代码模型熟悉 Python、Selenium、Playwright、pandas 或 openpyxl，却未必知道影刀的对象来源、元素库、市场指令参数、项目目录和同步机制。这个项目的价值，是把这些“影刀特有上下文”整理成 Agent 可以按需读取的开发基础设施。
+</HighlightBox>
+
+## 这个项目到底解决什么问题
+
+影刀可视化指令已经比较容易上手，但进入编码版开发后，问题会明显变多：API 资料分散、参数不够清楚、市场指令的界面参数和代码参数可能不同，代码在外部编辑器改完以后还要重新同步，最后还必须回到影刀环境确认真实业务结果。
+
+如果没有专门的知识库，Agent 很容易把“看起来相似”的普通 Python 经验直接套进影刀：函数名似乎合理，参数也像那么回事，但一运行就会出现对象不存在、参数层级错误、返回值结构不符，或者代码改了却根本没有进入真实应用。
+
+<div class="yxa-problem-bridge">
+  <div class="yxa-problem-bridge__side is-before">
+    <span>没有上下文时</span>
+    <strong>Agent 只能靠相似经验猜</strong>
+    <ul>
+      <li>把 Selenium / Playwright 用法套进 xbot</li>
+      <li>把知识库示例误当成真实业务项目</li>
+      <li>静态检查通过，就误判为业务已跑通</li>
+      <li>一个小需求引发无关重构</li>
+    </ul>
+  </div>
+  <div class="yxa-problem-bridge__arrow">
+    <b>→</b>
+    <span>补齐开发上下文</span>
+  </div>
+  <div class="yxa-problem-bridge__side is-after">
+    <span>接入知识库后</span>
+    <strong>先查依据，再进入真实项目</strong>
+    <ul>
+      <li>按任务读取规则、文档和示例</li>
+      <li>明确知识库目录与项目目录</li>
+      <li>只做当前需求需要的最小修改</li>
+      <li>同步后回到影刀进行运行验证</li>
+    </ul>
+  </div>
+</div>
+
+它不是影刀官方仓库，也不是一个可以直接运行的影刀应用。它更像一层“开发者翻译器”：把影刀 API、开发规则、历史错误、待验证事项和同步动作整理成 Agent 能理解、能搜索、能执行的工作流。
+
+## 项目里不只是 API 文档
+
+项目地址：**[apexcheng/yingdao-xbot-ai-agent](https://github.com/apexcheng/yingdao-xbot-ai-agent)**
+
+<div class="yxa-capability-map" aria-label="项目能力地图">
+  <div class="yxa-capability-map__head">
+    <span>PROJECT MAP</span>
+    <strong>一套知识库，覆盖六类影刀开发现场</strong>
+    <p>每个模块都不是独立资料堆，而是 Agent 遇到对应任务时的查询入口。</p>
+  </div>
+  <div class="yxa-capability-map__grid">
+    <div>
+      <b>01</b><span>BROWSER</span>
+      <strong>浏览器自动化</strong>
+      <p>网页对象、元素定位、点击输入、滚动、下载、Cookie、网络监听和 iframe。</p>
+    </div>
+    <div>
+      <b>02</b><span>EXCEL / WPS</span>
+      <strong>表格自动化</strong>
+      <p>工作簿、Sheet、区域读写、格式、长数字、文件占用和保存边界。</p>
+    </div>
+    <div>
+      <b>03</b><span>WINDOWS</span>
+      <strong>桌面与系统操作</strong>
+      <p>Windows 窗口、桌面对象、键盘鼠标、日志、通知和压缩解压。</p>
+    </div>
+    <div>
+      <b>04</b><span>EXTENSION</span>
+      <strong>市场指令</strong>
+      <p>可视化参数与编码版参数映射、真实调用入口、源码排查和版本差异。</p>
+    </div>
+    <div>
+      <b>05</b><span>DINGTALK</span>
+      <strong>钉钉 AI 表格</strong>
+      <p>记录读写、filter、多条件组合、分页、附件和 HTTP 500 排查。</p>
+    </div>
+    <div>
+      <b>06</b><span>AGENT OPS</span>
+      <strong>Agent 开发治理</strong>
+      <p>AGENTS.md、llms.txt、TASK.md、错误修正、待验证事项和同步工具。</p>
+    </div>
+  </div>
+</div>
+
+这也是我把项目从单纯的 `xbot-AI-docs` 继续整理成 `yingdao-xbot-ai-agent` 的原因：它已经不只是“查 API 的文档”，而是一套围绕 Agent 实际开发影刀项目设计的工作环境。
+
+## 最重要的概念：必须同时告诉 Agent 两个目录
+
+影刀 Agent 开发里最容易混淆的，不是语法，而是**知识库目录**和**真实影刀项目目录**。
+
+<div class="yxa-two-roots" aria-label="知识库目录与真实影刀项目目录">
+  <div class="yxa-root is-library">
+    <span>READ ONLY CONTEXT</span>
+    <strong>知识库目录</strong>
+    <code>C:\path\to\yingdao-xbot-ai-agent</code>
+    <ul>
+      <li>读取 AGENTS.md 和 llms.txt</li>
+      <li>查询 xbot API、示例和排错资料</li>
+      <li>读取历史错误和待验证事项</li>
+      <li>调用 shadowbot_sync_tool.py</li>
+    </ul>
+    <em>负责提供依据，不承载真实业务代码</em>
+  </div>
+  <div class="yxa-two-roots__agent">
+    <span>AI AGENT</span>
+    <strong>左边查，右边改</strong>
+    <div><i>READ</i><b>→</b><i>EDIT</i></div>
+    <small>两边缺一不可</small>
+  </div>
+  <div class="yxa-root is-project">
+    <span>REAL APPLICATION</span>
+    <strong>真实影刀项目目录</strong>
+    <code>%LOCALAPPDATA%\ShadowBot\users\...\apps\...</code>
+    <ul>
+      <li>读取当前应用的真实实现</li>
+      <li>修改 main.py 和业务模块</li>
+      <li>保留现有对象、日志和项目结构</li>
+      <li>接受同步并回到影刀运行</li>
+    </ul>
+    <em>负责实际执行，不能只改知识库示例</em>
+  </div>
+</div>
+
+只告诉 Agent 知识库目录，它最多能回答问题；只告诉它真实项目目录，它又可能因为缺少影刀上下文而猜 API。正确方式是：**左边提供规则和依据，右边提供真实代码和业务现场。**
+
+## Agent 开工前，需要的不是一句“帮我写流程”
+
+一个稳定的任务描述，至少要同时包含业务目标和开发上下文。
+
+<div class="yxa-context-board">
+  <div class="yxa-context-board__column">
+    <span>BUSINESS CONTEXT</span>
+    <strong>业务现场</strong>
+    <div><b>目标</b><p>最终要解决什么问题。</p></div>
+    <div><b>输入</b><p>页面、表格、文件或接口从哪里来。</p></div>
+    <div><b>输出</b><p>结果写到哪里，格式是什么。</p></div>
+    <div><b>验收</b><p>怎样才算真正完成。</p></div>
+    <div><b>边界</b><p>哪些地方必须人工确认。</p></div>
+  </div>
+  <div class="yxa-context-board__core">
+    <span>AGENT</span>
+    <strong>把需求变成可验证任务</strong>
+    <p>先调查现状，再查 API，最后做最小修改。</p>
+  </div>
+  <div class="yxa-context-board__column">
+    <span>DEVELOPMENT CONTEXT</span>
+    <strong>开发现场</strong>
+    <div><b>规则</b><p>AGENTS.md 与真实项目规则。</p></div>
+    <div><b>索引</b><p>llms.txt 按任务导航文档。</p></div>
+    <div><b>代码</b><p>真实项目当前文件和函数。</p></div>
+    <div><b>依据</b><p>xbot API、示例或源码。</p></div>
+    <div><b>验证</b><p>同步工具与影刀内运行。</p></div>
+  </div>
+</div>
+
+例如，不要只说：
+
+> 帮我做一个查询订单状态的影刀流程。
+
+更清楚的写法是：
+
+```text
+知识库目录：C:\path\to\yingdao-xbot-ai-agent
+真实项目目录：C:\path\to\shadowbot-project
+
+目标：读取指定 Excel 中的订单号，逐行打开网页查询状态，并写回原表。
+
+验收标准：
+- 跳过空订单号
+- 每个订单只查询一次
+- 结果写入指定列
+- 页面异常时记录错误，不覆盖原数据
+- 最后在影刀编辑器中完成一次实际运行验证
+
+执行要求：
+1. 先读取知识库中的 AGENTS.md 和 llms.txt。
+2. 再读取真实项目现有代码，定位当前实现。
+3. xbot API 必须以文档、现有代码或可验证源码为依据。
+4. 只修改当前需求直接相关的内容。
+5. 修改后执行同步工具，并说明影刀内验证结果。
+```
+
+这段提示词真正重要的不是格式，而是把“目标、目录、依据、修改范围、验收方式”一次讲清楚。
+
+## 一条需求如何经过 Agent 变成影刀结果
+
+<DecisionFlow
+  title="影刀 × Agent 推荐开发流程"
+  items={[
+    {
+      label: '阶段 1',
+      title: '把业务需求改写成验收标准',
+      description: '先写清输入、输出、人工确认点、异常处理和最终怎样算完成。',
+    },
+    {
+      label: '阶段 2',
+      title: '确认知识库与真实项目目录',
+      description: '知识库提供规则和 API；真实项目承载当前代码。Agent 必须明确两者职责。',
+    },
+    {
+      label: '阶段 3',
+      title: '先调查现有实现，再按需查文档',
+      description: '定位文件、函数、对象来源和现有输入输出，不一次加载全部资料。',
+    },
+    {
+      label: '阶段 4',
+      title: '做外科手术式修改',
+      description: '保留现有结构、日志和业务口径，只修改当前需求真正需要的代码。',
+    },
+    {
+      label: '阶段 5',
+      title: '同步、运行、记录结果',
+      description: '运行 shadowbot_sync_tool.py，回到影刀实际运行，并把已验证与待验证结论分开记录。',
+    },
+  ]}
+/>
+
+复杂任务可以创建 `TASK.md`，把调查、方案、实现、验证四个阶段和当前状态留下来；只改一个函数、参数或错误描述时，直接做最小修改，不需要为了“看起来正式”额外制造流程。
+
+## 不同任务，应该查不同入口
+
+`llms.txt` 的作用不是把所有文档一次塞给 Agent，而是让它根据任务按需进入正确入口。
+
+<div class="yxa-router" aria-label="影刀开发文档路由">
+  <div class="yxa-router__head">
+    <span>DOCUMENT ROUTER</span>
+    <strong>先判断任务类型，再读取对应资料</strong>
+  </div>
+  <div class="yxa-router__grid">
+    <div><b>第一次使用</b><span>getting-started.md</span><p>先理解两个目录、规则读取顺序和最终验收。</p></div>
+    <div><b>Agent 开发流程</b><span>ai-agent-development.md</span><p>目标、阶段、最小修改、提示词模板和完成报告。</p></div>
+    <div><b>查 xbot API</b><span>xbot-api-guide.md</span><p>从文档索引进入对应对象、方法、示例和边界。</p></div>
+    <div><b>网页与元素</b><span>browser-automation.md</span><p>页面、元素、滚动、下载、Cookie、网络监听和 iframe。</p></div>
+    <div><b>Excel / WPS</b><span>excel-automation.md</span><p>工作簿、Sheet、单元格、格式、长数字和文件占用。</p></div>
+    <div><b>运行报错</b><span>troubleshooting.md</span><p>最小复现、问题分层、市场指令、HTTP 500 和 Agent 异常。</p></div>
+  </div>
+</div>
+
+这能减少一个常见问题：上下文越多，Agent 不一定越准确。一次加载全部文档，反而可能混用不相关 API、忽略当前项目规则，甚至重复生成项目里已经存在的能力。
+
+## 浏览器探索，是网页自动化里的现场调查
+
+网页自动化最难的通常不是 Python 语法，而是页面当前到底长什么样：按钮是否位于 iframe、元素是否被遮挡、滚动的是页面还是局部容器、点击后是否需要等待异步加载、登录状态或风控是否改变了页面。
+
+当 Agent 可以通过授权的浏览器调试工具查看页面时，它就不必只根据截图猜测元素位置。
+
+<div class="yxa-browser-map">
+  <div class="yxa-browser-map__window">
+    <div class="yxa-browser-map__toolbar">
+      <span></span><span></span><span></span>
+      <code>https://example.com/orders</code>
+    </div>
+    <div class="yxa-browser-map__page">
+      <div class="yxa-page-title">订单管理 <small>DOM INSPECTION</small></div>
+      <div class="yxa-page-filter">
+        <span class="is-detected">订单号输入框</span>
+        <span>状态筛选</span>
+        <button class="is-detected">查询按钮</button>
+      </div>
+      <div class="yxa-page-row"><i></i><i></i><i></i></div>
+      <div class="yxa-page-row"><i></i><i></i><i></i></div>
+      <div class="yxa-page-row"><i></i><i></i><i></i></div>
+    </div>
+  </div>
+  <div class="yxa-browser-map__notes">
+    <div><b>01</b><p><strong>确认页面状态</strong><span>URL、登录、验证码、弹窗和页面版本。</span></p></div>
+    <div><b>02</b><p><strong>查看结构层级</strong><span>iframe、表格、局部滚动容器和遮挡关系。</span></p></div>
+    <div><b>03</b><p><strong>测试稳定定位</strong><span>优先属性、文本和局部范围，避免随机 class。</span></p></div>
+    <div><b>04</b><p><strong>验证动作结果</strong><span>点击、输入、等待、状态变化和异常分支。</span></p></div>
+  </div>
+</div>
+
+浏览器里确认元素，只是验证 A；这些元素放进影刀对象以后能否正常执行，仍需要验证 B。页面探索不能替代影刀运行，但可以大幅减少“看图猜按钮”和反复试错。
+
+## 外部代码写完后，为什么还要同步
+
+Agent 在真实项目目录修改 `.py` 文件以后，影刀不一定自动认识新增流程和辅助模块。项目根目录中的 `shadowbot_sync_tool.py` 用于把外部修改重新登记并准备编译。
+
+```powershell
+python "C:\path\to\yingdao-xbot-ai-agent\shadowbot_sync_tool.py" ^
+  --project-dir "%LOCALAPPDATA%\ShadowBot\users\<user_id>\apps\<app_id>" ^
+  prepare main.py
+```
+
+<div class="yxa-pipeline" aria-label="影刀 Agent 完整开发链路">
+  <div class="yxa-pipeline__head">
+    <span>DEVELOPMENT PIPELINE</span>
+    <em>5 个环节 · 2 道验证门</em>
+  </div>
+  <div class="yxa-pipeline__track">
+    <div><b>01</b><strong>定义需求</strong><small>目标与验收</small></div>
+    <i>→</i>
+    <div><b>02</b><strong>查找依据</strong><small>规则与 API</small></div>
+    <i>→</i>
+    <div class="is-focus"><b>03</b><strong>修改代码</strong><small>真实项目目录</small></div>
+    <i>→</i>
+    <div><b>04</b><strong>同步准备</strong><small>登记与编译</small></div>
+    <i>→</i>
+    <div class="is-success"><b>05</b><strong>影刀运行</strong><small>业务结果验收</small></div>
+  </div>
+  <div class="yxa-pipeline__checks">
+    <span><b>验证 A</b> 页面、元素、参数和数据结构是否符合当前现场</span>
+    <span><b>验证 B</b> 影刀应用是否真实运行并得到预期业务结果</span>
+  </div>
+</div>
+
+`prepare` 成功，只能说明同步和编译准备完成。它不等于页面元素正确、接口参数正确，更不等于整套业务已经跑通。**同步成功与业务成功必须分开表达。**
+
+## 出错时，先判断问题属于哪一层
+
+知识库的另一个价值，是不只记录“正确用法”，也记录怎样排错、过去哪些说法错了、还有哪些结论没有完成运行验证。
+
+<div class="yxa-debug-board" aria-label="影刀问题分层排查">
+  <div class="yxa-debug-board__head">
+    <span>TROUBLESHOOTING STACK</span>
+    <strong>先分层，再一次验证一个假设</strong>
+    <p>不要同时改多个参数。否则即使问题消失，也不知道真正原因是什么。</p>
+  </div>
+  <div class="yxa-debug-board__layers">
+    <div><b>L1</b><strong>业务输入层</strong><p>空值、字段名、Sheet、长数字、日期格式、重复数据和文件路径。</p><span>先看数据</span></div>
+    <div><b>L2</b><strong>xbot API 层</strong><p>对象来源、参数名称、类型、层级、返回值和相似库误用。</p><span>查文档</span></div>
+    <div><b>L3</b><strong>页面与环境层</strong><p>登录、风控、iframe、元素遮挡、WPS 进程和 Windows 窗口状态。</p><span>看现场</span></div>
+    <div><b>L4</b><strong>市场指令与接口层</strong><p>参数映射、版本变化、请求体、服务端 500、限流和 unknownError。</p><span>留 request id</span></div>
+    <div><b>L5</b><strong>Agent 上下文层</strong><p>错误目录、过期资料、上下文过多、把推测写成已验证、扩大修改范围。</p><span>回到规则</span></div>
+  </div>
+</div>
+
+一个更可靠的排错顺序是：保留完整错误 → 构造最小复现 → 确认真实项目和运行环境 → 定位文件、函数与输入 → 查对应文档和示例 → 一次只验证一个假设 → 做最小修复 → 回到影刀重新运行。
+
+## 知识库为什么需要持续更新
+
+影刀版本、市场指令、网页结构和第三方接口都会变化。一次整理完成，并不代表以后永远正确。
+
+<div class="yxa-loop" aria-label="影刀知识库更新闭环">
+  <div><span>真实项目</span><strong>遇到新问题</strong><small>保留完整错误与现场</small></div>
+  <i>→</i>
+  <div><span>Agent / 人工</span><strong>查文档与最小复现</strong><small>区分推测、源码和运行结果</small></div>
+  <i>→</i>
+  <div class="is-core"><span>知识库</span><strong>修正文档与边界</strong><small>error-book / unresolved</small></div>
+  <i>→</i>
+  <div><span>下一次开发</span><strong>直接复用结论</strong><small>减少重复踩坑</small></div>
+</div>
+
+项目把结果分成三种状态：
+
+- **已经在影刀环境运行通过**：可以记录为已验证；
+- **只通过文档或源码确认**：必须写明依据；
+- **仅根据现象推测**：放进待验证事项，不能写成确定结论。
+
+错误结论也不应该静默覆盖。记录“旧描述是什么、为什么错、正确说法是什么、依据是什么”，可以避免下一个 Agent 或下一个项目继续复制同一个错误。
+
+## 第一次使用，可以从这五步开始
+
+<DecisionFlow
+  title="最小可用的上手路径"
+  items={[
+    {
+      label: 'Step 1',
+      title: '克隆知识库',
+      description: '获取 AGENTS.md、llms.txt、专项文档、错误记录和同步工具。',
+    },
+    {
+      label: 'Step 2',
+      title: '确认真实影刀项目目录',
+      description: '不要凭名称猜路径，确认目录中的代码确实对应当前影刀应用。',
+    },
+    {
+      label: 'Step 3',
+      title: '把两个目录和验收标准告诉 Agent',
+      description: '知识库负责查询，真实项目负责修改；同时写清输入、输出和人工确认点。',
+    },
+    {
+      label: 'Step 4',
+      title: '让 Agent 先调查，再做最小修改',
+      description: '复杂任务维护 TASK.md，简单任务直接处理，但都要先定位当前实现。',
+    },
+    {
+      label: 'Step 5',
+      title: '运行同步工具并在影刀内验收',
+      description: '同步成功、静态检查通过和业务运行成功是三个不同状态，必须分别说明。',
+    },
+  ]}
+/>
+
+```bash
+git clone https://github.com/apexcheng/yingdao-xbot-ai-agent.git
+```
+
+<HighlightBox eyebrow="总结" title="这套项目的目标，是让 Agent 真正进入影刀开发现场">
+  理想状态不是“AI 什么都会”，而是它知道先读哪份规则、去哪里查 API、在哪个目录修改、哪些结论不能猜、外部代码怎样同步，以及最后必须回到哪里完成真实验证。
+</HighlightBox>
+
+<style>{`
+  .yxa-hero,
+  .yxa-problem-bridge,
+  .yxa-capability-map,
+  .yxa-two-roots,
+  .yxa-context-board,
+  .yxa-router,
+  .yxa-browser-map,
+  .yxa-pipeline,
+  .yxa-debug-board,
+  .yxa-loop {
+    margin: 1.9rem 0 2.35rem;
+  }
+
+  .yxa-hero {
+    display: grid;
+    grid-template-columns: minmax(0, .98fr) minmax(340px, 1.02fr);
+    gap: 1.45rem;
+    padding: clamp(1.45rem, 3vw, 2.35rem);
+    overflow: hidden;
+    color: #eaf4ff;
+    border: 1px solid rgba(95, 186, 255, .24);
+    border-radius: 30px;
+    background:
+      radial-gradient(circle at 78% 8%, rgba(37, 162, 255, .23), transparent 33%),
+      radial-gradient(circle at 10% 100%, rgba(105, 73, 255, .15), transparent 34%),
+      linear-gradient(135deg, #07111f 0%, #0b1728 52%, #07101b 100%);
+    box-shadow: 0 26px 74px rgba(2, 10, 24, .25);
+  }
+
+  .yxa-hero__copy { align-self: center; }
+  .yxa-kicker,
+  .yxa-workbench small,
+  .yxa-capability-map span,
+  .yxa-root > span,
+  .yxa-context-board > div > span,
+  .yxa-router span,
+  .yxa-pipeline__head span,
+  .yxa-debug-board__head span {
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+  }
+
+  .yxa-kicker { color: #62c7ff; }
+  .yxa-hero h2 {
+    margin: .68rem 0 .9rem;
+    color: #fff;
+    font-size: clamp(1.6rem, 3vw, 2.55rem);
+    line-height: 1.18;
+  }
+  .yxa-hero p { margin: 0; color: #a9bdd2; line-height: 1.8; }
+  .yxa-hero__actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.25rem; }
+  .yxa-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: .64rem .9rem;
+    color: #b8d5ec;
+    border: 1px solid rgba(125, 211, 252, .2);
+    border-radius: 11px;
+    background: rgba(13, 34, 55, .72);
+    font-size: .82rem;
+    font-weight: 760;
+    text-decoration: none;
+  }
+  .yxa-button.is-primary {
+    color: #051521;
+    border-color: #73d4ff;
+    background: linear-gradient(135deg, #7dd3fc, #4db4f3);
+  }
+  .yxa-repo-meta {
+    display: grid;
+    gap: .2rem;
+    margin-top: 1.2rem;
+    padding: .85rem 1rem;
+    border-left: 3px solid #43bdf8;
+    border-radius: 0 11px 11px 0;
+    background: rgba(7, 18, 31, .58);
+  }
+  .yxa-repo-meta span { color: #5a8cb3; font-size: .64rem; letter-spacing: .12em; }
+  .yxa-repo-meta strong { color: #dff4ff; font-size: .88rem; }
+  .yxa-repo-meta small { color: #69839b; font-size: .72rem; }
+
+  .yxa-workbench {
+    overflow: hidden;
+    border: 1px solid rgba(125, 211, 252, .18);
+    border-radius: 19px;
+    background: rgba(4, 12, 24, .75);
+    box-shadow: inset 0 1px rgba(255,255,255,.04);
+  }
+  .yxa-workbench__bar,
+  .yxa-browser-map__toolbar {
+    display: flex;
+    align-items: center;
+    gap: .42rem;
+    padding: .72rem .9rem;
+    border-bottom: 1px solid rgba(148,190,230,.14);
+  }
+  .yxa-workbench__bar span,
+  .yxa-browser-map__toolbar > span {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #2b4561;
+  }
+  .yxa-workbench__bar span:first-child,
+  .yxa-browser-map__toolbar > span:first-child { background: #ff7891; }
+  .yxa-workbench__bar span:nth-child(2),
+  .yxa-browser-map__toolbar > span:nth-child(2) { background: #ffd166; }
+  .yxa-workbench__bar span:nth-child(3),
+  .yxa-browser-map__toolbar > span:nth-child(3) { background: #57d69a; }
+  .yxa-workbench__bar em { margin-left: auto; color: #66819d; font-size: .7rem; font-style: normal; }
+  .yxa-workbench__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .72rem; padding: .84rem; }
+  .yxa-console {
+    min-height: 120px;
+    padding: 1rem;
+    border: 1px solid rgba(125,211,252,.12);
+    border-radius: 14px;
+    background: linear-gradient(145deg, rgba(16,35,58,.96), rgba(8,21,37,.96));
+  }
+  .yxa-console small { color: #5e7c99; }
+  .yxa-console strong { display: block; margin-top: .55rem; color: #f4f9ff; font-size: 1.06rem; }
+  .yxa-console p { margin-top: .2rem; color: #7993ad; font-size: .8rem; }
+  .yxa-console.is-api { border-color: rgba(81, 158, 255, .35); }
+  .yxa-console.is-agent { border-color: rgba(145, 113, 255, .36); box-shadow: 0 0 26px rgba(105, 76, 255, .08); }
+  .yxa-console.is-runtime { border-color: rgba(72,211,154,.3); }
+  .yxa-workbench__status {
+    display: flex;
+    gap: .65rem;
+    padding: 0 .85rem .85rem;
+  }
+  .yxa-workbench__status span {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .62rem .7rem;
+    border-radius: 10px;
+    color: #7792ab;
+    background: #091a2b;
+    font-size: .7rem;
+  }
+  .yxa-workbench__status i { width: 7px; height: 7px; border-radius: 99px; background: #50d49a; box-shadow: 0 0 10px rgba(80,212,154,.45); }
+
+  .yxa-problem-bridge {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: .9rem;
+    align-items: stretch;
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 25px;
+    background: linear-gradient(135deg, rgba(40, 105, 190, .055), rgba(120, 85, 230, .03));
+  }
+  .yxa-problem-bridge__side {
+    padding: 1.2rem;
+    border: 1px solid var(--line);
+    border-radius: 17px;
+    background: var(--paper);
+  }
+  .yxa-problem-bridge__side > span { color: var(--muted); font-size: .72rem; font-weight: 750; }
+  .yxa-problem-bridge__side strong { display: block; margin: .42rem 0 .72rem; font-size: 1.04rem; }
+  .yxa-problem-bridge__side ul { margin: 0; padding-left: 1.1rem; }
+  .yxa-problem-bridge__side li { margin: .38rem 0; }
+  .yxa-problem-bridge__side.is-before { box-shadow: inset 3px 0 #dc7080; }
+  .yxa-problem-bridge__side.is-after { box-shadow: inset 3px 0 #2abf85; }
+  .yxa-problem-bridge__arrow { display: grid; place-content: center; color: var(--blue); text-align: center; }
+  .yxa-problem-bridge__arrow b { font-size: 1.45rem; }
+  .yxa-problem-bridge__arrow span { max-width: 74px; font-size: .66rem; }
+
+  .yxa-capability-map {
+    overflow: hidden;
+    border: 1px solid #203a55;
+    border-radius: 26px;
+    color: #eaf4ff;
+    background: linear-gradient(145deg, #081421, #0b1b2c);
+  }
+  .yxa-capability-map__head { padding: 1.35rem 1.4rem 1.1rem; border-bottom: 1px solid #1d344c; }
+  .yxa-capability-map__head span { color: #59c7ff; }
+  .yxa-capability-map__head strong { display: block; margin-top: .35rem; font-size: 1.28rem; }
+  .yxa-capability-map__head p { margin: .35rem 0 0; color: #829ab1; font-size: .84rem; }
+  .yxa-capability-map__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .78rem; padding: .9rem; }
+  .yxa-capability-map__grid > div {
+    min-height: 162px;
+    padding: 1rem;
+    border: 1px solid #1e3851;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #0e2236, #0a1929);
+  }
+  .yxa-capability-map__grid b { color: #3b6f96; font: 800 .72rem/1 monospace; }
+  .yxa-capability-map__grid span { display: block; margin-top: .48rem; color: #5fbfe9; }
+  .yxa-capability-map__grid strong { display: block; margin: .32rem 0 .4rem; color: #f0f8ff; }
+  .yxa-capability-map__grid p { margin: 0; color: #7d94aa; font-size: .78rem; line-height: 1.65; }
+
+  .yxa-two-roots {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 160px minmax(0, 1fr);
+    gap: .85rem;
+    align-items: stretch;
+    padding: 1rem;
+    border: 1px solid #243b56;
+    border-radius: 26px;
+    color: #e8f2ff;
+    background: #081522;
+  }
+  .yxa-root { padding: 1.15rem; border: 1px solid #223c56; border-radius: 16px; background: #0d2033; }
+  .yxa-root > span { color: #59bfea; }
+  .yxa-root > strong { display: block; margin: .48rem 0 .72rem; color: #fff; font-size: 1.1rem; }
+  .yxa-root code { display: block; overflow-wrap: anywhere; padding: .58rem .65rem; border-radius: 8px; color: #8dd9ff; background: #071522; font-size: .72rem; }
+  .yxa-root ul { margin: .8rem 0; padding-left: 1.05rem; color: #9eb2c5; font-size: .82rem; }
+  .yxa-root li { margin: .4rem 0; }
+  .yxa-root em { color: #6f899f; font-size: .72rem; font-style: normal; }
+  .yxa-root.is-library { border-color: rgba(55, 162, 225, .38); }
+  .yxa-root.is-project { border-color: rgba(70, 201, 143, .34); }
+  .yxa-two-roots__agent {
+    display: grid;
+    place-content: center;
+    padding: .9rem .55rem;
+    text-align: center;
+  }
+  .yxa-two-roots__agent > span { color: #8f7bff; font-size: .68rem; font-weight: 850; letter-spacing: .12em; }
+  .yxa-two-roots__agent strong { margin-top: .42rem; color: #f4f0ff; font-size: .88rem; }
+  .yxa-two-roots__agent div { display: flex; align-items: center; justify-content: center; gap: .45rem; margin: .8rem 0 .45rem; }
+  .yxa-two-roots__agent i { padding: .3rem .42rem; border-radius: 6px; color: #ad9fff; background: rgba(113, 86, 255, .12); font-size: .62rem; font-style: normal; }
+  .yxa-two-roots__agent b { color: #4f7da0; }
+  .yxa-two-roots__agent small { color: #66819a; }
+
+  .yxa-context-board {
+    display: grid;
+    grid-template-columns: 1fr 190px 1fr;
+    gap: .82rem;
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 25px;
+    background: linear-gradient(135deg, rgba(31,111,235,.05), rgba(124,58,237,.035));
+  }
+  .yxa-context-board__column,
+  .yxa-context-board__core { padding: 1.1rem; border-radius: 16px; }
+  .yxa-context-board__column { border: 1px solid var(--line); background: var(--paper); }
+  .yxa-context-board__column > span { color: var(--blue); }
+  .yxa-context-board__column > strong { display: block; margin: .42rem 0 .78rem; font-size: 1.05rem; }
+  .yxa-context-board__column > div { display: grid; grid-template-columns: 52px 1fr; gap: .55rem; padding: .55rem 0; border-top: 1px dashed var(--line); }
+  .yxa-context-board__column b { color: var(--blue); font-size: .78rem; }
+  .yxa-context-board__column p { margin: 0; color: var(--muted); font-size: .8rem; }
+  .yxa-context-board__core {
+    display: grid;
+    place-content: center;
+    color: #edf0ff;
+    text-align: center;
+    background: radial-gradient(circle at 50% 0%, rgba(139,110,255,.25), transparent 45%), #14172d;
+  }
+  .yxa-context-board__core > span { color: #aa9aff; }
+  .yxa-context-board__core strong { margin: .5rem 0; font-size: .95rem; }
+  .yxa-context-board__core p { margin: 0; color: #888fae; font-size: .72rem; line-height: 1.6; }
+
+  .yxa-router { overflow: hidden; border: 1px solid #203a55; border-radius: 24px; color: #eaf4ff; background: #081522; }
+  .yxa-router__head { padding: 1.25rem 1.35rem 1rem; border-bottom: 1px solid #1d344c; }
+  .yxa-router__head span { color: #5ac8ff; }
+  .yxa-router__head strong { display: block; margin-top: .35rem; font-size: 1.18rem; }
+  .yxa-router__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .72rem; padding: .85rem; }
+  .yxa-router__grid > div { padding: .9rem 1rem; border: 1px solid #1d3852; border-radius: 13px; background: #0d2033; }
+  .yxa-router__grid b { color: #eff8ff; }
+  .yxa-router__grid span { display: block; margin-top: .25rem; color: #62bfe9; letter-spacing: 0; text-transform: none; }
+  .yxa-router__grid p { margin: .42rem 0 0; color: #7d94aa; font-size: .78rem; }
+
+  .yxa-browser-map {
+    display: grid;
+    grid-template-columns: minmax(0,1.25fr) minmax(260px,.75fr);
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #243b56;
+    border-radius: 24px;
+    color: #e8f2ff;
+    background: linear-gradient(145deg, #081421, #0d1c2d);
+  }
+  .yxa-browser-map__window { overflow: hidden; border: 1px solid #253e5b; border-radius: 15px; background: #f3f7fb; }
+  .yxa-browser-map__toolbar { background: #102239; }
+  .yxa-browser-map__toolbar code { margin-left: .5rem; color: #7592ae; font-size: .7rem; }
+  .yxa-browser-map__page { padding: 1rem; color: #1a2b3d; }
+  .yxa-page-title { display: flex; justify-content: space-between; margin-bottom: .9rem; font-weight: 800; }
+  .yxa-page-title small { color: #8497a9; font-size: .58rem; letter-spacing: .08em; }
+  .yxa-page-filter { display: flex; gap: .55rem; padding: .65rem; border: 1px solid #dce5ee; border-radius: 10px; background: #fff; }
+  .yxa-page-filter span,
+  .yxa-page-filter button { flex: 1; padding: .5rem; border: 1px solid #dce5ee; border-radius: 7px; color: #61758b; background: #f8fafc; font-size: .68rem; }
+  .yxa-page-filter .is-detected { outline: 2px solid #20a7ff; outline-offset: 2px; }
+  .yxa-page-row { display: grid; grid-template-columns: .7fr 1.5fr .8fr; gap: .5rem; margin-top: .7rem; }
+  .yxa-page-row i { height: 12px; border-radius: 99px; background: #dce7f0; }
+  .yxa-browser-map__notes { display: grid; gap: .7rem; }
+  .yxa-browser-map__notes > div { display: flex; gap: .8rem; padding: .85rem; border: 1px solid rgba(105,180,234,.15); border-radius: 12px; background: rgba(16,37,59,.82); }
+  .yxa-browser-map__notes b { color: #55c5ff; font: 800 .78rem/1.4 monospace; }
+  .yxa-browser-map__notes p { margin: 0; }
+  .yxa-browser-map__notes strong { display: block; color: #edf7ff; font-size: .9rem; }
+  .yxa-browser-map__notes span { display: block; margin-top: .15rem; color: #829bb3; font-size: .74rem; }
+
+  .yxa-pipeline { padding: 1.25rem; overflow: hidden; border: 1px solid #203a55; border-radius: 24px; color: #edf7ff; background: #081522; }
+  .yxa-pipeline__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .yxa-pipeline__head span { color: #5ec9ff; }
+  .yxa-pipeline__head em { color: #718aa2; font-size: .75rem; font-style: normal; }
+  .yxa-pipeline__track { display: flex; align-items: center; gap: .5rem; }
+  .yxa-pipeline__track > div { flex: 1; min-width: 0; padding: .9rem .65rem; border: 1px solid #203a55; border-radius: 12px; background: #0d2033; }
+  .yxa-pipeline__track > i { color: #3c769f; font-style: normal; }
+  .yxa-pipeline__track b { display: block; color: #52718d; font: 700 .7rem/1 monospace; }
+  .yxa-pipeline__track strong { display: block; margin: .38rem 0 .16rem; font-size: .86rem; }
+  .yxa-pipeline__track small { color: #7891a8; font-size: .66rem; }
+  .yxa-pipeline__track .is-focus { border-color: #8069ff; box-shadow: 0 0 25px rgba(105,76,255,.12); }
+  .yxa-pipeline__track .is-success { border-color: #31bd82; }
+  .yxa-pipeline__checks { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-top: .8rem; }
+  .yxa-pipeline__checks span { padding: .68rem .8rem; border-radius: 9px; color: #9bb3c8; background: #0c1d2d; font-size: .72rem; }
+  .yxa-pipeline__checks b { color: #62caff; }
+
+  .yxa-debug-board { overflow: hidden; border: 1px solid #253950; border-radius: 25px; color: #edf5ff; background: linear-gradient(145deg, #0a111c, #101b29); }
+  .yxa-debug-board__head { padding: 1.25rem 1.35rem 1rem; border-bottom: 1px solid #24364a; }
+  .yxa-debug-board__head span { color: #b692ff; }
+  .yxa-debug-board__head strong { display: block; margin-top: .35rem; font-size: 1.2rem; }
+  .yxa-debug-board__head p { margin: .35rem 0 0; color: #8292a5; font-size: .8rem; }
+  .yxa-debug-board__layers { display: grid; gap: .55rem; padding: .82rem; }
+  .yxa-debug-board__layers > div {
+    display: grid;
+    grid-template-columns: 42px 150px 1fr auto;
+    gap: .72rem;
+    align-items: center;
+    padding: .78rem .9rem;
+    border: 1px solid #24374b;
+    border-radius: 12px;
+    background: #111f2e;
+  }
+  .yxa-debug-board__layers b { color: #8f73ff; font: 800 .72rem/1 monospace; }
+  .yxa-debug-board__layers strong { font-size: .86rem; }
+  .yxa-debug-board__layers p { margin: 0; color: #8496a9; font-size: .74rem; }
+  .yxa-debug-board__layers span { padding: .28rem .48rem; border-radius: 999px; color: #c9bcff; background: rgba(129, 98, 255, .13); font-size: .62rem; white-space: nowrap; }
+
+  .yxa-loop { display: flex; align-items: stretch; gap: .6rem; padding: 1rem; border: 1px solid var(--line); border-radius: 22px; background: var(--paper); }
+  .yxa-loop > div { flex: 1; padding: .9rem; border: 1px solid var(--line); border-radius: 12px; }
+  .yxa-loop > i { align-self: center; color: var(--blue); font-style: normal; }
+  .yxa-loop span { display: block; color: var(--muted); font-size: .68rem; }
+  .yxa-loop strong { display: block; margin-top: .35rem; font-size: .84rem; }
+  .yxa-loop small { display: block; margin-top: .3rem; color: var(--muted); font-size: .68rem; }
+  .yxa-loop .is-core { color: #e8f6ff; border-color: #6f5be8; background: #171833; }
+  .yxa-loop .is-core span { color: #b2a5ff; }
+
+  @media (max-width: 900px) {
+    .yxa-capability-map__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .yxa-two-roots,
+    .yxa-context-board { grid-template-columns: 1fr; }
+    .yxa-two-roots__agent div { margin: .35rem 0; }
+    .yxa-two-roots__agent b { transform: rotate(90deg); }
+  }
+
+  @media (max-width: 760px) {
+    .yxa-hero,
+    .yxa-browser-map { grid-template-columns: 1fr; }
+    .yxa-problem-bridge { grid-template-columns: 1fr; }
+    .yxa-problem-bridge__arrow { transform: rotate(90deg); }
+    .yxa-pipeline__track,
+    .yxa-loop { flex-direction: column; }
+    .yxa-pipeline__track > i,
+    .yxa-loop > i { transform: rotate(90deg); text-align: center; }
+    .yxa-debug-board__layers > div { grid-template-columns: 42px 1fr auto; }
+    .yxa-debug-board__layers p { grid-column: 2 / -1; }
+  }
+
+  @media (max-width: 560px) {
+    .yxa-workbench__grid,
+    .yxa-capability-map__grid,
+    .yxa-router__grid,
+    .yxa-pipeline__checks { grid-template-columns: 1fr; }
+    .yxa-workbench__status,
+    .yxa-hero__actions { flex-direction: column; }
+    .yxa-page-filter { flex-direction: column; }
+    .yxa-debug-board__layers > div { grid-template-columns: 36px 1fr; }
+    .yxa-debug-board__layers span { grid-column: 2; justify-self: start; }
+    .yxa-debug-board__layers p { grid-column: 2; }
+  }
+`}</style>
