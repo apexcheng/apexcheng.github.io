@@ -1838,7 +1838,10 @@ function startCosmicOpening(root) {
 
   skipButton.addEventListener('click', () => {
     skipRequested = true;
-    finishSequence();
+    try {
+      sessionStorage.setItem(returnKey, returnUrl);
+    } catch (error) {}
+    window.location.assign(returnUrl);
   });
 
   replayButton.addEventListener('click', () => {
