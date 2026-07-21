@@ -29,6 +29,7 @@ import { withBase } from '../utils/paths';
       <canvas class="cosmic-canvas" data-cosmic-canvas aria-hidden="true"></canvas>
       <div class="cosmic-veil" aria-hidden="true"></div>
       <div class="cosmic-glass" aria-hidden="true"></div>
+      <div class="cinematic-frame" aria-hidden="true"></div>
 
       <header class="sequence-head">
         <div class="sequence-mark" aria-hidden="true">
@@ -173,6 +174,8 @@ import { withBase } from '../utils/paths';
       }
 
       .cosmic-opening {
+        --cinema-frame: 1;
+        --finale-shade: 0;
         background: #02050d;
         height: 100svh;
         isolation: isolate;
@@ -222,6 +225,20 @@ import { withBase } from '../utils/paths';
         z-index: 2;
       }
 
+      .cosmic-veil::after {
+        background: linear-gradient(
+          90deg,
+          rgba(1, 3, 9, 0.82) 0%,
+          rgba(1, 3, 9, 0.56) 30%,
+          rgba(1, 3, 9, 0.08) 62%,
+          transparent 82%
+        );
+        content: "";
+        inset: 0;
+        opacity: var(--finale-shade);
+        position: absolute;
+      }
+
       .cosmic-glass {
         background: linear-gradient(
           112deg,
@@ -241,6 +258,40 @@ import { withBase } from '../utils/paths';
 
       .cosmic-opening.is-finished .cosmic-glass {
         transform: translateX(55%);
+      }
+
+      .cinematic-frame {
+        inset: 0;
+        pointer-events: none;
+        position: absolute;
+        z-index: 4;
+      }
+
+      .cinematic-frame::before,
+      .cinematic-frame::after {
+        background: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.96) 72%, rgba(0, 0, 0, 0.78) 100%);
+        content: "";
+        height: clamp(34px, 6.2vh, 72px);
+        left: 0;
+        position: absolute;
+        right: 0;
+        transform: scaleY(var(--cinema-frame));
+        will-change: transform;
+      }
+
+      .cinematic-frame::before {
+        top: 0;
+        transform-origin: top center;
+      }
+
+      .cinematic-frame::after {
+        bottom: 0;
+        transform-origin: bottom center;
+      }
+
+      .cosmic-opening.is-exploring {
+        --cinema-frame: 0 !important;
+        --finale-shade: 0 !important;
       }
 
       .sequence-head {
@@ -665,6 +716,11 @@ import { withBase } from '../utils/paths';
           top: max(18px, env(safe-area-inset-top));
         }
 
+        .cinematic-frame::before,
+        .cinematic-frame::after {
+          height: clamp(24px, 4.8vh, 44px);
+        }
+
         .sequence-mark {
           font-size: 9px;
           gap: 8px;
@@ -794,6 +850,10 @@ import { withBase } from '../utils/paths';
       }
 
       @media (prefers-reduced-motion: reduce) {
+        .cinematic-frame {
+          display: none;
+        }
+
         .cosmic-glass,
         .enter-button {
           transition: none;

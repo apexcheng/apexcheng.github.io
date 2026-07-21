@@ -63,6 +63,9 @@ function startCosmicOpening(root) {
   let bloomPass = null;
   let scene = null;
   let camera = null;
+  let ambientLight = null;
+  let keyLight = null;
+  let rimLight = null;
   let world = null;
   let earthSpin = null;
   let earthSurface = null;
@@ -150,6 +153,8 @@ function startCosmicOpening(root) {
   const cameraTarget = new THREE.Vector3();
   const cameraBasePosition = new THREE.Vector3();
   const cameraBaseTarget = new THREE.Vector3();
+  const systemCameraPosition = new THREE.Vector3();
+  const systemCameraTarget = new THREE.Vector3();
   const freeCameraPosition = new THREE.Vector3();
   const targetFreeCameraPosition = new THREE.Vector3();
   const freeCameraBaseForward = new THREE.Vector3(0, 0, -1);
@@ -191,6 +196,17 @@ function startCosmicOpening(root) {
     [0.8, -7, 0, 0],
     [1, -6, 0, 0],
   ]);
+  const systemCameraKeysDesktop = createKeys([
+    [0.54, 32, 8, 46],
+    [0.68, 52, 18, 76],
+    [0.82, 88, 42, 126],
+    [1, 132, 72, 170],
+  ]);
+  const systemTargetKeysDesktop = createKeys([
+    [0.54, 10, 0.8, 0],
+    [0.72, 5, 0.3, 0],
+    [1, 0, 0, 0],
+  ]);
   const cameraKeysMobile = createKeys([
     [0, -0.5, 0.8, 18.5],
     [0.18, -0.3, 0.3, 13.8],
@@ -208,6 +224,17 @@ function startCosmicOpening(root) {
     [0.66, -7.5, 0.35, -0.5],
     [0.8, -7, 0.45, 0],
     [1, -6, 0.8, 0],
+  ]);
+  const systemCameraKeysMobile = createKeys([
+    [0.54, 34, 18, 60],
+    [0.7, 62, 44, 112],
+    [0.84, 90, 88, 178],
+    [1, 112, 146, 248],
+  ]);
+  const systemTargetKeysMobile = createKeys([
+    [0.54, 8, 0.8, 0],
+    [0.72, 4, 0.4, 0],
+    [1, 0, 0, 0],
   ]);
 
   function resolveReturnUrl(value) {
@@ -251,19 +278,29 @@ function startCosmicOpening(root) {
     return value * value * (3 - 2 * value);
   }
 
+  function cinematicEase(value) {
+    return value < 0.5
+      ? 4 * value * value * value
+      : 1 - Math.pow(-2 * value + 2, 3) / 2;
+  }
+
+  function easeOutQuint(value) {
+    return 1 - Math.pow(1 - value, 5);
+  }
+
   function band(progress, enterStart, enterEnd, exitStart, exitEnd) {
     return ease(phase(progress, enterStart, enterEnd))
       * (1 - ease(phase(progress, exitStart, exitEnd)));
   }
 
-  function sampleVector(keys, progress, target) {
+  function sampleVector(keys, progress, target, easing = ease) {
     if (progress <= keys[0].at) return target.copy(keys[0].value);
 
     for (let index = 0; index < keys.length - 1; index += 1) {
       const from = keys[index];
       const to = keys[index + 1];
       if (progress <= to.at) {
-        const localProgress = ease((progress - from.at) / (to.at - from.at));
+        const localProgress = easing((progress - from.at) / (to.at - from.at));
         return target.lerpVectors(from.value, to.value, localProgress);
       }
     }
@@ -302,16 +339,16 @@ function startCosmicOpening(root) {
     camera = new THREE.PerspectiveCamera(43, width / height, 0.1, 900);
     scene.add(camera);
 
-    const ambient = new THREE.HemisphereLight(0x29486c, 0x010207, 0.18);
-    scene.add(ambient);
+    ambientLight = new THREE.HemisphereLight(0x29486c, 0x010207, 0.12);
+    scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xfff4df, 0.58);
+    keyLight = new THREE.DirectionalLight(0xfff4df, 0.48);
     keyLight.position.set(-7.5, 4.5, 8);
     scene.add(keyLight);
 
-    const rim = new THREE.PointLight(0x5bbdd8, 5, 42, 2);
-    rim.position.set(5.5, -2.6, 5);
-    scene.add(rim);
+    rimLight = new THREE.PointLight(0x5bbdd8, 3.8, 42, 2);
+    rimLight.position.set(5.5, -2.6, 5);
+    scene.add(rimLight);
 
     stars = createStarField(isMobile ? 950 : 1850);
     scene.add(stars);
@@ -1018,25 +1055,34 @@ function startCosmicOpening(root) {
       side: THREE.FrontSide,
       uniforms: {
         opacity: { value: 0 },
+        sunDirection: { value: new THREE.Vector3(-1, 0, 0) },
       },
       vertexShader: [
         'varying vec3 vNormal;',
+        'varying vec3 vWorldNormal;',
         'varying vec3 vViewDirection;',
         'void main() {',
         '  vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);',
         '  vNormal = normalize(normalMatrix * normal);',
+        '  vWorldNormal = normalize(mat3(modelMatrix) * normal);',
         '  vViewDirection = normalize(-viewPosition.xyz);',
         '  gl_Position = projectionMatrix * viewPosition;',
         '}',
       ].join('\n'),
       fragmentShader: [
         'uniform float opacity;',
+        'uniform vec3 sunDirection;',
         'varying vec3 vNormal;',
+        'varying vec3 vWorldNormal;',
         'varying vec3 vViewDirection;',
         'void main() {',
         '  float fresnel = pow(1.0 - max(dot(vNormal, vViewDirection), 0.0), 2.7);',
-        '  vec3 atmosphere = vec3(0.16, 0.56, 0.96) * fresnel * 1.45;',
-        '  gl_FragColor = vec4(atmosphere, fresnel * opacity);',
+        '  float daylight = smoothstep(-0.38, 0.42, dot(normalize(vWorldNormal), normalize(sunDirection)));',
+        '  float horizon = mix(0.18, 1.0, daylight);',
+        '  vec3 nightBlue = vec3(0.035, 0.18, 0.46);',
+        '  vec3 dayBlue = vec3(0.18, 0.67, 1.0);',
+        '  vec3 atmosphere = mix(nightBlue, dayBlue, daylight) * fresnel * 1.55;',
+        '  gl_FragColor = vec4(atmosphere, fresnel * horizon * opacity);',
         '}',
       ].join('\n'),
     });
@@ -1475,6 +1521,7 @@ function startCosmicOpening(root) {
     const idleTime = isExploring && finishedAt ? (time - finishedAt) * 0.12 : 0;
     const sceneTime = progress * duration + idleTime;
     const orbitMotionTime = Math.max(0, sceneTime - orbitMotionDelay);
+    const systemShotBlend = cinematicEase(phase(progress, 0.54, 0.82));
 
     if (world) {
       const earthOrbitAngle = initialOrbitAngle
@@ -1524,23 +1571,50 @@ function startCosmicOpening(root) {
     } else {
       const cameraKeys = isMobile ? cameraKeysMobile : cameraKeysDesktop;
       const targetKeys = isMobile ? targetKeysMobile : targetKeysDesktop;
-      sampleVector(cameraKeys, progress, cameraBasePosition);
-      sampleVector(targetKeys, progress, cameraBaseTarget);
+      const systemCameraKeys = isMobile ? systemCameraKeysMobile : systemCameraKeysDesktop;
+      const systemTargetKeys = isMobile ? systemTargetKeysMobile : systemTargetKeysDesktop;
+
+      sampleVector(cameraKeys, progress, cameraBasePosition, cinematicEase);
+      sampleVector(targetKeys, progress, cameraBaseTarget, cinematicEase);
       cameraPosition.copy(earthWorldPosition).add(cameraBasePosition);
       cameraTarget.copy(earthWorldPosition).add(cameraBaseTarget);
-      cameraPosition.x += pointerX * 0.52 * pointerInfluence;
-      cameraPosition.y -= pointerY * 0.34 * pointerInfluence;
-      cameraTarget.x += pointerX * 0.22 * pointerInfluence;
-      cameraTarget.y -= pointerY * 0.16 * pointerInfluence;
+
+      const systemFramingScale = clamp(1.33 / Math.max(camera.aspect, 0.45), 1, 2.15);
+      sampleVector(systemCameraKeys, progress, systemCameraPosition, cinematicEase)
+        .multiplyScalar(systemFramingScale)
+        .add(solarCenter);
+      sampleVector(systemTargetKeys, progress, systemCameraTarget, cinematicEase)
+        .add(solarCenter);
+      cameraPosition.lerp(systemCameraPosition, systemShotBlend);
+      cameraTarget.lerp(systemCameraTarget, systemShotBlend);
+
+      const pointerWeight = 1 - systemShotBlend * 0.78;
+      cameraPosition.x += pointerX * 0.52 * pointerInfluence * pointerWeight;
+      cameraPosition.y -= pointerY * 0.34 * pointerInfluence * pointerWeight;
+      cameraTarget.x += pointerX * 0.22 * pointerInfluence * pointerWeight;
+      cameraTarget.y -= pointerY * 0.16 * pointerInfluence * pointerWeight;
       camera.position.copy(cameraPosition);
       camera.lookAt(cameraTarget);
+      camera.rotation.z += band(progress, 0.34, 0.43, 0.56, 0.66) * -0.012;
     }
 
-    const reveal = ease(phase(progress, 0.015, 0.11));
-    const sunReveal = ease(phase(progress, 0.025, 0.14));
-    const systemReveal = ease(phase(progress, 0.3, 0.68));
-    const orbitReveal = ease(phase(progress, 0.58, 0.78));
-    const warp = band(progress, 0.4, 0.48, 0.6, 0.69);
+    const reveal = easeOutQuint(phase(progress, 0.015, 0.13));
+    const sunReveal = easeOutQuint(phase(progress, 0.14, 0.31));
+    const systemReveal = cinematicEase(phase(progress, 0.32, 0.72));
+    const orbitReveal = cinematicEase(phase(progress, 0.57, 0.78));
+    const warp = band(progress, 0.38, 0.46, 0.58, 0.68);
+    const travelEnergy = band(progress, 0.32, 0.43, 0.64, 0.76);
+    const finaleCalm = ease(phase(progress, 0.78, 0.98));
+
+    const baseFov = isMobile ? 47 : 43;
+    const finaleFov = isMobile ? 42 : 39;
+    const desiredFov = isExploring
+      ? baseFov
+      : baseFov + warp * (isMobile ? 5 : 7) + (finaleFov - baseFov) * finaleCalm;
+    if (Math.abs(camera.fov - desiredFov) > 0.01) {
+      camera.fov = desiredFov;
+      camera.updateProjectionMatrix();
+    }
 
     if (earthSpin) {
       earthSpin.rotation.y = -1.58 + sceneTime * 0.000045;
@@ -1570,9 +1644,19 @@ function startCosmicOpening(root) {
       }
     });
     if (sunLight) {
-      sunLight.intensity = sunReveal * (isMobile ? 310 : 440);
+      sunLight.intensity = sunReveal * (isMobile ? 280 : 390);
     }
     if (sunLensflare) sunLensflare.visible = sunReveal > 0.08;
+
+    if (ambientLight) {
+      ambientLight.intensity = 0.06 + reveal * 0.05 + systemReveal * 0.035;
+    }
+    if (keyLight) {
+      keyLight.intensity = 0.42 * (1 - sunReveal * 0.72) + finaleCalm * 0.05;
+    }
+    if (rimLight) {
+      rimLight.intensity = 3.2 * reveal * (1 - systemReveal * 0.82);
+    }
 
     if (cityMaterial && earthSurface && sunSurface) {
       sunSurface.getWorldPosition(sunWorldPosition);
@@ -1582,6 +1666,9 @@ function startCosmicOpening(root) {
         .sub(earthWorldPosition)
         .normalize();
       cityMaterial.uniforms.sunDirection.value.copy(earthToSunDirection);
+      if (atmosphereMaterial) {
+        atmosphereMaterial.uniforms.sunDirection.value.copy(earthToSunDirection);
+      }
     }
 
     if (moon && moonMaterial) {
@@ -1597,8 +1684,8 @@ function startCosmicOpening(root) {
     }
 
     celestialBodies.forEach((body, index) => {
-      const revealStart = 0.32 + index * 0.035;
-      const bodyReveal = ease(phase(progress, revealStart, revealStart + 0.08));
+      const revealStart = 0.34 + index * 0.027;
+      const bodyReveal = easeOutQuint(phase(progress, revealStart, revealStart + 0.09));
       const orbitAngle = body.userData.orbitPhase
         + orbitMotionTime * body.userData.orbitSpeed;
       const orbitDistance = getOrbitDistance(
@@ -1637,7 +1724,9 @@ function startCosmicOpening(root) {
       zodiacalDustMaterial.opacity = (0.07 + zoomedSystemReveal * 0.11) * systemReveal;
     }
     asteroidMaterials.forEach((material) => {
-      material.opacity = systemReveal;
+      material.opacity = isExploring
+        ? 0.9
+        : Math.min(0.92, travelEnergy + systemReveal * (1 - finaleCalm) * 0.22);
     });
     asteroids.forEach((asteroid) => {
       const phaseOffset = asteroid.userData.driftPhase;
@@ -1665,14 +1754,14 @@ function startCosmicOpening(root) {
 
     if (warpLines && warpMaterial) {
       warpLines.rotation.z = sceneTime * 0.000015;
-      warpLines.scale.z = 1 + warp * 3.2;
-      warpMaterial.opacity = warp * 0.46;
+      warpLines.scale.z = 1 + warp * 3.6;
+      warpMaterial.opacity = warp * 0.5;
     }
 
-    renderer.toneMappingExposure = 1.03 + sunReveal * 0.09 + warp * 0.16;
+    renderer.toneMappingExposure = 0.98 + sunReveal * 0.1 + warp * 0.18 - finaleCalm * 0.04;
     if (bloomPass) {
-      bloomPass.strength = 0.42 + sunReveal * 0.42 + warp * 0.18;
-      bloomPass.radius = 0.36 + sunReveal * 0.08;
+      bloomPass.strength = 0.34 + sunReveal * 0.4 + warp * 0.22 - finaleCalm * 0.08;
+      bloomPass.radius = 0.3 + sunReveal * 0.1;
     }
     updateRipples(time);
     if (composer) {
@@ -1683,11 +1772,13 @@ function startCosmicOpening(root) {
   }
 
   function renderInterface(progress) {
-    const one = band(progress, 0.03, 0.09, 0.16, 0.21);
-    const two = band(progress, 0.22, 0.28, 0.35, 0.4);
-    const three = band(progress, 0.41, 0.47, 0.56, 0.61);
-    const four = band(progress, 0.62, 0.68, 0.76, 0.8);
-    const finaleAmount = ease(phase(progress, 0.84, 0.96));
+    const one = band(progress, 0.035, 0.09, 0.155, 0.205);
+    const two = band(progress, 0.19, 0.245, 0.315, 0.365);
+    const three = band(progress, 0.37, 0.43, 0.545, 0.595);
+    const four = band(progress, 0.59, 0.65, 0.755, 0.805);
+    const finaleAmount = cinematicEase(phase(progress, 0.82, 0.965));
+    const cinemaFrame = 1 - easeOutQuint(phase(progress, 0.74, 0.96));
+    const finaleShade = cinematicEase(phase(progress, 0.78, 0.95));
 
     setLayer(prologues.one, one, (1 - one) * 28, 0.992 + one * 0.008);
     setLayer(prologues.two, two, (1 - two) * 28, 0.992 + two * 0.008);
@@ -1696,15 +1787,17 @@ function startCosmicOpening(root) {
     setLayer(finale, finaleAmount, (1 - finaleAmount) * 34, 0.985 + finaleAmount * 0.015);
 
     finale.style.pointerEvents = finaleAmount > 0.96 ? 'auto' : 'none';
+    root.style.setProperty('--cinema-frame', Math.max(0.08, cinemaFrame).toFixed(3));
+    root.style.setProperty('--finale-shade', finaleShade.toFixed(3));
     progressFill.style.transform = 'scaleX(' + progress.toFixed(4) + ')';
     timeLeft.textContent =
       Math.max(0, Math.ceil((1 - progress) * duration / 1000)) + ' 秒';
 
-    let chapter = '正在唤醒';
-    if (progress >= 0.2) chapter = '迎向太阳光';
-    if (progress >= 0.4) chapter = '穿越行星轨道';
-    if (progress >= 0.61) chapter = '展开太阳系';
-    if (progress >= 0.84) chapter = '已经抵达';
+    let chapter = '地球微光';
+    if (progress >= 0.19) chapter = '掠过昼夜';
+    if (progress >= 0.37) chapter = '穿越内行星';
+    if (progress >= 0.59) chapter = '太阳系展开';
+    if (progress >= 0.82) chapter = '抵达知识宇宙';
 
     chapterName.textContent = chapter;
     if (chapter !== lastChapter) {
