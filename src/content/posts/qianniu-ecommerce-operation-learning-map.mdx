@@ -2,7 +2,7 @@
 title: 从一条商品链接开始：用千牛看懂电商运营完整链路
 description: 从消费者搜索、点击、选规格、付款、收货、售后和评价的经历出发，再看懂千牛与 ERP 后台里的 SKU、价格、订单、物流和运营逻辑。
 date: 2026-07-20T16:07:53+08:00
-updated: 2026-07-21T19:16:14+08:00
+updated: 2026-07-21T21:14:26+08:00
 category: 教程
 tags:
   - 千牛工作台
@@ -33,11 +33,60 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
 
 <UserBackendJourneyMap />
 
+<div class="qeo-lifecycle-map" aria-label="一笔订单从用户需求到运营优化的完整链路">
+  <div class="qeo-lifecycle-map__head">
+    <span>全文主线</span>
+    <strong>后面所有概念，都放回这一笔订单里理解</strong>
+    <p>先看用户怎么一步步购买，再看后台怎样接住每个动作，最后看运营如何通过数据继续改进。</p>
+  </div>
+  <div class="qeo-lifecycle-map__rail">
+    <div><span>01</span><strong>产生需求</strong><small>用户想解决一个问题</small></div>
+    <i>→</i>
+    <div><span>02</span><strong>搜索商品</strong><small>需求变成搜索词</small></div>
+    <i>→</i>
+    <div><span>03</span><strong>看到链接</strong><small>标题与推广带来曝光</small></div>
+    <i>→</i>
+    <div><span>04</span><strong>点击浏览</strong><small>主图、价格和评价建立兴趣</small></div>
+    <i>→</i>
+    <div><span>05</span><strong>选 SKU</strong><small>确认颜色、版本和套装</small></div>
+    <i>→</i>
+    <div><span>06</span><strong>付款下单</strong><small>平台生成正式订单</small></div>
+    <i>→</i>
+    <div><span>07</span><strong>仓库发货</strong><small>ERP、库存和仓库接力</small></div>
+    <i>→</i>
+    <div><span>08</span><strong>收货使用</strong><small>页面承诺接受真实检验</small></div>
+    <i>→</i>
+    <div><span>09</span><strong>售后评价</strong><small>问题和体验留下反馈</small></div>
+    <i>↺</i>
+    <div class="is-loop"><span>10</span><strong>数据优化</strong><small>下一批用户获得更好体验</small></div>
+  </div>
+</div>
+
+<div class="qeo-reading-lenses" aria-label="阅读每个环节时需要关注的四个角度">
+  <div><span>USER</span><strong>用户在做什么</strong><p>先确定他在搜索、比较、付款、等待收货，还是处理问题。</p></div>
+  <div><span>BACKEND</span><strong>后台管理什么</strong><p>再找到标题、SKU、价格、订单、库存、物流或售后单。</p></div>
+  <div><span>OPERATION</span><strong>运营要做什么</strong><p>判断应该上架、推广、履约、处理售后，还是调整页面。</p></div>
+  <div><span>DATA</span><strong>用什么确认结果</strong><p>最后用曝光、点击、成交、退款、利润和评价验证判断。</p></div>
+</div>
+
+这四个角度会贯穿全文。读到任何一个后台术语时，都可以先问：它接住了用户的哪一个动作，又会把结果交给下一个什么环节？
+
 ## 一、消费者为什么能找到、看懂并买下这件商品
 
-这一阶段解决的核心问题是：
+<div class="qeo-chapter-bridge is-blue" aria-label="第一部分与完整链路的关系">
+  <div><span>从哪里开始</span><strong>用户产生需求</strong><p>他还不知道后台有什么商品，只知道自己想解决什么问题。</p></div>
+  <i>→</i>
+  <div class="is-current"><span>这一章讲什么</span><strong>搜索、点击、浏览、选 SKU、付款</strong><p>后台提前准备标题、图片、详情、价格、活动、服务和库存。</p></div>
+  <i>→</i>
+  <div><span>交给下一章</span><strong>一张已付款订单</strong><p>订单会继续进入 ERP、仓库、物流和售后流程。</p></div>
+</div>
 
-> **用户先产生需求，再搜索、比较、点进链接、确认细节、选择 SKU 并付款；后台要提前把标题、商品内容、价格、活动、服务、SKU 和库存准备好。**
+<div class="qeo-stage-lenses" aria-label="第一部分的用户后台运营和数据对应关系">
+  <div><span>用户</span><strong>搜、看、选、付</strong></div>
+  <div><span>后台</span><strong>商品、SKU、价格、库存</strong></div>
+  <div><span>运营</span><strong>上架并改善成交条件</strong></div>
+  <div><span>数据</span><strong>曝光、点击、加购、成交</strong></div>
+</div>
 
 ### 用户先想要什么，再把需求说成搜索词
 
@@ -71,6 +120,8 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
 <Callout title="不是把热门词全部塞进标题">
   用户可能搜索“静音键盘”，但商品本身如果并不静音，就不能为了曝光强行写进去。关键词必须建立在真实商品、真实属性和真实使用场景上，否则后面得到的不是稳定成交，而是退款、差评和纠纷。
 </Callout>
+
+<div class="qeo-handoff"><span>连接 01</span><p><strong>标题、类目和属性先解决“能不能被找到”</strong>；商品获得曝光以后，主图、价格和标识才开始解决“用户愿不愿意点击”。</p></div>
 
 ### 用户看到很多链接，先决定点进哪一个
 
@@ -121,6 +172,8 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
 </div>
 
 同一个“到手更便宜”，可能来自商家让利，也可能来自平台补贴或双方共同承担。运营不能只看用户端显示了多少优惠，还要确认活动是否生效、由谁承担，以及商家最后能结算多少钱。
+
+<div class="qeo-handoff"><span>连接 02</span><p><strong>搜索结果页只负责争取一次点击</strong>；用户进入链接以后，还要继续验证商品是否适合、信息是否可信、最终价格是否值得。</p></div>
 
 ### 用户点进链接，继续验证它值不值得买
 
@@ -175,6 +228,8 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
   <div><span>05</span><strong>配置营销服务</strong><p>设置优惠工具、赠品、淘金币、质保、运费险等成交条件。</p><small>增加购买理由并降低顾虑</small></div>
   <div><span>06</span><strong>发布并真实检查</strong><p>从手机端重新搜索、打开链接、选择 SKU，检查优惠、库存和下单是否正常。</p><small>自己走一遍，才能知道用户能不能顺利买</small></div>
 </div>
+
+<div class="qeo-handoff"><span>连接 03</span><p><strong>商品内容解决“看懂和信任”</strong>；接下来用户必须选中一个具体 SKU，后台才能知道价格、库存以及仓库最终应该发什么。</p></div>
 
 ### 用户选择 SKU 后，还会经过加购、结算和付款
 
@@ -276,7 +331,7 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
 
 消费者只看到便宜了 30 元，但翻到后台，运营还必须追问：**这 30 元到底由谁承担？** 同样是到手 70 元，商家实收、利润和活动价值可能完全不同。
 
-用户在前台只会看到“有货”或“已售罄”，后台却要处理库存怎样占用和释放。部分商品会在买家提交订单后先占用库存，未付款订单也可能暂时锁定数量；重点不是死记某一种设置，而是确认平台库存、ERP 库存和仓库实物能否正确释放与同步，避免用户买到实际无货的商品。
+<div class="qeo-handoff"><span>连接 04</span><p><strong>价格、优惠、SKU 和库存共同决定用户能不能顺利付款</strong>；付款成功后，这些页面信息会被固定进订单，并开始接受仓库和物流的真实检验。</p></div>
 
 <HighlightBox eyebrow="第一阶段" title="用户完成一次下单，后台已经准备好一条真正能购买的商品链接">
   用户从需求和搜索词出发，在很多链接中比较主图、品牌、价格、活动与服务；进入页面后继续看图片、详情、视频、评价和属性；最后选择 SKU，经过加购或立即购买、结算确认并完成付款。后台则提前完成了标题、图片、详情、SKU、价格、活动、服务和库存设置。
@@ -284,9 +339,20 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
 
 ## 二、消费者付款后，后台如何把商品送到他手里
 
-这一阶段解决的核心问题是：
+<div class="qeo-chapter-bridge is-cyan" aria-label="第二部分与完整链路的关系">
+  <div><span>接住上一章</span><strong>用户已经付款</strong><p>平台已经知道用户买了哪个 SKU、付了多少钱、商品要送到哪里。</p></div>
+  <i>→</i>
+  <div class="is-current"><span>这一章讲什么</span><strong>订单、库存、仓库、物流、售后</strong><p>把页面上的购买承诺，变成用户真正收到的商品和服务。</p></div>
+  <i>→</i>
+  <div><span>交给下一章</span><strong>履约结果与用户反馈</strong><p>发货速度、退款原因和评价会变成运营继续优化的数据。</p></div>
+</div>
 
-> **用户看到的是“待发货、运输中、已签收”；后台要让订单信息变成仓库真正发出的包裹。**
+<div class="qeo-stage-lenses" aria-label="第二部分的用户后台运营和数据对应关系">
+  <div><span>用户</span><strong>等待、收货、提出诉求</strong></div>
+  <div><span>后台</span><strong>订单、库存、物流、售后单</strong></div>
+  <div><span>运营</span><strong>保证准确发货并处理异常</strong></div>
+  <div><span>数据</span><strong>发货时效、缺货、退款、评价</strong></div>
+</div>
 
 ### 用户看到物流进度，后台看到一份交付承诺
 
@@ -317,6 +383,33 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
 例如用户买了“粉色蓝牙键盘大礼包”，千牛记录的是这个平台 SKU；ERP 要把它翻译成 HB321 商品、粉色规格、赠品 A 和赠品 B；仓库按清单拣货；物流再把完整包裹送出去。
 
 所以千牛出现“待发货”时，不能只看一个状态。还要继续判断：ERP 是否同步、库存是否足够、仓库是否打单、订单是否被退款拦截、快递是否已经揽收。
+
+<div class="qeo-handoff"><span>连接 05</span><p><strong>订单完成系统接力以后，下一道关口是库存</strong>：系统里有订单，不代表仓库一定有可发的实物。</p></div>
+
+### 有订单，不代表一定能正常发货
+
+用户在前台只看到“有货”或“已售罄”，后台却要处理库存怎样占用、释放、同步和分配。部分订单提交或付款后会占用库存；退款、取消、超时未付款或仓库异常时，库存又需要正确释放。
+
+<div class="qeo-inventory-grid" aria-label="理解电商库存时需要区分的四种状态">
+  <div><span>PHYSICAL</span><strong>实物库存</strong><p>仓库里真实存在多少件商品，是所有库存判断的基础。</p></div>
+  <div><span>AVAILABLE</span><strong>可售库存</strong><p>扣除已占用、冻结或不可售部分后，现在还能继续卖多少。</p></div>
+  <div><span>LOCKED</span><strong>锁定库存</strong><p>已经被订单占用，但还没有最终完成出库或释放的数量。</p></div>
+  <div><span>INBOUND</span><strong>在途库存</strong><p>正在采购、调拨或运输中，尚未真正进入当前可售仓库的数量。</p></div>
+</div>
+
+真正需要确认的不是某个字段名称，而是这条订单能否从平台 SKU 一路对应到 ERP 商品、可售库存和仓库实物：
+
+- 平台 SKU 是否正确映射到 ERP 商品和规格。
+- ERP 是否及时收到订单并正确占用库存。
+- 仓库是否真的有货，组合商品的每个组成部分是否齐全。
+- 退款、取消和拦截发生后，订单与库存状态是否同步恢复。
+- 平台显示已发货时，快递是否已经真实揽收。
+
+<Callout title="库存错误会沿整条链路继续放大">
+  平台库存写错，可能先造成超卖；ERP 映射错误，可能继续扣错商品；仓库按错误代码拣货，又会变成错发、退款和差评。库存不是一个孤立数字，而是商品、订单和实物之间的连接点。
+</Callout>
+
+<div class="qeo-handoff"><span>连接 06</span><p><strong>正常订单继续进入仓库和物流</strong>；一旦用户取消、物流异常、商品损坏或收货后不满意，同一笔订单就会转入售后处理。</p></div>
 
 ### 用户发起诉求，后台先生成一件必须处理的售后任务
 
@@ -413,9 +506,24 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
 
 ## 三、运营要做的，就是把整条链路不断做得更好
 
+<div class="qeo-chapter-bridge is-violet" aria-label="第三部分与完整链路的关系">
+  <div><span>接住前两章</span><strong>用户行为与履约结果</strong><p>搜索、点击、成交、发货、退款和评价已经留下了完整记录。</p></div>
+  <i>→</i>
+  <div class="is-current"><span>这一章讲什么</span><strong>上架、推广、履约、报表和优化</strong><p>把分散数据放回用户路径，找到真正需要调整的环节。</p></div>
+  <i>↺</i>
+  <div><span>重新回到开头</span><strong>改善下一批用户体验</strong><p>有效方案继续保留，无效方案重新分析，再进入下一轮经营。</p></div>
+</div>
+
+<div class="qeo-stage-lenses" aria-label="第三部分的用户后台运营和数据对应关系">
+  <div><span>用户</span><strong>用行为和反馈表达结果</strong></div>
+  <div><span>后台</span><strong>分散在商品、推广、订单和售后</strong></div>
+  <div><span>运营</span><strong>发现问题、调整并验证</strong></div>
+  <div><span>数据</span><strong>店铺、链接、SKU、利润</strong></div>
+</div>
+
 运营不是只负责上架，也不是只负责投推广。更完整地说，运营要把一条链接从“准备上线”一直管到“用户买完以后”：商品有没有上对、用户能不能看到、进来后愿不愿意买、订单能不能顺利发出去、售后和评价有没有暴露新问题。
 
-前两节讲的是用户怎么买、商家怎么发。到了这一节，就是把这些环节连起来看：**哪里表现不好，就回到对应位置调整；调整以后，再看数据有没有真的变好。**
+前两节讲的是用户怎么买、商家怎么发。到了这一节，就是把这些环节重新连起来看：**哪里表现不好，就回到对应位置调整；调整以后，再看下一批用户的行为有没有真的变好。**
 
 <div class="qeo-operation-board" aria-label="运营从商品上架到售后反馈的四类日常工作">
   <div class="qeo-operation-board__center">
@@ -460,6 +568,21 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
 </VisualGrid>
 
 推广还可以发生在直播间、短视频、种草内容和站外渠道。不同渠道面对的人不一样：一条链接搜索推广效果一般，不代表它在直播间也卖不好；反过来，直播间卖得好，也不代表搜索流量一定能接得住。
+
+<div class="qeo-handoff"><span>连接 07</span><p><strong>推广把用户送进链接，但运营工作不会在付款时结束</strong>；成交以后，还要继续确认订单、库存、发货、物流和售后是否兑现了页面承诺。</p></div>
+
+### 成交以后，运营还要盯住订单、库存和售后
+
+一条链接的曝光和成交很好，不代表经营结果一定好。如果订单经常缺货、发货慢、错发、退款或产生差评，前面花钱获得的流量会在后面的交付环节被浪费。
+
+<div class="qeo-ops-follow" aria-label="运营在成交后需要继续跟进的四个环节">
+  <div><span>ORDER</span><strong>订单有没有正常进入 ERP</strong><p>检查漏单、重复单、异常地址、退款拦截和状态不同步。</p><small>对应用户：已经付款，正在等待发货</small></div>
+  <div><span>STOCK</span><strong>库存是否真的足够</strong><p>检查平台、ERP 和仓库库存是否一致，组合商品是否缺少组成部分。</p><small>对应用户：页面显示有货，应该能够正常买到</small></div>
+  <div><span>DELIVERY</span><strong>仓库和物流有没有按时完成</strong><p>检查打单、拣货、出库、揽收、运输和异常件处理。</p><small>对应用户：看到的发货承诺是否兑现</small></div>
+  <div><span>AFTERCARE</span><strong>售后问题有没有真正闭环</strong><p>检查退款、退货、补寄、换货、责任原因和用户最终结果。</p><small>对应用户：问题有没有被解决</small></div>
+</div>
+
+这些环节分别留在千牛、推广后台、ERP、仓库和售后记录里。运营要想看懂整体经营，就必须把它们重新整理到同一条用户路径中。
 
 ### 做 Excel 报表，是为了看清每个店铺、每条链接到底怎么样
 
@@ -656,6 +779,72 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
   ]}
 />
 
+<div class="qeo-chain-table" aria-label="电商完整链路的用户后台运营和数据对照表">
+  <div class="qeo-chain-table__head">
+    <strong>完整链路对照</strong>
+    <span>用户动作</span>
+    <span>后台对象</span>
+    <span>运营动作</span>
+    <span>主要数据</span>
+  </div>
+  <div class="qeo-chain-table__row">
+    <div><span>阶段</span><strong>需求与搜索</strong></div>
+    <div><span>用户动作</span><p>把问题说成搜索词</p></div>
+    <div><span>后台对象</span><p>类目、属性、标题</p></div>
+    <div><span>运营动作</span><p>研究需求并准确上架</p></div>
+    <div><span>主要数据</span><p>搜索词、曝光量</p></div>
+  </div>
+  <div class="qeo-chain-table__row">
+    <div><span>阶段</span><strong>曝光与点击</strong></div>
+    <div><span>用户动作</span><p>比较链接并决定进入</p></div>
+    <div><span>后台对象</span><p>主图、价格、活动、服务</p></div>
+    <div><span>运营动作</span><p>优化展示并获得流量</p></div>
+    <div><span>主要数据</span><p>点击量、点击率</p></div>
+  </div>
+  <div class="qeo-chain-table__row">
+    <div><span>阶段</span><strong>浏览与选购</strong></div>
+    <div><span>用户动作</span><p>看详情、评价并选 SKU</p></div>
+    <div><span>后台对象</span><p>详情、评价、SPU、SKU</p></div>
+    <div><span>运营动作</span><p>解释商品并降低顾虑</p></div>
+    <div><span>主要数据</span><p>访客、加购、咨询</p></div>
+  </div>
+  <div class="qeo-chain-table__row">
+    <div><span>阶段</span><strong>结算与付款</strong></div>
+    <div><span>用户动作</span><p>核对优惠、库存和地址</p></div>
+    <div><span>后台对象</span><p>价格、优惠、库存、订单</p></div>
+    <div><span>运营动作</span><p>确保成交条件真实生效</p></div>
+    <div><span>主要数据</span><p>成交、转化率、实收</p></div>
+  </div>
+  <div class="qeo-chain-table__row">
+    <div><span>阶段</span><strong>订单与发货</strong></div>
+    <div><span>用户动作</span><p>等待商家发出商品</p></div>
+    <div><span>后台对象</span><p>订单、ERP、库存、仓库</p></div>
+    <div><span>运营动作</span><p>跟进同步、拣货和出库</p></div>
+    <div><span>主要数据</span><p>缺货、发货时效</p></div>
+  </div>
+  <div class="qeo-chain-table__row">
+    <div><span>阶段</span><strong>物流与收货</strong></div>
+    <div><span>用户动作</span><p>查看物流并签收使用</p></div>
+    <div><span>后台对象</span><p>物流单、揽收、签收状态</p></div>
+    <div><span>运营动作</span><p>处理异常件和配送问题</p></div>
+    <div><span>主要数据</span><p>揽收时效、异常率</p></div>
+  </div>
+  <div class="qeo-chain-table__row">
+    <div><span>阶段</span><strong>售后与评价</strong></div>
+    <div><span>用户动作</span><p>提出诉求并留下反馈</p></div>
+    <div><span>后台对象</span><p>售后单、退款、评价</p></div>
+    <div><span>运营动作</span><p>解决问题并找到责任方向</p></div>
+    <div><span>主要数据</span><p>退款率、差评原因</p></div>
+  </div>
+  <div class="qeo-chain-table__row is-loop">
+    <div><span>阶段</span><strong>报表与优化</strong></div>
+    <div><span>用户动作</span><p>下一批用户重新进入链路</p></div>
+    <div><span>后台对象</span><p>店铺、链接、SKU、成本</p></div>
+    <div><span>运营动作</span><p>定位问题、修改并再次验证</p></div>
+    <div><span>主要数据</span><p>销售额、利润、趋势</p></div>
+  </div>
+</div>
+
 <div class="qeo-final">
   <span>最终理解</span>
   <h3>先从消费者经历看懂电商，再到后台找到每一步对应的工作</h3>
@@ -664,16 +853,6 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
   </div>
   <p>消费者在前台完成搜、看、选、付、收货和反馈；商家在后台完成商品准备、流量成交、订单履约、售后处理和持续优化。把每个后台模块放回这条用户路径里，复杂术语就不再是需要死记的按钮。</p>
 </div>
-
----
-
-参考资料：
-
-- <a href="https://apps.apple.com/cn/app/%E5%8D%83%E7%89%9B-%E6%B7%98%E5%AE%9D%E5%A4%A9%E7%8C%AB%E5%95%86%E5%AE%B6%E6%A1%8C%E9%9D%A2%E7%89%88/id6449173707?mt=12">千牛淘宝天猫商家桌面版官方产品说明</a>：用于确认千牛覆盖商品、订单物流售后、客服和营销推广等主要方向。
-- <a href="https://sell.amazon.com/zh/learn/seller-university">亚马逊卖家大学</a>：参考商品发布、定价、配送和推广的通用教学结构，不作为淘宝天猫规则依据。
-- <a href="https://help.shopify.com/zh-CN/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports">Shopify 行为报告</a>与<a href="https://help.shopify.com/en/manual/products/analytics">商品库存分析</a>：参考浏览、加购、结算、付款和库存可售天数等通用分析思路。
-
-本文最终仍以淘宝天猫店铺当前后台和官方规则为准，其他平台资料只用于补充通用电商逻辑。
 
 <style>{`
 .qeo-source-note {
@@ -704,6 +883,360 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
   font-size: 0.88rem;
 }
 
+.qeo-lifecycle-map {
+  margin: 1.25rem 0 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(14, 116, 144, 0.2);
+  border-radius: 27px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(56, 189, 248, 0.12), transparent 30%),
+    linear-gradient(145deg, rgba(248, 250, 252, 0.98), rgba(236, 254, 255, 0.82));
+}
+
+.qeo-lifecycle-map__head span,
+.qeo-lifecycle-map__head strong,
+.qeo-lifecycle-map__head p {
+  display: block;
+}
+
+.qeo-lifecycle-map__head span {
+  color: #0891b2;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.qeo-lifecycle-map__head strong {
+  margin-top: 0.25rem;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.qeo-lifecycle-map__head p {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.qeo-lifecycle-map__rail {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  overflow-x: auto;
+  margin-top: 0.85rem;
+  padding: 0.1rem 0 0.35rem;
+  scrollbar-width: thin;
+}
+
+.qeo-lifecycle-map__rail > div {
+  flex: 0 0 8.5rem;
+  min-height: 6.4rem;
+  padding: 0.72rem;
+  border: 1px solid rgba(125, 211, 252, 0.38);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.qeo-lifecycle-map__rail > div.is-loop {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.qeo-lifecycle-map__rail > i {
+  flex: 0 0 auto;
+  color: #0e7490;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.qeo-lifecycle-map__rail span,
+.qeo-lifecycle-map__rail strong,
+.qeo-lifecycle-map__rail small {
+  display: block;
+}
+
+.qeo-lifecycle-map__rail span {
+  color: #0284c7;
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.qeo-lifecycle-map__rail strong {
+  margin-top: 0.25rem;
+  color: #0f172a;
+  font-size: 0.84rem;
+}
+
+.qeo-lifecycle-map__rail small {
+  margin-top: 0.35rem;
+  color: #64748b;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.qeo-reading-lenses,
+.qeo-stage-lenses,
+.qeo-inventory-grid,
+.qeo-ops-follow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 1rem 0 1.35rem;
+}
+
+.qeo-reading-lenses > div,
+.qeo-inventory-grid > div,
+.qeo-ops-follow > div {
+  padding: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.94);
+}
+
+.qeo-reading-lenses span,
+.qeo-reading-lenses strong,
+.qeo-inventory-grid span,
+.qeo-inventory-grid strong,
+.qeo-ops-follow span,
+.qeo-ops-follow strong,
+.qeo-ops-follow small {
+  display: block;
+}
+
+.qeo-reading-lenses span,
+.qeo-inventory-grid span,
+.qeo-ops-follow span {
+  color: #0e7490;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+}
+
+.qeo-reading-lenses strong,
+.qeo-inventory-grid strong,
+.qeo-ops-follow strong {
+  margin-top: 0.24rem;
+  color: #0f172a;
+  font-size: 0.84rem;
+}
+
+.qeo-reading-lenses p,
+.qeo-inventory-grid p,
+.qeo-ops-follow p {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+
+.qeo-ops-follow small {
+  margin-top: 0.55rem;
+  color: #7c3aed;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.qeo-chapter-bridge {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.25fr) auto minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: stretch;
+  margin: 1rem 0 0.8rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 26px;
+  background: linear-gradient(145deg, rgba(239, 246, 255, 0.96), rgba(248, 250, 252, 0.96));
+}
+
+.qeo-chapter-bridge.is-cyan {
+  border-color: rgba(8, 145, 178, 0.2);
+  background: linear-gradient(145deg, rgba(236, 254, 255, 0.96), rgba(248, 250, 252, 0.96));
+}
+
+.qeo-chapter-bridge.is-violet {
+  border-color: rgba(124, 58, 237, 0.18);
+  background: linear-gradient(145deg, rgba(245, 243, 255, 0.96), rgba(248, 250, 252, 0.96));
+}
+
+.qeo-chapter-bridge > div {
+  padding: 0.78rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.qeo-chapter-bridge > div.is-current {
+  border-color: rgba(59, 130, 246, 0.36);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.08);
+}
+
+.qeo-chapter-bridge.is-cyan > div.is-current {
+  border-color: rgba(8, 145, 178, 0.36);
+  box-shadow: 0 10px 25px rgba(8, 145, 178, 0.08);
+}
+
+.qeo-chapter-bridge.is-violet > div.is-current {
+  border-color: rgba(124, 58, 237, 0.32);
+  box-shadow: 0 10px 25px rgba(124, 58, 237, 0.08);
+}
+
+.qeo-chapter-bridge > i {
+  align-self: center;
+  color: #2563eb;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.qeo-chapter-bridge.is-cyan > i {
+  color: #0891b2;
+}
+
+.qeo-chapter-bridge.is-violet > i {
+  color: #7c3aed;
+}
+
+.qeo-chapter-bridge span,
+.qeo-chapter-bridge strong {
+  display: block;
+}
+
+.qeo-chapter-bridge span {
+  color: #64748b;
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.qeo-chapter-bridge strong {
+  margin-top: 0.24rem;
+  color: #0f172a;
+  font-size: 0.84rem;
+}
+
+.qeo-chapter-bridge p {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.qeo-stage-lenses > div {
+  padding: 0.68rem 0.75rem;
+  border-radius: 15px;
+  background: #0f172a;
+}
+
+.qeo-stage-lenses span,
+.qeo-stage-lenses strong {
+  display: block;
+}
+
+.qeo-stage-lenses span {
+  color: #67e8f9;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+.qeo-stage-lenses strong {
+  margin-top: 0.2rem;
+  color: #f8fafc;
+  font-size: 0.78rem;
+}
+
+.qeo-handoff {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+  margin: 1rem 0 1.35rem;
+  padding: 0.78rem 0.9rem;
+  border-left: 4px solid #38bdf8;
+  border-radius: 0 16px 16px 0;
+  background: linear-gradient(90deg, rgba(224, 242, 254, 0.8), rgba(248, 250, 252, 0.72));
+}
+
+.qeo-handoff > span {
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  color: #0369a1;
+  background: #bae6fd;
+  font-size: 0.65rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.qeo-handoff p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.8rem;
+  line-height: 1.65;
+}
+
+.qeo-chain-table {
+  overflow: hidden;
+  margin: 1.3rem 0 1.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 25px;
+  background: rgba(248, 250, 252, 0.96);
+}
+
+.qeo-chain-table__head,
+.qeo-chain-table__row {
+  display: grid;
+  grid-template-columns: 1.05fr repeat(4, minmax(0, 1fr));
+}
+
+.qeo-chain-table__head {
+  color: #e2e8f0;
+  background: linear-gradient(135deg, #0f172a, #155e75);
+}
+
+.qeo-chain-table__head > * {
+  padding: 0.75rem;
+  font-size: 0.72rem;
+}
+
+.qeo-chain-table__head strong {
+  color: #67e8f9;
+}
+
+.qeo-chain-table__row {
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.qeo-chain-table__row.is-loop {
+  background: #ecfdf5;
+}
+
+.qeo-chain-table__row > div {
+  min-width: 0;
+  padding: 0.72rem;
+  border-right: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.qeo-chain-table__row > div:last-child {
+  border-right: 0;
+}
+
+.qeo-chain-table__row span {
+  display: none;
+  color: #0e7490;
+  font-size: 0.63rem;
+  font-weight: 900;
+}
+
+.qeo-chain-table__row strong {
+  color: #0f172a;
+  font-size: 0.78rem;
+}
+
+.qeo-chain-table__row p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
 .qeo-identity-map,
 .qeo-listing-flow,
 .qeo-code-sync,
@@ -713,6 +1246,13 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
 .qeo-operation-board,
 .qeo-aftercare-check,
 .qeo-optimization-loop,
+.qeo-lifecycle-map,
+.qeo-reading-lenses,
+.qeo-chapter-bridge,
+.qeo-stage-lenses,
+.qeo-inventory-grid,
+.qeo-ops-follow,
+.qeo-chain-table,
 .qeo-final {
   margin: 1.2rem 0 1.5rem;
 }
@@ -1879,6 +2419,22 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
 }
 
 @media (max-width: 980px) {
+  .qeo-reading-lenses,
+  .qeo-stage-lenses,
+  .qeo-inventory-grid,
+  .qeo-ops-follow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qeo-chapter-bridge {
+    grid-template-columns: 1fr;
+  }
+
+  .qeo-chapter-bridge > i {
+    justify-self: center;
+    transform: rotate(90deg);
+  }
+
   .qeo-price-board {
     grid-template-columns: 1fr;
   }
@@ -1929,6 +2485,54 @@ import UserBackendJourneyMap from '../../components/UserBackendJourneyMap.astro'
 @media (max-width: 700px) {
   .qeo-source-note {
     grid-template-columns: 1fr;
+  }
+
+  .qeo-lifecycle-map,
+  .qeo-chapter-bridge,
+  .qeo-chain-table {
+    border-radius: 20px;
+  }
+
+  .qeo-reading-lenses,
+  .qeo-stage-lenses,
+  .qeo-inventory-grid,
+  .qeo-ops-follow {
+    grid-template-columns: 1fr;
+  }
+
+  .qeo-handoff {
+    grid-template-columns: 1fr;
+    border-left-width: 3px;
+  }
+
+  .qeo-handoff > span {
+    justify-self: start;
+  }
+
+  .qeo-chain-table__head {
+    display: block;
+    padding: 0.85rem;
+  }
+
+  .qeo-chain-table__head span {
+    display: none;
+  }
+
+  .qeo-chain-table__row {
+    grid-template-columns: 1fr;
+    padding: 0.45rem;
+  }
+
+  .qeo-chain-table__row > div {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: 0.55rem;
+    padding: 0.48rem;
+    border-right: 0;
+  }
+
+  .qeo-chain-table__row span {
+    display: block;
   }
 
   .qeo-identity-map,
