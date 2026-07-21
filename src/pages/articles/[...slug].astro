@@ -40,29 +40,41 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
         </div>
       </aside>
       <aside class="toc-panel">
-        <h2>本文目录</h2>
+        <div class="toc-panel-head">
+          <h2>本文目录</h2>
+          <button
+            class="toc-collapse-button"
+            type="button"
+            aria-controls="article-sidebar"
+            aria-expanded="true"
+            title="收起左侧栏，进入专注阅读"
+            data-article-sidebar-collapse
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m12 5-5 5 5 5"></path>
+            </svg>
+            <span>收起</span>
+          </button>
+        </div>
         {headings.filter((heading) => heading.depth === 2 || heading.depth === 3).map((heading) => (
           <a class={`toc-link toc-link-depth-${heading.depth}`} href={`#${heading.slug}`}>{heading.text}</a>
         ))}
       </aside>
     </div>
     <article class="article-content">
-      <div class="article-reading-toolbar">
+      <div class="article-sidebar-restore" data-article-sidebar-restore-wrap hidden>
         <button
-          class="article-focus-toggle"
+          class="article-sidebar-restore-button"
           type="button"
           aria-controls="article-sidebar"
-          aria-pressed="false"
-          title="隐藏左侧目录，扩大阅读区域"
-          data-article-focus-toggle
+          aria-expanded="false"
+          title="展开左侧目录"
+          data-article-sidebar-restore
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
-            <path d="M16 3h3a2 2 0 0 1 2 2v3"></path>
-            <path d="M8 21H5a2 2 0 0 1-2-2v-3"></path>
-            <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+          <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m8 5 5 5-5 5"></path>
           </svg>
-          <span data-article-focus-label>全屏阅读</span>
+          <span>展开目录</span>
         </button>
       </div>
       {post.data.series && seriesMeta && seriesIndex >= 0 && (
@@ -112,17 +124,26 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
   <script is:inline>
     (function () {
       var shell = document.querySelector('[data-article-shell]');
-      var toggle = document.querySelector('[data-article-focus-toggle]');
-      var label = document.querySelector('[data-article-focus-label]');
+      var collapseButton = document.querySelector('[data-article-sidebar-collapse]');
+      var restoreButton = document.querySelector('[data-article-sidebar-restore]');
+      var restoreWrap = document.querySelector('[data-article-sidebar-restore-wrap]');
       var sidebar = document.getElementById('article-sidebar');
-      if (!shell || !toggle || !label || !sidebar) return;
+      if (!shell || !collapseButton || !restoreButton || !restoreWrap || !sidebar) return;
 
-      toggle.addEventListener('click', function () {
-        var isFocusMode = shell.classList.toggle('is-focus-mode');
+      function setFocusMode(isFocusMode) {
+        shell.classList.toggle('is-focus-mode', isFocusMode);
         sidebar.setAttribute('aria-hidden', isFocusMode ? 'true' : 'false');
-        toggle.setAttribute('aria-pressed', isFocusMode ? 'true' : 'false');
-        toggle.setAttribute('title', isFocusMode ? '显示左侧目录' : '隐藏左侧目录，扩大阅读区域');
-        label.textContent = isFocusMode ? '退出全屏' : '全屏阅读';
+        collapseButton.setAttribute('aria-expanded', isFocusMode ? 'false' : 'true');
+        restoreButton.setAttribute('aria-expanded', isFocusMode ? 'false' : 'true');
+        restoreWrap.hidden = !isFocusMode;
+      }
+
+      collapseButton.addEventListener('click', function () {
+        setFocusMode(true);
+      });
+
+      restoreButton.addEventListener('click', function () {
+        setFocusMode(false);
       });
     })();
   </script>
