@@ -2100,6 +2100,34 @@ html[data-theme='dark'] .report-dashboard {
 }
 
 @media (max-width: 680px) {
+  /* 移动端顶部快捷菜单：避免绝对定位面板被导航区域裁切或向左溢出 */
+  .header-controls {
+    gap: 6px;
+  }
+
+  .theme-menu-panel,
+  .intro-menu-panel,
+  .home-index-panel {
+    position: fixed;
+    right: 12px;
+    top: 64px;
+    width: min(280px, calc(100vw - 24px));
+    max-height: calc(100vh - 90px);
+    overflow-y: auto;
+  }
+
+  .theme-menu-panel,
+  .intro-menu-panel,
+  .home-index-panel {
+    transform: translateY(-8px);
+  }
+
+  .theme-menu.open .theme-menu-panel,
+  .intro-menu.open .intro-menu-panel,
+  .home-index-menu.open .home-index-panel {
+    transform: translateY(0);
+  }
+
   .report-metrics {
     grid-template-columns: 1fr;
     padding: 20px;
