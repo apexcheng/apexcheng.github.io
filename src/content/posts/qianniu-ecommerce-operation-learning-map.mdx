@@ -2,7 +2,7 @@
 title: 从一条商品链接开始：用千牛看懂电商运营完整链路
 description: 从消费者搜索、点击、选规格、付款、收货、售后和评价的经历出发，再看懂千牛与 ERP 后台里的 SKU、价格、订单、物流和运营逻辑。
 date: 2026-07-20T16:07:53+08:00
-updated: 2026-07-21T11:07:00+08:00
+updated: 2026-07-21T14:02:29+08:00
 category: 教程
 tags:
   - 千牛工作台
@@ -68,19 +68,6 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 这一阶段解决的核心问题是：
 
 > **用户只是在前台搜、看、选、付；后台要提前把商品、规格、内容、价格、库存和流量全部准备好。**
-
-### 用户能顺利下单，后台先要完成四次确认
-
-消费者看到的是一个已经可以购买的页面，不会知道它在后台经历过什么。对运营来说，上架不是填完资料后点一下“发布”，而是要确保用户能够找到页面、看懂信息、选中规格，并以正确的价格和库存完成下单。
-
-<div class="qeo-listing-flow" aria-label="商品从准备资料到发布后复查的四阶段流程">
-  <div><span>01</span><strong>准备资料</strong><p>确认类目、品牌、型号、图片、价格、库存和售后政策。</p><small>让用户看到的信息有准确来源</small></div>
-  <div><span>02</span><strong>创建商品</strong><p>选择类目、填写属性、建立 SKU、上传图文并设置价格库存。</p><small>把资料变成用户能浏览和选择的页面</small></div>
-  <div><span>03</span><strong>发布前检查</strong><p>核对信息是否一致、价格是否正确、库存是否可售、页面能否购买。</p><small>避免用户看到错误内容或无法付款</small></div>
-  <div><span>04</span><strong>发布后复查</strong><p>检查搜索展示、移动端页面、优惠是否生效、订单能否正常流转。</p><small>从用户端真实走一次才算完成</small></div>
-</div>
-
-用户在前台只会看到“有货”或“已售罄”，后台却要处理库存怎样占用和释放。部分商品会在买家提交订单后先占用库存，未付款订单也可能暂时锁定数量；重点不是死记某一种设置，而是确认平台库存、ERP 库存和仓库实物能否正确释放与同步，避免用户买到实际无货的商品。
 
 ### 消费者眼里是一件商品，后台里却要拆成多个身份
 
@@ -179,7 +166,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     <div class="qeo-price-plan__head"><span>方案 B</span><strong>优惠＋补贴标识</strong></div>
     <div class="qeo-price-formula is-long"><i>（</i><b>¥109.42</b><i>－</i><b>¥21.90</b><i>）× 80%</i><strong>≈ ¥70</strong></div>
     <dl>
-      <div><dt>销售价</dt><dd>100 元</dd></div>
+      <div><dt>销售价</dt><dd>109.42 元</dd></div>
       <div><dt>活动优惠</dt><dd>21.9 元</dd></div>
       <div><dt>限时补贴</dt><dd>20%</dd></div>
       <div><dt>用户看到</dt><dd>到手 70 元</dd></div>
@@ -193,6 +180,16 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 </Callout>
 
 翻到后台，运营还要确认每一层优惠由谁设置、谁承担，以及商家最后实收多少。在这套经营方式里，**价格计划承担兜底价的角色**：当长期优惠、活动或其他工具异常失效时，用户看到的价格不至于突然恢复成不合理水平。
+
+<div class="qeo-discount-flow" aria-label="商家让利和平台让利">
+  <div><span>商品价格</span><strong>¥100</strong></div>
+  <i>－</i>
+  <div class="is-question"><span>优惠金额</span><strong>¥30</strong><small>商家出？平台出？共同承担？</small></div>
+  <i>＝</i>
+  <div class="is-result"><span>买家到手</span><strong>¥70</strong></div>
+</div>
+
+消费者只看到便宜了 30 元，但翻到后台，运营还必须追问：**这 30 元到底由谁承担？** 同样是到手 70 元，商家实收、利润和活动价值可能完全不同。
 
 ### 用户看到优惠和推荐，后台对应三类不同工作
 
@@ -242,29 +239,18 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 推广还可以发生在直播、短视频、种草内容和站外渠道。不同渠道的人群不同：一个商品搜索推广效果一般，不代表它在直播间也卖不好。
 
-#### 从用户“看见”到“付款”，推广指标要按顺序看
+### 把前面的内容组合起来，才是一条真正能购买的商品链接
 
-<div class="qeo-metric-flow" aria-label="推广从展现到经营结果的指标判断顺序">
-  <div><span>01 · 曝光</span><strong>展现量</strong><p>商品获得了多少次被用户看到的机会。</p><small>先判断有没有流量</small></div>
-  <div><span>02 · 吸引</span><strong>点击率</strong><p><code>点击量 ÷ 展现量</code></p><small>用户看到后愿不愿意进入</small></div>
-  <div><span>03 · 承接</span><strong>转化率</strong><p><code>成交人数或订单数 ÷ 访问人数</code></p><small>进入后愿不愿意购买</small></div>
-  <div><span>04 · 回报</span><strong>ROI</strong><p><code>推广销售额 ÷ 推广花费</code></p><small>每投入 1 元带来多少销售额</small></div>
-  <div><span>05 · 成本</span><strong>花费占比</strong><p><code>推广花费 ÷ 销售额</code></p><small>推广成本占成交金额多少</small></div>
+消费者看到的是一个已经可以购买的页面，不会知道它在后台经历过什么。对运营来说，上架不是填完资料后点一下“发布”，而是把前面认识的商品身份、内容、价格、营销、推广和库存组合起来，并确认用户能够顺利完成购买。
+
+<div class="qeo-listing-flow" aria-label="商品从准备资料到发布后复查的四阶段流程">
+  <div><span>01</span><strong>准备资料</strong><p>确认类目、品牌、型号、图片、价格、库存和售后政策。</p><small>让用户看到的信息有准确来源</small></div>
+  <div><span>02</span><strong>创建商品</strong><p>选择类目、填写属性、建立 SKU、上传图文并设置价格库存。</p><small>把资料变成用户能浏览和选择的页面</small></div>
+  <div><span>03</span><strong>发布前检查</strong><p>核对信息是否一致、价格是否正确、库存是否可售、页面能否购买。</p><small>避免用户看到错误内容或无法付款</small></div>
+  <div><span>04</span><strong>发布后复查</strong><p>检查搜索展示、移动端页面、优惠是否生效、订单能否正常流转。</p><small>从用户端真实走一次才算完成</small></div>
 </div>
 
-<Callout title="ROI 高，不代表一定赚钱">
-  ROI 和花费占比只描述推广投入与销售额的关系。最终是否赚钱，还要继续结合商品毛利、平台费用、物流仓储、售后损失和其他经营成本判断。
-</Callout>
-
-<div class="qeo-discount-flow" aria-label="商家让利和平台让利">
-  <div><span>商品价格</span><strong>¥100</strong></div>
-  <i>－</i>
-  <div class="is-question"><span>优惠金额</span><strong>¥30</strong><small>商家出？平台出？共同承担？</small></div>
-  <i>＝</i>
-  <div class="is-result"><span>买家到手</span><strong>¥70</strong></div>
-</div>
-
-消费者只看到便宜了 30 元，但翻到后台，运营还必须追问：**这 30 元到底由谁承担？** 同样是到手 70 元，商家实收、利润和活动价值可能完全不同。
+用户在前台只会看到“有货”或“已售罄”，后台却要处理库存怎样占用和释放。部分商品会在买家提交订单后先占用库存，未付款订单也可能暂时锁定数量；重点不是死记某一种设置，而是确认平台库存、ERP 库存和仓库实物能否正确释放与同步，避免用户买到实际无货的商品。
 
 <HighlightBox eyebrow="第一阶段" title="消费者只是搜、看、选、付，后台已经完成了一整套配合">
   SPU 和 SKU 决定用户在买什么，商品代码、规格代码与组合商品决定仓库以后要发什么；标题、主图和详情页帮助用户找到并理解商品，价格、营销和推广继续促成付款。
@@ -306,73 +292,11 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 所以千牛出现“待发货”时，不能只看一个状态。还要继续判断：ERP 是否同步、库存是否足够、仓库是否打单、订单是否被退款拦截、快递是否已经揽收。
 
-### 用户支付 70 元，不等于商家收入 70 元
+### 用户发起诉求，后台先生成一件必须处理的售后任务
 
-消费者在收银台只需要确认自己最终支付多少；商家做经营分析时，却必须区分用户付了多少、平台最后结算多少，以及财务按什么金额开票。
+买家可能因为物流、商品质量、活动价格或客服服务发起退款、退货、换货、维修、补寄、投诉或咨询。用户看到的是一次申请，商家后台看到的则是一张会不断改变状态、必须跟进到结束的售后工单。
 
-<div class="qeo-money-grid" aria-label="买家付款、商家实收和开票金额的关系">
-  <div><span>消费者看到</span><strong>买家付款</strong><p>用户在收银台实际支付多少钱。</p><small>商品＋运费－各种优惠</small></div>
-  <div><span>商家后台</span><strong>商家实收</strong><p>平台最后结算给商家的金额。</p><small>受优惠承担、平台费用、退款等影响</small></div>
-  <div><span>财务口径</span><strong>开票金额</strong><p>财务根据开票规则确认的金额。</p><small>不一定等于付款金额或商家实收</small></div>
-</div>
-
-```text
-买家付款金额 ≠ 商家实收金额 ≠ 开票金额
-```
-
-前两者描述的是同一笔交易在消费者和商家两侧的不同视角，开票金额又是另一套财务口径。**利润通常不是千牛里的一个现成功能或字段，而是把收入、成本和经营花费组合后计算出来的结果。**
-
-#### 用户看不到利润，Excel 报表必须自己算
-
-如果用户支付 70 元，其中还包含平台承担或商家承担的优惠，商家最终拿到的钱未必是 70 元。因此，做报表时不能看见“买家付款金额”就直接拿来减成本。
-
-<div class="qeo-profit-board" aria-label="Excel 报表计算利润时的字段选择">
-  <div class="qeo-profit-board__head">
-    <span>REPORT FIELD</span>
-    <strong>从消费者的付款，切换到商家的实际收入</strong>
-    <p>买家付款金额适合看销售规模；计算利润时，收入端应优先确认“商家实收 / 结算金额”。</p>
-  </div>
-  <div class="qeo-profit-field-row">
-    <span>看销售规模</span>
-    <strong>买家付款金额</strong>
-    <p>回答用户一共支付了多少钱。</p>
-  </div>
-  <div class="qeo-profit-field-row">
-    <span>看实际收入</span>
-    <strong>商家实收 / 结算金额</strong>
-    <p>回答平台最终结算给商家多少钱。</p>
-  </div>
-  <div class="qeo-profit-field-row">
-    <span>算简单利润</span>
-    <strong>商家实收－商品成本</strong>
-    <p>只考虑商品进货成本，得到的是较简单的商品利润口径。</p>
-  </div>
-  <div class="qeo-profit-field-row is-real">
-    <span>算真实经营利润</span>
-    <strong>商家实收－商品成本－运营成本与花费</strong>
-    <p>还要扣除推广、平台费用、物流仓储、售后损失及其他运营成本。</p>
-  </div>
-</div>
-
-<div class="qeo-profit-formula" aria-label="简单利润和真实经营利润计算公式">
-  <div>
-    <span>SIMPLE</span>
-    <strong>简单利润</strong>
-    <code>商家实收 − 商品成本</code>
-  </div>
-  <i>≠</i>
-  <div class="is-real">
-    <span>REAL</span>
-    <strong>真实经营利润</strong>
-    <code>商家实收 − 商品成本 − 推广花费 − 平台费用 − 物流仓储 − 售后损失 − 其他运营成本</code>
-  </div>
-</div>
-
-<Callout title="做报表前先确认字段口径">
-  不同平台和导出表的字段名称可能不同。先确认“商家实收 / 结算金额”是否已经扣除了平台费用、退款或其他项目，再决定后续扣减项，避免同一笔成本被重复计算。
-</Callout>
-
-### 用户只说“我想退”，后台先判断货和钱在哪里
+### 后台处理前，先判断货在哪里、钱该怎么处理
 
 消费者遇到未收到货、商品损坏、少配件或不想要了，通常只会选择退款、退货、换货、维修或补寄。翻到后台，售后看起来很复杂，但本质上就是先判断两件事：**货现在在哪里，钱该怎么处理。**
 
@@ -387,9 +311,9 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 | “商品坏了，需要维修” | 商品进入检测或维修流程 | 判断保修范围、周期、费用和寄回方式 |
 | “包裹少了配件，请补寄” | 原商品留在用户手里 | 补发缺少的商品或配件，并防止重复补寄 |
 
-### 用户点下“申请售后”，后台就生成一件必须跟到底的事
+### 判断清楚后，还要把售后任务跟到底
 
-买家可能因为物流、商品质量、活动价格或客服服务发起诉求。用户看到的是一次申请和几条回复，商家后台看到的则是一张会不断改变状态、必须跟进到结束的售后工单。
+确认货物位置、资金处理方式和用户诉求后，卖家才进入回复、协商和实际执行。过程中可能需要买家确认，也可能由平台介入判断，直到退款、物流、商品和用户结果全部对齐。
 
 <DecisionFlow
   title="售后任务如何流转"
@@ -477,17 +401,6 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   <div class="qeo-operation-card is-service"><span>04</span><strong>用户买完又失望</strong><p>回到发货效率、退款原因、客服、售后和评价检查交付。</p></div>
 </div>
 
-### 消费者会比较，所以运营不能关起门来写页面
-
-用户搜索蓝牙键盘时，看到的不只有我们，还会同时比较多个商品的图片、价格、卖点和评价。因此，标题、主图和详情页不能只凭运营自己的感觉写出来。
-
-- **用户的搜索和市场变化**告诉我们：大家正在找什么，需求是在增长还是下降。
-- **用户对竞品的点击、购买和评价**告诉我们：别人正在强调什么，哪些地方让人满意或失望。
-- **商品属性**决定页面能真实地说什么。
-- **商品卖点**负责把真实属性翻译成“为什么适合这个用户”。
-
-比如 GK84 原来的关键词只有“矮轴”“机械键盘”，但消费者可能会搜索“静音键盘”“办公键盘”。运营可以继续研究这些需求词，但是否适合写进标题，仍要看商品真实特征、搜索数据和竞品情况，而不是看到热词就直接堆进去。
-
 ### 数据不是报表，而是问题定位器
 
 消费者的一连串动作进入后台后，会变成展现、点击、访问、成交、退款和评价等数据。运营看数据，不只是统计卖了多少，而是要沿着用户路径找到他在哪一步停下来了。
@@ -500,6 +413,97 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 </div>
 
 这就是运营和“只看销售额”的区别：不是看到结果就结束，而是沿着链路找到问题发生在哪个环节。
+
+### 从用户“看见”到“付款”，推广指标要按顺序看
+
+<div class="qeo-metric-flow" aria-label="推广从展现到经营结果的指标判断顺序">
+  <div><span>01 · 曝光</span><strong>展现量</strong><p>商品获得了多少次被用户看到的机会。</p><small>先判断有没有流量</small></div>
+  <div><span>02 · 吸引</span><strong>点击率</strong><p><code>点击量 ÷ 展现量</code></p><small>用户看到后愿不愿意进入</small></div>
+  <div><span>03 · 承接</span><strong>转化率</strong><p><code>成交人数或订单数 ÷ 访问人数</code></p><small>进入后愿不愿意购买</small></div>
+  <div><span>04 · 回报</span><strong>ROI</strong><p><code>推广销售额 ÷ 推广花费</code></p><small>每投入 1 元带来多少销售额</small></div>
+  <div><span>05 · 成本</span><strong>花费占比</strong><p><code>推广花费 ÷ 销售额</code></p><small>推广成本占成交金额多少</small></div>
+</div>
+
+<Callout title="ROI 高，不代表一定赚钱">
+  ROI 和花费占比只描述推广投入与销售额的关系。最终是否赚钱，还要继续结合商品毛利、平台费用、物流仓储、售后损失和其他经营成本判断。
+</Callout>
+
+### 用户支付 70 元，不等于商家收入 70 元
+
+消费者在收银台只需要确认自己最终支付多少；商家做经营分析时，却必须区分用户付了多少、平台最后结算多少，以及财务按什么金额开票。
+
+<div class="qeo-money-grid" aria-label="买家付款、商家实收和开票金额的关系">
+  <div><span>消费者看到</span><strong>买家付款</strong><p>用户在收银台实际支付多少钱。</p><small>商品＋运费－各种优惠</small></div>
+  <div><span>商家后台</span><strong>商家实收</strong><p>平台最后结算给商家的金额。</p><small>受优惠承担、平台费用、退款等影响</small></div>
+  <div><span>财务口径</span><strong>开票金额</strong><p>财务根据开票规则确认的金额。</p><small>不一定等于付款金额或商家实收</small></div>
+</div>
+
+```text
+买家付款金额 ≠ 商家实收金额 ≠ 开票金额
+```
+
+前两者描述的是同一笔交易在消费者和商家两侧的不同视角，开票金额又是另一套财务口径。**利润通常不是千牛里的一个现成功能或字段，而是把收入、成本和经营花费组合后计算出来的结果。**
+
+#### 用户看不到利润，Excel 报表必须自己算
+
+如果用户支付 70 元，其中还包含平台承担或商家承担的优惠，商家最终拿到的钱未必是 70 元。因此，做报表时不能看见“买家付款金额”就直接拿来减成本。
+
+<div class="qeo-profit-board" aria-label="Excel 报表计算利润时的字段选择">
+  <div class="qeo-profit-board__head">
+    <span>REPORT FIELD</span>
+    <strong>从消费者的付款，切换到商家的实际收入</strong>
+    <p>买家付款金额适合看销售规模；计算利润时，收入端应优先确认“商家实收 / 结算金额”。</p>
+  </div>
+  <div class="qeo-profit-field-row">
+    <span>看销售规模</span>
+    <strong>买家付款金额</strong>
+    <p>回答用户一共支付了多少钱。</p>
+  </div>
+  <div class="qeo-profit-field-row">
+    <span>看实际收入</span>
+    <strong>商家实收 / 结算金额</strong>
+    <p>回答平台最终结算给商家多少钱。</p>
+  </div>
+  <div class="qeo-profit-field-row">
+    <span>算简单利润</span>
+    <strong>商家实收－商品成本</strong>
+    <p>只考虑商品进货成本，得到的是较简单的商品利润口径。</p>
+  </div>
+  <div class="qeo-profit-field-row is-real">
+    <span>算真实经营利润</span>
+    <strong>商家实收－商品成本－运营成本与花费</strong>
+    <p>还要扣除推广、平台费用、物流仓储、售后损失及其他运营成本。</p>
+  </div>
+</div>
+
+<div class="qeo-profit-formula" aria-label="简单利润和真实经营利润计算公式">
+  <div>
+    <span>SIMPLE</span>
+    <strong>简单利润</strong>
+    <code>商家实收 − 商品成本</code>
+  </div>
+  <i>≠</i>
+  <div class="is-real">
+    <span>REAL</span>
+    <strong>真实经营利润</strong>
+    <code>商家实收 − 商品成本 − 推广花费 − 平台费用 − 物流仓储 − 售后损失 − 其他运营成本</code>
+  </div>
+</div>
+
+<Callout title="做报表前先确认字段口径">
+  不同平台和导出表的字段名称可能不同。先确认“商家实收 / 结算金额”是否已经扣除了平台费用、退款或其他项目，再决定后续扣减项，避免同一笔成本被重复计算。
+</Callout>
+
+### 消费者会比较，所以运营不能关起门来写页面
+
+用户搜索蓝牙键盘时，看到的不只有我们，还会同时比较多个商品的图片、价格、卖点和评价。因此，标题、主图和详情页不能只凭运营自己的感觉写出来。
+
+- **用户的搜索和市场变化**告诉我们：大家正在找什么，需求是在增长还是下降。
+- **用户对竞品的点击、购买和评价**告诉我们：别人正在强调什么，哪些地方让人满意或失望。
+- **商品属性**决定页面能真实地说什么。
+- **商品卖点**负责把真实属性翻译成“为什么适合这个用户”。
+
+比如 GK84 原来的关键词只有“矮轴”“机械键盘”，但消费者可能会搜索“静音键盘”“办公键盘”。运营可以继续研究这些需求词，但是否适合写进标题，仍要看商品真实特征、搜索数据和竞品情况，而不是看到热词就直接堆进去。
 
 ### 找到用户停下的位置，还要验证改动是否真的有效
 
