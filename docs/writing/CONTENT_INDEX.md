@@ -41,7 +41,7 @@
 | `src/content/posts/excel-intermediate-functions-case-guide.mdx` | `教程` | Excel 中级函数案例教程，使用编码日期表、运营明细表和七天销量表，讲解 18 个文本日期、动态数组与批量计算函数 | 写 Excel 动态数组、日期周期、LET、BYROW、MAP、REDUCE 和减少下拉公式的教学文章时参考 |
 | `src/content/posts/qianniu-ecommerce-operation-learning-map.mdx` | `教程` | 从一条商品链接出发，把 SKU、价格体系、营销推广、订单 ERP、物流售后、评价与运营优化串成完整电商经营链路，并补充面对陌生后台功能的学习方法 | 写千牛工作台、电商运营入门、新人培训、商品从上架到售后的全链路教学文章时参考 |
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
-| `src/content/posts/ecommerce-review-analysis-agent-workflow.mdx` | `实践` | 电商评价分析 Agent 实战，覆盖首次评价与追加评价统一口径、Python 事实包、日报与周期对比、钉钉文档和群消息发送、发送成功后的分表状态回写 | 写电商评价分析、钉钉 AI 表格、事实包、Agent 报告、Webhook 交付闭环和业务状态回写时参考 |
+| `src/content/posts/ecommerce-review-analysis-agent-workflow.mdx` | `实践` | 电商评价分析 Agent 整页视觉案例，以滚动叙事方式展示两张评价表统一、Python 事实包、日报与周期对比、钉钉交付闸门和发送成功后的分表状态回写 | 写电商评价分析、钉钉 AI 表格、事实包、Agent 报告、Webhook 交付闭环、状态回写和整页数据故事时参考 |
 | `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `实践` | 泰国、马来西亚、菲律宾雅仓与深圳跨境仓的仓储网络，覆盖双平台共享库存、跨国家隔离和本地优先发货 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
 | `src/content/posts/ai-product-image-agent-workflow.mdx` | `实践` | AI 商品图工作流重构复盘，覆盖从逐张临场决策到规划前移、Art Direction、同组差异化、纯执行生成、人工审查和规则单一来源 | 写商品图生成、Agent 工作流重构、视觉规划、Prompt 设计和执行边界时参考 |
 | `src/content/posts/ai-product-image-workflow-in-practice.mdx` | `实践` | 以一次脱敏后的真实新品项目为背景，讲清输入资料、四个 Skill 分工、竞品链接抓取、可选评价分析、Art Direction 前移、真实产品图边界、纯执行生成和定向整改 | 写 AI 商品图真实使用流程、Skill 协作、竞品分析、视觉规划、补拍边界和单图执行时参考 |
