@@ -28,8 +28,8 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
 ---
 
 <SiteLayout title={post.data.title} active={post.data.series ? 'series' : 'articles'} description={post.data.description}>
-  <main class="page-content article-shell">
-    <div class="article-sidebar">
+  <main class="page-content article-shell" data-article-shell>
+    <div class="article-sidebar" id="article-sidebar">
       <aside class="article-info desktop-article-info">
         <h2>文章信息</h2>
         <p>{post.data.category}</p>
@@ -47,6 +47,24 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
       </aside>
     </div>
     <article class="article-content">
+      <div class="article-reading-toolbar">
+        <button
+          class="article-focus-toggle"
+          type="button"
+          aria-controls="article-sidebar"
+          aria-pressed="false"
+          title="隐藏左侧目录，扩大阅读区域"
+          data-article-focus-toggle
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+            <path d="M16 3h3a2 2 0 0 1 2 2v3"></path>
+            <path d="M8 21H5a2 2 0 0 1-2-2v-3"></path>
+            <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+          </svg>
+          <span data-article-focus-label>全屏阅读</span>
+        </button>
+      </div>
       {post.data.series && seriesMeta && seriesIndex >= 0 && (
         <a class="article-series-kicker" href={withBase(`/series/${post.data.series}/`)}>
           <span>系列 · {seriesMeta.title}</span>
@@ -91,4 +109,21 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
     </article>
   </main>
   <script src="/scripts/active-toc.js" defer></script>
+  <script is:inline>
+    (function () {
+      var shell = document.querySelector('[data-article-shell]');
+      var toggle = document.querySelector('[data-article-focus-toggle]');
+      var label = document.querySelector('[data-article-focus-label]');
+      var sidebar = document.getElementById('article-sidebar');
+      if (!shell || !toggle || !label || !sidebar) return;
+
+      toggle.addEventListener('click', function () {
+        var isFocusMode = shell.classList.toggle('is-focus-mode');
+        sidebar.setAttribute('aria-hidden', isFocusMode ? 'true' : 'false');
+        toggle.setAttribute('aria-pressed', isFocusMode ? 'true' : 'false');
+        toggle.setAttribute('title', isFocusMode ? '显示左侧目录' : '隐藏左侧目录，扩大阅读区域');
+        label.textContent = isFocusMode ? '退出全屏' : '全屏阅读';
+      });
+    })();
+  </script>
 </SiteLayout>

@@ -1615,6 +1615,14 @@ h3 {
   grid-template-columns: 260px minmax(0, 1fr);
 }
 
+.article-shell.is-focus-mode {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.article-shell.is-focus-mode .article-sidebar {
+  display: none;
+}
+
 .article-sidebar {
   display: grid;
   gap: 18px;
@@ -1698,6 +1706,57 @@ h3 {
   min-width: 0;
   overflow-wrap: break-word;
   padding: 48px;
+}
+
+.article-reading-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: -16px 0 18px;
+}
+
+.article-focus-toggle {
+  align-items: center;
+  background: color-mix(in srgb, var(--paper) 88%, var(--blue) 12%);
+  border: 1px solid color-mix(in srgb, var(--line) 72%, var(--blue) 28%);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 720;
+  gap: 7px;
+  padding: 8px 13px;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.article-focus-toggle svg {
+  height: 16px;
+  width: 16px;
+}
+
+.article-focus-toggle[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--blue) 12%, var(--paper));
+  border-color: color-mix(in srgb, var(--blue) 42%, var(--line));
+  color: var(--blue);
+}
+
+@media (hover: hover) {
+  .article-focus-toggle:hover {
+    background: color-mix(in srgb, var(--blue) 10%, var(--paper));
+    border-color: color-mix(in srgb, var(--blue) 42%, var(--line));
+    color: var(--blue);
+    transform: translateY(-1px);
+  }
+}
+
+.article-focus-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--blue) 34%, transparent);
+  outline-offset: 3px;
 }
 
 .article-content h1 {
@@ -3147,6 +3206,10 @@ html[data-theme='dark'] .report-dashboard {
 
   .article-content {
     padding: 26px;
+  }
+
+  .article-reading-toolbar {
+    margin: -4px 0 16px;
   }
 
   .series-card {
