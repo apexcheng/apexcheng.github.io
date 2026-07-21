@@ -463,12 +463,22 @@ function startCosmicOpening(root) {
       const y = positions.getY(index);
       const z = positions.getZ(index);
       const distortion = 1
-        + Math.sin((index + 1) * (1.37 + variant * 0.23)) * 0.13
-        + Math.cos((index + 3) * (0.73 + variant * 0.17)) * 0.08;
+        + Math.sin(
+          x * (3.7 + variant * 0.41)
+          + y * (5.1 + variant * 0.29)
+          + z * (4.3 + variant * 0.37)
+        ) * 0.13
+        + Math.cos(
+          x * (7.3 + variant * 0.31)
+          - y * (3.9 + variant * 0.43)
+          + z * (5.7 + variant * 0.23)
+        ) * 0.08;
       positions.setXYZ(index, x * distortion, y * distortion, z * distortion);
     }
 
+    positions.needsUpdate = true;
     geometry.computeVertexNormals();
+    geometry.computeBoundingSphere();
     return geometry;
   }
 
@@ -834,6 +844,9 @@ function startCosmicOpening(root) {
         flatShading: true,
         transparent: true,
         opacity: 0,
+        side: THREE.FrontSide,
+        depthTest: true,
+        depthWrite: true,
       }));
     });
 
@@ -1624,7 +1637,7 @@ function startCosmicOpening(root) {
       zodiacalDustMaterial.opacity = (0.07 + zoomedSystemReveal * 0.11) * systemReveal;
     }
     asteroidMaterials.forEach((material) => {
-      material.opacity = systemReveal * 0.78;
+      material.opacity = systemReveal;
     });
     asteroids.forEach((asteroid) => {
       const phaseOffset = asteroid.userData.driftPhase;
