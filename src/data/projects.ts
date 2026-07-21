@@ -28,4 +28,12 @@ export const projects = [
     tags: ['Playwright', 'Browser'],
     tone: 'green',
   },
+  {
+    title: '电商评价分析 Agent',
+    type: 'AI Agent',
+    description: '将评价采集、责任分析、报告生成和钉钉交付串成自动化闭环，帮助运营从问题发现到处理跟进。',
+    tags: ['Agent', 'Python', '钉钉 AI 表格', '自动化'],
+    tone: 'orange',
+    url: 'https://github.com/apexcheng/review-analysis-reporter-skill',
+  },
 ];
