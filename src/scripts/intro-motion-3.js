@@ -118,6 +118,8 @@ function startCosmicOpening(root) {
   let cameraOrbitVelocityPitch = 0;
   let cameraOrbitVelocityYaw = 0;
   let freeCameraActive = false;
+  let isPinchingScene = false;
+  let pinchLastDistance = 0;
   let lastRenderAt = 0;
   let suppressDoubleClickUntil = 0;
   let randomSeed = 20260717;
@@ -126,6 +128,7 @@ function startCosmicOpening(root) {
   const orbitMotionDelay = 1800;
   const maximumFreeCameraDistance = 720;
   const wheelTravelSensitivity = 0.024;
+  const touchPinchSensitivity = 2.2;
   const zoomAnchorLockDuration = 220;
   const earthOrbitDefinition = {
     name: 'earth',
@@ -144,6 +147,7 @@ function startCosmicOpening(root) {
   const asteroids = [];
   const asteroidMaterials = [];
   const zoomTargets = [];
+  const activeTouchPointers = new Map();
   const pressedMoveKeys = new Set();
   const moveKeyCodes = new Set([
     'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'ShiftLeft', 'ShiftRight',
@@ -1341,6 +1345,102 @@ function startCosmicOpening(root) {
     } catch (error) {}
   }
 
+  function getPinchMetrics() {
+    if (activeTouchPointers.size < 2) return null;
+    const [first, second] = Array.from(activeTouchPointers.values());
+    return {
+      clientX: (first.clientX + second.clientX) * 0.5,
+      clientY: (first.clientY + second.clientY) * 0.5,
+      distance: Math.hypot(
+        second.clientX - first.clientX,
+        second.clientY - first.clientY
+      ),
+    };
+  }
+
+  function beginScenePinch() {
+    endSceneDrag(null, true);
+    clearZoomAnchor();
+    activateFreeCamera();
+    const pinch = getPinchMetrics();
+    if (!pinch) return;
+
+    isPinchingScene = true;
+    pinchLastDistance = pinch.distance;
+    root.classList.add('is-scene-dragging');
+
+    for (const pointerId of activeTouchPointers.keys()) {
+      try {
+        root.setPointerCapture(pointerId);
+      } catch (error) {}
+    }
+  }
+
+  function moveScenePinch(event) {
+    if (event.pointerType !== 'touch' || !activeTouchPointers.has(event.pointerId)) {
+      return false;
+    }
+
+    activeTouchPointers.set(event.pointerId, {
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
+    if (!isPinchingScene) return false;
+
+    const pinch = getPinchMetrics();
+    if (!pinch) return true;
+    const pinchDelta = (pinchLastDistance - pinch.distance) * touchPinchSensitivity;
+    pinchLastDistance = pinch.distance;
+    if (Math.abs(pinchDelta) < 0.05) return true;
+
+    const now = performance.now();
+    resolveZoomAnchor(pinch, now);
+    moveCameraTowardZoomAnchor(pinchDelta);
+    suppressDoubleClickUntil = now + 480;
+    renderScene(currentProgress, now);
+    scheduleFrame();
+    return true;
+  }
+
+  function resumeSingleTouchDrag() {
+    if (activeTouchPointers.size !== 1) return;
+    const [pointerId, pointer] = activeTouchPointers.entries().next().value;
+    beginSceneDrag({
+      pointerId,
+      pointerType: 'touch',
+      button: 0,
+      shiftKey: false,
+      ctrlKey: false,
+      metaKey: false,
+      clientX: pointer.clientX,
+      clientY: pointer.clientY,
+    });
+  }
+
+  function endSceneTouch(event, cancelled) {
+    if (event.pointerType !== 'touch' || !activeTouchPointers.has(event.pointerId)) {
+      return false;
+    }
+
+    activeTouchPointers.delete(event.pointerId);
+    if (!isPinchingScene) return false;
+
+    if (activeTouchPointers.size >= 2) {
+      const pinch = getPinchMetrics();
+      pinchLastDistance = pinch ? pinch.distance : 0;
+      return true;
+    }
+
+    isPinchingScene = false;
+    pinchLastDistance = 0;
+    clearZoomAnchor();
+    root.classList.remove('is-scene-dragging');
+
+    if (!cancelled) resumeSingleTouchDrag();
+    scheduleFrame();
+    return true;
+  }
+
   function moveSceneDrag(event) {
     if (!isDraggingScene || event.pointerId !== sceneDragPointerId) return false;
 
@@ -1431,6 +1531,20 @@ function startCosmicOpening(root) {
     enterExploreMode(true);
     if (!isExploring) return;
     event.preventDefault();
+
+    if (event.pointerType === 'touch') {
+      activeTouchPointers.set(event.pointerId, {
+        clientX: event.clientX,
+        clientY: event.clientY,
+      });
+      if (activeTouchPointers.size === 1) {
+        beginSceneDrag(event);
+      } else {
+        beginScenePinch();
+      }
+      return;
+    }
+
     beginSceneDrag(event);
   }
 
@@ -2005,6 +2119,10 @@ function startCosmicOpening(root) {
   exitExploreButton.addEventListener('click', leaveExploreMode);
 
   window.addEventListener('pointermove', (event) => {
+    if (moveScenePinch(event)) {
+      event.preventDefault();
+      return;
+    }
     if (moveSceneDrag(event)) {
       event.preventDefault();
       return;
@@ -2029,11 +2147,16 @@ function startCosmicOpening(root) {
   });
 
   window.addEventListener('pointerup', (event) => {
+    if (endSceneTouch(event, false)) {
+      event.preventDefault();
+      return;
+    }
     if (isDraggingScene) event.preventDefault();
     endSceneDrag(event, false);
   }, { passive: false });
 
   window.addEventListener('pointercancel', (event) => {
+    if (endSceneTouch(event, true)) return;
     endSceneDrag(event, true);
   });
 
