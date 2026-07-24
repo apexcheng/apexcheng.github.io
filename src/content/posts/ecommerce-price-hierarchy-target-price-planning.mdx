@@ -1,14 +1,14 @@
 ---
 title: 电商价格体系：优惠叠加优先级与价盘控制逻辑
-description: 从一口价、单品宝、活动标价、活动让利、优惠券到价盘，讲清当前标价谁生效、哪些优惠会继续叠加，以及消费者最终到手价是怎么计算出来的。
+description: 先分清活动、单品宝和营销工具让利（非活动让利），再讲当前标价怎么生效、活动如何校验、优惠怎样覆盖叠加、消费端到手价如何检查，以及平时价和活动价如何保持一致。
 date: 2026-07-24T14:11:50+08:00
-updated: 2026-07-24T16:05:20+08:00
+updated: 2026-07-24T16:19:11+08:00
 category: 教程
 tags:
   - 电商运营
   - 价格体系
   - 营销活动
-minutes: 14
+minutes: 16
 featured: false
 draft: false
 private: false
@@ -21,119 +21,170 @@ import VisualGrid from '../../components/VisualGrid.astro';
 import HighlightBox from '../../components/HighlightBox.astro';
 import DecisionFlow from '../../components/DecisionFlow.astro';
 
-电商后台的价格看起来很乱，是因为几种完全不同的工具经常同时出现：有的负责**改变当前标价**，有的负责**在标价上继续优惠**，还有一个价盘负责**把价格补到目标到手价**。
+电商价格容易混乱，不是因为减法难算，而是后台同时存在几类作用完全不同的工具：**单品宝负责设置平时标价，活动负责活动标价和活动让利，营销工具让利则会在当前生效价格上继续扣减。**
 
-先不要背活动名称。只要先分清下面三件事，整套价格逻辑就容易理解：
-
-1. 现在到底是哪一个标价生效；
-2. 生效标价上还会继续叠加哪些优惠；
-3. 前面的优惠做完后，价盘还需要补多少。
+前面全部计算完成后，价盘还可能再补一个“限时立减”，把消费者到手价补到目标价格。
 
 <div class="epp-boundary">
   <span>阅读边界</span>
-  <p>本文整理的是实际运营中的价格理解方法。超级立减、日常大促、双11 / 618的让利比例仅使用文中的案例数字，具体活动要求、计价口径和优惠叠加规则以当前平台后台为准。</p>
+  <p>本文整理的是实际运营中的价格理解方法。超级立减、平时大促、双11 / 618的让利比例使用文中的案例数字，具体活动要求、优惠计入口径和叠加规则，以当前平台后台显示为准。</p>
 </div>
 
 <VisualGrid columns={4}>
-  <MetricCard label="基础价格" value="一口价" detail="商品上架时填写的基础价格。" />
-  <MetricCard label="当前标价" value="只生效一个" detail="活动标价生效时，会覆盖单品宝价格。" tone="cyan" />
-  <MetricCard label="后续优惠" value="可以叠加" detail="活动让利后，普通优惠券仍可能继续扣减。" tone="violet" />
-  <MetricCard label="价盘作用" value="向下补差" detail="高于目标价就补，已经更低则保持原价。" tone="green" />
+  <MetricCard label="平时标价" value="单品宝" detail="没有活动时，用来设置商品当前销售价格。" />
+  <MetricCard label="活动价格" value="标价＋让利" detail="活动期间使用活动标价，并按要求设置活动让利。" tone="cyan" />
+  <MetricCard label="后续优惠" value="营销工具让利" detail="优惠券、单品立减等可能在活动让利后继续扣减。" tone="violet" />
+  <MetricCard label="最后兜底" value="价盘补差" detail="当前价格高于目标价时，再补限时立减。" tone="green" />
 </VisualGrid>
 
-## 先看一个商品怎样从200元变成80元
+## 一、先分清三个价格概念
 
-假设一个商品上架时，一口价设置为200元。
+在计算价格之前，先看每种工具到底负责什么。这里先以一口价200元的商品为例。
 
-<div class="epp-price-story" aria-label="商品价格从一口价到活动叠加优惠的变化过程">
-  <div>
-    <span>01 · 商品上架</span>
-    <strong>一口价 200元</strong>
-    <p>没有其他价格工具时，消费者看到200元。</p>
-    <small>消费端：200元</small>
-  </div>
-  <div>
-    <span>02 · 设置单品宝</span>
-    <strong>单品宝价 100元</strong>
-    <p>单品宝改变当前销售标价，消费者看到100元。</p>
-    <small>消费端：100元</small>
-  </div>
-  <div>
-    <span>03 · 再加普通券</span>
-    <strong>100－10＝90元</strong>
-    <p>优惠券不改变标价，而是在100元基础上继续扣10元。</p>
-    <small>消费端：优惠前100，到手90</small>
-  </div>
-  <div class="is-activity">
-    <span>04 · 参加活动</span>
-    <strong>100－10－10＝80元</strong>
-    <p>活动标价100元覆盖单品宝；活动让利10元后，普通券还能再减10元。</p>
-    <small>消费端：活动价100，到手80</small>
-  </div>
-</div>
-
-第四步最容易算错。活动开始后，不是“单品宝100元再参加活动”，而是：
-
-```text
-活动标价100元             ← 覆盖单品宝价格
-－ 活动让利10元
-－ 普通优惠券10元          ← 继续叠加
-＝ 消费者最终到手80元
-```
-
-<Callout title="为什么做活动时一般不要继续加券">
-  活动让利后还能继续叠加普通优惠券。原本活动计划卖90元，如果还保留10元优惠券，消费者最终会以80元购买。因此做活动时通常要检查并暂停不需要继续叠加的优惠券，避免实际到手价低于计划。
+<Callout title="一口价是商品上架时的基础价格">
+  商品没有设置单品宝、没有参加活动，也没有其他价格工具时，消费者看到的就是一口价。例如一口价200元，消费端显示200元。
 </Callout>
 
-## 先分清：改标价和减优惠不是一回事
-
-整套价格工具可以先分成两类。
-
-<VisualGrid columns={2}>
-  <FeatureCard title="先决定当前标价" meta="PRICE" description="消费者页面上先显示哪个基础价格，后续优惠都从这个价格开始计算。">
+<VisualGrid columns={3}>
+  <FeatureCard title="单品宝" meta="改标价" description="负责设置商品平时使用的当前标价，不是在一口价基础上再减一次钱。">
     <ul>
-      <li>没有其他工具时：一口价生效。</li>
-      <li>设置单品宝时：单品宝价格生效。</li>
-      <li>参加活动时：活动标价覆盖单品宝价格。</li>
+      <li>一口价200元。</li>
+      <li>单品宝设置100元。</li>
+      <li>消费者看到100元。</li>
     </ul>
   </FeatureCard>
-  <FeatureCard title="再从标价继续扣减" meta="DISCOUNT" description="这些工具一般不负责重新设置标价，而是在当前生效标价上继续让利。">
+  <FeatureCard title="活动" meta="活动标价＋活动让利" description="活动期间使用一套活动价格，由活动标价和活动让利两部分组成。">
     <ul>
-      <li>活动让利。</li>
+      <li>活动标价100元。</li>
+      <li>活动让利10元。</li>
+      <li>活动自身价格90元。</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="营销工具让利（非活动让利）" meta="继续扣减" description="不负责决定活动标价，而是在当前生效价格上继续减钱。">
+    <ul>
       <li>普通公开优惠券。</li>
       <li>单品立减。</li>
-      <li>价盘补充的限时立减。</li>
+      <li>店铺宝等营销工具。</li>
     </ul>
   </FeatureCard>
 </VisualGrid>
 
-没有活动时，可以先用这条公式理解：
+### 单品宝：改变平时显示的标价
 
-<div class="epp-formula" aria-label="没有活动时的最终到手价计算">
+商品上架时一口价是200元，设置单品宝100元后，消费者页面显示100元。
+
+```text
+一口价：200元
+单品宝价格：100元
+消费者看到：100元
+```
+
+这里不是“200－100＝100元”，而是单品宝把当前销售标价直接设置成100元。
+
+### 活动：由活动标价和活动让利组成
+
+活动不是只填写一个优惠金额，而是先设置活动标价，再设置活动让利。
+
+<div class="epp-formula is-activity" aria-label="活动标价和活动让利组成活动自身价格">
+  <div><span>活动标价</span><strong>100元</strong></div>
+  <i>－</i>
+  <div><span>活动让利</span><strong>10元</strong></div>
+  <i>＝</i>
+  <div class="is-result"><span>活动自身价格</span><strong>90元</strong></div>
+</div>
+
+参加活动后，活动标价会覆盖单品宝价格。此时消费端不是先读取单品宝100元，再额外套一层活动标价，而是直接使用活动标价作为新的计算起点。
+
+### 营销工具让利（非活动让利）：在生效价格上继续扣减
+
+优惠券、单品立减等营销工具让利，和活动让利不是同一个概念。
+
+没有活动时，它们可以在单品宝价格上继续扣减：
+
+<div class="epp-formula is-simple" aria-label="单品宝价格叠加普通优惠券">
   <div><span>单品宝价格</span><strong>100元</strong></div>
   <i>－</i>
   <div><span>普通优惠券</span><strong>10元</strong></div>
-  <i>－</i>
-  <div><span>价盘补差</span><strong>按需补充</strong></div>
   <i>＝</i>
-  <div class="is-result"><span>最终到手价</span><strong>实际结果</strong></div>
+  <div class="is-result"><span>消费者到手价</span><strong>90元</strong></div>
 </div>
 
-有活动时，则改成：
+有活动时，营销工具让利还可能在活动让利后继续扣减：
 
-<div class="epp-formula is-activity" aria-label="有活动时的最终到手价计算">
+<div class="epp-formula is-activity" aria-label="活动让利后继续叠加营销工具让利">
   <div><span>活动标价</span><strong>100元</strong></div>
   <i>－</i>
   <div><span>活动让利</span><strong>10元</strong></div>
   <i>－</i>
   <div><span>普通优惠券</span><strong>10元</strong></div>
+  <i>＝</i>
+  <div class="is-result"><span>消费者到手价</span><strong>80元</strong></div>
+</div>
+
+<HighlightBox eyebrow="先记住" title="活动让利和营销工具让利是两层优惠">
+  活动让利属于活动本身；普通优惠券、单品立减等属于营销工具让利（非活动让利）。活动让利结束后，营销工具让利仍可能继续叠加，所以活动报名价格不一定等于消费者最终到手价。
+</HighlightBox>
+
+## 二、价格到底从哪里开始生效
+
+计算最终到手价，第一步不是把所有优惠全部列出来，而是先确认：**当前到底是哪一个标价生效。**
+
+<VisualGrid columns={2}>
+  <FeatureCard title="没有活动时" meta="日常价格" description="有单品宝就从单品宝价格开始，没有单品宝才从一口价开始。">
+    <p><strong>单品宝价格－营销工具让利－价盘补差</strong></p>
+  </FeatureCard>
+  <FeatureCard title="有活动时" meta="活动价格" description="活动标价覆盖单品宝，先扣活动让利，再扣营销工具让利。">
+    <p><strong>活动标价－活动让利－营销工具让利－价盘补差</strong></p>
+  </FeatureCard>
+</VisualGrid>
+
+### 没有活动时
+
+```text
+有单品宝：从单品宝价格开始
+没有单品宝：从一口价开始
+```
+
+例如：
+
+<div class="epp-formula" aria-label="没有活动时的价格生效顺序">
+  <div><span>单品宝价格</span><strong>100元</strong></div>
+  <i>－</i>
+  <div><span>营销工具让利</span><strong>优惠券10元</strong></div>
   <i>－</i>
   <div><span>价盘补差</span><strong>按需补充</strong></div>
   <i>＝</i>
   <div class="is-result"><span>最终到手价</span><strong>实际结果</strong></div>
 </div>
 
-## 普惠卷后价：普通消费者单独买一件要多少钱
+### 有活动时
+
+```text
+活动标价生效
+单品宝价格被覆盖
+```
+
+例如：
+
+<div class="epp-formula is-activity" aria-label="有活动时的价格生效顺序">
+  <div><span>活动标价</span><strong>100元</strong></div>
+  <i>－</i>
+  <div><span>活动让利</span><strong>10元</strong></div>
+  <i>－</i>
+  <div><span>营销工具让利</span><strong>优惠券10元</strong></div>
+  <i>－</i>
+  <div><span>价盘补差</span><strong>按需补充</strong></div>
+  <i>＝</i>
+  <div class="is-result"><span>最终到手价</span><strong>实际结果</strong></div>
+</div>
+
+这一步解决的是“从哪个价格开始算”，还没有进入活动报名要求。
+
+## 三、活动怎么设置和校验
+
+活动通常不只要求设置活动标价和活动让利，还会校验普惠卷后价以及最低让利比例。
+
+### 普惠卷后价是什么
 
 **普惠卷后价**可以理解为：没有特殊人群或渠道限制的普通消费者，单独购买一件商品时，通过大众都能使用的公开优惠可以买到的价格。
 
@@ -145,7 +196,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 新客礼金：10元
 ```
 
-这里的普惠卷后价是90元，而不是80元：
+普惠卷后价是90元，不是80元：
 
 <div class="epp-formula is-simple" aria-label="普惠卷后价计算示例">
   <div><span>单品宝价格</span><strong>100元</strong></div>
@@ -155,9 +206,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   <div class="is-result"><span>普惠卷后价</span><strong>90元</strong></div>
 </div>
 
-新客礼金只有部分新客可以使用，不是所有普通消费者都能获得，所以不计入这个案例的普惠卷后价。
-
-本文后面的价盘计算，也主要关注大众消费者能够使用的公开优惠：
+新客礼金只有部分新客可以使用，不属于所有普通消费者都能稳定获得的公开优惠，因此不计入这个案例。
 
 | 优惠类型 | 是否计入本文的公开优惠计算 | 原因 |
 | --- | --- | --- |
@@ -168,13 +217,13 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 | 会员专享券 | 不计入 | 有会员身份限制 |
 | 平台红包等特殊优惠 | 不计入 | 不是稳定的大众公开优惠 |
 
-<Callout title="具体仍以平台后台为准">
-  不同活动可能对普惠卷后价、历史最低价和优惠计入口径有更细的规则。正式报名活动时，应以后台展示的校验价格和优惠明细为准。
+<Callout title="具体口径以报名后台为准">
+  不同活动可能对普惠卷后价、历史最低价格和优惠计入方式有更细的规则。正式报名活动时，应以后台展示的校验价格和优惠明细为准。
 </Callout>
 
-## 活动要求：既要看普惠卷后价，也要达到让利比例
+### 活动同时要满足两项要求
 
-假设现在有一个商品：
+假设商品当前是：
 
 ```text
 一口价：200元
@@ -183,23 +232,12 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 普惠卷后价：90元
 ```
 
-报名活动时，通常需要同时满足两类要求：
+报名活动时，通常需要同时满足：
 
-1. 活动自身让利后的价格不能高于普惠卷后价；
-2. 活动让利金额不能小于活动要求的最低比例。
+1. 活动标价减去活动让利后的价格，不能高于普惠卷后价；
+2. 活动让利金额不能低于活动规定的最低比例。
 
-为了避免把概念混在一起，本文把两个价格分开：
-
-<VisualGrid columns={2}>
-  <FeatureCard title="活动自身校验价" meta="CHECK" description="活动标价减去活动让利，用来检查活动本身是否满足报名要求。">
-    <p><strong>活动标价－活动让利</strong></p>
-  </FeatureCard>
-  <FeatureCard title="消费者最终到手价" meta="FINAL" description="活动自身校验通过后，还可能继续叠加普通优惠券和价盘限时立减。">
-    <p><strong>活动标价－活动让利－优惠券－价盘补差</strong></p>
-  </FeatureCard>
-</VisualGrid>
-
-按照这次案例使用的让利比例：
+按照本文使用的案例比例：
 
 | 活动级别 | 活动标价 | 最低让利要求 | 活动自身校验价 | 与普惠卷后价90元比较 |
 | --- | ---: | ---: | ---: | --- |
@@ -207,127 +245,14 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 | 平时大促 | 100元 | 不少于12% | 100－12＝**88元** | 不高于90元，满足 |
 | 双11 / 618 | 100元 | 不少于15% | 100－15＝**85元** | 不高于90元，满足 |
 
-也可以把活动自身允许的最高价格理解成：
-
 <div class="epp-rule">
   <span>活动自身校验价</span>
   <strong>取“普惠卷后价”和“最低让利比例计算价”中更低的一项</strong>
 </div>
 
-但活动让利后，普通优惠券还可能继续叠加。如果10元优惠券没有关闭，消费者最终看到的是：
+这里的90元、88元和85元，都是**活动标价减去活动让利后的活动自身价格**，还不是消费者最终支付价格。后面如果继续叠加营销工具让利或价盘补差，实际到手价还会继续下降。
 
-<div class="epp-activity-results" aria-label="不同活动叠加10元优惠券后的最终到手价">
-  <div>
-    <span>超级立减</span>
-    <strong>90－10＝80元</strong>
-    <p>活动自身校验价90元，再叠加10元普通券。</p>
-  </div>
-  <div>
-    <span>平时大促</span>
-    <strong>88－10＝78元</strong>
-    <p>活动要求让利12元，普通券继续再减10元。</p>
-  </div>
-  <div class="is-major">
-    <span>双11 / 618</span>
-    <strong>85－10＝75元</strong>
-    <p>活动要求更低，叠加优惠券后最终可能卖到75元。</p>
-  </div>
-</div>
-
-这正是做活动前必须检查优惠券的原因：**活动报名价格算对了，不代表消费者最终支付价格就不会继续下降。**
-
-## 想让平时价和活动价一致，就要反推标价
-
-实际运营中，经常不希望商品一参加大促就比平时再便宜很多，而是希望：
-
-```text
-平时到手价：90元
-活动到手价：90元
-```
-
-如果仍然沿用前面的价格结构：
-
-```text
-单品宝价格：100元
-普通公开优惠券：10元
-普惠卷后价：90元
-```
-
-平时卖90元没有问题。但双11 / 618要求至少让利15%时，如果活动标价仍然设置为100元，活动自身校验价只能做到：
-
-```text
-100 × 85%＝85元
-```
-
-也就是说，平时卖90元，活动时会变成85元，比平时再低5元。
-
-如果希望活动仍然卖90元，不能继续使用100元作为活动标价，而要从目标到手价反推标价。
-
-<div class="epp-rule is-green">
-  <span>反推活动标价</span>
-  <strong>目标到手价 ÷（1－活动让利比例）</strong>
-</div>
-
-以目标到手价90元、活动要求让利15%为例：
-
-```text
-活动标价＝90 ÷ 85%
-        ≈105.88元
-```
-
-对应的活动让利金额是：
-
-```text
-105.88 × 15%
-≈15.88元
-```
-
-所以活动期间可以这样设置：
-
-<div class="epp-formula is-activity" aria-label="目标到手90元时反推双11活动标价">
-  <div><span>活动标价</span><strong>105.88元</strong></div>
-  <i>－</i>
-  <div><span>活动让利15%</span><strong>15.88元</strong></div>
-  <i>＝</i>
-  <div class="is-result"><span>活动到手价</span><strong>90元</strong></div>
-</div>
-
-平时也把单品宝价格设置为105.88元，再使用15.88元普通公开优惠券：
-
-<div class="epp-formula is-simple" aria-label="平时使用单品宝和优惠券保持到手90元">
-  <div><span>单品宝价格</span><strong>105.88元</strong></div>
-  <i>－</i>
-  <div><span>普通公开优惠券</span><strong>15.88元</strong></div>
-  <i>＝</i>
-  <div class="is-result"><span>普惠卷后价</span><strong>90元</strong></div>
-</div>
-
-这样，平时和活动期间都能保持90元：
-
-| 销售场景 | 价格计算 | 最终到手价 |
-| --- | --- | ---: |
-| 平时销售 | 单品宝105.88－优惠券15.88 | **90元** |
-| 双11 / 618 | 活动标价105.88－活动让利15.88 | **90元** |
-
-<Callout title="活动期间要关闭平时使用的优惠券">
-  平时的15.88元优惠券如果在活动期间继续生效，会在活动让利后再次扣减：105.88－15.88－15.88＝74.12元。原本计划活动卖90元，最终却会卖到74.12元。因此这套做法的前提是：平时用优惠券做到90元，活动期间关闭这张券，改由活动让利做到90元。
-</Callout>
-
-不同活动要求的让利比例不同，目标到手价同样是90元时，对应标价也不同：
-
-| 活动最低让利要求 | 标价反推 | 对应标价 | 对应让利金额 |
-| --- | --- | ---: | ---: |
-| 10% | 90 ÷ 90% | 100元 | 10元 |
-| 12% | 90 ÷ 88% | 约102.27元 | 约12.27元 |
-| 15% | 90 ÷ 85% | 约105.88元 | 约15.88元 |
-
-所以真正的价格规划不是所有活动都统一填写100元，而是：**先确定最终想卖多少钱，再根据每一级活动要求的让利比例，反推对应的活动标价和让利金额。**
-
-实际设置时，还要根据平台允许的小数位、四舍五入方式和后台校验结果，调整标价与让利金额。
-
-## 报名活动前，先完成价格校验
-
-上面的普惠卷后价、最低让利比例和标价反推，都是**报名活动之前**需要完成的工作。这个阶段解决的不是消费者最后付多少钱，而是：活动价格能不能通过校验，以及活动期间准备使用哪一套价格。
+### 报名活动前的设置顺序
 
 <DecisionFlow
   title="报名活动前的价格设置顺序"
@@ -344,29 +269,55 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     },
     {
       label: 'Step 3',
-      title: '根据目标活动价反推标价',
-      description: '希望活动仍卖90元时，用目标价除以让利后的剩余比例，反推出活动标价和让利金额。',
+      title: '设置活动标价和活动让利',
+      description: '活动自身价格既不能高于普惠卷后价，也必须达到活动最低让利比例。',
     },
     {
       label: 'Step 4',
-      title: '校验活动自身价格',
-      description: '活动标价减去活动让利后，既不能高于普惠卷后价，也必须达到活动最低让利要求。',
-    },
-    {
-      label: 'Step 5',
-      title: '决定活动期间是否关闭平时优惠券',
-      description: '活动让利后普通券还能继续叠加；不想继续降价时，要提前暂停对应优惠券。',
+      title: '检查活动期间的营销工具让利',
+      description: '优惠券、单品立减等可能继续叠加；不希望继续降价时，要提前暂停对应工具。',
     },
   ]}
 />
 
-<Callout title="报名校验和最终到手价是两件事">
-  活动自身价格通过报名校验，只代表活动标价和活动让利符合要求。活动上线后，优惠券、单品立减和价盘仍可能继续改变消费者最终支付价格，因此还要做一次消费端检查。
-</Callout>
+## 四、覆盖、叠加和优先级怎么生效
 
-## 多个活动同时存在时，谁会生效
+这一部分是整套价格体系最核心的规则。三个词分别代表三种完全不同的关系。
 
-如果多个活动同时在线，消费端采用最高级别活动的活动标价和活动让利，低级别活动不再重复叠加。
+<VisualGrid columns={3}>
+  <FeatureCard title="覆盖" meta="谁决定标价" description="活动标价生效后，单品宝价格不再作为活动期间的计算起点。" />
+  <FeatureCard title="叠加" meta="还能不能继续减" description="活动让利后，符合条件的营销工具让利仍可能继续扣减。" />
+  <FeatureCard title="优先级" meta="多个活动谁生效" description="多个活动同时在线时，只使用最高级别活动的标价和让利。" />
+</VisualGrid>
+
+<HighlightBox eyebrow="核心口诀" title="活动之间看优先级，活动与单品宝看覆盖，活动让利与营销工具让利看叠加">
+  先用优先级选出当前生效活动，再用活动标价覆盖单品宝，最后继续检查优惠券、单品立减等营销工具让利是否叠加。
+</HighlightBox>
+
+### 覆盖：活动标价覆盖单品宝价格
+
+例如：
+
+```text
+单品宝价格：100元       ← 活动期间不生效
+活动标价：105元         ← 当前生效标价
+活动让利：15元
+```
+
+活动期间从105元开始计算，不是先使用单品宝100元，再额外扣活动让利。
+
+### 叠加：营销工具让利可能继续扣减
+
+```text
+活动标价：100元
+－活动让利：10元
+－普通优惠券：10元
+＝消费者到手：80元
+```
+
+所以做活动时一般要检查平时在线的优惠券和单品立减。原本活动计划卖90元，继续叠加10元普通券后，实际会卖到80元。
+
+### 优先级：多个活动只生效最高级别
 
 <div class="epp-priority" aria-label="多个活动同时存在时的生效优先级">
   <div class="is-top"><span>优先级 1</span><strong>双11 / 618特大活动</strong><p>生效后，使用该活动的标价和活动让利。</p></div>
@@ -374,113 +325,192 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   <div><span>优先级 3</span><strong>超级立减</strong><p>没有更高等级活动时生效。</p></div>
 </div>
 
-因此，同时设置单品宝、超级立减、平时大促和双11时，可以这样理解：
+多个活动同时在线时，低级别活动不重复扣减：
 
 ```text
 双11 / 618活动标价与让利生效
 平时大促不再重复生效
 超级立减不再重复生效
 单品宝价格被活动标价覆盖
-普通优惠券仍可能继续叠加
+营销工具让利仍可能继续叠加
 ```
 
-<HighlightBox eyebrow="优先级" title="标价只选一个，优惠还可能继续往下减">
-  最高级别活动决定当前活动标价和活动让利；单品宝与低级别活动不重复生效。但普通优惠券、单品立减等工具可能继续叠加，所以最终到手价仍要单独核对。
-</HighlightBox>
+### 价盘：在最后补到目标到手价
 
-## 价盘：不是最低售价，而是目标到手价兜底
+价盘不是最低售价保护，而是**目标到手价兜底**。系统先计算活动让利和营销工具让利，再判断是否需要补一个“限时立减”。
 
-价盘计划设置的是一个**目标到手价**。它会先看活动让利、普通公开优惠券、单品立减等公开优惠计算后的价格。
-
-- 当前到手价高于价盘目标：补一个“限时立减”，把价格补到目标价；
-- 当前到手价等于价盘目标：不再补；
-- 当前到手价已经低于价盘目标：保持更低价格，不会拉回目标价。
-
-价盘补差可以简化成：
+- 当前公开优惠后价格高于价盘目标：补足差额；
+- 当前价格等于价盘目标：不再补；
+- 当前价格已经低于价盘目标：保持更低价格，不会拉回目标价。
 
 <div class="epp-rule is-green">
   <span>限时立减金额</span>
   <strong>＝ 当前公开优惠后到手价－价盘目标价；结果小于0时按0计算</strong>
 </div>
 
-假设价盘目标统一设置为80元，常见情况如下。
+假设价盘目标是80元：
 
-<div class="epp-case-grid" aria-label="价盘目标80元时的五种常见价格场景">
+<div class="epp-case-grid" aria-label="价盘目标80元时的常见价格场景">
   <div>
-    <span>场景一 · 有活动，没有优惠券</span>
-    <strong>活动90元，补10元</strong>
-    <p>活动标价100－活动让利10＝90元。价盘目标80元，因此补“限时立减10元”，最终80元。</p>
+    <span>有活动，没有营销工具让利</span>
+    <strong>当前90元，补10元</strong>
+    <p>活动标价100－活动让利10＝90元，价盘补限时立减10元，最终80元。</p>
   </div>
   <div>
-    <span>场景二 · 单品宝加普通券</span>
-    <strong>日常90元，补10元</strong>
-    <p>单品宝100－优惠券10＝90元。高于价盘80元，因此再补10元，最终80元。</p>
-  </div>
-  <div>
-    <span>场景三 · 活动加10元券</span>
+    <span>活动叠加10元优惠券</span>
     <strong>已经80元，不再补</strong>
-    <p>活动标价100－活动让利10－优惠券10＝80元，已经达到价盘目标。</p>
+    <p>活动100－活动让利10－优惠券10＝80元，已经达到价盘目标。</p>
   </div>
   <div>
-    <span>场景四 · 活动加5元券</span>
-    <strong>当前85元，补5元</strong>
-    <p>活动标价100－活动让利10－优惠券5＝85元，价盘再补“限时立减5元”，最终80元。</p>
-  </div>
-  <div class="is-wide">
-    <span>场景五 · 没有活动、单品宝和优惠券</span>
-    <strong>一口价200元，补120元</strong>
-    <p>当前只有一口价200元，价盘目标为80元，因此补“限时立减120元”，消费者最终到手80元。</p>
+    <span>活动叠加15元优惠</span>
+    <strong>已经75元，仍卖75元</strong>
+    <p>当前价格低于价盘80元，价盘不会把价格重新抬高。</p>
   </div>
   <div class="is-low">
-    <span>特殊情况 · 已经低于价盘</span>
-    <strong>当前75元，仍然卖75元</strong>
-    <p>价盘只负责向下补到目标价，不是最低售价保护。已有优惠做到75元时，不会把价格重新抬回80元。</p>
+    <span>没有活动、单品宝和营销工具让利</span>
+    <strong>一口价200元，补120元</strong>
+    <p>当前只有一口价200元，价盘补限时立减120元，最终80元。</p>
   </div>
 </div>
 
-## 活动上线后，再检查消费者最终到手价
+## 五、怎么检查消费端最终到手价
+
+活动报名通过，只能说明活动标价和活动让利符合报名条件，不能证明消费者最后一定按这个价格付款。
+
+消费端检查的目标是把所有实际生效价格重新算一遍。
 
 <DecisionFlow
-  title="商品最终到手价检查顺序"
+  title="消费者最终到手价检查顺序"
   items={[
     {
       label: 'Step 1',
-      title: '先找当前生效标价',
-      description: '没有工具看一口价；有单品宝看单品宝价；有活动时看最高级别活动标价。',
+      title: '确认消费端当前显示标价',
+      description: '看页面显示的是一口价、单品宝价格还是活动标价。',
     },
     {
       label: 'Step 2',
-      title: '确认哪个活动生效',
-      description: '双11 / 618优先于平时大促，平时大促优先于超级立减；低级活动不重复叠加。',
+      title: '确认实际生效活动',
+      description: '多个活动在线时，确认最高级别活动的标价和活动让利是否生效。',
     },
     {
       label: 'Step 3',
-      title: '列出并计算还能叠加的优惠',
-      description: '把普通优惠券和单品立减继续扣除，算出价盘介入前的当前到手价。',
+      title: '检查营销工具让利',
+      description: '核对普通优惠券、单品立减等是否仍然在线并继续扣减。',
     },
     {
       label: 'Step 4',
-      title: '计算价盘需要补多少',
-      description: '当前公开优惠后的价格高于价盘目标就补差，已经等于或低于目标则不处理。',
+      title: '检查价盘限时立减',
+      description: '查看价盘是否补出限时立减，以及补差金额是否符合目标价。',
     },
     {
       label: 'Step 5',
-      title: '核对消费者最终到手价',
-      description: '到消费端或价格预览中确认最终价格符合计划，并且没有低于利润底线。',
+      title: '核对最终支付价格',
+      description: '在消费端或价格预览中确认最终到手价符合计划，没有低于利润底线。',
     },
   ]}
 />
 
-活动上线后，不能只看后台某一个活动设置页面。还要去消费端或价格预览中确认：
+例如消费端显示：
 
-- 当前显示的是一口价、单品宝价格还是活动标价；
-- 实际生效的是哪一级活动；
-- 优惠券是否仍在继续叠加；
-- 价盘补出的“限时立减”是多少；
-- 最终到手价有没有低于利润底线。
+```text
+活动标价：100元
+活动让利：10元
+普通优惠券：5元
+限时立减：5元
+最终到手价：80元
+```
 
-<HighlightBox eyebrow="最终结论" title="先确定标价，再叠加优惠，最后由价盘补差">
-  一口价是基础；单品宝和活动负责决定当前标价，活动标价会覆盖单品宝；最高级别活动覆盖低级活动；活动让利后，普通优惠券仍可能继续叠加；价盘只在最终公开优惠价格高于目标价时补充限时立减，已经更低则保持更低价格。
+反向核算：
+
+<div class="epp-formula is-activity" aria-label="消费端最终到手价核算示例">
+  <div><span>活动标价</span><strong>100元</strong></div>
+  <i>－</i>
+  <div><span>活动让利</span><strong>10元</strong></div>
+  <i>－</i>
+  <div><span>营销工具让利</span><strong>优惠券5元</strong></div>
+  <i>－</i>
+  <div><span>价盘限时立减</span><strong>5元</strong></div>
+  <i>＝</i>
+  <div class="is-result"><span>最终到手价</span><strong>80元</strong></div>
+</div>
+
+<Callout title="不要只看活动报名页面">
+  活动报名价只是其中一层。消费端最终价格还要继续检查营销工具让利和价盘限时立减，否则很容易出现“后台计划卖90元，消费者实际只付80元”的情况。
+</Callout>
+
+## 六、想让平时价和活动价一致，就要反推标价
+
+实际运营中，经常希望平时价格和活动价格保持一致，例如：
+
+```text
+平时到手价：90元
+活动到手价：90元
+```
+
+假设平时使用：
+
+```text
+单品宝价格：100元
+普通公开优惠券：10元
+普惠卷后价：90元
+```
+
+如果双11 / 618要求至少让利15%，活动标价仍然填写100元，那么活动自身价格只能做到：
+
+```text
+100 × 85%＝85元
+```
+
+平时卖90元，活动却会卖85元。想让活动仍卖90元，就不能继续固定使用100元标价，而要从目标到手价反推活动标价。
+
+<div class="epp-rule is-green">
+  <span>反推活动标价</span>
+  <strong>目标到手价 ÷（1－活动最低让利比例）</strong>
+</div>
+
+目标到手价90元、活动要求让利15%时：
+
+```text
+活动标价＝90 ÷ 85%
+        ≈105.88元
+```
+
+对应活动让利金额：
+
+```text
+105.88 × 15%
+≈15.88元
+```
+
+平时和活动分别这样设置：
+
+<VisualGrid columns={2}>
+  <FeatureCard title="平时销售" meta="单品宝＋营销工具让利" description="单品宝105.88元，使用15.88元普通公开优惠券。">
+    <p><strong>105.88－15.88＝90元</strong></p>
+  </FeatureCard>
+  <FeatureCard title="双11 / 618" meta="活动标价＋活动让利" description="活动标价105.88元，按15%让利约15.88元。">
+    <p><strong>105.88－15.88＝90元</strong></p>
+  </FeatureCard>
+</VisualGrid>
+
+<Callout title="活动期间必须关闭平时使用的优惠券">
+  平时的15.88元优惠券如果在活动期间继续生效，会在活动让利后再次扣减：105.88－15.88－15.88＝74.12元。原本计划活动卖90元，最终却会卖到74.12元。
+</Callout>
+
+不同活动要求对应的反推标价不同：
+
+| 活动最低让利要求 | 目标到手价 | 标价反推 | 对应标价 | 对应让利金额 |
+| --- | ---: | --- | ---: | ---: |
+| 10% | 90元 | 90 ÷ 90% | 100元 | 10元 |
+| 12% | 90元 | 90 ÷ 88% | 约102.27元 | 约12.27元 |
+| 15% | 90元 | 90 ÷ 85% | 约105.88元 | 约15.88元 |
+
+真正的价格规划不是所有活动都统一填写100元，而是：**先确定最终想卖多少钱，再根据活动最低让利比例，分别反推活动标价和让利金额。**
+
+实际设置时，还要根据平台允许的小数位、四舍五入方式和后台校验结果调整。
+
+<HighlightBox eyebrow="最终结论" title="先认识工具，再判断生效关系，最后检查真实到手价">
+  单品宝负责平时标价；活动由活动标价和活动让利组成；优惠券、单品立减等属于营销工具让利（非活动让利），可能在活动后继续叠加。多个活动先按优先级选出一个，活动标价再覆盖单品宝，价盘最后按目标到手价补差。想让平时价和活动价一致，则根据活动让利比例反推标价，并在活动期间关闭不需要继续叠加的平时优惠。
 </HighlightBox>
 
 想继续了解商品价格如何与标题、主图、SKU、订单和售后连成完整经营链路，可以阅读：[从一条商品链接开始：用千牛看懂电商运营完整链路](/articles/qianniu-ecommerce-operation-learning-map/)。
@@ -511,71 +541,6 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   margin: 0.35rem 0 0;
   color: var(--muted);
   font-size: 0.92rem;
-}
-
-.epp-price-story {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.8rem;
-  margin: 1.2rem 0 1.5rem;
-}
-
-.epp-price-story > div,
-.epp-activity-results > div,
-.epp-case-grid > div {
-  padding: 1rem;
-  border: 1px solid var(--line);
-  border-radius: calc(var(--radius) + 4px);
-  background: var(--paper);
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
-}
-
-.epp-price-story > div.is-activity {
-  border-color: rgba(109, 40, 217, 0.38);
-  background: linear-gradient(145deg, var(--paper), rgba(109, 40, 217, 0.08));
-}
-
-.epp-price-story span,
-.epp-price-story strong,
-.epp-price-story small,
-.epp-activity-results span,
-.epp-activity-results strong,
-.epp-case-grid span,
-.epp-case-grid strong {
-  display: block;
-}
-
-.epp-price-story span,
-.epp-activity-results span,
-.epp-case-grid span {
-  color: var(--cyan);
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.epp-price-story strong,
-.epp-activity-results strong,
-.epp-case-grid strong {
-  margin-top: 0.4rem;
-  color: var(--ink);
-  font-size: 1.04rem;
-}
-
-.epp-price-story p,
-.epp-activity-results p,
-.epp-case-grid p {
-  margin: 0.55rem 0 0;
-  color: var(--muted);
-  font-size: 0.86rem;
-}
-
-.epp-price-story small {
-  margin-top: 0.7rem;
-  padding-top: 0.65rem;
-  border-top: 1px solid var(--line-soft);
-  color: var(--green);
-  font-size: 0.76rem;
-  font-weight: 750;
 }
 
 .epp-formula {
@@ -663,18 +628,6 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   font-size: 1rem;
 }
 
-.epp-activity-results {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
-  margin: 1rem 0 1.5rem;
-}
-
-.epp-activity-results > div.is-major {
-  border-color: rgba(109, 40, 217, 0.4);
-  background: linear-gradient(145deg, var(--paper), rgba(109, 40, 217, 0.09));
-}
-
 .epp-priority {
   display: grid;
   gap: 0.65rem;
@@ -720,8 +673,12 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   margin: 1rem 0 1.5rem;
 }
 
-.epp-case-grid > div.is-wide {
-  border-color: rgba(37, 99, 235, 0.32);
+.epp-case-grid > div {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--paper);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
 }
 
 .epp-case-grid > div.is-low {
@@ -729,11 +686,30 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   background: rgba(15, 118, 110, 0.07);
 }
 
-@media (max-width: 860px) {
-  .epp-price-story {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.epp-case-grid span,
+.epp-case-grid strong {
+  display: block;
+}
 
+.epp-case-grid span {
+  color: var(--cyan);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.epp-case-grid strong {
+  margin-top: 0.4rem;
+  color: var(--ink);
+  font-size: 1.04rem;
+}
+
+.epp-case-grid p {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+@media (max-width: 860px) {
   .epp-priority > div {
     grid-template-columns: 80px 1fr;
   }
@@ -744,8 +720,6 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 }
 
 @media (max-width: 640px) {
-  .epp-price-story,
-  .epp-activity-results,
   .epp-case-grid {
     grid-template-columns: 1fr;
   }
