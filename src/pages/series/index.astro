@@ -6,163 +6,562 @@ import { withBase } from '../../utils/paths';
 
 const posts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private);
 const seriesList = seriesMetaList
-  .map((series) => ({
-    ...series,
-    postCount: posts.filter((post) => post.data.series === series.id).length,
-  }))
+  .map((series) => {
+    const seriesPosts = posts
+      .filter((post) => post.data.series === series.id)
+      .sort((a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0));
+
+    return {
+      ...series,
+      posts: seriesPosts,
+      postCount: seriesPosts.length,
+      totalMinutes: seriesPosts.reduce((sum, post) => sum + post.data.minutes, 0),
+    };
+  })
   .filter((series) => series.postCount > 0)
   .sort((a, b) => a.order - b.order);
 ---
 
 <SiteLayout title="系列" active="series">
   <main class="page-content series-page">
-    <section class="series-hero">
-      <p class="eyebrow">系列</p>
-      <h1 class="page-title">按一条路线，把一个主题读完整</h1>
-      <p class="page-lead">有些内容不适合拆成互不相关的单篇文章。这里把连续主题整理成清晰的阅读路线。</p>
-    </section>
+    <div class="series-workspace">
+      <div class="series-main">
+        <section class="series-hero">
+          <p class="eyebrow">系列</p>
+          <h1 class="page-title">按一条路线，把一个主题读完整</h1>
+          <p class="page-lead">有些内容不适合拆成互不相关的单篇文章。这里把连续主题整理成清晰的阅读路线。</p>
+        </section>
 
-    <div class="series-layout">
-    <section class="series-library" aria-label="系列列表">
-      {seriesList.map((series, index) => (
-        <a class="series-card" data-series-id={series.id} href={withBase(`/series/${series.id}/`)}>
-          <span class="series-card-index">{String(index + 1).padStart(2, '0')}</span>
-          <div class="series-card-body">
-            <p class="series-card-meta">{series.postCount} 篇文章</p>
-            <h2>{series.title}</h2>
-            <p>{series.description}</p>
-          </div>
-          <span class="series-card-link">查看阅读路线 <span aria-hidden="true">→</span></span>
-        </a>
-      ))}
-    </section>
+        <section class="series-library" aria-label="系列列表">
+          {seriesList.map((series, index) => (
+            <a
+              class:list={['series-card', index === 0 && 'is-active']}
+              data-series-id={series.id}
+              href={withBase(`/series/${series.id}/`)}
+            >
+              <span class="series-card-index">{String(index + 1).padStart(2, '0')}</span>
+              <div class="series-card-body">
+                <p class="series-card-meta">{series.postCount} 篇文章 · 约 {series.totalMinutes} 分钟</p>
+                <h2>{series.title}</h2>
+                <p>{series.description}</p>
+              </div>
+              <span class="series-card-link">查看路线 <span aria-hidden="true">→</span></span>
+            </a>
+          ))}
+        </section>
+      </div>
 
-    <aside class="series-guide">
-      <p class="guide-label">阅读路线预览</p>
-      <h2 id="guide-title">选择一个系列，开始完整阅读</h2>
-      <p id="guide-description">系列不是单篇文章的集合，而是一条从基础到实践的学习路径。</p>
-      <div class="guide-route" id="guide-route">
-        <span>主题入口</span>
-        <i></i>
-        <span>核心概念</span>
-        <i></i>
-        <span>真实实践</span>
-      </div>
-      <div class="guide-meta">
-        <span id="guide-count">4 个系列</span>
-        <span>路线阅读</span>
-      </div>
-    </aside>
+      <aside class="series-map" aria-label="系列阅读地图" aria-live="polite">
+        <div class="series-map-grid" aria-hidden="true"></div>
+
+        {seriesList.map((series, seriesIndex) => (
+          <article
+            class:list={['series-map-view', seriesIndex === 0 && 'is-active']}
+            data-map-id={series.id}
+            hidden={seriesIndex !== 0}
+          >
+            <div class="series-map-topline">
+              <span>READING MAP</span>
+              <span>{String(seriesIndex + 1).padStart(2, '0')} / {String(seriesList.length).padStart(2, '0')}</span>
+            </div>
+
+            <header class="series-map-header">
+              <p class="series-map-kicker">当前阅读主题</p>
+              <h2>{series.title}</h2>
+              <p>{series.description}</p>
+            </header>
+
+            <div class="series-map-stats" aria-label="系列统计">
+              <div>
+                <strong>{series.postCount}</strong>
+                <span>篇文章</span>
+              </div>
+              <div>
+                <strong>{series.totalMinutes}</strong>
+                <span>分钟阅读</span>
+              </div>
+              <div>
+                <strong>{String(seriesIndex + 1).padStart(2, '0')}</strong>
+                <span>推荐路线</span>
+              </div>
+            </div>
+
+            <section class="series-map-route" aria-label={`${series.title} 阅读顺序`}>
+              <div class="series-map-route-head">
+                <span>阅读顺序</span>
+                <span>从理解到实践</span>
+              </div>
+              <ol>
+                {series.posts.map((post, postIndex) => (
+                  <li>
+                    <span class="series-map-node">{String(postIndex + 1).padStart(2, '0')}</span>
+                    <div>
+                      <strong>{post.data.title}</strong>
+                      <span>{post.data.category} · {post.data.minutes} 分钟</span>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
+
+            <a class="series-map-action" href={withBase(`/series/${series.id}/`)}>
+              <span>
+                <small>OPEN SERIES</small>
+                打开完整阅读路线
+              </span>
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22">
+                <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
+              </svg>
+            </a>
+          </article>
+        ))}
+      </aside>
     </div>
   </main>
 </SiteLayout>
 
 <style>
-  .series-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 420px;
-    gap: 36px;
+  .series-page {
+    max-width: none;
+    padding-top: 54px;
+  }
+
+  .series-workspace {
     align-items: start;
+    display: grid;
+    gap: clamp(30px, 3vw, 54px);
+    grid-template-columns: minmax(500px, 0.86fr) minmax(620px, 1.14fr);
+    margin: 0 auto;
+    max-width: 1660px;
+  }
+
+  .series-main,
+  .series-map {
+    min-width: 0;
+  }
+
+  .series-hero {
+    margin-bottom: 34px;
+    max-width: 720px;
   }
 
   .series-library {
     display: grid;
-    gap: 18px;
+    gap: 16px;
   }
 
   .series-card {
-    display: grid;
-    grid-template-columns: 70px 1fr auto;
-    gap: 22px;
     align-items: center;
+    cursor: pointer;
+    gap: 20px;
+    grid-template-columns: 58px minmax(0, 1fr) auto;
+    min-height: 164px;
+    padding: 26px 28px;
   }
 
-  .series-guide {
-    position: sticky;
-    top: 100px;
-    min-height: 430px;
-    padding: 38px;
-    border: 1px solid rgba(95, 130, 180, .2);
-    border-radius: 28px;
-    background: linear-gradient(145deg, rgba(255,255,255,.8), rgba(235,243,255,.65));
-    overflow: hidden;
+  .series-card.is-active {
+    border-color: color-mix(in srgb, var(--blue) 48%, var(--line));
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.1);
   }
 
-  .guide-label {
-    color: #1769ff;
-    font-size: 13px;
-    font-weight: 700;
+  .series-card.is-active::before {
+    width: 6px;
   }
 
-  .series-guide h2 {
-    margin: 22px 0 12px;
-    font-size: 28px;
-    line-height: 1.35;
+  .series-card.is-active .series-card-index,
+  .series-card.is-active .series-card-body h2,
+  .series-card.is-active .series-card-link {
+    color: var(--blue);
   }
 
-  .series-guide p:not(.guide-label) {
-    color: var(--muted);
-    line-height: 1.8;
+  .series-card-index {
+    font-size: 38px;
   }
 
-  .guide-route {
-    display: grid;
-    gap: 14px;
-    margin: 42px 0;
+  .series-card-body h2 {
+    font-size: 24px;
+    line-height: 1.28;
+    margin: 5px 0 8px;
   }
 
-  .guide-route span {
-    padding: 14px 18px;
-    border-radius: 14px;
-    background: rgba(255,255,255,.8);
-    border: 1px solid rgba(95,130,180,.15);
+  .series-card-body > p:last-child {
+    display: -webkit-box;
     font-size: 14px;
+    line-height: 1.72;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
-  .guide-route i {
-    width: 1px;
-    height: 18px;
-    background: #9eb7df;
-    margin: -8px 0 -8px 24px;
+  .series-card-link {
+    font-size: 13px;
+    padding: 10px 14px;
   }
 
-  .guide-meta {
+  .series-map {
+    background:
+      radial-gradient(circle at 85% 12%, color-mix(in srgb, var(--violet) 17%, transparent), transparent 260px),
+      radial-gradient(circle at 12% 88%, color-mix(in srgb, var(--cyan) 15%, transparent), transparent 300px),
+      linear-gradient(145deg, color-mix(in srgb, var(--paper) 92%, var(--blue) 8%), var(--paper));
+    border: 1px solid color-mix(in srgb, var(--blue) 22%, var(--line));
+    border-radius: 30px;
+    box-shadow: 0 28px 80px rgba(40, 64, 112, 0.12);
+    min-height: calc(100vh - 126px);
+    overflow: hidden;
+    padding: clamp(30px, 2.5vw, 42px);
+    position: sticky;
+    top: 96px;
+  }
+
+  .series-map-grid {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--line) 42%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--line) 42%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+    inset: 0;
+    mask-image: linear-gradient(135deg, transparent 4%, rgba(0, 0, 0, 0.62) 48%, transparent 94%);
+    opacity: 0.46;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .series-map-view {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    min-height: calc(100vh - 210px);
+    position: relative;
+    z-index: 1;
   }
 
-  .guide-meta span {
-    padding: 7px 12px;
-    border-radius: 99px;
-    background: rgba(23,105,255,.08);
-    color: #1769ff;
+  .series-map-view[hidden] {
+    display: none;
+  }
+
+  .series-map-view.is-active {
+    animation: series-map-in 220ms ease-out both;
+  }
+
+  .series-map-topline {
+    align-items: center;
+    color: var(--soft);
+    display: flex;
+    font-size: 11px;
+    font-weight: 800;
+    justify-content: space-between;
+    letter-spacing: 0.18em;
+  }
+
+  .series-map-topline::after {
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+    content: "";
+    height: 2px;
+    left: 0;
+    position: absolute;
+    top: 28px;
+    width: 72px;
+  }
+
+  .series-map-header {
+    max-width: 680px;
+    padding-top: clamp(30px, 4vh, 42px);
+  }
+
+  .series-map-kicker {
+    color: var(--blue);
     font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    margin: 0 0 12px;
   }
 
-  @media (max-width: 1100px) {
-    .series-layout { grid-template-columns: 1fr; }
-    .series-guide { position: static; }
+  .series-map-header h2 {
+    font-size: clamp(30px, 2.7vw, 44px);
+    letter-spacing: -0.04em;
+    line-height: 1.12;
+    margin: 0;
+    max-width: 620px;
+  }
+
+  .series-map-header > p:last-child {
+    font-size: 15px;
+    line-height: 1.68;
+    margin: 13px 0 0;
+    max-width: 650px;
+  }
+
+  .series-map-stats {
+    border-bottom: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 24px;
+  }
+
+  .series-map-stats > div {
+    display: grid;
+    gap: 3px;
+    padding: 15px 18px 14px 0;
+  }
+
+  .series-map-stats > div + div {
+    border-left: 1px solid var(--line);
+    padding-left: 24px;
+  }
+
+  .series-map-stats strong {
+    color: var(--ink);
+    font-size: 23px;
+    line-height: 1;
+  }
+
+  .series-map-stats span {
+    color: var(--soft);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  .series-map-route {
+    margin-top: 22px;
+  }
+
+  .series-map-route-head {
+    align-items: center;
+    color: var(--soft);
+    display: flex;
+    font-size: 12px;
+    font-weight: 720;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .series-map-route ol {
+    display: grid;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .series-map-route li {
+    align-items: center;
+    display: grid;
+    gap: 16px;
+    grid-template-columns: 42px minmax(0, 1fr);
+    min-height: 50px;
+    padding: 4px 0;
+    position: relative;
+  }
+
+  .series-map-route li:not(:last-child)::after {
+    background: color-mix(in srgb, var(--blue) 34%, var(--line));
+    bottom: -3px;
+    content: "";
+    left: 20px;
+    position: absolute;
+    top: 37px;
+    width: 1px;
+  }
+
+  .series-map-node {
+    align-items: center;
+    background: color-mix(in srgb, var(--paper) 82%, var(--blue) 18%);
+    border: 1px solid color-mix(in srgb, var(--blue) 36%, var(--line));
+    border-radius: 50%;
+    color: var(--blue);
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 800;
+    height: 36px;
+    justify-content: center;
+    position: relative;
+    width: 36px;
+    z-index: 1;
+  }
+
+  .series-map-route li > div {
+    align-items: baseline;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    min-width: 0;
+  }
+
+  .series-map-route strong {
+    font-size: 14px;
+    line-height: 1.45;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .series-map-route li > div > span {
+    color: var(--soft);
+    flex: 0 0 auto;
+    font-size: 11px;
+  }
+
+  .series-map-action {
+    align-items: center;
+    background: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 18px;
+    color: var(--paper);
+    cursor: pointer;
+    display: flex;
+    gap: 24px;
+    justify-content: space-between;
+    margin-top: auto;
+    padding: 14px 18px;
+    transition: box-shadow 180ms ease, transform 180ms ease;
+  }
+
+  .series-map-action span {
+    display: grid;
+    font-size: 14px;
+    font-weight: 760;
+    gap: 3px;
+  }
+
+  .series-map-action small {
+    color: color-mix(in srgb, var(--paper) 66%, transparent);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+  }
+
+  .series-map-action:focus-visible {
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.2);
+    outline: 3px solid color-mix(in srgb, var(--blue) 28%, transparent);
+    outline-offset: 3px;
+    transform: translateY(-2px);
+  }
+
+  @media (hover: hover) {
+    .series-map-action:hover {
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.2);
+      color: var(--paper);
+      transform: translateY(-2px);
+    }
+  }
+
+  @keyframes series-map-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 1320px) {
+    .series-workspace {
+      grid-template-columns: minmax(450px, 0.88fr) minmax(520px, 1.12fr);
+    }
+
+    .series-map {
+      padding: 34px;
+    }
+
+    .series-card {
+      grid-template-columns: 48px minmax(0, 1fr);
+    }
+
+    .series-card-link {
+      grid-column: 2;
+      justify-self: start;
+    }
+  }
+
+  @media (max-width: 1080px) {
+    .series-page {
+      max-width: 900px;
+    }
+
+    .series-workspace {
+      grid-template-columns: 1fr;
+    }
+
+    .series-map {
+      min-height: auto;
+      position: static;
+    }
+
+    .series-map-view {
+      min-height: 660px;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .series-page {
+      padding-top: 34px;
+    }
+
+    .series-card {
+      gap: 14px;
+      grid-template-columns: 42px minmax(0, 1fr);
+      min-height: 0;
+      padding: 22px 20px;
+    }
+
+    .series-card-index {
+      font-size: 28px;
+    }
+
+    .series-card-body h2 {
+      font-size: 20px;
+    }
+
+    .series-card-link {
+      grid-column: 2;
+    }
+
+    .series-map {
+      border-radius: 22px;
+      padding: 28px 22px;
+    }
+
+    .series-map-view {
+      min-height: 620px;
+    }
+
+    .series-map-header h2 {
+      font-size: 30px;
+    }
+
+    .series-map-stats > div,
+    .series-map-stats > div + div {
+      padding: 16px 10px;
+    }
+
+    .series-map-stats strong {
+      font-size: 21px;
+    }
+
+    .series-map-route li > div {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .series-map-route strong {
+      white-space: normal;
+    }
   }
 </style>
 
 <script>
-  const guides = {
-    'personal-blog': ['这个博客是怎么搭起来的', '从架构 → 代码 → 部署，理解一个个人博客如何运行。', '架构', '代码实现', '部署发布'],
-    'yingdao-agent-development': ['影刀 × Agent 开发实战', '从知识库到真实项目，让 Agent 参与自动化开发流程。', '知识库', '页面探索', '项目实践'],
-    'excel-functions': ['Excel 函数学习与实战', '从基础函数到复杂案例，建立完整函数使用路线。', '函数基础', '查找匹配', '综合案例'],
-    'ecommerce-operation-learning': ['电商运营从入门到实战', '从消费者购买链路理解商品、价格、活动和经营分析。', '消费者视角', '后台流程', '运营分析'],
-  };
+  const cards = Array.from(document.querySelectorAll('.series-card'));
+  const maps = Array.from(document.querySelectorAll('.series-map-view'));
 
-  const title = document.querySelector('#guide-title');
-  const description = document.querySelector('#guide-description');
-  const route = document.querySelector('#guide-route');
-  document.querySelectorAll('.series-card').forEach((card) => {
-    card.addEventListener('mouseenter', () => {
-      const item = guides[card.dataset.seriesId];
-      if (!item) return;
-      title.textContent = item[0];
-      description.textContent = item[1];
-      route.querySelectorAll('span').forEach((node, index) => node.textContent = item[index + 2]);
+  function showSeries(seriesId) {
+    cards.forEach((card) => {
+      card.classList.toggle('is-active', card.dataset.seriesId === seriesId);
     });
+
+    maps.forEach((map) => {
+      const isActive = map.dataset.mapId === seriesId;
+      map.hidden = !isActive;
+      map.classList.toggle('is-active', isActive);
+    });
+  }
+
+  cards.forEach((card) => {
+    card.addEventListener('mouseenter', () => showSeries(card.dataset.seriesId));
+    card.addEventListener('focus', () => showSeries(card.dataset.seriesId));
   });
 </script>
