@@ -22,9 +22,10 @@ const seriesList = seriesMetaList
       <p class="page-lead">有些内容不适合拆成互不相关的单篇文章。这里把连续主题整理成清晰的阅读路线。</p>
     </section>
 
+    <div class="series-layout">
     <section class="series-library" aria-label="系列列表">
       {seriesList.map((series, index) => (
-        <a class="series-card" href={withBase(`/series/${series.id}/`)}>
+        <a class="series-card" data-series-id={series.id} href={withBase(`/series/${series.id}/`)}>
           <span class="series-card-index">{String(index + 1).padStart(2, '0')}</span>
           <div class="series-card-body">
             <p class="series-card-meta">{series.postCount} 篇文章</p>
@@ -35,5 +36,133 @@ const seriesList = seriesMetaList
         </a>
       ))}
     </section>
+
+    <aside class="series-guide">
+      <p class="guide-label">阅读路线预览</p>
+      <h2 id="guide-title">选择一个系列，开始完整阅读</h2>
+      <p id="guide-description">系列不是单篇文章的集合，而是一条从基础到实践的学习路径。</p>
+      <div class="guide-route" id="guide-route">
+        <span>主题入口</span>
+        <i></i>
+        <span>核心概念</span>
+        <i></i>
+        <span>真实实践</span>
+      </div>
+      <div class="guide-meta">
+        <span id="guide-count">4 个系列</span>
+        <span>路线阅读</span>
+      </div>
+    </aside>
+    </div>
   </main>
 </SiteLayout>
+
+<style>
+  .series-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 420px;
+    gap: 36px;
+    align-items: start;
+  }
+
+  .series-library {
+    display: grid;
+    gap: 18px;
+  }
+
+  .series-card {
+    display: grid;
+    grid-template-columns: 70px 1fr auto;
+    gap: 22px;
+    align-items: center;
+  }
+
+  .series-guide {
+    position: sticky;
+    top: 100px;
+    min-height: 430px;
+    padding: 38px;
+    border: 1px solid rgba(95, 130, 180, .2);
+    border-radius: 28px;
+    background: linear-gradient(145deg, rgba(255,255,255,.8), rgba(235,243,255,.65));
+    overflow: hidden;
+  }
+
+  .guide-label {
+    color: #1769ff;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .series-guide h2 {
+    margin: 22px 0 12px;
+    font-size: 28px;
+    line-height: 1.35;
+  }
+
+  .series-guide p:not(.guide-label) {
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .guide-route {
+    display: grid;
+    gap: 14px;
+    margin: 42px 0;
+  }
+
+  .guide-route span {
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.8);
+    border: 1px solid rgba(95,130,180,.15);
+    font-size: 14px;
+  }
+
+  .guide-route i {
+    width: 1px;
+    height: 18px;
+    background: #9eb7df;
+    margin: -8px 0 -8px 24px;
+  }
+
+  .guide-meta {
+    display: flex;
+    gap: 10px;
+  }
+
+  .guide-meta span {
+    padding: 7px 12px;
+    border-radius: 99px;
+    background: rgba(23,105,255,.08);
+    color: #1769ff;
+    font-size: 12px;
+  }
+
+  @media (max-width: 1100px) {
+    .series-layout { grid-template-columns: 1fr; }
+    .series-guide { position: static; }
+  }
+</style>
+
+<script>
+  const guides = {
+    'personal-blog': ['这个博客是怎么搭起来的', '从架构 → 代码 → 部署，理解一个个人博客如何运行。', '架构', '代码实现', '部署发布'],
+    'yingdao-agent-development': ['影刀 × Agent 开发实战', '从知识库到真实项目，让 Agent 参与自动化开发流程。', '知识库', '页面探索', '项目实践'],
+    'excel-functions': ['Excel 函数学习与实战', '从基础函数到复杂案例，建立完整函数使用路线。', '函数基础', '查找匹配', '综合案例'],
+    'ecommerce-operation-learning': ['电商运营从入门到实战', '从消费者购买链路理解商品、价格、活动和经营分析。', '消费者视角', '后台流程', '运营分析'],
+  };
+
+  const title = document.querySelector('#guide-title');
+  const description = document.querySelector('#guide-description');
+  const route = document.querySelector('#guide-route');
+  document.querySelectorAll('.series-card').forEach((card) => {
+    card.addEventListener('mouseenter', () => {
+      const item = guides[card.dataset.seriesId];
+      if (!item) return;
+      title.textContent = item[0];
+      description.textContent = item[1];
+      route.querySelectorAll('span').forEach((node, index) => node.textContent = item[index + 2]);
+    });
+  });
+</script>
