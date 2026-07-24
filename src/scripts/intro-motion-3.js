@@ -1931,7 +1931,7 @@ function startCosmicOpening(root) {
     const wasExploring = isExploring;
 
     isPlaying = false;
-    isIdle = wasExploring && !reducedMotion.matches;
+    isIdle = initialized && !reducedMotion.matches;
     currentProgress = 1;
     finishedAt = now;
 
