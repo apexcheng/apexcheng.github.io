@@ -1,0 +1,194 @@
+---
+title: "Python 基础考核：20 道覆盖不同知识点的入门题"
+description: "一套可直接使用的 Python 基础考核题，覆盖类型转换、循环、字典、函数、文件、JSON、类、浅拷贝和默认参数，并提供完整附件下载。"
+date: 2026-07-24T15:48:25+08:00
+category: "教程"
+tags:
+  - "Python"
+  - "基础考核"
+  - "编程入门"
+minutes: 12
+featured: false
+draft: false
+private: false
+---
+
+import MetricCard from '../../components/MetricCard.astro';
+import FeatureCard from '../../components/FeatureCard.astro';
+import VisualGrid from '../../components/VisualGrid.astro';
+import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
+
+这套题用于检查一个人是否真正掌握了 Python 基础，而不是只记住几个零散语法。题目不追求算法难度，重点覆盖日常编程中最常见的数据处理、函数、文件和对象知识。
+
+<VisualGrid columns={4}>
+  <MetricCard label="题目数量" value="20 题" detail="每道题尽量覆盖不同的 Python 基础知识点。" />
+  <MetricCard label="基础题" value="17 题" detail="补全代码、完成数据处理或解释明确错误。" tone="cyan" />
+  <MetricCard label="基础理解" value="3 题" detail="判断运行结果，并解释引用、拷贝和默认参数。" tone="violet" />
+  <MetricCard label="外部依赖" value="0 个" detail="全部使用 Python 自带语法和标准库。" tone="green" />
+</VisualGrid>
+
+<HighlightBox eyebrow="附件下载" title="下载两个文件后即可开始考核">
+  <p><a href="/files/python-basic-assessment/python-basic-assessment.py" download>下载完整 Python 考核题（PY）</a></p>
+  <p><a href="/files/python-basic-assessment/test.txt" download>下载文件读取测试素材（TXT）</a></p>
+  请把两个文件放在同一个文件夹中。第 13 题会读取 `test.txt`，其余题目都在 Python 文件内完成。
+</HighlightBox>
+
+## 这套题怎么安排
+
+<DecisionFlow
+  title="从会写语法，到理解运行机制"
+  items={[
+    {
+      label: '第 1～4 题',
+      title: '先检查基础数据处理',
+      description: '类型转换、列表筛选、字典统计和字符串清洗，是最常见的入门操作。',
+    },
+    {
+      label: '第 5～12 题',
+      title: '再检查代码组织能力',
+      description: '函数、去重、循环、推导式、集合、可变参数和异常处理，能看出是否可以独立完成小任务。',
+    },
+    {
+      label: '第 13～17 题',
+      title: '接着检查实际使用能力',
+      description: '文件、JSON、类、模块和订单数据处理，更接近日常工作场景。',
+    },
+    {
+      label: '第 18～20 题',
+      title: '最后检查基础理解',
+      description: '不运行代码，判断引用、浅拷贝和默认参数的真实行为。',
+    },
+  ]}
+/>
+
+## 考核说明
+
+- 建议用时：15～20 分钟。
+- 不允许使用第三方库。
+- 第 1～17 题按题目要求补全代码或说明原因。
+- 第 18～20 题先写出运行结果，再解释原因。
+- 题目文件不包含答案，避免考核者直接查看。
+
+## 20 道题的知识地图
+
+<VisualGrid columns={2}>
+  <FeatureCard title="基础语法与数据" meta="1～4" description="先确认能否处理最常见的数据输入和容器。">
+    <ul>
+      <li>类型转换与数值计算</li>
+      <li>列表筛选与平均值</li>
+      <li>字典计数</li>
+      <li>字符串清洗与比较</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="循环、函数与容器" meta="5～12" description="检查能否把基础语法组合成完整的小任务。">
+    <ul>
+      <li>函数返回值与条件判断</li>
+      <li>列表去重、排序与推导式</li>
+      <li>元组、集合与可变参数</li>
+      <li>异常处理</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="实际文件与对象" meta="13～17" description="检查是否接触过真实的数据输入、结构和标准库。">
+    <ul>
+      <li>文本文件读取</li>
+      <li>JSON 序列化</li>
+      <li>类与对象</li>
+      <li>模块导入与综合数据处理</li>
+    </ul>
+  </FeatureCard>
+  <FeatureCard title="Python 运行机制" meta="18～20" description="检查是否理解代码表面结果背后的对象关系。">
+    <ul>
+      <li>变量引用</li>
+      <li>浅拷贝与嵌套可变对象</li>
+      <li>可变对象作为默认参数</li>
+    </ul>
+  </FeatureCard>
+</VisualGrid>
+
+## 题目目录
+
+| 题号 | 知识点 | 主要任务 |
+| --- | --- | --- |
+| 1 | 类型转换 | 把字符串单价和数量转换后计算总金额 |
+| 2 | 列表、循环、条件 | 筛选及格成绩并计算平均分 |
+| 3 | 字典 | 统计不同商品出现次数 |
+| 4 | 字符串 | 去空格、转小写并判断内容 |
+| 5 | 函数与返回值 | 根据金额判断是否打折 |
+| 6 | 去重与排序 | 整理重复用户 ID |
+| 7 | 循环与条件 | 统计符合条件的数据数量 |
+| 8 | 列表推导式 | 生成数字平方列表 |
+| 9 | 元组 | 解释为什么不能修改元素 |
+| 10 | 集合 | 使用集合完成去重 |
+| 11 | `*args` | 接收任意数量参数并求和 |
+| 12 | 异常处理 | 处理除数为零的情况 |
+| 13 | 文件读取 | 读取并打印 `test.txt` |
+| 14 | JSON | 把字典转换为 JSON 字符串 |
+| 15 | 类与对象 | 创建带属性和方法的 `User` 类 |
+| 16 | 模块导入 | 正确使用 Python 标准库 |
+| 17 | 综合数据处理 | 根据订单列表计算销售总金额 |
+| 18 | 变量引用 | 判断两个变量指向同一列表后的结果 |
+| 19 | 浅拷贝 | 判断嵌套列表为什么会共同变化 |
+| 20 | 默认参数 | 判断可变默认参数跨调用保留状态的结果 |
+
+## 代表题型
+
+完整题目请下载附件。下面挑选四类题目，说明这套考核具体在检查什么。
+
+### 类型转换不是字符串拼接
+
+```python
+price = "119.9"
+quantity = "2"
+
+# 计算订单总金额，并输出：总金额: 239.8
+```
+
+这道题很简单，但可以直接看出考核者是否知道外部输入经常是字符串，以及数值计算前需要先转换类型。
+
+### 字典统计是否能独立写出来
+
+```python
+products = ["键盘", "鼠标", "键盘", "耳机", "鼠标", "键盘"]
+
+# 期望输出：
+# {'键盘': 3, '鼠标': 2, '耳机': 1}
+```
+
+这道题不限定必须使用哪种高级写法。重点是能否用循环、判断和字典完成一个完整统计过程。
+
+### 文件题要和附件一起使用
+
+```python
+# 请读取 test.txt 文件内容并打印。
+```
+
+`test.txt` 已作为第二个附件提供。把它和 Python 文件放在同一目录，就可以检查相对路径、文件打开和内容读取这些基础操作。
+
+### 最后三题不允许运行代码
+
+```python
+original = {
+    "name": "张三",
+    "skills": ["Python", "SQL"]
+}
+
+copy_data = original.copy()
+copy_data["name"] = "李四"
+copy_data["skills"].append("Linux")
+```
+
+这里不是考察是否会背 `copy()`，而是看考核者能否区分：外层字典已经复制，但内部的列表仍然指向同一个对象。
+
+## 怎么判断完成质量
+
+不需要强行要求所有人写出完全相同的代码。更值得观察的是下面四点：
+
+1. **结果是否正确**：输出值和题目要求一致。
+2. **思路是否直接**：没有为了简单问题写大量无关代码。
+3. **基础是否完整**：会使用常见容器、函数、文件和标准库。
+4. **解释是否准确**：最后三题能说明对象引用和状态变化原因，而不是只猜输出。
+
+<HighlightBox eyebrow="完成标准" title="会写基础代码，也能解释代码为什么这样运行">
+  这 20 题不用于筛选算法能力。它更适合判断一个人是否已经越过“只看过语法”的阶段，能够独立完成小型数据处理任务，并理解几个最容易出错的 Python 基础机制。
+</HighlightBox>
