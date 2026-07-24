@@ -40,7 +40,7 @@
 | `src/content/posts/excel-lookup-functions-visual-guide.mdx` | `教程` | Excel 查找匹配函数专题，用五张内容相同、标注不同的独立案例表，逐个展示 VLOOKUP、XLOOKUP、INDEX、MATCH、XMATCH 的参数、查找过程、位置与返回结果 | 写 Excel 查找函数教学、单函数可视化案例、VLOOKUP 与 XLOOKUP 对比、INDEX + MATCH / XMATCH 组合和位置返回文章时参考 |
 | `src/content/posts/excel-intermediate-functions-case-guide.mdx` | `教程` | Excel 中级函数案例教程，使用编码日期表、运营明细表和七天销量表，讲解 18 个文本日期、动态数组与批量计算函数 | 写 Excel 动态数组、日期周期、LET、BYROW、MAP、REDUCE 和减少下拉公式的教学文章时参考 |
 | `src/content/posts/qianniu-ecommerce-operation-learning-map.mdx` | `教程` | 从一条商品链接出发，把 SKU、价格体系、营销推广、订单 ERP、物流售后、评价与运营优化串成完整电商经营链路，并补充面对陌生后台功能的学习方法 | 写千牛工作台、电商运营入门、新人培训、商品从上架到售后的全链路教学文章时参考 |
-| `src/content/posts/ecommerce-price-hierarchy-target-price-planning.mdx` | `教程` | 用目标卖 85 元的案例，直接说明单品宝、优惠券、普惠卷后价、超级立减、平时大促和双11 / 618分别怎么算 | 写电商价格体系、活动卡控价、普惠卷后价、营销工具和目标到手价倒推教程时参考 |
+| `src/content/posts/ecommerce-price-hierarchy-target-price-planning.mdx` | `教程` | 从一口价、单品宝、活动标价、活动让利、优惠券到价盘，讲清改标价工具的覆盖关系、活动优先级、普惠卷后价和价盘补差逻辑 | 写电商价格体系、优惠叠加优先级、活动卡控价、普惠卷后价和价盘目标到手价教程时参考 |
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
 | `src/content/posts/ecommerce-review-analysis-agent-workflow.mdx` | `实践` | 电商评价分析 Agent 整页视觉案例，以滚动叙事方式展示两张评价表统一、Python 事实包、日报与周期对比、钉钉交付闸门和发送成功后的分表状态回写 | 写电商评价分析、钉钉 AI 表格、事实包、Agent 报告、Webhook 交付闭环、状态回写和整页数据故事时参考 |
 | `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `实践` | 泰国、马来西亚、菲律宾雅仓与深圳跨境仓的仓储网络，覆盖双平台共享库存、跨国家隔离和本地优先发货 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
