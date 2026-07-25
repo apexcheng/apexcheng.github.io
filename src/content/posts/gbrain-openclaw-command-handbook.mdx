@@ -1,0 +1,834 @@
+---
+title: "GBrain 接入 OpenClaw 后，我最常用的命令"
+description: "一份面向实际使用的 GBrain 命令手册：从状态检查、知识检索、写入、同步嵌入，到 OpenClaw 接入验证和分层排查。"
+date: 2026-07-25T09:04:36+08:00
+category: "教程"
+tags:
+  - "GBrain"
+  - "OpenClaw"
+  - "Agent"
+  - "知识库"
+minutes: 16
+featured: false
+draft: false
+private: false
+---
+
+import Callout from '../../components/Callout.astro';
+import MetricCard from '../../components/MetricCard.astro';
+import VisualGrid from '../../components/VisualGrid.astro';
+import HighlightBox from '../../components/HighlightBox.astro';
+import DecisionFlow from '../../components/DecisionFlow.astro';
+
+我之前已经写过一篇完整搭建记录：[《给 OpenClaw 装上长期记忆》](/articles/gbrain-openclaw-long-term-brain-setup/)。那篇文章重点讲为什么要接、架构怎么搭、我踩过哪些坑。
+
+这篇不再重复完整安装过程，而是回答另一个更实际的问题：
+
+> GBrain 已经接进 OpenClaw 以后，平时到底用哪些命令？
+
+我的使用顺序基本固定：**先看状态，再查知识；需要沉淀时写入，Markdown 有变化时同步；最后再确认 OpenClaw 是否真的调用到了 GBrain。**
+
+<VisualGrid columns={3}>
+  <MetricCard label="核心用途" value="5 类" detail="状态、查询、写入、同步、维护。" />
+  <MetricCard label="主要入口" value="CLI" detail="大部分问题先在终端验证，再判断是不是 OpenClaw 的问题。" tone="cyan" />
+  <MetricCard label="验证标准" value="真实命中" detail="不能只看插件 loaded，还要能查到页面、同步成功并产生召回。" tone="green" />
+</VisualGrid>
+
+## 工作原理：OpenClaw 用，GBrain 记
+
+GBrain 不是另一个聊天机器人，它更像 OpenClaw 后面的长期知识层。
+
+<div class="gbcmd-architecture" aria-label="GBrain 接入 OpenClaw 后的工作原理">
+  <div class="gbcmd-architecture__head">
+    <span>OPENCLAW × GBRAIN</span>
+    <strong>同一个长期知识库，通过“自动召回”和“主动读写”两条通道参与任务</strong>
+  </div>
+  <div class="gbcmd-architecture__input">用户消息 / 当前任务</div>
+  <div class="gbcmd-architecture__lanes">
+    <section>
+      <div class="gbcmd-lane__tag">自动召回</div>
+      <div class="gbcmd-lane__flow">
+        <div><b>01</b><strong>OpenClaw</strong><small>开始组装本轮上下文</small></div>
+        <i>→</i>
+        <div><b>02</b><strong>Context Engine</strong><small>识别本轮可能相关的长期信息</small></div>
+        <i>→</i>
+        <div class="is-focus"><b>03</b><strong>GBrain</strong><small>返回相关页面和知识指针</small></div>
+      </div>
+    </section>
+    <section>
+      <div class="gbcmd-lane__tag gbcmd-lane__tag--green">主动读写</div>
+      <div class="gbcmd-lane__flow">
+        <div><b>01</b><strong>MCP / CLI</strong><small>搜索、读取、写入或同步</small></div>
+        <i>→</i>
+        <div><b>02</b><strong>GBrain Engine</strong><small>处理页面、链接、分块和嵌入</small></div>
+        <i>→</i>
+        <div class="is-success"><b>03</b><strong>长期知识库</strong><small>后续对话继续复用</small></div>
+      </div>
+    </section>
+  </div>
+  <div class="gbcmd-architecture__base">
+    <div><span>OpenClaw 自带记忆</span><strong>memory-core / dreaming</strong><small>轻量记忆与短期内容晋升</small></div>
+    <div><span>GBrain 长期知识</span><strong>页面 / 图谱 / 向量检索</strong><small>项目、人物、决策、经验和可复用方法</small></div>
+  </div>
+</div>
+
+所以 `memory-core`、OpenClaw 的 Memory Dreaming 和 GBrain 可以同时存在。它们不是互相替代，而是分别处理轻量记忆与长期知识。
+
+## 简单安装与接入
+
+GBrain 官方更推荐让 Agent 读取安装协议后自动执行。可以把下面的地址交给能访问终端的 Agent：
+
+```text
+https://raw.githubusercontent.com/garrytan/gbrain/master/INSTALL_FOR_AGENTS.md
+```
+
+只看最小安装路径，大致是：
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+export PATH="$HOME/.bun/bin:$PATH"
+bun install -g github:garrytan/gbrain
+
+gbrain --version
+gbrain init
+gbrain doctor --json
+```
+
+然后准备一个独立的 Markdown 知识目录，例如 `~/brain`，注册 source，并把内容同步进去。
+
+```bash
+mkdir -p ~/brain
+cd ~/brain
+git init
+
+gbrain sources add brain --path ~/brain
+gbrain sync --source brain
+```
+
+OpenClaw 侧至少要完成三件事：
+
+<DecisionFlow
+  title="最小接入路径"
+  items={[
+    {
+      label: 'Step 1',
+      title: '接入 GBrain MCP',
+      description: '让 OpenClaw 能主动搜索、读取和写入 GBrain，并明确 GBRAIN_SOURCE=brain。',
+    },
+    {
+      label: 'Step 2',
+      title: '安装 Retrieval Reflex',
+      description: '让对话中出现相关实体时，可以自动找到长期知识。',
+    },
+    {
+      label: 'Step 3',
+      title: '启用 GBrain Context Engine',
+      description: '把 plugins.slots.contextEngine 设置为 gbrain-context，再重启 Gateway。',
+    },
+  ]}
+/>
+
+MCP 可以这样添加：
+
+```bash
+openclaw mcp add gbrain \
+  --command "$(command -v gbrain)" \
+  --arg serve \
+  --cwd ~/brain \
+  --env GBRAIN_SOURCE=brain
+```
+
+Retrieval Reflex 安装到 OpenClaw workspace：
+
+```bash
+gbrain integrations install retrieval-reflex \
+  --target ~/.openclaw/workspace
+```
+
+最后确认 OpenClaw 配置中的 Context Engine ID 是 `gbrain-context`。注意：插件 ID 是 `gbrain-context-engine`，这两个名字不一样。
+
+<Callout title="版本说明">
+  本文按我当前使用的 GBrain 0.42.57.0 和 OpenClaw 2026.7.1-beta.2 整理。CLI 后续可能增加参数，但下面这些核心命令的使用思路不会因为小版本变化而改变。
+</Callout>
+
+## 常用命令一：先确认 GBrain 现在是什么状态
+
+刚接入、刚重启、刚同步，或者感觉搜索结果不对时，我不会直接猜原因，而是先跑下面四个命令。
+
+```bash
+gbrain --version
+gbrain status
+gbrain stats
+gbrain health
+```
+
+它们看起来都像“检查状态”，但关注点不同：
+
+| 命令 | 主要回答什么 |
+| --- | --- |
+| `gbrain --version` | 当前 CLI 是哪个版本 |
+| `gbrain status` | 最近同步时间、source 状态、队列和后台任务是否正常 |
+| `gbrain stats` | 当前有多少页面、分块、链接等数据 |
+| `gbrain health` | 嵌入覆盖率、过期页面、孤立页面等知识库质量 |
+
+我最常先看 `gbrain status`。正常情况下，至少应该看到目标 source 是 `[OK]`，并且 `embed=100%` 或接近 100%。
+
+如果只是想快速判断“数据库能不能用”，不要一上来跑完整诊断。先看状态，再做一次真实搜索，通常更直接。
+
+## 常用命令二：浏览知识库里现在有什么
+
+不知道准确 slug 时，可以先列出最近页面。
+
+```bash
+gbrain list --limit 10 --sort updated_desc
+```
+
+按页面类型查看：
+
+```bash
+gbrain list --type concept --limit 20
+```
+
+按标签查看：
+
+```bash
+gbrain list --tag openclaw --limit 20
+```
+
+只看最近一段时间有变化的页面：
+
+```bash
+gbrain list \
+  --updated-after 2026-07-01 \
+  --sort updated_desc \
+  --limit 30
+```
+
+`gbrain list` 更像目录浏览。它不负责理解问题，只负责把符合筛选条件的页面列出来。
+
+## 常用命令三：关键词搜索和语义查询怎么选
+
+这是我使用频率最高的一组命令。
+
+### 知道明确关键词：用 search
+
+```bash
+gbrain search "品牌雷达" --limit 5
+```
+
+`search` 走关键词全文检索。查项目名、人物名、具体功能名、固定术语时，它通常最快，也最容易判断结果对不对。
+
+多 source 场景，可以明确指定 source：
+
+```bash
+gbrain search "OpenClaw" \
+  --source-id brain \
+  --limit 10
+```
+
+### 想用自然语言提问：用 query
+
+```bash
+gbrain query "OpenClaw 和 GBrain 分别负责什么？" --limit 5
+```
+
+`query` 会结合关键词、向量检索和查询扩展，更适合：
+
+- 问一个完整问题；
+- 原文未必使用同样措辞；
+- 需要从多个页面拼出答案；
+- 想找语义相关，而不是字面相同的内容。
+
+强调最近内容时，可以增加时间范围和 recency：
+
+```bash
+gbrain query "最近有哪些 OpenClaw 配置变化？" \
+  --since 7d \
+  --recency strong \
+  --limit 10
+```
+
+需要完整候选结果，不希望智能截断时，可以关闭 autocut：
+
+```bash
+gbrain query "所有和长期记忆有关的方案" \
+  --autocut false \
+  --limit 20
+```
+
+我的简单判断是：
+
+```text
+知道名字或关键词 → search
+只有问题，没有准确关键词 → query
+```
+
+## 常用命令四：读取具体页面和关系
+
+搜索结果通常会返回一个 slug，例如 `concepts/brand-radar`。拿到 slug 后，用 `get` 阅读完整页面。
+
+```bash
+gbrain get concepts/brand-radar
+```
+
+只记得大概名字时，可以开启模糊匹配：
+
+```bash
+gbrain get brand-radar --fuzzy
+```
+
+查看有哪些页面链接到它：
+
+```bash
+gbrain backlinks concepts/brand-radar
+```
+
+从当前页面向外查看两层关系：
+
+```bash
+gbrain graph concepts/brand-radar --depth 2
+```
+
+这组命令适合回答：
+
+- 这篇知识页完整写了什么；
+- 哪些项目引用了它；
+- 它和哪些人物、公司、概念有关；
+- 某个知识点是不是孤立存在。
+
+## 常用命令五：快速把内容写进 GBrain
+
+临时想到一句值得长期保存的话，最直接的是 `capture`。
+
+```bash
+gbrain capture "以后博客文章默认公开，除非明确要求草稿"
+```
+
+它会自动写入 `inbox/`，并返回生成的 slug。适合先收集，后续再整理。
+
+从文件写入，并明确 slug：
+
+```bash
+gbrain capture \
+  --file ./notes/openclaw-memory.md \
+  --slug operational/openclaw-memory \
+  --type note
+```
+
+从管道接收内容：
+
+```bash
+echo "GBrain 和 memory-core 可以同时使用" \
+  | gbrain capture --stdin
+```
+
+在脚本中只需要拿到 slug 时，可以使用安静模式：
+
+```bash
+PAGE_SLUG=$(gbrain capture "需要后续整理的事实" --quiet)
+echo "$PAGE_SLUG"
+```
+
+我的使用习惯是：
+
+- 一句话、临时事实、待整理材料，用 `gbrain capture`；
+- 已经有完整 Markdown 文件，直接维护 `~/brain` 里的文件，再运行 `gbrain sync`；
+- 不把所有聊天内容都塞进去，只保存以后还会影响判断的信息。
+
+## 常用命令六：补充标签、关系和时间线
+
+给页面加标签：
+
+```bash
+gbrain tag concepts/brand-radar openclaw
+```
+
+建立两个页面之间的明确关系：
+
+```bash
+gbrain link projects/openclaw-memory concepts/gbrain \
+  --link-type uses \
+  --context "OpenClaw 使用 GBrain 作为长期知识层"
+```
+
+记录一个项目时间节点：
+
+```bash
+gbrain timeline-add \
+  projects/openclaw-memory \
+  2026-07-25 \
+  "完成 GBrain 与 OpenClaw 接入验证"
+```
+
+这类命令不是每天都用，但当知识库开始变大后，它们会比单纯堆 Markdown 更有价值。因为 Agent 不只可以搜到文字，还能知道页面之间是什么关系、事情发生在什么时候。
+
+## 常用命令七：同步 Markdown 和补全嵌入
+
+我的长期知识源放在独立的 `~/brain` Git 仓库里。文件发生变化后，需要同步进 GBrain Engine。
+
+先看已经注册了哪些 source：
+
+```bash
+gbrain sources list
+```
+
+正式同步前先预览：
+
+```bash
+gbrain sync --source brain --dry-run
+```
+
+确认后执行增量同步：
+
+```bash
+gbrain sync --source brain
+```
+
+多个 source 一起同步：
+
+```bash
+gbrain sync --all --parallel 2
+```
+
+如果嵌入服务临时不可用，可以先只同步文本：
+
+```bash
+gbrain sync --source brain --no-embed
+```
+
+服务恢复后，再补齐过期嵌入：
+
+```bash
+gbrain embed --stale
+```
+
+之前存在失败记录，希望重新处理：
+
+```bash
+gbrain sync --source brain --retry-failed
+```
+
+这里最重要的不是每次都全量重建，而是优先使用增量同步。正常情况下，`gbrain sync` 会识别变化文件，不需要反复使用 `--full`。
+
+## 常用命令八：版本、回退和删除
+
+查看某个页面的历史版本：
+
+```bash
+gbrain history concepts/brand-radar
+```
+
+回退到指定版本：
+
+```bash
+gbrain revert concepts/brand-radar <version_id>
+```
+
+删除页面：
+
+```bash
+gbrain delete concepts/brand-radar
+```
+
+GBrain 的页面删除默认是软删除。需要确认删除后的页面时，可以这样读取：
+
+```bash
+gbrain get concepts/brand-radar --include-deleted
+```
+
+所以遇到写错内容，不必第一时间直接改数据库。先看历史，再决定回退还是删除，通常更安全。
+
+## 常用命令九：健康检查、建议和升级
+
+完整检查：
+
+```bash
+gbrain doctor
+```
+
+只做快速检查：
+
+```bash
+gbrain doctor --fast
+```
+
+查看 GBrain 对当前环境给出的维护建议：
+
+```bash
+gbrain advisor
+```
+
+检查是否有新版本：
+
+```bash
+gbrain check-update --json
+```
+
+明确决定升级后再执行：
+
+```bash
+gbrain upgrade
+```
+
+GBrain 还有自己的梦境维护：
+
+```bash
+gbrain dream --dry-run
+gbrain dream
+```
+
+它和 OpenClaw 的 `Memory Dreaming Promotion` 不是同一个任务。前者维护 GBrain 知识库，后者整理 OpenClaw 的 `MEMORY.md`，可以同时启用。
+
+<Callout title="不要只看 doctor 的退出码">
+  `gbrain doctor` 会同时检查数据库、嵌入、Skill 路由、RESOLVER 和集成规范。某个 Skill 缺少规则时，它可能返回失败，但数据库搜索仍然正常。因此应结合 status、真实搜索和 OpenClaw 调用结果一起判断。
+</Callout>
+
+## 常用命令十：确认 OpenClaw 真的接到了 GBrain
+
+先检查 MCP 静态配置并主动连接：
+
+```bash
+openclaw mcp doctor gbrain --probe
+```
+
+查看 MCP 公开了哪些工具：
+
+```bash
+openclaw mcp probe gbrain
+```
+
+查看 GBrain MCP 的实际配置：
+
+```bash
+openclaw mcp show gbrain --json
+```
+
+确认 Context Engine 插件已加载：
+
+```bash
+openclaw plugins inspect \
+  gbrain-context-engine \
+  --runtime
+```
+
+确认 Context Engine slot：
+
+```bash
+openclaw config get plugins.slots.contextEngine
+```
+
+正确结果应该是：
+
+```text
+gbrain-context
+```
+
+修改 MCP 配置后，不一定需要重启整个 OpenClaw，也可以先清理 MCP runtime 缓存：
+
+```bash
+openclaw mcp reload
+```
+
+修改插件或 Context Engine 配置后，再重启 Gateway：
+
+```bash
+openclaw gateway restart
+openclaw gateway health
+```
+
+最终验收不要只看命令成功。最好在 GBrain 里放入一个独特、明确的测试事实，然后在新的 OpenClaw 会话中直接提问，看 Agent 能否在不手动要求搜索的情况下主动召回。
+
+## 常用命令十一：检查知识质量和导出备份
+
+知识库刚开始只有几十页时，搜索能命中就够了。页面越来越多后，还要定期看是否出现孤立页面、坏链接、Markdown 格式问题和长期未整理的内容。
+
+只统计没有任何入站链接的页面：
+
+```bash
+gbrain orphans --count
+```
+
+查看具体孤立页面，并输出便于脚本处理的 JSON：
+
+```bash
+gbrain orphans --json
+```
+
+检查 Brain Repo 中的 Markdown 是否有占位日期、异常 frontmatter 或常见 LLM 痕迹：
+
+```bash
+gbrain lint ~/brain
+```
+
+确认页面之间的双向链接是否完整：
+
+```bash
+gbrain check-backlinks check ~/brain
+```
+
+查看当前知识图谱里的链接来源，例如人工关系、Markdown 链接和自动抽取关系：
+
+```bash
+gbrain link-sources
+```
+
+需要把数据库里的页面导出成 Markdown 备份时，可以写到独立目录：
+
+```bash
+gbrain export --dir ./gbrain-export
+```
+
+这几条命令更适合周期性维护，不需要每次对话都运行。我的判断标准是：搜索结果开始出现重复页面、页面之间明显断裂，或者准备升级、迁移数据库时，再集中做一次质量检查和导出备份。
+
+## 排查思路：先分清是哪一层坏了
+
+遇到“GBrain 好像没生效”，不要把所有模块混在一起查，按层缩小范围即可：
+
+1. 用 `gbrain status` 确认 source、同步时间和嵌入状态。
+2. 用 `gbrain search "确定存在的关键词" --limit 3` 证明知识确实能被查到。
+3. 用 `gbrain doctor --fast` 检查数据库、维度和嵌入，但把 Skill 路由警告与数据库故障分开判断。
+4. 用 `openclaw mcp doctor gbrain --probe` 验证 MCP；失败时再检查 command、cwd、`GBRAIN_SOURCE` 和环境变量。
+5. 用 `openclaw plugins inspect gbrain-context-engine --runtime` 和 `openclaw config get plugins.slots.contextEngine` 验证插件与 slot。
+6. 查看 `~/.gbrain/integrations/retrieval-reflex/heartbeat.jsonl`，出现 `event=inject` 才代表对话中真的发生了自动召回。
+
+这个顺序的关键，是每一层都先拿到“正常证据”，再继续往上查。例如 `gbrain search` 已经能返回目标页面，就不用再怀疑 Markdown 是否入库；`openclaw mcp doctor gbrain --probe` 已经通过，就不用反复修改 MCP command；插件显示 loaded，但对话仍然没有召回，才把注意力放到 Context Engine slot 和 Retrieval Reflex。
+
+还要区分“功能故障”和“维护检查未满分”。例如 `gbrain doctor --fast` 因缺少 `RESOLVER.md` 或某个 Skill 不符合 brain-first 规范而返回失败，并不代表 PostgreSQL、关键词搜索或向量检索一定不可用。此时应该结合 `gbrain status`、一次真实搜索和最近的 inject 日志一起判断，而不是看到退出码 1 就删除数据库重装。
+
+自动同步任务报错时也一样：先看 `gbrain status` 中最后成功同步时间，再检查本次 `gbrain sync --source brain` 的输出。同步本身成功、只是后续 doctor 检查失败，和文件根本没有入库，是两种完全不同的问题。
+
+## 我最终保留的日常使用顺序
+
+<div class="gbcmd-daily-path" aria-label="GBrain 日常操作顺序">
+  <div><b>1</b><span>看状态</span><code>gbrain status</code></div>
+  <i>→</i>
+  <div><b>2</b><span>查知识</span><code>search / query / get</code></div>
+  <i>→</i>
+  <div><b>3</b><span>写内容</span><code>capture / tag / link</code></div>
+  <i>→</i>
+  <div><b>4</b><span>做同步</span><code>sync / embed</code></div>
+  <i>→</i>
+  <div><b>5</b><span>验收接入</span><code>openclaw mcp / plugins</code></div>
+</div>
+
+<HighlightBox eyebrow="日常使用" title="先证明 GBrain 自己正常，再检查 OpenClaw 接入">
+  最省时间的排查顺序不是反复重启，而是先用 GBrain CLI 证明数据库、页面和搜索正常，再向上检查 MCP、Context Engine 和自动召回。这样每一步都有明确证据，也更容易知道到底应该改哪里。
+</HighlightBox>
+
+<style>{`
+  .gbcmd-architecture,
+  .gbcmd-daily-path {
+    margin: 1.4rem 0;
+    border: 1px solid #29435b;
+    border-radius: 24px;
+    color: #eaf5ff;
+    background: #0a1724;
+  }
+
+  .gbcmd-architecture {
+    overflow: hidden;
+  }
+
+  .gbcmd-architecture__head {
+    padding: 1.15rem 1.25rem;
+    border-bottom: 1px solid #284258;
+    background: linear-gradient(135deg, #0d2031, #10283b);
+  }
+
+  .gbcmd-architecture__head span {
+    display: block;
+    margin-bottom: .35rem;
+    color: #6fc7ff;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+  }
+
+  .gbcmd-architecture__head strong {
+    display: block;
+    color: #f4f9fd;
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  .gbcmd-architecture__input {
+    width: fit-content;
+    margin: 1rem auto .2rem;
+    padding: .55rem .95rem;
+    border: 1px solid #3f6685;
+    border-radius: 999px;
+    color: #dff3ff;
+    background: #102b40;
+    font-size: .86rem;
+    font-weight: 700;
+  }
+
+  .gbcmd-architecture__lanes {
+    display: grid;
+    gap: .85rem;
+    padding: .9rem 1rem 1rem;
+  }
+
+  .gbcmd-architecture__lanes section {
+    padding: .9rem;
+    border: 1px solid #29465f;
+    border-radius: 18px;
+    background: #0d2031;
+  }
+
+  .gbcmd-lane__tag {
+    width: fit-content;
+    margin-bottom: .75rem;
+    padding: .28rem .58rem;
+    border-radius: 999px;
+    color: #83d0ff;
+    background: rgba(72, 165, 225, .12);
+    font-size: .72rem;
+    font-weight: 700;
+  }
+
+  .gbcmd-lane__tag--green {
+    color: #7de0b5;
+    background: rgba(58, 196, 135, .11);
+  }
+
+  .gbcmd-lane__flow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: .55rem;
+    align-items: stretch;
+  }
+
+  .gbcmd-lane__flow > div {
+    min-width: 0;
+    padding: .8rem;
+    border: 1px solid #2d4d67;
+    border-radius: 14px;
+    background: #10273a;
+  }
+
+  .gbcmd-lane__flow > div.is-focus {
+    border-color: rgba(74, 173, 238, .5);
+    background: #12324a;
+  }
+
+  .gbcmd-lane__flow > div.is-success {
+    border-color: rgba(72, 206, 145, .42);
+    background: #11332d;
+  }
+
+  .gbcmd-lane__flow b {
+    display: block;
+    color: #68bff5;
+    font-size: .7rem;
+  }
+
+  .gbcmd-lane__flow strong {
+    display: block;
+    margin: .3rem 0;
+    color: #f2f8fc;
+    font-size: .88rem;
+  }
+
+  .gbcmd-lane__flow small {
+    display: block;
+    color: #91a9bb;
+    font-size: .76rem;
+    line-height: 1.55;
+  }
+
+  .gbcmd-lane__flow > i {
+    align-self: center;
+    color: #527694;
+    font-style: normal;
+  }
+
+  .gbcmd-architecture__base {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+    padding: 0 1rem 1rem;
+  }
+
+  .gbcmd-architecture__base > div {
+    padding: .85rem 1rem;
+    border: 1px solid #29465f;
+    border-radius: 16px;
+    background: #0c1d2c;
+  }
+
+  .gbcmd-architecture__base span,
+  .gbcmd-architecture__base small {
+    display: block;
+    color: #849daf;
+    font-size: .74rem;
+  }
+
+  .gbcmd-architecture__base strong {
+    display: block;
+    margin: .3rem 0;
+    color: #edf7ff;
+    font-size: .88rem;
+  }
+
+  .gbcmd-daily-path {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: .55rem;
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .gbcmd-daily-path > div {
+    min-width: 0;
+    padding: .8rem;
+    border: 1px solid #2d4b64;
+    border-radius: 14px;
+    background: #102638;
+  }
+
+  .gbcmd-daily-path b {
+    display: inline-grid;
+    width: 1.5rem;
+    height: 1.5rem;
+    place-items: center;
+    margin-right: .35rem;
+    border-radius: 999px;
+    color: #dff4ff;
+    background: #255a7d;
+    font-size: .72rem;
+  }
+
+  .gbcmd-daily-path span {
+    color: #f1f7fb;
+    font-size: .84rem;
+    font-weight: 700;
+  }
+
+  .gbcmd-daily-path code {
+    display: block;
+    margin-top: .45rem;
+    color: #83d1ff;
+    font-size: .72rem;
+    white-space: normal;
+  }
+
+  .gbcmd-daily-path > i {
+    color: #527694;
+    font-style: normal;
+  }
+
+  @media (max-width: 760px) {
+    .gbcmd-lane__flow,
+    .gbcmd-architecture__base,
+    .gbcmd-daily-path {
+      grid-template-columns: 1fr;
+    }
+
+    .gbcmd-lane__flow > i,
+    .gbcmd-daily-path > i {
+      transform: rotate(90deg);
+      text-align: center;
+    }
+  }
+`}</style>

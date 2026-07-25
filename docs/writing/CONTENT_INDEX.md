@@ -31,6 +31,7 @@
 | `src/content/posts/automation-agent-workflow.mdx` | `实践` | Agent 工作流、任务类型判断、决策树、大任务 TASK.md 状态文件、失败边界、Mermaid 流程图 | 写 Agent 流程、自动化协作、任务拆解决策、大任务阶段管理、可维护性文章时参考 |
 | `src/content/posts/browser-agent-shared-chrome-runtime.mdx` | `实践` | Browser Agent 本地共享浏览器运行时，覆盖真实 Chrome、固定 Profile、CDP、自愈启动、跨 Skill 接入和页面隔离边界 | 写浏览器自动化基础设施、Playwright CDP、共享登录状态、Chrome 生命周期和多 Agent 复用时参考 |
 | `src/content/posts/gbrain-openclaw-long-term-brain-setup.mdx` | `实践` | GBrain 接入 OpenClaw 的实战配置，覆盖 Context Engine 自动召回、Signal Detector 后台写入、PostgreSQL 多会话并发、Brain source 路由与高频踩坑 | 写 Agent 长期记忆、GBrain、OpenClaw Context Engine、自动记忆闭环和多进程存储选型时参考 |
+| `src/content/posts/gbrain-openclaw-command-handbook.mdx` | `教程` | GBrain 接入 OpenClaw 后的命令操作手册，覆盖状态、浏览、检索、读取、写入、关系、同步嵌入、版本维护、OpenClaw 接入验证和分层排查 | 写 GBrain CLI 教程、OpenClaw 长期知识库运维、命令速查和接入验收时参考 |
 | `src/content/posts/blog-project-architecture.mdx` | `实践` | 博客架构、内容流、发布链路、视觉笔记结构 | 写本博客说明、仓库结构、内容维护规则时参考 |
 | `src/content/posts/blog-code-structure-runtime.mdx` | `实践` | 项目结构、页面入口、文章读取、组件渲染、本地运行和发布流程 | 写本博客代码结构、运行流程、Astro 项目拆解时参考 |
 | `src/content/posts/css-selector-for-automation-beginners.mdx` | `教程` | 面向网页自动化实战的 CSS 定位教程，覆盖稳定定位三层能力、属性匹配、关系选择器、伪类边界、影刀文字定位、唯一性验证、排错路线和坏定位改造 | 写 CSS 选择器教学、网页元素定位、影刀编码版自动化、动态 class 处理和定位排错文章时参考 |
