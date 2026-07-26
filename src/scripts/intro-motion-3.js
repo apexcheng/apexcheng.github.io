@@ -1634,7 +1634,6 @@ function startCosmicOpening(root) {
 
     const idleTime = isIdle && finishedAt ? (time - finishedAt) * 0.12 : 0;
     const sceneTime = progress * duration + idleTime;
-    const sunAnimationTime = progress * duration + idleTime;
     const orbitMotionTime = Math.max(0, sceneTime - orbitMotionDelay);
     const systemShotBlend = cinematicEase(phase(progress, 0.54, 0.82));
 
@@ -1746,21 +1745,20 @@ function startCosmicOpening(root) {
 
     if (sunSurface && sunMaterial) {
       sunSurface.visible = sunReveal > 0.002;
-      sunSurface.rotation.y = sunAnimationTime * 0.000006;
-      sunSurface.rotation.z = sunAnimationTime * 0.0000018;
-      sunMaterial.uniforms.time.value = sunAnimationTime * 0.001;
+      sunSurface.rotation.y = sceneTime * 0.000006;
+      sunSurface.rotation.z = sceneTime * 0.0000018;
+      sunMaterial.uniforms.time.value = sceneTime * 0.001;
       sunMaterial.uniforms.opacity.value = sunReveal;
     }
-    const sunPulse = 1 + Math.sin(sunAnimationTime * 0.00115) * 0.14;
     sunGlowSprites.forEach((sprite, index) => {
-      const pulse = sunPulse + Math.sin(sunAnimationTime * 0.0007 + index * 1.3) * 0.025;
+      const pulse = 0.94 + Math.sin(sceneTime * 0.00055 + index * 1.3) * 0.06;
       sprite.material.opacity = sunReveal * sprite.userData.targetOpacity * pulse;
       if (index === sunGlowSprites.length - 1) {
-        sprite.material.rotation = Math.sin(sunAnimationTime * 0.00008) * 0.08;
+        sprite.material.rotation = Math.sin(sceneTime * 0.00008) * 0.08;
       }
     });
     if (sunLight) {
-      sunLight.intensity = sunReveal * (isMobile ? 310 : 440) * sunPulse;
+      sunLight.intensity = sunReveal * (isMobile ? 310 : 440);
     }
     if (sunLensflare) sunLensflare.visible = sunReveal > 0.08;
 
@@ -1874,12 +1872,10 @@ function startCosmicOpening(root) {
       warpMaterial.opacity = warp * 0.5;
     }
 
-    renderer.toneMappingExposure = 1.08 + sunReveal * 0.08 + warp * 0.18
-      + (sunPulse - 1) * 0.1 - finaleCalm * 0.01;
+    renderer.toneMappingExposure = 1.03 + sunReveal * 0.09 + warp * 0.16;
     if (bloomPass) {
-      bloomPass.strength = 0.42 + sunReveal * 0.48 + warp * 0.22
-        + (sunPulse - 1) * 0.55 - finaleCalm * 0.02;
-      bloomPass.radius = 0.32 + sunReveal * 0.12;
+      bloomPass.strength = 0.42 + sunReveal * 0.42 + warp * 0.18;
+      bloomPass.radius = 0.36 + sunReveal * 0.08;
     }
     updateRipples(time);
     if (composer) {
