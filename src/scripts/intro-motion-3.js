@@ -1633,7 +1633,7 @@ function startCosmicOpening(root) {
     pointerInfluence += (targetPointerInfluence - pointerInfluence) * 0.05;
 
     const idleTime = isIdle && finishedAt ? (time - finishedAt) * 0.12 : 0;
-    const sceneTime = progress * duration + (isExploring ? idleTime : 0);
+    const sceneTime = progress * duration + idleTime;
     const sunAnimationTime = progress * duration + idleTime;
     const orbitMotionTime = Math.max(0, sceneTime - orbitMotionDelay);
     const systemShotBlend = cinematicEase(phase(progress, 0.54, 0.82));
@@ -1751,15 +1751,16 @@ function startCosmicOpening(root) {
       sunMaterial.uniforms.time.value = sunAnimationTime * 0.001;
       sunMaterial.uniforms.opacity.value = sunReveal;
     }
+    const sunPulse = 1 + Math.sin(sunAnimationTime * 0.00115) * 0.14;
     sunGlowSprites.forEach((sprite, index) => {
-      const pulse = 0.94 + Math.sin(sunAnimationTime * 0.00055 + index * 1.3) * 0.06;
+      const pulse = sunPulse + Math.sin(sunAnimationTime * 0.0007 + index * 1.3) * 0.025;
       sprite.material.opacity = sunReveal * sprite.userData.targetOpacity * pulse;
       if (index === sunGlowSprites.length - 1) {
         sprite.material.rotation = Math.sin(sunAnimationTime * 0.00008) * 0.08;
       }
     });
     if (sunLight) {
-      sunLight.intensity = sunReveal * (isMobile ? 280 : 390);
+      sunLight.intensity = sunReveal * (isMobile ? 310 : 440) * sunPulse;
     }
     if (sunLensflare) sunLensflare.visible = sunReveal > 0.08;
 
@@ -1873,10 +1874,12 @@ function startCosmicOpening(root) {
       warpMaterial.opacity = warp * 0.5;
     }
 
-    renderer.toneMappingExposure = 0.98 + sunReveal * 0.1 + warp * 0.18 - finaleCalm * 0.04;
+    renderer.toneMappingExposure = 1.08 + sunReveal * 0.08 + warp * 0.18
+      + (sunPulse - 1) * 0.1 - finaleCalm * 0.01;
     if (bloomPass) {
-      bloomPass.strength = 0.34 + sunReveal * 0.4 + warp * 0.22 - finaleCalm * 0.08;
-      bloomPass.radius = 0.3 + sunReveal * 0.1;
+      bloomPass.strength = 0.42 + sunReveal * 0.48 + warp * 0.22
+        + (sunPulse - 1) * 0.55 - finaleCalm * 0.02;
+      bloomPass.radius = 0.32 + sunReveal * 0.12;
     }
     updateRipples(time);
     if (composer) {
