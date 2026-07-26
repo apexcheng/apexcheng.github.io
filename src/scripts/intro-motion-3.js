@@ -1632,8 +1632,9 @@ function startCosmicOpening(root) {
     pointerY += (targetPointerY - pointerY) * 0.035;
     pointerInfluence += (targetPointerInfluence - pointerInfluence) * 0.05;
 
-    const idleTime = isExploring && finishedAt ? (time - finishedAt) * 0.12 : 0;
-    const sceneTime = progress * duration + idleTime;
+    const idleTime = isIdle && finishedAt ? (time - finishedAt) * 0.12 : 0;
+    const sceneTime = progress * duration + (isExploring ? idleTime : 0);
+    const sunAnimationTime = progress * duration + idleTime;
     const orbitMotionTime = Math.max(0, sceneTime - orbitMotionDelay);
     const systemShotBlend = cinematicEase(phase(progress, 0.54, 0.82));
 
@@ -1745,16 +1746,16 @@ function startCosmicOpening(root) {
 
     if (sunSurface && sunMaterial) {
       sunSurface.visible = sunReveal > 0.002;
-      sunSurface.rotation.y = sceneTime * 0.000006;
-      sunSurface.rotation.z = sceneTime * 0.0000018;
-      sunMaterial.uniforms.time.value = sceneTime * 0.001;
+      sunSurface.rotation.y = sunAnimationTime * 0.000006;
+      sunSurface.rotation.z = sunAnimationTime * 0.0000018;
+      sunMaterial.uniforms.time.value = sunAnimationTime * 0.001;
       sunMaterial.uniforms.opacity.value = sunReveal;
     }
     sunGlowSprites.forEach((sprite, index) => {
-      const pulse = 0.94 + Math.sin(sceneTime * 0.00055 + index * 1.3) * 0.06;
+      const pulse = 0.94 + Math.sin(sunAnimationTime * 0.00055 + index * 1.3) * 0.06;
       sprite.material.opacity = sunReveal * sprite.userData.targetOpacity * pulse;
       if (index === sunGlowSprites.length - 1) {
-        sprite.material.rotation = Math.sin(sceneTime * 0.00008) * 0.08;
+        sprite.material.rotation = Math.sin(sunAnimationTime * 0.00008) * 0.08;
       }
     });
     if (sunLight) {
@@ -1963,6 +1964,7 @@ function startCosmicOpening(root) {
     exploreButton.hidden = reducedMotion.matches;
     exitExploreButton.hidden = true;
     status.textContent = '天体序章播放完成，可以进入博客或自由探索太阳系';
+    scheduleFrame();
   }
 
   function tick(time) {
