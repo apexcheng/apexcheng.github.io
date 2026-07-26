@@ -1,14 +1,14 @@
 ---
-title: "Excel 函数图解手册：看懂 VALUE、NUMBERVALUE、TEXT 与 XLOOKUP"
-description: "用四张完整网页信息图讲清 VALUE、NUMBERVALUE、TEXT 和 XLOOKUP 的输入、解析过程、返回结果与常见边界。"
+title: "Excel 函数图解手册：从类型转换到判断、查找与筛选"
+description: "用六张完整网页信息图讲清 VALUE、NUMBERVALUE、TEXT、XLOOKUP、IF 和 FILTER 的输入、处理过程、返回结果与常见边界。"
 date: 2026-07-26T12:50:27+08:00
-updated: 2026-07-26T22:22:27+08:00
+updated: 2026-07-26T22:58:39+08:00
 category: "教程"
 tags:
   - "Excel"
   - "数据处理"
   - "Excel 函数"
-minutes: 20
+minutes: 30
 featured: false
 series: "excel-functions"
 seriesOrder: 6
@@ -18,7 +18,7 @@ private: false
 
 这是一篇持续更新的 **Excel 函数图解手册**。每个函数占一个完整章节，不只告诉你公式怎么写，还会把输入、解析过程、返回结果和错误边界放在同一张网页信息图里。
 
-第一轮先收录四个函数：`VALUE` 负责把文本数字解析成数值，`NUMBERVALUE` 负责明确指定分隔符，`TEXT` 负责把数值按格式输出成文本，`XLOOKUP` 负责把查找值映射到对应结果。
+目前收录六个函数：`VALUE` 和 `NUMBERVALUE` 负责文本数字转换，`TEXT` 负责格式化输出，`XLOOKUP` 负责查找映射，`IF` 负责条件分支，`FILTER` 负责按条件返回多行结果。
 
 ## 第一章：VALUE——文本数字是怎么变成真正数值的
 
@@ -782,7 +782,323 @@ private: false
   </footer>
 </div>
 
-这篇手册后续仍会按“单函数独立信息图”继续扩展，下一轮可以进入动态数组函数，例如 `FILTER`。
+## 第五章：IF——条件成立和不成立时分别返回什么
+
+<div class="function-poster chapter-if" role="group" aria-label="Excel IF 函数根据条件选择返回结果的完整信息图">
+  <header class="poster-title">
+    <div>
+      <span class="poster-kicker">EXCEL FUNCTION VISUAL HANDBOOK · CHAPTER 05</span>
+      <strong class="poster-main-title">IF：把一次判断分成两条明确的返回路径</strong>
+    </div>
+    <span class="poster-function-tag">IF</span>
+  </header>
+
+  <div class="poster-definition">
+    <div>
+      <strong>IF(logical_test, value_if_true, value_if_false)</strong>
+      <span>先判断条件是否成立，再从两个候选结果中选择一个返回。</span>
+    </div>
+    <div class="poster-formula-demo">
+      <code>=IF(C2&gt;=100,"重点跟进","正常")</code>
+      <i aria-hidden="true">→</i>
+      <strong>重点跟进</strong>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>一、三个参数对应一条判断路径</b>
+    <span>先看条件，再决定走 TRUE 还是 FALSE 分支</span>
+  </div>
+
+  <div class="if-parameter-map" aria-label="IF 函数三个参数与分支的对应关系">
+    <div class="if-formula-line">
+      <span>=IF(</span>
+      <code class="if-test-token">C2&gt;=100</code>
+      <span>,</span>
+      <code class="if-true-token">"重点跟进"</code>
+      <span>,</span>
+      <code class="if-false-token">"正常"</code>
+      <span>)</span>
+    </div>
+    <div class="if-argument-grid">
+      <article class="if-test-card">
+        <small>logical_test</small>
+        <strong>C2&gt;=100</strong>
+        <p>这次要判断的问题。</p>
+      </article>
+      <article class="if-true-card">
+        <small>value_if_true</small>
+        <strong>"重点跟进"</strong>
+        <p>条件成立时返回。</p>
+      </article>
+      <article class="if-false-card">
+        <small>value_if_false</small>
+        <strong>"正常"</strong>
+        <p>条件不成立时返回。</p>
+      </article>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>二、一次完整判断是怎么发生的</b>
+    <span>以 C2 的数值 129 为例</span>
+  </div>
+
+  <div class="if-decision-board" aria-label="IF 函数条件判断流程">
+    <article class="if-input-node">
+      <small>读取单元格</small>
+      <strong>C2 = 129</strong>
+      <p>公式取得这次需要判断的实际值。</p>
+    </article>
+    <i aria-hidden="true">→</i>
+    <article class="if-gate-node">
+      <small>判断条件</small>
+      <strong>129 ≥ 100？</strong>
+      <span>TRUE</span>
+    </article>
+    <div class="if-branch-lines" aria-hidden="true">
+      <span class="is-true">TRUE</span>
+      <span class="is-false">FALSE</span>
+    </div>
+    <div class="if-result-branches">
+      <article class="is-selected">
+        <small>成立分支</small>
+        <strong>重点跟进</strong>
+        <p>本次条件成立，所以返回第二个参数。</p>
+      </article>
+      <article>
+        <small>不成立分支</small>
+        <strong>正常</strong>
+        <p>本次不选择这个结果。</p>
+      </article>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>三、同一个公式遇到不同数据</b>
+    <span>公式不变，变化的是条件判断结果</span>
+  </div>
+
+  <div class="if-case-grid">
+    <article class="is-true-case">
+      <div><span>输入</span><strong>C2 = 129</strong></div>
+      <div><span>判断</span><strong>129 ≥ 100 → TRUE</strong></div>
+      <div><span>返回</span><strong>重点跟进</strong></div>
+    </article>
+    <article class="is-false-case">
+      <div><span>输入</span><strong>C2 = 89</strong></div>
+      <div><span>判断</span><strong>89 ≥ 100 → FALSE</strong></div>
+      <div><span>返回</span><strong>正常</strong></div>
+    </article>
+  </div>
+
+  <div class="poster-section-title">
+    <b>四、常见公式变化</b>
+    <span>IF 可以返回文字、数字、公式结果，也可以继续嵌套判断</span>
+  </div>
+
+  <div class="example-table" role="table" aria-label="IF 函数常见公式示例">
+    <div class="example-head" role="row">
+      <span role="columnheader">公式</span>
+      <span role="columnheader">判断内容</span>
+      <span role="columnheader">成立时</span>
+      <span role="columnheader">不成立时</span>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=IF(B2&gt;=60,"及格","不及格")</code>
+      <span role="cell">分数是否达到 60</span>
+      <strong role="cell">及格</strong>
+      <span role="cell">不及格</span>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=IF(D2="异常",1,0)</code>
+      <span role="cell">状态是否等于“异常”</span>
+      <strong role="cell">1</strong>
+      <span role="cell">0</span>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=IF(C2="","待填写",C2)</code>
+      <span role="cell">单元格是否为空</span>
+      <strong role="cell">待填写</strong>
+      <span role="cell">保留原值</span>
+    </div>
+    <div class="example-row is-error" role="row">
+      <code role="cell">=IF(C2&gt;=100,"重点跟进")</code>
+      <span role="cell">省略第三个参数</span>
+      <span role="cell">重点跟进</span>
+      <strong role="cell">FALSE</strong>
+    </div>
+  </div>
+
+  <footer class="poster-conclusion">
+    <span>最终理解</span>
+    <strong>IF 的核心不是“写三个参数”，而是把一个判断问题和两个可能结果连接起来。</strong>
+    <p>阅读 IF 公式时，依次问自己：判断什么、成立返回什么、不成立返回什么。</p>
+  </footer>
+</div>
+
+## 第六章：FILTER——一个公式为什么能返回多行结果
+
+<div class="function-poster chapter-filter" role="group" aria-label="Excel FILTER 函数根据布尔条件数组返回多行记录的完整信息图">
+  <header class="poster-title">
+    <div>
+      <span class="poster-kicker">EXCEL FUNCTION VISUAL HANDBOOK · CHAPTER 06</span>
+      <strong class="poster-main-title">FILTER：先生成 TRUE / FALSE，再把命中的整行筛出来</strong>
+    </div>
+    <span class="poster-function-tag">FILTER</span>
+  </header>
+
+  <div class="poster-definition">
+    <div>
+      <strong>FILTER(array, include, [if_empty])</strong>
+      <span>根据条件数组保留对应为 TRUE 的记录，并把结果动态溢出到相邻单元格。</span>
+    </div>
+    <div class="poster-formula-demo">
+      <code>=FILTER(A2:D6,D2:D6="异常","暂无异常")</code>
+      <i aria-hidden="true">→</i>
+      <strong>返回 2 行</strong>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>一、三个参数分别对应什么</b>
+    <span>源数据决定返回哪些列，条件数组决定保留哪些行</span>
+  </div>
+
+  <div class="filter-parameter-map" aria-label="FILTER 函数参数映射">
+    <div class="filter-formula-line">
+      <span>=FILTER(</span>
+      <code class="filter-array-token">A2:D6</code>
+      <span>,</span>
+      <code class="filter-include-token">D2:D6="异常"</code>
+      <span>,</span>
+      <code class="filter-empty-token">"暂无异常"</code>
+      <span>)</span>
+    </div>
+    <div class="filter-argument-grid">
+      <article class="filter-array-card">
+        <small>array</small>
+        <strong>A2:D6</strong>
+        <p>筛选后要返回的完整数据区域。</p>
+      </article>
+      <article class="filter-include-card">
+        <small>include</small>
+        <strong>D2:D6="异常"</strong>
+        <p>逐行生成 TRUE / FALSE 的条件。</p>
+      </article>
+      <article class="filter-empty-card">
+        <small>if_empty</small>
+        <strong>"暂无异常"</strong>
+        <p>没有任何记录命中时显示。</p>
+      </article>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>二、从源数据到条件数组</b>
+    <span>每一行状态都会被判断一次，并得到一个对应的布尔值</span>
+  </div>
+
+  <div class="filter-source-board">
+    <div class="filter-source-table" role="table" aria-label="FILTER 函数源数据示例">
+      <div class="filter-source-row filter-source-head" role="row">
+        <span role="columnheader">行</span>
+        <span role="columnheader">商品</span>
+        <span role="columnheader">店铺</span>
+        <span role="columnheader">销售额</span>
+        <span role="columnheader">状态</span>
+      </div>
+      <div class="filter-source-row" role="row">
+        <span role="cell">2</span><strong role="cell">键盘 A</strong><span role="cell">天猫</span><b role="cell">860</b><em role="cell">正常</em>
+      </div>
+      <div class="filter-source-row is-hit" role="row">
+        <span role="cell">3</span><strong role="cell">鼠标 B</strong><span role="cell">京东</span><b role="cell">420</b><em role="cell">异常</em>
+      </div>
+      <div class="filter-source-row" role="row">
+        <span role="cell">4</span><strong role="cell">键盘 C</strong><span role="cell">拼多多</span><b role="cell">730</b><em role="cell">正常</em>
+      </div>
+      <div class="filter-source-row is-hit" role="row">
+        <span role="cell">5</span><strong role="cell">鼠标 D</strong><span role="cell">天猫</span><b role="cell">190</b><em role="cell">异常</em>
+      </div>
+      <div class="filter-source-row" role="row">
+        <span role="cell">6</span><strong role="cell">键盘 E</strong><span role="cell">京东</span><b role="cell">980</b><em role="cell">正常</em>
+      </div>
+    </div>
+
+    <div class="filter-mask" aria-label="FILTER 条件数组结果">
+      <span>条件数组</span>
+      <code>FALSE</code>
+      <code class="is-true">TRUE</code>
+      <code>FALSE</code>
+      <code class="is-true">TRUE</code>
+      <code>FALSE</code>
+    </div>
+  </div>
+
+  <div class="filter-selection-strip">
+    <span>保留规则</span>
+    <strong>只有条件数组中为 TRUE 的第 3 行和第 5 行被保留</strong>
+    <small>FALSE 对应的记录不会进入结果区域</small>
+  </div>
+
+  <div class="poster-section-title">
+    <b>三、结果为什么会“溢出”成一块区域</b>
+    <span>FILTER 返回的不是一个值，而是一组行列结构完整的数组</span>
+  </div>
+
+  <div class="filter-output-board">
+    <div class="filter-output-origin">
+      <span>公式只写在 F2</span>
+      <code>=FILTER(A2:D6,D2:D6="异常","暂无异常")</code>
+    </div>
+    <i aria-hidden="true">→ 动态溢出 →</i>
+    <div class="filter-result-table" role="table" aria-label="FILTER 动态溢出结果">
+      <div class="filter-result-row filter-result-head" role="row">
+        <span role="columnheader">商品</span><span role="columnheader">店铺</span><span role="columnheader">销售额</span><span role="columnheader">状态</span>
+      </div>
+      <div class="filter-result-row" role="row">
+        <strong role="cell">鼠标 B</strong><span role="cell">京东</span><b role="cell">420</b><em role="cell">异常</em>
+      </div>
+      <div class="filter-result-row" role="row">
+        <strong role="cell">鼠标 D</strong><span role="cell">天猫</span><b role="cell">190</b><em role="cell">异常</em>
+      </div>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>四、常见边界</b>
+    <span>条件范围要与源数据行数一致，溢出区域也必须保持空白</span>
+  </div>
+
+  <div class="filter-boundary-grid">
+    <article class="is-empty-case">
+      <span>没有命中记录</span>
+      <code>=FILTER(A2:D6,D2:D6="缺货","暂无缺货")</code>
+      <strong>暂无缺货</strong>
+      <p>第三个参数避免没有结果时直接返回计算错误。</p>
+    </article>
+    <article class="is-spill-case">
+      <span>溢出区域被占用</span>
+      <code>结果要占用 F2:I3，但其中已有内容</code>
+      <strong>#SPILL!</strong>
+      <p>清空结果区域中的阻挡内容后，数组才能完整展开。</p>
+    </article>
+    <article class="is-size-case">
+      <span>条件范围高度不一致</span>
+      <code>=FILTER(A2:D6,D2:D5="异常")</code>
+      <strong>#VALUE!</strong>
+      <p>源数据有 5 行，条件只判断 4 行，无法逐行对应。</p>
+    </article>
+  </div>
+
+  <footer class="poster-conclusion">
+    <span>最终理解</span>
+    <strong>FILTER 的核心是先把条件变成一组 TRUE / FALSE，再返回所有 TRUE 对应的完整记录。</strong>
+    <p>看 FILTER 公式时依次确认：返回哪片数据、每一行如何判断、没有结果时显示什么，以及溢出区域是否为空。</p>
+  </footer>
+</div>
+
+这篇手册后续仍会按“单函数独立信息图”继续扩展，不把多个函数压缩进同一张小卡片。
 
 <div class="handbook-series-link">
   <div>
@@ -1937,6 +2253,474 @@ private: false
     background: #f7f3ff;
   }
 
+  .chapter-if .poster-title {
+    background:
+      linear-gradient(90deg, rgba(217, 119, 6, .1), transparent 48%),
+      #fff;
+  }
+
+  .chapter-if .poster-kicker,
+  .chapter-if .poster-section-title b { color: #b45309; }
+
+  .chapter-if .poster-function-tag {
+    color: #b45309;
+    border-color: #e8bd7d;
+    background: #fff7e8;
+  }
+
+  .chapter-filter .poster-title {
+    background:
+      linear-gradient(90deg, rgba(25, 138, 97, .1), transparent 48%),
+      #fff;
+  }
+
+  .chapter-filter .poster-kicker,
+  .chapter-filter .poster-section-title b { color: var(--poster-green); }
+
+  .chapter-filter .poster-function-tag {
+    color: var(--poster-green);
+    border-color: #9fcdb5;
+    background: var(--poster-green-soft);
+  }
+
+  .if-parameter-map,
+  .filter-parameter-map {
+    margin: 0 1.5rem 1.6rem;
+    overflow: hidden;
+    border: 1px solid var(--poster-line);
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .if-formula-line,
+  .filter-formula-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .35rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--poster-line);
+    background: #fbfdff;
+    color: #5c6d81;
+    font-size: .84rem;
+    font-weight: 800;
+  }
+
+  .if-formula-line code,
+  .filter-formula-line code {
+    padding: .38rem .5rem;
+    border-radius: 5px;
+    font-size: .82rem;
+    font-weight: 900;
+  }
+
+  .if-test-token { color: #1769dc; background: #edf5ff; }
+  .if-true-token { color: #198a61; background: #eef9f4; }
+  .if-false-token { color: #c34848; background: #fff1f1; }
+  .filter-array-token { color: #1769dc; background: #edf5ff; }
+  .filter-include-token { color: #198a61; background: #eef9f4; }
+  .filter-empty-token { color: #7653c8; background: #f5f0ff; }
+
+  .if-argument-grid,
+  .filter-argument-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--poster-line);
+  }
+
+  .if-argument-grid article,
+  .filter-argument-grid article {
+    padding: .9rem;
+    background: #fff;
+  }
+
+  .if-argument-grid small,
+  .filter-argument-grid small {
+    display: block;
+    color: #738297;
+    font-size: .66rem;
+    font-weight: 900;
+    letter-spacing: .04em;
+  }
+
+  .if-argument-grid strong,
+  .filter-argument-grid strong {
+    display: block;
+    margin: .28rem 0;
+    color: #17283d;
+    font-size: .92rem;
+  }
+
+  .if-argument-grid p,
+  .filter-argument-grid p {
+    margin: 0;
+    color: #607186;
+    font-size: .75rem;
+    line-height: 1.55;
+  }
+
+  .if-test-card,
+  .filter-array-card { border-top: 3px solid #1769dc; }
+  .if-true-card,
+  .filter-include-card { border-top: 3px solid #198a61; }
+  .if-false-card { border-top: 3px solid #c34848; }
+  .filter-empty-card { border-top: 3px solid #7653c8; }
+
+  .if-decision-board {
+    display: grid;
+    grid-template-columns: minmax(180px, .8fr) auto minmax(190px, .85fr) minmax(180px, .7fr) minmax(0, 1.2fr);
+    align-items: center;
+    gap: .7rem;
+    margin: 0 1.5rem 1.6rem;
+  }
+
+  .if-input-node,
+  .if-gate-node,
+  .if-result-branches article {
+    padding: .9rem;
+    border: 1px solid #cbd8e8;
+    border-radius: 9px;
+    background: #fff;
+  }
+
+  .if-input-node { background: #f7fbff; }
+
+  .if-input-node small,
+  .if-gate-node small,
+  .if-result-branches small {
+    display: block;
+    color: #718196;
+    font-size: .66rem;
+    font-weight: 900;
+  }
+
+  .if-input-node strong,
+  .if-gate-node strong,
+  .if-result-branches strong {
+    display: block;
+    margin: .32rem 0;
+    color: #17283d;
+    font-size: .98rem;
+  }
+
+  .if-input-node p,
+  .if-result-branches p {
+    margin: 0;
+    color: #607186;
+    font-size: .74rem;
+    line-height: 1.55;
+  }
+
+  .if-decision-board > i {
+    color: #7b8798;
+    font-style: normal;
+    font-weight: 900;
+  }
+
+  .if-gate-node {
+    text-align: center;
+    border-color: #e1b66f;
+    background: #fff9ee;
+  }
+
+  .if-gate-node span {
+    display: inline-block;
+    padding: .28rem .48rem;
+    border-radius: 999px;
+    color: #fff;
+    background: #198a61;
+    font-size: .68rem;
+    font-weight: 900;
+  }
+
+  .if-branch-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 1.45rem;
+  }
+
+  .if-branch-lines span {
+    position: relative;
+    padding-right: 1rem;
+    font-size: .64rem;
+    font-weight: 900;
+    text-align: right;
+  }
+
+  .if-branch-lines span::after {
+    content: "→";
+    position: absolute;
+    right: 0;
+  }
+
+  .if-branch-lines .is-true { color: #198a61; }
+  .if-branch-lines .is-false { color: #c34848; }
+
+  .if-result-branches {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .65rem;
+  }
+
+  .if-result-branches article.is-selected {
+    border-color: #9dcdb5;
+    background: #f1fbf6;
+    box-shadow: inset 4px 0 0 #198a61;
+  }
+
+  .if-result-branches article:not(.is-selected) {
+    opacity: .72;
+    background: #fff9f9;
+  }
+
+  .if-case-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 0 1.5rem 1.6rem;
+  }
+
+  .if-case-grid article {
+    overflow: hidden;
+    border: 1px solid var(--poster-line);
+    border-radius: 9px;
+    background: #fff;
+  }
+
+  .if-case-grid article > div {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: .6rem;
+    padding: .68rem .8rem;
+    border-top: 1px solid var(--poster-line);
+  }
+
+  .if-case-grid article > div:first-child { border-top: 0; }
+
+  .if-case-grid span {
+    color: #738297;
+    font-size: .68rem;
+    font-weight: 900;
+  }
+
+  .if-case-grid strong {
+    color: #263b53;
+    font-size: .78rem;
+  }
+
+  .if-case-grid .is-true-case { border-top: 3px solid #198a61; }
+  .if-case-grid .is-false-case { border-top: 3px solid #c34848; }
+
+  .filter-source-board {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 120px;
+    gap: .8rem;
+    margin: 0 1.5rem 1rem;
+  }
+
+  .filter-source-table,
+  .filter-mask,
+  .filter-result-table {
+    overflow: hidden;
+    border: 1px solid var(--poster-line);
+    border-radius: 9px;
+    background: #fff;
+  }
+
+  .filter-source-row {
+    display: grid;
+    grid-template-columns: 46px 1fr .9fr .7fr .65fr;
+    border-top: 1px solid var(--poster-line);
+  }
+
+  .filter-source-row:first-child { border-top: 0; }
+
+  .filter-source-row > * {
+    padding: .62rem .55rem;
+    border-right: 1px solid var(--poster-line);
+    color: #53667a;
+    font-size: .74rem;
+    font-style: normal;
+  }
+
+  .filter-source-row > *:last-child { border-right: 0; }
+  .filter-source-head { background: #eaf5ef; font-weight: 900; }
+  .filter-source-row b { color: #1769dc; }
+  .filter-source-row em { color: #5d6f83; }
+
+  .filter-source-row.is-hit {
+    background: #f2fbf7;
+    box-shadow: inset 4px 0 0 #198a61;
+  }
+
+  .filter-source-row.is-hit em {
+    color: #c34848;
+    font-weight: 900;
+  }
+
+  .filter-mask {
+    display: grid;
+    grid-template-rows: auto repeat(5, 1fr);
+  }
+
+  .filter-mask > span,
+  .filter-mask code {
+    display: grid;
+    place-items: center;
+    min-height: 38px;
+    border-top: 1px solid var(--poster-line);
+    font-size: .68rem;
+    font-weight: 900;
+  }
+
+  .filter-mask > span {
+    border-top: 0;
+    color: #315d4a;
+    background: #eaf5ef;
+  }
+
+  .filter-mask code { color: #798698; }
+  .filter-mask code.is-true { color: #198a61; background: #f2fbf7; }
+
+  .filter-selection-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .55rem;
+    margin: 0 1.5rem 1.6rem;
+    padding: .75rem .9rem;
+    border: 1px solid #a8d1bc;
+    border-radius: 8px;
+    background: #f2fbf7;
+  }
+
+  .filter-selection-strip span {
+    color: #527061;
+    font-size: .68rem;
+    font-weight: 900;
+  }
+
+  .filter-selection-strip strong {
+    color: #198a61;
+    font-size: .82rem;
+  }
+
+  .filter-selection-strip small {
+    color: #68798d;
+    font-size: .68rem;
+  }
+
+  .filter-output-board {
+    display: grid;
+    grid-template-columns: minmax(230px, .85fr) auto minmax(0, 1.4fr);
+    align-items: center;
+    gap: .8rem;
+    margin: 0 1.5rem 1.6rem;
+  }
+
+  .filter-output-origin {
+    padding: .9rem;
+    border: 1px solid #b9cce2;
+    border-radius: 9px;
+    background: #f7fbff;
+  }
+
+  .filter-output-origin span {
+    display: block;
+    margin-bottom: .45rem;
+    color: #64758a;
+    font-size: .68rem;
+    font-weight: 900;
+  }
+
+  .filter-output-origin code {
+    color: #1769dc;
+    font-size: .76rem;
+    font-weight: 800;
+  }
+
+  .filter-output-board > i {
+    color: #65768a;
+    font-size: .72rem;
+    font-style: normal;
+    font-weight: 900;
+  }
+
+  .filter-result-row {
+    display: grid;
+    grid-template-columns: 1fr .8fr .7fr .65fr;
+    border-top: 1px solid var(--poster-line);
+  }
+
+  .filter-result-row:first-child { border-top: 0; }
+
+  .filter-result-row > * {
+    padding: .65rem .55rem;
+    border-right: 1px solid var(--poster-line);
+    color: #53667a;
+    font-size: .73rem;
+    font-style: normal;
+  }
+
+  .filter-result-row > *:last-child { border-right: 0; }
+  .filter-result-head { background: #eaf5ef; font-weight: 900; }
+  .filter-result-row b { color: #1769dc; }
+  .filter-result-row em { color: #c34848; font-weight: 900; }
+
+  .filter-boundary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .8rem;
+    margin: 0 1.5rem 1.6rem;
+  }
+
+  .filter-boundary-grid article {
+    padding: .9rem;
+    border: 1px solid var(--poster-line);
+    border-radius: 9px;
+    background: #fff;
+  }
+
+  .filter-boundary-grid span {
+    display: block;
+    color: #53667a;
+    font-size: .68rem;
+    font-weight: 900;
+  }
+
+  .filter-boundary-grid code,
+  .filter-boundary-grid strong {
+    display: block;
+    margin-top: .42rem;
+  }
+
+  .filter-boundary-grid code {
+    color: #1769dc;
+    font-size: .72rem;
+    font-weight: 800;
+  }
+
+  .filter-boundary-grid strong {
+    color: #17283d;
+    font-size: .98rem;
+  }
+
+  .filter-boundary-grid p {
+    margin: .42rem 0 0;
+    color: #607186;
+    font-size: .73rem;
+    line-height: 1.55;
+  }
+
+  .filter-boundary-grid .is-empty-case { border-top: 3px solid #198a61; }
+  .filter-boundary-grid .is-spill-case,
+  .filter-boundary-grid .is-size-case { border-top: 3px solid #c34848; background: #fff9f9; }
+  .filter-boundary-grid .is-spill-case strong,
+  .filter-boundary-grid .is-size-case strong { color: #c34848; }
+
   .handbook-series-link {
     display: flex;
     align-items: center;
@@ -2004,13 +2788,19 @@ private: false
     .text-render-flow,
     .locale-compare,
     .lookup-workbench,
-    .not-found-flow {
+    .not-found-flow,
+    .if-decision-board,
+    .filter-output-board,
+    .filter-boundary-grid {
       grid-template-columns: 1fr;
     }
 
     .separator-pipeline > i,
     .text-render-flow > span,
-    .not-found-flow > i {
+    .not-found-flow > i,
+    .if-decision-board > i,
+    .filter-output-board > i,
+    .if-branch-lines {
       display: none;
     }
 
@@ -2047,7 +2837,15 @@ private: false
     .lookup-workbench,
     .lookup-result-strip,
     .array-alignment-board,
-    .not-found-flow {
+    .not-found-flow,
+    .if-parameter-map,
+    .if-decision-board,
+    .if-case-grid,
+    .filter-parameter-map,
+    .filter-source-board,
+    .filter-selection-strip,
+    .filter-output-board,
+    .filter-boundary-grid {
       margin-left: .85rem;
       margin-right: .85rem;
     }
@@ -2079,12 +2877,19 @@ private: false
     .format-code-notes,
     .type-state-board,
     .text-use-grid,
-    .array-alignment-board {
+    .array-alignment-board,
+    .if-argument-grid,
+    .filter-argument-grid,
+    .if-result-branches,
+    .if-case-grid,
+    .filter-boundary-grid {
       grid-template-columns: 1fr;
     }
 
     .separator-formula,
-    .lookup-formula-line {
+    .lookup-formula-line,
+    .if-formula-line,
+    .filter-formula-line {
       justify-content: flex-start;
       padding: .9rem .75rem;
     }
@@ -2110,6 +2915,19 @@ private: false
     .lookup-result-strip {
       justify-content: flex-start;
     }
+
+    .filter-source-board {
+      grid-template-columns: minmax(540px, 1fr) 92px;
+      overflow-x: auto;
+      padding-bottom: .25rem;
+    }
+
+    .filter-output-board {
+      overflow-x: auto;
+      padding-bottom: .25rem;
+    }
+
+    .filter-result-table { min-width: 480px; }
 
     .detail-row,
     .detail-row.is-tall {
