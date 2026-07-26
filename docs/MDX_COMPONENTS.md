@@ -42,7 +42,7 @@
 文章用法：
 
 ```mdx
-<FeatureCard title="先写正文" meta="STEP" description="先把结论和结构写清楚，再决定是否加组件。">
+<FeatureCard title="先定视觉结构" meta="STEP" description="先确定章节要表达的关系，再选择合适的组件作为子模式。">
   <ul>
     <li>普通段落优先</li>
     <li>组件只服务重点信息</li>

@@ -4,99 +4,61 @@ description: 一句话简介
 date: 2026-06-29T10:30:00+08:00
 category: 实践
 tags:
-  - Agent
-  - 视觉笔记
+  - 主题标签
 minutes: 8
 featured: false
 draft: false
 private: false
 ---
 
-import MetricCard from '../../components/MetricCard.astro';
-import FeatureCard from '../../components/FeatureCard.astro';
-import VisualGrid from '../../components/VisualGrid.astro';
-import HighlightBox from '../../components/HighlightBox.astro';
-import DecisionFlow from '../../components/DecisionFlow.astro';
-import Mermaid from '../../components/Mermaid.astro';
+{/*
+写作前先完成视觉方案，并在正式发布前删除本注释：
 
-本文结论：用一句话说明这篇文章解决什么问题，以及推荐的做法。
+- 文章形态：图解手册型 / 视觉叙事型 / 设计化文章型
+- 整篇文章最适合被看成什么网页？
+- 每个主要 H2 分别解决什么问题、使用什么完整视觉板？
+- 桌面端如何拓宽，移动端如何纵向重排？
 
-## 概览
+不要直接保留任何示例布局。
+不要默认导入 VisualGrid、MetricCard、Mermaid 等组件。
+先根据内容设计，再只导入实际需要的组件。
+*/}
 
-<VisualGrid columns={3}>
-  <MetricCard label="场景" value="待填写" detail="这篇文章适合什么任务或读者。" />
-  <MetricCard label="输入" value="待填写" detail="需要哪些材料、页面、数据或上下文。" tone="cyan" />
-  <MetricCard label="输出" value="待填写" detail="读者最终能得到什么结果。" tone="green" />
-</VisualGrid>
+用 1 到 2 句写清文章的问题和核心判断。
 
-<HighlightBox eyebrow="KEY" title="先看结论">
-  用 1 到 2 句写清楚核心判断。不要在开头铺太长背景。
-</HighlightBox>
+## 用读者真正关心的问题作为章节标题
 
-## 路径
+<section class="article-visual-chapter" aria-label="根据文章主题填写">
+  {/*
+  这里不是固定模板。根据内容重新设计完整视觉章节，建议形成：
 
-<Mermaid
-  title="执行路径"
-  caption="把流程、决策或架构压成一张图；如果太复杂，拆成多张。"
-  chart={`flowchart LR
-    A[输入] --> B[判断]
-    B --> C[执行]
-    C --> D[输出]`}
-/>
+  章节定义 / 问题
+    ↓
+  总览关系 / 流程
+    ↓
+  核心解析
+    ↓
+  案例、数据或结果
+    ↓
+  错误、边界与结论
 
-## 模块
+  可以使用文章专属 HTML、MDX、CSS、现有组件、表格或代码块。
+  视觉结构应承担主要解释，普通正文只补充事实和边界。
+  */}
+</section>
 
-<VisualGrid columns={2}>
-  <FeatureCard title="模块一" meta="ROLE" description="说明第一个关键模块、角色或步骤。">
-    <ul>
-      <li>要点一</li>
-      <li>要点二</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="模块二" meta="RULE" description="说明第二个关键模块、规则或取舍。">
-    <ul>
-      <li>要点一</li>
-      <li>要点二</li>
-    </ul>
-  </FeatureCard>
-</VisualGrid>
+用必要的短正文补充视觉章节没有覆盖的背景、事实或例外情况。
 
-## 决策
+{/* 有其他同级问题时，再新增下一个 H2 和完整视觉章节。不要为了凑结构增加空章节。 */}
 
-<DecisionFlow
-  title="判断顺序"
-  items={[
-    {
-      label: 'Step 1',
-      title: '先确认目标',
-      description: '写清楚用户要解决的问题，不扩展到无关需求。',
-    },
-    {
-      label: 'Step 2',
-      title: '再选择路径',
-      description: '流程、架构、对比或代码细节只保留必要部分。',
-    },
-    {
-      label: 'Step 3',
-      title: '最后给检查清单',
-      description: '把结论转成读者可以直接执行的动作。',
-    },
-  ]}
-/>
+<style>{`
+  .article-visual-chapter {
+    /* 根据文章专属视觉方案重新设计；不要保留空样式发布。 */
+  }
 
-## 细节
-
-- 关键事实一：待填写。
-- 关键事实二：待填写。
-- 风险或边界：待填写。
-
-```bash
-# 如需命令示例，保留最小可运行片段
-echo "replace me"
-```
-
-## 检查
-
-<HighlightBox eyebrow="CHECK" title="发布前确认">
-  确认分类只使用生活、实践、教程、视觉实验室之一；新文章默认 draft: false、private: false，只有用户明确要求草稿或私密时才改为 true。
-</HighlightBox>
+  @media (max-width: 720px) {
+    .article-visual-chapter {
+      /* 横向关系改为纵向，保持正文字号和整页宽度正常。 */
+    }
+  }
+`}</style>
