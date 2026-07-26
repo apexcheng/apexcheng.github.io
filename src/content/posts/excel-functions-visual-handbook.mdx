@@ -1,0 +1,1039 @@
+---
+title: "Excel 函数图解手册：从 VALUE 开始看懂公式原理"
+description: "把 Excel 函数做成可持续扩展的网页信息图手册。第一章用一张完整视觉板讲清 VALUE 如何把文本数字解析成真正的数值。"
+date: 2026-07-26T12:50:27+08:00
+updated: 2026-07-26T13:18:00+08:00
+category: "教程"
+tags:
+  - "Excel"
+  - "数据处理"
+  - "Excel 函数"
+minutes: 8
+featured: false
+series: "excel-functions"
+seriesOrder: 6
+draft: false
+private: false
+---
+
+这是一篇持续更新的 **Excel 函数图解手册**。每个函数占一个完整章节，不只告诉你公式怎么写，还会把输入、解析过程、返回结果和错误边界放在同一张网页信息图里。
+
+目前先从 `VALUE` 开始：它不是“把字符串转成文本”，而是把**看起来像数字的文本，解析成真正可以计算的数值**。
+
+## 第一章：VALUE——文本数字是怎么变成真正数值的
+
+<div class="function-poster" role="group" aria-label="Excel VALUE 函数将文本转换为数值的完整信息图">
+  <header class="poster-title">
+    <div>
+      <span class="poster-kicker">EXCEL FUNCTION VISUAL HANDBOOK · CHAPTER 01</span>
+      <strong class="poster-main-title">VALUE 函数：将字符串转换为数值的原理</strong>
+    </div>
+    <span class="poster-function-tag">VALUE</span>
+  </header>
+
+  <div class="poster-definition">
+    <div>
+      <strong>VALUE(text)</strong>
+      <span>把符合数字格式的文本，解析成 Excel 可以计算的数值。</span>
+    </div>
+    <div class="poster-formula-demo">
+      <code>=VALUE("123.45")</code>
+      <i aria-hidden="true">→</i>
+      <strong>123.45</strong>
+      <span>数值</span>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>一、总体流程</b>
+    <span>先判断文本能不能被完整解释成数字，再返回真正的数值类型</span>
+  </div>
+
+  <div class="poster-flow" aria-label="VALUE 函数四步处理流程">
+    <article class="tone-blue">
+      <small>01</small>
+      <strong>输入字符串</strong>
+      <p>接收到的仍然是文本，例如 <code>" -1,234.56 "</code>。</p>
+    </article>
+    <i aria-hidden="true">→</i>
+    <article class="tone-green">
+      <small>02</small>
+      <strong>解析与验证</strong>
+      <p>按当前地区的数字格式，检查符号、分隔符和数字结构。</p>
+    </article>
+    <i aria-hidden="true">→</i>
+    <article class="tone-orange">
+      <small>03</small>
+      <strong>转换为数值</strong>
+      <p>去掉显示层面的分隔结构，构造 Excel 内部的数值。</p>
+    </article>
+    <i aria-hidden="true">→</i>
+    <article class="tone-violet">
+      <small>04</small>
+      <strong>返回结果</strong>
+      <p>结果可以继续计算、排序、汇总、比较和绘图。</p>
+    </article>
+  </div>
+
+  <div class="poster-section-title">
+    <b>二、详细原理图解</b>
+    <span>以文本 " -1,234.56 " 为例，看 Excel 每一步究竟做了什么</span>
+  </div>
+
+  <div class="poster-detail-table" role="table" aria-label="VALUE 函数详细解析过程">
+    <div class="detail-head" role="row">
+      <span role="columnheader">步骤</span>
+      <span role="columnheader">处理过程</span>
+      <span role="columnheader">图示</span>
+      <span role="columnheader">说明</span>
+    </div>
+
+    <div class="detail-row" role="row">
+      <div class="detail-step" role="cell">
+        <b>1</b>
+        <strong>输入字符串</strong>
+      </div>
+      <div class="detail-action" role="cell">接收文本</div>
+      <div class="detail-visual input-visual" role="cell">
+        <span>原始内容</span>
+        <code>" -1,234.56 "</code>
+      </div>
+      <div class="detail-note" role="cell">
+        单元格里的内容看起来像数字，但此时仍是一串字符。首尾空格、负号、千位符和小数点都属于文本内容的一部分。
+      </div>
+    </div>
+
+    <div class="detail-row is-tall" role="row">
+      <div class="detail-step" role="cell">
+        <b>2</b>
+        <strong>解析与验证</strong>
+      </div>
+      <div class="detail-action" role="cell">按数字规则拆解</div>
+      <div class="detail-visual parser-visual" role="cell">
+        <div class="token-line" aria-label="文本中的数字结构">
+          <span class="token-sign"><b>-</b><small>负号</small></span>
+          <span class="token-number"><b>1</b><small>整数</small></span>
+          <span class="token-group"><b>,</b><small>千位符</small></span>
+          <span class="token-number"><b>234</b><small>整数</small></span>
+          <span class="token-decimal"><b>.</b><small>小数点</small></span>
+          <span class="token-fraction"><b>56</b><small>小数</small></span>
+        </div>
+        <div class="validation-strip">
+          <span>符号位置正确</span>
+          <span>分隔符可识别</span>
+          <span>整段可解释</span>
+          <strong>合法</strong>
+        </div>
+      </div>
+      <div class="detail-note" role="cell">
+        Excel 会按当前地区设置识别正负号、小数点和千位分隔符。只要其中夹杂无法解释的字符，例如 <code>12a3</code>，就会返回 <code>#VALUE!</code>。
+      </div>
+    </div>
+
+    <div class="detail-row" role="row">
+      <div class="detail-step" role="cell">
+        <b>3</b>
+        <strong>转换为数值</strong>
+      </div>
+      <div class="detail-action" role="cell">构造数值结构</div>
+      <div class="detail-visual build-visual" role="cell">
+        <div><span>符号</span><b>-</b></div>
+        <i>+</i>
+        <div><span>整数部分</span><b>1234</b></div>
+        <i>+</i>
+        <div><span>小数部分</span><b>56</b></div>
+        <em>→</em>
+        <strong>-1234.56</strong>
+      </div>
+      <div class="detail-note" role="cell">
+        千位分隔符只负责帮助阅读，不属于数值本身。解析成功后，Excel 得到标准数值 <code>-1234.56</code>，再用内部的浮点数格式保存。
+      </div>
+    </div>
+
+    <div class="detail-row" role="row">
+      <div class="detail-step" role="cell">
+        <b>4</b>
+        <strong>返回结果</strong>
+      </div>
+      <div class="detail-action" role="cell">返回数值类型</div>
+      <div class="detail-visual output-visual" role="cell">
+        <span>VALUE 返回</span>
+        <strong>-1234.56</strong>
+        <small>数值类型</small>
+      </div>
+      <div class="detail-note" role="cell">
+        结果不再是文字，可以参与加减乘除、条件比较、统计汇总和图表分析。之后设置货币或百分比，只是在改变显示格式。
+      </div>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>三、更多示例</b>
+    <span>能否成功，取决于整段文本是否符合 Excel 当前可识别的数字格式</span>
+  </div>
+
+  <div class="example-table" role="table" aria-label="VALUE 函数常见公式示例">
+    <div class="example-head" role="row">
+      <span role="columnheader">公式</span>
+      <span role="columnheader">字符串内容</span>
+      <span role="columnheader">Excel 如何理解</span>
+      <span role="columnheader">返回值</span>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=VALUE("123")</code>
+      <span role="cell">"123"</span>
+      <span role="cell">识别为整数</span>
+      <strong role="cell">123</strong>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=VALUE(" +45.6 ")</code>
+      <span role="cell">" +45.6 "</span>
+      <span role="cell">忽略首尾空格，识别正号和小数</span>
+      <strong role="cell">45.6</strong>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=VALUE("1,234.56")</code>
+      <span role="cell">"1,234.56"</span>
+      <span role="cell">识别千位分隔符和小数点</span>
+      <strong role="cell">1234.56</strong>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=VALUE("-0.75E2")</code>
+      <span role="cell">"-0.75E2"</span>
+      <span role="cell">识别科学计数法：-0.75 × 10²</span>
+      <strong role="cell">-75</strong>
+    </div>
+    <div class="example-row is-error" role="row">
+      <code role="cell">=VALUE("12a3")</code>
+      <span role="cell">"12a3"</span>
+      <span role="cell">包含无法解释的字符</span>
+      <strong role="cell">#VALUE!</strong>
+    </div>
+  </div>
+
+  <div class="poster-bottom-grid">
+    <div class="type-compare">
+      <span class="bottom-label">转换前后</span>
+      <div>
+        <article>
+          <small>文本</small>
+          <strong>"123.45"</strong>
+          <p>看起来像数字，本质仍是一串字符。</p>
+        </article>
+        <i>VALUE</i>
+        <article class="is-number">
+          <small>数值</small>
+          <strong>123.45</strong>
+          <p>可以计算、排序、汇总和绘图。</p>
+        </article>
+      </div>
+    </div>
+
+    <aside class="key-summary" aria-label="VALUE 函数关键要点总结">
+      <span>关键要点总结</span>
+      <ul>
+        <li><b>本质：</b>把文本解释成数值，而不是只改变显示格式。</li>
+        <li><b>前提：</b>整段文本必须符合可识别的数字格式。</li>
+        <li><b>成功：</b>返回值可以直接参与计算。</li>
+        <li><b>失败：</b>夹杂非法字符时返回 <code>#VALUE!</code>。</li>
+        <li><b>地区差异：</b>分隔符不一致时使用 <code>NUMBERVALUE</code> 明确指定。</li>
+      </ul>
+    </aside>
+  </div>
+
+  <footer class="poster-conclusion">
+    <span>最终理解</span>
+    <strong>VALUE 就像一个“数字解析器”：先读懂文本的数字结构，再返回真正的数值。</strong>
+    <p>以后遇到从系统导出、网页复制或文件读取后无法计算的数字，可以先判断它是不是“文本数字”。</p>
+  </footer>
+</div>
+
+后续新增其他函数时，会继续在这篇手册中增加第二章、第三章……每个函数仍然保持“一章一张完整信息图”的结构，不把多个函数挤进同一张小卡片。
+
+<div class="handbook-series-link">
+  <div>
+    <span>EXCEL FUNCTION SERIES</span>
+    <strong>先看函数知识地图，再按问题进入对应专题</strong>
+  </div>
+  <a href="/articles/excel-functions-from-basic-to-intermediate/">查看 Excel 函数系列 →</a>
+</div>
+
+<style>{`
+  .function-poster,
+  .handbook-series-link {
+    --poster-blue: #1769dc;
+    --poster-blue-soft: #edf5ff;
+    --poster-green: #198a61;
+    --poster-green-soft: #eef9f4;
+    --poster-orange: #d66f1d;
+    --poster-orange-soft: #fff5e9;
+    --poster-violet: #7653c8;
+    --poster-violet-soft: #f5f0ff;
+    --poster-red: #c34848;
+    --poster-navy: #14243c;
+    --poster-text: #293a50;
+    --poster-muted: #66778b;
+    --poster-line: #cbd8e8;
+    color: var(--poster-text);
+  }
+
+  .function-poster {
+    width: min(1060px, calc(100vw - 3rem));
+    overflow: hidden;
+    margin: 1.5rem 0 2.2rem 50%;
+    border: 1px solid #bccbde;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 22px 55px rgba(31, 63, 101, .11);
+    transform: translateX(-50%);
+  }
+
+  .poster-title {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.2rem;
+    padding: 1.4rem 1.5rem 1.15rem;
+    border-bottom: 1px solid var(--poster-line);
+    background:
+      linear-gradient(90deg, rgba(23, 105, 220, .08), transparent 46%),
+      #fff;
+  }
+
+  .poster-kicker {
+    display: block;
+    margin-bottom: .36rem;
+    color: var(--poster-blue);
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .08em;
+  }
+
+  .poster-main-title {
+    display: block;
+    margin: 0;
+    color: #111827;
+    font-size: clamp(1.45rem, 3vw, 2.25rem);
+    line-height: 1.22;
+  }
+
+  .poster-function-tag {
+    flex: 0 0 auto;
+    padding: .55rem .78rem;
+    border: 1px solid #9fc1ef;
+    border-radius: 8px;
+    color: var(--poster-blue);
+    background: var(--poster-blue-soft);
+    font-size: .9rem;
+    font-weight: 900;
+    letter-spacing: .06em;
+  }
+
+  .poster-definition {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.2rem;
+    margin: 1rem 1.5rem 1.25rem;
+    padding: .85rem 1rem;
+    border: 1px solid #a9d1b9;
+    border-radius: 8px;
+    background: #f5fcf8;
+  }
+
+  .poster-definition > div:first-child {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: .45rem .75rem;
+  }
+
+  .poster-definition > div:first-child strong {
+    color: #17283e;
+    font-size: 1rem;
+  }
+
+  .poster-definition > div:first-child span {
+    color: #49645a;
+    font-size: .9rem;
+    line-height: 1.55;
+  }
+
+  .poster-formula-demo {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    flex: 0 0 auto;
+  }
+
+  .poster-formula-demo code {
+    color: var(--poster-blue);
+    font-size: .92rem;
+    font-weight: 800;
+  }
+
+  .poster-formula-demo i {
+    color: #718096;
+    font-style: normal;
+    font-weight: 900;
+  }
+
+  .poster-formula-demo strong {
+    color: var(--poster-green);
+    font-size: 1.08rem;
+  }
+
+  .poster-formula-demo span {
+    color: #5b6c7f;
+    font-size: .76rem;
+  }
+
+  .poster-section-title {
+    display: flex;
+    align-items: baseline;
+    gap: .8rem;
+    margin: 1.4rem 1.5rem .75rem;
+    padding-bottom: .5rem;
+    border-bottom: 2px solid #e1e9f3;
+  }
+
+  .poster-section-title b {
+    color: var(--poster-blue);
+    font-size: 1.02rem;
+  }
+
+  .poster-section-title span {
+    color: var(--poster-muted);
+    font-size: .8rem;
+  }
+
+  .poster-flow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: .65rem;
+    margin: 0 1.5rem 1.6rem;
+  }
+
+  .poster-flow > i {
+    color: #728197;
+    font-size: 1.15rem;
+    font-style: normal;
+    font-weight: 900;
+  }
+
+  .poster-flow article {
+    min-height: 142px;
+    padding: .9rem;
+    border: 1px solid currentColor;
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .poster-flow article small {
+    display: inline-grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-bottom: .55rem;
+    border-radius: 999px;
+    color: #fff;
+    background: currentColor;
+    font-size: .68rem;
+    font-weight: 900;
+  }
+
+  .poster-flow article strong {
+    display: block;
+    color: #18273d;
+    font-size: .98rem;
+  }
+
+  .poster-flow article p {
+    margin: .38rem 0 0;
+    color: #607186;
+    font-size: .78rem;
+    line-height: 1.6;
+  }
+
+  .poster-flow .tone-blue { color: var(--poster-blue); background: #f8fbff; }
+  .poster-flow .tone-green { color: var(--poster-green); background: #f8fcfa; }
+  .poster-flow .tone-orange { color: var(--poster-orange); background: #fffaf4; }
+  .poster-flow .tone-violet { color: var(--poster-violet); background: #fbf9ff; }
+
+  .poster-detail-table,
+  .example-table {
+    margin: 0 1.5rem 1.6rem;
+    overflow: hidden;
+    border: 1px solid var(--poster-line);
+    border-radius: 8px;
+  }
+
+  .detail-head,
+  .detail-row {
+    display: grid;
+    grid-template-columns: 142px 154px minmax(320px, 1.55fr) minmax(230px, 1fr);
+  }
+
+  .detail-head {
+    color: #30455e;
+    background: #eaf2fc;
+    font-size: .8rem;
+    font-weight: 900;
+  }
+
+  .detail-head span,
+  .detail-row > div {
+    padding: .75rem .85rem;
+    border-right: 1px solid var(--poster-line);
+  }
+
+  .detail-head span:last-child,
+  .detail-row > div:last-child {
+    border-right: 0;
+  }
+
+  .detail-row {
+    min-height: 126px;
+    border-top: 1px solid var(--poster-line);
+    background: #fff;
+  }
+
+  .detail-row.is-tall { min-height: 188px; }
+
+  .detail-step {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: .45rem;
+    color: var(--poster-blue);
+    background: #f7faff;
+  }
+
+  .detail-step b {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 999px;
+    color: #fff;
+    background: var(--poster-blue);
+    font-size: .72rem;
+  }
+
+  .detail-step strong {
+    color: #21446f;
+    font-size: .86rem;
+    line-height: 1.45;
+  }
+
+  .detail-action {
+    display: flex;
+    align-items: center;
+    color: #30445c;
+    font-size: .84rem;
+    font-weight: 800;
+  }
+
+  .detail-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    background: #fbfdff;
+  }
+
+  .detail-note {
+    display: flex;
+    align-items: center;
+    color: #53667c;
+    font-size: .78rem;
+    line-height: 1.65;
+  }
+
+  .input-visual {
+    flex-direction: column;
+    gap: .5rem;
+  }
+
+  .input-visual span {
+    color: #718196;
+    font-size: .72rem;
+  }
+
+  .input-visual code {
+    padding: .65rem 1rem;
+    border: 1px solid #a8d4b8;
+    border-radius: 7px;
+    color: #22374c;
+    background: #f3fbf6;
+    font-size: 1.05rem;
+    font-weight: 800;
+  }
+
+  .parser-visual {
+    flex-direction: column;
+    gap: .85rem;
+  }
+
+  .token-line {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .token-line > span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 55px;
+    padding: .55rem .42rem;
+    border: 1px solid #b5c5d8;
+    border-right: 0;
+    background: #fff;
+  }
+
+  .token-line > span:first-child { border-radius: 7px 0 0 7px; }
+  .token-line > span:last-child { border-right: 1px solid #b5c5d8; border-radius: 0 7px 7px 0; }
+  .token-line b { color: #17283d; font-size: 1rem; }
+  .token-line small { margin-top: .22rem; font-size: .62rem; }
+  .token-sign small { color: var(--poster-orange); }
+  .token-number small { color: var(--poster-blue); }
+  .token-group small { color: var(--poster-green); }
+  .token-decimal small { color: var(--poster-orange); }
+  .token-fraction small { color: var(--poster-violet); }
+
+  .validation-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .4rem;
+  }
+
+  .validation-strip span,
+  .validation-strip strong {
+    padding: .3rem .48rem;
+    border-radius: 5px;
+    font-size: .66rem;
+  }
+
+  .validation-strip span {
+    color: #4d6279;
+    background: #eef3f8;
+  }
+
+  .validation-strip strong {
+    color: #fff;
+    background: var(--poster-green);
+  }
+
+  .build-visual {
+    gap: .45rem;
+    flex-wrap: wrap;
+  }
+
+  .build-visual > div {
+    min-width: 82px;
+    padding: .45rem .55rem;
+    border: 1px solid #b9cce2;
+    border-radius: 6px;
+    text-align: center;
+    background: #fff;
+  }
+
+  .build-visual > div span {
+    display: block;
+    color: #708095;
+    font-size: .62rem;
+  }
+
+  .build-visual > div b {
+    color: #17283c;
+    font-size: .9rem;
+  }
+
+  .build-visual i,
+  .build-visual em {
+    color: #7a8799;
+    font-style: normal;
+    font-weight: 900;
+  }
+
+  .build-visual strong {
+    padding: .55rem .7rem;
+    border: 1px solid #deb06d;
+    border-radius: 6px;
+    color: var(--poster-orange);
+    background: var(--poster-orange-soft);
+    font-size: 1rem;
+  }
+
+  .output-visual {
+    flex-direction: column;
+    gap: .22rem;
+  }
+
+  .output-visual span,
+  .output-visual small {
+    color: #748398;
+    font-size: .68rem;
+  }
+
+  .output-visual strong {
+    padding: .55rem 1.2rem;
+    border: 1px solid #baa7e7;
+    border-radius: 6px;
+    color: var(--poster-violet);
+    background: var(--poster-violet-soft);
+    font-size: 1.1rem;
+  }
+
+  .example-head,
+  .example-row {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1.55fr .65fr;
+  }
+
+  .example-head {
+    color: #30455e;
+    background: #eaf2fc;
+    font-size: .78rem;
+    font-weight: 900;
+  }
+
+  .example-head span,
+  .example-row > * {
+    padding: .68rem .78rem;
+    border-right: 1px solid var(--poster-line);
+  }
+
+  .example-head span:last-child,
+  .example-row > *:last-child { border-right: 0; }
+
+  .example-row {
+    border-top: 1px solid var(--poster-line);
+    background: #fff;
+  }
+
+  .example-row > * {
+    display: flex;
+    align-items: center;
+    color: #4d6076;
+    font-size: .76rem;
+    line-height: 1.5;
+  }
+
+  .example-row code { color: var(--poster-blue); font-weight: 800; }
+  .example-row strong { color: var(--poster-green); font-size: .86rem; }
+  .example-row.is-error { background: #fff9f9; }
+  .example-row.is-error strong { color: var(--poster-red); }
+
+  .poster-bottom-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(260px, .75fr);
+    gap: 1rem;
+    margin: 0 1.5rem 1.5rem;
+  }
+
+  .type-compare,
+  .key-summary {
+    border: 1px solid var(--poster-line);
+    border-radius: 9px;
+    background: #fff;
+  }
+
+  .bottom-label,
+  .key-summary > span {
+    display: block;
+    padding: .62rem .78rem;
+    border-bottom: 1px solid var(--poster-line);
+    color: var(--poster-blue);
+    background: #f4f8fd;
+    font-size: .74rem;
+    font-weight: 900;
+  }
+
+  .type-compare > div {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: .8rem;
+    padding: 1rem;
+  }
+
+  .type-compare article {
+    padding: .8rem;
+    border: 1px solid #d5dfeb;
+    border-radius: 8px;
+    background: #fafcff;
+  }
+
+  .type-compare article.is-number {
+    border-color: #add1bc;
+    background: var(--poster-green-soft);
+  }
+
+  .type-compare article small {
+    display: block;
+    color: #718196;
+    font-size: .68rem;
+  }
+
+  .type-compare article strong {
+    display: block;
+    margin: .25rem 0;
+    color: #17283d;
+    font-size: 1.05rem;
+  }
+
+  .type-compare article p {
+    margin: 0;
+    color: #5f7186;
+    font-size: .75rem;
+    line-height: 1.55;
+  }
+
+  .type-compare > div > i {
+    padding: .35rem .5rem;
+    border-radius: 5px;
+    color: #fff;
+    background: var(--poster-blue);
+    font-size: .68rem;
+    font-style: normal;
+    font-weight: 900;
+  }
+
+  .key-summary ul {
+    margin: 0;
+    padding: .85rem 1rem .9rem 1.8rem;
+  }
+
+  .key-summary li {
+    margin: .35rem 0;
+    color: #53667a;
+    font-size: .74rem;
+    line-height: 1.55;
+  }
+
+  .key-summary b { color: #20344d; }
+
+  .poster-conclusion {
+    margin: 0;
+    padding: 1.05rem 1.5rem 1.2rem;
+    border-top: 1px solid #aebfda;
+    background:
+      linear-gradient(90deg, rgba(23, 105, 220, .09), rgba(118, 83, 200, .05)),
+      #f8fbff;
+  }
+
+  .poster-conclusion span {
+    display: block;
+    color: var(--poster-blue);
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .06em;
+  }
+
+  .poster-conclusion strong {
+    display: block;
+    margin: .3rem 0;
+    color: #17283d;
+    font-size: 1.02rem;
+    line-height: 1.5;
+  }
+
+  .poster-conclusion p {
+    margin: 0;
+    color: #5e7085;
+    font-size: .8rem;
+    line-height: 1.6;
+  }
+
+  .handbook-series-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 1.7rem 0 2.2rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid #bfd2e8;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f7fbff, #fff);
+  }
+
+  .handbook-series-link span {
+    display: block;
+    color: var(--poster-blue);
+    font-size: .68rem;
+    font-weight: 900;
+    letter-spacing: .07em;
+  }
+
+  .handbook-series-link strong {
+    display: block;
+    margin-top: .22rem;
+    color: var(--poster-navy);
+    font-size: .9rem;
+  }
+
+  .handbook-series-link a {
+    flex: 0 0 auto;
+    color: var(--poster-blue);
+    font-size: .82rem;
+    font-weight: 900;
+    text-decoration: none;
+  }
+
+  @media (max-width: 980px) {
+    .poster-flow {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .poster-flow > i { display: none; }
+
+    .detail-head { display: none; }
+
+    .detail-row,
+    .detail-row.is-tall {
+      grid-template-columns: 108px 1fr;
+      min-height: 0;
+    }
+
+    .detail-step { grid-row: span 3; }
+
+    .detail-action,
+    .detail-visual,
+    .detail-note {
+      border-right: 0 !important;
+      border-bottom: 1px solid var(--poster-line);
+    }
+
+    .detail-note { border-bottom: 0; }
+
+    .poster-bottom-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 720px) {
+    .function-poster {
+      width: auto;
+      margin-inline: -.35rem;
+      border-radius: 14px;
+      transform: none;
+    }
+
+    .poster-title,
+    .poster-definition,
+    .poster-section-title,
+    .poster-flow,
+    .poster-detail-table,
+    .example-table,
+    .poster-bottom-grid {
+      margin-left: .85rem;
+      margin-right: .85rem;
+    }
+
+    .poster-title {
+      margin: 0;
+      padding: 1.05rem .9rem;
+    }
+
+    .poster-function-tag { display: none; }
+
+    .poster-definition {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .poster-formula-demo { flex-wrap: wrap; }
+
+    .poster-section-title {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: .2rem;
+    }
+
+    .poster-flow { grid-template-columns: 1fr; }
+    .poster-flow article { min-height: 0; }
+
+    .detail-row,
+    .detail-row.is-tall {
+      grid-template-columns: 1fr;
+    }
+
+    .detail-step {
+      grid-row: auto;
+      align-items: center;
+      flex-direction: row;
+      justify-content: flex-start;
+    }
+
+    .detail-action,
+    .detail-visual,
+    .detail-note {
+      padding: .8rem !important;
+    }
+
+    .token-line {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .35rem;
+    }
+
+    .token-line > span,
+    .token-line > span:last-child {
+      min-width: 0;
+      border: 1px solid #b5c5d8;
+      border-radius: 6px;
+    }
+
+    .build-visual { flex-direction: column; }
+    .build-visual i { display: none; }
+
+    .example-head { display: none; }
+
+    .example-row {
+      grid-template-columns: 1fr 1fr;
+      padding: .4rem 0;
+    }
+
+    .example-row > * {
+      border-right: 0;
+      padding: .45rem .65rem;
+    }
+
+    .example-row > *:nth-child(3),
+    .example-row > *:nth-child(4) {
+      border-top: 1px dashed #d9e1eb;
+    }
+
+    .type-compare > div {
+      grid-template-columns: 1fr;
+    }
+
+    .type-compare > div > i {
+      width: fit-content;
+      margin: 0 auto;
+    }
+
+    .poster-conclusion { padding: 1rem .9rem; }
+
+    .handbook-series-link {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+
+  html[data-theme='dark'] .function-poster {
+    box-shadow: 0 22px 62px rgba(0, 0, 0, .32);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .function-poster *,
+    .handbook-series-link * {
+      scroll-behavior: auto;
+      transition: none !important;
+    }
+  }
+`}</style>
