@@ -1,24 +1,8 @@
 # 内容索引
 
-本文件只作为文章索引。需要参考旧文章时，先按主题选择 1 到 3 篇最相关正文；不要默认通读全部文章。
+本文件只索引公开正式文章。草稿、私密文章和视觉实验不在这里维护；视觉 Demo 统一查看 `docs/writing/VISUAL_LAB.md`。
 
-## 优先参考：视觉实验室示例
-
-写文章、组织视觉笔记、使用 MDX 组件、代码块、图表或展示样式时，优先从这里选择参考正文。这里的文章都能在网页的「视觉实验室」分类中看到实际效果。
-
-| 文件 | 分类 | 主题概览 | 适合什么时候参考 |
-| --- | --- | --- | --- |
-| `src/content/posts/visual-lab/user-backend-journey-map.mdx` | `视觉实验室` | 前台体验与后台系统双层流程卡，把用户动作设为第一视觉层、后台工作设为第二视觉层，并说明信息层级、适用场景和组件用法 | 写用户体验与后台系统对应、客户诉求与内部处理、业务动作与系统动作等双层流程内容时参考 |
-| `src/content/posts/visual-lab/excel-formula-visual-patterns.mdx` | `视觉实验室` | 从 19 个函数中归纳 7 种基础教学视觉关系，并沉淀单函数独立案例板、教学字号底线、横向滚动和移动端可读性规则 | 写 Excel、WPS、SQL、正则表达式、条件统计、文本处理和查找匹配教程，需要解释数据如何流过公式或逐个讲解函数时参考 |
-| `src/content/posts/visual-lab/article-visual-system-demo.mdx` | `视觉实验室` | 文章视觉系统实战 Demo，展示从文字草稿到视觉文章的编排流程、内容关系路由、风险看板和自审面板 | 验证新文章是否遵守“先做视觉方案，再写 MDX”的规则，或需要学习三个高视觉模板的风格而不是骨架时参考 |
-| `src/content/posts/visual-lab/mdx-design-patterns-gallery.mdx` | `视觉实验室` | 开头结论卡、Bento 宫格、指标看板、对比面板、问题链路、时间线、案例拆解卡、决策树等文章视觉模式 | 写 MDX 文章、做复杂排版、判断什么时候不用表格或流程图时优先参考 |
-| `src/content/posts/visual-lab/screenshot-mdx-replica-demo.mdx` | `视觉实验室` | 截图风格 MDX 复刻示例，包含 Agent 功能矩阵、安全防御报告和搜索工具决策树三类定制组件 | 需要复刻产品功能区、报告看板、安全验证页、深色信息图等高视觉密度内容时参考 |
-| `src/content/posts/visual-lab/mdx-components-demo.mdx` | `视觉实验室` | 提示块、流程步骤、对比表、指标卡和总结块的 MDX 综合示例 | 写 MDX 文章、做文章可视化、给 Agent 学组件组合时优先参考 |
-| `src/content/posts/visual-lab/table-style-demo.mdx` | `视觉实验室` | Markdown 表格边框、表头、宽表格、业务判断表和字段说明表示例 | 写表格型文章、对比表、判断矩阵、字段说明和经营看板表格时参考 |
-| `src/content/posts/visual-lab/visual-notes-components.mdx` | `视觉实验室` | VisualGrid、MetricCard、FeatureCard、DecisionFlow 示例 | 写视觉笔记、MDX 组件化文章、卡片式信息组织时优先参考 |
-| `src/content/posts/visual-lab/mdx-code-diagrams.md` | `视觉实验室` | 代码块、Callout、图表和下载链接用法 | 写展示型技术文章、图表说明、代码块和静态文件链接时参考 |
-| `src/content/posts/visual-lab/context-flow-demo.mdx` | `视觉实验室` | 上下文流程图、ContextFlow 组件、MDX 教学型视觉图 | 写视觉实验、组件展示、AI 基础概念说明时参考 |
-| `src/content/posts/visual-lab/code-block-style-lab.mdx` | `视觉实验室` | 8 种代码块样式候选、CodeBlockStyleShowcase 组件 | 做代码块风格选型、全局样式确认时参考 |
+需要参考旧文章时，先按主题选择 1 到 3 篇最相关正文，不默认通读全部文章。
 
 ## 正文文章索引
 
@@ -27,6 +11,7 @@
 | `src/content/posts/yingdao-enterprise-rpa-flow-notes.mdx` | `实践` | 影刀企业案例、RPA业务流程、普通版与企业版决策、Mermaid流程图 | 写影刀RPA、企业自动化、普通版/企业版选型、流程图笔记时参考 |
 | `src/content/posts/ulike-customer-service-rpa-flow-detail.mdx` | `实践` | Ulike 客服售后自动化细节拆解，覆盖静默单推送、已发货仅退款、赠品发货留言三条 RPA 实操流程 | 写电商客服售后RPA、订单/物流/ERP跨系统流程、客服自动化动作拆解时参考 |
 | `src/content/posts/how-to-use-yingdao-rpa-correctly.mdx` | `实践` | 从 40+ 个影刀小应用出发，复盘影刀正确用法、人机协作、经营看板、供应链预警和企业版判断，并用深色决策树风展示新需求是否值得做影刀 | 写影刀RPA复盘、正确使用影刀、日报升级经营看板、自动化治理、需求判断决策树时参考 |
+| `src/content/posts/yingdao-daily-report-to-business-dashboard.mdx` | `实践` | 从 40+ 个零散影刀应用复盘人机协作、维护责任、日报边界和经营看板升级方向 | 写影刀应用治理、日报自动化、经营看板、人机协作和维护责任文章时参考 |
 | `src/content/posts/yingdao-agent-development-knowledge-base.mdx` | `教程` | 影刀 × Agent 开发总览，覆盖开发知识库、问题查询、真实项目规则、浏览器元素探索、代码同步和知识库更新闭环 | 写影刀编码版、Agent 辅助开发、影刀知识库、浏览器元素探索和外部代码同步时参考 |
 | `src/content/posts/automation-agent-workflow.mdx` | `实践` | Agent 执行系统图解手册，统一任务分流、状态管理、权限边界、执行循环和失败恢复 | 写 Agent 流程、自动化协作、任务拆解决策、大任务阶段管理和失败恢复文章时参考 |
 | `src/content/posts/browser-agent-shared-chrome-runtime.mdx` | `实践` | 共享 Chrome 运行时架构手册，覆盖固定 Profile、CDP、ensure 状态机、接入顺序、页面隔离、操作清单和故障分流 | 写浏览器自动化基础设施、Playwright CDP、共享登录状态、Chrome 生命周期和多 Agent 复用时参考 |

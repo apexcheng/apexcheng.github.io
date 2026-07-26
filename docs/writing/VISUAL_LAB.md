@@ -1,41 +1,29 @@
 # 视觉实验室索引
 
-视觉实验室用于测试博客文章的视觉表现，也用于给 Agent 提供可参考的展示样式。
+视觉实验室是文章样式、组件、图表和复杂视觉模式的 Demo 分类，也是这些示例的唯一索引。
 
-它是博客里的 Demo 分类，不是正式正文文章目录。
-
-## 目录位置
-
-```txt
-src/content/posts/visual-lab/
-```
-
-## 使用场景
-
-1. 用户想先看效果。
-2. 用户要比较多个样式方案。
-3. 需要测试代码块、流程图、卡片、分栏、Callout、组件展示。
-4. Agent 写文章时需要参考视觉笔记排版。
+只有需要查看实际效果时才读取本文件，并最多选择 1 篇与当前任务最相关的 Demo。
 
 ## Demo 列表
 
 | 文件 | 用途 |
 | --- | --- |
-| `src/content/posts/visual-lab/user-backend-journey-map.mdx` | 前台体验与后台系统双层流程卡，展示如何把用户动作放在第一视觉层、后台工作放在第二视觉层，并用三阶段色彩与编号串成完整旅程 |
-| `src/content/posts/visual-lab/excel-formula-visual-patterns.mdx` | Excel 公式教学可视化模式，覆盖 19 个函数和 7 种基础视觉关系，并补充单函数独立案例板、教学字号底线、横向滚动与移动端可读性规则 |
-| `src/content/posts/visual-lab/article-visual-system-demo.mdx` | 文章视觉系统实战 Demo，展示一篇文章如何先做视觉方案，再用总览、流程、路由、风险和审查面板组织成视觉文章 |
-| `src/content/posts/visual-lab/mdx-design-patterns-gallery.mdx` | MDX 文章视觉模式参考，展示结论卡、Bento、指标看板、对比面板、问题链路、时间线、案例拆解、决策树和总结横幅 |
-| `src/content/posts/visual-lab/screenshot-mdx-replica-demo.mdx` | 截图风格 MDX 复刻示例，展示 Agent 功能矩阵、安全防御报告和搜索工具决策树三类定制视觉组件 |
-| `src/content/posts/visual-lab/mdx-components-demo.mdx` | MDX 文章可视化综合示例，包含提示块、流程步骤、对比表、指标卡和总结块 |
-| `src/content/posts/visual-lab/table-style-demo.mdx` | 文章表格样式示例，包含边框表格、宽表格、业务判断表和字段说明表 |
-| `src/content/posts/visual-lab/code-block-style-lab.mdx` | 代码块样式对比和全局代码块风格选型 |
-| `src/content/posts/visual-lab/context-flow-demo.mdx` | 上下文流程图组件展示 |
-| `src/content/posts/visual-lab/visual-notes-components.mdx` | MetricCard、FeatureCard、VisualGrid、HighlightBox、DecisionFlow 组件示例 |
-| `src/content/posts/visual-lab/mdx-code-diagrams.md` | 代码块、Callout、图表和静态文件链接示例 |
+| `src/content/posts/visual-lab/user-backend-journey-map.mdx` | 用户动作与后台系统的双层流程 |
+| `src/content/posts/visual-lab/excel-formula-visual-patterns.mdx` | 公式参数映射、单函数案例和教学字号 |
+| `src/content/posts/visual-lab/article-visual-system-demo.mdx` | 从信息关系到整页视觉结构的示例 |
+| `src/content/posts/visual-lab/mdx-design-patterns-gallery.mdx` | Bento、指标、对比、时间线和决策树等模式 |
+| `src/content/posts/visual-lab/screenshot-mdx-replica-demo.mdx` | 功能矩阵、报告面板和深色决策图 |
+| `src/content/posts/visual-lab/mdx-components-demo.mdx` | 通用 MDX 组件组合 |
+| `src/content/posts/visual-lab/table-style-demo.mdx` | 普通表格和宽表格 |
+| `src/content/posts/visual-lab/code-block-style-lab.mdx` | 代码块样式对比 |
+| `src/content/posts/visual-lab/context-flow-demo.mdx` | `ContextFlow` 专属组件 |
+| `src/content/posts/visual-lab/visual-notes-components.mdx` | 基础视觉组件示例 |
+| `src/content/posts/visual-lab/mdx-code-diagrams.md` | 代码块、Callout、图表和静态文件链接 |
 
-## 使用边界
+## 边界
 
-1. 视觉实验室文章可以发布到博客中，分类统一为 `视觉实验室`。
-2. Demo 文章可以作为参考，但不代表正式文章必须照搬。
-3. 正式正文文章仍然放在 `src/content/posts/` 根层或对应分类目录中。
-4. 引用视觉实验室文章的组件写法时，要注意相对路径层级。
+1. Demo 分类统一使用 `视觉实验室`。
+2. Demo 提供视觉参考，不是正式文章骨架。
+3. `ContextFlow`、`AgentFeatureMatrix`、`DefenseArchitectureReport`、`SearchDecisionTree`、`CodeBlockStyleShowcase` 等带特定主题或硬编码文案的组件只作为 Demo 或同主题实现线索，不属于通用组件 API。
+4. 引用示例时注意正式文章与 `visual-lab/` 的相对路径不同。
+5. 新增 Demo 后更新本文件；不要同时复制到 `CONTENT_INDEX.md`。

@@ -1,46 +1,10 @@
-# Agent 入口路由
+# Agent 快速入口
 
-本文件用于帮助 Agent 快速判断本项目应该先读哪些规则文件。它只负责路由，不承载详细规则。
+先读 `AGENTS.md`，再按其中的任务路由只读取当前任务需要的文件。
 
-## 默认入口
+- 代码任务：`docs/DEV_RULES.md`
+- 普通文章：`docs/writing/BLOG_AGENT.md` + 目标文章
+- 新文章或结构性重写：按需增加 `docs/ARTICLE_VISUAL_SYSTEM.md`、`docs/MDX_WRITING_GUIDE.md`
+- 组件、模式、Demo、内容索引和 `TODO.md`：仅在对应需求出现时读取
 
-1. 先读 `AGENTS.md`，确认项目定位、目录边界和任务路由。
-2. 再按任务类型读取 `docs/` 下的具体规则。
-3. 不默认通读 `src/content/posts/` 下全部文章。
-
-## 代码 / 工程任务
-
-适用场景：代码修改、样式调整、构建配置、测试、依赖、项目结构、Git 操作。
-
-读取：
-
-- `AGENTS.md`
-- `docs/DEV_RULES.md`
-
-## 文章任务
-
-适用场景：写文章、改文章、审查文章、发布文章、整理文章索引。
-
-读取：
-
-- `AGENTS.md`
-- `docs/writing/BLOG_AGENT.md`
-- `docs/ARTICLE_VISUAL_SYSTEM.md`
-- `docs/writing/STYLE_GUIDE.md`
-- `docs/writing/CONTENT_INDEX.md`
-
-## 视觉实验 / Demo
-
-适用场景：先看效果、样式选型、代码块样式、MDX 组件展示、流程图和视觉笔记示例。
-
-读取：
-
-- `docs/writing/VISUAL_LAB.md`
-- `src/content/posts/visual-lab/`
-
-## 边界
-
-- `src/content/posts/` 是正式正文文章目录。
-- `src/content/posts/visual-lab/` 是视觉实验和 Demo 文章目录。
-- `docs/` 是 Agent 知识库，不是正式文章目录。
-- 新文章默认公开发布；只有用户明确要求草稿、暂不发布或私密时，才不公开。
+不要默认通读 `docs/`、全部文章或视觉实验室。

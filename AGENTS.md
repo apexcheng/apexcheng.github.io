@@ -1,113 +1,78 @@
 # AGENTS.md
 
-本文件是本项目给 Codex、Claude Code、OpenClaw 等 Agent 使用的默认入口。
+本文件是 Codex、Claude Code、OpenClaw 等 Agent 的项目入口。
 
-核心原则：**AGENTS.md 只做导航；docs 做知识库；正式文章和视觉实验文章分开维护。**
+核心原则：**视觉优先、按需读取、最小改动、规则单一来源。**
 
----
+## 项目边界
 
-## 项目定位
+- 正式文章：`src/content/posts/`
+- 视觉实验 / Demo：`src/content/posts/visual-lab/`
+- Agent 规则和索引：`docs/`
+- 文章模板：`templates/post.mdx`
 
-这是一个个人博客项目。
+正式文章默认是经过信息设计的网页作品。视觉表达优先于个人博客口吻，但必须服务内容，不机械套用旧文章或 Demo。
 
-- 正式文章目录：`src/content/posts/`
-- 视觉实验 / Demo 文章目录：`src/content/posts/visual-lab/`
-- Agent 规则和索引目录：`docs/`
-- Agent 路由文件：`llms.txt`
+## 通用硬规则
 
-## 默认原则
-
-```text
-最小改动 | 结构简单 | 只改相关文件 | 不做无关重构 | 规则单一来源 | 方便维护
-```
-
-1. 修改前先读相关上下文，不要默认通读所有 Markdown。
-2. 只处理当前任务直接相关的文件和内容。
-3. 不确定的事实、页面行为、工具参数或构建结果必须标注“需运行验证”。
-4. 工作区可能已有用户改动；不要回滚、覆盖或清理不是本次任务产生的改动。
-5. 本项目默认在 `main` 分支开发和推送，除非用户明确要求新分支。
-
-## 开发硬规则
-
-1. 修改代码、样式、构建配置、测试或工程结构前，必须先读 `docs/DEV_RULES.md`。
-2. 只改当前任务直接相关的文件和内容。
-3. 不做无关重构、无关格式化、无关改名。
-4. 不引入不必要依赖。
-5. 不覆盖、回滚、清理用户已有改动。
-6. 修改后必须说明验证方式；没运行测试就明确说未运行。
+1. 修改前只读取当前任务需要的上下文，不默认通读全部规则或文章。
+2. 只处理当前任务直接相关的文件，不做无关重构、格式化或改名。
+3. 保留工作区已有改动，不回滚、覆盖或清理非本次任务产生的内容。
+4. 在当前实际环境和仓库根目录执行命令，不预设操作系统或运行环境。
+5. 不确定的事实、页面行为、工具参数或验证结果必须明确标注。
+6. 默认目标分支是 `main`；commit、push 和部署仅在用户明确要求时执行。
 
 ## 文章硬规则
 
-1. 写作、审查、发布文章前，必须先读 `docs/writing/BLOG_AGENT.md`。
-2. 正式文章写作、重写或可视化改造前，必须先读 `docs/ARTICLE_VISUAL_SYSTEM.md`；写 MDX 前必须先做文章视觉方案。
-3. 判断文章风格时，必须参考 `docs/writing/STYLE_GUIDE.md`。
-4. 需要参考旧文章时，必须先读 `docs/writing/CONTENT_INDEX.md`，只打开 1 到 3 篇相关正文。
-5. 写 MDX 文章或做文章可视化前，必须参考 `docs/MDX_WRITING_GUIDE.md`、`docs/MDX_COMPONENTS.md` 和 `src/content/posts/visual-lab/mdx-components-demo.mdx`。
-6. 任务涉及 MDX 文章、文章可视化或复杂排版时，必须参考 `docs/MDX_DESIGN_REFERENCES.md`、`docs/MDX_PATTERN_LIBRARY.md` 和 `src/content/posts/visual-lab/mdx-design-patterns-gallery.mdx`。
-7. 功能矩阵、报告看板、决策树是视觉风格样板，不是固定文章骨架；正式文章必须根据内容设计专属视觉表达。
-8. 正式文章放在 `src/content/posts/`。
-9. 视觉实验 / Demo 文章放在 `src/content/posts/visual-lab/`。
-10. 新文章默认 `draft: false`、`private: false`，公开发布；只有用户明确要求草稿、暂不发布或私密时，才设置为 `draft: true` 或 `private: true`。
-11. 正式文章分类只使用 `生活`、`实践`、`教程`、`视觉实验室`；新文章默认用 `实践`，生活经验用 `生活`，系统教学用 `教程`。
-12. 默认使用专业风格；只有用户明确要求大众风格时，才使用大众风格。
-13. 新增或迁移文章后，必须同步更新 `docs/writing/CONTENT_INDEX.md`。
-14. 所有正式文章默认按“可滚动阅读的网页作品”设计；教程、流程、规则和系统说明类文章优先采用“一章一张完整信息图”，不得未经视觉设计直接交付长篇正文加零散卡片。
+1. 写作、审查或发布文章时，先读 `docs/writing/BLOG_AGENT.md`。
+2. 新文章或结构性重写保持视觉优先，并按需读取 `docs/ARTICLE_VISUAL_SYSTEM.md` 和 `docs/MDX_WRITING_GUIDE.md`。
+3. 写作前只需判断核心信息关系、整页视觉概念和移动端转换方式，不要求输出长篇视觉方案。
+4. 改字、事实修正、链接、frontmatter 和局部小改直接执行，不重新规划全文，不读取 Demo。
+5. 正式文章放在 `src/content/posts/`；Demo 放在 `src/content/posts/visual-lab/`。
+6. 新文章默认 `draft: false`、`private: false`；只有用户明确要求草稿或私密时才改为 `true`。
+7. 分类只使用 `生活`、`实践`、`教程`、`视觉实验室`。
+8. 新增公开正式文章后更新 `docs/writing/CONTENT_INDEX.md`；新增 Demo 后更新 `docs/writing/VISUAL_LAB.md`。
 
-## 任务路由
+## 按需路由
 
-### 修改代码、样式、构建配置、测试或工程结构
+### 代码、样式、配置、测试或工程结构
 
-读取：
+读取 `docs/DEV_RULES.md`。
 
-- `docs/DEV_RULES.md`
+### 普通文章编辑
 
-### 写作、审查、发布博客文章
+读取 `docs/writing/BLOG_AGENT.md` 和目标文章。
 
-读取：
+### 新文章、结构性重写或复杂视觉改造
 
-- `docs/writing/BLOG_AGENT.md`
-- `docs/ARTICLE_VISUAL_SYSTEM.md`
-- `docs/writing/STYLE_GUIDE.md`
-- `docs/writing/CONTENT_INDEX.md`
-
-### 写 MDX 文章或做文章可视化
-
-读取：
+额外读取：
 
 - `docs/ARTICLE_VISUAL_SYSTEM.md`
 - `docs/MDX_WRITING_GUIDE.md`
-- `docs/MDX_COMPONENTS.md`
-- `docs/MDX_DESIGN_REFERENCES.md`
+
+### 使用现有 MDX 组件
+
+仅在需要组件时读取 `docs/MDX_COMPONENTS.md`。
+
+### 选择复杂视觉模式或参考 Demo
+
+仅在现有规则不足以完成设计时读取：
+
 - `docs/MDX_PATTERN_LIBRARY.md`
-- `src/content/posts/visual-lab/mdx-components-demo.mdx`
-- `src/content/posts/visual-lab/mdx-design-patterns-gallery.mdx`
-
-### 需要参考视觉效果或 Demo
-
-读取：
-
 - `docs/writing/VISUAL_LAB.md`
-- `src/content/posts/visual-lab/`
 
-### 需要给 Agent 快速判断入口
+从视觉实验室最多选择 1 篇最相关 Demo，不默认通读。
 
-读取：
+### 参考旧文章
 
-- `llms.txt`
+读取 `docs/writing/CONTENT_INDEX.md`，再选择 1 到 3 篇最相关正文。
 
-## 内容边界
+### 规划后续任务
 
-1. `src/content/posts/` 是正式正文文章目录，不是示例专用目录。
-2. Demo、样式实验、组件展示、代码块样式对比统一放到 `src/content/posts/visual-lab/`。
-3. `docs/` 只放 Agent 规则、写作规范、索引和维护说明，不作为正式博客文章目录。
-4. `llms.txt` 给 Agent 看，用于快速理解项目入口和读取顺序。
+只在梳理路线图或选择下一项工作时读取 `TODO.md`。
 
-## 规则维护边界
+## 规则维护
 
-1. 更新规则前先判断规则类型：开发硬规则、文章硬规则、开发细则、写作细则、内容索引、视觉实验索引。
-2. `AGENTS.md` 只放最关键、不能违反的硬规则和路由，不承载详细说明、长示例或 prompt 库。
-3. 开发细则写入 `docs/DEV_RULES.md`，不要新建 `dev-docs/` 或恢复旧的 `docs/agent/` 结构。
-4. 写作细则写入 `docs/writing/`，不要把写作规则放回根目录 `BLOG_AGENT.md` 或 `CONTENT_INDEX.md`。
-5. 同一条规则只保留一个权威版本；其他文件只做简短引用，避免多处重复维护。
-6. 新增规则要优先合并到现有文件和章节，除非用户明确要求新增规则文件。
-7. 迁移或新增文章后，必须同步更新 `docs/writing/CONTENT_INDEX.md`；新增视觉实验文章还要同步更新 `docs/writing/VISUAL_LAB.md`。
+1. `AGENTS.md` 只放硬规则和路由，详细说明放在 `docs/`。
+2. 同一规则只保留一个权威版本，其他文件只做简短引用。
+3. 优先精简或合并现有规则，不为单次问题新增长期规则。
