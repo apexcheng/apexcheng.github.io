@@ -1,8 +1,8 @@
 ---
 title: "这个博客是怎么搭起来的：架构、内容流程与发布方式"
-description: "用视觉笔记的方式拆解这个个人博客：为什么选择静态架构、内容如何组织、文章怎样发布，以及 Agent 在写作维护中的位置。"
+description: "把仓库、内容边界、规则索引、写作流程与静态发布放进一套博客系统蓝图，说明这个个人博客如何长期维护。"
 date: 2026-06-28T21:09:06+08:00
-updated: 2026-06-30T16:51:06+08:00
+updated: 2026-07-26T17:26:22+08:00
 category: "实践"
 tags:
   - "Astro"
@@ -15,259 +15,1244 @@ draft: false
 private: false
 ---
 
-import MetricCard from '../../components/MetricCard.astro';
-import FeatureCard from '../../components/FeatureCard.astro';
-import VisualGrid from '../../components/VisualGrid.astro';
-import HighlightBox from '../../components/HighlightBox.astro';
-import DecisionFlow from '../../components/DecisionFlow.astro';
-import Mermaid from '../../components/Mermaid.astro';
+这个博客首先是一套可维护的内容系统，其次才是一组网页。文章、规则、索引和发布配置都留在仓库里，让一次写作从选题到公开都有清楚边界。
 
-这个博客的核心选择很朴素：先把内容、页面和发布链路做稳，再考虑更复杂的后台能力。
+<section class="sys-hero" aria-label="博客系统蓝图导览">
+  <div class="sys-hero-copy">
+    <span class="sys-kicker">SYSTEM BLUEPRINT · 01</span>
+    <strong class="sys-hero-title">这一篇看系统，下一篇看代码运行</strong>
+    <p>本篇回答“内容与维护系统怎么组织”；系列下一篇《从代码看这个博客》沿一次请求和构建，解释页面、Content Collections、MDX 与部署如何真正跑起来。</p>
+  </div>
+  <div class="sys-hero-route" aria-label="两篇文章分工">
+    <div class="is-current">
+      <span>维护者视角</span>
+      <strong>仓库 → 内容 → 规则 → 发布</strong>
+    </div>
+    <i aria-hidden="true"></i>
+    <div>
+      <span>开发者视角</span>
+      <strong>URL → 页面 → 渲染 → 构建</strong>
+    </div>
+  </div>
+</section>
 
-它不是一个完整 CMS，也不是动态应用。文章是仓库里的 Markdown / MDX 文件，Astro 在构建期生成静态页面，GitHub Actions 再把产物发布到 GitHub Pages。
+## 先看全局：仓库里有四条相互咬合的主线
 
-## 概览
+<section class="sys-board sys-board--map" aria-label="博客仓库全局地图">
+  <header class="sys-board-head">
+    <div>
+      <span class="sys-index">B01 · REPOSITORY MAP</span>
+      <strong class="sys-board-title">文件不是散落的目录，而是四条职责明确的系统线</strong>
+    </div>
+    <p>内容线负责写什么，页面线负责怎么呈现，规则线负责如何维护，交付线负责怎样变成公开站点。</p>
+  </header>
 
-<VisualGrid columns={4}>
-  <MetricCard label="站点类型" value="Static" detail="构建后发布静态文件，不需要常驻后端。" />
-  <MetricCard label="内容源" value="MDX" detail="文章放在 src/content/posts/。" tone="cyan" />
-  <MetricCard label="发布链路" value="GitHub" detail="Actions 构建，Pages 托管。" tone="green" />
-  <MetricCard label="维护角色" value="Agent" detail="辅助写作、审查和结构整理。" tone="violet" />
-</VisualGrid>
+  <div class="sys-map-grid">
+    <article class="sys-lane sys-lane--content">
+      <span>CONTENT · 内容线</span>
+      <strong><code>{`src/content/posts/`}</code></strong>
+      <p>正式文章和视觉实验都进入同一个 Content Collection，再由分类、标签、系列与公开状态组织。</p>
+      <ul>
+        <li><code>{`*.mdx`}</code> 保存可版本化正文</li>
+        <li><code>{`visual-lab/`}</code> 单独承载 Demo</li>
+      </ul>
+    </article>
 
-<HighlightBox eyebrow="DECISION" title="先做稳定工作台">
-  当前阶段最重要的不是在线后台，而是让文章能长期写、稳定构建、容易发布。静态博客把复杂度放在构建期，线上访问链路更短。
-</HighlightBox>
+    <article class="sys-lane sys-lane--view">
+      <span>VIEW · 页面线</span>
+      <strong><code>{`src/pages/`}</code> + <code>{`src/components/`}</code></strong>
+      <p>页面文件建立路由，组件与布局建立阅读界面；文章只调用真正需要的展示能力。</p>
+      <ul>
+        <li><code>{`src/layouts/SiteLayout.astro`}</code> 提供外壳</li>
+        <li><code>{`src/styles/global.css`}</code> 维护全局视觉</li>
+      </ul>
+    </article>
 
-## 为什么这样搭
+    <article class="sys-lane sys-lane--rule">
+      <span>RULE · 规则线</span>
+      <strong><code>{`AGENTS.md`}</code> + <code>{`docs/`}</code></strong>
+      <p>入口文件提供路由与关键硬边界，开发、写作、视觉和内容索引分别在 docs 中保持单一权威来源。</p>
+      <ul>
+        <li><code>{`llms.txt`}</code> 帮 Agent 快速判断入口</li>
+        <li><code>{`CONTENT_INDEX.md`}</code> 限定参考范围</li>
+      </ul>
+    </article>
 
-这个博客要解决的是“长期沉淀”，不是一次性展示。它主要承载生活判断、项目实践、系统教程、视觉实验和项目复盘类内容。
+    <article class="sys-lane sys-lane--ship">
+      <span>SHIP · 交付线</span>
+      <strong><code>{`astro.config.mjs`}</code> + <code>{`.github/workflows/`}</code></strong>
+      <p>Astro 在构建期生成静态文件；Actions 在 main 推送或手动触发后构建，再交给 Pages。</p>
+      <ul>
+        <li><code>{`package.json`}</code> 暴露验证命令</li>
+        <li><code>{`dist/`}</code> 是构建产物，不是内容源</li>
+      </ul>
+    </article>
+  </div>
 
-<VisualGrid columns={2}>
-  <FeatureCard title="内容直接" meta="Write" description="新增文章就是新增文件，不需要打开后台或维护数据库。">
-    <ul>
-      <li>普通文章用 Markdown</li>
-      <li>视觉笔记和图表文章用 MDX</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="结构稳定" meta="Build" description="frontmatter 决定文章如何进入列表、分类、标签和 RSS。">
-    <ul>
-      <li>分类、标签自动聚合</li>
-      <li>草稿和私密内容有发布边界</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="发布简单" meta="Deploy" description="推送仓库后由 GitHub Actions 构建，再发布到 GitHub Pages。">
-    <ul>
-      <li>不手动上传 dist</li>
-      <li>不维护服务器进程</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="适合 Agent" meta="Agent" description="文章、规则和模板都在仓库里，Agent 可以直接阅读、修改和验证。">
-    <ul>
-      <li>根据 docs/writing/BLOG_AGENT.md 写作</li>
-      <li>用 npm test 和 build 校验</li>
-    </ul>
-  </FeatureCard>
-</VisualGrid>
+  <div class="sys-legend" aria-label="蓝图线型图例">
+    <span><i class="line-solid" aria-hidden="true"></i>实线：生产主链</span>
+    <span><i class="line-dashed" aria-hidden="true"></i>虚线：规则约束</span>
+    <strong>结论：改动先按职责找到唯一入口，再进入下一层。</strong>
+  </div>
+</section>
 
-## 架构
+这张地图刻意不展开函数和模板细节。维护者先判断“我在改内容、页面、规则还是交付”，就能避免把写作规范塞进组件、把 Demo 混进正式文章，或把构建产物当源码维护。
 
-<Mermaid
-  title="整体架构"
-  caption="内容文件进入 Astro 内容集合，构建后由 GitHub Pages 托管。"
-  chart={`flowchart LR
-    A[MD / MDX 文章] --> B[Astro 内容集合]
-    B --> C[页面模板]
-    C --> D[静态构建]
-    D --> E[dist 产物]
-    E --> F[GitHub Actions]
-    F --> G[GitHub Pages]
-    G --> H[读者访问]`}
-/>
+## 正式文章、视觉实验和规则文档为什么必须分区
 
-这套架构的边界很清楚：写作阶段处理内容，构建阶段生成页面，发布阶段只托管静态文件。
+<section class="sys-board sys-board--zones" aria-label="内容分区与边界蓝图">
+  <header class="sys-board-head">
+    <div>
+      <span class="sys-index">B02 · CONTENT ZONES</span>
+      <strong class="sys-board-title">三个区域共享仓库，但承担三种完全不同的承诺</strong>
+    </div>
+    <p>目录边界不是为了整齐，而是让读者内容、设计试验和 Agent 规则不会互相污染。</p>
+  </header>
 
-<VisualGrid columns={3}>
-  <FeatureCard title="Astro" meta="Core" description="负责内容读取、页面生成和静态构建。" />
-  <FeatureCard title="Starlight" meta="Docs" description="提供文档站基础能力，也保留指南入口的扩展空间。" />
-  <FeatureCard title="MDX" meta="Writing" description="让文章可以插入 Astro 组件、卡片和 Mermaid 图表。" />
-</VisualGrid>
+  <div class="sys-zone-map">
+    <article class="sys-zone sys-zone--public">
+      <div class="sys-zone-title">
+        <span>PUBLIC WORK</span>
+        <strong>正式文章</strong>
+      </div>
+      <code>{`src/content/posts/*.mdx`}</code>
+      <p>面向读者发布。每篇保留完整 frontmatter，分类只使用生活、实践、教程、视觉实验室中的合法值。</p>
+      <div class="sys-zone-check">
+        <span>输入</span><b>作者事实与判断</b>
+        <span>输出</span><b>可独立阅读的网页作品</b>
+      </div>
+    </article>
 
-## 页面
+    <div class="sys-boundary">
+      <span>不得混放</span>
+      <i aria-hidden="true"></i>
+      <small>Demo 不冒充正文<br />规则不作为文章发布</small>
+    </div>
 
-站点不是单页应用，而是一组构建期生成的静态入口：首页负责导览，文章页负责阅读，分类和标签负责聚合。
+    <article class="sys-zone sys-zone--lab">
+      <div class="sys-zone-title">
+        <span>VISUAL LAB</span>
+        <strong>视觉实验</strong>
+      </div>
+      <code>{`src/content/posts/visual-lab/`}</code>
+      <p>集中测试组件、复杂排版和视觉模式。它提供参考效果，但不会成为正式文章的固定骨架。</p>
+      <div class="sys-zone-check">
+        <span>输入</span><b>待验证的表达方式</b>
+        <span>输出</span><b>可参考的视觉样板</b>
+      </div>
+    </article>
 
-<Mermaid
-  title="页面结构"
-  caption="大部分入口都由文章 frontmatter 和内容集合驱动。"
-  chart={`flowchart TD
-    Home[首页] --> Articles[文章列表]
-    Home --> Projects[项目页]
-    Home --> About[关于页]
-    Home --> Search[顶部搜索]
-    Articles --> Detail[文章详情]
-    Articles --> Category[分类页]
-    Articles --> Tag[标签页]
-    Detail --> RSS[RSS]
-    Search --> Detail`}
-/>
+    <div class="sys-boundary">
+      <span>只做引用</span>
+      <i aria-hidden="true"></i>
+      <small>规则给正文设边界<br />正文不复制规则全文</small>
+    </div>
 
-<VisualGrid columns={2}>
-  <FeatureCard title="首页" meta="入口" description="展示主题方向、精选文章和项目记录，让读者快速知道这里写什么。" />
-  <FeatureCard title="文章列表" meta="索引" description="按日期展示公开文章，并连接分类、标签和详情页。" />
-  <FeatureCard title="详情页" meta="阅读" description="渲染 Markdown / MDX 正文，同时展示标题、摘要、标签和目录。" />
-  <FeatureCard title="顶部搜索" meta="检索" description="在导航栏里提供轻量搜索入口，不需要单独维护搜索页面。" />
-</VisualGrid>
+    <article class="sys-zone sys-zone--docs">
+      <div class="sys-zone-title">
+        <span>CONTROL DOCS</span>
+        <strong>维护规则</strong>
+      </div>
+      <code>{`AGENTS.md · docs/ · llms.txt`}</code>
+      <p>只服务维护与 Agent 路由。详细规则进入 docs，AGENTS.md 保留硬规则，llms.txt 提供快速入口。</p>
+      <div class="sys-zone-check">
+        <span>输入</span><b>长期维护约束</b>
+        <span>输出</span><b>一致的执行路径</b>
+      </div>
+    </article>
+  </div>
 
-## 内容模型
+  <footer class="sys-verdict">
+    <span>BOUNDARY</span>
+    <strong>正式文章对读者负责，视觉实验对表达验证负责，规则文档对维护一致性负责。</strong>
+  </footer>
+</section>
 
-每篇文章开头的 frontmatter 是内容进入站点的入口。它不只是元信息，也决定文章是否公开、如何聚合、是否进入精选。
+## 规则和索引如何组成维护控制面
 
-<Mermaid
-  title="frontmatter 驱动"
-  caption="页面不手工维护链接，而是从文章字段生成列表、详情、分类和标签。"
-  chart={`flowchart LR
-    A[frontmatter] --> B[标题与摘要]
-    A --> C[分类与标签]
-    A --> D[草稿与私密边界]
-    A --> E[精选与阅读时间]
-    B --> F[文章卡片]
-    C --> G[分类 / 标签页]
-    D --> H[公开页面过滤]
-    E --> I[首页展示]`}
-/>
+<section class="sys-board sys-board--control" aria-label="博客规则控制面蓝图">
+  <header class="sys-board-head">
+    <div>
+      <span class="sys-index">B03 · CONTROL PLANE</span>
+      <strong class="sys-board-title">先路由，再读取；只让一个文件成为每类规则的权威来源</strong>
+    </div>
+    <p>Agent 不需要默认通读整个仓库，而是从任务类型进入最小必需上下文。</p>
+  </header>
 
-<VisualGrid columns={3}>
-  <MetricCard label="公开边界" value="draft" detail="draft: true 不进入公开页面。" />
-  <MetricCard label="隐藏边界" value="private" detail="private: true 不生成公开入口。" tone="cyan" />
-  <MetricCard label="精选入口" value="featured" detail="featured: true 可进入首页精选。" tone="green" />
-</VisualGrid>
+  <div class="sys-control-flow">
+    <article class="sys-control-entry">
+      <span>ENTRY</span>
+      <strong>新任务</strong>
+      <p>先辨认是代码、文章、MDX 视觉还是内容检索。</p>
+    </article>
+    <i class="sys-arrow" aria-hidden="true"></i>
+    <article class="sys-control-router">
+      <span>ROUTER</span>
+      <strong><code>{`AGENTS.md`}</code> / <code>{`llms.txt`}</code></strong>
+      <p>给出读取顺序与硬边界，不承载长示例。</p>
+    </article>
+    <i class="sys-arrow" aria-hidden="true"></i>
+    <div class="sys-control-sources">
+      <article>
+        <span>CODE</span>
+        <strong><code>{`docs/DEV_RULES.md`}</code></strong>
+        <p>最小改动、验证与 Git 约定</p>
+      </article>
+      <article>
+        <span>WRITING</span>
+        <strong><code>{`docs/writing/`}</code></strong>
+        <p>写作、风格与内容索引</p>
+      </article>
+      <article>
+        <span>VISUAL</span>
+        <strong><code>{`docs/ARTICLE_VISUAL_SYSTEM.md`}</code></strong>
+        <p>整页视觉方案与章节闭环</p>
+      </article>
+      <article>
+        <span>REFERENCE</span>
+        <strong><code>{`CONTENT_INDEX.md`}</code></strong>
+        <p>先选主题，再只读 1 到 3 篇正文</p>
+      </article>
+    </div>
+  </div>
 
-固定分类现在有四个：`生活`、`实践`、`教程`、`视觉实验室`。分类负责内容类型，标签负责细粒度索引。
+  <div class="sys-control-rails">
+    <div>
+      <span>读取原则</span>
+      <strong>任务相关 → 必要规则 → 少量参考 → 目标文件</strong>
+    </div>
+    <div>
+      <span>维护原则</span>
+      <strong>同一规则只保留一个权威版本，其他文件只做导航。</strong>
+    </div>
+    <div>
+      <span>变更原则</span>
+      <strong>只改直接相关文件，不整理或回滚工作区里的其他修改。</strong>
+    </div>
+  </div>
+</section>
 
-## 写作
+这套控制面让 Agent 可参与维护，但不会把 Agent 变成新的内容源。作者事实和项目真实代码仍然是依据；规则只约束怎样读取、修改和验证。
 
-写作流程尽量短：先选主题和分类，再写 frontmatter，最后用 Markdown / MDX 组织正文。
+## 一篇文章怎样从想法进入公开内容系统
 
-<DecisionFlow
-  title="写作判断"
-  items={[
-    {
-      label: 'Format',
-      title: '先选格式',
-      description: '普通笔记用 Markdown；需要卡片、图表或高亮说明时用 MDX。',
-    },
-    {
-      label: 'Shape',
-      title: '再定结构',
-      description: '技术文章优先写成视觉笔记：结论、指标、流程、模块、检查清单。',
-    },
-    {
-      label: 'Boundary',
-      title: '最后看发布边界',
-      description: '新文章默认 draft: true，只有明确确认发布后才改为 false。',
-    },
-  ]}
-/>
+<section class="sys-board sys-board--pipeline" aria-label="文章从写作到公开的内容流">
+  <header class="sys-board-head">
+    <div>
+      <span class="sys-index">B04 · CONTENT PIPELINE</span>
+      <strong class="sys-board-title">默认公开不是省略检查，而是把例外状态说清楚</strong>
+    </div>
+    <p>新文章默认 <code>{`draft: false`}</code>、<code>{`private: false`}</code>；只有用户明确要求草稿或私密时才切换状态。</p>
+  </header>
 
-<HighlightBox eyebrow="STYLE" title="不要写成 README">
-  文章不是把项目目录说明搬上去。读者更需要先看到判断、架构、流程和边界，再读必要细节。
-</HighlightBox>
+  <ol class="sys-pipeline">
+    <li>
+      <span>01 · BRIEF</span>
+      <strong>确认主题与读者任务</strong>
+      <p>提炼一句话结论、事实素材、专业风格和文章形态。</p>
+      <small>产出：视觉简报</small>
+    </li>
+    <li>
+      <span>02 · DESIGN</span>
+      <strong>先设计网页作品</strong>
+      <p>按读者问题拆 H2；系统、教程和流程文章默认一章一张完整信息图。</p>
+      <small>产出：章节蓝图</small>
+    </li>
+    <li>
+      <span>03 · WRITE</span>
+      <strong>写入 Content Collection</strong>
+      <p>正文进入 <code>{`src/content/posts/`}</code>，frontmatter 对齐 schema 与固定分类。</p>
+      <small>产出：MDX 文件</small>
+    </li>
+    <li>
+      <span>04 · VERIFY</span>
+      <strong>检查事实与页面</strong>
+      <p>审查敏感信息、桌面和移动布局，再执行测试与静态构建。</p>
+      <small>产出：可构建页面</small>
+    </li>
+    <li>
+      <span>05 · PUBLISH</span>
+      <strong>提交到 main 的发布链</strong>
+      <p>推送触发 Actions；线上是否已经更新，必须查看实际运行后才能确认。</p>
+      <small>产出：静态站点</small>
+    </li>
+  </ol>
 
-## 发布
+  <div class="sys-gates">
+    <article class="is-pass">
+      <span>默认路径</span>
+      <strong><code>{`draft: false · private: false`}</code></strong>
+      <p>文章通过内容与页面检查后进入公开集合。</p>
+    </article>
+    <article class="is-hold">
+      <span>明确要求暂不发布</span>
+      <strong><code>{`draft: true`}</code></strong>
+      <p>不进入公开页面；何时公开由用户后续决定。</p>
+    </article>
+    <article class="is-stop">
+      <span>明确要求不进公开站点</span>
+      <strong><code>{`private: true`}</code></strong>
+      <p>不进入公开列表、详情、RSS 与站内搜索数据；它不是密码保护。</p>
+    </article>
+  </div>
+</section>
 
-发布流程也保持文件化：文章进入仓库，本地验证通过后提交推送，GitHub Actions 负责构建和发布。
+## 仓库怎样变成 GitHub Pages 上的静态站点
 
-<Mermaid
-  title="发布流程"
-  caption="本地只负责写作和验证，线上由 GitHub Actions 发布到 GitHub Pages。"
-  chart={`flowchart LR
-    A[写文章] --> B[检查 frontmatter]
-    B --> C[npm test]
-    C --> D[npm run build]
-    D --> E[提交并推送]
-    E --> F[GitHub Actions]
-    F --> G[GitHub Pages]
-    G --> H[线上博客]`}
-/>
+<section class="sys-board sys-board--release" aria-label="静态构建与发布边界蓝图">
+  <header class="sys-board-head">
+    <div>
+      <span class="sys-index">B05 · RELEASE BOUNDARY</span>
+      <strong class="sys-board-title">源码、构建和托管分成三段，线上不需要常驻 Node 服务</strong>
+    </div>
+    <p>当前配置使用 Astro + MDX。工作流在 main 推送或手动触发时运行，构建完成后由 GitHub Pages 托管静态产物。</p>
+  </header>
 
-<VisualGrid columns={2}>
-  <FeatureCard title="本地验证" meta="Local" description="用测试和构建确认内容边界、页面结构和 MDX 语法没有破坏站点。">
-    <ul>
-      <li><code>npm test</code></li>
-      <li><code>npm run build</code></li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="静态托管" meta="Pages" description="线上托管的是构建后的 dist 文件，不需要 Node 服务、数据库或后台进程。">
-    <ul>
-      <li>访问地址：/</li>
-      <li>发布来源：GitHub Actions</li>
-    </ul>
-  </FeatureCard>
-</VisualGrid>
+  <div class="sys-release-track">
+    <article>
+      <span>SOURCE</span>
+      <strong>仓库源码</strong>
+      <code>{`posts · pages · components · styles`}</code>
+      <p>Git 记录内容与代码的每次变化。</p>
+    </article>
+    <i aria-hidden="true"></i>
+    <article>
+      <span>BUILD</span>
+      <strong>Astro 静态生成</strong>
+      <code>{`npm test\nnpm run build`}</code>
+      <p>测试与构建验证由本地或 CI 执行。</p>
+    </article>
+    <i aria-hidden="true"></i>
+    <article>
+      <span>DELIVER</span>
+      <strong>GitHub Actions</strong>
+      <code>{`withastro/action@v6`}</code>
+      <p>上传 Pages artifact，deploy job 等待 build。</p>
+    </article>
+    <i aria-hidden="true"></i>
+    <article>
+      <span>HOST</span>
+      <strong>GitHub Pages</strong>
+      <code>{`https://apexcheng.github.io`}</code>
+      <p>提供静态文件，不运行应用后端。</p>
+    </article>
+  </div>
 
-## Agent 角色
+  <div class="sys-release-facts">
+    <article>
+      <span>仓库可确认</span>
+      <strong><code>{`site`}</code> 已配置，未配置 <code>{`base`}</code></strong>
+      <p>这与当前用户站点根路径方案一致。</p>
+    </article>
+    <article>
+      <span>仓库可确认</span>
+      <strong>工作流权限与并发组已声明</strong>
+      <p><code>{`contents: read`}</code>、<code>{`pages: write`}</code>、<code>{`id-token: write`}</code>，并使用 pages concurrency group。</p>
+    </article>
+    <article class="is-verify">
+      <span>需运行验证</span>
+      <strong>Pages Source、最新 Actions 运行与线上页面</strong>
+      <p>这些属于仓库外实时状态，不能只凭配置文件宣称已经成功。</p>
+    </article>
+  </div>
+</section>
 
-Agent 不是发布系统本身，而是写作和维护流程里的协作者。它适合做结构整理、规则检查、图表补全和构建验证。
+静态架构的取舍也在这里：它没有数据库、登录、在线编辑后台和常驻应用服务，换来的是更短的访问链、更低的运行维护成本，以及可被 Git 审查的内容历史。
 
-<VisualGrid columns={3}>
-  <FeatureCard title="写作助手" meta="Draft" description="把草稿整理成视觉笔记，补齐标题、摘要、卡片和流程图。" />
-  <FeatureCard title="规则审查" meta="Review" description="检查分类、草稿状态、敏感信息、frontmatter 和发布边界。" />
-  <FeatureCard title="构建验证" meta="Verify" description="运行项目已有命令，确认文章能被 Astro 正常构建。" />
-</VisualGrid>
+## 两篇蓝图应该怎样配合阅读
 
-<HighlightBox eyebrow="BOUNDARY" title="发布必须由人确认">
-  Agent 可以准备草稿、重写文章和运行验证，但不能自行把新文章发布出去。是否从 draft: true 改成 draft: false，必须由用户明确确认。
-</HighlightBox>
+<section class="sys-board sys-board--handoff" aria-label="博客架构篇与运行篇分工">
+  <header class="sys-board-head">
+    <div>
+      <span class="sys-index">B06 · HANDOFF</span>
+      <strong class="sys-board-title">先用本篇确定系统边界，再用运行篇定位代码路径</strong>
+    </div>
+    <p>两篇共享同一套蓝图语汇，但不会重复同一张图：一篇解释“为什么这样组织”，一篇解释“代码怎样执行”。</p>
+  </header>
 
-## 静态取舍
+  <div class="sys-handoff">
+    <article>
+      <span>YOU ARE HERE · SYSTEM</span>
+      <strong>这个博客是怎么搭起来的</strong>
+      <p>适合新增文章、维护规则、调整内容边界或理解发布责任时阅读。</p>
+      <ul>
+        <li>仓库职责地图</li>
+        <li>正式文章 / Demo / docs 分区</li>
+        <li>写作到公开的控制链</li>
+      </ul>
+    </article>
+    <i aria-hidden="true"></i>
+    <article>
+      <span>NEXT · RUNTIME</span>
+      <strong>从代码看这个博客</strong>
+      <p>适合按 URL 找页面、追踪文章渲染、理解构建产物或排查部署链路时阅读。</p>
+      <ul>
+        <li>页面与路由定位</li>
+        <li>Collection / MDX / Layout 渲染栈</li>
+        <li>本地与 Actions 双运行链</li>
+      </ul>
+    </article>
+  </div>
 
-这个博客没有数据库、登录、评论和后台权限。它牺牲的是在线编辑便利性，换来的是低维护成本、可版本化内容和稳定访问。
+  <footer class="sys-verdict">
+    <span>TAKEAWAY</span>
+    <strong>文件管理内容，规则控制变更，Astro 生成页面，Actions 与 Pages 完成交付。</strong>
+  </footer>
+</section>
 
-<VisualGrid columns={2}>
-  <FeatureCard title="静态博客" meta="当前选择" description="适合个人写作、版本管理、低成本部署和长期维护。">
-    <ul>
-      <li>复杂度主要在构建期</li>
-      <li>线上访问链路短</li>
-      <li>内容变更有 Git 记录</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="动态博客" meta="暂不需要" description="适合多人后台、权限系统、评论互动和复杂查询。">
-    <ul>
-      <li>需要维护运行时服务</li>
-      <li>需要数据库和权限模型</li>
-      <li>当前阶段收益不够高</li>
-    </ul>
-  </FeatureCard>
-</VisualGrid>
+<style>{`
+  .sys-hero,
+  .sys-board {
+    --sys-ink: #183044;
+    --sys-muted: #526b7b;
+    --sys-line: #afc4d0;
+    --sys-line-soft: #d7e2e8;
+    --sys-paper: #f7fafb;
+    --sys-paper-2: #edf3f6;
+    --sys-blue: #2d6688;
+    --sys-cyan: #347d84;
+    --sys-green: #497665;
+    --sys-amber: #8b6b38;
+    --sys-red: #8a4e55;
+    box-sizing: border-box;
+    color: var(--sys-ink);
+  }
 
-## 后续
+  .sys-hero *,
+  .sys-board * {
+    box-sizing: border-box;
+  }
 
-后续演进会围绕写作体验和阅读体验逐步做，而不是一开始就扩成庞大系统。
+  .sys-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr);
+    gap: 1.5rem;
+    width: min(1080px, calc(100vw - 2rem));
+    margin: 1.6rem 0 2.4rem 50%;
+    padding: 1.5rem;
+    border: 1px solid var(--sys-line);
+    border-radius: 16px;
+    background:
+      linear-gradient(rgba(77, 115, 139, .07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77, 115, 139, .07) 1px, transparent 1px),
+      var(--sys-paper);
+    background-size: 24px 24px;
+    box-shadow: 0 18px 42px rgba(29, 61, 81, .09);
+    transform: translateX(-50%);
+  }
 
-<DecisionFlow
-  title="演进顺序"
-  items={[
-    {
-      label: 'Content',
-      title: '先沉淀内容',
-      description: '保持分类稳定，继续把生活、实践、教程和视觉实验室文章写下去。',
-    },
-    {
-      label: 'Experience',
-      title: '再优化阅读',
-      description: '根据真实文章数量优化搜索、相关文章、系列文章和移动端阅读体验。',
-    },
-    {
-      label: 'Build',
-      title: '最后补检查',
-      description: '需要时再加入链接检查、图片资源检查和更细的 frontmatter 校验。',
-    },
-  ]}
-/>
+  .sys-kicker,
+  .sys-index,
+  .sys-lane > span,
+  .sys-zone-title span,
+  .sys-control-flow span,
+  .sys-pipeline > li > span,
+  .sys-gates span,
+  .sys-release-track span,
+  .sys-release-facts span,
+  .sys-handoff span,
+  .sys-verdict span {
+    display: block;
+    color: var(--sys-blue);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: .6875rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    line-height: 1.35;
+    text-transform: uppercase;
+  }
 
-## 小结
+  .sys-hero-title {
+    display: block;
+    margin: .5rem 0 .65rem;
+    color: var(--sys-ink);
+    font-size: clamp(1.35rem, 3vw, 2rem);
+    line-height: 1.32;
+  }
 
-<HighlightBox eyebrow="SUMMARY" title="文件管理内容，构建生成页面">
-  这个博客的架构目标不是复杂，而是可持续：用文件写文章，用 Astro 生成页面，用 GitHub Actions 发布到 GitHub Pages，再让 Agent 辅助写作、审查和维护。
-</HighlightBox>
+  .sys-hero p,
+  .sys-board p,
+  .sys-board li,
+  .sys-board small {
+    font-size: .8125rem;
+    line-height: 1.65;
+  }
+
+  .sys-hero p {
+    max-width: 680px;
+    margin: 0;
+    color: var(--sys-muted);
+  }
+
+  .sys-hero-route {
+    align-self: stretch;
+    display: grid;
+    grid-template-columns: 1fr 38px 1fr;
+    align-items: center;
+    gap: .65rem;
+  }
+
+  .sys-hero-route > div {
+    min-width: 0;
+    padding: .85rem;
+    border: 1px solid var(--sys-line-soft);
+    background: rgba(255, 255, 255, .72);
+  }
+
+  .sys-hero-route > div.is-current {
+    border-color: #8fb2c5;
+    background: #e9f2f6;
+  }
+
+  .sys-hero-route span,
+  .sys-hero-route strong {
+    display: block;
+  }
+
+  .sys-hero-route span {
+    color: var(--sys-muted);
+    font-size: .6875rem;
+  }
+
+  .sys-hero-route strong {
+    margin-top: .35rem;
+    font-size: .8125rem;
+    line-height: 1.5;
+  }
+
+  .sys-hero-route > i,
+  .sys-release-track > i,
+  .sys-handoff > i {
+    position: relative;
+    height: 1px;
+    background: var(--sys-blue);
+  }
+
+  .sys-hero-route > i::after,
+  .sys-release-track > i::after,
+  .sys-handoff > i::after {
+    position: absolute;
+    top: 50%;
+    right: -1px;
+    width: 7px;
+    height: 7px;
+    border-top: 1px solid var(--sys-blue);
+    border-right: 1px solid var(--sys-blue);
+    content: "";
+    transform: translateY(-50%) rotate(45deg);
+  }
+
+  .sys-board {
+    width: min(1080px, calc(100vw - 2rem));
+    margin: 1.4rem 0 2.3rem 50%;
+    overflow: hidden;
+    border: 1px solid var(--sys-line);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 18px 42px rgba(29, 61, 81, .08);
+    transform: translateX(-50%);
+  }
+
+  .sys-board-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr);
+    gap: 1rem;
+    padding: 1.25rem 1.4rem 1.05rem;
+    border-bottom: 1px solid var(--sys-line-soft);
+    background:
+      linear-gradient(rgba(77, 115, 139, .06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77, 115, 139, .06) 1px, transparent 1px),
+      var(--sys-paper);
+    background-size: 22px 22px;
+  }
+
+  .sys-board-title {
+    display: block;
+    margin: .38rem 0 0;
+    color: var(--sys-ink);
+    font-size: clamp(1.2rem, 2.5vw, 1.65rem);
+    line-height: 1.35;
+  }
+
+  .sys-board-head p {
+    align-self: end;
+    margin: 0;
+    color: var(--sys-muted);
+  }
+
+  .sys-map-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--sys-line-soft);
+  }
+
+  .sys-lane {
+    min-width: 0;
+    padding: 1.2rem 1.3rem;
+    background: #fff;
+    box-shadow: inset 4px 0 0 var(--lane-color);
+  }
+
+  .sys-lane--content { --lane-color: #3d778f; }
+  .sys-lane--view { --lane-color: #4c7c72; }
+  .sys-lane--rule { --lane-color: #756c91; }
+  .sys-lane--ship { --lane-color: #8b6b45; }
+
+  .sys-lane strong,
+  .sys-lane p {
+    display: block;
+    margin-top: .55rem;
+  }
+
+  .sys-lane strong {
+    font-size: .875rem;
+    line-height: 1.55;
+  }
+
+  .sys-lane p {
+    margin-bottom: .65rem;
+    color: var(--sys-muted);
+  }
+
+  .sys-lane ul,
+  .sys-handoff ul {
+    margin: 0;
+    padding-left: 1.15rem;
+    color: var(--sys-muted);
+  }
+
+  .sys-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem 1.25rem;
+    align-items: center;
+    padding: .9rem 1.3rem;
+    border-top: 1px solid var(--sys-line-soft);
+    background: var(--sys-paper);
+  }
+
+  .sys-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    color: var(--sys-muted);
+    font-size: .75rem;
+  }
+
+  .sys-legend i {
+    width: 30px;
+    border-top: 1px solid var(--sys-blue);
+  }
+
+  .sys-legend .line-dashed {
+    border-top-style: dashed;
+  }
+
+  .sys-legend strong {
+    margin-left: auto;
+    font-size: .8125rem;
+  }
+
+  .sys-zone-map {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr) 72px minmax(0, 1fr);
+    align-items: stretch;
+    padding: 1.25rem;
+    background: #f8fafb;
+  }
+
+  .sys-zone {
+    min-width: 0;
+    padding: 1.1rem;
+    border: 1px solid var(--zone-line);
+    background: #fff;
+  }
+
+  .sys-zone--public { --zone-line: #8fb4c6; }
+  .sys-zone--lab { --zone-line: #a7a1be; }
+  .sys-zone--docs { --zone-line: #aab9a8; }
+
+  .sys-zone-title {
+    display: flex;
+    justify-content: space-between;
+    gap: .75rem;
+    align-items: baseline;
+    margin-bottom: .8rem;
+  }
+
+  .sys-zone-title strong {
+    font-size: .95rem;
+  }
+
+  .sys-zone > code {
+    display: block;
+    overflow-wrap: anywhere;
+    color: var(--sys-blue);
+    font-size: .75rem;
+  }
+
+  .sys-zone > p {
+    margin: .7rem 0;
+    color: var(--sys-muted);
+  }
+
+  .sys-zone-check {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .4rem .6rem;
+    padding-top: .7rem;
+    border-top: 1px dashed var(--sys-line);
+  }
+
+  .sys-zone-check span {
+    color: var(--sys-muted);
+    font-size: .6875rem;
+  }
+
+  .sys-zone-check b {
+    font-size: .75rem;
+    font-weight: 700;
+  }
+
+  .sys-boundary {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: .55rem;
+    min-width: 0;
+    color: var(--sys-muted);
+    text-align: center;
+  }
+
+  .sys-boundary span {
+    font-size: .6875rem;
+    font-weight: 800;
+  }
+
+  .sys-boundary i {
+    width: 58%;
+    border-top: 1px dashed var(--sys-red);
+  }
+
+  .sys-boundary small {
+    font-size: .6875rem;
+    line-height: 1.45;
+  }
+
+  .sys-verdict {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1rem;
+    align-items: center;
+    padding: .95rem 1.3rem;
+    border-top: 1px solid var(--sys-line-soft);
+    background: #edf4f7;
+  }
+
+  .sys-verdict strong {
+    font-size: .875rem;
+    line-height: 1.55;
+  }
+
+  .sys-control-flow {
+    display: grid;
+    grid-template-columns: minmax(150px, .65fr) 42px minmax(210px, .9fr) 42px minmax(0, 1.45fr);
+    align-items: center;
+    padding: 1.3rem;
+    background: #f8fafb;
+  }
+
+  .sys-control-entry,
+  .sys-control-router,
+  .sys-control-sources article {
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--sys-line);
+    background: #fff;
+  }
+
+  .sys-control-entry strong,
+  .sys-control-router strong,
+  .sys-control-sources strong {
+    display: block;
+    margin-top: .4rem;
+    font-size: .8125rem;
+    line-height: 1.5;
+  }
+
+  .sys-control-entry p,
+  .sys-control-router p,
+  .sys-control-sources p {
+    margin: .45rem 0 0;
+    color: var(--sys-muted);
+  }
+
+  .sys-control-router {
+    border-style: dashed;
+    border-color: var(--sys-blue);
+  }
+
+  .sys-arrow {
+    position: relative;
+    height: 1px;
+    margin: 0 .55rem;
+    background: var(--sys-blue);
+  }
+
+  .sys-arrow::after {
+    position: absolute;
+    top: 50%;
+    right: -1px;
+    width: 7px;
+    height: 7px;
+    border-top: 1px solid var(--sys-blue);
+    border-right: 1px solid var(--sys-blue);
+    content: "";
+    transform: translateY(-50%) rotate(45deg);
+  }
+
+  .sys-control-sources {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .65rem;
+  }
+
+  .sys-control-rails {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    border-top: 1px solid var(--sys-line-soft);
+    background: var(--sys-line-soft);
+  }
+
+  .sys-control-rails > div {
+    padding: 1rem 1.1rem;
+    background: #fff;
+  }
+
+  .sys-control-rails span,
+  .sys-control-rails strong {
+    display: block;
+  }
+
+  .sys-control-rails span {
+    color: var(--sys-muted);
+    font-size: .6875rem;
+  }
+
+  .sys-control-rails strong {
+    margin-top: .4rem;
+    font-size: .8125rem;
+    line-height: 1.55;
+  }
+
+  .sys-pipeline {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin: 0;
+    padding: 1.3rem;
+    list-style: none;
+    background: #f8fafb;
+  }
+
+  .sys-pipeline > li {
+    position: relative;
+    min-width: 0;
+    padding: 1rem;
+    border-top: 2px solid var(--sys-blue);
+    border-right: 1px solid var(--sys-line-soft);
+    background: #fff;
+  }
+
+  .sys-pipeline > li:last-child {
+    border-right: 0;
+  }
+
+  .sys-pipeline > li::before {
+    position: absolute;
+    top: -6px;
+    left: 1rem;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: var(--sys-blue);
+    box-shadow: 0 0 0 1px var(--sys-blue);
+    content: "";
+  }
+
+  .sys-pipeline strong,
+  .sys-pipeline p,
+  .sys-pipeline small {
+    display: block;
+  }
+
+  .sys-pipeline strong {
+    margin-top: .6rem;
+    font-size: .85rem;
+    line-height: 1.5;
+  }
+
+  .sys-pipeline p {
+    margin: .5rem 0;
+    color: var(--sys-muted);
+  }
+
+  .sys-pipeline small {
+    color: var(--sys-green);
+    font-size: .6875rem;
+  }
+
+  .sys-gates {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .8rem;
+    padding: 0 1.3rem 1.3rem;
+    background: #f8fafb;
+  }
+
+  .sys-gates article {
+    min-width: 0;
+    padding: .9rem 1rem;
+    border: 1px solid var(--gate-color);
+    background: #fff;
+  }
+
+  .sys-gates .is-pass { --gate-color: #8cb3a3; }
+  .sys-gates .is-hold { --gate-color: #c5ae7d; }
+  .sys-gates .is-stop { --gate-color: #bd9298; }
+
+  .sys-gates strong {
+    display: block;
+    margin-top: .42rem;
+    overflow-wrap: anywhere;
+    font-size: .8rem;
+  }
+
+  .sys-gates p {
+    margin: .45rem 0 0;
+    color: var(--sys-muted);
+  }
+
+  .sys-release-track {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr) 44px minmax(0, 1fr) 44px minmax(0, 1fr);
+    align-items: center;
+    padding: 1.3rem;
+    background: #f8fafb;
+  }
+
+  .sys-release-track article {
+    min-width: 0;
+    min-height: 176px;
+    padding: 1rem;
+    border: 1px solid var(--sys-line);
+    background: #fff;
+  }
+
+  .sys-release-track strong,
+  .sys-release-track code,
+  .sys-release-track p {
+    display: block;
+  }
+
+  .sys-release-track strong {
+    margin-top: .42rem;
+    font-size: .9rem;
+  }
+
+  .sys-release-track code {
+    margin-top: .7rem;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    color: var(--sys-blue);
+    font-size: .75rem;
+    line-height: 1.55;
+  }
+
+  .sys-release-track p {
+    margin: .6rem 0 0;
+    color: var(--sys-muted);
+  }
+
+  .sys-release-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    border-top: 1px solid var(--sys-line-soft);
+    background: var(--sys-line-soft);
+  }
+
+  .sys-release-facts article {
+    min-width: 0;
+    padding: 1rem 1.1rem;
+    background: #fff;
+  }
+
+  .sys-release-facts article.is-verify {
+    box-shadow: inset 0 3px 0 var(--sys-amber);
+  }
+
+  .sys-release-facts strong {
+    display: block;
+    margin-top: .42rem;
+    font-size: .82rem;
+    line-height: 1.5;
+  }
+
+  .sys-release-facts p {
+    margin: .45rem 0 0;
+    color: var(--sys-muted);
+  }
+
+  .sys-handoff {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 70px minmax(0, 1fr);
+    align-items: center;
+    padding: 1.3rem;
+    background: #f8fafb;
+  }
+
+  .sys-handoff article {
+    min-width: 0;
+    padding: 1.15rem;
+    border: 1px solid var(--sys-line);
+    background: #fff;
+  }
+
+  .sys-handoff strong {
+    display: block;
+    margin-top: .45rem;
+    font-size: 1rem;
+  }
+
+  .sys-handoff p {
+    margin: .55rem 0 .65rem;
+    color: var(--sys-muted);
+  }
+
+  html[data-theme='dark'] .sys-hero,
+  html[data-theme='dark'] .sys-board {
+    --sys-ink: #dce9ef;
+    --sys-muted: #a9bdc8;
+    --sys-line: #486272;
+    --sys-line-soft: #304957;
+    --sys-paper: #142632;
+    --sys-paper-2: #1a2f3d;
+    --sys-blue: #82bad6;
+    --sys-cyan: #78c0c3;
+    --sys-green: #8fbba8;
+    --sys-amber: #d3b77e;
+    --sys-red: #d29aa1;
+  }
+
+  html[data-theme='dark'] .sys-hero,
+  html[data-theme='dark'] .sys-board-head {
+    background:
+      linear-gradient(rgba(155, 191, 209, .08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(155, 191, 209, .08) 1px, transparent 1px),
+      var(--sys-paper);
+  }
+
+  html[data-theme='dark'] .sys-board,
+  html[data-theme='dark'] .sys-lane,
+  html[data-theme='dark'] .sys-zone,
+  html[data-theme='dark'] .sys-control-entry,
+  html[data-theme='dark'] .sys-control-router,
+  html[data-theme='dark'] .sys-control-sources article,
+  html[data-theme='dark'] .sys-control-rails > div,
+  html[data-theme='dark'] .sys-pipeline > li,
+  html[data-theme='dark'] .sys-gates article,
+  html[data-theme='dark'] .sys-release-track article,
+  html[data-theme='dark'] .sys-release-facts article,
+  html[data-theme='dark'] .sys-handoff article,
+  html[data-theme='dark'] .sys-hero-route > div {
+    background: #10212c;
+  }
+
+  html[data-theme='dark'] .sys-zone-map,
+  html[data-theme='dark'] .sys-control-flow,
+  html[data-theme='dark'] .sys-pipeline,
+  html[data-theme='dark'] .sys-gates,
+  html[data-theme='dark'] .sys-release-track,
+  html[data-theme='dark'] .sys-handoff,
+  html[data-theme='dark'] .sys-legend,
+  html[data-theme='dark'] .sys-verdict {
+    background: #142733;
+  }
+
+  html[data-theme='dark'] .sys-hero-route > div.is-current {
+    background: #193545;
+  }
+
+  @media (max-width: 1399px) {
+    .sys-hero,
+    .sys-board {
+      width: auto;
+      margin-left: 0;
+      transform: none;
+    }
+
+    .sys-zone-map {
+      grid-template-columns: 1fr;
+      gap: .75rem;
+    }
+
+    .sys-boundary {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      text-align: left;
+    }
+
+    .sys-boundary i {
+      width: 100%;
+    }
+
+    .sys-boundary small br {
+      display: none;
+    }
+
+    .sys-control-flow {
+      grid-template-columns: 1fr;
+      gap: .75rem;
+    }
+
+    .sys-arrow {
+      width: 1px;
+      height: 28px;
+      margin: 0 auto;
+    }
+
+    .sys-arrow::after {
+      top: auto;
+      right: 50%;
+      bottom: -1px;
+      transform: translateX(50%) rotate(135deg);
+    }
+
+    .sys-release-track {
+      grid-template-columns: 1fr;
+      gap: .7rem;
+    }
+
+    .sys-release-track > i,
+    .sys-handoff > i {
+      width: 1px;
+      height: 24px;
+      margin: 0 auto;
+    }
+
+    .sys-release-track > i::after,
+    .sys-handoff > i::after {
+      top: auto;
+      right: 50%;
+      bottom: -1px;
+      transform: translateX(50%) rotate(135deg);
+    }
+
+    .sys-release-track article {
+      min-height: 0;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .sys-hero {
+      grid-template-columns: 1fr;
+      padding: 1rem;
+    }
+
+    .sys-hero-route {
+      grid-template-columns: 1fr;
+    }
+
+    .sys-hero-route > i {
+      width: 1px;
+      height: 24px;
+      margin: 0 auto;
+    }
+
+    .sys-hero-route > i::after {
+      top: auto;
+      right: 50%;
+      bottom: -1px;
+      transform: translateX(50%) rotate(135deg);
+    }
+
+    .sys-board-head {
+      grid-template-columns: 1fr;
+      padding: 1rem;
+    }
+
+    .sys-map-grid,
+    .sys-control-sources,
+    .sys-control-rails,
+    .sys-gates,
+    .sys-release-facts {
+      grid-template-columns: 1fr;
+    }
+
+    .sys-legend {
+      align-items: flex-start;
+      flex-direction: column;
+      padding: .9rem 1rem;
+    }
+
+    .sys-legend strong {
+      margin-left: 0;
+    }
+
+    .sys-zone-map,
+    .sys-control-flow,
+    .sys-release-track,
+    .sys-handoff {
+      padding: 1rem;
+    }
+
+    .sys-verdict {
+      grid-template-columns: 1fr;
+      gap: .4rem;
+      padding: .9rem 1rem;
+    }
+
+    .sys-pipeline {
+      grid-template-columns: 1fr;
+      gap: .7rem;
+      padding: 1rem;
+    }
+
+    .sys-pipeline > li {
+      border-top: 0;
+      border-right: 0;
+      border-left: 2px solid var(--sys-blue);
+    }
+
+    .sys-pipeline > li::before {
+      top: 1rem;
+      left: -6px;
+    }
+
+    .sys-gates {
+      padding: 0 1rem 1rem;
+    }
+
+    .sys-handoff {
+      grid-template-columns: 1fr;
+      gap: .7rem;
+    }
+
+    .sys-zone-title {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: .25rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sys-hero,
+    .sys-board {
+      scroll-behavior: auto;
+    }
+  }
+`}</style>

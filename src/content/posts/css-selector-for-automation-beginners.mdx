@@ -15,353 +15,317 @@ series: "yingdao-agent-development"
 seriesOrder: 2
 ---
 
-刚开始学自动化，CSS 定位很容易被讲成“背几个语法”：`#id`、`.class`、`[name="xxx"]`。但真实项目里，真正难的不是写出一个能用的选择器，而是写出一个**稳定、可读、出错后好排查**的选择器。
+刚开始学自动化，CSS 定位很容易被讲成“背几个语法”。真实项目里更重要的问题是：这个选择器能不能长期命中正确元素，失效后能不能快速知道原因。
 
-这篇文章不再停留在 CSS 入门。目标是让实习生能从“会写选择器”，进一步走到“知道为什么这样写、什么时候不用这样写、怎么验证它是不是可靠”。
+本文面向网页自动化场景，尤其是影刀编码版常见的 `browser.find_by_css()`、`browser.find_all_by_css()` 和 `browser.find_by_xpath()`。临时操作可以只求能用；交给 RPA 长期运行时，定位必须像代码一样可读、可验证、可维护。
 
-<div class="css-guide-hero" role="group" aria-label="CSS 稳定定位能力总览">
-  <div class="css-guide-hero__head">
-    <span>CSS SELECTOR</span>
-    <strong>稳定定位不是把路径写长，而是按层级缩小目标</strong>
-    <p>先命中元素，再提高匹配精度，最后把范围限定到弹窗、表格行或业务卡片里，并验证结果是否唯一。</p>
-  </div>
-
-  <div class="css-layer-track">
-    <div class="css-layer-card">
-      <span>01</span>
-      <strong>基础命中</strong>
-      <code>{`button[data-action="submit"]`}</code>
-      <p>先找到大致目标，避免坐标点击。</p>
+<div class="selector-manual selector-manual--hero" role="group" aria-label="CSS 稳定定位总览">
+  <div class="selector-kicker"><span>CSS SELECTOR FIELD MANUAL</span><b>网页自动化定位图解手册</b></div>
+  <div class="selector-hero-grid">
+    <div class="selector-hero-copy">
+      <span class="selector-chip selector-chip--blue">一句话结论</span>
+      <strong>稳定定位不是把路径写长，<br />而是逐层减少不确定性。</strong>
+      <p>先限定业务区域，再找稳定特征，用最少条件收窄目标，最后把匹配数量变成可检查的结果。</p>
+      <div class="selector-hero-rule">
+        <span>区域</span><i>→</i><span>特征</span><i>→</i><span>组合</span><i>→</i><span>验证</span>
+      </div>
     </div>
-    <div class="css-layer-card">
-      <span>02</span>
-      <strong>精准匹配</strong>
-      <code>{`[class*="comments--"]`}</code>
-      <p>用等于、包含、开头和结尾匹配处理动态属性。</p>
-    </div>
-    <div class="css-layer-card">
-      <span>03</span>
-      <strong>范围控制</strong>
-      <code>{`.dialog .confirm`}</code>
-      <p>先锁定弹窗、表格行或卡片，再找里面的按钮。</p>
-    </div>
-    <div class="css-layer-card is-final">
-      <span>04</span>
-      <strong>唯一验证</strong>
-      <code>{`len(elements) == 1`}</code>
-      <p>不是“能找到”就结束，而是确认只找到目标元素。</p>
+    <div class="selector-scope-demo" aria-label="从页面到目标按钮的范围缩小示意">
+      <div class="selector-scope selector-scope--page">
+        <small>PAGE</small>
+        <span>整个页面</span>
+        <div class="selector-scope selector-scope--dialog">
+          <small>.order-dialog</small>
+          <span>订单弹窗</span>
+          <div class="selector-scope selector-scope--row">
+            <small>tr[data-order-id]</small>
+            <span>目标订单行</span>
+            <code>button[data-action="confirm"]</code>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-
-  <div class="css-guide-hero__footer">
-    <span>◎ 稳定属性优先</span>
-    <span>◉ 模糊匹配要验数量</span>
-    <span>◇ 找不到先排页面状态</span>
+  <div class="selector-hero-status">
+    <span><b>优先</b> 稳定属性</span>
+    <span><b>控制</b> 业务范围</span>
+    <span><b>检查</b> 匹配数量</span>
+    <span><b>兜底</b> 页面状态</span>
   </div>
 </div>
 
-本文默认场景是网页自动化，尤其是影刀编码版里常见的 `browser.find_by_css()`、`browser.find_all_by_css()` 和 `browser.find_by_xpath()`。如果只是临时点一次页面，写得能用就行；如果要交给 RPA 长期跑，就必须把定位当成可维护代码来写。
+## 稳定定位到底在解决哪几层问题？
 
-## 先把定位分成三层能力
+只会写选择器，解决的是“能否命中”；能把范围、唯一性和页面上下文一起考虑，才是在解决自动化稳定性。
 
-CSS 定位可以先分成三层，不要一上来就陷入语法细节。
+<div class="selector-manual" role="group" aria-label="稳定定位四层能力图">
+  <div class="selector-board-head">
+    <div><span>01 · CAPABILITY STACK</span><strong>四层能力栈</strong></div>
+    <p>每往下一层，定位从“碰巧找到”更接近“可长期维护”。</p>
+  </div>
+  <div class="selector-stack">
+    <div class="selector-stack-row selector-stack-row--base">
+      <b>01</b>
+      <div><span>基础命中</span><strong>先找到候选元素</strong></div>
+      <code>input[name="keyword"]</code>
+      <small>回答：页面上有没有它？</small>
+    </div>
+    <div class="selector-stack-row selector-stack-row--precision">
+      <b>02</b>
+      <div><span>精准匹配</span><strong>处理动态属性</strong></div>
+      <code>[class*="comments--"]</code>
+      <small>回答：哪个片段真正稳定？</small>
+    </div>
+    <div class="selector-stack-row selector-stack-row--scope">
+      <b>03</b>
+      <div><span>范围控制</span><strong>先锁业务容器</strong></div>
+      <code>.dialog .confirm</code>
+      <small>回答：它属于哪个弹窗或记录？</small>
+    </div>
+    <div class="selector-stack-row selector-stack-row--verify">
+      <b>04</b>
+      <div><span>唯一验证</span><strong>让错误显式发生</strong></div>
+      <code>len(elements) == 1</code>
+      <small>回答：是 0 个、1 个还是多个？</small>
+    </div>
+  </div>
+  <div class="selector-board-verdict">
+    <span>能力边界</span>
+    <strong>入门掌握基础命中；真实项目至少同时使用精准匹配、范围控制和唯一验证。</strong>
+  </div>
+</div>
 
-| 层级 | 解决什么问题 | 典型写法 |
-| --- | --- | --- |
-| 基础命中 | 通过标签、id、class、属性找到元素 | `#submit`、`.primary`、`input[name="keyword"]` |
-| 精准匹配 | 对属性做等于、包含、开头、结尾等匹配 | `[data-id^="order-"]`、`[class*="comments--"]` |
-| 范围控制 | 先限定弹窗、表格行、卡片，再找内部按钮 | `.dialog .confirm`、`tr[data-id="1"] button` |
+## 基础选择器怎么选，才不会一开始就走偏？
 
-入门阶段只要知道第一层。真正做自动化项目，至少要掌握第二层和第三层。
+基础语法不需要死背。先判断元素有没有“表达功能的稳定特征”，再决定用 id、class 还是属性。
 
-## 先快速过一遍基础：这些够你开始写定位
-
-基础选择器不需要背很多，先记住它们分别适合什么场景。
-
-| 写法 | 例子 | 适合什么时候用 |
-| --- | --- | --- |
-| 标签 | `button`、`input` | 只做大范围候选，不建议单独点击 |
-| id | `#submit-order` | id 稳定且页面唯一 |
-| class | `.primary`、`.button.primary` | class 有业务含义，不是随机样式名 |
-| 属性 | `input[name="username"]` | 自动化里最常用，优先看 `name`、`data-*`、`aria-label` |
-| 组合 | `input.form-input[name="keyword"]` | 单个条件不唯一时，再加必要条件 |
-| 范围 | `.dialog .confirm` | 页面有多个同名按钮时，先限定弹窗、表格行或卡片 |
-
-一个登录输入框可能长这样：
-
-```html
-<input
+<div class="selector-manual" role="group" aria-label="基础选择器索引">
+  <div class="selector-board-head">
+    <div><span>02 · SELECTOR INDEX</span><strong>六种入口，一条优先级</strong></div>
+    <p>越靠近业务语义，通常越适合自动化；越依赖位置和样式，维护风险越高。</p>
+  </div>
+  <div class="selector-index">
+    <div class="selector-index-axis"><span>更稳定</span><i></i><span>更依赖页面结构</span></div>
+    <div class="selector-index-items">
+      <div><b>属性</b><code>input[name="username"]</code><small>`name`、稳定且表达业务或测试语义的 `data-*`、`aria-label` 优先</small></div>
+      <div><b>id</b><code>#submit-order</code><small>仅在 id 稳定且唯一时使用</small></div>
+      <div><b>组合</b><code>input.form-input[name="keyword"]</code><small>单条件不唯一时补必要条件</small></div>
+      <div><b>范围</b><code>.dialog .confirm</code><small>页面有同名元素时先缩小区域</small></div>
+      <div><b>class</b><code>.button.primary</code><small>确认是业务类名，不是随机样式名</small></div>
+      <div><b>标签</b><code>button</code><small>适合找候选，不建议单独点击</small></div>
+    </div>
+  </div>
+  <div class="selector-specimen">
+    <div>
+      <span class="selector-chip selector-chip--blue">HTML 样本</span>
+      <pre><code class="language-html">{`<input
   id="username"
   class="login-input"
   name="username"
   placeholder="请输入用户名"
   type="text"
-/>
-```
+/>`}</code></pre>
+    </div>
+    <div class="selector-choice">
+      <span class="selector-chip selector-chip--green">推荐</span>
+      <code>input[name="username"]</code>
+      <p>`name` 更像程序字段，能直接说明用途。</p>
+    </div>
+    <div class="selector-choice selector-choice--risk">
+      <span class="selector-chip selector-chip--red">不优先</span>
+      <code>input[placeholder="请输入用户名"]</code>
+      <p>`placeholder` 是展示文案，更容易被产品调整。</p>
+    </div>
+  </div>
+  <div class="selector-board-verdict">
+    <span>基础判断</span>
+    <strong>优先找能表达功能的稳定属性，不复制浏览器生成的完整层级路径。</strong>
+  </div>
+</div>
 
-如果 `name="username"` 稳定，就优先写：
+## 六种属性匹配分别该在什么时候用？
 
-```css
-input[name="username"]
-```
+页面没有干净的 id 或专用测试属性时，关键不是立即改用长路径，而是识别属性值中哪一部分稳定。
 
-不优先写：
+<div class="selector-manual" role="group" aria-label="CSS 属性匹配刻度尺">
+  <div class="selector-board-head">
+    <div><span>03 · ATTRIBUTE GAUGE</span><strong>属性匹配刻度尺</strong></div>
+    <p>从精确到宽松，匹配范围逐渐扩大；越宽松，越需要范围控制和数量验证。</p>
+  </div>
+  <div class="selector-gauge">
+    <div class="selector-gauge-line"><span>窄</span><i></i><span>宽</span></div>
+    <div class="selector-gauge-grid">
+      <div class="is-safe"><b>=</b><strong>完全等于</strong><code>[data-action="submit"]</code><small>属性值完整且稳定</small></div>
+      <div><b>^=</b><strong>固定开头</strong><code>[id^="order-"]</code><small>前缀稳定、后半段变化</small></div>
+      <div><b>$=</b><strong>固定结尾</strong><code>[href$=".xlsx"]</code><small>文件名或状态后缀稳定</small></div>
+      <div class="is-caution"><b>&#42;=</b><strong>包含片段</strong><code>[class*="comments--"]</code><small>动态值中间有稳定语义</small></div>
+      <div><b>&#126;=</b><strong>空格分词</strong><code>[class~="primary"]</code><small>属性由多个独立词组成</small></div>
+      <div><b>|=</b><strong>词或词前缀</strong><code>[lang|="zh"]</code><small>等于 `zh` 或以 `zh-` 开头</small></div>
+    </div>
+  </div>
+  <div class="selector-compare-lab">
+    <div>
+      <span class="selector-chip selector-chip--orange">动态 class</span>
+      <pre><code class="language-html">{`<div class="comments--ChxC7GEN">评价区</div>`}</code></pre>
+      <p>随机后缀会变化，稳定片段是 `comments--`。</p>
+    </div>
+    <div class="selector-compare-arrow">→</div>
+    <div>
+      <span class="selector-chip selector-chip--green">候选写法</span>
+      <code>div[class*="comments--"]</code>
+      <p>可用于收窄候选，但必须检查匹配数量。</p>
+    </div>
+  </div>
+  <div class="selector-word-test">
+    <div><code>[class~="primary"]</code><span>✓</span><small>class="button primary large"</small></div>
+    <div><code>[class~="primary"]</code><span>✓</span><small>class="primary"</small></div>
+    <div class="is-fail"><code>[class~="primary"]</code><span>×</span><small>class="primary-button"</small></div>
+  </div>
+  <div class="selector-board-verdict selector-board-verdict--warning">
+    <span>风险边界</span>
+    <strong>`*=` 不是更高级，只是更宽松。能精确匹配时不要先用模糊匹配。</strong>
+  </div>
+</div>
 
-```css
-input[placeholder="请输入用户名"]
-```
-
-原因很简单：`name` 更像程序字段，`placeholder` 更像给用户看的提示文案，后者更容易被产品文案调整影响。
-
-基础部分先记住一句话：**优先找能表达功能的稳定属性，不要一上来复制浏览器生成的完整路径。**
-
-## 属性匹配：从入门到中等水平的关键
-
-很多页面没有干净的 id，也没有专门给自动化准备的 `data-testid`。这时只会写 `[name="xxx"]` 还不够，需要掌握属性匹配。
-
-| 写法 | 含义 | 适合场景 |
-| --- | --- | --- |
-| `[attr="value"]` | 属性值完全等于 | 精确匹配 `name`、`type`、`data-action` |
-| `[attr^="value"]` | 属性值以某段开头 | id 或 class 有固定前缀 |
-| `[attr$="value"]` | 属性值以某段结尾 | 文件名、链接、状态后缀 |
-| `[attr*="value"]` | 属性值包含某段文本 | 动态 class 有稳定片段 |
-| `[attr~="value"]` | 属性值按空格拆分后包含某个词 | class 这类空格分隔属性 |
-| `[attr|="value"]` | 属性值等于 value 或以 `value-` 开头 | 语言、状态前缀等少数场景 |
-
-可以先按这个判断：
-
-| 真实场景 | 优先写法 | 例子 |
-| --- | --- | --- |
-| 属性完全稳定 | 精确匹配 | `[data-action="submit"]` |
-| 前缀稳定，后面变化 | 开头匹配 | `[id^="order-"]` |
-| 后缀稳定 | 结尾匹配 | `[href$=".xlsx"]` |
-| 中间有稳定片段 | 包含匹配 | `[class*="comments--"]` |
-| class 是多个独立词 | 空格词匹配 | `[class~="primary"]` |
-
-越模糊的匹配，越要验证数量。尤其是 `*=`，它不是“更高级”，只是“更宽松”。
-
-### 精确匹配
-
-```css
-input[name="keyword"]
-button[data-action="submit"]
-```
-
-这是最推荐的属性写法。只要属性稳定，精确匹配最清楚，也最不容易误伤。
-
-### 开头匹配
-
-```css
-tr[data-order-id^="202607"]
-```
-
-表示 `data-order-id` 以 `202607` 开头。它适合批量找某一类元素，但不适合直接点击，因为它通常会匹配多个。
-
-自动化里更常见的用法是先找一组候选：
+批量选择器可以先拿到候选，再按文本、状态或其它属性筛选：
 
 ```python
 rows = browser.find_all_by_css('tr[data-order-id^="202607"]', timeout=10)
 ```
 
-然后再根据文本、状态或其它属性继续筛选。
+## 关系选择器和伪类，什么时候是在帮忙，什么时候在添风险？
 
-### 结尾匹配
+关系选择器负责表达“元素在哪个容器、哪一层、哪个相邻位置”；伪类负责表达“元素是什么状态或位置”。它们解决的问题不同。
 
-```css
-a[href$=".xlsx"]
-img[src$=".png"]
-```
-
-这种写法适合下载链接、图片、文件类型判断。但如果页面里同类链接很多，仍然要先限定范围。
-
-### 包含匹配
-
-```css
-[class*="comments--"]
-```
-
-这类写法常用于前端框架生成的动态 class。
-
-例如页面里出现：
-
-```html
-<div class="comments--ChxC7GEN">评价区</div>
-```
-
-后半段 `ChxC7GEN` 看起来像随机字符，但 `comments--` 是稳定语义，就可以用包含匹配：
-
-```css
-div[class*="comments--"]
-```
-
-不过要注意：`*=` 是模糊匹配，范围容易变大。能用 `data-*`、`name`、`aria-label` 时，不要优先用它。
-
-### 空格词匹配
-
-```css
-button[class~="primary"]
-```
-
-它表示 class 列表里有一个完整的 `primary` 词。下面两个元素都能匹配：
-
-```html
-<button class="button primary large">提交</button>
-<button class="primary">提交</button>
-```
-
-但这个不会匹配：
-
-```html
-<button class="primary-button">提交</button>
-```
-
-这和 `[class*="primary"]` 不一样。`*=` 只要包含文本就行，`~=` 要求是独立词。
-
-## 关系选择器：控制范围的核心
-
-CSS 选择器不只是“找某个元素”，还可以表达元素之间的关系。
-
-| 写法 | 含义 | 示例 |
-| --- | --- | --- |
-| `A B` | A 内部任意层级的 B | `.dialog button` |
-| `A > B` | A 的直接子元素 B | `.menu > li` |
-| `A + B` | A 后面紧挨着的 B | `label + input` |
-| `A ~ B` | A 后面同级的所有 B | `.title ~ button` |
-
-### 后代选择器：最常用
-
-```css
-.dialog .confirm
-```
-
-表示在 `.dialog` 内部找 `.confirm`。弹窗、卡片、表格行、表单区域都常用这种思路。
-
-### 直接子元素：避免层级过深误匹配
-
-```css
-.menu > li
-```
-
-只找 `.menu` 下面第一层的 `li`，不会继续往更深层级找。
-
-### 相邻兄弟：根据前后结构找元素
-
-```css
-label[for="password"] + input
-```
-
-它表示找到 `for="password"` 的 label 后，紧挨着它的 input。
-
-这种写法在后台表单里偶尔有用，但依赖结构，页面布局调整后可能失效。能用 `name` 还是优先用 `name`。
-
-## 伪类选择器：能用，但要知道风险
-
-伪类选择器可以表达状态或位置，但自动化里不要滥用。
-
-| 写法 | 含义 | 自动化建议 |
-| --- | --- | --- |
-| `:nth-child(n)` | 第 n 个子元素 | 最后再用，容易受数据变化影响 |
-| `:first-child` | 第一个子元素 | 适合固定结构，不适合动态列表 |
-| `:last-child` | 最后一个子元素 | 适合固定结构，不适合分页表格 |
-| `:not(...)` | 排除某类元素 | 可用于排除禁用项或隐藏项 |
-| `:checked` | 被选中的复选框或单选框 | 适合状态判断 |
-| `:disabled` | 禁用状态 | 适合判断按钮是否可用 |
-| `:has(...)` | 包含某个子元素 | 需按运行环境验证，不要默认所有环境都稳定 |
-
-### `:not()` 用于排除干扰项
-
-```css
-button:not([disabled])
-```
-
-表示找没有 `disabled` 属性的按钮。实际项目里通常还要加范围：
-
-```css
-.order-dialog button.submit:not([disabled])
-```
-
-### `:has()` 可以表达“包含关系”，但要谨慎
-
-```css
-tr:has([data-status="待处理"]) button.process
-```
-
-这个选择器的意思是：找包含 `data-status="待处理"` 的表格行，再找这一行里的处理按钮。
-
-它表达能力很强，但自动化项目里要注意两点：
-
-1. 影刀内置浏览器或实际运行环境是否支持，需要运行验证；
-2. 如果可以通过 `tr[data-order-id="..."]` 直接定位，就不要为了炫技使用 `:has()`。
-
-中等水平不是会用更复杂的语法，而是知道什么时候不用复杂语法。
-
-## 自动化里的 CSS 定位四步法
-
-写 CSS 时不要一上来复制浏览器生成的超长路径。先按下面四步判断，定位通常会更短，也更容易维护。
-
-<div class="css-method-board" role="group" aria-label="CSS 定位四步法与推荐优先级">
-  <div class="css-method-steps">
-    <div class="css-method-step"><b>1</b><span>◎</span><div><strong>先确定区域</strong><p>页面主体 / 弹窗 / 表格 / 商品卡片</p></div></div>
-    <div class="css-method-step"><b>2</b><span>⌕</span><div><strong>找稳定特征</strong><p>id / name / data-* / aria-label</p></div></div>
-    <div class="css-method-step"><b>3</b><span>✣</span><div><strong>组合必要条件</strong><p>用尽量少的条件唯一定位</p></div></div>
-    <div class="css-method-step"><b>4</b><span>✓</span><div><strong>验证是否唯一</strong><p>匹配结果是 0 个 / 1 个 / 多个</p></div></div>
+<div class="selector-manual" role="group" aria-label="DOM 关系地图和伪类风险带">
+  <div class="selector-board-head">
+    <div><span>04 · DOM RELATION MAP</span><strong>先看关系，再评估结构依赖</strong></div>
+    <p>业务容器通常比页面位置稳定；位置型伪类通常比属性状态更脆弱。</p>
   </div>
-
-  <div class="css-priority-list">
-    <div class="css-priority-list__head"><span>★</span><strong>推荐优先级</strong></div>
-    <ol>
-      <li><b>1</b><span>数据属性 / name / aria-label</span></li>
-      <li><b>2</b><span>稳定且有意义的 id</span></li>
-      <li><b>3</b><span>稳定且有意义的 class</span></li>
-      <li><b>4</b><span>标签 + 属性组合</span></li>
-      <li><b>5</b><span>nth-child，最后再考虑</span></li>
-    </ol>
+  <div class="selector-dom-map">
+    <div class="selector-dom-tree">
+      <div class="selector-dom-node selector-dom-node--root"><code>.dialog</code><small>业务容器 A</small></div>
+      <div class="selector-dom-branch">
+        <div class="selector-dom-node"><code>.toolbar</code><small>直接子元素 B</small></div>
+        <div class="selector-dom-node"><code>label</code><small>相邻参照 A</small></div>
+        <div class="selector-dom-node selector-dom-node--target"><code>input</code><small>目标元素 B</small></div>
+        <div class="selector-dom-node"><code>button</code><small>后续同级 B</small></div>
+      </div>
+    </div>
+    <div class="selector-dom-legend">
+      <div><code>A B</code><strong>任意后代</strong><span>.dialog button</span><small>最常用的范围控制</small></div>
+      <div><code>A &gt; B</code><strong>直接子元素</strong><span>.menu &gt; li</span><small>避免继续命中深层元素</small></div>
+      <div><code>A + B</code><strong>紧邻兄弟</strong><span>label + input</span><small>依赖相邻结构，改版可能失效</small></div>
+      <div><code>A ~ B</code><strong>后续同级</strong><span>.title ~ button</span><small>命中 A 后面的所有同级 B</small></div>
+    </div>
   </div>
-
-  <div class="css-method-warnings">
-    <strong>常见误区</strong>
-    <span>△ 复制超长路径</span>
-    <span>△ 只靠随机 class</span>
-    <span>△ 模糊匹配不验证数量</span>
+  <div class="selector-risk-band">
+    <div class="is-low"><b>低风险</b><code>:checked</code><code>:disabled</code><small>状态明确，适合判断控件状态</small></div>
+    <div class="is-mid"><b>中风险</b><code>:not(...)</code><code>:first-child</code><small>适合排除干扰或固定结构</small></div>
+    <div class="is-high"><b>高风险</b><code>:nth-child(n)</code><code>:last-child</code><small>数据和顺序变化时容易错位</small></div>
+    <div class="is-runtime"><b>需运行验证</b><code>:has(...)</code><small>表达力强，但要确认影刀实际运行环境支持</small></div>
+  </div>
+  <div class="selector-has-case">
+    <code>tr:has([data-status="待处理"]) button.process</code>
+    <p>语义是“找到包含待处理状态的表格行，再取这一行的处理按钮”。如果能用订单 id 直接定位，就不必为了复杂而使用 `:has()`。</p>
+  </div>
+  <div class="selector-board-verdict">
+    <span>使用原则</span>
+    <strong>范围关系优先服务业务语义；结构关系和位置伪类只在没有更稳定特征时使用。</strong>
   </div>
 </div>
 
-这张图只保留方法，不再重复每一种语法。实际写代码时，可以把它当成检查顺序：先看范围，再看稳定特征，再组合，最后验证数量。
+## 写一个选择器时，应该按什么顺序下手？
 
-## CSS、XPath、get_text() 怎么选？
+不要从浏览器复制路径开始。把定位当成一次从业务区域到唯一元素的逐层诊断。
 
-这一步要提前讲，因为真实页面并不是所有元素都适合用 CSS。
+<div class="selector-manual selector-manual--dark" role="group" aria-label="CSS 定位四步仪表盘">
+  <div class="selector-board-head">
+    <div><span>05 · LOCATOR PROCEDURE</span><strong>四步定位仪</strong></div>
+    <p>每一步都有输入、动作和退出条件；任何一步信息不足，都先回页面确认。</p>
+  </div>
+  <div class="selector-procedure">
+    <div class="selector-procedure-step">
+      <b>01</b><span class="selector-procedure-icon">◎</span>
+      <div><strong>确定区域</strong><p>页面主体、弹窗、表格、商品卡片</p><small>退出条件：业务容器已明确</small></div>
+    </div>
+    <div class="selector-procedure-step">
+      <b>02</b><span class="selector-procedure-icon">⌕</span>
+      <div><strong>寻找稳定特征</strong><p>id、name、具备业务或测试语义的 data-*、aria-label</p><small>退出条件：特征稳定且能表达功能</small></div>
+    </div>
+    <div class="selector-procedure-step">
+      <b>03</b><span class="selector-procedure-icon">✣</span>
+      <div><strong>组合必要条件</strong><p>只补足能消除歧义的条件</p><small>退出条件：选择器仍然短且可读</small></div>
+    </div>
+    <div class="selector-procedure-step">
+      <b>04</b><span class="selector-procedure-icon">✓</span>
+      <div><strong>验证匹配数量</strong><p>0 个、1 个、多个分别处理</p><small>退出条件：目标唯一且语义正确</small></div>
+    </div>
+  </div>
+  <div class="selector-priority-console">
+    <div><span>优先级</span><b>1</b><strong>稳定且表达业务或测试语义的 data-* / name / aria-label</strong></div>
+    <div><span>优先级</span><b>2</b><strong>稳定且有意义的 id</strong></div>
+    <div><span>优先级</span><b>3</b><strong>稳定且有意义的 class</strong></div>
+    <div><span>优先级</span><b>4</b><strong>标签 + 属性组合</strong></div>
+    <div class="is-last"><span>最后考虑</span><b>5</b><strong>nth-child</strong></div>
+  </div>
+  <div class="selector-procedure-alerts">
+    <span>× 复制超长路径</span><span>× 只靠随机 class</span><span>× 模糊匹配不验数量</span>
+  </div>
+</div>
 
-```text
-有稳定属性
-    ↓
-优先使用 CSS
+这张定位仪就是写代码时的检查顺序：先确认范围和稳定特征，再组合，最后把数量验证写进程序。
 
-没有稳定属性，但按钮文字明确
-    ↓
-使用 XPath 按文字定位
+## CSS、XPath 和 get_text() 应该怎么分工？
 
-需要先限定弹窗、表格或卡片范围，再判断文字
-    ↓
-CSS 找候选元素，再用 get_text() 筛选
+CSS 是主力定位方式，但不是唯一方式。只有显示文字稳定时，硬凑 CSS 往往会把问题复杂化。
 
-元素在 iframe、弹窗或动态加载区域里
-    ↓
-先处理页面上下文和加载状态，再谈选择器
-```
+<div class="selector-manual" role="group" aria-label="CSS XPath 和文字筛选路由">
+  <div class="selector-board-head">
+    <div><span>06 · ROUTING CONSOLE</span><strong>定位方式路由台</strong></div>
+    <p>先判断稳定信息来自属性、文字还是页面上下文，再选工具。</p>
+  </div>
+  <div class="selector-router">
+    <div class="selector-router-start"><span>START</span><strong>目标元素有什么稳定信息？</strong></div>
+    <div class="selector-router-paths">
+      <div>
+        <span class="selector-chip selector-chip--blue">稳定属性</span>
+        <strong>优先 CSS</strong>
+        <code>button[data-action="submit"]</code>
+        <small>短、清楚，适合范围组合</small>
+      </div>
+      <div>
+        <span class="selector-chip selector-chip--orange">只有文字</span>
+        <strong>改用 XPath</strong>
+        <code>//button[normalize-space(.)="提交订单"]</code>
+        <small>标准 CSS 不能匹配内部文字</small>
+      </div>
+      <div>
+        <span class="selector-chip selector-chip--violet">先限范围再看文字</span>
+        <strong>CSS + get_text()</strong>
+        <code>.order-dialog button</code>
+        <small>先拿候选，再在 Python 中筛选</small>
+      </div>
+      <div>
+        <span class="selector-chip selector-chip--red">上下文异常</span>
+        <strong>先处理页面状态</strong>
+        <code>iframe / popup / async</code>
+        <small>加载、弹窗和 iframe 不是选择器语法问题</small>
+      </div>
+    </div>
+  </div>
+  <div class="selector-invalid-css">
+    <div><span>不能匹配内部文字</span><code>button[text="提交订单"]</code></div>
+    <div><span>非标准 / 无效 CSS</span><code>button:contains("提交订单")</code></div>
+    <strong>前者是合法属性选择器，但只会检查 `text` 属性；后者不是标准 CSS。</strong>
+  </div>
+  <div class="selector-board-verdict">
+    <span>分工结论</span>
+    <strong>CSS 缩小结构范围，XPath 处理稳定文字，get_text() 在候选集合中完成业务筛选。</strong>
+  </div>
+</div>
 
-也就是说，CSS 是自动化里的主力定位方式，但不是唯一方式。遇到“只有文字稳定”的按钮时，硬凑 CSS 反而会把问题复杂化。
-
-### 按文字定位：不要写 `:contains()`
-
-标准 CSS 不能根据元素内部显示的文字进行匹配。下面这种写法并不是有效的 CSS：
-
-```css
-button[text="提交订单"]
-button:contains("提交订单")
-```
-
-在影刀编码版中，如果按钮文字稳定，可以直接用 XPath：
+按文字直接定位：
 
 ```python
 button = browser.find_by_xpath(
@@ -371,7 +335,7 @@ button = browser.find_by_xpath(
 button.click()
 ```
 
-如果需要先限定弹窗范围，再按文字筛选，可以先用 CSS 拿候选元素：
+先限定弹窗，再按文字筛选：
 
 ```python
 buttons = browser.find_all_by_css(".order-dialog button", timeout=10)
@@ -384,73 +348,29 @@ else:
     raise RuntimeError('未找到文本为“提交订单”的按钮')
 ```
 
-这里的关键点是：**CSS 负责缩小范围，文字判断发生在 Python 代码里。**
+## 怎样验证唯一性，并判断“找不到”到底是哪一层出了问题？
 
-## 怎么在浏览器里查看和验证？
+先在开发者工具中确认 HTML 和匹配数量，再进入影刀运行环境。这样可以把“选择器语法”和“页面状态”分开排查。
 
-### 第一步：打开开发者工具
-
-在 Chrome 或 Edge 中按 `F12`，或者在目标元素上点击右键，选择“检查”。
-
-### 第二步：观察元素特征
-
-重点看这些内容：
-
-- 标签名；
-- id；
-- class；
-- name；
-- placeholder；
-- data 属性；
-- aria-label。
-
-不要看到一大段 HTML 就慌。先问自己：有没有稳定 id？有没有能表达功能的属性？是否需要先限定一个区域？
-
-### 第三步：在 Console 验证
-
-```javascript
-document.querySelectorAll('input[name="username"]')
-```
-
-重点看返回数量：
-
-| 数量 | 说明 | 下一步 |
-| --- | --- | --- |
-| 0 个 | 没找到，或者元素还没有加载 | 检查语法、页面状态和 iframe |
-| 1 个 | 通常是理想结果 | 再确认它是不是目标元素 |
-| 多个 | 定位范围太大 | 增加区域或稳定条件 |
-
-在影刀里也可以用 `find_all_by_css()` 做类似验证：
-
-```python
-elements = browser.find_all_by_css('input[name="username"]', timeout=10)
-
-if len(elements) != 1:
-    raise RuntimeError(f"定位结果不唯一，当前数量={len(elements)}")
-
-elements[0].input("test_user")
-```
-
-一个好的定位不能只看“现在能找到”，还要看“以后是否容易失效”。
-
-## 选择器明明对，为什么还是找不到？
-
-这部分是新手最容易卡住的地方。很多时候不是 CSS 写错了，而是页面状态不对。
-
-| 现象 | 常见原因 | 排查方向 |
-| --- | --- | --- |
-| Console 能找到，影刀找不到 | 页面还没加载完成 | 先等待页面加载、弹窗出现或列表渲染完成 |
-| CSS 写法没问题，但结果是 0 个 | 元素在 iframe 里 | 先确认当前操作的是不是正确 iframe 或页面对象 |
-| 只在点击后才出现 | 元素是弹窗、下拉框或异步区域 | 先触发页面动作，再查找元素 |
-| 明明看得见，代码找不到 | 元素可能在 Shadow DOM、虚拟列表或特殊控件里 | 需要单独探测页面结构，不要直接猜选择器 |
-| `find_by_css()` 报匹配多个 | 选择器范围太大 | 改用 `find_all_by_css()` 看数量，再增加范围条件 |
-| 昨天能跑，今天失效 | id、class 或页面结构动态变化 | 改用稳定属性、包含匹配或业务范围定位 |
-| 使用 `:has()` 不稳定 | 运行环境支持不确定 | 在影刀实际运行环境验证，不能只看浏览器 Console |
-
-影刀里排查定位问题时，我通常先用 `find_all_by_css()` 看数量，而不是直接 `find_by_css()`：
-
-```python
-selector = '.order-dialog button.submit:not([disabled])'
+<div class="selector-manual" role="group" aria-label="选择器唯一性测试台">
+  <div class="selector-board-head">
+    <div><span>07 · VALIDATION LAB</span><strong>唯一性测试台</strong></div>
+    <p>一个选择器至少要通过“语法、数量、语义、运行环境”四道检查。</p>
+  </div>
+  <div class="selector-validation-flow">
+    <div><b>1</b><strong>检查元素</strong><span>F12 → Inspect</span><small>观察标签、id、class、name、data-*、aria-label</small></div>
+    <div><b>2</b><strong>Console 验证</strong><code>document.querySelectorAll(...)</code><small>先确认浏览器里能否匹配</small></div>
+    <div><b>3</b><strong>读取数量</strong><span>0 / 1 / 多个</span><small>不要只看结果列表里“好像有目标”</small></div>
+    <div><b>4</b><strong>影刀复验</strong><code>find_all_by_css(...)</code><small>验证加载、iframe 和实际运行环境</small></div>
+  </div>
+  <div class="selector-count-meter">
+    <div class="is-zero"><b>0</b><strong>未找到</strong><p>检查语法、加载状态、弹窗和 iframe。</p></div>
+    <div class="is-one"><b>1</b><strong>理想结果</strong><p>继续确认它的文本、属性和业务语义。</p></div>
+    <div class="is-many"><b>2+</b><strong>范围太大</strong><p>增加业务容器或稳定条件，不直接点击。</p></div>
+  </div>
+  <div class="selector-validation-code">
+    <span class="selector-chip selector-chip--green">可观察失败</span>
+    <pre><code class="language-python">{`selector = '.order-dialog button.submit:not([disabled])'
 elements = browser.find_all_by_css(selector, timeout=10)
 
 if len(elements) == 0:
@@ -459,87 +379,99 @@ if len(elements) == 0:
 if len(elements) > 1:
     raise RuntimeError(f"定位不唯一：{selector}，数量={len(elements)}")
 
-elements[0].click()
-```
-
-这样写虽然多几行，但报错信息会更清楚。后续排查时，能马上知道是“没找到”，还是“找到太多”。
-
-## 实战案例：从“能找到”到“可维护”
-
-### 案例一：登录输入框
-
-```html
-<input type="text" name="username" placeholder="请输入账号">
-```
-
-推荐：
-
-```css
-input[name="username"]
-```
-
-不优先使用：
-
-```css
-input[placeholder="请输入账号"]
-```
-
-原因是 `name="username"` 更像程序字段，`placeholder` 更像给用户看的提示文案，后者更容易因为产品文案调整而变化。
-
-### 案例二：弹窗确认按钮
-
-```html
-<div class="dialog">
-  <button class="cancel">取消</button>
-  <button class="confirm">确认</button>
+elements[0].click()`}</code></pre>
+    <p>报错直接区分“没找到”和“找到太多”，后续维护不必重新猜。</p>
+  </div>
+  <div class="selector-board-verdict">
+    <span>验收标准</span>
+    <strong>不仅要“现在能找到”，还要让失效方式可观察、可复现、可定位。</strong>
+  </div>
 </div>
-```
 
-推荐：
+<div class="selector-manual selector-manual--troubleshoot" role="group" aria-label="CSS 定位页面状态排障栈">
+  <div class="selector-board-head">
+    <div><span>08 · TROUBLESHOOTING STACK</span><strong>页面状态排障栈</strong></div>
+    <p>Console 能找到而自动化找不到时，优先向页面上下文排查，不要立刻重写选择器。</p>
+  </div>
+  <div class="selector-trouble-grid">
+    <div><span>现象 01</span><strong>Console 能找到，影刀找不到</strong><p>页面、弹窗或列表还没渲染完成。</p><b>→ 等待目标状态出现</b></div>
+    <div><span>现象 02</span><strong>语法正确，结果始终为 0</strong><p>元素可能位于 iframe 或另一个页面对象。</p><b>→ 切换正确上下文</b></div>
+    <div><span>现象 03</span><strong>点击后元素才出现</strong><p>下拉框、弹窗和异步区域尚未创建。</p><b>→ 先触发，再查找</b></div>
+    <div><span>现象 04</span><strong>看得见，但代码无法命中</strong><p>可能是 Shadow DOM、虚拟列表或特殊控件。</p><b>→ 探测真实页面结构</b></div>
+    <div><span>现象 05</span><strong>find_by_css() 报多个</strong><p>候选范围大于业务目标范围。</p><b>→ 用 find_all_by_css() 数量诊断</b></div>
+    <div><span>现象 06</span><strong>昨天能跑，今天失效</strong><p>id、class、顺序或层级发生动态变化。</p><b>→ 改用稳定属性与业务范围</b></div>
+    <div class="is-wide"><span>环境边界</span><strong>`:has()` 在浏览器 Console 可用，不等于在影刀运行环境稳定</strong><p>必须在实际浏览器内核与项目环境中运行验证。</p><b>→ 需运行验证</b></div>
+  </div>
+  <div class="selector-board-verdict selector-board-verdict--warning">
+    <span>排错顺序</span>
+    <strong>语法 → 匹配数量 → 加载状态 → 页面上下文 → 特殊 DOM → 运行环境。</strong>
+  </div>
+</div>
 
-```css
-.dialog .confirm
-```
+## 坏定位应该怎样一步步改造成可维护定位？
 
-不要只写：
+改造方向不是“换一个更复杂的语法”，而是减少结构依赖，增加业务语义，并让结果可验证。
 
-```css
-.confirm
-```
+<div class="selector-manual" role="group" aria-label="五类定位改造案例">
+  <div class="selector-board-head">
+    <div><span>09 · REFACTOR CLINIC</span><strong>定位重构手术台</strong></div>
+    <p>从原始页面特征出发，逐步替换不稳定依赖，而不是记固定答案。</p>
+  </div>
+  <div class="selector-case-stack">
+    <div class="selector-case">
+      <div class="selector-case-no">CASE 01</div>
+      <div class="selector-case-context"><strong>登录输入框</strong><span>稳定程序字段优先于展示文案</span></div>
+      <div class="selector-case-before"><small>不优先</small><code>input[placeholder="请输入账号"]</code></div>
+      <div class="selector-case-arrow">→</div>
+      <div class="selector-case-after"><small>推荐</small><code>input[name="username"]</code></div>
+    </div>
+    <div class="selector-case">
+      <div class="selector-case-no">CASE 02</div>
+      <div class="selector-case-context"><strong>弹窗确认按钮</strong><span>同名按钮先限定业务容器</span></div>
+      <div class="selector-case-before"><small>范围过大</small><code>.confirm</code></div>
+      <div class="selector-case-arrow">→</div>
+      <div class="selector-case-after"><small>推荐</small><code>.dialog .confirm</code></div>
+    </div>
+    <div class="selector-case">
+      <div class="selector-case-no">CASE 03</div>
+      <div class="selector-case-context"><strong>订单行操作按钮</strong><span>先定位业务记录，再操作行内按钮</span></div>
+      <div class="selector-case-before"><small>不稳定</small><code>tr:nth-child(2) button</code></div>
+      <div class="selector-case-arrow">→</div>
+      <div class="selector-case-after"><small>推荐</small><code>tr[data-order-id="20260713001"] .process-button</code></div>
+    </div>
+    <div class="selector-case">
+      <div class="selector-case-no">CASE 04</div>
+      <div class="selector-case-context"><strong>动态 class 评价区</strong><span>提取稳定片段，并补数量验证</span></div>
+      <div class="selector-case-before"><small>随机后缀</small><code>.comments--ChxC7GEN</code></div>
+      <div class="selector-case-arrow">→</div>
+      <div class="selector-case-after"><small>候选</small><code>div[class*="comments--"]</code></div>
+    </div>
+    <div class="selector-case selector-case--major">
+      <div class="selector-case-no">CASE 05 · 结构路径重构</div>
+      <div class="selector-path-before">
+        <small>浏览器复制路径</small>
+        <code>body &gt; div:nth-child(3) &gt; div &gt; div:nth-child(2) &gt; button:nth-child(2)</code>
+        <p>依赖弹窗顺序、容器层级和按钮位置，任一处变化都可能点错。</p>
+      </div>
+      <div class="selector-refactor-steps">
+        <span><b>1</b>识别业务范围 `.order-dialog`</span>
+        <span><b>2</b>寻找稳定动作 `data-action="confirm"`</span>
+        <span><b>3</b>组合为短而可读的选择器</span>
+      </div>
+      <div class="selector-path-after">
+        <small>重构结果</small>
+        <code>.order-dialog button[data-action="confirm"]</code>
+        <p>范围和动作都带业务语义，页面增加容器时仍有机会保持稳定。</p>
+      </div>
+    </div>
+  </div>
+  <div class="selector-board-verdict">
+    <span>改造方向</span>
+    <strong>少依赖页面层级，多依赖业务范围、稳定属性和可验证结果。</strong>
+  </div>
+</div>
 
-因为页面其它区域也可能有确认按钮。自动化里经常不是元素本身难找，而是**同名元素太多**。
-
-### 案例三：表格某一行的处理按钮
-
-```html
-<tr data-order-id="20260713001">
-  <td>20260713001</td>
-  <td>待处理</td>
-  <td><button class="process-button">处理</button></td>
-</tr>
-```
-
-推荐：
-
-```css
-tr[data-order-id="20260713001"] .process-button
-```
-
-这个写法的重点不是 `.process-button`，而是前面的 `tr[data-order-id="20260713001"]`。先定位业务记录，再操作这一行内部按钮，这比直接找第几个按钮稳定得多。
-
-### 案例四：动态 class 的评价区
-
-```html
-<div class="comments--ChxC7GEN">评价内容</div>
-```
-
-如果确认 `comments--` 是稳定前缀，可以写：
-
-```css
-div[class*="comments--"]
-```
-
-但这类选择器必须验证数量：
+动态 class 的数量验证：
 
 ```python
 areas = browser.find_all_by_css('div[class*="comments--"]', timeout=10)
@@ -548,34 +480,7 @@ if len(areas) != 1:
     raise RuntimeError(f"评价区定位不唯一，当前数量={len(areas)}")
 ```
 
-这就是中等水平和入门水平的差别：入门只看“能不能找到”，中等水平会继续确认“是不是只找到了一个”。
-
-### 案例五：把坏定位改造成好定位
-
-很多新手会从浏览器里复制出这种选择器：
-
-```css
-body > div:nth-child(3) > div > div:nth-child(2) > button:nth-child(2)
-```
-
-它的问题不是“不能用”，而是太依赖页面结构。只要页面多一个弹窗、多一层容器，或者按钮顺序变化，就可能点错。
-
-如果页面结构是这样：
-
-```html
-<div class="order-dialog">
-  <button class="btn">取消</button>
-  <button class="btn" data-action="confirm">确认</button>
-</div>
-```
-
-更好的写法是：
-
-```css
-.order-dialog button[data-action="confirm"]
-```
-
-如果没有 `data-action`，但弹窗范围和按钮文字稳定，就不要硬凑 CSS，可以用 CSS 加 `get_text()`：
+如果弹窗没有 `data-action`，但文字稳定，可以退回 CSS 候选加文字筛选：
 
 ```python
 buttons = browser.find_all_by_css(".order-dialog button", timeout=10)
@@ -588,39 +493,34 @@ else:
     raise RuntimeError("未找到弹窗里的确认按钮")
 ```
 
-这个案例要记住的不是某个固定答案，而是改造方向：**少依赖页面层级，多依赖业务范围、稳定属性和可验证结果。**
+## 学完后，怎样确认自己已经能独立写稳定定位？
 
-## 给实习生的练习
+先完成两道练习，再用能力验收条逐项检查。答案不是唯一目标，能解释为什么稳定才算掌握。
 
-假设页面 HTML 如下：
-
-```html
-<div class="login-panel">
+<div class="selector-manual" role="group" aria-label="CSS 定位练习与能力验收">
+  <div class="selector-board-head">
+    <div><span>10 · PRACTICE &amp; CHECK</span><strong>练习台与能力验收</strong></div>
+    <p>先看业务区域和稳定属性，再动手写选择器。</p>
+  </div>
+  <div class="selector-practice-grid">
+    <div class="selector-practice-card">
+      <span class="selector-chip selector-chip--blue">练习 A · 基础命中</span>
+      <pre><code class="language-html">{`<div class="login-panel">
   <input name="account" placeholder="请输入账号">
   <input name="password" type="password">
   <button class="login-button" data-action="login">登录</button>
-</div>
-```
-
-先自己写，再展开答案：
-
-<details class="css-answer">
-  <summary>查看参考答案</summary>
-  <div>
-
-```css
-input[name="account"]
+</div>`}</code></pre>
+      <p>分别定位账号、密码和登录按钮。</p>
+      <details class="selector-answer">
+        <summary>查看参考答案</summary>
+        <pre><code class="language-css">{`input[name="account"]
 input[name="password"]
-button[data-action="login"]
-```
-
-  </div>
-</details>
-
-再加一个中等难度练习：
-
-```html
-<div class="order-dialog">
+button[data-action="login"]`}</code></pre>
+      </details>
+    </div>
+    <div class="selector-practice-card">
+      <span class="selector-chip selector-chip--violet">练习 B · 范围控制</span>
+      <pre><code class="language-html">{`<div class="order-dialog">
   <div class="row" data-order-id="20260713001">
     <span class="status pending">待处理</span>
     <button class="btn btn-primary">处理</button>
@@ -629,156 +529,599 @@ button[data-action="login"]
     <span class="status done">已完成</span>
     <button class="btn btn-primary">查看</button>
   </div>
-</div>
-```
-
-目标：点击订单 `20260713001` 这一行里的按钮。
-
-<details class="css-answer">
-  <summary>查看参考答案</summary>
-  <div>
-
-```css
-.order-dialog .row[data-order-id="20260713001"] button.btn-primary
-```
-
-这里分成三层：先限定弹窗 `.order-dialog`，再找到对应订单行 `.row[data-order-id="20260713001"]`，最后操作这一行里的按钮。
-
+</div>`}</code></pre>
+      <p>定位订单 `20260713001` 这一行里的按钮。</p>
+      <details class="selector-answer">
+        <summary>查看参考答案</summary>
+        <pre><code class="language-css">{`.order-dialog .row[data-order-id="20260713001"] button.btn-primary`}</code></pre>
+        <p>先限定弹窗，再定位订单行，最后取行内按钮。</p>
+      </details>
+    </div>
   </div>
-</details>
-
-## 学完后先记住这几条
-
-<div class="css-final-check" role="group" aria-label="CSS 定位学习检查清单">
-  <div><b>1</b><span>能在开发者工具中找到目标元素的 HTML</span></div>
-  <div><b>2</b><span>能区分精确匹配、包含匹配、开头匹配和结尾匹配</span></div>
-  <div><b>3</b><span>能用范围选择器避免点错同名按钮</span></div>
-  <div><b>4</b><span>能在浏览器和影刀中验证选择器是否唯一</span></div>
-  <div><b>5</b><span>知道什么时候该换 XPath 或 get_text()，而不是硬用 CSS</span></div>
-  <strong>中等水平的 CSS 定位，不是写更多语法，而是能判断稳定性、控制范围，并验证结果。</strong>
+  <div class="selector-skill-check">
+    <div><b>01</b><span>能在开发者工具里找到目标元素的 HTML</span></div>
+    <div><b>02</b><span>能区分精确、包含、开头和结尾匹配</span></div>
+    <div><b>03</b><span>能用业务范围避免点错同名按钮</span></div>
+    <div><b>04</b><span>能在浏览器和影刀里验证选择器是否唯一</span></div>
+    <div><b>05</b><span>知道什么时候换 XPath 或 get_text()</span></div>
+  </div>
+  <div class="selector-board-verdict selector-board-verdict--final">
+    <span>最终判断</span>
+    <strong>中等水平的 CSS 定位，不是会写更多语法，而是能判断稳定性、控制范围，并验证结果。</strong>
+  </div>
 </div>
 
 <style>{`
-  .css-guide-hero,
-  .css-method-board,
-  .css-final-check {
-    --css-blue: #1268e8;
-    --css-cyan: #00a6e8;
-    --css-navy: #071a3a;
-    --css-text: #17243a;
-    --css-muted: #66758a;
-    --css-line: #cfe2ff;
-    --css-paper: #ffffff;
-    margin: 1.8rem 0 2.25rem;
-    color: var(--css-text);
-  }
-
-  .css-guide-hero {
+  .selector-manual {
+    --sel-ink: #10213b;
+    --sel-muted: #617188;
+    --sel-paper: #ffffff;
+    --sel-surface: #f4f8fc;
+    --sel-line: #d7e2ee;
+    --sel-blue: #1769e0;
+    --sel-cyan: #0ba7c9;
+    --sel-violet: #7356d8;
+    --sel-green: #16845b;
+    --sel-orange: #d97706;
+    --sel-red: #c2414b;
     position: relative;
+    left: 50%;
+    width: min(1080px, calc(100vw - 2.5rem));
+    max-width: none;
+    margin: 2rem 0 2.6rem;
+    padding: clamp(1rem, 2.4vw, 1.65rem);
+    transform: translateX(-50%);
     overflow: hidden;
-    padding: clamp(1.1rem, 3vw, 1.8rem);
-    border: 1px solid #b9d6ff;
-    border-radius: 28px;
+    border: 1px solid var(--sel-line);
+    border-radius: 26px;
+    color: var(--sel-ink);
     background:
-      radial-gradient(circle at 92% 8%, rgba(37, 142, 255, .14), transparent 25%),
-      linear-gradient(145deg, #ffffff 0%, #f5faff 56%, #eef7ff 100%);
-    box-shadow: 0 22px 65px rgba(39, 103, 179, .12);
+      radial-gradient(circle at 95% 0%, rgba(23, 105, 224, .1), transparent 25%),
+      linear-gradient(145deg, #fff 0%, #f8fbff 100%);
+    box-shadow: 0 22px 60px rgba(35, 72, 112, .1);
+    box-sizing: border-box;
   }
-  .css-guide-hero::before {
-    content: '';
-    position: absolute;
-    top: 1.2rem;
-    left: 1.2rem;
-    width: 52px;
-    height: 52px;
-    opacity: .45;
-    background-image: radial-gradient(circle, #5b9eff 2px, transparent 2.5px);
-    background-size: 13px 13px;
+
+  .selector-manual *,
+  .selector-manual *::before,
+  .selector-manual *::after { box-sizing: border-box; }
+  .selector-manual code { font-size: max(.81rem, 13px); overflow-wrap: normal; }
+  .selector-manual pre {
+    max-width: 100%;
+    margin: .65rem 0 0;
+    overflow-x: auto;
+    border: 1px solid #d7e3ef;
+    border-radius: 13px;
+    background: #f8fbfe;
   }
-  .css-guide-hero__head { position: relative; max-width: 760px; margin: 0 auto 1.35rem; text-align: center; }
-  .css-guide-hero__head > span { color: var(--css-blue); font-size: .72rem; font-weight: 850; letter-spacing: .16em; }
-  .css-guide-hero__head strong { display: block; margin: .45rem 0 .5rem; color: var(--css-navy); font-size: clamp(1.3rem, 3vw, 2rem); line-height: 1.22; }
-  .css-guide-hero__head p { margin: 0; color: var(--css-muted); font-size: .92rem; line-height: 1.75; }
-  .css-layer-track { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .85rem; }
-  .css-layer-card { position: relative; min-width: 0; padding: 1rem; border: 1px solid #c8defa; border-radius: 18px; background: rgba(255, 255, 255, .9); box-shadow: 0 12px 30px rgba(45, 107, 175, .08); }
-  .css-layer-card::after { content: '→'; position: absolute; top: 50%; right: -.68rem; z-index: 1; display: grid; place-items: center; width: 1.35rem; height: 1.35rem; transform: translateY(-50%); border: 1px solid #bfd8ff; border-radius: 999px; color: var(--css-blue); background: #fff; font-weight: 900; }
-  .css-layer-card:last-child::after { display: none; }
-  .css-layer-card span { display: inline-flex; align-items: center; justify-content: center; width: 2.1rem; height: 2.1rem; border-radius: 999px; color: #fff; background: linear-gradient(145deg, var(--css-blue), var(--css-cyan)); font-size: .72rem; font-weight: 900; }
-  .css-layer-card strong { display: block; margin: .7rem 0 .45rem; color: var(--css-navy); font-size: .95rem; }
-  .css-layer-card code { display: block; min-width: 0; overflow-x: auto; padding: .55rem .6rem; border: 1px solid #d3e6ff; border-radius: 10px; color: #0d61ca; background: #f5faff; font-size: .72rem; white-space: nowrap; }
-  .css-layer-card p { margin: .65rem 0 0; color: var(--css-muted); font-size: .74rem; line-height: 1.6; }
-  .css-layer-card.is-final { border-color: #9ed8ef; background: linear-gradient(145deg, #ffffff, #f0fbff); }
-  .css-guide-hero__footer { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 1rem; overflow: hidden; border: 1px solid #c9dfff; border-radius: 15px; background: rgba(255,255,255,.72); }
-  .css-guide-hero__footer span { padding: .75rem; color: var(--css-navy); font-weight: 800; text-align: center; }
-  .css-guide-hero__footer span + span { border-left: 1px solid #d5e5f8; }
+  .selector-manual pre code { font-size: max(.82rem, 13px); line-height: 1.65; }
+  .selector-manual p,
+  .selector-manual small { line-height: 1.65; }
+  .selector-manual p { font-size: max(.86rem, 13px); }
+  .selector-manual small { font-size: max(.8rem, 13px); }
 
-  .css-method-board { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(280px, .95fr); gap: 1rem; padding: clamp(1rem, 2.4vw, 1.5rem); border: 1px solid #bcd8ff; border-radius: 26px; background: linear-gradient(145deg, #ffffff, #f2f8ff); box-shadow: 0 20px 55px rgba(40, 101, 172, .1); }
-  .css-method-steps, .css-priority-list { padding: .85rem; border: 1px solid #d1e2f8; border-radius: 18px; background: rgba(255,255,255,.8); }
-  .css-method-step { display: grid; grid-template-columns: 30px 46px minmax(0,1fr); align-items: center; gap: .65rem; padding: .72rem .25rem; }
-  .css-method-step + .css-method-step { border-top: 1px dashed #d3e2f4; }
-  .css-method-step > b { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; color: #fff; background: var(--css-blue); font-size: .78rem; }
-  .css-method-step > span { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #c5ddff; border-radius: 14px; color: var(--css-blue); background: #f5f9ff; font-size: 1.2rem; }
-  .css-method-step strong { color: var(--css-navy); }
-  .css-method-step p { margin: .15rem 0 0; color: var(--css-muted); font-size: .76rem; }
-  .css-priority-list__head { display: flex; align-items: center; justify-content: center; gap: .5rem; padding: .25rem 0 .75rem; color: var(--css-blue); }
-  .css-priority-list__head span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; color: #fff; background: var(--css-blue); }
-  .css-priority-list ol { margin: 0; padding: 0; list-style: none; }
-  .css-priority-list li { display: grid; grid-template-columns: 30px minmax(0, 1fr); align-items: center; gap: .65rem; padding: .7rem .2rem; border-top: 1px dashed #d3e2f4; }
-  .css-priority-list li b { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 999px; color: #fff; background: #2680ef; font-size: .72rem; }
-  .css-priority-list li span { font-size: .8rem; }
-  .css-method-warnings { grid-column: 1 / -1; display: grid; grid-template-columns: auto repeat(3, minmax(0, 1fr)); align-items: center; gap: .65rem; padding: .85rem; border: 1px solid #ffd3d3; border-radius: 16px; background: #fff8f8; }
-  .css-method-warnings strong { color: #df3d3d; }
-  .css-method-warnings span { padding: .55rem .65rem; border-radius: 10px; color: #865151; background: #fff; font-size: .75rem; text-align: center; }
+  .selector-kicker,
+  .selector-board-head,
+  .selector-hero-status,
+  .selector-board-verdict,
+  .selector-invalid-css,
+  .selector-procedure-alerts {
+    display: flex;
+    align-items: center;
+  }
+  .selector-kicker { justify-content: space-between; gap: 1rem; margin-bottom: 1.3rem; }
+  .selector-kicker span,
+  .selector-board-head > div > span {
+    color: var(--sel-blue);
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .14em;
+  }
+  .selector-kicker b { color: var(--sel-muted); font-size: .82rem; }
+  .selector-board-head { justify-content: space-between; gap: 1.5rem; margin-bottom: 1.2rem; }
+  .selector-board-head strong { display: block; margin-top: .24rem; font-size: clamp(1.18rem, 2vw, 1.55rem); }
+  .selector-board-head p { max-width: 520px; margin: 0; color: var(--sel-muted); text-align: right; }
 
-  .css-answer { margin: 1rem 0 1.8rem; overflow: hidden; border: 1px solid #cfe0f5; border-radius: 14px; background: #f8fbff; }
-  .css-answer summary { padding: .8rem 1rem; color: #0e62ca; cursor: pointer; font-weight: 800; }
-  .css-answer > div { padding: 0 1rem 1rem; }
-  .css-answer pre { margin: 0; }
+  .selector-hero-grid { display: grid; grid-template-columns: minmax(0, 1.04fr) minmax(330px, .96fr); align-items: center; gap: clamp(1rem, 3vw, 2rem); }
+  .selector-hero-copy > strong { display: block; margin: .8rem 0; font-size: clamp(1.65rem, 3.5vw, 2.65rem); line-height: 1.2; letter-spacing: -.04em; }
+  .selector-hero-copy > p { max-width: 620px; margin: 0; color: var(--sel-muted); font-size: max(.92rem, 14px); }
+  .selector-chip { display: inline-flex; width: fit-content; padding: .3rem .6rem; border-radius: 999px; font-size: max(.7rem, 13px); font-weight: 900; }
+  .selector-chip--blue { color: #0d5ac5; background: #e8f2ff; }
+  .selector-chip--green { color: #0d704b; background: #e4f7ee; }
+  .selector-chip--orange { color: #9a5100; background: #fff0d9; }
+  .selector-chip--violet { color: #5f43bc; background: #eee9ff; }
+  .selector-chip--red { color: #a8323d; background: #ffe9ec; }
+  .selector-hero-rule { display: flex; align-items: center; gap: .55rem; margin-top: 1.2rem; }
+  .selector-hero-rule span { padding: .55rem .7rem; border: 1px solid #cbdff7; border-radius: 10px; color: var(--sel-blue); background: #fff; font-size: max(.8rem, 13px); font-weight: 850; }
+  .selector-hero-rule i { color: #91a4b9; font-style: normal; }
 
-  .css-final-check { display: grid; gap: .55rem; padding: clamp(1rem, 2.5vw, 1.5rem); border: 1px solid #bcd8ff; border-radius: 24px; background: linear-gradient(145deg, #ffffff, #eef7ff); box-shadow: 0 18px 45px rgba(39, 102, 174, .09); }
-  .css-final-check > div { display: grid; grid-template-columns: 30px minmax(0, 1fr); align-items: center; gap: .7rem; padding: .58rem .7rem; border: 1px solid #d6e6f8; border-radius: 11px; background: rgba(255,255,255,.82); }
-  .css-final-check > div b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; color: #fff; background: var(--css-blue); font-size: .68rem; }
-  .css-final-check > div span { font-size: .8rem; }
-  .css-final-check > strong { margin-top: .25rem; padding: .8rem; border-radius: 13px; color: #fff; background: linear-gradient(90deg, #1268e8, #00a6e8); text-align: center; }
+  .selector-scope { border: 1px solid #bed5ee; background: rgba(255,255,255,.78); }
+  .selector-scope small,
+  .selector-scope span { display: block; }
+  .selector-scope small { color: var(--sel-blue); font-weight: 900; letter-spacing: .05em; }
+  .selector-scope span { margin: .2rem 0 .65rem; color: var(--sel-muted); }
+  .selector-scope--page { padding: 1rem; border-radius: 22px; box-shadow: 0 18px 40px rgba(38, 99, 165, .1); }
+  .selector-scope--dialog { padding: .85rem; border-radius: 16px; background: #f4f9ff; }
+  .selector-scope--row { padding: .8rem; border-color: #cdbff4; border-radius: 12px; background: #faf8ff; }
+  .selector-scope--row code { display: block; padding: .65rem; border-radius: 9px; color: #fff; background: linear-gradient(90deg, var(--sel-violet), var(--sel-blue)); text-align: center; }
+  .selector-hero-status { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 1.3rem; overflow: hidden; border: 1px solid var(--sel-line); border-radius: 14px; background: rgba(255,255,255,.8); }
+  .selector-hero-status span { padding: .75rem; font-size: max(.78rem, 13px); text-align: center; }
+  .selector-hero-status span + span { border-left: 1px solid var(--sel-line); }
+  .selector-hero-status b { color: var(--sel-blue); }
 
-  html[data-theme='dark'] .css-guide-hero,
-  html[data-theme='dark'] .css-method-board,
-  html[data-theme='dark'] .css-final-check {
-    --css-navy: #eff7ff;
-    --css-text: #dbe9f8;
-    --css-muted: #98abc0;
-    --css-line: #263d57;
-    --css-paper: #0d1b2b;
-    border-color: #294a6d;
-    background: linear-gradient(145deg, #0b1726, #102238);
+  .selector-stack { display: grid; gap: .62rem; }
+  .selector-stack-row { display: grid; grid-template-columns: 42px minmax(150px, .8fr) minmax(220px, 1fr) minmax(180px, .85fr); align-items: center; gap: .85rem; padding: .8rem 1rem; border: 1px solid var(--sel-line); border-radius: 14px; background: #fff; }
+  .selector-stack-row > b { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; color: #fff; background: var(--sel-blue); }
+  .selector-stack-row div span,
+  .selector-stack-row div strong { display: block; }
+  .selector-stack-row div span { color: var(--sel-blue); font-size: max(.72rem, 13px); font-weight: 900; }
+  .selector-stack-row div strong { margin-top: .12rem; }
+  .selector-stack-row code { padding: .55rem .65rem; overflow-x: auto; border-radius: 9px; color: #0b5ec8; background: #eef6ff; white-space: nowrap; }
+  .selector-stack-row small { color: var(--sel-muted); }
+  .selector-stack-row--precision { margin-left: 3%; }
+  .selector-stack-row--scope { margin-left: 6%; }
+  .selector-stack-row--verify { margin-left: 9%; border-color: #a9dcca; }
+  .selector-stack-row--verify > b { background: var(--sel-green); }
+
+  .selector-board-verdict { gap: .75rem; margin-top: 1rem; padding: .85rem 1rem; border: 1px solid #abd9ca; border-radius: 13px; background: #f0fbf6; }
+  .selector-board-verdict span { flex: 0 0 auto; padding: .28rem .5rem; border-radius: 7px; color: #fff; background: var(--sel-green); font-size: max(.68rem, 13px); font-weight: 900; }
+  .selector-board-verdict strong { font-size: max(.86rem, 13px); }
+  .selector-board-verdict--warning { border-color: #f0c98f; background: #fff9ed; }
+  .selector-board-verdict--warning span { background: var(--sel-orange); }
+  .selector-board-verdict--final { border-color: #9ecbf3; background: linear-gradient(90deg, #eef7ff, #f5f2ff); }
+  .selector-board-verdict--final span { background: var(--sel-blue); }
+
+  .selector-index { padding: 1rem; border: 1px solid var(--sel-line); border-radius: 17px; background: #fff; }
+  .selector-index-axis { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .75rem; color: var(--sel-muted); font-size: max(.72rem, 13px); font-weight: 800; }
+  .selector-index-axis i { height: 5px; border-radius: 999px; background: linear-gradient(90deg, var(--sel-green), var(--sel-blue), var(--sel-orange)); }
+  .selector-index-items { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; margin-top: .9rem; }
+  .selector-index-items > div { min-width: 0; padding: .8rem; border: 1px solid #e0e8f0; border-radius: 12px; background: var(--sel-surface); }
+  .selector-index-items b,
+  .selector-index-items code,
+  .selector-index-items small { display: block; }
+  .selector-index-items b { color: var(--sel-blue); font-size: max(.76rem, 13px); }
+  .selector-index-items code { margin: .45rem 0; overflow-x: auto; white-space: nowrap; }
+  .selector-index-items small { color: var(--sel-muted); }
+  .selector-specimen { display: grid; grid-template-columns: 1.2fr .8fr .8fr; gap: .75rem; margin-top: .8rem; }
+  .selector-specimen > div { min-width: 0; padding: .9rem; border: 1px solid var(--sel-line); border-radius: 14px; background: #fff; }
+  .selector-choice code { display: block; margin: .8rem 0; overflow-x: auto; color: var(--sel-green); white-space: nowrap; }
+  .selector-choice p { margin: 0; color: var(--sel-muted); }
+  .selector-choice--risk { border-color: #f1cbd0 !important; background: #fffafa !important; }
+  .selector-choice--risk code { color: var(--sel-red); }
+
+  .selector-gauge { padding: 1rem; border: 1px solid var(--sel-line); border-radius: 17px; background: #fff; }
+  .selector-gauge-line { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .7rem; color: var(--sel-muted); font-size: max(.72rem, 13px); font-weight: 800; }
+  .selector-gauge-line i { height: 7px; border-radius: 999px; background: linear-gradient(90deg, var(--sel-green), var(--sel-blue), var(--sel-orange), var(--sel-red)); }
+  .selector-gauge-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .55rem; margin-top: .85rem; }
+  .selector-gauge-grid > div { min-width: 0; padding: .7rem; border: 1px solid #e0e8f1; border-radius: 11px; background: #f8fafc; }
+  .selector-gauge-grid b,
+  .selector-gauge-grid strong,
+  .selector-gauge-grid code,
+  .selector-gauge-grid small { display: block; }
+  .selector-gauge-grid b { color: var(--sel-blue); font-size: 1rem; }
+  .selector-gauge-grid strong { margin: .3rem 0; font-size: max(.8rem, 13px); }
+  .selector-gauge-grid code { padding: .4rem; overflow-x: auto; border-radius: 7px; background: #eef4fa; white-space: nowrap; }
+  .selector-gauge-grid small { margin-top: .45rem; color: var(--sel-muted); }
+  .selector-gauge-grid .is-safe { border-color: #addbc9; background: #f3fcf8; }
+  .selector-gauge-grid .is-caution { border-color: #efc37d; background: #fffaf0; }
+  .selector-compare-lab { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .75rem; margin-top: .8rem; }
+  .selector-compare-lab > div:not(.selector-compare-arrow) { min-width: 0; padding: .9rem; border: 1px solid var(--sel-line); border-radius: 14px; background: #fff; }
+  .selector-compare-lab p { margin: .6rem 0 0; color: var(--sel-muted); }
+  .selector-compare-lab > div > code { display: block; margin-top: .75rem; overflow-x: auto; white-space: nowrap; }
+  .selector-compare-arrow { color: var(--sel-blue); font-size: 1.4rem; font-weight: 900; }
+  .selector-word-test { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin-top: .8rem; }
+  .selector-word-test > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .25rem .5rem; padding: .7rem; border: 1px solid #b8ddce; border-radius: 11px; background: #f3fbf7; }
+  .selector-word-test span { color: var(--sel-green); font-weight: 900; }
+  .selector-word-test small { grid-column: 1 / -1; color: var(--sel-muted); }
+  .selector-word-test .is-fail { border-color: #efc4c9; background: #fff7f8; }
+  .selector-word-test .is-fail span { color: var(--sel-red); }
+
+  .selector-dom-map { display: grid; grid-template-columns: .9fr 1.1fr; gap: .9rem; }
+  .selector-dom-tree,
+  .selector-dom-legend { padding: 1rem; border: 1px solid var(--sel-line); border-radius: 16px; background: #fff; }
+  .selector-dom-node { position: relative; min-width: 0; padding: .7rem; border: 1px solid #d7e4f1; border-radius: 10px; background: #f6f9fc; }
+  .selector-dom-node code,
+  .selector-dom-node small { display: block; }
+  .selector-dom-node code { color: var(--sel-blue); }
+  .selector-dom-node small { margin-top: .25rem; color: var(--sel-muted); }
+  .selector-dom-node--root { margin-bottom: .8rem; border-color: #9ec7f3; background: #edf6ff; }
+  .selector-dom-branch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; padding-left: 1rem; border-left: 2px solid #a9c9ec; }
+  .selector-dom-node--target { border-color: #b6a8ec; background: #f5f2ff; }
+  .selector-dom-legend { display: grid; grid-template-columns: repeat(2, 1fr); gap: .6rem; }
+  .selector-dom-legend > div { min-width: 0; padding: .7rem; border: 1px solid #e0e8f0; border-radius: 10px; }
+  .selector-dom-legend code,
+  .selector-dom-legend strong,
+  .selector-dom-legend span,
+  .selector-dom-legend small { display: block; }
+  .selector-dom-legend code { color: var(--sel-violet); font-weight: 900; }
+  .selector-dom-legend strong { margin: .3rem 0; }
+  .selector-dom-legend span { overflow-x: auto; color: var(--sel-blue); font-family: monospace; white-space: nowrap; }
+  .selector-dom-legend small { margin-top: .35rem; color: var(--sel-muted); }
+  .selector-risk-band { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; margin-top: .8rem; }
+  .selector-risk-band > div { min-width: 0; padding: .75rem; border: 1px solid var(--sel-line); border-top: 4px solid var(--sel-green); border-radius: 11px; background: #fff; }
+  .selector-risk-band b,
+  .selector-risk-band code,
+  .selector-risk-band small { display: block; }
+  .selector-risk-band code { margin-top: .35rem; overflow-x: auto; white-space: nowrap; }
+  .selector-risk-band small { margin-top: .4rem; color: var(--sel-muted); }
+  .selector-risk-band .is-mid { border-top-color: var(--sel-blue); }
+  .selector-risk-band .is-high { border-top-color: var(--sel-red); }
+  .selector-risk-band .is-runtime { border-top-color: var(--sel-orange); }
+  .selector-has-case { display: grid; grid-template-columns: minmax(280px, .8fr) 1.2fr; align-items: center; gap: .8rem; margin-top: .8rem; padding: .9rem; border: 1px dashed #d1b3f1; border-radius: 13px; background: #faf7ff; }
+  .selector-has-case code { overflow-x: auto; color: var(--sel-violet); white-space: nowrap; }
+  .selector-has-case p { margin: 0; color: var(--sel-muted); }
+
+  .selector-manual--dark {
+    --sel-ink: #eaf4ff;
+    --sel-muted: #a6bad0;
+    --sel-line: #2b4967;
+    background:
+      radial-gradient(circle at 90% 5%, rgba(28, 146, 218, .22), transparent 26%),
+      linear-gradient(145deg, #08172a, #0d2238);
+    box-shadow: 0 24px 70px rgba(4, 20, 38, .3);
+  }
+  .selector-manual--dark .selector-board-head > div > span { color: #55c6f3; }
+  .selector-procedure { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; }
+  .selector-procedure-step { position: relative; min-width: 0; padding: .9rem; border: 1px solid #31526f; border-radius: 14px; background: rgba(14, 38, 61, .84); }
+  .selector-procedure-step::after { content: '→'; position: absolute; top: 50%; right: -.65rem; z-index: 2; display: grid; place-items: center; width: 1.2rem; height: 1.2rem; transform: translateY(-50%); border-radius: 999px; color: #041524; background: #58c6f2; font-weight: 900; }
+  .selector-procedure-step:last-child::after { display: none; }
+  .selector-procedure-step > b { color: #55c6f3; font-size: .72rem; }
+  .selector-procedure-icon { display: grid; place-items: center; width: 45px; height: 45px; margin: .7rem 0; border: 1px solid #356489; border-radius: 13px; color: #59cef8; background: #0a1b2c; font-size: 1.2rem; }
+  .selector-procedure-step strong,
+  .selector-procedure-step p,
+  .selector-procedure-step small { display: block; }
+  .selector-procedure-step p { margin: .35rem 0; color: #c2d2e2; }
+  .selector-procedure-step small { color: #7fa6c4; }
+  .selector-priority-console { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .5rem; margin-top: .8rem; padding: .7rem; border: 1px solid #2f526f; border-radius: 14px; background: #071523; }
+  .selector-priority-console > div { min-width: 0; padding: .65rem; border-right: 1px solid #29465f; }
+  .selector-priority-console > div:last-child { border-right: 0; }
+  .selector-priority-console span,
+  .selector-priority-console b,
+  .selector-priority-console strong { display: block; }
+  .selector-priority-console span { color: #749ab8; font-size: max(.66rem, 13px); }
+  .selector-priority-console b { margin: .25rem 0; color: #55c6f3; font-size: 1.15rem; }
+  .selector-priority-console strong { font-size: max(.77rem, 13px); line-height: 1.45; }
+  .selector-priority-console .is-last b { color: #f2b665; }
+  .selector-procedure-alerts { display: grid; grid-template-columns: repeat(3, 1fr); gap: .55rem; margin-top: .8rem; }
+  .selector-procedure-alerts span { padding: .6rem; border: 1px solid #6c3d4a; border-radius: 9px; color: #ffc2ca; background: #2b1722; font-size: max(.76rem, 13px); text-align: center; }
+
+  .selector-router-start { width: min(520px, 100%); margin: 0 auto .9rem; padding: .9rem; border: 1px solid #a6cbed; border-radius: 15px; background: #edf6ff; text-align: center; }
+  .selector-router-start span,
+  .selector-router-start strong { display: block; }
+  .selector-router-start span { color: var(--sel-blue); font-size: max(.68rem, 11px); font-weight: 900; letter-spacing: .12em; }
+  .selector-router-start strong { margin-top: .25rem; }
+  .selector-router-paths { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; padding-top: .9rem; }
+  .selector-router-paths::before { content: ''; position: absolute; top: 0; left: 12.5%; width: 75%; height: 1px; background: #abc9e7; }
+  .selector-router-paths > div { min-width: 0; padding: .85rem; border: 1px solid var(--sel-line); border-radius: 13px; background: #fff; }
+  .selector-router-paths > div::before { content: ''; display: block; width: 1px; height: .9rem; margin: -.85rem auto .55rem; background: #abc9e7; }
+  .selector-router-paths strong,
+  .selector-router-paths code,
+  .selector-router-paths small { display: block; }
+  .selector-router-paths strong { margin: .6rem 0; }
+  .selector-router-paths code { overflow-x: auto; color: var(--sel-blue); white-space: nowrap; }
+  .selector-router-paths small { margin-top: .45rem; color: var(--sel-muted); }
+  .selector-invalid-css { display: grid; grid-template-columns: 1fr 1fr auto; gap: .6rem; margin-top: .8rem; padding: .75rem; border: 1px solid #edc1c7; border-radius: 13px; background: #fff7f8; }
+  .selector-invalid-css > div { min-width: 0; }
+  .selector-invalid-css span,
+  .selector-invalid-css code { display: block; }
+  .selector-invalid-css span { color: var(--sel-red); font-size: max(.68rem, 13px); font-weight: 900; }
+  .selector-invalid-css code { margin-top: .25rem; overflow-x: auto; white-space: nowrap; }
+  .selector-invalid-css > strong { align-self: center; max-width: 280px; color: var(--sel-red); font-size: max(.78rem, 13px); }
+
+  .selector-validation-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; }
+  .selector-validation-flow > div { position: relative; min-width: 0; padding: .8rem; border: 1px solid var(--sel-line); border-radius: 13px; background: #fff; }
+  .selector-validation-flow > div::after { content: '→'; position: absolute; top: 1rem; right: -.55rem; z-index: 2; color: var(--sel-blue); font-weight: 900; }
+  .selector-validation-flow > div:last-child::after { display: none; }
+  .selector-validation-flow b,
+  .selector-validation-flow strong,
+  .selector-validation-flow span,
+  .selector-validation-flow code,
+  .selector-validation-flow small { display: block; }
+  .selector-validation-flow b { color: var(--sel-blue); font-size: .72rem; }
+  .selector-validation-flow strong { margin: .4rem 0; }
+  .selector-validation-flow span,
+  .selector-validation-flow code { overflow-x: auto; color: var(--sel-violet); white-space: nowrap; }
+  .selector-validation-flow small { margin-top: .4rem; color: var(--sel-muted); }
+  .selector-count-meter { display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem; margin-top: .8rem; }
+  .selector-count-meter > div { padding: .8rem; border: 1px solid var(--sel-line); border-top: 4px solid var(--sel-red); border-radius: 12px; background: #fff; text-align: center; }
+  .selector-count-meter b { display: block; color: var(--sel-red); font-size: 1.5rem; }
+  .selector-count-meter strong { display: block; margin: .15rem 0; }
+  .selector-count-meter p { margin: 0; color: var(--sel-muted); }
+  .selector-count-meter .is-one { border-top-color: var(--sel-green); }
+  .selector-count-meter .is-one b { color: var(--sel-green); }
+  .selector-count-meter .is-many { border-top-color: var(--sel-orange); }
+  .selector-count-meter .is-many b { color: var(--sel-orange); }
+  .selector-validation-code { margin-top: .8rem; padding: .9rem; border: 1px solid #b8dccd; border-radius: 14px; background: #f5fcf8; }
+  .selector-validation-code p { margin: .65rem 0 0; color: var(--sel-muted); }
+
+  .selector-manual--troubleshoot { background: linear-gradient(145deg, #fff, #fff9f1); }
+  .selector-trouble-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
+  .selector-trouble-grid > div { min-width: 0; padding: .85rem; border: 1px solid #ead9c3; border-radius: 13px; background: rgba(255,255,255,.9); }
+  .selector-trouble-grid span,
+  .selector-trouble-grid strong,
+  .selector-trouble-grid b { display: block; }
+  .selector-trouble-grid span { color: var(--sel-orange); font-size: max(.68rem, 13px); font-weight: 900; letter-spacing: .07em; }
+  .selector-trouble-grid strong { margin: .4rem 0; }
+  .selector-trouble-grid p { margin: 0; color: var(--sel-muted); }
+  .selector-trouble-grid b { margin-top: .55rem; color: var(--sel-blue); font-size: max(.78rem, 13px); }
+  .selector-trouble-grid .is-wide { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1.1fr 1fr auto; align-items: center; gap: .75rem; border-color: #e9c78f; background: #fffaf0; }
+  .selector-trouble-grid .is-wide p,
+  .selector-trouble-grid .is-wide b { margin: 0; }
+
+  .selector-case-stack { display: grid; gap: .65rem; }
+  .selector-case { display: grid; grid-template-columns: 72px minmax(150px, .75fr) minmax(180px, 1fr) auto minmax(180px, 1fr); align-items: center; gap: .65rem; padding: .75rem; border: 1px solid var(--sel-line); border-radius: 13px; background: #fff; }
+  .selector-case-no { color: var(--sel-blue); font-size: .7rem; font-weight: 900; letter-spacing: .06em; }
+  .selector-case-context strong,
+  .selector-case-context span,
+  .selector-case-before small,
+  .selector-case-before code,
+  .selector-case-after small,
+  .selector-case-after code { display: block; }
+  .selector-case-context span { margin-top: .2rem; color: var(--sel-muted); font-size: max(.75rem, 13px); line-height: 1.45; }
+  .selector-case-before,
+  .selector-case-after { min-width: 0; padding: .6rem; border-radius: 9px; background: #fff5f6; }
+  .selector-case-after { background: #eefaf4; }
+  .selector-case-before small { color: var(--sel-red); }
+  .selector-case-after small { color: var(--sel-green); }
+  .selector-case-before code,
+  .selector-case-after code { margin-top: .25rem; overflow-x: auto; white-space: nowrap; }
+  .selector-case-arrow { color: var(--sel-blue); font-weight: 900; }
+  .selector-case--major { grid-template-columns: 1fr; align-items: stretch; padding: 1rem; border-color: #b8cfea; background: #f9fbfe; }
+  .selector-path-before,
+  .selector-path-after { min-width: 0; padding: .8rem; border: 1px solid #efc8cd; border-radius: 11px; background: #fff7f8; }
+  .selector-path-after { border-color: #b9dece; background: #f1fbf6; }
+  .selector-path-before small,
+  .selector-path-before code,
+  .selector-path-after small,
+  .selector-path-after code { display: block; }
+  .selector-path-before small { color: var(--sel-red); font-weight: 900; }
+  .selector-path-after small { color: var(--sel-green); font-weight: 900; }
+  .selector-path-before code,
+  .selector-path-after code { margin-top: .4rem; overflow-x: auto; white-space: nowrap; }
+  .selector-path-before p,
+  .selector-path-after p { margin: .45rem 0 0; color: var(--sel-muted); }
+  .selector-refactor-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+  .selector-refactor-steps span { padding: .6rem; border: 1px dashed #abc8e5; border-radius: 9px; color: var(--sel-blue); background: #fff; font-size: max(.78rem, 13px); }
+  .selector-refactor-steps b { display: inline-grid; place-items: center; width: 21px; height: 21px; margin-right: .25rem; border-radius: 999px; color: #fff; background: var(--sel-blue); }
+
+  .selector-practice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+  .selector-practice-card { min-width: 0; padding: .9rem; border: 1px solid var(--sel-line); border-radius: 14px; background: #fff; }
+  .selector-practice-card > p { margin: .65rem 0; color: var(--sel-muted); }
+  .selector-answer { overflow: hidden; border: 1px solid #cbdff2; border-radius: 10px; background: #f5f9fd; }
+  .selector-answer summary { padding: .65rem .75rem; color: var(--sel-blue); cursor: pointer; font-size: max(.8rem, 13px); font-weight: 850; }
+  .selector-answer pre { margin: 0 .75rem .75rem; }
+  .selector-answer p { margin: 0 .75rem .75rem; color: var(--sel-muted); }
+  .selector-skill-check { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .55rem; margin-top: .8rem; }
+  .selector-skill-check > div { padding: .7rem; border: 1px solid #c6dcef; border-radius: 11px; background: #f4f9fd; }
+  .selector-skill-check b,
+  .selector-skill-check span { display: block; }
+  .selector-skill-check b { color: var(--sel-blue); font-size: .7rem; }
+  .selector-skill-check span { margin-top: .35rem; font-size: max(.8rem, 13px); line-height: 1.5; }
+
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) {
+    --sel-ink: #e7f0fa;
+    --sel-muted: #9eb0c2;
+    --sel-paper: #0d1b2a;
+    --sel-surface: #111f2f;
+    --sel-line: #294159;
+    background: linear-gradient(145deg, #0b1725, #102136);
     box-shadow: none;
   }
-  html[data-theme='dark'] .css-layer-card,
-  html[data-theme='dark'] .css-method-steps,
-  html[data-theme='dark'] .css-priority-list,
-  html[data-theme='dark'] .css-final-check > div {
-    border-color: #29445f;
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-scope,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-hero-rule span,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-hero-status,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-index,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-index-items > div,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-specimen > div,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-gauge,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-gauge-grid > div,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-compare-lab > div:not(.selector-compare-arrow),
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-word-test > div,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-dom-tree,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-dom-legend,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-dom-node,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-risk-band > div,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-has-case,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-router-start,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-router-paths > div,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-invalid-css,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-validation-flow > div,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-count-meter > div,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-validation-code,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-trouble-grid > div,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-case,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-case-before,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-case-after,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-path-before,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-path-after,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-refactor-steps span,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-practice-card,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-answer,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-skill-check > div {
+    border-color: #294159;
     background: #102033;
   }
-  html[data-theme='dark'] .css-layer-card code,
-  html[data-theme='dark'] .css-guide-hero__footer {
-    border-color: #29445f;
-    background: #0d1b2b;
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) pre,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-stack-row {
+    border-color: #294159;
+    background: #0d1b2a;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-stack-row code,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-gauge-grid code {
+    color: #91c7ff;
+    background: #162a3e;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-scope--dialog {
+    background: #132940;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-scope--row,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-dom-node--target {
+    border-color: #4e4777;
+    background: #211e38;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-dom-node--root {
+    border-color: #315c82;
+    background: #142a40;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-gauge-grid .is-safe,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-word-test > div,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-case-after,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-path-after {
+    border-color: #315f51;
+    background: #102b25;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-gauge-grid .is-caution {
+    border-color: #70572f;
+    background: #2b2113;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-word-test .is-fail,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-case-before,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-path-before {
+    border-color: #6b3941;
+    background: #2b171d;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-choice--risk {
+    border-color: #6b3941 !important;
+    background: #2b171d !important;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-choice--risk code,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-word-test .is-fail span {
+    color: #ff9ca7;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-chip--blue { color: #9acbff; background: #153354; }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-chip--green { color: #8de2bd; background: #143529; }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-chip--orange { color: #ffd08d; background: #392817; }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-chip--violet { color: #c8b9ff; background: #2d2549; }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-chip--red { color: #ffa8b1; background: #3b1e26; }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-board-verdict { color: #dff7eb; background: #102b25; }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-board-verdict--warning { color: #ffe8c4; background: #2b2113; }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-board-verdict--final {
+    border-color: #315c82;
+    color: #e5f2ff;
+    background: #142a40;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-kicker span,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-board-head > div > span,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-stack-row div span,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-index-items b,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-trouble-grid b,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-case-no,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-skill-check b {
+    color: #8fc6ff;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-dom-legend code,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-has-case code,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-validation-flow span,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-validation-flow code {
+    color: #c8b9ff;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-word-test span,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-choice code,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-case-after small,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-path-after small {
+    color: #8de2bd;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-invalid-css span,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-invalid-css > strong,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-case-before small,
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-path-before small {
+    color: #ffa8b1;
+  }
+  html[data-theme='dark'] .selector-manual:not(.selector-manual--dark) .selector-trouble-grid span {
+    color: #ffd08d;
   }
 
-  @media (max-width: 820px) {
-    .css-layer-track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .css-layer-card:nth-child(2)::after { display: none; }
-    .css-method-board { grid-template-columns: 1fr; }
-    .css-method-warnings { grid-template-columns: 1fr; }
-    .css-method-warnings strong { text-align: center; }
+  @media (max-width: 900px) {
+    .selector-manual { width: min(100%, calc(100vw - 1.5rem)); }
+    .selector-hero-grid,
+    .selector-dom-map { grid-template-columns: 1fr; }
+    .selector-index-items { grid-template-columns: repeat(2, 1fr); }
+    .selector-specimen { grid-template-columns: 1fr; }
+    .selector-gauge-grid { grid-template-columns: repeat(3, 1fr); }
+    .selector-procedure,
+    .selector-router-paths,
+    .selector-validation-flow { grid-template-columns: repeat(2, 1fr); }
+    .selector-procedure-step:nth-child(2)::after,
+    .selector-validation-flow > div:nth-child(2)::after { display: none; }
+    .selector-priority-console { grid-template-columns: repeat(3, 1fr); }
+    .selector-priority-console > div { border-right: 0; }
+    .selector-risk-band { grid-template-columns: repeat(2, 1fr); }
+    .selector-trouble-grid { grid-template-columns: repeat(2, 1fr); }
+    .selector-trouble-grid .is-wide { grid-template-columns: 1fr 1fr; }
+    .selector-case { grid-template-columns: 65px 1fr; }
+    .selector-case-before,
+    .selector-case-after { grid-column: 1 / -1; }
+    .selector-case-arrow { grid-column: 1 / -1; transform: rotate(90deg); text-align: center; }
+    .selector-skill-check { grid-template-columns: repeat(3, 1fr); }
   }
+
+  @media (max-width: 740px) {
+    .selector-stack-row {
+      grid-template-columns: 40px minmax(0, 1fr);
+      gap: .55rem;
+      margin-left: 0;
+    }
+    .selector-stack-row code,
+    .selector-stack-row small { grid-column: 1 / -1; }
+  }
+
   @media (max-width: 620px) {
-    .css-guide-hero { border-radius: 20px; }
-    .css-layer-track { grid-template-columns: 1fr; }
-    .css-layer-card::after { top: auto; right: 50%; bottom: -.68rem; transform: translateX(50%) rotate(90deg); }
-    .css-layer-card:nth-child(2)::after { display: grid; }
-    .css-guide-hero__footer { grid-template-columns: 1fr; }
-    .css-guide-hero__footer span + span { border-top: 1px solid #d5e5f8; border-left: 0; }
+    .selector-manual {
+      position: static;
+      left: auto;
+      width: 100%;
+      margin: 1.5rem 0 2rem;
+      padding: .85rem;
+      transform: none;
+      border-radius: 19px;
+    }
+    .selector-kicker,
+    .selector-board-head,
+    .selector-board-verdict { align-items: flex-start; flex-direction: column; gap: .45rem; }
+    .selector-kicker { margin-bottom: 1rem; }
+    .selector-board-head p { text-align: left; }
+    .selector-hero-copy > strong { font-size: 1.55rem; }
+    .selector-hero-rule { display: grid; grid-template-columns: 1fr; }
+    .selector-hero-rule i { transform: rotate(90deg); text-align: center; }
+    .selector-hero-status,
+    .selector-index-items,
+    .selector-gauge-grid,
+    .selector-word-test,
+    .selector-dom-legend,
+    .selector-risk-band,
+    .selector-procedure,
+    .selector-priority-console,
+    .selector-procedure-alerts,
+    .selector-router-paths,
+    .selector-validation-flow,
+    .selector-count-meter,
+    .selector-trouble-grid,
+    .selector-practice-grid,
+    .selector-skill-check,
+    .selector-refactor-steps { grid-template-columns: 1fr; }
+    .selector-hero-status span + span { border-top: 1px solid var(--sel-line); border-left: 0; }
+    .selector-compare-lab,
+    .selector-has-case { grid-template-columns: 1fr; }
+    .selector-compare-arrow { transform: rotate(90deg); text-align: center; }
+    .selector-dom-branch { grid-template-columns: 1fr; }
+    .selector-procedure-step::after,
+    .selector-validation-flow > div::after { top: auto; right: 50%; bottom: -.65rem; transform: translateX(50%) rotate(90deg); }
+    .selector-procedure-step:nth-child(2)::after,
+    .selector-validation-flow > div:nth-child(2)::after { display: grid; }
+    .selector-router-paths { padding-top: 0; }
+    .selector-router-paths::before,
+    .selector-router-paths > div::before { display: none; }
+    .selector-invalid-css { grid-template-columns: 1fr; }
+    .selector-invalid-css > strong { max-width: none; }
+    .selector-trouble-grid .is-wide { display: block; grid-column: auto; }
+    .selector-trouble-grid .is-wide strong,
+    .selector-trouble-grid .is-wide p,
+    .selector-trouble-grid .is-wide b { margin-top: .45rem; }
+    .selector-case { grid-template-columns: 1fr; }
+    .selector-case-before,
+    .selector-case-after,
+    .selector-case-arrow { grid-column: auto; }
+    .selector-manual pre code,
+    .selector-manual code { font-size: 13px; }
   }
 `}</style>

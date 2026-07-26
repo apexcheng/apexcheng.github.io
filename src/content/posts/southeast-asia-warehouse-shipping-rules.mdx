@@ -12,108 +12,290 @@ draft: false
 private: false
 ---
 
-import HighlightBox from '../../components/HighlightBox.astro';
 import SoutheastAsiaWarehouseNetwork from '../../components/SoutheastAsiaWarehouseNetwork.astro';
 
-<HighlightBox eyebrow="结论" title="这套仓储规则其实只有三个核心关系">
-  同一国家的 Shopee、Lazada 共用本国雅仓库存；三个国家之间的雅仓库存互不通用；发货时永远先走本国雅仓，没有可用库存才切换到深圳跨境仓。
-</HighlightBox>
+<div class="warehouse-manual">
+  <header class="warehouse-hero">
+    <span>FULFILMENT FIELD GUIDE</span>
+    <p class="warehouse-hero-title">别把“共用”看错：<br />共用的是同国库存与深圳兜底通道。</p>
+    <p>这套规则适用于泰国、马来西亚、菲律宾站点。读订单时只要先区分国家，再判断本国雅仓是否有可用库存，发货路径就不会混乱。</p>
+    <div class="hero-rules" aria-label="三条核心规则">
+      <strong><b>01</b> 同国双平台共用本国雅仓</strong>
+      <strong><b>02</b> 三个国家雅仓互不调货</strong>
+      <strong><b>03</b> 本地无可用库存才走深圳</strong>
+    </div>
+  </header>
 
-这是一套泰国、马来西亚、菲律宾站点共用的仓储与发货规则。
+  <SoutheastAsiaWarehouseNetwork />
 
-之前只用文字说明时，最容易出现几个误解：把“三国共用深圳仓”理解成“三国雅仓也能互相调货”，把“双平台共用库存”理解成三个国家都共用一份库存，或者把“雅仓售罄才走国内仓”写得过死。
+  <h2>订单进入后，先用国家把库存范围框住</h2>
 
-所以我把它重新整理成一张仓储路由图。先看清仓库之间的关系，再看库存怎么共用、订单怎么发货。
+  <section class="chapter-board country-scope" aria-label="订单国家与库存范围">
+    <div class="board-heading">
+      <span>01 / ORDER SCOPE</span>
+      <h3>每张订单只看它所在国家的一份本地库存池</h3>
+      <p>国家是第一层边界。平台名称不会改变这层边界，因此不能先在三国库存中挑“哪里有货”。</p>
+    </div>
+    <ol class="scope-rail">
+      <li><em>订单</em><strong>识别站点国家</strong><small>泰国、马来西亚或菲律宾</small></li>
+      <li><em>范围</em><strong>锁定本国雅仓</strong><small>只进入该国的物理库存池</small></li>
+      <li><em>结果</em><strong>拒绝跨国调用</strong><small>别国有货也不改变当前订单路径</small></li>
+    </ol>
+    <aside><b>容易混淆的点</b>：三个国家共用的是深圳跨境直发渠道，不是三个海外雅仓库存。</aside>
+  </section>
 
-<SoutheastAsiaWarehouseNetwork />
+  <h2>同国双平台共享的是实物库存，不是两套库存</h2>
 
-## 一、先把仓库结构看成「3 + 1」
+  <section class="chapter-board stock-control" aria-label="双平台库存统一管理">
+    <div class="board-heading">
+      <span>02 / STOCK CONTROL</span>
+      <h3>一国、一仓、一份库存池，同时供给 Shopee 与 Lazada</h3>
+    </div>
+    <div class="stock-diagram">
+      <div class="platform-side"><b>Shopee</b><small>读取同一份库存</small></div>
+      <div class="shared-core"><span>同国雅仓</span><strong>统一实物库存池</strong><small>库存必须统一管理并同步</small></div>
+      <div class="platform-side"><b>Lazada</b><small>读取同一份库存</small></div>
+    </div>
+    <div class="control-notes">
+      <p><b>可以做：</b>同一国家的 Shopee、Lazada 共用一份雅仓实物库存，不必为两个平台分别备两套货。</p>
+      <p><b>必须做：</b>把库存统一管理并同步到两个平台，避免同一批货被重复分配而产生超卖。</p>
+    </div>
+  </section>
 
-整套网络一共有 4 个仓库节点：
+  <h2>发货不是“售罄才兜底”，而是“无可用库存才切换”</h2>
 
-- 3 个海外雅仓：泰国、马来西亚、菲律宾各 1 个；
-- 1 个深圳跨境仓：三个国家共用跨境直发渠道。
+  <section class="chapter-board availability-board" aria-label="本地库存可用性判断">
+    <div class="board-heading">
+      <span>03 / AVAILABILITY CHECK</span>
+      <h3>发货优先级始终是：本国雅仓 ＞ 深圳跨境仓</h3>
+      <p>判断用词应是“无可用库存”，而不是只盯着“售罄”。只要当前没有能够正常履约的本地库存，就进入兜底路径。</p>
+    </div>
+    <div class="availability-path">
+      <div class="check-node"><span>检查对象</span><strong>订单所在国家的本地雅仓</strong><small>不检查其他国家雅仓</small></div>
+      <div class="branch-set">
+        <div class="yes-path"><span>有可用库存</span><strong>本国雅仓直接发货</strong><small>默认路径</small></div>
+        <div class="no-path"><span>无可用库存</span><strong>深圳跨境仓直发</strong><small>兜底路径</small></div>
+      </div>
+    </div>
+    <p class="plain-boundary">深圳仓不是三个雅仓的上级仓库，也不是日常默认发货仓；它只在本国雅仓无法正常履约时接手。</p>
+  </section>
 
-这里最重要的是：**深圳仓不是三个雅仓的上级仓库，也不是日常默认发货仓。**
+  <h2>下单与后台核对，只保留这一张操作清单</h2>
 
-三个国家平时各自使用本国雅仓履约。深圳仓只承担兜底作用，当某一国家的本地雅仓没有可用库存时，该国订单才转为跨境直发。
+  <section class="chapter-board final-check" aria-label="仓储规则操作清单">
+    <div class="board-heading">
+      <span>04 / OPERATION CHECK</span>
+      <h3>先确认路径，再确认后台名；不要把当前叫法扩大成通用规则</h3>
+    </div>
+    <div class="check-grid">
+      <div><span>CHECK 1</span><strong>订单国家已识别</strong><p>只查看本国雅仓库存，不跨国调货。</p></div>
+      <div><span>CHECK 2</span><strong>双平台库存已统一</strong><p>同国共享实物库存，两个平台同步管理。</p></div>
+      <div><span>CHECK 3</span><strong>本地库存是否可履约</strong><p>有则本地直发；无则深圳跨境直发。</p></div>
+      <div><span>CHECK 4</span><strong>以店铺后台为准</strong><p>Lazada 当前业务口径为 3PF，Shopee 为 LFF；实际以对应账号显示为准。</p></div>
+    </div>
+    <footer><b>最后记住：</b>国家隔离、平台共享、本地优先。三个关系不混，库存分配、平台同步与发货判断就有一致口径。</footer>
+  </section>
+</div>
 
-## 二、「双平台共用库存」只在同一国家成立
+<style>{`
+  .warehouse-manual {
+    --warehouse-ink: #172033;
+    --warehouse-muted: #526075;
+    --warehouse-line: #cbd5e1;
+    --warehouse-blue: #1d4ed8;
+    --warehouse-teal: #0f766e;
+    --warehouse-orange: #c2410c;
+    --warehouse-red: #b91c1c;
+  }
 
-同一国家的雅仓库存，可以同时供给该国 Shopee、Lazada 两个平台店铺。
+  .warehouse-hero {
+    border-left: 4px solid var(--warehouse-blue);
+    margin: 22px 0 34px;
+    padding: 10px 0 10px 22px;
+  }
 
-例如泰国雅仓实际有 100 件商品，这 100 件是泰国 Shopee 和泰国 Lazada 共用的一份实物库存池，不需要为了两个平台分别备两套货。
+  .warehouse-hero > span,
+  .board-heading > span {
+    color: var(--warehouse-blue);
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+  }
 
-<HighlightBox eyebrow="库存口径" title="共享的是同一份实物库存池，不是两份平台库存">
-  双平台都在销售时，库存需要统一管理并同步到两个平台，避免同一批货被重复分配。否则“共用库存”反而更容易产生超卖。
-</HighlightBox>
+  .warehouse-hero-title,
+  .board-heading h3 {
+    color: var(--warehouse-ink);
+    letter-spacing: -0.045em;
+    line-height: 1.13;
+  }
 
-所以这条规则的完整说法应该是：
+  .warehouse-hero-title {
+    font-size: clamp(31px, 5vw, 53px);
+    margin: 10px 0 14px;
+  }
 
-> 同一国家双平台共用本国雅仓实物库存，但库存必须统一管理。
+  .warehouse-hero > p {
+    color: var(--warehouse-muted);
+    font-size: 15px;
+    line-height: 1.78;
+    margin: 0;
+    max-width: 720px;
+  }
 
-## 三、跨国家库存完全隔离
+  .hero-rules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px 20px;
+    margin-top: 20px;
+  }
 
-泰国、马来西亚、菲律宾三地雅仓是三个独立的物理库房。
+  .hero-rules strong { color: var(--warehouse-ink); font-size: 13px; }
+  .hero-rules b { color: var(--warehouse-blue); font-size: 11px; letter-spacing: 0.06em; margin-right: 5px; }
 
-因此：
+  .warehouse-manual > h2 {
+    color: var(--warehouse-ink);
+    font-size: clamp(23px, 3.2vw, 33px);
+    letter-spacing: -0.04em;
+    line-height: 1.2;
+    margin: 54px 0 14px;
+  }
 
-- 泰国雅仓的货，只服务泰国站点；
-- 马来西亚雅仓的货，只服务马来西亚站点；
-- 菲律宾雅仓的货，只服务菲律宾站点。
+  .chapter-board {
+    background: #fbfdff;
+    border: 1px solid var(--warehouse-line);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+    padding: clamp(18px, 3.5vw, 32px);
+  }
 
-一国雅仓有货，不代表另外两个国家可以直接调用。
+  .board-heading { border-bottom: 1px solid var(--warehouse-line); padding-bottom: 18px; }
+  .board-heading h3 { font-size: clamp(21px, 3vw, 31px); margin: 7px 0 8px; }
+  .board-heading p { color: var(--warehouse-muted); font-size: 13px; line-height: 1.7; margin: 0; max-width: 720px; }
 
-**国家之间共用的只有深圳跨境直发渠道，不是海外雅仓库存。**
+  .scope-rail {
+    display: grid;
+    gap: 0;
+    grid-template-columns: repeat(3, 1fr);
+    list-style: none;
+    margin: 22px 0 14px;
+    padding: 0;
+  }
 
-这也是整套规则里最需要区分的一点：
+  .scope-rail li {
+    border: 1px solid var(--warehouse-line);
+    border-right: 0;
+    display: grid;
+    gap: 7px;
+    min-height: 126px;
+    padding: 16px;
+    position: relative;
+  }
 
-```text
-同一国家：Shopee ↔ Lazada，可以共用本国雅仓库存
-不同国家：泰国 × 马来西亚 × 菲律宾，雅仓库存互不通用
-```
+  .scope-rail li:last-child { border-right: 1px solid var(--warehouse-line); }
+  .scope-rail li:not(:last-child)::after {
+    background: #64748b;
+    clip-path: polygon(0 42%, 68% 42%, 68% 0, 100% 50%, 68% 100%, 68% 58%, 0 58%);
+    content: '';
+    height: 16px;
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    z-index: 1;
+  }
 
-## 四、发货判断只需要两步
+  .scope-rail em,
+  .check-grid span { color: var(--warehouse-blue); font-size: 11px; font-style: normal; font-weight: 850; letter-spacing: 0.08em; }
+  .scope-rail strong { color: var(--warehouse-ink); font-size: 16px; line-height: 1.32; }
+  .scope-rail small { color: var(--warehouse-muted); font-size: 13px; line-height: 1.55; }
+  .country-scope aside { background: #eff6ff; border-left: 3px solid var(--warehouse-blue); color: #1e3a8a; font-size: 13px; line-height: 1.65; padding: 12px 14px; }
 
-实际订单进来后，不需要做复杂判断，只看订单所在国家的本地库存。
+  .stock-diagram {
+    align-items: center;
+    display: grid;
+    gap: 0;
+    grid-template-columns: 1fr minmax(200px, 1.25fr) 1fr;
+    margin: 22px 0 16px;
+  }
 
-### 第一步：本国雅仓有可用库存
+  .platform-side,
+  .shared-core { min-height: 126px; padding: 18px; }
+  .platform-side { background: #f1f5f9; display: grid; gap: 7px; place-content: center; text-align: center; }
+  .platform-side b { color: var(--warehouse-ink); font-size: 17px; }
+  .platform-side small,
+  .shared-core small { color: var(--warehouse-muted); font-size: 13px; }
+  .shared-core { background: #ecfdf5; border: 1px solid #99f6e4; display: grid; gap: 6px; place-content: center; text-align: center; }
+  .shared-core span { color: var(--warehouse-teal); font-size: 11px; font-weight: 850; letter-spacing: 0.08em; }
+  .shared-core strong { color: #115e59; font-size: 20px; }
 
-优先从本国雅仓直接发货。
+  .control-notes { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+  .control-notes p { border-top: 1px solid var(--warehouse-line); color: var(--warehouse-muted); font-size: 13px; line-height: 1.68; margin: 0; padding-top: 12px; }
+  .control-notes b { color: var(--warehouse-ink); }
 
-这也是默认路径，能够走本地仓时，不需要再考虑深圳跨境仓。
+  .availability-path { display: grid; gap: 14px; grid-template-columns: 0.9fr 1.1fr; margin-top: 22px; }
+  .check-node { background: #eff6ff; border-left: 4px solid var(--warehouse-blue); display: grid; gap: 8px; padding: 18px; }
+  .check-node span,
+  .branch-set span { font-size: 11px; font-weight: 850; letter-spacing: 0.08em; }
+  .check-node span { color: var(--warehouse-blue); }
+  .check-node strong { color: #1e3a8a; font-size: 18px; line-height: 1.35; }
+  .check-node small,
+  .branch-set small { color: var(--warehouse-muted); font-size: 13px; line-height: 1.5; }
+  .branch-set { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+  .branch-set > div { display: grid; gap: 7px; padding: 17px; }
+  .yes-path { background: #ecfdf5; border-bottom: 3px solid #059669; }
+  .yes-path span,
+  .yes-path strong { color: #047857; }
+  .no-path { background: #fff7ed; border-bottom: 3px solid var(--warehouse-orange); }
+  .no-path span,
+  .no-path strong { color: #9a3412; }
+  .branch-set strong { font-size: 17px; line-height: 1.35; }
+  .plain-boundary { border-top: 1px solid var(--warehouse-line); color: var(--warehouse-muted); font-size: 13px; line-height: 1.68; margin: 16px 0 0; padding-top: 14px; }
 
-### 第二步：本国雅仓无可用库存
+  .check-grid { display: grid; gap: 1px; grid-template-columns: 1fr 1fr; margin-top: 20px; overflow: hidden; }
+  .check-grid > div { background: #f8fafc; border: 1px solid var(--warehouse-line); display: grid; gap: 7px; min-height: 146px; padding: 17px; }
+  .check-grid strong { color: var(--warehouse-ink); font-size: 17px; line-height: 1.35; }
+  .check-grid p { color: var(--warehouse-muted); font-size: 13px; line-height: 1.62; margin: 0; }
+  .final-check footer { background: #172033; color: #e2e8f0; font-size: 14px; line-height: 1.7; margin-top: 16px; padding: 16px 18px; }
+  .final-check footer b { color: #93c5fd; }
 
-改由深圳跨境仓跨境直发。
+  :global(html[data-theme='dark']) .warehouse-manual { --warehouse-ink: #f8fafc; --warehouse-muted: #cbd5e1; --warehouse-line: #334155; }
+  :global(html[data-theme='dark']) .chapter-board { background: #111827; }
+  :global(html[data-theme='dark']) .scope-rail li,
+  :global(html[data-theme='dark']) .platform-side,
+  :global(html[data-theme='dark']) .check-grid > div { background: #0f172a; }
+  :global(html[data-theme='dark']) .country-scope aside { background: #172554; color: #bfdbfe; }
+  :global(html[data-theme='dark']) .shared-core { background: #052e2b; border-color: #115e59; }
+  :global(html[data-theme='dark']) .shared-core strong { color: #99f6e4; }
+  :global(html[data-theme='dark']) .check-node { background: #172554; }
+  :global(html[data-theme='dark']) .check-node strong { color: #bfdbfe; }
+  :global(html[data-theme='dark']) .yes-path { background: #052e24; }
+  :global(html[data-theme='dark']) .no-path { background: #431407; }
 
-这里建议使用「无可用库存」而不是只写「售罄」。因为实际业务里，只要当前没有能够正常履约的本地库存，就应该进入兜底路径。
+  @media (max-width: 680px) {
+    .warehouse-hero { padding-left: 16px; }
+    .scope-rail,
+    .stock-diagram,
+    .control-notes,
+    .availability-path,
+    .branch-set,
+    .check-grid { grid-template-columns: 1fr; }
+    .scope-rail { gap: 9px; }
+    .scope-rail li,
+    .scope-rail li:last-child { border-right: 1px solid var(--warehouse-line); }
+    .scope-rail li:not(:last-child)::after {
+      bottom: -12px;
+      clip-path: polygon(42% 0, 58% 0, 58% 68%, 100% 68%, 50% 100%, 0 68%, 42% 68%);
+      height: 16px;
+      left: 50%;
+      right: auto;
+      top: auto;
+      transform: translateX(-50%);
+    }
+    .platform-side { min-height: 76px; }
+    .shared-core { min-height: 110px; }
+  }
 
-因此整套发货优先级可以压缩成一句话：
-
-> **本国雅仓 ＞ 深圳跨境仓**
-
-## 五、3PF 和 LFF 只记录当前业务口径
-
-同一雅仓在不同平台后台，当前业务使用的名称不同：
-
-| 平台 | 当前后台名称 |
-| --- | --- |
-| Lazada | 3PF |
-| Shopee | LFF |
-
-这里特意写成「当前业务后台名称」，而不是「平台统一官方叫法」。
-
-实际操作时，仍然应该以对应店铺后台显示的仓库和履约模式为准，避免把当前账号里的名称扩展成所有商家都完全一致的规则。
-
-## 最后只记住三句话
-
-<HighlightBox eyebrow="RULES" title="国家隔离、平台共享、本地优先">
-  <ul>
-    <li><strong>同一国家：</strong>Shopee、Lazada 共用本国雅仓实物库存。</li>
-    <li><strong>不同国家：</strong>三个雅仓相互独立，库存不能跨国家调用。</li>
-    <li><strong>发货顺序：</strong>本国雅仓优先，无可用库存时再走深圳跨境仓。</li>
-  </ul>
-</HighlightBox>
-
-只要这三个关系不混，后面的库存分配、平台同步和发货判断都会清楚很多。
+  @media (prefers-reduced-motion: reduce) {
+    .warehouse-manual *, .warehouse-manual *::before, .warehouse-manual *::after { scroll-behavior: auto !important; transition: none !important; }
+  }
+`}</style>

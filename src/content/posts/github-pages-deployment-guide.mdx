@@ -1,8 +1,8 @@
 ---
 title: "GitHub Pages 是什么，以及这个博客是怎么部署的"
-description: "先解释 GitHub Pages、GitHub Actions、Astro 构建、用户站点和项目站点等概念，再按当前项目配置完整拆解发布流程。"
+description: "用浏览器请求、Astro 构建、GitHub Actions 发布和分层排错四条链路，图解这个博客从源码到线上静态页面的真实部署原理。"
 date: 2026-06-28T21:14:44+08:00
-updated: 2026-06-29T17:47:55+08:00
+updated: 2026-07-26T16:02:21+08:00
 category: "实践"
 tags:
   - "GitHub Pages"
@@ -15,504 +15,1438 @@ draft: false
 private: false
 ---
 
-import Callout from '../../components/Callout.astro';
-import Mermaid from '../../components/Mermaid.astro';
+这个博客没有常驻后端进程。它先由 Astro 把源码构建成静态文件，再由 GitHub Actions 把构建产物发布到 GitHub Pages；读者访问时，Pages 直接返回已经生成好的 HTML、CSS、JavaScript 和图片。
 
-这篇文章专门讲清楚两件事：第一，GitHub Pages 到底是什么；第二，这个博客项目当前是怎么从本地代码发布到线上地址的。
+<div class="pages-manual pages-opening" role="group" aria-label="这个博客部署方式的一句话结论">
+  <div class="pages-opening__label">DEPLOYMENT MODEL</div>
+  <strong>源码不是网站，<span>dist 产物</span>才是 Pages 最终托管的内容。</strong>
+  <p>Astro 负责“生成”，GitHub Actions 负责“自动执行”，GitHub Pages 负责“公开托管”。</p>
+  <div class="pages-opening__roles">
+    <span><b>Astro</b> 构建器</span>
+    <span><b>Actions</b> 自动化</span>
+    <span><b>Pages</b> 静态托管</span>
+  </div>
+</div>
 
-这个博客目前不是部署在云服务器上，也没有 Nginx、数据库、后端进程。它是一个 Astro 静态站点，代码推送到 GitHub 后，由 GitHub Actions 自动构建，再发布到 GitHub Pages。
+## 浏览器访问时，真正发生了什么
 
-<Callout title="一句话理解">
-GitHub Pages 负责托管最终生成的静态网页；GitHub Actions 负责把源码构建成这些静态网页；Astro 负责把文章、页面和组件编译成可部署的产物。
-</Callout>
+<div class="pages-manual pages-board" role="group" aria-label="浏览器访问 GitHub Pages 静态站点的完整请求链路">
+  <header class="pages-board__header">
+    <div>
+      <span class="pages-kicker">01 · REQUEST PATH</span>
+      <strong>一次访问，只是在请求已经发布好的静态文件</strong>
+    </div>
+    <span class="pages-status pages-status--green">运行时无构建</span>
+  </header>
 
-## 先解释几个名词
+  <div class="pages-definition">
+    <b>GitHub Pages</b>
+    <span>GitHub 提供的静态站点托管服务，可以从仓库内容或 Actions 产物发布 HTML、CSS 和 JavaScript 网站。</span>
+    <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages">GitHub 官方定义</a>
+  </div>
 
-### GitHub Pages
+  <div class="pages-track" aria-label="从浏览器到页面资源的访问链路">
+    <article class="pages-node pages-node--browser">
+      <small>REQUEST</small>
+      <strong>浏览器请求 URL</strong>
+      <code>https://apexcheng.github.io/</code>
+      <p>首页或文章地址成为一条 HTTPS 请求。</p>
+    </article>
+    <i aria-hidden="true">→</i>
+    <article class="pages-node pages-node--host">
+      <small>HOST</small>
+      <strong>GitHub Pages 接收</strong>
+      <code>apexcheng.github.io</code>
+      <p>Pages 按已经发布的站点版本查找对应文件。</p>
+    </article>
+    <i aria-hidden="true">→</i>
+    <article class="pages-node pages-node--asset">
+      <small>RESPONSE</small>
+      <strong>返回静态资源</strong>
+      <code>HTML · CSS · JS · images</code>
+      <p>浏览器下载资源并在本地完成页面呈现。</p>
+    </article>
+  </div>
 
-GitHub Pages 是 GitHub 提供的静态网站托管服务。它适合放个人主页、项目文档、博客、作品集这类由 HTML、CSS、JavaScript 组成的网站。
+  <div class="pages-runtime-map">
+    <div class="pages-runtime-map__present">
+      <span>访问时存在</span>
+      <div>
+        <b>静态文件</b>
+        <b>浏览器渲染</b>
+        <b>Pages 托管</b>
+      </div>
+    </div>
+    <div class="pages-runtime-map__absent">
+      <span>这个项目访问时不需要</span>
+      <div>
+        <s>Node 常驻进程</s>
+        <s>应用数据库</s>
+        <s>Nginx 自建服务器</s>
+        <s>每次请求现场构建</s>
+      </div>
+    </div>
+  </div>
 
-它有两个常见形态：
+  <div class="pages-evidence">
+    <span>本站证据</span>
+    <p><code>astro.config.mjs</code> 没有服务端 adapter；当前部署链路以 Astro 静态构建和 Pages artifact 为核心。</p>
+    <b>边界：需要登录、数据库写入或实时服务端计算时，静态 Pages 本身不能替代后端。</b>
+  </div>
+</div>
 
-- 用户站点：通常是 `用户名.github.io`。
-- 项目站点：通常是 `用户名.github.io/仓库名/`。
+GitHub Pages 有用户 / 组织站点和项目站点两类。用户站点仓库使用特殊名称 <code>&lt;owner&gt;.github.io</code>，默认地址位于域名根路径；项目站点默认位于 <code>/&lt;repository&gt;/</code> 子路径。这个差异会直接影响 Astro 的 `base`。
 
-这个博客现在属于用户站点，因为仓库名是 `apexcheng.github.io`，所以访问路径就是根目录 `/`。原来的关于页仓库改成 `about` 后，会成为项目站点路径 `/about/`。
+## Astro 怎样把文章变成可部署文件
 
-### 静态站点
+<div class="pages-manual pages-board" role="group" aria-label="Astro 从源码构建到 dist 静态产物的完整变换">
+  <header class="pages-board__header">
+    <div>
+      <span class="pages-kicker">02 · BUILD TRANSFORMATION</span>
+      <strong>构建把“项目结构”翻译成“浏览器能直接读取的文件”</strong>
+    </div>
+    <span class="pages-status pages-status--blue">npm run build</span>
+  </header>
 
-静态站点指的是部署后主要由 HTML、CSS、JavaScript、图片、字体等静态文件组成的网站。
+  <div class="pages-input-output">
+    <div class="pages-input-output__side">
+      <span>SOURCE · 输入</span>
+      <strong>仓库里的开发文件</strong>
+      <ul>
+        <li><code>src/content/posts/</code>：Markdown / MDX 文章</li>
+        <li><code>src/pages/</code>：页面与静态路由</li>
+        <li><code>src/components/</code>：Astro 组件</li>
+        <li><code>src/styles/</code>：站点样式</li>
+      </ul>
+    </div>
+    <div class="pages-compiler">
+      <span>ASTRO BUILD</span>
+      <b>读取内容</b>
+      <i aria-hidden="true">↓</i>
+      <b>生成路由</b>
+      <i aria-hidden="true">↓</i>
+      <b>编译与打包</b>
+      <i aria-hidden="true">↓</i>
+      <strong>写入 dist/</strong>
+    </div>
+    <div class="pages-input-output__side pages-input-output__side--output">
+      <span>ARTIFACT · 输出</span>
+      <strong>可公开托管的静态站点</strong>
+      <ul>
+        <li><code>index.html</code>：入口页面</li>
+        <li><code>articles/.../index.html</code>：文章页</li>
+        <li><code>_astro/...</code>：编译后的 CSS / JS</li>
+        <li>图片、字体、RSS 等公开资源</li>
+      </ul>
+    </div>
+  </div>
 
-访问时不需要后端临时查数据库，也不需要服务端实时渲染页面。浏览器请求一个地址，GitHub Pages 返回已经构建好的文件。
+  <div class="pages-project-proof">
+    <article>
+      <span>构建命令</span>
+      <code>npm run build</code>
+      <p><code>package.json</code> 当前映射为 <code>astro build</code>。</p>
+    </article>
+    <article>
+      <span>默认输出</span>
+      <code>dist/</code>
+      <p>项目没有覆盖 <code>outDir</code>，沿用 Astro 默认静态输出目录。</p>
+    </article>
+    <article>
+      <span>发布原则</span>
+      <code>不提交 dist</code>
+      <p>远端 Action 会基于同一提交重新安装、构建并上传产物。</p>
+    </article>
+  </div>
 
-这类站点的优点是简单、稳定、便宜，缺点是运行时动态能力弱。对个人技术博客来说，静态站点通常足够。
+  <div class="pages-verdict">
+    <span>这一章的判断</span>
+    <strong>本地源码能打开，不等于部署产物能生成；`npm run build` 才是发布前最接近云端的一次检查。</strong>
+  </div>
+</div>
 
-### Astro
+可复制的本地构建命令：
 
-Astro 是当前博客使用的静态站点框架。它负责读取 `src/content/posts/` 里的文章，结合页面模板、组件和样式，构建出最终的静态页面。
-
-本项目里，Astro 主要负责这些事情：
-
-- 读取 Markdown / MDX 文章。
-- 生成首页、文章列表页、文章详情页、分类页、标签页。
-- 生成 RSS、搜索索引相关页面。
-- 把站点构建到 `dist/` 目录。
-
-### GitHub Actions
-
-GitHub Actions 是 GitHub 的自动化执行环境。它可以在代码 push 后自动运行一组步骤，比如安装依赖、执行测试、构建项目、上传产物、发布页面。
-
-这个项目里，GitHub Actions 的工作就是：
-
-1. 检出仓库代码。
-2. 使用 Astro 官方 Action 安装依赖并构建站点。
-3. 把构建产物交给 GitHub Pages 发布。
-
-### workflow
-
-workflow 是 GitHub Actions 的流程配置文件，通常放在 `.github/workflows/` 目录下。
-
-当前项目的部署 workflow 是：
-
-```text
-.github/workflows/deploy.yml
+```bash
+npm run build
+npm run preview
 ```
 
-它定义了什么时候触发、需要哪些权限、有哪些任务、每个任务执行什么步骤。
+`preview` 用于检查刚生成的静态产物，不是生产服务器。Astro 官方部署文档也将默认构建命令写为 `npm run build`、默认发布目录写为 `dist`，可参考 [Astro 部署说明](https://docs.astro.build/en/guides/deploy/)。
 
-### site 和 base
+## GitHub Actions 怎样完成自动发布
 
-Astro 里有两个部署到 GitHub Pages 时常见的配置：`site` 和 `base`。
+<div class="pages-manual pages-board" role="group" aria-label="GitHub Actions build 和 deploy 两个任务的发布泳道">
+  <header class="pages-board__header">
+    <div>
+      <span class="pages-kicker">03 · DELIVERY PIPELINE</span>
+      <strong>main 分支只触发流程，真正交付的是 build job 产出的 artifact</strong>
+    </div>
+    <span class="pages-status pages-status--violet">2 jobs</span>
+  </header>
 
-当前项目配置是：
+  <div class="pages-trigger-strip">
+    <div>
+      <span>AUTO</span>
+      <strong>push → main</strong>
+      <p>main 收到新提交时自动触发。</p>
+    </div>
+    <div>
+      <span>MANUAL</span>
+      <strong>workflow_dispatch</strong>
+      <p>允许从 Actions 页面手动运行。</p>
+    </div>
+    <div>
+      <span>QUEUE</span>
+      <strong>group: pages</strong>
+      <p><code>cancel-in-progress: false</code>，进行中的发布不被新运行取消。</p>
+    </div>
+  </div>
 
-```js
-site: 'https://apexcheng.github.io',
-```
+  <div class="pages-swimlane">
+    <div class="pages-swimlane__label">
+      <span>BUILD JOB</span>
+      <small>输入：仓库提交</small>
+    </div>
+    <div class="pages-swimlane__steps">
+      <article>
+        <b>1</b>
+        <strong>Checkout</strong>
+        <code>actions/checkout@v6</code>
+        <p>把触发这次运行的仓库内容检出到 runner。</p>
+      </article>
+      <i aria-hidden="true">→</i>
+      <article>
+        <b>2</b>
+        <strong>Install + Build</strong>
+        <code>withastro/action@v6</code>
+        <p>使用 npm 安装依赖、执行 Astro 构建并准备 Pages artifact。</p>
+      </article>
+      <i aria-hidden="true">→</i>
+      <article class="pages-swimlane__artifact">
+        <b>3</b>
+        <strong>Pages artifact</strong>
+        <code>静态构建产物</code>
+        <p>这是 build job 交给 deploy job 的发布对象。</p>
+      </article>
+    </div>
+  </div>
 
-这个配置对应最终站点地址：
+  <div class="pages-job-gate">
+    <span>needs: build</span>
+    <b>只有 build 成功，deploy 才能开始</b>
+  </div>
 
-```text
-https://apexcheng.github.io/
-```
+  <div class="pages-swimlane pages-swimlane--deploy">
+    <div class="pages-swimlane__label">
+      <span>DEPLOY JOB</span>
+      <small>输入：Pages artifact</small>
+    </div>
+    <div class="pages-swimlane__steps pages-swimlane__steps--deploy">
+      <article>
+        <b>4</b>
+        <strong>Deploy Pages</strong>
+        <code>actions/deploy-pages@v5</code>
+        <p>把上一任务的 artifact 发布到 <code>github-pages</code> environment。</p>
+      </article>
+      <i aria-hidden="true">→</i>
+      <article class="pages-swimlane__online">
+        <b>5</b>
+        <strong>站点版本更新</strong>
+        <code>https://apexcheng.github.io/</code>
+        <p>成功运行会输出部署 URL；外部是否已更新仍需线上验收。</p>
+      </article>
+    </div>
+  </div>
 
-`site` 表示站点域名。`base` 只在项目站点挂载到子路径时需要，比如仓库名是 `about` 时，对应路径通常是 `/about/`。
+  <div class="pages-permissions">
+    <span>最小权限与发布身份</span>
+    <div>
+      <code>contents: read</code>
+      <code>pages: write</code>
+      <code>id-token: write</code>
+    </div>
+    <p>分别用于读取仓库、写入 Pages 部署和使用 OIDC 身份令牌；这些字段与当前 workflow 一致。</p>
+  </div>
 
-<Callout title="为什么现在不配置 base？">
-当前博客仓库名是 `apexcheng.github.io`，属于 GitHub 用户站点，部署在根路径 `/`。如果继续保留旧的 `base: '/blog'`，CSS、JS、文章链接和 RSS 链接就会错误地指向 `/blog/`。
-</Callout>
+  <div class="pages-verdict">
+    <span>这一章的判断</span>
+    <strong>构建失败时不会进入发布；发布成功也只证明 artifact 已部署，页面内容与缓存仍要单独验收。</strong>
+  </div>
+</div>
 
-### dist
+当前仓库的真实 workflow 是 `.github/workflows/deploy.yml`。它与 [Astro 官方 GitHub Pages 指南](https://docs.astro.build/en/guides/deploy/github/) 的两任务结构一致；GitHub 也把 “checkout → build → upload artifact → deploy-pages” 作为自定义 Actions 发布的标准链路，见 [GitHub Pages 发布源说明](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)。
 
-`dist/` 是 Astro 构建后的输出目录。运行 `npm run build` 后，Astro 会把所有页面和资源生成到这里。
+## site、base 和仓库名怎样共同决定地址
 
-需要注意的是，这个项目不需要把 `dist/` 手动提交到 Git。GitHub Actions 会在云端重新构建并上传产物。
+<div class="pages-manual pages-board" role="group" aria-label="GitHub Pages 用户站点和项目站点的地址映射">
+  <header class="pages-board__header">
+    <div>
+      <span class="pages-kicker">04 · ADDRESS MODEL</span>
+      <strong>先判断仓库属于哪种 Pages 站点，再决定 Astro 是否需要 base</strong>
+    </div>
+    <span class="pages-status pages-status--amber">路径最易出错</span>
+  </header>
 
-## 本项目部署架构
+  <div class="pages-address-compare">
+    <article class="pages-address-card pages-address-card--current">
+      <span>USER SITE · 当前博客</span>
+      <strong>仓库名匹配特殊规则</strong>
+      <code>apexcheng.github.io</code>
+      <div class="pages-address-card__mapping">
+        <small>默认站点地址</small>
+        <b>https://apexcheng.github.io/</b>
+      </div>
+      <ul>
+        <li><code>site</code>：设置完整域名</li>
+        <li><code>base</code>：当前不配置</li>
+        <li>页面和资源从根路径 <code>/</code> 开始</li>
+      </ul>
+    </article>
 
-先看整体链路。
+    <article class="pages-address-card">
+      <span>PROJECT SITE · 对照情况</span>
+      <strong>普通仓库作为项目站点</strong>
+      <code>about</code>
+      <div class="pages-address-card__mapping">
+        <small>默认站点地址</small>
+        <b>https://apexcheng.github.io/about/</b>
+      </div>
+      <ul>
+        <li><code>site</code>：仍是所属域名</li>
+        <li><code>base</code>：通常配置为 <code>/about</code></li>
+        <li>内部链接必须带上项目子路径</li>
+      </ul>
+    </article>
+  </div>
 
-<Mermaid
-  title="本项目部署架构"
-  chart={`flowchart LR
-  A[本地项目源码] --> B[Git commit]
-  B --> C[Push 到 GitHub main]
-  C --> D[GitHub Actions 触发]
-  D --> E[withastro/action 构建 Astro]
-  E --> F[生成静态产物]
-  F --> G[actions/deploy-pages 发布]
-  G --> H[GitHub Pages 线上站点]
-  H --> I[访问根路径 /]`}
-/>
-
-这个流程里，本地电脑不直接把 `dist/` 上传到服务器。真正发布发生在 GitHub Actions 里。
-
-你本地只需要保证代码没问题，然后把代码 push 到远端。GitHub 收到 main 分支的新提交后，会自动执行部署 workflow。
-
-## 当前项目关键文件
-
-本项目和部署相关的关键文件有三个。
-
-### astro.config.mjs
-
-这个文件决定 Astro 如何构建站点。当前部署相关配置是：
-
-```js
-export default defineConfig({
+  <div class="pages-config-proof">
+    <div>
+      <span>当前 astro.config.mjs</span>
+      <pre><code>{`export default defineConfig({
   site: 'https://apexcheng.github.io',
-  integrations: [
-    starlight({
-      title: siteMeta.siteName,
-      customCss: ['./src/styles/global.css'],
-    }),
-    mdx(),
-  ],
-});
-```
+  devToolbar: {
+    enabled: true,
+  },
+  integrations: [mdx()],
+});`}</code></pre>
+    </div>
+    <aside>
+      <span>读配置的顺序</span>
+      <ol>
+        <li>域名来自 <code>site</code>。</li>
+        <li>未设置 <code>base</code>，因此构建根路径是 <code>/</code>。</li>
+        <li><code>withBase()</code> 用 <code>import.meta.env.BASE_URL</code> 统一生成内部链接。</li>
+      </ol>
+    </aside>
+  </div>
 
-其中最关键的是：
+  <div class="pages-path-failure">
+    <div>
+      <span>错误配置示例</span>
+      <code>base: '/blog'</code>
+    </div>
+    <i aria-hidden="true">→</i>
+    <div>
+      <span>构建出的资源路径</span>
+      <code>/blog/_astro/...</code>
+    </div>
+    <i aria-hidden="true">→</i>
+    <div class="pages-path-failure__result">
+      <span>部署在根站点时</span>
+      <strong>CSS / JS 可能 404</strong>
+    </div>
+  </div>
 
-- `site`：GitHub 用户 Pages 域名。
-- 当前不配置 `base`：因为博客部署在根路径 `/`。
-- `integrations`：启用 Starlight 和 MDX。
+  <div class="pages-evidence">
+    <span>边界与结论</span>
+    <p>仓库改名、改为项目站点或接入自定义域名时，都要重新核对 `site`、`base`、Pages 设置和内部链接；不能只改其中一个。</p>
+    <b>当前“根路径部署”由本地配置和仓库命名共同支持；GitHub 仓库的 Pages Source 仍需在 Settings 中运行验证。</b>
+  </div>
+</div>
 
-### .github/workflows/deploy.yml
+Astro 官方说明明确指出：项目站点通常要把仓库名配置为 `base`，而当仓库名符合 `<username>.github.io` 时可以跳过。当前项目的 `src/utils/paths.ts` 还保留了 `withBase()`，因此内部地址不会把根路径写死。
 
-这是自动部署流程。当前配置可以简化理解成：
+## 从改文章到线上验收，应该按哪条操作链
 
-```yaml
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+<div class="pages-manual pages-board" role="group" aria-label="从本地修改到线上验收的发布操作链">
+  <header class="pages-board__header">
+    <div>
+      <span class="pages-kicker">05 · OPERATOR RUNBOOK</span>
+      <strong>发布不是 push 结束，而是本地、Actions、线上三次验收</strong>
+    </div>
+    <span class="pages-status pages-status--blue">可复制执行</span>
+  </header>
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+  <div class="pages-runbook">
+    <article>
+      <div class="pages-runbook__number">01</div>
+      <div>
+        <span>CONTENT</span>
+        <strong>修改文章或代码</strong>
+        <p>正式文章位于 <code>src/content/posts/</code>；公开文章保持 <code>draft: false</code> 和 <code>private: false</code>。</p>
+      </div>
+      <b>产出：源码变更</b>
+    </article>
+    <article>
+      <div class="pages-runbook__number">02</div>
+      <div>
+        <span>LOCAL GATE</span>
+        <strong>先测试，再构建</strong>
+        <pre><code>{`npm test
+npm run build`}</code></pre>
+        <p>测试负责已有规则，构建负责 MDX、路由和静态生成。</p>
+      </div>
+      <b>产出：可生成的 dist</b>
+    </article>
+    <article>
+      <div class="pages-runbook__number">03</div>
+      <div>
+        <span>VERSION</span>
+        <strong>只提交本次相关文件</strong>
+        <pre><code>{`git add src/content/posts/my-new-article.mdx
+git commit -m "更新文章"`}</code></pre>
+        <p>提交记录定义这次远端构建使用的源码版本。</p>
+      </div>
+      <b>产出：Git commit</b>
+    </article>
+    <article>
+      <div class="pages-runbook__number">04</div>
+      <div>
+        <span>TRIGGER</span>
+        <strong>推送 main</strong>
+        <pre><code>{`git push origin main`}</code></pre>
+        <p>当前 workflow 监听 main；其他分支不会通过这条 push 规则自动部署。</p>
+      </div>
+      <b>产出：Actions run</b>
+    </article>
+    <article>
+      <div class="pages-runbook__number">05</div>
+      <div>
+        <span>REMOTE GATE</span>
+        <strong>检查 build 与 deploy</strong>
+        <p>先确认 build job，再确认 deploy job；绿色状态来自真实运行，不从 YAML 推断。</p>
+      </div>
+      <b>产出：deployment URL</b>
+    </article>
+    <article>
+      <div class="pages-runbook__number">06</div>
+      <div>
+        <span>BROWSER GATE</span>
+        <strong>检查真实页面</strong>
+        <p>至少打开首页、目标文章和一个静态资源；必要时使用无痕窗口排除缓存。</p>
+      </div>
+      <b>产出：线上验收</b>
+    </article>
+  </div>
 
-jobs:
-  build:
-    steps:
-      - uses: actions/checkout@v6
-      - uses: withastro/action@v6
-        with:
-          package-manager: npm
+  <div class="pages-release-gates">
+    <article>
+      <span>GATE A</span>
+      <strong>本地构建通过</strong>
+      <p>证明这份源码能生成静态站点。</p>
+    </article>
+    <article>
+      <span>GATE B</span>
+      <strong>Actions 两个 job 通过</strong>
+      <p>证明远端环境完成构建与部署。</p>
+    </article>
+    <article>
+      <span>GATE C</span>
+      <strong>浏览器访问正确</strong>
+      <p>证明路径、资源与内容对读者可用。</p>
+    </article>
+  </div>
 
-  deploy:
-    needs: build
-    steps:
-      - uses: actions/deploy-pages@v5
-```
+  <div class="pages-verdict">
+    <span>这一章的判断</span>
+    <strong>三个闸门不能互相替代：本地成功不代表远端权限正确，Actions 成功也不代表浏览器没有缓存或路径问题。</strong>
+  </div>
+</div>
 
-这段配置表达了几个关键信息：
+本文没有把 `dist/` 加入提交命令，因为当前部署方式会在 GitHub runner 上重新构建。若将来改为分支目录发布，交付对象与操作链也必须随之调整。
 
-- push 到 `main` 分支时自动部署。
-- 也可以在 GitHub Actions 页面手动触发。
-- `build` 任务负责构建和上传产物。
-- `deploy` 任务依赖 `build`，构建成功后才发布。
-- 发布动作使用 GitHub 官方 Pages 部署 Action。
+## 部署失败时，怎样分层定位
 
-### package.json
+<div class="pages-manual pages-board pages-diagnostic" role="group" aria-label="GitHub Pages 部署五层故障诊断图">
+  <header class="pages-board__header">
+    <div>
+      <span class="pages-kicker">06 · LAYERED DIAGNOSIS</span>
+      <strong>不要从“页面不对”直接猜原因，先找到故障发生在哪一层</strong>
+    </div>
+    <span class="pages-status pages-status--red">5 层定位</span>
+  </header>
 
-`package.json` 里定义了本地和云端都会用到的命令：
+  <div class="pages-diagnostic__legend">
+    <span><i class="is-red"></i> 当前故障层</span>
+    <span><i class="is-green"></i> 已通过证据</span>
+    <span><i class="is-gray"></i> 尚未检查</span>
+  </div>
 
-```json
-{
-  "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "test": "vitest run"
+  <div class="pages-diagnostic__stack">
+    <article>
+      <div class="pages-diagnostic__level">L1</div>
+      <div>
+        <span>SOURCE</span>
+        <strong>源码与内容层</strong>
+        <p>MDX 语法、frontmatter、import、公开状态、文件名是否正确。</p>
+      </div>
+      <div class="pages-diagnostic__check">
+        <b>证据</b>
+        <code>npm test</code>
+        <code>目标文件 diff</code>
+      </div>
+      <div class="pages-diagnostic__signal">构建前错误</div>
+    </article>
+
+    <article>
+      <div class="pages-diagnostic__level">L2</div>
+      <div>
+        <span>BUILD</span>
+        <strong>Astro 构建层</strong>
+        <p>依赖是否可安装，路由和 MDX 是否能生成，<code>dist/</code> 是否完整。</p>
+      </div>
+      <div class="pages-diagnostic__check">
+        <b>证据</b>
+        <code>npm run build</code>
+        <code>构建日志首个错误</code>
+      </div>
+      <div class="pages-diagnostic__signal">build job 红色</div>
+    </article>
+
+    <article>
+      <div class="pages-diagnostic__level">L3</div>
+      <div>
+        <span>DELIVERY</span>
+        <strong>Actions 与 artifact 层</strong>
+        <p>workflow 是否触发，build 是否上传 Pages artifact，deploy 是否获得所需权限。</p>
+      </div>
+      <div class="pages-diagnostic__check">
+        <b>证据</b>
+        <code>Actions run</code>
+        <code>build / deploy job</code>
+      </div>
+      <div class="pages-diagnostic__signal">未触发或 job 失败</div>
+    </article>
+
+    <article>
+      <div class="pages-diagnostic__level">L4</div>
+      <div>
+        <span>ADDRESS</span>
+        <strong>Pages 设置与路径层</strong>
+        <p>Source 是否为 GitHub Actions，<code>site</code> / <code>base</code> 是否匹配用户站点或项目站点。</p>
+      </div>
+      <div class="pages-diagnostic__check">
+        <b>证据</b>
+        <code>Settings → Pages</code>
+        <code>资源请求 URL</code>
+      </div>
+      <div class="pages-diagnostic__signal">404 或样式丢失</div>
+    </article>
+
+    <article>
+      <div class="pages-diagnostic__level">L5</div>
+      <div>
+        <span>BROWSER</span>
+        <strong>线上内容与缓存层</strong>
+        <p>部署 URL 是否是最新运行，页面和静态资源是否返回预期版本。</p>
+      </div>
+      <div class="pages-diagnostic__check">
+        <b>证据</b>
+        <code>无痕窗口</code>
+        <code>直接访问文章路径</code>
+      </div>
+      <div class="pages-diagnostic__signal">Actions 绿但页面旧</div>
+    </article>
+  </div>
+
+  <div class="pages-symptom-map">
+    <article>
+      <span>症状</span>
+      <strong>Actions 没有运行</strong>
+      <p>先查 L3：提交是否真的 push 到 main，workflow 文件是否存在且能被 GitHub 读取。</p>
+    </article>
+    <article>
+      <span>症状</span>
+      <strong>build 失败</strong>
+      <p>回到 L1 / L2：从日志第一个有效错误开始，不先改 Pages 设置。</p>
+    </article>
+    <article>
+      <span>症状</span>
+      <strong>页面开了但无样式</strong>
+      <p>优先查 L4：CSS / JS 请求路径是否多了或少了 <code>base</code>。</p>
+    </article>
+    <article>
+      <span>症状</span>
+      <strong>部署成功但内容旧</strong>
+      <p>先查 L5，再核对 deploy 使用的 commit；不要把缓存问题误判为构建失败。</p>
+    </article>
+  </div>
+
+  <div class="pages-verification-panel">
+    <div>
+      <span>本地已能确认</span>
+      <ul>
+        <li><code>site</code> 指向 <code>https://apexcheng.github.io</code></li>
+        <li>当前没有配置 <code>base</code></li>
+        <li>workflow 监听 main 并支持手动触发</li>
+        <li>build → deploy 依赖关系存在</li>
+      </ul>
+    </div>
+    <div class="pages-verification-panel__remote">
+      <span>需运行验证</span>
+      <ul>
+        <li>仓库 Pages Source 当前是否为 GitHub Actions</li>
+        <li>最新 Actions run 是否成功</li>
+        <li>线上站点和目标文章是否已更新</li>
+        <li>桌面端与 390px 移动端是否无布局溢出</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="pages-final">
+    <span>FINAL MODEL</span>
+    <strong>源码 → Astro 静态产物 → Pages artifact → GitHub Pages → 浏览器</strong>
+    <p>排错时从左到右找证据；每通过一层，才继续检查下一层。</p>
+  </footer>
+</div>
+
+这套部署方式把内容生产、构建自动化和静态托管拆成了清晰的责任边界。对当前博客而言，最重要的不是记住某个 Action 版本，而是始终分清：源码在哪里、产物是什么、谁负责发布，以及失败证据来自哪一层。
+
+<style>{`
+  .pages-manual {
+    --pages-ink: #182538;
+    --pages-text: #34445a;
+    --pages-muted: #68788d;
+    --pages-line: #cbd7e6;
+    --pages-blue: #1766c2;
+    --pages-blue-soft: #edf5ff;
+    --pages-violet: #6d53b5;
+    --pages-violet-soft: #f4f0ff;
+    --pages-green: #13795b;
+    --pages-green-soft: #edf9f4;
+    --pages-amber: #b46816;
+    --pages-amber-soft: #fff6e8;
+    --pages-red: #bb4347;
+    --pages-red-soft: #fff1f1;
+    color: var(--pages-text);
   }
-}
-```
 
-其中部署最关键的是：
-
-```bash
-npm run build
-```
-
-GitHub Actions 使用 Astro Action 构建项目时，最终也是围绕构建命令生成静态产物。
-
-## 从写文章到线上发布
-
-这个博客的发布流程可以分成两段：本地内容更新，远端自动部署。
-
-<Mermaid
-  title="从文章到线上页面的完整流程"
-  chart={`flowchart TD
-  A[新增或修改 MDX 文章] --> B[填写 frontmatter]
-  B --> C[本地运行 npm test]
-  C --> D[本地运行 npm run build]
-  D --> E[git add]
-  E --> F[git commit]
-  F --> G[git push origin main]
-  G --> H[GitHub Actions 开始运行]
-  H --> I[Checkout 仓库]
-  I --> J[安装依赖并构建 Astro]
-  J --> K[上传 Pages artifact]
-  K --> L[Deploy Pages]
-  L --> M[线上根路径地址更新]`}
-/>
-
-### 第一步：写文章
-
-文章放在：
-
-```text
-src/content/posts/
-```
-
-普通文章可以用 `.md`，需要组件、Callout 或 Mermaid 图表时用 `.mdx`。
-
-每篇文章都需要 frontmatter，例如：
-
-```yaml
----
-title: "GitHub Pages 是什么，以及这个博客是怎么部署的"
-description: "先解释 GitHub Pages、GitHub Actions、Astro 构建、site 和 base 等概念，再按当前项目配置完整拆解发布流程。"
-date: 2026-06-28
-category: "实践"
-tags:
-  - "GitHub Pages"
-  - "GitHub Actions"
-  - "Astro"
-minutes: 13
-featured: false
-draft: false
-private: false
----
-```
-
-这里的 `draft: false` 和 `private: false` 很重要。当前项目的文章列表、详情页、分类页、标签页、RSS 都会过滤草稿和私密文章。
-
-### 第二步：本地验证
-
-发布前建议先运行：
-
-```bash
-npm test
-npm run build
-```
-
-`npm test` 用来验证已有测试。`npm run build` 用来确认 Astro 可以完整生成静态站点。
-
-如果构建失败，就不要提交发布。先修文章语法、frontmatter、MDX 组件或 Mermaid 写法。
-
-### 第三步：提交代码
-
-本地确认没问题后，提交：
-
-```bash
-git add src/content/posts/xxx.mdx
-git commit -m "新增 GitHub Pages 部署说明文章"
-```
-
-这个项目用 Git 管理内容，所以文章新增、分类调整、页面修改都会留下提交记录。
-
-### 第四步：推送到 GitHub
-
-提交后推送到 main：
-
-```bash
-git push origin main
-```
-
-因为 workflow 里写了：
-
-```yaml
-on:
-  push:
-    branches: [main]
-```
-
-所以只要 main 分支收到新提交，GitHub Actions 就会自动开始部署。
-
-### 第五步：GitHub Actions 构建
-
-Actions 先运行 build job。
-
-<Mermaid
-  title="GitHub Actions 内部任务关系"
-  chart={`flowchart LR
-  A[push main] --> B[build job]
-  B --> C[actions/checkout]
-  C --> D[withastro/action]
-  D --> E[install dependencies]
-  E --> F[astro build]
-  F --> G[upload Pages artifact]
-  G --> H[deploy job]
-  H --> I[actions/deploy-pages]
-  I --> J[GitHub Pages updated]`}
-/>
-
-当前 build job 里使用的是：
-
-```yaml
-- name: Build and upload
-  uses: withastro/action@v6
-  with:
-    package-manager: npm
-```
-
-这说明部署时使用 npm 作为包管理器，并由 Astro 官方 Action 处理安装、构建和上传产物。
-
-### 第六步：GitHub Pages 发布
-
-build 成功后，deploy job 会执行：
-
-```yaml
-- name: Deploy to GitHub Pages
-  id: deployment
-  uses: actions/deploy-pages@v5
-```
-
-它会把上一步生成并上传的 Pages artifact 发布到 GitHub Pages。发布完成后，站点地址会更新。
-
-当前博客线上地址对应的是：
-
-```text
-https://apexcheng.github.io/
-```
-
-## 为什么现在要移除旧的 base
-
-GitHub Pages 的用户站点和项目站点不一样。
-
-如果仓库名是 `apexcheng.github.io`，它就是用户站点，默认路径是：
-
-```text
-/
-```
-
-Astro 默认也会认为站点部署在根路径 `/`，所以当前博客不需要配置 `base`。
-
-如果继续保留旧的配置：
-
-```js
-base: '/blog'
-```
-
-构建出来的 CSS、JS、文章链接、RSS 链接等资源会继续带上 `/blog` 前缀，部署到根站点后就容易 404。
-
-本项目里还保留了一个 `withBase()` 方法，用来生成兼容 base 的内部链接：
-
-```ts
-export function withBase(path: string) {
-  const base = import.meta.env.BASE_URL.endsWith('/')
-    ? import.meta.env.BASE_URL.slice(0, -1)
-    : import.meta.env.BASE_URL;
-
-  if (path === '/') {
-    return `${base}/`;
+  .pages-opening {
+    position: relative;
+    overflow: hidden;
+    margin: 1.4rem 0 2.3rem;
+    padding: 1.35rem 1.45rem 1.25rem;
+    border: 1px solid #b7cbe4;
+    border-radius: 16px;
+    background:
+      linear-gradient(110deg, rgba(23, 102, 194, .09), rgba(109, 83, 181, .04) 62%, transparent),
+      #fbfdff;
+    box-shadow: 0 14px 34px rgba(31, 67, 108, .08);
   }
 
-  return `${base}${path}`;
-}
-```
+  .pages-opening::after {
+    position: absolute;
+    top: -4.5rem;
+    right: -3rem;
+    width: 11rem;
+    height: 11rem;
+    border: 1px solid rgba(23, 102, 194, .14);
+    border-radius: 999px;
+    content: "";
+  }
 
-这就是为什么页面里很多链接不是直接写 `/articles/`，而是写：
+  .pages-opening__label,
+  .pages-kicker {
+    display: block;
+    color: var(--pages-blue);
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .09em;
+  }
 
-```astro
-<a href={withBase('/articles/')}>开始阅读</a>
-```
+  .pages-opening > strong {
+    display: block;
+    max-width: 720px;
+    margin-top: .45rem;
+    color: var(--pages-ink);
+    font-size: clamp(1.35rem, 3vw, 2rem);
+    line-height: 1.35;
+  }
 
-这样当前根站点会生成 `/articles/`，以后如果重新变成项目站点，也只需要恢复对应的 `base`。
+  .pages-opening > strong span { color: var(--pages-blue); }
 
-<Callout title="仓库改名时要注意">
-如果远端仓库名是 `apexcheng.github.io`，博客就是用户站点，不要配置 `base`。如果以后改回普通项目仓库，例如 `blog`，才需要把 `base` 改成对应的子路径。
-</Callout>
+  .pages-opening > p {
+    max-width: 720px;
+    margin: .55rem 0 1rem;
+    color: var(--pages-muted);
+    font-size: .9rem;
+    line-height: 1.7;
+  }
 
-## GitHub Pages 设置里要选什么
+  .pages-opening__roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
 
-这个项目使用 GitHub Actions 发布，所以 GitHub 仓库设置里，Pages 的 Source 应该选择 GitHub Actions，而不是从某个分支目录直接发布。
+  .pages-opening__roles span {
+    padding: .42rem .62rem;
+    border: 1px solid #c7d5e5;
+    border-radius: 999px;
+    color: #526378;
+    background: rgba(255, 255, 255, .78);
+    font-size: .75rem;
+  }
 
-两种方式区别是：
+  .pages-opening__roles b { color: var(--pages-ink); }
 
-- 分支目录发布：GitHub 直接拿某个分支或目录里的静态文件发布。
-- GitHub Actions 发布：先运行 workflow 构建，再把构建产物发布。
+  .pages-board {
+    width: min(1100px, calc(100vw - 2.5rem));
+    overflow: hidden;
+    margin: 1.3rem 0 2.1rem 50%;
+    border: 1px solid #b9c9dc;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 20px 54px rgba(30, 60, 98, .1);
+    transform: translateX(-50%);
+  }
 
-Astro 项目更适合第二种。因为源码不是最终网页，必须先构建。
+  .pages-board__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.4rem 1.05rem;
+    border-bottom: 1px solid var(--pages-line);
+    background:
+      linear-gradient(90deg, rgba(23, 102, 194, .075), transparent 55%),
+      #fbfdff;
+  }
 
-## 如何判断部署是否成功
+  .pages-board__header strong {
+    display: block;
+    margin-top: .32rem;
+    color: var(--pages-ink);
+    font-size: clamp(1.2rem, 2.5vw, 1.75rem);
+    line-height: 1.35;
+  }
 
-一次部署是否成功，可以看三个位置。
+  .pages-status {
+    flex: 0 0 auto;
+    padding: .46rem .62rem;
+    border: 1px solid;
+    border-radius: 7px;
+    font-size: .72rem;
+    font-weight: 900;
+  }
 
-### 1. 本地构建是否成功
+  .pages-status--green { color: var(--pages-green); border-color: #9dccba; background: var(--pages-green-soft); }
+  .pages-status--blue { color: var(--pages-blue); border-color: #a9c8eb; background: var(--pages-blue-soft); }
+  .pages-status--violet { color: var(--pages-violet); border-color: #c3b4e8; background: var(--pages-violet-soft); }
+  .pages-status--amber { color: var(--pages-amber); border-color: #e2c38d; background: var(--pages-amber-soft); }
+  .pages-status--red { color: var(--pages-red); border-color: #e2aeb0; background: var(--pages-red-soft); }
 
-```bash
-npm run build
-```
+  .pages-definition {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .75rem 1rem;
+    margin: 1rem 1.4rem 1.25rem;
+    padding: .78rem .9rem;
+    border: 1px solid #abc7e9;
+    border-radius: 9px;
+    background: var(--pages-blue-soft);
+  }
 
-如果本地都构建失败，远端大概率也会失败。
+  .pages-definition b { color: var(--pages-blue); font-size: .86rem; }
+  .pages-definition span { color: #445b76; font-size: .8125rem; line-height: 1.55; }
+  .pages-definition a { color: var(--pages-blue); font-size: .8125rem; font-weight: 800; text-decoration: none; }
 
-### 2. GitHub Actions 是否绿色
+  .pages-track {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: .7rem;
+    margin: 0 1.4rem 1.25rem;
+  }
 
-推送后进入 GitHub 仓库的 Actions 页面，查看 `Deploy to GitHub Pages` workflow 是否成功。
+  .pages-track > i,
+  .pages-path-failure > i,
+  .pages-swimlane__steps > i {
+    color: #7c8da2;
+    font-style: normal;
+    font-weight: 900;
+  }
 
-如果失败，先看 build job 还是 deploy job 失败：
+  .pages-node {
+    min-height: 152px;
+    padding: .9rem;
+    border: 1px solid #b8c8db;
+    border-radius: 10px;
+    background: #fbfdff;
+  }
 
-- build 失败：多半是依赖、代码、MDX、frontmatter、构建配置问题。
-- deploy 失败：多半是 Pages 权限、Pages Source、artifact 或 GitHub 配置问题。
+  .pages-node small,
+  .pages-input-output__side > span,
+  .pages-trigger-strip span,
+  .pages-swimlane__label span,
+  .pages-address-card > span,
+  .pages-config-proof span,
+  .pages-runbook span,
+  .pages-release-gates span,
+  .pages-diagnostic__stack article > div:nth-child(2) > span,
+  .pages-symptom-map span,
+  .pages-verification-panel span {
+    color: var(--pages-blue);
+    font-size: .6875rem;
+    font-weight: 900;
+    letter-spacing: .07em;
+  }
 
-### 3. 线上页面是否更新
+  .pages-node strong {
+    display: block;
+    margin: .38rem 0 .5rem;
+    color: var(--pages-ink);
+    font-size: .92rem;
+  }
 
-部署成功后，访问线上地址，看首页、文章页、分类页是否更新。
+  .pages-node code {
+    display: block;
+    overflow-wrap: anywhere;
+    color: var(--pages-blue);
+    font-size: .8125rem;
+    font-weight: 800;
+  }
 
-新文章通常会生成类似这样的路径：
+  .pages-node p,
+  .pages-project-proof p,
+  .pages-trigger-strip p,
+  .pages-swimlane p,
+  .pages-permissions p,
+  .pages-runbook p,
+  .pages-release-gates p,
+  .pages-diagnostic__stack p,
+  .pages-symptom-map p {
+    margin: .5rem 0 0;
+    color: var(--pages-muted);
+    font-size: .8125rem;
+    line-height: 1.6;
+  }
 
-```text
-/articles/github-pages-deployment-guide/
-```
+  .pages-node--host { border-color: #c6b9e5; background: #fbf9ff; }
+  .pages-node--host small,
+  .pages-node--host code { color: var(--pages-violet); }
+  .pages-node--asset { border-color: #a8d2bf; background: #f6fcf9; }
+  .pages-node--asset small,
+  .pages-node--asset code { color: var(--pages-green); }
 
-当前项目没有配置 `base`，线上完整访问路径就是根路径 `/`。
+  .pages-runtime-map {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .8rem;
+    margin: 0 1.4rem 1.25rem;
+  }
 
-## 常见问题
+  .pages-runtime-map > div {
+    padding: .85rem;
+    border: 1px solid var(--pages-line);
+    border-radius: 9px;
+  }
 
-### 页面能打开，但样式丢了
+  .pages-runtime-map > div > span {
+    display: block;
+    margin-bottom: .55rem;
+    font-size: .72rem;
+    font-weight: 900;
+  }
 
-优先检查 `base` 是否和仓库类型匹配。当前仓库名是 `apexcheng.github.io`，属于用户站点，不应该保留旧的 `base: '/blog'`。
+  .pages-runtime-map > div > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+  }
 
-样式丢失通常说明 CSS 或 JS 资源路径不对。
+  .pages-runtime-map b,
+  .pages-runtime-map s {
+    padding: .35rem .48rem;
+    border-radius: 5px;
+    font-size: .7rem;
+    text-decoration: none;
+  }
 
-### 首页能打开，文章页 404
+  .pages-runtime-map__present { background: var(--pages-green-soft); }
+  .pages-runtime-map__present > span,
+  .pages-runtime-map__present b { color: var(--pages-green); }
+  .pages-runtime-map__present b { background: #fff; }
+  .pages-runtime-map__absent { background: #f5f7fa; }
+  .pages-runtime-map__absent > span { color: #65758a; }
+  .pages-runtime-map__absent s { color: #718096; background: #fff; }
 
-先确认文章不是 `draft: true` 或 `private: true`。当前项目会过滤这些文章，不会生成公开页面。
+  .pages-evidence,
+  .pages-verdict {
+    margin: 0 1.4rem 1.35rem;
+    padding: .85rem .95rem;
+    border-left: 4px solid var(--pages-blue);
+    background: #f6f9fd;
+  }
 
-再确认文章文件名和访问路径是否一致。例如：
+  .pages-evidence > span,
+  .pages-verdict > span {
+    display: block;
+    color: var(--pages-blue);
+    font-size: .6875rem;
+    font-weight: 900;
+    letter-spacing: .06em;
+  }
 
-```text
-src/content/posts/github-pages-deployment-guide.mdx
-```
+  .pages-evidence p {
+    margin: .3rem 0;
+    color: #52647a;
+    font-size: .8125rem;
+    line-height: 1.6;
+  }
 
-对应文章 slug 通常是：
+  .pages-evidence b,
+  .pages-verdict strong {
+    color: var(--pages-ink);
+    font-size: .8125rem;
+    line-height: 1.6;
+  }
 
-```text
-github-pages-deployment-guide
-```
+  .pages-input-output {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px minmax(0, 1fr);
+    gap: .85rem;
+    margin: 1.2rem 1.4rem 1rem;
+  }
 
-### GitHub Actions 没有触发
+  .pages-input-output__side {
+    padding: 1rem;
+    border: 1px solid #afc9e8;
+    border-radius: 10px;
+    background: #f8fbff;
+  }
 
-检查 workflow 是否监听 main 分支：
+  .pages-input-output__side--output {
+    border-color: #abd1bf;
+    background: #f7fcfa;
+  }
 
-```yaml
-on:
-  push:
-    branches: [main]
-```
+  .pages-input-output__side--output > span { color: var(--pages-green); }
 
-也要确认当前提交确实 push 到了 main，而不是其他分支。
+  .pages-input-output__side > strong {
+    display: block;
+    margin: .32rem 0 .7rem;
+    color: var(--pages-ink);
+    font-size: .96rem;
+  }
 
-### Actions 成功了，但页面还是旧的
+  .pages-input-output__side ul,
+  .pages-address-card ul,
+  .pages-verification-panel ul {
+    margin: 0;
+    padding-left: 1.05rem;
+  }
 
-可能是浏览器缓存，也可能是 GitHub Pages 更新需要一点时间。可以刷新页面、换无痕窗口，或者直接访问新文章路径确认。
+  .pages-input-output__side li,
+  .pages-address-card li,
+  .pages-verification-panel li {
+    margin: .38rem 0;
+    color: #586a7f;
+    font-size: .8125rem;
+    line-height: 1.55;
+  }
 
-## 当前项目部署流程总结
+  .pages-compiler {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    padding: .8rem;
+    border: 1px solid #c3b3e6;
+    border-radius: 10px;
+    background: var(--pages-violet-soft);
+    text-align: center;
+  }
 
-这个博客现在的部署流程可以压缩成一条链：
+  .pages-compiler span { color: var(--pages-violet); font-size: .6875rem; font-weight: 900; letter-spacing: .07em; }
+  .pages-compiler b { color: #4f4767; font-size: .8125rem; }
+  .pages-compiler i { margin: .18rem 0; color: #8b79b5; font-style: normal; }
+  .pages-compiler strong { margin-top: .35rem; color: var(--pages-violet); font-size: .86rem; }
 
-```text
-写文章 -> npm test -> npm run build -> git commit -> git push origin main -> GitHub Actions -> GitHub Pages
-```
+  .pages-project-proof,
+  .pages-trigger-strip,
+  .pages-release-gates,
+  .pages-symptom-map {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .75rem;
+    margin: 0 1.4rem 1.2rem;
+  }
 
-对应项目文件是：
+  .pages-project-proof article,
+  .pages-trigger-strip > div,
+  .pages-release-gates article,
+  .pages-symptom-map article {
+    padding: .78rem .85rem;
+    border: 1px solid var(--pages-line);
+    border-radius: 9px;
+    background: #fbfcfe;
+  }
 
-- 文章内容：`src/content/posts/`
-- Astro 配置：`astro.config.mjs`
-- 自动部署：`.github/workflows/deploy.yml`
-- 构建命令：`package.json` 里的 `npm run build`
-- 线上路径：`/`
+  .pages-project-proof span {
+    display: block;
+    color: var(--pages-muted);
+    font-size: .6875rem;
+    font-weight: 800;
+  }
 
-<Callout title="最终理解">
-这个项目不是把本地文件手动上传到服务器，而是把源码推到 GitHub，让 GitHub Actions 在远端构建，再把构建结果交给 GitHub Pages 托管。
-</Callout>
+  .pages-project-proof code {
+    display: block;
+    margin-top: .28rem;
+    color: var(--pages-blue);
+    font-size: .88rem;
+    font-weight: 900;
+  }
 
-## 小结
+  .pages-trigger-strip { margin-top: 1.15rem; }
+  .pages-trigger-strip strong,
+  .pages-release-gates strong,
+  .pages-symptom-map strong {
+    display: block;
+    margin-top: .28rem;
+    color: var(--pages-ink);
+    font-size: .86rem;
+  }
 
-GitHub Pages 解决的是“静态网站放在哪里访问”的问题，GitHub Actions 解决的是“怎么自动构建和发布”的问题，Astro 解决的是“怎么把文章和组件变成静态网站”的问题。
+  .pages-swimlane {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    margin: 0 1.4rem;
+    border: 1px solid var(--pages-line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
 
-本项目的部署方式很适合个人博客：不需要服务器，不需要后端进程，不需要手动上传文件。只要本地文章写好、构建通过、提交并推送到 main，后面的构建和发布就由 GitHub 自动完成。
+  .pages-swimlane--deploy { margin-bottom: 1rem; }
 
-这套流程的维护成本低，失败点少，也方便回滚。对当前阶段的个人技术博客来说，这就是最实用的部署方式。
+  .pages-swimlane__label {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    gap: .35rem;
+    padding: .8rem;
+    background: #edf4fc;
+    text-align: center;
+  }
+
+  .pages-swimlane--deploy .pages-swimlane__label { background: var(--pages-violet-soft); }
+  .pages-swimlane--deploy .pages-swimlane__label span { color: var(--pages-violet); }
+  .pages-swimlane__label small { color: var(--pages-muted); font-size: .6875rem; }
+
+  .pages-swimlane__steps {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: .55rem;
+    padding: .8rem;
+  }
+
+  .pages-swimlane__steps--deploy {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .pages-swimlane__steps article {
+    min-height: 124px;
+    padding: .75rem;
+    border: 1px solid #c6d3e3;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .pages-swimlane__steps article > b {
+    display: inline-grid;
+    place-items: center;
+    width: 1.55rem;
+    height: 1.55rem;
+    border-radius: 999px;
+    color: #fff;
+    background: var(--pages-blue);
+    font-size: .6875rem;
+  }
+
+  .pages-swimlane__steps article > strong {
+    display: block;
+    margin: .38rem 0 .25rem;
+    color: var(--pages-ink);
+    font-size: .82rem;
+  }
+
+  .pages-swimlane__steps article > code {
+    color: var(--pages-blue);
+    font-size: .8125rem;
+    font-weight: 800;
+  }
+
+  .pages-swimlane__artifact { border-color: #d7c49e !important; background: var(--pages-amber-soft) !important; }
+  .pages-swimlane__artifact > b { background: var(--pages-amber) !important; }
+  .pages-swimlane__artifact > code { color: var(--pages-amber) !important; }
+  .pages-swimlane__online { border-color: #a8cfbd !important; background: var(--pages-green-soft) !important; }
+  .pages-swimlane__online > b { background: var(--pages-green) !important; }
+  .pages-swimlane__online > code { color: var(--pages-green) !important; overflow-wrap: anywhere; }
+
+  .pages-job-gate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .7rem;
+    margin: .55rem 1.4rem;
+    padding: .5rem;
+    color: #5a4c7b;
+    background: var(--pages-violet-soft);
+    font-size: .8125rem;
+  }
+
+  .pages-job-gate span {
+    padding: .25rem .4rem;
+    border-radius: 4px;
+    color: #fff;
+    background: var(--pages-violet);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  .pages-permissions {
+    margin: 0 1.4rem 1.2rem;
+    padding: .8rem .9rem;
+    border: 1px solid #c7d2df;
+    border-radius: 9px;
+    background: #f8fafc;
+  }
+
+  .pages-permissions > span { color: var(--pages-ink); font-size: .75rem; font-weight: 900; }
+  .pages-permissions > div { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+  .pages-permissions > div code { padding: .3rem .45rem; border-radius: 5px; color: var(--pages-violet); background: var(--pages-violet-soft); font-size: .8125rem; }
+
+  .pages-address-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .9rem;
+    margin: 1.2rem 1.4rem 1rem;
+  }
+
+  .pages-address-card {
+    padding: 1rem;
+    border: 1px solid #c7b9e5;
+    border-radius: 10px;
+    background: #fbf9ff;
+  }
+
+  .pages-address-card--current { border-color: #a7c6e9; background: #f7fbff; }
+  .pages-address-card > strong { display: block; margin: .35rem 0; color: var(--pages-ink); font-size: .95rem; }
+  .pages-address-card > code { color: var(--pages-blue); font-size: .82rem; font-weight: 900; }
+  .pages-address-card__mapping { margin: .75rem 0; padding: .65rem .7rem; border-radius: 7px; background: #fff; }
+  .pages-address-card__mapping small { display: block; color: var(--pages-muted); font-size: .6875rem; }
+  .pages-address-card__mapping b { display: block; margin-top: .2rem; color: var(--pages-green); font-size: .8125rem; overflow-wrap: anywhere; }
+
+  .pages-config-proof {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(240px, .75fr);
+    gap: .8rem;
+    margin: 0 1.4rem 1rem;
+  }
+
+  .pages-config-proof > div,
+  .pages-config-proof aside {
+    min-width: 0;
+    padding: .85rem;
+    border: 1px solid var(--pages-line);
+    border-radius: 9px;
+    background: #fafcff;
+  }
+
+  .pages-config-proof pre,
+  .pages-runbook pre {
+    overflow-x: auto;
+    margin: .55rem 0 0;
+    padding: .7rem;
+    border-radius: 7px;
+    color: #dcecff;
+    background: #18283c;
+    font-size: .8125rem;
+    line-height: 1.55;
+  }
+
+  .pages-config-proof ol { margin: .6rem 0 0; padding-left: 1.2rem; }
+  .pages-config-proof li { margin: .42rem 0; color: #596b80; font-size: .8125rem; line-height: 1.55; }
+
+  .pages-path-failure {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: .55rem;
+    margin: 0 1.4rem 1.1rem;
+    padding: .75rem;
+    border: 1px solid #e0c18b;
+    border-radius: 9px;
+    background: var(--pages-amber-soft);
+  }
+
+  .pages-path-failure > div { padding: .55rem; border-radius: 6px; background: #fff; }
+  .pages-path-failure span { display: block; color: var(--pages-muted); font-size: .6875rem; }
+  .pages-path-failure code { color: var(--pages-amber); font-size: .8125rem; font-weight: 800; }
+  .pages-path-failure__result strong { display: block; color: var(--pages-red); font-size: .8125rem; }
+
+  .pages-runbook {
+    margin: 1.1rem 1.4rem 1rem;
+    border: 1px solid var(--pages-line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .pages-runbook article {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) 155px;
+    align-items: center;
+    gap: .8rem;
+    padding: .85rem;
+    border-top: 1px solid var(--pages-line);
+    background: #fff;
+  }
+
+  .pages-runbook article:first-child { border-top: 0; }
+  .pages-runbook article:nth-child(even) { background: #fafcff; }
+
+  .pages-runbook__number {
+    display: grid;
+    place-items: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 999px;
+    color: #fff;
+    background: var(--pages-blue);
+    font-size: .72rem;
+    font-weight: 900;
+  }
+
+  .pages-runbook strong { display: block; margin-top: .2rem; color: var(--pages-ink); font-size: .88rem; }
+  .pages-runbook pre { display: inline-block; margin-top: .45rem; }
+  .pages-runbook article > b { padding: .45rem .55rem; border-radius: 6px; color: var(--pages-green); background: var(--pages-green-soft); font-size: .7rem; text-align: center; }
+
+  .pages-release-gates article { text-align: center; }
+  .pages-release-gates span { color: var(--pages-green); }
+
+  .pages-diagnostic__legend {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: .8rem;
+    margin: 1rem 1.4rem .65rem;
+  }
+
+  .pages-diagnostic__legend span { color: var(--pages-muted); font-size: .6875rem; }
+  .pages-diagnostic__legend i { display: inline-block; width: .55rem; height: .55rem; margin-right: .2rem; border-radius: 999px; }
+  .pages-diagnostic__legend .is-red { background: var(--pages-red); }
+  .pages-diagnostic__legend .is-green { background: var(--pages-green); }
+  .pages-diagnostic__legend .is-gray { background: #9aa8b8; }
+
+  .pages-diagnostic__stack {
+    margin: 0 1.4rem 1rem;
+    border: 1px solid var(--pages-line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .pages-diagnostic__stack article {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1.4fr) minmax(180px, .8fr) 150px;
+    align-items: center;
+    gap: .8rem;
+    padding: .85rem;
+    border-top: 1px solid var(--pages-line);
+    background: #fff;
+  }
+
+  .pages-diagnostic__stack article:first-child { border-top: 0; }
+  .pages-diagnostic__stack article:nth-child(even) { background: #fafcff; }
+
+  .pages-diagnostic__level {
+    display: grid;
+    place-items: center;
+    width: 2.45rem;
+    height: 2.45rem;
+    border: 1px solid #abc5e5;
+    border-radius: 9px;
+    color: var(--pages-blue);
+    background: var(--pages-blue-soft);
+    font-size: .76rem;
+    font-weight: 900;
+  }
+
+  .pages-diagnostic__stack strong { display: block; margin-top: .2rem; color: var(--pages-ink); font-size: .86rem; }
+  .pages-diagnostic__check b { display: block; margin-bottom: .3rem; color: var(--pages-muted); font-size: .6875rem; }
+  .pages-diagnostic__check code { display: block; margin-top: .25rem; color: var(--pages-blue); font-size: .8125rem; }
+  .pages-diagnostic__signal { padding: .45rem .55rem; border-radius: 6px; color: var(--pages-red); background: var(--pages-red-soft); font-size: .69rem; font-weight: 800; text-align: center; }
+
+  .pages-symptom-map {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .pages-symptom-map span { color: var(--pages-red); }
+
+  .pages-verification-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .8rem;
+    margin: 0 1.4rem 1.1rem;
+  }
+
+  .pages-verification-panel > div {
+    padding: .85rem;
+    border: 1px solid #add0c0;
+    border-radius: 9px;
+    background: var(--pages-green-soft);
+  }
+
+  .pages-verification-panel > div > span { color: var(--pages-green); }
+  .pages-verification-panel__remote { border-color: #e0c28d !important; background: var(--pages-amber-soft) !important; }
+  .pages-verification-panel__remote > span { color: var(--pages-amber) !important; }
+
+  .pages-final {
+    padding: 1rem 1.4rem 1.15rem;
+    border-top: 1px solid #b5c9e2;
+    background: #f3f8fe;
+  }
+
+  .pages-final span { color: var(--pages-blue); font-size: .6875rem; font-weight: 900; letter-spacing: .08em; }
+  .pages-final strong { display: block; margin: .3rem 0; color: var(--pages-ink); font-size: 1rem; line-height: 1.5; }
+  .pages-final p { margin: 0; color: var(--pages-muted); font-size: .8125rem; }
+
+  @media (max-width: 1399px) {
+    .pages-board {
+      width: auto;
+      margin-left: 0;
+      margin-right: 0;
+      transform: none;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .pages-track { grid-template-columns: 1fr; }
+    .pages-track > i { transform: rotate(90deg); text-align: center; }
+    .pages-node { min-height: 0; }
+    .pages-input-output { grid-template-columns: 1fr; }
+    .pages-compiler { min-height: 185px; }
+    .pages-project-proof,
+    .pages-trigger-strip { grid-template-columns: 1fr; }
+    .pages-swimlane { grid-template-columns: 1fr; }
+    .pages-swimlane__label { align-items: flex-start; }
+    .pages-swimlane__steps { grid-template-columns: 1fr; }
+    .pages-swimlane__steps > i { transform: rotate(90deg); text-align: center; }
+    .pages-swimlane__steps article { min-height: 0; }
+    .pages-config-proof { grid-template-columns: 1fr; }
+    .pages-diagnostic__stack article {
+      grid-template-columns: 50px minmax(0, 1fr) 150px;
+    }
+    .pages-diagnostic__signal { grid-column: 2 / -1; }
+    .pages-symptom-map { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 680px) {
+    .pages-opening { padding: 1.05rem; }
+
+    .pages-board {
+      width: auto;
+      margin-inline: -.35rem;
+      border-radius: 14px;
+      transform: none;
+    }
+
+    .pages-board__header {
+      align-items: flex-start;
+      flex-direction: column;
+      padding: 1rem .9rem;
+    }
+
+    .pages-definition,
+    .pages-track,
+    .pages-runtime-map,
+    .pages-evidence,
+    .pages-input-output,
+    .pages-project-proof,
+    .pages-trigger-strip,
+    .pages-swimlane,
+    .pages-job-gate,
+    .pages-permissions,
+    .pages-verdict,
+    .pages-address-compare,
+    .pages-config-proof,
+    .pages-path-failure,
+    .pages-runbook,
+    .pages-release-gates,
+    .pages-diagnostic__legend,
+    .pages-diagnostic__stack,
+    .pages-symptom-map,
+    .pages-verification-panel {
+      margin-left: .85rem;
+      margin-right: .85rem;
+    }
+
+    .pages-definition { grid-template-columns: 1fr; }
+    .pages-runtime-map,
+    .pages-address-compare,
+    .pages-release-gates,
+    .pages-symptom-map,
+    .pages-verification-panel { grid-template-columns: 1fr; }
+
+    .pages-job-gate { align-items: flex-start; flex-direction: column; }
+
+    .pages-path-failure {
+      grid-template-columns: 1fr;
+    }
+
+    .pages-path-failure > i {
+      transform: rotate(90deg);
+      text-align: center;
+    }
+
+    .pages-runbook article {
+      grid-template-columns: 42px minmax(0, 1fr);
+      align-items: flex-start;
+    }
+
+    .pages-runbook article > b { grid-column: 2; text-align: left; }
+
+    .pages-diagnostic__legend { justify-content: flex-start; }
+
+    .pages-diagnostic__stack article {
+      grid-template-columns: 42px minmax(0, 1fr);
+      align-items: flex-start;
+    }
+
+    .pages-diagnostic__check,
+    .pages-diagnostic__signal {
+      grid-column: 2;
+    }
+
+    .pages-config-proof pre,
+    .pages-runbook pre {
+      max-width: calc(100vw - 7rem);
+    }
+
+    .pages-final { padding: .9rem; }
+  }
+
+  html[data-theme='dark'] .pages-board,
+  html[data-theme='dark'] .pages-opening {
+    box-shadow: 0 20px 58px rgba(0, 0, 0, .3);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pages-manual * {
+      scroll-behavior: auto;
+      transition: none !important;
+    }
+  }
+`}</style>

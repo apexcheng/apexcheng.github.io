@@ -28,13 +28,13 @@
 | `src/content/posts/ulike-customer-service-rpa-flow-detail.mdx` | `实践` | Ulike 客服售后自动化细节拆解，覆盖静默单推送、已发货仅退款、赠品发货留言三条 RPA 实操流程 | 写电商客服售后RPA、订单/物流/ERP跨系统流程、客服自动化动作拆解时参考 |
 | `src/content/posts/how-to-use-yingdao-rpa-correctly.mdx` | `实践` | 从 40+ 个影刀小应用出发，复盘影刀正确用法、人机协作、经营看板、供应链预警和企业版判断，并用深色决策树风展示新需求是否值得做影刀 | 写影刀RPA复盘、正确使用影刀、日报升级经营看板、自动化治理、需求判断决策树时参考 |
 | `src/content/posts/yingdao-agent-development-knowledge-base.mdx` | `教程` | 影刀 × Agent 开发总览，覆盖开发知识库、问题查询、真实项目规则、浏览器元素探索、代码同步和知识库更新闭环 | 写影刀编码版、Agent 辅助开发、影刀知识库、浏览器元素探索和外部代码同步时参考 |
-| `src/content/posts/automation-agent-workflow.mdx` | `实践` | Agent 工作流、任务类型判断、决策树、大任务 TASK.md 状态文件、失败边界、Mermaid 流程图 | 写 Agent 流程、自动化协作、任务拆解决策、大任务阶段管理、可维护性文章时参考 |
-| `src/content/posts/browser-agent-shared-chrome-runtime.mdx` | `实践` | Browser Agent 本地共享浏览器运行时，覆盖真实 Chrome、固定 Profile、CDP、自愈启动、跨 Skill 接入和页面隔离边界 | 写浏览器自动化基础设施、Playwright CDP、共享登录状态、Chrome 生命周期和多 Agent 复用时参考 |
+| `src/content/posts/automation-agent-workflow.mdx` | `实践` | Agent 执行系统图解手册，统一任务分流、状态管理、权限边界、执行循环和失败恢复 | 写 Agent 流程、自动化协作、任务拆解决策、大任务阶段管理和失败恢复文章时参考 |
+| `src/content/posts/browser-agent-shared-chrome-runtime.mdx` | `实践` | 共享 Chrome 运行时架构手册，覆盖固定 Profile、CDP、ensure 状态机、接入顺序、页面隔离、操作清单和故障分流 | 写浏览器自动化基础设施、Playwright CDP、共享登录状态、Chrome 生命周期和多 Agent 复用时参考 |
 | `src/content/posts/gbrain-openclaw-long-term-brain-setup.mdx` | `实践` | GBrain 接入 OpenClaw 的实战配置，覆盖 Context Engine 自动召回、Signal Detector 后台写入、PostgreSQL 多会话并发、Brain source 路由与高频踩坑 | 写 Agent 长期记忆、GBrain、OpenClaw Context Engine、自动记忆闭环和多进程存储选型时参考 |
-| `src/content/posts/gbrain-openclaw-command-handbook.mdx` | `教程` | GBrain 接入 OpenClaw 后的命令操作手册，覆盖状态、浏览、检索、读取、写入、关系、同步嵌入、版本维护、OpenClaw 接入验证和分层排查 | 写 GBrain CLI 教程、OpenClaw 长期知识库运维、命令速查和接入验收时参考 |
-| `src/content/posts/blog-project-architecture.mdx` | `实践` | 博客架构、内容流、发布链路、视觉笔记结构 | 写本博客说明、仓库结构、内容维护规则时参考 |
-| `src/content/posts/blog-code-structure-runtime.mdx` | `实践` | 项目结构、页面入口、文章读取、组件渲染、本地运行和发布流程 | 写本博客代码结构、运行流程、Astro 项目拆解时参考 |
-| `src/content/posts/css-selector-for-automation-beginners.mdx` | `教程` | 面向网页自动化实战的 CSS 定位教程，覆盖稳定定位三层能力、属性匹配、关系选择器、伪类边界、影刀文字定位、唯一性验证、排错路线和坏定位改造 | 写 CSS 选择器教学、网页元素定位、影刀编码版自动化、动态 class 处理和定位排错文章时参考 |
+| `src/content/posts/gbrain-openclaw-command-handbook.mdx` | `教程` | GBrain / OpenClaw 运维命令图谱，覆盖状态定位、浏览检索、写入关系、同步嵌入、版本删除、健康升级、接入验收和分层排障 | 写 GBrain CLI 教程、OpenClaw 长期知识库运维、命令速查和接入验收时参考 |
+| `src/content/posts/blog-project-architecture.mdx` | `实践` | 维护者视角的博客系统蓝图，覆盖仓库职责、内容分区、规则控制面、写作公开流程和静态发布边界 | 写本博客说明、仓库结构、内容维护规则和发布边界时参考 |
+| `src/content/posts/blog-code-structure-runtime.mdx` | `实践` | 开发者视角的博客运行蓝图，覆盖 URL 路由、Content Collection、MDX 渲染栈、静态构建、本地与 Pages 链路和代码定位 | 写本博客代码结构、运行流程、Astro 项目拆解和故障定位时参考 |
+| `src/content/posts/css-selector-for-automation-beginners.mdx` | `教程` | CSS 定位图解手册，覆盖稳定定位层级、属性匹配、关系与伪类、影刀文字定位、唯一性验证、排错路线和坏定位改造 | 写 CSS 选择器教学、网页元素定位、影刀编码版自动化、动态 class 处理和定位排错文章时参考 |
 | `src/content/posts/python-basic-assessment-20-questions.mdx` | `教程` | Python 基础考核题，包含 17 道基础编码题和 3 道基础理解题，覆盖类型转换、循环、字典、函数、文件、JSON、类、浅拷贝与默认参数，并提供可下载附件 | 写 Python 入门考核、基础练习题、编程能力检查和培训测验文章时参考 |
 | `src/content/posts/excel-functions-from-basic-to-intermediate.mdx` | `教程` | Excel 函数知识地图，把 57 个常用函数整理成 9 个函数家族，并说明基础函数、中级函数、综合应用和系列阅读路线 | 写 Excel / WPS 函数学习地图、函数分类、系列入口和表格能力分层文章时参考 |
 | `src/content/posts/excel-basic-functions-case-guide.mdx` | `教程` | Excel 基础函数案例教程，使用订单明细和商品资料两张示例表，逐个演示 39 个统计、条件、查找、文本、逻辑和日期函数的公式、结果与组合练习 | 写 Excel 基础函数实操、函数案例讲解、订单明细统计和新手练习文章时参考 |
@@ -46,10 +46,10 @@
 | `src/content/posts/ecommerce-price-hierarchy-target-price-planning.mdx` | `教程` | 先解释单品宝、活动和营销工具让利（非活动让利），再讲当前标价如何生效、活动如何校验、覆盖叠加与活动优先级、消费端到手价检查、价盘补差，以及平时价与活动价一致时的标价反推方法 | 写电商价格体系、优惠叠加优先级、营销工具让利、活动卡控价、普惠卷后价、活动标价反推和价盘目标到手价教程时参考 |
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
 | `src/content/posts/ecommerce-review-analysis-agent-workflow.mdx` | `实践` | 电商评价分析 Agent 整页视觉案例，以滚动叙事方式展示两张评价表统一、Python 事实包、日报与周期对比、钉钉交付闸门和发送成功后的分表状态回写 | 写电商评价分析、钉钉 AI 表格、事实包、Agent 报告、Webhook 交付闭环、状态回写和整页数据故事时参考 |
-| `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `实践` | 泰国、马来西亚、菲律宾雅仓与深圳跨境仓的仓储网络，覆盖双平台共享库存、跨国家隔离和本地优先发货 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
+| `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `实践` | 东南亚仓网与发货决策信息图，覆盖三国雅仓、同国双平台共享、跨国隔离、本地优先、深圳兜底和后台核对口径 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
 | `src/content/posts/ai-product-image-agent-workflow.mdx` | `实践` | AI 商品图工作流重构复盘，覆盖从逐张临场决策到规划前移、Art Direction、同组差异化、纯执行生成、人工审查和规则单一来源 | 写商品图生成、Agent 工作流重构、视觉规划、Prompt 设计和执行边界时参考 |
 | `src/content/posts/ai-product-image-workflow-in-practice.mdx` | `实践` | 以一次脱敏后的真实新品项目为背景，讲清输入资料、四个 Skill 分工、竞品链接抓取、可选评价分析、Art Direction 前移、真实产品图边界、纯执行生成和定向整改 | 写 AI 商品图真实使用流程、Skill 协作、竞品分析、视觉规划、补拍边界和单图执行时参考 |
-| `src/content/posts/github-pages-deployment-guide.mdx` | `实践` | GitHub Pages、Astro、Actions 部署流程 | 写部署说明、构建发布、静态站点原理时参考 |
+| `src/content/posts/github-pages-deployment-guide.mdx` | `实践` | GitHub Pages 部署原理图解手册，覆盖访问链路、Astro 构建、Actions artifact、站点路径映射、发布检查和分层排障 | 写部署说明、构建发布、静态站点原理和 Pages 故障排查时参考 |
 | `src/content/posts/wsl-devspace-caddy-chmlfrp-chatgpt.mdx` | `实践` | 在 WSL 中用 DevSpace、Caddy 和 ChmlFrp 暴露公网 HTTPS MCP 地址，包含完整配置、systemd 常驻、Windows KeepAlive、验证命令和常见配置坑 | 写 WSL 本地 MCP 公网接入、DevSpace、Caddy、ChmlFrp、ChatGPT 连接教程时参考 |
 | `src/content/posts/wsl-devspace-tailscale-funnel-chatgpt.mdx` | `实践` | 通用 DevSpace + Tailscale Funnel 教程，覆盖 Linux、WSL、Windows 和 macOS 的环境选择，并按本地 401、OAuth metadata、Funnel 和 ChatGPT 真实调用逐层验收 | 写本地 MCP 公网接入、跨平台 DevSpace 启动方式、Tailscale Funnel、ChatGPT OAuth 连接和分层排查时参考 |
 | `src/content/posts/performance-review-should-recognize-talent.mdx` | `生活` | 从运营助理分级考核表出发，批评统一能力清单如何用短板限制长板，并提出共同底线加专项晋升路线 | 写职场观察、绩效考核、人才管理、专人专项和制度批评类文章时参考 |

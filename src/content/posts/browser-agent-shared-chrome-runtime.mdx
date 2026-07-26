@@ -1,146 +1,149 @@
 ---
-title: "Browser Agent：让多个 AI Agent 共用同一个真实 Chrome"
-description: "一个本地共享浏览器运行时：统一管理真实 Chrome、固定 Profile、CDP 和自动恢复，让 Skill 与 AI Agent 只负责页面业务。"
+title: "Browser Agent：共享 Chrome 运行时架构与接入手册"
+description: "把真实 Chrome、固定 Profile、CDP 和恢复流程收敛为一个本地运行时；业务 Agent 只连接、创建页面并完成自己的任务。"
 date: 2026-07-14T15:20:01+08:00
+updated: 2026-07-26T12:00:00+08:00
 category: "实践"
 tags:
   - "Browser Agent"
   - "Playwright"
   - "Chrome CDP"
-minutes: 6
+minutes: 12
 featured: false
 draft: false
 private: false
 ---
 
-import MetricCard from '../../components/MetricCard.astro';
-import FeatureCard from '../../components/FeatureCard.astro';
-import VisualGrid from '../../components/VisualGrid.astro';
-import HighlightBox from '../../components/HighlightBox.astro';
-import DecisionFlow from '../../components/DecisionFlow.astro';
-import Mermaid from '../../components/Mermaid.astro';
+把多个 Agent 都接到同一个 Chrome，并不等于让它们共享同一个任务。真正应该被共享的是运行时：一个可见的真实 Chrome、一个固定 Profile、一条固定 CDP 通道和一套可恢复的生命周期。每个业务任务仍只拥有自己的页面、选择器与结果。
 
-Browser Agent 是一个本地共享浏览器运行时。它统一管理真实 Google Chrome、固定 Profile、CDP 端口和浏览器生命周期，让多个 Skill、Python 项目与 AI Agent 连接同一个浏览器环境。
+<section class="runtime-hero" aria-label="Browser Agent 核心结论">
+  <div>
+    <span>SHARED CHROME RUNTIME · FIELD GUIDE</span>
+    <h2>先保证浏览器活着、可连接、可复用；再让 Agent 处理网页业务。</h2>
+    <p>Browser Agent 把 Chrome 的启动与恢复从 Skill 中拿走。接入方只做两件事：调用 <code>ensure</code>，再连接 CDP。</p>
+  </div>
+  <ol>
+    <li><b>01</b><span>固定 Profile</span><em>登录状态有唯一归属</em></li>
+    <li><b>02</b><span>固定 CDP</span><em>连接地址不再由项目各自分配</em></li>
+    <li><b>03</b><span>独立 Page</span><em>任务只关闭自己创建的页面</em></li>
+    <li><b>04</b><span>显式边界</span><em>默认串行，不把共享当作并发能力</em></li>
+  </ol>
+</section>
 
-它不负责具体网站的采集逻辑，只负责保证浏览器可用。
+## 先分清：谁管理运行时，谁完成网页任务
 
-## 项目定位
+Browser Agent 不是采集器，也不是远程浏览器集群。它只在一台可执行本地命令的机器上管理 Chrome 进程、共享 Profile 和 CDP。业务 Skill 或 Python 项目负责进入网站、读取页面、提交表单或提取数据。
 
-<VisualGrid columns={4}>
-  <MetricCard label="浏览器" value="真实 Chrome" detail="不使用临时 Chromium，保留正常浏览器环境。" />
-  <MetricCard label="状态" value="固定 Profile" detail="复用 Cookie、登录状态和 Local Storage。" tone="cyan" />
-  <MetricCard label="连接" value="CDP" detail="Playwright 通过固定地址连接现有 Chrome。" tone="green" />
-  <MetricCard label="入口" value="ensure" detail="外部项目调用一次，即可保证浏览器在线。" tone="violet" />
-</VisualGrid>
+<section class="runtime-board runtime-layers" aria-label="Browser Agent 分层架构">
+  <header>
+    <span>01 · RESPONSIBILITY MAP</span>
+    <h3>共享的是底座，不是页面控制权</h3>
+    <p>把生命周期和业务逻辑拆开后，故障归属与关闭权限也随之清晰。</p>
+  </header>
+  <div class="layer-stack">
+    <article class="layer-task">
+      <b>业务层</b>
+      <strong>Skill / Python / 本地 AI Agent</strong>
+      <p>调用 <code>ensure</code>、连接 CDP、创建自己的 <code>page</code>，执行该网站的选择器和业务逻辑。</p>
+    </article>
+    <div class="layer-arrow">↓ 连接，不启动自己的浏览器</div>
+    <article class="layer-control">
+      <b>控制层</b>
+      <strong><code>~/browser-agent/browser-agent</code></strong>
+      <p>提供 <code>ensure</code>、<code>status</code>、<code>connect</code>、<code>disconnect</code>、<code>stop</code> 等统一入口；页面命令会先确保浏览器可用。</p>
+    </article>
+    <div class="layer-arrow">↓ 健康检查与恢复</div>
+    <article class="layer-runtime">
+      <b>运行时层</b>
+      <strong>真实 Google Chrome + 固定 Profile + 固定 CDP</strong>
+      <p>保存登录状态与浏览器配置，并通过 <code>http://127.0.0.1:19312</code> 暴露调试连接。</p>
+    </article>
+  </div>
+  <footer><b>职责边界：</b>控制层负责“浏览器是否可用”；业务层负责“这个网页任务做什么、是否成功”。两边都不替对方猜测。</footer>
+</section>
 
-<HighlightBox eyebrow="CORE" title="它是浏览器基础设施，不是采集器">
-  Browser Agent 管理 Chrome 是否在线、Profile 是否可用、CDP 是否正常；业务 Skill 只管理自己的页面、选择器和数据处理逻辑。
-</HighlightBox>
+这样可以消除常见的重复劳动：每个项目各自寻找 Chrome、各自创建临时 Profile、各自抢端口、连接失败后各自重启进程。只要业务脚本遵守“只关闭自己 Page”的规则，任务结束时就不会主动带走其他任务仍在复用的共享 Chrome。
 
-## 它解决什么问题
+## 固定约定是一份连接合同
 
-没有统一浏览器运行时，每个自动化项目通常会重复处理同一批问题：
+这套工具的当前默认配置将运行时放在用户目录下，使用本机回环地址的 19312 端口。上游配置的 Chrome 可执行文件默认值是 macOS 的 Google Chrome 路径；若部署在其他系统，必须通过配置确认可执行文件路径，而不是照抄默认值。
 
-- 自己选择 Chrome 或 Chromium。
-- 自己维护 Profile 路径。
-- 自己分配远程调试端口。
-- 浏览器关闭后连接直接报错。
-- Profile 被旧进程占用时无法启动。
-- 多个项目分别登录同一批网站。
-- Agent 任务结束时误关共享浏览器。
+<section class="runtime-board runtime-contract" aria-label="Browser Agent 固定连接合同">
+  <header>
+    <span>02 · CONNECTION CONTRACT</span>
+    <h3>让每个接入方说同一种语言</h3>
+    <p>路径与端口是运行时边界；Profile 本身承载登录态，不能当作普通项目文件。</p>
+  </header>
+  <dl>
+    <div><dt>控制入口</dt><dd><code>&#126;/browser-agent/browser-agent</code><small>所有 Agent 与本地项目的统一命令入口。</small></dd></div>
+    <div><dt>共享 Profile</dt><dd><code>&#126;/browser-agent/chrome-profile</code><small>Cookie、本地存储和浏览器配置的持久化位置。</small></dd></div>
+    <div><dt>CDP 地址</dt><dd><code>http://127.0.0.1:19312</code><small>Playwright 与命令行工具连接既有 Chrome 的回环地址。</small></dd></div>
+    <div><dt>默认会话</dt><dd><code>browser-agent</code><small>Playwright CLI 的会话名；可临时覆盖，但仍连接同一 Profile。</small></dd></div>
+  </dl>
+  <div class="contract-note"><b>安全含义</b><span>Profile 中可能包含登录凭据与站点状态：不要提交到 Git，不要把目录打包给不受信任的环境，也不要把 CDP 暴露到非本机网络。</span></div>
+</section>
 
-Browser Agent 把这些通用能力集中到一个项目里。
+如果要自定义路径、端口或会话名，先检查 <code>config.env</code> 中的 <code>CHROME_BIN</code>、<code>CDP_PORT</code> 与 <code>BROWSER_AGENT_SESSION</code>。修改后是否仍能启动和连接属于运行环境事实，需运行验证。
 
-<VisualGrid columns={2}>
-  <FeatureCard title="统一登录状态" meta="PROFILE" description="所有接入方复用同一个 Chrome Profile，不需要每个 Skill 单独登录。">
-    <ul>
-      <li>Cookie 和本地存储长期保留</li>
-      <li>登录验证可在可见 Chrome 中人工完成</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="统一生命周期" meta="RUNTIME" description="浏览器启动、健康检查、异常进程清理和重启都由 Browser Agent 负责。">
-    <ul>
-      <li>浏览器在线时直接复用</li>
-      <li>CDP 异常时自动恢复</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="统一连接地址" meta="CDP" description="外部项目不再自行管理端口，统一连接固定 CDP 地址。">
-    <ul>
-      <li><code>http://127.0.0.1:19312</code></li>
-      <li>Playwright 使用 <code>connect_over_cdp()</code></li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="统一使用规范" meta="AGENT" description="README、SKILL.md、AGENTS.md 和 CLAUDE.md 描述同一套接入边界。">
-    <ul>
-      <li>适配 Codex、Claude Code 和 OpenClaw</li>
-      <li>新 Skill 不再重复实现 Chrome 管理</li>
-    </ul>
-  </FeatureCard>
-</VisualGrid>
+## `ensure` 把“能否连接”收敛为一个状态机
 
-## 整体架构
-
-<Mermaid
-  title="Browser Agent 分层"
-  caption="浏览器运行时和网站业务逻辑分开维护。"
-  chart={`flowchart LR
-    A[Skill / Python / AI Agent] --> B[browser-agent ensure]
-    B --> C{CDP 是否正常}
-    C -->|正常| D[复用现有 Chrome]
-    C -->|异常| E[清理异常进程与运行锁]
-    E --> F[启动真实 Google Chrome]
-    F --> G[固定 Profile + 固定 CDP]
-    D --> H[Playwright connect_over_cdp]
-    G --> H
-    H --> I[创建独立 Page]
-    I --> J[执行网站业务逻辑]`}
-/>
-
-固定约定如下：
-
-```text
-控制入口：~/browser-agent/browser-agent
-共享 Profile：~/browser-agent/chrome-profile
-CDP：http://127.0.0.1:19312
-```
-
-## ensure 如何工作
-
-外部项目不需要判断浏览器当前处于什么状态，只需要执行：
+业务代码不应该先猜 Chrome 是否已启动。它应当把判断交给 <code>ensure</code>：脚本先访问 <code>/json/version</code>，再根据共享 Profile 进程与端口状态决定复用、报错或恢复。
 
 ```bash
 ~/browser-agent/browser-agent ensure
 ```
 
-<DecisionFlow
-  title="浏览器自愈流程"
-  items={[
-    {
-      label: 'Check',
-      title: '检查 CDP',
-      description: '访问 /json/version。正常时直接返回，不重复启动 Chrome。',
-    },
-    {
-      label: 'Recover',
-      title: '处理异常进程',
-      description: 'CDP 不可用但共享 Profile 仍有 Chrome 进程时，先正常结束，再按需强制结束。',
-    },
-    {
-      label: 'Clean',
-      title: '清理运行锁',
-      description: '确认端口未被其他程序占用，并清理 SingletonLock、SingletonCookie 和 SingletonSocket。',
-    },
-    {
-      label: 'Start',
-      title: '启动并等待恢复',
-      description: '使用固定 Profile 和端口启动真实 Chrome，等待 CDP 可访问后返回成功。',
-    },
-  ]}
-/>
+<section class="runtime-board runtime-state" aria-label="ensure 状态机">
+  <header>
+    <span>03 · ENSURE STATE MACHINE</span>
+    <h3>复用优先；异常时先保护 Profile，再恢复 Chrome</h3>
+    <p>这里的“恢复”只覆盖 Chrome 进程与 CDP 可用性，不验证某个网站是否仍处于登录状态。</p>
+  </header>
+  <div class="state-route">
+    <article class="state-start"><b>输入</b><strong>执行 <code>ensure</code></strong><p>业务方不负责预检查。</p></article>
+    <div class="state-line">↓</div>
+    <article><b>CDP 就绪？</b><strong>请求 <code>/json/version</code></strong><p>端口可达并不自动代表 Profile 一定正确。</p></article>
+    <div class="state-branches">
+      <section class="state-branch state-yes" aria-label="CDP 正常时复用并返回">
+        <span>是 · 复用路径</span>
+        <article class="state-reuse"><b>复用</b><strong>确认匹配的 Profile 进程仍在</strong><p>成立时不重复启动 Chrome。</p></article>
+        <i aria-hidden="true">↓</i>
+        <strong class="state-end">直接返回 · ensure 结束</strong>
+      </section>
+      <section class="state-branch state-no" aria-label="CDP 异常时执行恢复链">
+        <span>否 · 恢复路径</span>
+        <article class="state-recover"><b>恢复</b><strong>结束异常的共享 Profile 进程</strong><p>先尝试正常结束；仍存在时脚本才会强制结束。</p></article>
+        <i aria-hidden="true">↓</i>
+        <article class="state-clean"><b>清理</b><strong>检查端口，移除运行锁</strong><p>清理 <code>SingletonLock</code>、<code>SingletonCookie</code>、<code>SingletonSocket</code>。</p></article>
+        <i aria-hidden="true">↓</i>
+        <article class="state-ready"><b>启动</b><strong>以固定 Profile 和 CDP 启动 Chrome</strong><p>等待 CDP 可访问后，接入方再连接。</p></article>
+        <i aria-hidden="true">↓</i>
+        <strong class="state-end">CDP 就绪 · ensure 结束</strong>
+      </section>
+    </div>
+  </div>
+  <footer><b>明确失败：</b>按当前脚本实现，CDP 已响应但找不到匹配的 Profile 进程，或端口检查发现 19312 被其他程序占用时，<code>ensure</code> 会报错，而非接管一个身份未知的浏览器。</footer>
+</section>
 
-## 外部项目怎么接入
+这里有一个很重要的边界：<code>ensure</code> 解决的是“Chrome/CDP 是否可用”，不是“页面是否加载成功”“Cookie 是否过期”或“验证码是否已处理”。后几项仍要由业务任务观察并在需要时交给人处理。
 
-Python 项目只需要先调用 `ensure`，再通过 Playwright 连接 CDP：
+## 接入顺序：保证运行时，再拥有自己的页面
+
+外部 Python 项目最小接入步骤是：先运行 <code>ensure</code>，再以 CDP 附着到 Chrome；从已有 context 中新建页面；完成后只关闭该页面。下面的代码保留了连接与关闭边界，适合作为业务脚本的起点。
+
+<section class="runtime-board runtime-sequence" aria-label="外部项目接入顺序">
+  <header>
+    <span>04 · ATTACH SEQUENCE</span>
+    <h3>每个任务都从同一个入口进入，却只带走自己的 Page</h3>
+    <p>CDP 连接附着的是已有 Chrome；它不应被业务任务当成私有浏览器来关闭。</p>
+  </header>
+  <ol>
+    <li><b>1</b><strong>确保</strong><span>调用 <code>browser-agent ensure</code>。</span></li>
+    <li><b>2</b><strong>附着</strong><span><code>connect_over_cdp()</code> 连接固定地址。</span></li>
+    <li><b>3</b><strong>隔离</strong><span>从既有 context 新建本任务的 <code>page</code>。</span></li>
+    <li><b>4</b><strong>收尾</strong><span>关闭该 <code>page</code>，保留 context、browser 与 Chrome。</span></li>
+  </ol>
+</section>
 
 ```python
 import subprocess
@@ -151,67 +154,257 @@ from playwright.sync_api import sync_playwright
 
 browser_agent = Path.home() / "browser-agent" / "browser-agent"
 
-subprocess.run(
-    [str(browser_agent), "ensure"],
-    check=True,
-)
+subprocess.run([str(browser_agent), "ensure"], check=True)
 
 with sync_playwright() as playwright:
     browser = playwright.chromium.connect_over_cdp(
         "http://127.0.0.1:19312"
     )
-
     context = browser.contexts[0]
     page = context.new_page()
 
     try:
         page.goto("https://example.com")
-        # 当前项目的页面业务逻辑
+        # 只写当前项目的网站业务逻辑。
     finally:
         page.close()
 ```
 
-业务项目不再负责以下内容：
+如果该运行时没有可用 context，或 CDP 协议与客户端版本不兼容，上面示例会失败；这是接入环境而非网页业务本身的问题，需运行验证后再决定如何处理。
 
-```text
-Chrome 可执行文件路径
-Profile 创建与迁移
-远程调试端口分配
-Chrome 进程启动与结束
-CDP 健康检查
-异常进程恢复
-```
+## 复用登录态，不复用页面控制权
 
-## 使用价值
+同一 Profile 让不同任务看见同一份登录状态。上游规则仍明确要求默认不要并发操作，并让不同任务各自创建页面；因此页面隔离只是最低限度的协作约定，不是多租户安全边界。
 
-<VisualGrid columns={3}>
-  <FeatureCard title="减少重复代码" meta="MAINTAIN" description="Chrome 管理只维护一份，网站适配器不再复制启动和重启逻辑。" />
-  <FeatureCard title="提高任务稳定性" meta="RECOVER" description="浏览器未启动或 CDP 异常时，项目可以自动恢复，而不是直接连接失败。" />
-  <FeatureCard title="跨 Agent 复用" meta="SHARE" description="ChatGPT、Codex、Claude Code、OpenClaw 和普通 Python 可以连接同一个环境。" />
-</VisualGrid>
+<section class="runtime-board runtime-isolation" aria-label="共享与隔离边界矩阵">
+  <header>
+    <span>05 · SHARE / ISOLATE</span>
+    <h3>一份身份状态，多个独立任务页面</h3>
+    <p>先识别什么被共享，才能避免把“新建页面”误当成账号或业务隔离。</p>
+  </header>
+  <div class="isolation-grid">
+    <article class="isolation-shared"><b>共享</b><strong>Chrome 进程、Profile、Cookie、Local Storage、CDP 地址</strong><p>它们由运行时维护，通常在任务结束后持续存在。</p></article>
+    <article class="isolation-owned"><b>任务独有</b><strong>本任务创建的 Page、选择器、导航与结果</strong><p>任务负责关闭自己的页面，并把结果写回自己的业务上下文。</p></article>
+    <article class="isolation-forbidden"><b>不要触碰</b><strong><code>context.close()</code>、<code>browser.close()</code>、未授权的 <code>stop</code></strong><p>这些动作会影响共享运行时与其他任务，应保留给明确授权的运维操作。</p></article>
+  </div>
+  <div class="isolation-rule"><span>并发规则</span><b>默认同一时刻只让一个 Agent 操作共享 Chrome。</b><p>即使以不同 <code>BROWSER_AGENT_SESSION</code> 连接，它们依然控制同一 Profile；会话名不等于浏览器隔离。</p></div>
+</section>
 
-它尤其适合以下场景：
+验证码、扫码和账号安全验证不应尝试绕过。让用户在可见的 Chrome 中完成验证，再继续运行任务。对有写入、副作用或资金风险的网站，业务层还应自行设计确认、幂等和结果复核；Browser Agent 不替代这些控制。
 
-- 需要登录状态的网页采集。
-- 多个 Skill 操作相同网站。
-- 本地 Agent 调试网页结构和选择器。
-- 定时任务需要在 Chrome 关闭后自动恢复。
-- 不希望每个项目创建临时 Profile。
+## 日常命令：先看状态，再做可定位的动作
 
-## 使用边界
+除了给 Python 接入，控制入口还封装了 Playwright CLI 的常用页面操作。它会在需要时附着到 CDP；其中 <code>start</code> 当前是 <code>ensure</code> 的别名，<code>close</code> 被显式拒绝，以避免误关共享 Chrome。
 
-Browser Agent 是单机共享运行时，不是远程浏览器集群，也不是并发调度平台。
+<section class="runtime-board runtime-runbook" aria-label="Browser Agent 操作清单">
+  <header>
+    <span>06 · OPERATOR RUNBOOK</span>
+    <h3>把“连上了”变成可检查的日常操作</h3>
+    <p>页面已经跳转、刷新或弹窗变化后，应重新获取快照；旧引用不应继续假定有效。</p>
+  </header>
+  <div class="runbook-grid">
+    <div><code>browser-agent ensure</code><span>保证共享 Chrome 与 CDP 可用。</span></div>
+    <div><code>browser-agent status</code><span>查看当前运行状态。</span></div>
+    <div><code>browser-agent snapshot</code><span>读取最新页面结构与引用。</span></div>
+    <div><code>browser-agent click e12</code><span>按最新快照中的引用执行操作。</span></div>
+    <div><code>{'browser-agent fill e20 "文本"'}</code><span>填写指定引用对应的输入区域。</span></div>
+    <div><code>browser-agent screenshot</code><span>保留页面可视证据。</span></div>
+    <div><code>browser-agent disconnect</code><span>只断开 CLI 会话，不关闭 Chrome。</span></div>
+    <div><code>browser-agent stop</code><span>仅在用户明确要求关闭共享浏览器时使用。</span></div>
+  </div>
+</section>
 
-需要遵守以下边界：
+`snapshot`、`click`、`fill` 中的引用值取决于当时的页面结构，示例里的 <code>e12</code> 与 <code>e20</code> 不是可跨页面复用的固定选择器。实际页面命令、登录状态和站点反馈均需运行验证。
 
-1. 每个任务创建自己的 `page`，任务结束只关闭该页面。
-2. 不调用 `context.close()` 或 `browser.close()`，避免影响其他任务。
-3. 默认不要让多个 Agent 同时操作同一个页面。
-4. 验证码、扫码和账号安全验证需要人工处理。
-5. Profile 包含登录信息，不能提交到 Git 仓库。
+## 出现故障时，按影响范围回到正确层级
 
-<HighlightBox eyebrow="RESULT" title="统一运行时，业务项目只写业务">
-  Browser Agent 的价值不是替代 Playwright，而是把 Playwright 连接之前的 Chrome 生命周期管理统一起来。所有 Skill 先调用 <code>ensure</code>，再连接固定 CDP，就能复用同一个真实浏览器和登录状态。
-</HighlightBox>
+<section class="runtime-board runtime-triage" aria-label="Browser Agent 故障分流">
+  <header>
+    <span>07 · FAILURE TRIAGE</span>
+    <h3>不要用重启 Chrome 处理所有问题</h3>
+    <p>先判断异常发生在运行时、连接、页面还是账号验证，再把动作限制在对应层级。</p>
+  </header>
+  <div class="triage-grid">
+    <article><b>CDP 不可达</b><strong>先执行 <code>ensure</code></strong><p>若仍失败，检查端口占用、Chrome 可执行文件、Profile 权限和脚本输出。</p></article>
+    <article><b>能连上但页面异常</b><strong>重新 snapshot，检查 URL 与页面状态</strong><p>这是网站或任务逻辑问题；不要仅因元素找不到就结束共享 Chrome。</p></article>
+    <article><b>登录失效或出现验证码</b><strong>停在可见 Chrome，交给用户</strong><p>登录状态保存在 Profile，但过期与安全验证仍是站点的业务边界。</p></article>
+    <article><b>多个 Agent 相互干扰</b><strong>停止并发，明确串行所有者</strong><p>不同 CLI 会话不提供页面或身份隔离；先完成当前任务再交接。</p></article>
+  </div>
+  <footer><b>最终原则：</b>共享运行时降低重复维护成本，但不取消操作授权、网站规则、人工验证和业务结果复核。</footer>
+</section>
+
+<div class="runtime-summary"><span>TAKEAWAY</span><strong>把 Chrome 当作受管理的本地基础设施：入口统一、身份固定、连接可恢复、页面各自负责；只要不越过共享边界，业务 Agent 就能把精力放在网页任务本身。</strong></div>
 
 项目仓库：[apexcheng/browser-agent](https://github.com/apexcheng/browser-agent)
+
+<style>{`
+  .runtime-hero,
+  .runtime-board,
+  .runtime-summary {
+    --runtime-ink: #192b3d;
+    --runtime-muted: #5a6d7c;
+    --runtime-line: #cbd8df;
+    --runtime-blue: #176c97;
+    --runtime-teal: #137567;
+    --runtime-amber: #a75c1f;
+    --runtime-red: #a74848;
+    color: var(--runtime-ink);
+  }
+
+  .runtime-hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: 1.5rem; width: min(1080px, calc(100vw - 2rem)); margin: 1.6rem 0 2.2rem 50%; padding: 1.5rem; border: 1px solid #aebfca; background: #f4f8f8; box-shadow: 0 16px 36px rgba(28, 60, 73, .09); transform: translateX(-50%); }
+  .runtime-hero > div > span, .runtime-board header > span, .runtime-summary > span { display: block; color: var(--runtime-blue); font-size: .6875rem; font-weight: 900; letter-spacing: .09em; }
+  .runtime-hero h2 { max-width: 680px; margin: .45rem 0 .65rem; color: #17354b; font-size: clamp(1.28rem, 2.8vw, 1.92rem); line-height: 1.42; }
+  .runtime-hero p { max-width: 680px; margin: 0; color: #526a78; font-size: .875rem; line-height: 1.7; }
+  .runtime-hero ol { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin: 0; padding: 0; list-style: none; }
+  .runtime-hero li { min-height: 94px; padding: .7rem; border: 1px solid #c5d3da; background: #fff; }
+  .runtime-hero li b { display: block; color: var(--runtime-teal); font-size: .6875rem; letter-spacing: .06em; }
+  .runtime-hero li span { display: block; margin-top: .28rem; color: #29495b; font-size: .875rem; font-weight: 800; }
+  .runtime-hero li em { display: block; margin-top: .22rem; color: var(--runtime-muted); font-size: .75rem; font-style: normal; line-height: 1.45; }
+
+  .runtime-board { width: min(1080px, calc(100vw - 2rem)); margin: 1.55rem 0 2rem 50%; border: 1px solid var(--runtime-line); background: #fff; box-shadow: 0 16px 36px rgba(27, 58, 73, .08); transform: translateX(-50%); }
+  .runtime-board header { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(240px, .85fr); gap: 1rem; padding: 1.2rem 1.35rem 1rem; border-bottom: 1px solid var(--runtime-line); background: #f5f8fa; }
+  .runtime-board header h3 { margin: .32rem 0 0; color: #1e4057; font-size: clamp(1.12rem, 2.35vw, 1.56rem); line-height: 1.35; }
+  .runtime-board header p { align-self: end; margin: 0; color: var(--runtime-muted); font-size: .8125rem; line-height: 1.65; }
+  .runtime-board footer { padding: .85rem 1.35rem; border-top: 1px solid var(--runtime-line); color: #536b78; background: #fbfcfc; font-size: .8125rem; line-height: 1.65; }
+  .runtime-board footer b { color: #20566c; }
+
+  .layer-stack { padding: 1.3rem 1.35rem; background: #fcfdfd; }
+  .layer-stack article { display: grid; grid-template-columns: 115px minmax(190px, .75fr) minmax(0, 1.25fr); gap: .9rem; align-items: center; padding: .9rem 1rem; border: 1px solid #cbd9dd; background: rgba(255, 255, 255, .96); }
+  .layer-stack article b { color: var(--runtime-blue); font-size: .6875rem; letter-spacing: .08em; }
+  .layer-stack article strong { color: #22465a; font-size: .9375rem; line-height: 1.45; }
+  .layer-stack article p { margin: 0; color: var(--runtime-muted); font-size: .8125rem; line-height: 1.6; }
+  .layer-task { border-left: 4px solid #4686aa !important; }
+  .layer-control { border-left: 4px solid #29907e !important; }
+  .layer-runtime { border-left: 4px solid #b77b3e !important; }
+  .layer-arrow { padding: .48rem 0; color: #64808e; font-size: .75rem; font-weight: 800; text-align: center; }
+
+  .runtime-contract dl { display: grid; grid-template-columns: 1fr 1fr; margin: 0; }
+  .runtime-contract dl > div { display: grid; grid-template-columns: 128px 1fr; gap: .8rem; min-height: 120px; padding: 1rem 1.35rem; border-bottom: 1px solid var(--runtime-line); }
+  .runtime-contract dl > div:nth-child(odd) { border-right: 1px solid var(--runtime-line); }
+  .runtime-contract dl > div:nth-last-child(-n + 2) { border-bottom: 0; }
+  .runtime-contract dt { color: var(--runtime-blue); font-size: .75rem; font-weight: 900; letter-spacing: .05em; }
+  .runtime-contract dd { margin: 0; }
+  .runtime-contract dd code { color: #234c63; font-size: .8125rem; overflow-wrap: anywhere; }
+  .runtime-contract dd small { display: block; margin-top: .55rem; color: var(--runtime-muted); font-size: .8125rem; line-height: 1.55; }
+  .contract-note { display: grid; grid-template-columns: 130px 1fr; gap: .8rem; padding: .85rem 1.35rem; border-top: 1px solid #e4cfb8; background: #fffaf5; }
+  .contract-note b { color: var(--runtime-amber); font-size: .8125rem; }
+  .contract-note span { color: #755a42; font-size: .8125rem; line-height: 1.6; }
+
+  .state-route { display: grid; grid-template-columns: 1fr; padding: 1.25rem 1.35rem; background: #fbfdfd; }
+  .state-route article { position: relative; padding: .82rem 1rem; border: 1px solid #cedae0; background: #fff; }
+  .state-route article b { display: block; color: var(--runtime-blue); font-size: .6875rem; letter-spacing: .07em; }
+  .state-route article strong { display: block; margin: .3rem 0; color: #24485d; font-size: .9375rem; line-height: 1.45; }
+  .state-route article p { margin: 0; color: var(--runtime-muted); font-size: .8125rem; line-height: 1.55; }
+  .state-start { border-left: 4px solid #357fa5 !important; }
+  .state-line { padding: .32rem 0; color: #77909a; font-weight: 900; text-align: center; }
+  .state-branches { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: .8rem; margin-top: .65rem; }
+  .state-branch { display: flex; flex-direction: column; gap: .45rem; padding: .75rem; border: 1px solid #d2dde1; background: #f8fbfb; }
+  .state-branch > span { color: #4d6a77; font-size: .75rem; font-weight: 900; letter-spacing: .04em; }
+  .state-branch > i { color: #78909a; font-size: .75rem; font-style: normal; font-weight: 900; text-align: center; }
+  .state-route .state-reuse { border-left: 4px solid #29907e; }
+  .state-route .state-recover { border-left: 4px solid #c1783a; }
+  .state-route .state-clean { border-left: 4px solid #be8e34; }
+  .state-route .state-ready { border-left: 4px solid #25846f; }
+  .state-yes { border-top: 4px solid #29907e; }
+  .state-no { border-top: 4px solid #c1783a; }
+  .state-end { padding: .58rem .7rem; border: 1px solid #b9d8d0; color: #246557; background: #eff8f5; font-size: .8125rem; text-align: center; }
+
+  .runtime-sequence ol { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin: 0; padding: 1.25rem 1.35rem; list-style: none; }
+  .runtime-sequence li { min-height: 138px; padding: .85rem; border: 1px solid #cdd9df; background: #fcfefe; }
+  .runtime-sequence li b { display: block; color: var(--runtime-teal); font-size: .75rem; }
+  .runtime-sequence li strong { display: block; margin: .4rem 0; color: #284a5e; font-size: .9375rem; }
+  .runtime-sequence li span { display: block; color: var(--runtime-muted); font-size: .8125rem; line-height: 1.55; }
+
+  .isolation-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; padding: 1.25rem 1.35rem; }
+  .isolation-grid article { min-height: 185px; padding: .9rem; border: 1px solid #cfdae0; }
+  .isolation-grid b { display: block; font-size: .6875rem; letter-spacing: .08em; }
+  .isolation-grid strong { display: block; margin: .42rem 0; color: #294b5e; font-size: .9375rem; line-height: 1.5; }
+  .isolation-grid p { margin: 0; color: var(--runtime-muted); font-size: .8125rem; line-height: 1.6; }
+  .isolation-shared { border-top: 4px solid #337fa1 !important; background: #f7fbfd; }
+  .isolation-shared b { color: var(--runtime-blue); }
+  .isolation-owned { border-top: 4px solid #308b78 !important; background: #f5fbf8; }
+  .isolation-owned b { color: var(--runtime-teal); }
+  .isolation-forbidden { border-top: 4px solid #b75c5c !important; background: #fff8f8; }
+  .isolation-forbidden b { color: var(--runtime-red); }
+  .isolation-rule { display: grid; grid-template-columns: 130px 1fr; gap: .75rem; align-items: start; padding: .85rem 1.35rem; border-top: 1px solid #bfe0d6; background: #f4fbf8; }
+  .isolation-rule span { color: var(--runtime-teal); font-size: .8125rem; font-weight: 900; }
+  .isolation-rule b { color: #245d53; font-size: .875rem; }
+  .isolation-rule p { grid-column: 2; margin: -.35rem 0 0; color: #52746b; font-size: .8125rem; line-height: 1.55; }
+
+  .runbook-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .runbook-grid > div { display: grid; grid-template-columns: minmax(200px, .9fr) minmax(0, 1.1fr); gap: .8rem; padding: .85rem 1.35rem; border-bottom: 1px solid var(--runtime-line); }
+  .runbook-grid > div:nth-child(odd) { border-right: 1px solid var(--runtime-line); }
+  .runbook-grid > div:nth-last-child(-n + 2) { border-bottom: 0; }
+  .runbook-grid code { color: #225470; font-size: .8125rem; overflow-wrap: anywhere; }
+  .runbook-grid span { color: var(--runtime-muted); font-size: .8125rem; line-height: 1.55; }
+
+  .triage-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .triage-grid article { min-height: 155px; padding: 1rem 1.35rem; border-bottom: 1px solid var(--runtime-line); }
+  .triage-grid article:nth-child(odd) { border-right: 1px solid var(--runtime-line); }
+  .triage-grid article:nth-last-child(-n + 2) { border-bottom: 0; }
+  .triage-grid b { display: block; color: var(--runtime-amber); font-size: .6875rem; letter-spacing: .07em; }
+  .triage-grid strong { display: block; margin: .38rem 0; color: #304856; font-size: .9375rem; line-height: 1.45; }
+  .triage-grid p { margin: 0; color: var(--runtime-muted); font-size: .8125rem; line-height: 1.6; }
+
+  .runtime-summary { width: min(900px, calc(100vw - 2rem)); margin: 1.7rem 0 2.3rem 50%; padding: 1.2rem 1.35rem; border: 1px solid #aac2ca; background: #f3f8f8; transform: translateX(-50%); }
+  .runtime-summary strong { display: block; margin-top: .38rem; color: #234357; font-size: 1rem; line-height: 1.65; }
+
+  @media (max-width: 1400px) and (min-width: 761px) {
+    .runtime-hero,
+    .runtime-board,
+    .runtime-summary { width: 100%; margin-left: 0; transform: none; }
+  }
+
+  @media (max-width: 760px) {
+    .runtime-hero,
+    .runtime-board,
+    .runtime-summary { width: auto; margin: 1.25rem -.35rem 1.65rem; transform: none; }
+    .runtime-hero,
+    .runtime-board header { grid-template-columns: 1fr; }
+    .runtime-hero { padding: 1rem; }
+    .runtime-hero li { min-height: 0; }
+    .runtime-board header { padding: 1rem; }
+    .layer-stack,
+    .state-route,
+    .runtime-sequence ol,
+    .isolation-grid { padding: 1rem; }
+    .layer-stack article,
+    .runtime-contract dl,
+    .runtime-contract dl > div,
+    .runtime-sequence ol,
+    .isolation-grid,
+    .runbook-grid,
+    .runbook-grid > div,
+    .triage-grid,
+    .triage-grid article { grid-template-columns: 1fr; }
+    .layer-stack article { gap: .35rem; }
+    .runtime-contract dl > div,
+    .runbook-grid > div,
+    .triage-grid article { min-height: 0; padding: .9rem 1rem; }
+    .runtime-contract dl > div:nth-child(odd),
+    .triage-grid article:nth-child(odd),
+    .runbook-grid > div:nth-child(odd) { border-right: 0; }
+    .runtime-contract dl > div:not(:last-child),
+    .runbook-grid > div:not(:last-child),
+    .triage-grid article:not(:last-child) { border-bottom: 1px solid var(--runtime-line); }
+    .runtime-contract dl > div:nth-last-child(-n + 2),
+    .runbook-grid > div:nth-last-child(-n + 2),
+    .triage-grid article:nth-last-child(-n + 2) { border-bottom: 1px solid var(--runtime-line); }
+    .runtime-contract dl > div:last-child,
+    .runbook-grid > div:last-child,
+    .triage-grid article:last-child { border-bottom: 0; }
+    .contract-note,
+    .isolation-rule { grid-template-columns: 1fr; padding: .85rem 1rem; }
+    .state-branches { grid-template-columns: 1fr; }
+    .isolation-rule p { grid-column: auto; margin: 0; }
+    .runtime-sequence li,
+    .isolation-grid article { min-height: 0; }
+    .runtime-board footer { padding: .85rem 1rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .runtime-hero,
+    .runtime-board,
+    .runtime-summary { scroll-behavior: auto; }
+  }
+`}</style>

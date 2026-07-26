@@ -1,368 +1,162 @@
----
-const taskSignals = [
-  '跨多个文件或目录',
-  '需要分阶段执行',
-  '涉及迁移、重构或规则调整',
-  '容易被上下文遗漏',
-];
-
-const lightweightSignals = [
-  '只改一处文案或样式',
-  '没有明显阶段状态',
-  '失败不会产生副作用',
-  '能快速验证清楚',
-];
----
-
-<section class="agent-workflow-tree" aria-label="Agent 工作流选择决策树">
-  <header class="tree-header">
-    <span class="tree-eyebrow">DECISION TREE</span>
-    <h2>Agent 工作流怎么选？</h2>
-    <p>不是所有任务都要上复杂流程。先判断任务规模、状态风险和副作用，再决定直接做、写 brief，还是建立 TASK.md。</p>
+<section class="routing-console" aria-label="Agent 任务路由控制台">
+  <header class="console-header">
+    <div>
+      <span class="console-kicker">01 · TASK ROUTING</span>
+      <h3>先决定流程重量，再开始执行</h3>
+      <p>工作流不是越完整越好。用任务规模、状态风险和副作用三个信号，选择刚好够用的执行方式。</p>
+    </div>
+    <div class="entry-chip"><span aria-hidden="true">↓</span> 新任务进入</div>
   </header>
 
-  <div class="tree-stage start-stage">
-    <article class="tree-card start-card">
-      <span class="card-icon" aria-hidden="true">👤</span>
-      <span class="card-kicker">START</span>
-      <h3>收到一个任务</h3>
-      <p>先不要急着抽象，先判断它到底是小改、流程任务，还是多阶段任务。</p>
+  <div class="route-map">
+    <article class="question-panel q-one">
+      <span>Q1 · 规模</span>
+      <strong>能否在一个清晰动作里完成并验证？</strong>
+      <small>例如补一句文案、修一个样式、改一个局部判断。</small>
+    </article>
+
+    <div class="route-bridge" aria-hidden="true"><i>是</i><b></b><i>否</i></div>
+
+    <div class="route-results">
+      <article class="route-card direct">
+        <span class="decision-path">Q1 = 是</span>
+        <span class="route-status">ROUTE A</span>
+        <h4>直接执行</h4>
+        <p>不为了“小事”制造额外状态。</p>
+        <ul><li>最小改动</li><li>局部验证</li></ul>
+      </article>
+
+      <article class="question-panel q-two">
+        <span>Q2 · 状态</span>
+        <strong>是否必须分阶段推进，且中断后难以只靠当前上下文续接？</strong>
+        <small>跨文件本身不等于高状态风险；关键是任务能否分段验收，以及是否需要稳定记录下一步。</small>
+      </article>
+
+      <article class="route-card task">
+        <span class="decision-path">Q1 = 否 · Q2 = 是</span>
+        <span class="route-status">ROUTE C</span>
+        <h4>建立 TASK.md</h4>
+        <p>把每次继续执行所需的事实外置。</p>
+        <ul><li>阶段与进度</li><li>风险与验收</li></ul>
+      </article>
+    </div>
+
+    <div class="route-bridge second-bridge" aria-hidden="true"><i>否</i><b></b><i>是</i></div>
+
+    <article class="route-card brief">
+      <span class="decision-path">Q1 = 否 · Q2 = 否</span>
+      <span class="route-status">ROUTE B</span>
+      <h4>轻量 brief</h4>
+      <p>用一页目标、边界和验证点，保持执行可读。</p>
+      <ul><li>目标明确</li><li>不留长期负担</li></ul>
     </article>
   </div>
 
-  <div class="tree-stage decision-stage">
-    <article class="tree-card question-card">
-      <span class="card-kicker">Q1</span>
-      <h3>只是小修小补？</h3>
-      <p>例如改一句话、调整一个样式、补一个小判断。</p>
-    </article>
-  </div>
-
-  <div class="branch-grid">
-    <article class="tree-card answer-card yes-card">
-      <span class="branch-label">是</span>
-      <h3>直接改，不引入 TASK.md</h3>
-      <p>保持最小改动，最后说明改了什么、怎么验证。</p>
-    </article>
-    <article class="tree-card answer-card no-card">
-      <span class="branch-label">否</span>
-      <h3>继续判断任务规模</h3>
-      <p>不要因为任务看起来复杂，就立刻上重流程。</p>
-    </article>
-  </div>
-
-  <div class="tree-stage decision-stage">
-    <article class="tree-card question-card">
-      <span class="card-kicker">Q2</span>
-      <h3>跨文件、跨阶段、容易丢状态？</h3>
-      <p>例如规则迁移、内容重构、组件改造、长任务分批执行。</p>
-    </article>
-  </div>
-
-  <div class="branch-grid">
-    <article class="tree-card answer-card yes-card strong-card">
-      <span class="branch-label">是</span>
-      <h3>先建立 TASK.md</h3>
-      <p>写清目标、阶段、验收标准、当前进度和风险点。</p>
-    </article>
-    <article class="tree-card answer-card no-card">
-      <span class="branch-label">否</span>
-      <h3>用轻量 brief 即可</h3>
-      <p>先写目标、边界和验证点，不额外制造维护文件。</p>
-    </article>
-  </div>
-
-  <div class="tree-stage decision-stage">
-    <article class="tree-card question-card">
-      <span class="card-kicker">Q3</span>
-      <h3>会产生副作用吗？</h3>
-      <p>例如写文件、删内容、发消息、推送、批量处理数据、操作页面后台。</p>
-    </article>
-  </div>
-
-  <div class="branch-grid final-branches">
-    <article class="tree-card answer-card danger-card">
-      <span class="branch-label">是</span>
-      <h3>加日志、验证和人工确认</h3>
-      <p>副作用必须可追踪，失败分支不能被隐藏。</p>
-    </article>
-    <article class="tree-card answer-card yes-card">
-      <span class="branch-label">否</span>
-      <h3>保持流程可读</h3>
-      <p>用普通正文、列表或 Mermaid 表达清楚即可。</p>
-    </article>
-  </div>
-
-  <div class="signal-grid">
-    <article class="signal-card task-card">
-      <h3>适合 TASK.md 的信号</h3>
-      <ul>
-        {taskSignals.map((item) => <li>{item}</li>)}
-      </ul>
-    </article>
-    <article class="signal-card light-card">
-      <h3>不该复杂化的信号</h3>
-      <ul>
-        {lightweightSignals.map((item) => <li>{item}</li>)}
-      </ul>
-    </article>
-  </div>
-
-  <footer class="tree-footer">
-    <strong>最终输出标准</strong>
-    <span>目标清楚 · 边界清楚 · 失败可见 · 验证可复现</span>
-  </footer>
+  <aside class="route-rule">
+    <span>副作用闸门</span>
+    <strong>所有副作用：记录动作并验证结果</strong>
+    <p>只有超出既有授权、对外发送、批量高风险或不可逆操作，才额外停下来请求人工确认。</p>
+  </aside>
 </section>
 
 <style>
-  .agent-workflow-tree {
-    background:
-      radial-gradient(circle at 50% 0%, rgba(96, 165, 250, 0.2), transparent 30%),
-      radial-gradient(circle at 8% 52%, rgba(16, 185, 129, 0.14), transparent 30%),
-      radial-gradient(circle at 94% 66%, rgba(168, 85, 247, 0.16), transparent 34%),
-      linear-gradient(135deg, #07111f 0%, #10162b 48%, #090b16 100%);
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    border-radius: 24px;
-    box-shadow: 0 30px 80px rgba(2, 6, 23, 0.3);
-    color: #e5edf7;
-    margin: 32px 0;
+  .routing-console {
+    --route-ink: #18243a;
+    --route-muted: #64748b;
+    --route-line: #d8e1ef;
+    --route-blue: #2f6feb;
+    --route-purple: #7653d6;
+    --route-green: #178b68;
+    --route-orange: #c96a1d;
+    color: var(--route-ink);
+    width: min(1080px, calc(100vw - 2rem));
+    margin: 1.5rem 0 2.25rem 50%;
     overflow: hidden;
-    padding: clamp(22px, 4vw, 42px);
-  }
-
-  .tree-header {
-    margin: 0 auto 28px;
-    max-width: 780px;
-    text-align: center;
-  }
-
-  .tree-eyebrow,
-  .card-kicker,
-  .branch-label {
-    color: #93c5fd;
-    display: inline-flex;
-    font-size: 12px;
-    font-weight: 860;
-    letter-spacing: 0.08em;
-  }
-
-  .tree-header h2 {
-    color: #fff;
-    font-size: clamp(28px, 5vw, 48px);
-    letter-spacing: -0.06em;
-    line-height: 1.08;
-    margin: 10px 0 14px;
-  }
-
-  .tree-header p {
-    color: #b8c6dc;
-    font-size: clamp(15px, 2vw, 18px);
-    line-height: 1.75;
-    margin: 0;
-  }
-
-  .tree-stage {
-    display: flex;
-    justify-content: center;
-    position: relative;
-  }
-
-  .tree-stage::after {
-    background: linear-gradient(180deg, #60a5fa, rgba(96, 165, 250, 0.2));
-    content: '';
-    height: 34px;
-    left: 50%;
-    position: absolute;
-    top: 100%;
+    border: 1px solid #cdd9ea;
+    border-radius: 22px;
+    background: linear-gradient(145deg, #f7faff, #fff 42%, #fbfaff);
+    box-shadow: 0 24px 56px rgba(42, 67, 108, .12);
     transform: translateX(-50%);
-    width: 2px;
   }
 
-  .decision-stage {
-    margin-top: 34px;
-  }
-
-  .tree-card {
-    background: rgba(15, 23, 42, 0.78);
-    border: 1px solid rgba(148, 163, 184, 0.22);
-    border-radius: 18px;
-    box-shadow: 0 18px 48px rgba(2, 6, 23, 0.24);
-    position: relative;
-  }
-
-  .start-card,
-  .question-card {
-    max-width: 520px;
-    padding: 24px 28px;
-    text-align: center;
-    width: min(100%, 520px);
-  }
-
-  .start-card {
-    border-color: rgba(96, 165, 250, 0.38);
-  }
-
-  .card-icon {
-    display: block;
-    font-size: 30px;
-    margin-bottom: 10px;
-  }
-
-  .tree-card h3 {
-    color: #fff;
-    font-size: clamp(20px, 3vw, 26px);
-    letter-spacing: -0.04em;
-    line-height: 1.2;
-    margin: 10px 0 12px;
-  }
-
-  .tree-card p {
-    color: #bdc9da;
-    font-size: 15px;
-    line-height: 1.7;
-    margin: 0;
-  }
-
-  .branch-grid {
-    display: grid;
-    gap: 22px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin: 34px auto 0;
-    max-width: 900px;
-    position: relative;
-  }
-
-  .branch-grid::before {
-    background: linear-gradient(90deg, rgba(52, 211, 153, 0.18), #60a5fa, rgba(251, 113, 133, 0.18));
-    content: '';
-    height: 2px;
-    left: 18%;
-    position: absolute;
-    right: 18%;
-    top: -18px;
-  }
-
-  .answer-card {
-    min-height: 158px;
-    padding: 22px;
-  }
-
-  .yes-card {
-    border-color: rgba(52, 211, 153, 0.35);
-  }
-
-  .yes-card .branch-label {
-    color: #34d399;
-  }
-
-  .no-card {
-    border-color: rgba(96, 165, 250, 0.32);
-  }
-
-  .strong-card {
-    background: linear-gradient(135deg, rgba(6, 95, 70, 0.72), rgba(15, 23, 42, 0.86));
-  }
-
-  .danger-card {
-    background: linear-gradient(135deg, rgba(127, 29, 29, 0.68), rgba(15, 23, 42, 0.86));
-    border-color: rgba(251, 113, 133, 0.36);
-  }
-
-  .danger-card .branch-label {
-    color: #fb7185;
-  }
-
-  .signal-grid {
-    display: grid;
-    gap: 22px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin-top: 34px;
-  }
-
-  .signal-card {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    border-radius: 18px;
-    padding: 24px;
-  }
-
-  .signal-card h3 {
-    color: #fff;
-    font-size: 20px;
-    letter-spacing: -0.03em;
-    margin: 0 0 16px;
-  }
-
-  .signal-card ul {
-    color: #c8d3e2;
-    line-height: 1.9;
-    margin: 0;
-    padding-left: 20px;
-  }
-
-  .task-card {
-    border-color: rgba(52, 211, 153, 0.26);
-  }
-
-  .light-card {
-    border-color: rgba(96, 165, 250, 0.24);
-  }
-
-  .tree-footer {
-    align-items: center;
-    background: rgba(15, 23, 42, 0.72);
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    border-radius: 18px;
+  .console-header {
     display: flex;
-    gap: 16px;
+    align-items: flex-start;
     justify-content: space-between;
-    margin-top: 24px;
-    padding: 18px 22px;
+    gap: 1.4rem;
+    padding: 1.55rem 1.65rem 1.35rem;
+    border-bottom: 1px solid var(--route-line);
+    background: linear-gradient(100deg, rgba(47, 111, 235, .11), transparent 58%), #fff;
   }
 
-  .tree-footer strong {
-    color: #fff;
-    font-size: 18px;
-    white-space: nowrap;
+  .console-kicker,
+  .route-status,
+  .decision-path,
+  .question-panel > span,
+  .route-rule > span {
+    color: var(--route-blue);
+    font-size: .7rem;
+    font-weight: 900;
+    letter-spacing: .08em;
   }
 
-  .tree-footer span {
-    color: #b8c6dc;
-    line-height: 1.6;
-    text-align: right;
+  .console-header h3 { margin: .34rem 0 .45rem; color: #13213a; font-size: clamp(1.35rem, 2.8vw, 2.15rem); line-height: 1.2; }
+  .console-header p { max-width: 650px; margin: 0; color: var(--route-muted); font-size: .9rem; line-height: 1.72; }
+  .entry-chip { flex: 0 0 auto; padding: .55rem .7rem; border: 1px solid #a7c5f3; border-radius: 9px; color: var(--route-blue); background: #eef5ff; font-size: .75rem; font-weight: 800; }
+  .entry-chip span { margin-right: .28rem; font-size: 1.05rem; }
+
+  .route-map { position: relative; padding: 1.5rem 1.65rem 1.35rem; background-image: radial-gradient(#dce6f6 1px, transparent 1px); background-size: 15px 15px; }
+  .question-panel, .route-card { position: relative; border: 1px solid var(--route-line); border-radius: 13px; background: rgba(255, 255, 255, .94); box-shadow: 0 10px 24px rgba(56, 80, 117, .06); }
+  .question-panel { max-width: 620px; margin: 0 auto; padding: .95rem 1.1rem; text-align: center; }
+  .question-panel > span { display: block; margin-bottom: .35rem; color: var(--route-purple); }
+  .question-panel strong { display: block; color: #263554; font-size: 1rem; line-height: 1.45; }
+  .question-panel small { display: block; margin-top: .3rem; color: var(--route-muted); font-size: .8125rem; line-height: 1.5; }
+  .route-bridge { display: grid; grid-template-columns: 1fr 2px 1fr; align-items: center; max-width: 760px; height: 38px; margin: 0 auto; color: var(--route-muted); font-size: .72rem; font-style: normal; font-weight: 800; }
+  .route-bridge b { align-self: stretch; background: #a9b9d1; }
+  .route-bridge i:first-child { justify-self: start; color: var(--route-green); }
+  .route-bridge i:last-child { justify-self: end; color: var(--route-orange); }
+
+  .route-results { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.18fr) minmax(0, 1fr); align-items: center; gap: .85rem; }
+  .route-card { min-height: 154px; padding: 1rem; }
+  .route-card h4 { margin: .35rem 0; color: #1e2e49; font-size: 1.08rem; }
+  .route-card p { min-height: 2.9em; margin: 0; color: var(--route-muted); font-size: .8125rem; line-height: 1.58; }
+  .route-card ul { display: flex; flex-wrap: wrap; gap: .35rem; margin: .8rem 0 0; padding: 0; list-style: none; }
+  .route-card li { padding: .22rem .38rem; border-radius: 4px; background: #f1f5f9; color: #53647b; font-size: .6875rem; font-weight: 800; }
+  .decision-path { display: block; margin-bottom: .28rem; color: #526987; font-size: .6875rem; }
+  .direct { border-color: #b5dfcf; background: linear-gradient(145deg, #f2fbf7, #fff); }
+  .direct .route-status { color: var(--route-green); }
+  .task { border-color: #bec3f2; background: linear-gradient(145deg, #f5f3ff, #fff); }
+  .task .route-status { color: var(--route-purple); }
+  .brief { width: min(370px, 100%); margin: 0 auto; border-color: #f0cda9; background: linear-gradient(145deg, #fff8ed, #fff); }
+  .brief .route-status { color: var(--route-orange); }
+  .second-bridge { max-width: 430px; transform: translateX(17%); }
+
+  .route-rule { display: grid; grid-template-columns: auto minmax(180px, 1fr) minmax(220px, 1.3fr); gap: 1rem; align-items: center; margin: 0 1.65rem 1.45rem; padding: .9rem 1rem; border: 1px solid #efc3a0; border-radius: 11px; background: #fff8ef; }
+  .route-rule > span { color: #b85d19; }
+  .route-rule strong { color: #7c3e14; font-size: .86rem; line-height: 1.5; }
+  .route-rule p { margin: 0; color: #8c6246; font-size: .8125rem; line-height: 1.55; }
+
+  @media (max-width: 1400px) and (min-width: 761px) {
+    .routing-console {
+      width: 100%;
+      margin-left: 0;
+      transform: none;
+    }
   }
 
-  @media (max-width: 720px) {
-    .agent-workflow-tree {
-      border-radius: 18px;
-      padding: 22px;
-    }
-
-    .tree-stage::after,
-    .branch-grid::before {
-      display: none;
-    }
-
-    .branch-grid,
-    .signal-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .start-card,
-    .question-card,
-    .answer-card,
-    .signal-card {
-      padding: 20px;
-      text-align: left;
-    }
-
-    .tree-footer {
-      align-items: flex-start;
-      flex-direction: column;
-    }
-
-    .tree-footer span {
-      text-align: left;
-    }
+  @media (max-width: 760px) {
+    .routing-console { width: auto; margin: 1.25rem -.35rem 1.8rem; border-radius: 16px; transform: none; }
+    .console-header { flex-direction: column; padding: 1.1rem; }
+    .entry-chip { align-self: flex-start; }
+    .route-map { padding: 1rem; background-size: 12px 12px; }
+    .route-results { grid-template-columns: 1fr; }
+    .route-bridge, .second-bridge { display: none; }
+    .question-panel { text-align: left; }
+    .route-results { margin-top: .8rem; }
+    .route-card { min-height: 0; }
+    .route-card p { min-height: 0; }
+    .q-two { order: 2; }
+    .task { order: 3; }
+    .route-rule { grid-template-columns: 1fr; gap: .4rem; margin: 0 1rem 1rem; }
   }
 </style>

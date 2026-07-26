@@ -1,8 +1,8 @@
 ---
 title: "从代码看这个博客：项目结构与运行流程"
-description: "从项目目录、页面入口、文章读取、组件渲染、本地运行和 GitHub Pages 发布链路，拆解这个 Astro 博客是怎么跑起来的。"
+description: "沿 URL、Content Collections、MDX 渲染、静态生成与 GitHub Pages 发布链路，定位这个 Astro 博客的一次请求和构建。"
 date: 2026-06-29T19:07:46+08:00
-updated: 2026-06-30T16:51:06+08:00
+updated: 2026-07-26T17:26:22+08:00
 category: "实践"
 tags:
   - "Astro"
@@ -14,301 +14,1257 @@ draft: false
 private: false
 ---
 
-import MetricCard from '../../components/MetricCard.astro';
-import FeatureCard from '../../components/FeatureCard.astro';
-import VisualGrid from '../../components/VisualGrid.astro';
-import HighlightBox from '../../components/HighlightBox.astro';
-import DecisionFlow from '../../components/DecisionFlow.astro';
-import Mermaid from '../../components/Mermaid.astro';
+这个博客在线上没有常驻应用服务器：页面与文章在构建阶段组合成静态文件，访问时由 GitHub Pages 直接返回结果。理解代码时，不必通读仓库；沿一条 URL 反查到页面入口，再顺着内容、渲染和构建往下走即可。
 
-本文结论：这个博客不是传统后端网站，也不是 Vue 那种纯前端应用。它是一个 Astro 静态博客项目，代码在构建阶段把文章、页面、组件和样式组合起来，最后生成可以直接部署到 GitHub Pages 的静态文件。
+<section class="run-hero" aria-label="博客代码运行蓝图导览">
+  <div>
+    <span class="run-kicker">RUNTIME BLUEPRINT · 02</span>
+    <strong class="run-hero-title">这一篇追踪代码，不重复系统架构</strong>
+    <p>系列上一篇《这个博客是怎么搭起来的》解释仓库、内容边界、规则与发布责任；本篇只回答：一个 URL 或一次构建，究竟经过哪些文件和 Astro 能力。</p>
+  </div>
+  <ol class="run-signal">
+    <li><span>01</span><strong>URL</strong><small>找到页面入口</small></li>
+    <li><span>02</span><strong>Content</strong><small>读取并校验文章</small></li>
+    <li><span>03</span><strong>Render</strong><small>组合 MDX 与布局</small></li>
+    <li><span>04</span><strong>Output</strong><small>生成静态文件</small></li>
+  </ol>
+</section>
 
-理解这个项目，不需要先看所有代码。先抓住四个核心目录就够了：页面在 `src/pages`，文章在 `src/content/posts`，组件在 `src/components`，整体布局和样式在 `src/layouts` 与 `src/styles`。
+## 从 URL 反查：页面文件就是路由入口
 
-## 概览
+<section class="run-board run-board--routes" aria-label="URL 到 Astro 页面入口映射">
+  <header class="run-board-head">
+    <div>
+      <span class="run-index">R01 · ROUTE TABLE</span>
+      <strong class="run-board-title">先把访问路径翻译成 <code>{`src/pages`}</code> 下的文件</strong>
+    </div>
+    <p>Astro 使用文件路由；静态页面直接对应文件，方括号目录或文件名表示构建时生成的动态参数路径。</p>
+  </header>
 
-<VisualGrid columns={4}>
-  <MetricCard label="页面入口" value="pages" detail="文件路径决定网站路由。" />
-  <MetricCard label="内容来源" value="posts" detail="文章统一放在内容集合里。" tone="cyan" />
-  <MetricCard label="展示能力" value="MDX" detail="正文可以插入 Astro 组件。" tone="violet" />
-  <MetricCard label="发布形态" value="Static" detail="构建后发布静态文件。" tone="green" />
-</VisualGrid>
+  <div class="run-route-table">
+    <div class="run-route-head">
+      <span>浏览器 URL</span>
+      <span>页面入口</span>
+      <span>构建职责</span>
+    </div>
+    <article>
+      <code>{`/`}</code>
+      <strong><code>{`src/pages/index.astro`}</code></strong>
+      <p>当前转交给 <code>{`home-redesign-1.astro`}</code> 渲染首页。</p>
+    </article>
+    <article>
+      <code>{`/articles/`}</code>
+      <strong><code>{`src/pages/articles/index.astro`}</code></strong>
+      <p>读取公开文章，组织分类、标签、排序与文章列表。</p>
+    </article>
+    <article>
+      <code>{`/articles/{slug}/`}</code>
+      <strong><code>{`src/pages/articles/[...slug].astro`}</code></strong>
+      <p>用 <code>{`getStaticPaths()`}</code> 为每篇公开文章生成详情路径。</p>
+    </article>
+    <article>
+      <code>{`/articles/category/{category}/`}</code>
+      <strong><code>{`src/pages/articles/category/[category].astro`}</code></strong>
+      <p>为固定分类生成聚合页。</p>
+    </article>
+    <article>
+      <code>{`/articles/tag/{tag}/`}</code>
+      <strong><code>{`src/pages/articles/tag/[tag].astro`}</code></strong>
+      <p>从公开文章标签生成聚合路径。</p>
+    </article>
+    <article>
+      <code>{`/series/{series}/`}</code>
+      <strong><code>{`src/pages/series/[series].astro`}</code></strong>
+      <p>按 series 元数据和文章顺序生成系列页。</p>
+    </article>
+    <article>
+      <code>{`/rss.xml`}</code>
+      <strong><code>{`src/pages/rss.xml.ts`}</code></strong>
+      <p>把公开文章映射为 RSS item。</p>
+    </article>
+  </div>
 
-<HighlightBox eyebrow="KEY" title="先理解运行链路">
-  这个项目的重点不是线上跑一个后端服务，而是本地写代码和文章，构建时生成页面，推送后由 GitHub Actions 发布到 GitHub Pages。
-</HighlightBox>
+  <footer class="run-verdict">
+    <span>LOCATE</span>
+    <strong>页面问题先从 URL 找 <code>{`src/pages`}</code>；不要先钻进组件或文章正文。</strong>
+  </footer>
+</section>
 
-## 项目结构
+## 文章怎样进入 Content Collection
 
-核心目录可以压缩成一张图：
+<section class="run-board run-board--collection" aria-label="文章 Content Collection 入库与过滤流程">
+  <header class="run-board-head">
+    <div>
+      <span class="run-index">R02 · CONTENT INTAKE</span>
+      <strong class="run-board-title">Markdown / MDX 文件先通过 schema，再被页面读取、过滤和排序</strong>
+    </div>
+    <p><code>{`src/content.config.ts`}</code> 是文章字段的代码边界；分类与系列合法值分别来自 <code>{`src/data/categories.ts`}</code> 和 <code>{`src/data/series.ts`}</code>。</p>
+  </header>
 
-<Mermaid
-  title="项目结构"
-  caption="看懂这些目录，基本就能理解这个博客的代码如何组织。"
-  chart={`flowchart TD
-    Root[personal-blog] --> Src[src]
-    Root --> Templates[templates]
-    Root --> Public[public]
-    Root --> Config[astro.config.mjs]
-    Root --> Package[package.json]
-    Root --> Workflow[.github/workflows]
-    Src --> Pages[pages 页面入口]
-    Src --> Content[content 文章内容]
-    Src --> Components[components 展示组件]
-    Src --> Layouts[layouts 页面外壳]
-    Src --> Styles[styles 全局样式]
-    Src --> Data[data 站点数据]
-    Src --> Utils[utils 工具函数]`}
-/>
+  <div class="run-intake-flow">
+    <article>
+      <span>SOURCE</span>
+      <strong><code>{`src/content/posts/**/*.{md,mdx}`}</code></strong>
+      <p>正文与 frontmatter 一起进入 posts collection。</p>
+    </article>
+    <i aria-hidden="true"></i>
+    <article>
+      <span>SCHEMA</span>
+      <strong><code>{`defineCollection({ type: 'content' })`}</code></strong>
+      <p>Zod 校验字段类型、默认值、合法分类与系列 ID。</p>
+    </article>
+    <i aria-hidden="true"></i>
+    <article>
+      <span>QUERY</span>
+      <strong><code>{`getCollection('posts')`}</code></strong>
+      <p>页面、布局和 RSS 从同一个集合读取文章。</p>
+    </article>
+    <i aria-hidden="true"></i>
+    <article>
+      <span>PUBLIC FILTER</span>
+      <strong><code>{`!draft && !private`}</code></strong>
+      <p>公开入口统一排除草稿和私密文章。</p>
+    </article>
+  </div>
 
-<VisualGrid columns={2}>
-  <FeatureCard title="src/pages" meta="Routes" description="页面入口目录，决定首页、文章列表、详情页、项目页和关于页。">
-    <ul>
-      <li><code>index.astro</code> 是首页</li>
-      <li><code>articles/[...slug].astro</code> 是文章详情</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="src/content" meta="Content" description="内容集合目录，主要存放博客文章和 Starlight 指南内容。">
-    <ul>
-      <li><code>posts/</code> 存文章</li>
-      <li><code>content.config.ts</code> 定义字段规则</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="src/components" meta="UI" description="可复用展示组件，文章和页面都可以调用。">
-    <ul>
-      <li>卡片、网格、高亮框</li>
-      <li>Mermaid 图表组件</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="src/styles" meta="Theme" description="全局样式目录，控制整体视觉、文章样式、代码块和主题效果。">
-    <ul>
-      <li><code>global.css</code> 是主要样式入口</li>
-      <li>代码块字体也在全局样式中维护</li>
-    </ul>
-  </FeatureCard>
-</VisualGrid>
+  <div class="run-schema-map">
+    <article>
+      <span>IDENTITY</span>
+      <strong><code>{`title · description · date · updated?`}</code></strong>
+      <p>标题、摘要与时间信息。</p>
+    </article>
+    <article>
+      <span>INDEX</span>
+      <strong><code>{`category · tags · minutes · featured`}</code></strong>
+      <p>分类、检索、阅读时间与精选状态。</p>
+    </article>
+    <article>
+      <span>SERIES</span>
+      <strong><code>{`series? · seriesOrder?`}</code></strong>
+      <p>可选系列 ID 与正整数顺序。</p>
+    </article>
+    <article>
+      <span>BOUNDARY</span>
+      <strong><code>{`draft · private`}</code></strong>
+      <p>两个字段默认都是 <code>{`false`}</code>；公开页面同时过滤两者。</p>
+    </article>
+  </div>
 
-如果只从写文章的角度看，最常接触的是 `src/content/posts` 和 `templates/post.mdx`。如果要改页面和视觉，就会进入 `src/pages`、`src/components` 和 `src/styles`。
-
-## 代码怎么运行
-
-本地运行入口在 `package.json`。它没有复杂脚本，核心命令很少：
-
-```json
-{
-  "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "test": "vitest run"
-  }
-}
-```
-
-<DecisionFlow
-  title="本地开发顺序"
-  items={[
-    {
-      label: 'Dev',
-      title: '先启动本地预览',
-      description: '运行 npm run dev，Astro 会启动开发服务，适合边改边看。',
-    },
-    {
-      label: 'Test',
-      title: '再跑项目测试',
-      description: '运行 npm test，确认现有测试没有被文章或代码改动破坏。',
-    },
-    {
-      label: 'Build',
-      title: '最后执行静态构建',
-      description: '运行 npm run build，确认文章、MDX 组件和页面都能被正常生成。',
-    },
-  ]}
-/>
-
-这里要注意一点：`npm run dev` 只是本地预览，真正上线前更关键的是 `npm run build`。因为 GitHub Pages 托管的是构建后的静态文件，不是开发服务。
-
-## 页面入口
-
-Astro 的路由来自 `src/pages` 文件路径。这个项目没有单独维护一份复杂路由表，页面文件本身就是入口。
-
-```text
-src/pages/index.astro
-src/pages/articles/index.astro
-src/pages/articles/[...slug].astro
-src/pages/projects.astro
-src/pages/about.astro
-src/pages/rss.xml.ts
-```
-
-<VisualGrid columns={3}>
-  <FeatureCard title="首页" meta="/" description="读取公开文章和项目数据，展示首页导览、精选文章和项目记录。" />
-  <FeatureCard title="文章列表" meta="/articles/" description="读取公开文章，生成分类、标签和文章卡片列表。" />
-  <FeatureCard title="文章详情" meta="/articles/[slug]/" description="根据文章 slug 生成详情页，并渲染正文和目录。" />
-</VisualGrid>
-
-这种结构的好处是直观：想找某个页面从哪里来，直接按 URL 去 `src/pages` 找对应文件。
-
-## 文章怎么读取
-
-文章放在 `src/content/posts/`，每篇文章开头都有 frontmatter。字段规则由 `src/content.config.ts` 定义：
-
-```ts
-const posts = defineCollection({
+  <div class="run-code-pair">
+    <div>
+      <span>集合定义（节选）</span>
+      <pre><code>{`const posts = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string(),
-    description: z.string(),
-    date: z.coerce.date(),
-    category: z.enum(['生活', '实践', '教程', '视觉实验室']),
-    tags: z.array(z.string()),
-    minutes: z.number(),
-    featured: z.boolean().default(false),
+    category: z.enum(categories),
     draft: z.boolean().default(false),
     private: z.boolean().default(false),
   }),
-});
-```
-
-这段代码相当于文章的入库规则。标题、摘要、分类、标签、阅读时间这些字段不是随便写的，构建时会按 schema 检查。
-
-<HighlightBox eyebrow="BOUNDARY" title="公开边界由字段控制">
-  新文章是否进入公开页面，不靠手动维护链接，而是靠 <code>draft</code> 和 <code>private</code> 控制。确认发布后，文章才应该设为 <code>draft: false</code>。
-</HighlightBox>
-
-## 文章怎么展示
-
-文章列表页的核心逻辑很短：
-
-```ts
-const posts = (await getCollection('posts'))
+});`}</code></pre>
+    </div>
+    <div>
+      <span>公开读取（实际模式）</span>
+      <pre><code>{`const posts = (await getCollection('posts'))
   .filter((post) => !post.data.draft && !post.data.private)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-```
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());`}</code></pre>
+    </div>
+  </div>
+</section>
 
-它做了三件事：读取文章集合，过滤草稿和私密文章，再按日期倒序排列。
+schema 能确认字段是否合法，页面过滤决定内容是否进入公开入口。两者解决的是不同问题：前者阻止结构错误，后者实施发布边界。
 
-<Mermaid
-  title="文章展示流程"
-  caption="文章公开后，会进入列表、详情、分类、标签和 RSS 等入口。"
-  chart={`flowchart LR
-    A[MDX 文章] --> B[frontmatter]
-    B --> C[content.config.ts 校验]
-    C --> D[getCollection 读取]
-    D --> E{是否公开}
-    E -->|draft/private| F[不进入公开页面]
-    E -->|公开| G[文章列表]
-    G --> H[文章详情]
-    G --> I[分类页]
-    G --> J[标签页]
-    G --> K[RSS]`}
-/>
+## 一篇 MDX 详情页怎样完成渲染
 
-所以新增文章的流程很稳定：创建 MDX 文件，填好 frontmatter，确认发布后设为公开，再让页面代码自动读取。
+<section class="run-board run-board--render" aria-label="文章详情页 MDX 渲染栈">
+  <header class="run-board-head">
+    <div>
+      <span class="run-index">R03 · RENDER STACK</span>
+      <strong class="run-board-title">路径在构建期确定，正文再与组件、布局和全局样式合并</strong>
+    </div>
+    <p>详情页入口是 <code>{`src/pages/articles/[...slug].astro`}</code>。它既负责生成路径，也负责渲染文章与系列导航。</p>
+  </header>
 
-## 详情页怎么生成
+  <div class="run-render-stack">
+    <article class="run-layer run-layer--path">
+      <span>L1 · PATH</span>
+      <div>
+        <strong><code>{`getStaticPaths()`}</code></strong>
+        <p>读取公开 posts，把每篇 <code>{`post.slug`}</code> 映射为静态路径和 props。</p>
+      </div>
+      <code>{`params: { slug: post.slug }`}</code>
+    </article>
+    <article class="run-layer run-layer--content">
+      <span>L2 · CONTENT</span>
+      <div>
+        <strong><code>{`render(post)`}</code></strong>
+        <p>返回正文组件 <code>{`Content`}</code> 与标题数据 <code>{`headings`}</code>。</p>
+      </div>
+      <code>{`const { Content, headings } = await render(post);`}</code>
+    </article>
+    <article class="run-layer run-layer--mdx">
+      <span>L3 · MDX</span>
+      <div>
+        <strong>Markdown + Astro components</strong>
+        <p>MDX integration 让正文保留 Markdown，同时导入文章专属或现有 Astro 组件。</p>
+      </div>
+      <code>{`integrations: [mdx()]`}</code>
+    </article>
+    <article class="run-layer run-layer--layout">
+      <span>L4 · LAYOUT</span>
+      <div>
+        <strong><code>{`SiteLayout.astro`}</code> + <code>{`[...slug].astro`}</code></strong>
+        <p>SiteLayout 提供导航、搜索、主题与站点外壳；文章路由组织侧栏、正文和深度为 2 或 3 的目录 headings。</p>
+      </div>
+      <code>{`<Content />`}</code>
+    </article>
+    <article class="run-layer run-layer--style">
+      <span>L5 · STYLE</span>
+      <div>
+        <strong><code>{`src/styles/global.css`}</code> + article CSS</strong>
+        <p>全局文件控制站点外壳；单篇独有信息图用文章 class 限定，避免污染其他页面。</p>
+      </div>
+      <code>{`html[data-theme='dark']`}</code>
+    </article>
+  </div>
 
-文章详情页在 `src/pages/articles/[...slug].astro`。这个文件使用 `getStaticPaths()` 为每篇公开文章生成静态路径：
+  <div class="run-render-output">
+    <span>BUILD RESULT</span>
+    <strong>每篇公开文章得到一个静态详情页</strong>
+    <p>浏览器收到的是已经生成的 HTML、CSS 与必要脚本；不会在每次访问时重新查询文章数据库。</p>
+  </div>
+</section>
 
-```ts
-export async function getStaticPaths() {
-  const posts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private);
+MDX 组件不是独立应用层。它们在构建时成为文章渲染树的一部分；页面外壳与全局主题仍由 SiteLayout 和 global.css 负责。
 
-  return posts.map((post) => ({
-    params: { slug: post.slug },
-    props: { post },
-  }));
-}
-```
+## 静态构建怎样把所有入口合成产物
 
-然后详情页再渲染正文：
+<section class="run-board run-board--build" aria-label="Astro 静态构建工厂蓝图">
+  <header class="run-board-head">
+    <div>
+      <span class="run-index">R04 · BUILD FACTORY</span>
+      <strong class="run-board-title">一次 build 同时处理页面路由、文章路径、组件依赖和公开资源</strong>
+    </div>
+    <p>当前 <code>{`astro.config.mjs`}</code> 配置站点地址并启用 MDX，没有配置 <code>{`base`}</code>；输出沿 Astro 当前默认静态站点方式生成。</p>
+  </header>
 
-```ts
-const { Content, headings } = await render(post);
-```
+  <div class="run-build-grid">
+    <div class="run-build-inputs">
+      <article><span>ROUTES</span><strong><code>{`src/pages/`}</code></strong><p>固定入口与参数化入口</p></article>
+      <article><span>CONTENT</span><strong><code>{`posts collection`}</code></strong><p>公开文章与 frontmatter</p></article>
+      <article><span>UI</span><strong><code>{`components · layouts · styles`}</code></strong><p>渲染能力与主题</p></article>
+      <article><span>ASSETS</span><strong><code>{`public/`}</code></strong><p>按原路径复制的公开文件</p></article>
+    </div>
+    <i class="run-build-arrow" aria-hidden="true"></i>
+    <article class="run-build-engine">
+      <span>ASTRO BUILD</span>
+      <strong>解析 → 校验 → 渲染 → 生成</strong>
+      <p>Content schema 先检查文章；页面收集路径；MDX 与 Astro 组件编译；静态入口写入产物目录。</p>
+      <pre><code>{`npm run build`}</code></pre>
+    </article>
+    <i class="run-build-arrow" aria-hidden="true"></i>
+    <div class="run-build-outputs">
+      <article><span>HTML</span><strong>页面与文章</strong></article>
+      <article><span>CSS / JS</span><strong>样式与必要交互</strong></article>
+      <article><span>PUBLIC</span><strong>公开静态资源</strong></article>
+      <article><span>RSS</span><strong><code>{`rss.xml`}</code></strong></article>
+    </div>
+  </div>
 
-这里的 `Content` 是文章正文，`headings` 是文章目录。也就是说，文章页并不是访问时再去数据库查询，而是在构建阶段提前生成。
+  <div class="run-build-boundary">
+    <div>
+      <span>构建前错误</span>
+      <strong>frontmatter、MDX 语法、导入路径或页面代码可让 build 失败。</strong>
+    </div>
+    <div>
+      <span>构建后边界</span>
+      <strong>产物用于托管；下一次内容修改仍应回到源码，而不是手改 <code>{`dist/`}</code>。</strong>
+    </div>
+  </div>
+</section>
 
-## 组件怎么工作
+## 本地运行和线上发布是两条不同链路
 
-这个博客支持 MDX，所以文章不是只能写普通 Markdown。需要视觉笔记效果时，可以在文章顶部引入 Astro 组件：
+<section class="run-board run-board--environments" aria-label="本地运行与 GitHub Pages 发布双链路">
+  <header class="run-board-head">
+    <div>
+      <span class="run-index">R05 · TWO ENVIRONMENTS</span>
+      <strong class="run-board-title">本地命令验证源码，Actions 与 Pages 交付静态产物</strong>
+    </div>
+    <p>开发服务可快速反馈，但上线前仍要以测试和静态构建为准；工作流实际运行和线上结果属于外部实时状态。</p>
+  </header>
 
-```mdx
-import MetricCard from '../../components/MetricCard.astro';
-import VisualGrid from '../../components/VisualGrid.astro';
-import Mermaid from '../../components/Mermaid.astro';
-```
+  <div class="run-env-grid">
+    <article class="run-env run-env--local">
+      <header>
+        <span>LOCAL · 开发与验收</span>
+        <strong><code>{`package.json`}</code></strong>
+      </header>
+      <ol>
+        <li><b>Dev</b><span>启动开发服务，边改边看。</span></li>
+        <li><b>Test</b><span>运行 Vitest 项目测试。</span></li>
+        <li><b>Build</b><span>执行正式静态构建。</span></li>
+        <li><b>Preview</b><span>预览已经生成的构建产物。</span></li>
+      </ol>
+      <pre><code>{`npm run dev
+npm test
+npm run build
+npm run preview`}</code></pre>
+    </article>
 
-<VisualGrid columns={3}>
-  <FeatureCard title="MetricCard" meta="指标" description="展示场景、输入、输出、风险、耗时等高扫描信息。" />
-  <FeatureCard title="FeatureCard" meta="模块" description="解释一个功能、目录、步骤或能力边界。" />
-  <FeatureCard title="Mermaid" meta="图表" description="把架构、流程和决策关系画成图，减少大段文字。" />
-</VisualGrid>
+    <div class="run-env-handoff">
+      <span><code>{`git push main`}</code></span>
+      <i aria-hidden="true"></i>
+      <small>或 workflow_dispatch</small>
+    </div>
 
-这也是这个博客文章风格的关键：内容还是文件，展示可以组件化。文章能被 Git 管理，也能被 Agent 修改和审查。
+    <article class="run-env run-env--online">
+      <header>
+        <span>CI / HOST · 构建与托管</span>
+        <strong><code>{`.github/workflows/deploy.yml`}</code></strong>
+      </header>
+      <ol>
+        <li><b>Checkout</b><span><code>{`actions/checkout@v6`}</code></span></li>
+        <li><b>Build</b><span><code>{`withastro/action@v6`}</code>，package manager 为 npm。</span></li>
+        <li><b>Deploy</b><span><code>{`actions/deploy-pages@v5`}</code> 等待 build job。</span></li>
+        <li><b>Host</b><span>Pages 返回静态站点。</span></li>
+      </ol>
+      <div class="run-live-check">
+        <span>需运行验证</span>
+        <strong>Pages Source、最新 workflow 结果与线上页面是否更新</strong>
+      </div>
+    </article>
+  </div>
 
-## 布局和样式
+  <footer class="run-verdict">
+    <span>BOUNDARY</span>
+    <strong><code>{`npm run dev`}</code> 成功不等于生产构建成功；配置存在也不等于最新部署已经完成。</strong>
+  </footer>
+</section>
 
-页面整体外壳在 `src/layouts/SiteLayout.astro`，全局样式在 `src/styles/global.css`。
+## 出问题时按现象定位代码，不要从根目录盲找
 
-可以这样理解：
+<section class="run-board run-board--locator" aria-label="博客代码问题定位矩阵">
+  <header class="run-board-head">
+    <div>
+      <span class="run-index">R06 · CODE LOCATOR</span>
+      <strong class="run-board-title">先问“哪里表现错了”，再沿最短链路找到责任文件</strong>
+    </div>
+    <p>下面不是完整目录说明，而是从现象到入口、继续追踪点和验证动作的最短排查图。</p>
+  </header>
 
-```text
-页面负责放什么
-布局负责包一层什么结构
-样式负责看起来是什么风格
-组件负责复用局部展示能力
-```
+  <div class="run-locator-grid">
+    <article>
+      <span>现象 01 · 某个 URL 不对</span>
+      <strong>先看 <code>{`src/pages/`}</code></strong>
+      <p>按访问路径找到同名页面；参数路由继续看 <code>{`getStaticPaths()`}</code>。</p>
+      <small>验证：build 是否生成对应路径</small>
+    </article>
+    <article>
+      <span>现象 02 · 文章没出现</span>
+      <strong>先看 frontmatter 与公开过滤</strong>
+      <p>检查 schema、<code>{`draft`}</code>、<code>{`private`}</code>、分类、系列与页面过滤条件。</p>
+      <small>验证：collection 读取与列表结果</small>
+    </article>
+    <article>
+      <span>现象 03 · 正文或目录异常</span>
+      <strong>先看详情页与目标 MDX</strong>
+      <p>确认 <code>{`render(post)`}</code>、<code>{`<Content />`}</code>、H2/H3 headings 和组件 import。</p>
+      <small>验证：单篇编译与实际页面</small>
+    </article>
+    <article>
+      <span>现象 04 · 全站视觉异常</span>
+      <strong>先看 Layout 与 global.css</strong>
+      <p>导航、主题和文章外壳属于全局；单篇信息图只排查文章专属 class。</p>
+      <small>验证：浅色、深色与 390px 页面</small>
+    </article>
+    <article>
+      <span>现象 05 · 本地能看、build 失败</span>
+      <strong>先看构建输出的首个错误</strong>
+      <p>沿文件和行号检查 MDX 语法、导入路径、schema 与构建期代码。</p>
+      <small>验证：<code>{`npm test`}</code> + <code>{`npm run build`}</code></small>
+    </article>
+    <article>
+      <span>现象 06 · build 通过、线上没变</span>
+      <strong>再看 Actions 与 Pages</strong>
+      <p>确认 main 推送、build/deploy jobs、Pages Source 和实际访问结果。</p>
+      <small>状态：需运行验证</small>
+    </article>
+  </div>
 
-例如导航、页面宽度、文章容器、代码块、卡片视觉、明暗主题和字体规则，都不是写在每篇文章里，而是尽量沉到布局和全局样式里。
+  <div class="run-final-route">
+    <span>RUNTIME TAKEAWAY</span>
+    <strong>URL 找 page，文章找 collection，展示找 render / component / layout，产物找 build，线上找 workflow 与 Pages。</strong>
+    <p>需要理解这些文件为何这样分区，再回到系列上一篇的系统蓝图；需要修代码，则继续沿本篇的最短执行链定位。</p>
+  </div>
+</section>
 
-## 发布流程
+<style>{`
+  .run-hero,
+  .run-board {
+    --run-ink: #183044;
+    --run-muted: #526b7b;
+    --run-line: #afc4d0;
+    --run-line-soft: #d7e2e8;
+    --run-paper: #f7fafb;
+    --run-paper-2: #edf3f6;
+    --run-blue: #2d6688;
+    --run-cyan: #347d84;
+    --run-green: #497665;
+    --run-amber: #8b6b38;
+    --run-red: #8a4e55;
+    box-sizing: border-box;
+    color: var(--run-ink);
+  }
 
-本地和线上是两条链路。
+  .run-hero *,
+  .run-board * {
+    box-sizing: border-box;
+  }
 
-<Mermaid
-  title="运行与发布流程"
-  caption="本地用于预览和验证，线上由 GitHub Actions 构建并发布。"
-  chart={`flowchart TD
-    A[修改文章或代码] --> B[npm run dev]
-    B --> C[本地预览]
-    A --> D[npm test]
-    D --> E[npm run build]
-    E --> F[git commit]
-    F --> G[git push main]
-    G --> H[GitHub Actions]
-    H --> I[Astro 静态构建]
-    I --> J[GitHub Pages]
-    J --> K[线上博客]`}
-/>
+  .run-kicker,
+  .run-index,
+  .run-board [class*="run-"] > span,
+  .run-board article > span,
+  .run-board header > span,
+  .run-verdict > span {
+    color: var(--run-blue);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: .6875rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    line-height: 1.35;
+    text-transform: uppercase;
+  }
 
-线上访问时，不需要 Node 服务一直运行。GitHub Actions 会把源码构建成静态产物，再交给 GitHub Pages 托管。
+  .run-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(360px, .88fr);
+    gap: 1.5rem;
+    width: min(1080px, calc(100vw - 2rem));
+    margin: 1.6rem 0 2.4rem 50%;
+    padding: 1.5rem;
+    border: 1px solid var(--run-line);
+    border-radius: 16px;
+    background:
+      linear-gradient(rgba(77, 115, 139, .07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77, 115, 139, .07) 1px, transparent 1px),
+      var(--run-paper);
+    background-size: 24px 24px;
+    box-shadow: 0 18px 42px rgba(29, 61, 81, .09);
+    transform: translateX(-50%);
+  }
 
-## 为什么适合 Agent 协作
+  .run-hero-title {
+    display: block;
+    margin: .5rem 0 .65rem;
+    color: var(--run-ink);
+    font-size: clamp(1.35rem, 3vw, 2rem);
+    line-height: 1.32;
+  }
 
-这个项目对 Agent 友好，不是因为它复杂，而是因为规则显式、文件位置固定、验证命令明确。
+  .run-hero p,
+  .run-board p,
+  .run-board li,
+  .run-board small {
+    font-size: .8125rem;
+    line-height: 1.65;
+  }
 
-<VisualGrid columns={2}>
-  <FeatureCard title="入口明确" meta="Read" description="Agent 先读 AGENTS.md 和 llms.txt，再根据任务读 docs/writing/ 下的规则、索引和模板。">
-    <ul>
-      <li>不用默认通读所有文章</li>
-      <li>减少上下文浪费</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="边界明确" meta="Write" description="文章字段、分类、草稿状态和发布规则都写在项目里。">
-    <ul>
-      <li>新增文章可审查</li>
-      <li>发布前可验证</li>
-    </ul>
-  </FeatureCard>
-</VisualGrid>
+  .run-hero p {
+    margin: 0;
+    color: var(--run-muted);
+  }
 
-对个人博客来说，这种结构比一开始就做动态后台更轻。文章变更有 Git 记录，页面生成能构建验证，发布链路也足够简单。
+  .run-signal {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-self: stretch;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--run-line-soft);
+    list-style: none;
+    background: rgba(255, 255, 255, .75);
+  }
 
-## 检查清单
+  .run-signal li {
+    position: relative;
+    min-width: 0;
+    padding: .85rem .7rem;
+    border-right: 1px solid var(--run-line-soft);
+  }
 
-<HighlightBox eyebrow="CHECK" title="看代码时抓住这条主线">
-  <code>src/pages</code> 决定路径，<code>src/content/posts</code> 保存文章，<code>src/components</code> 提供展示能力，<code>src/layouts</code> 和 <code>src/styles</code> 控制整体视觉，最后由 Astro 构建成静态站点。
-</HighlightBox>
+  .run-signal li:last-child {
+    border-right: 0;
+  }
 
-总结成一句话：Astro 读取文章和页面代码，在构建阶段生成静态网站，再由 GitHub Pages 托管。这个博客的代码重点不是功能堆叠，而是结构清楚、运行链路短、发布边界明确。
+  .run-signal span,
+  .run-signal strong,
+  .run-signal small {
+    display: block;
+  }
+
+  .run-signal span {
+    color: var(--run-blue);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: .6875rem;
+  }
+
+  .run-signal strong {
+    margin-top: .45rem;
+    font-size: .8rem;
+  }
+
+  .run-signal small {
+    margin-top: .25rem;
+    color: var(--run-muted);
+    font-size: .6875rem;
+    line-height: 1.45;
+  }
+
+  .run-board {
+    width: min(1080px, calc(100vw - 2rem));
+    margin: 1.4rem 0 2.3rem 50%;
+    overflow: hidden;
+    border: 1px solid var(--run-line);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 18px 42px rgba(29, 61, 81, .08);
+    transform: translateX(-50%);
+  }
+
+  .run-board-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr);
+    gap: 1rem;
+    padding: 1.25rem 1.4rem 1.05rem;
+    border-bottom: 1px solid var(--run-line-soft);
+    background:
+      linear-gradient(rgba(77, 115, 139, .06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77, 115, 139, .06) 1px, transparent 1px),
+      var(--run-paper);
+    background-size: 22px 22px;
+  }
+
+  .run-board-title {
+    display: block;
+    margin: .38rem 0 0;
+    color: var(--run-ink);
+    font-size: clamp(1.2rem, 2.5vw, 1.65rem);
+    line-height: 1.35;
+  }
+
+  .run-board-head p {
+    align-self: end;
+    margin: 0;
+    color: var(--run-muted);
+  }
+
+  .run-route-table {
+    display: grid;
+    padding: 1.2rem 1.3rem;
+    background: #f8fafb;
+  }
+
+  .run-route-head,
+  .run-route-table article {
+    display: grid;
+    grid-template-columns: minmax(150px, .65fr) minmax(260px, 1.05fr) minmax(0, 1.3fr);
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .run-route-head {
+    padding: 0 .9rem .55rem;
+    color: var(--run-muted);
+    font-size: .6875rem;
+    font-weight: 800;
+  }
+
+  .run-route-table article {
+    min-width: 0;
+    padding: .78rem .9rem;
+    border-top: 1px solid var(--run-line-soft);
+    background: #fff;
+  }
+
+  .run-route-table article > code,
+  .run-route-table article strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: .8rem;
+  }
+
+  .run-route-table article > code {
+    color: var(--run-blue);
+  }
+
+  .run-route-table article p {
+    margin: 0;
+    color: var(--run-muted);
+  }
+
+  .run-verdict {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1rem;
+    align-items: center;
+    padding: .95rem 1.3rem;
+    border-top: 1px solid var(--run-line-soft);
+    background: #edf4f7;
+  }
+
+  .run-verdict strong {
+    font-size: .875rem;
+    line-height: 1.55;
+  }
+
+  .run-intake-flow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr) 38px minmax(0, 1fr) 38px minmax(0, 1fr);
+    align-items: center;
+    padding: 1.3rem;
+    background: #f8fafb;
+  }
+
+  .run-intake-flow article {
+    min-width: 0;
+    min-height: 150px;
+    padding: 1rem;
+    border: 1px solid var(--run-line);
+    background: #fff;
+  }
+
+  .run-intake-flow strong,
+  .run-intake-flow p {
+    display: block;
+  }
+
+  .run-intake-flow strong {
+    margin-top: .45rem;
+    overflow-wrap: anywhere;
+    font-size: .8rem;
+    line-height: 1.5;
+  }
+
+  .run-intake-flow p {
+    margin: .55rem 0 0;
+    color: var(--run-muted);
+  }
+
+  .run-intake-flow > i,
+  .run-env-handoff > i {
+    position: relative;
+    height: 1px;
+    background: var(--run-blue);
+  }
+
+  .run-intake-flow > i::after,
+  .run-env-handoff > i::after {
+    position: absolute;
+    top: 50%;
+    right: -1px;
+    width: 7px;
+    height: 7px;
+    border-top: 1px solid var(--run-blue);
+    border-right: 1px solid var(--run-blue);
+    content: "";
+    transform: translateY(-50%) rotate(45deg);
+  }
+
+  .run-schema-map {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    border-top: 1px solid var(--run-line-soft);
+    background: var(--run-line-soft);
+  }
+
+  .run-schema-map article {
+    min-width: 0;
+    padding: 1rem;
+    background: #fff;
+  }
+
+  .run-schema-map strong,
+  .run-schema-map p {
+    display: block;
+  }
+
+  .run-schema-map strong {
+    margin-top: .4rem;
+    overflow-wrap: anywhere;
+    font-size: .8125rem;
+    line-height: 1.5;
+  }
+
+  .run-schema-map p {
+    margin: .45rem 0 0;
+    color: var(--run-muted);
+  }
+
+  .run-code-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+    padding: 1.2rem 1.3rem 1.3rem;
+    border-top: 1px solid var(--run-line-soft);
+    background: #f8fafb;
+  }
+
+  .run-code-pair > div {
+    min-width: 0;
+  }
+
+  .run-code-pair > div > span {
+    display: block;
+    margin-bottom: .45rem;
+    color: var(--run-muted);
+    font-size: .6875rem;
+    font-weight: 800;
+  }
+
+  .run-code-pair pre,
+  .run-build-engine pre,
+  .run-env pre {
+    margin: 0;
+    overflow-x: auto;
+    border: 1px solid #314c5c;
+    border-radius: 8px;
+    background: #132833;
+    color: #e0eef4;
+  }
+
+  .run-code-pair code,
+  .run-build-engine pre code,
+  .run-env pre code {
+    font-size: .75rem;
+    line-height: 1.65;
+  }
+
+  .run-render-stack {
+    padding: 1.25rem 1.3rem;
+    background: #f8fafb;
+  }
+
+  .run-layer {
+    display: grid;
+    grid-template-columns: 100px minmax(0, 1fr) minmax(260px, .8fr);
+    gap: 1rem;
+    align-items: center;
+    min-width: 0;
+    padding: .9rem 1rem;
+    border-right: 1px solid var(--layer-color);
+    border-bottom: 1px solid var(--run-line-soft);
+    border-left: 4px solid var(--layer-color);
+    background: #fff;
+  }
+
+  .run-layer:last-child {
+    border-bottom: 0;
+  }
+
+  .run-layer--path { --layer-color: #4f7b94; }
+  .run-layer--content { --layer-color: #4d7f7d; }
+  .run-layer--mdx { --layer-color: #746f95; }
+  .run-layer--layout { --layer-color: #7f744f; }
+  .run-layer--style { --layer-color: #557665; }
+
+  .run-layer strong {
+    font-size: .85rem;
+  }
+
+  .run-layer p {
+    margin: .35rem 0 0;
+    color: var(--run-muted);
+  }
+
+  .run-layer > code {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--run-blue);
+    font-size: .75rem;
+  }
+
+  .run-render-output {
+    margin: 0 1.3rem 1.3rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid #8fb5aa;
+    background: #eef6f2;
+  }
+
+  .run-render-output strong,
+  .run-render-output p {
+    display: block;
+  }
+
+  .run-render-output strong {
+    margin-top: .4rem;
+    font-size: .9rem;
+  }
+
+  .run-render-output p {
+    margin: .45rem 0 0;
+    color: var(--run-muted);
+  }
+
+  .run-build-grid {
+    display: grid;
+    grid-template-columns: minmax(240px, .85fr) 50px minmax(280px, 1.15fr) 50px minmax(210px, .75fr);
+    align-items: center;
+    padding: 1.3rem;
+    background: #f8fafb;
+  }
+
+  .run-build-inputs,
+  .run-build-outputs {
+    display: grid;
+    gap: .55rem;
+  }
+
+  .run-build-inputs article,
+  .run-build-outputs article,
+  .run-build-engine {
+    min-width: 0;
+    padding: .85rem;
+    border: 1px solid var(--run-line);
+    background: #fff;
+  }
+
+  .run-build-inputs strong,
+  .run-build-inputs p,
+  .run-build-outputs strong,
+  .run-build-engine strong,
+  .run-build-engine p {
+    display: block;
+  }
+
+  .run-build-inputs strong,
+  .run-build-outputs strong {
+    margin-top: .32rem;
+    overflow-wrap: anywhere;
+    font-size: .8125rem;
+  }
+
+  .run-build-inputs p {
+    margin: .3rem 0 0;
+    color: var(--run-muted);
+  }
+
+  .run-build-engine {
+    border: 1px dashed var(--run-blue);
+    background: #edf4f7;
+  }
+
+  .run-build-engine strong {
+    margin-top: .45rem;
+    font-size: 1rem;
+  }
+
+  .run-build-engine p {
+    margin: .5rem 0 .75rem;
+    color: var(--run-muted);
+  }
+
+  .run-build-arrow {
+    position: relative;
+    height: 1px;
+    margin: 0 .6rem;
+    background: var(--run-blue);
+  }
+
+  .run-build-arrow::after {
+    position: absolute;
+    top: 50%;
+    right: -1px;
+    width: 7px;
+    height: 7px;
+    border-top: 1px solid var(--run-blue);
+    border-right: 1px solid var(--run-blue);
+    content: "";
+    transform: translateY(-50%) rotate(45deg);
+  }
+
+  .run-build-boundary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    border-top: 1px solid var(--run-line-soft);
+    background: var(--run-line-soft);
+  }
+
+  .run-build-boundary > div {
+    padding: 1rem 1.2rem;
+    background: #fff;
+  }
+
+  .run-build-boundary span,
+  .run-build-boundary strong {
+    display: block;
+  }
+
+  .run-build-boundary span {
+    color: var(--run-muted);
+    font-size: .6875rem;
+  }
+
+  .run-build-boundary strong {
+    margin-top: .4rem;
+    font-size: .8125rem;
+    line-height: 1.55;
+  }
+
+  .run-env-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 100px minmax(0, 1fr);
+    align-items: center;
+    padding: 1.3rem;
+    background: #f8fafb;
+  }
+
+  .run-env {
+    min-width: 0;
+    border: 1px solid var(--run-line);
+    background: #fff;
+  }
+
+  .run-env > header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--run-line-soft);
+    background: var(--run-paper);
+  }
+
+  .run-env > header strong {
+    display: block;
+    margin-top: .4rem;
+    overflow-wrap: anywhere;
+    font-size: .85rem;
+  }
+
+  .run-env ol {
+    margin: 0;
+    padding: .8rem 1rem;
+    list-style: none;
+  }
+
+  .run-env li {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: .7rem;
+    padding: .48rem 0;
+    border-bottom: 1px dashed var(--run-line-soft);
+  }
+
+  .run-env li:last-child {
+    border-bottom: 0;
+  }
+
+  .run-env li b {
+    color: var(--run-blue);
+    font-size: .75rem;
+  }
+
+  .run-env li span {
+    color: var(--run-muted);
+    font-size: .8125rem;
+  }
+
+  .run-env pre {
+    margin: 0 1rem 1rem;
+  }
+
+  .run-env-handoff {
+    display: grid;
+    gap: .55rem;
+    align-items: center;
+    text-align: center;
+  }
+
+  .run-env-handoff span,
+  .run-env-handoff small {
+    font-size: .6875rem;
+  }
+
+  .run-env-handoff small {
+    color: var(--run-muted);
+  }
+
+  .run-live-check {
+    margin: 0 1rem 1rem;
+    padding: .75rem;
+    border: 1px solid #c4ad7d;
+    background: #fbf6e9;
+  }
+
+  .run-live-check strong {
+    display: block;
+    margin-top: .35rem;
+    font-size: .78rem;
+    line-height: 1.5;
+  }
+
+  .run-locator-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--run-line-soft);
+  }
+
+  .run-locator-grid article {
+    min-width: 0;
+    padding: 1.1rem 1.2rem;
+    background: #fff;
+  }
+
+  .run-locator-grid strong,
+  .run-locator-grid p,
+  .run-locator-grid small {
+    display: block;
+  }
+
+  .run-locator-grid strong {
+    margin-top: .45rem;
+    font-size: .9rem;
+  }
+
+  .run-locator-grid p {
+    margin: .5rem 0;
+    color: var(--run-muted);
+  }
+
+  .run-locator-grid small {
+    color: var(--run-green);
+    font-size: .6875rem;
+  }
+
+  .run-final-route {
+    padding: 1.1rem 1.3rem;
+    border-top: 1px solid var(--run-line-soft);
+    background: #edf4f7;
+  }
+
+  .run-final-route strong,
+  .run-final-route p {
+    display: block;
+  }
+
+  .run-final-route strong {
+    margin-top: .4rem;
+    font-size: .95rem;
+    line-height: 1.55;
+  }
+
+  .run-final-route p {
+    margin: .45rem 0 0;
+    color: var(--run-muted);
+  }
+
+  html[data-theme='dark'] .run-hero,
+  html[data-theme='dark'] .run-board {
+    --run-ink: #dce9ef;
+    --run-muted: #a9bdc8;
+    --run-line: #486272;
+    --run-line-soft: #304957;
+    --run-paper: #142632;
+    --run-paper-2: #1a2f3d;
+    --run-blue: #82bad6;
+    --run-cyan: #78c0c3;
+    --run-green: #8fbba8;
+    --run-amber: #d3b77e;
+    --run-red: #d29aa1;
+  }
+
+  html[data-theme='dark'] .run-hero,
+  html[data-theme='dark'] .run-board-head {
+    background:
+      linear-gradient(rgba(155, 191, 209, .08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(155, 191, 209, .08) 1px, transparent 1px),
+      var(--run-paper);
+  }
+
+  html[data-theme='dark'] .run-board,
+  html[data-theme='dark'] .run-signal,
+  html[data-theme='dark'] .run-route-table article,
+  html[data-theme='dark'] .run-intake-flow article,
+  html[data-theme='dark'] .run-schema-map article,
+  html[data-theme='dark'] .run-layer,
+  html[data-theme='dark'] .run-build-inputs article,
+  html[data-theme='dark'] .run-build-outputs article,
+  html[data-theme='dark'] .run-build-boundary > div,
+  html[data-theme='dark'] .run-env,
+  html[data-theme='dark'] .run-locator-grid article {
+    background: #10212c;
+  }
+
+  html[data-theme='dark'] .run-route-table,
+  html[data-theme='dark'] .run-intake-flow,
+  html[data-theme='dark'] .run-code-pair,
+  html[data-theme='dark'] .run-render-stack,
+  html[data-theme='dark'] .run-build-grid,
+  html[data-theme='dark'] .run-env-grid {
+    background: #142733;
+  }
+
+  html[data-theme='dark'] .run-verdict,
+  html[data-theme='dark'] .run-final-route,
+  html[data-theme='dark'] .run-build-engine,
+  html[data-theme='dark'] .run-render-output {
+    background: #19323f;
+  }
+
+  html[data-theme='dark'] .run-live-check {
+    background: #332c1d;
+  }
+
+  @media (max-width: 1399px) {
+    .run-hero,
+    .run-board {
+      width: auto;
+      margin-left: 0;
+      transform: none;
+    }
+
+    .run-intake-flow,
+    .run-build-grid {
+      grid-template-columns: 1fr;
+      gap: .7rem;
+    }
+
+    .run-intake-flow article {
+      min-height: 0;
+    }
+
+    .run-intake-flow > i,
+    .run-build-arrow {
+      width: 1px;
+      height: 26px;
+      margin: 0 auto;
+    }
+
+    .run-intake-flow > i::after,
+    .run-build-arrow::after {
+      top: auto;
+      right: 50%;
+      bottom: -1px;
+      transform: translateX(50%) rotate(135deg);
+    }
+
+    .run-build-inputs,
+    .run-build-outputs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .run-env-grid {
+      grid-template-columns: 1fr;
+      gap: .8rem;
+    }
+
+    .run-env-handoff {
+      grid-template-columns: auto minmax(40px, 1fr) auto;
+      text-align: left;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .run-hero {
+      grid-template-columns: 1fr;
+      padding: 1rem;
+    }
+
+    .run-signal {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .run-signal li:nth-child(2) {
+      border-right: 0;
+    }
+
+    .run-signal li:nth-child(-n + 2) {
+      border-bottom: 1px solid var(--run-line-soft);
+    }
+
+    .run-board-head {
+      grid-template-columns: 1fr;
+      padding: 1rem;
+    }
+
+    .run-route-table,
+    .run-render-stack,
+    .run-build-grid,
+    .run-env-grid {
+      padding: 1rem;
+    }
+
+    .run-route-head {
+      display: none;
+    }
+
+    .run-route-table {
+      gap: .7rem;
+    }
+
+    .run-route-table article {
+      grid-template-columns: 1fr;
+      gap: .35rem;
+      border: 1px solid var(--run-line-soft);
+    }
+
+    .run-verdict {
+      grid-template-columns: 1fr;
+      gap: .4rem;
+      padding: .9rem 1rem;
+    }
+
+    .run-schema-map,
+    .run-code-pair,
+    .run-build-inputs,
+    .run-build-outputs,
+    .run-build-boundary,
+    .run-locator-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .run-code-pair {
+      padding: 1rem;
+    }
+
+    .run-layer {
+      grid-template-columns: 1fr;
+      gap: .4rem;
+      padding: .9rem;
+    }
+
+    .run-render-output {
+      margin: 0 1rem 1rem;
+    }
+
+    .run-env-handoff {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .run-env-handoff > i {
+      width: 1px;
+      height: 24px;
+    }
+
+    .run-env-handoff > i::after {
+      top: auto;
+      right: 50%;
+      bottom: -1px;
+      transform: translateX(50%) rotate(135deg);
+    }
+
+    .run-final-route {
+      padding: 1rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .run-hero,
+    .run-board {
+      scroll-behavior: auto;
+    }
+  }
+`}</style>
