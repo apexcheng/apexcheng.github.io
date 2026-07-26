@@ -1,14 +1,14 @@
 ---
-title: "Excel 函数图解手册：从 VALUE 开始看懂公式原理"
-description: "把 Excel 函数做成可持续扩展的网页信息图手册。第一章用一张完整视觉板讲清 VALUE 如何把文本数字解析成真正的数值。"
+title: "Excel 函数图解手册：看懂 VALUE、NUMBERVALUE、TEXT 与 XLOOKUP"
+description: "用四张完整网页信息图讲清 VALUE、NUMBERVALUE、TEXT 和 XLOOKUP 的输入、解析过程、返回结果与常见边界。"
 date: 2026-07-26T12:50:27+08:00
-updated: 2026-07-26T13:18:00+08:00
+updated: 2026-07-26T22:22:27+08:00
 category: "教程"
 tags:
   - "Excel"
   - "数据处理"
   - "Excel 函数"
-minutes: 8
+minutes: 20
 featured: false
 series: "excel-functions"
 seriesOrder: 6
@@ -18,7 +18,7 @@ private: false
 
 这是一篇持续更新的 **Excel 函数图解手册**。每个函数占一个完整章节，不只告诉你公式怎么写，还会把输入、解析过程、返回结果和错误边界放在同一张网页信息图里。
 
-目前先从 `VALUE` 开始：它不是“把字符串转成文本”，而是把**看起来像数字的文本，解析成真正可以计算的数值**。
+第一轮先收录四个函数：`VALUE` 负责把文本数字解析成数值，`NUMBERVALUE` 负责明确指定分隔符，`TEXT` 负责把数值按格式输出成文本，`XLOOKUP` 负责把查找值映射到对应结果。
 
 ## 第一章：VALUE——文本数字是怎么变成真正数值的
 
@@ -248,7 +248,541 @@ private: false
   </footer>
 </div>
 
-后续新增其他函数时，会继续在这篇手册中增加第二章、第三章……每个函数仍然保持“一章一张完整信息图”的结构，不把多个函数挤进同一张小卡片。
+## 第二章：NUMBERVALUE——明确告诉 Excel 哪个是小数点
+
+<div class="function-poster chapter-numbervalue" role="group" aria-label="Excel NUMBERVALUE 函数指定小数分隔符与千位分隔符的完整信息图">
+  <header class="poster-title">
+    <div>
+      <span class="poster-kicker">EXCEL FUNCTION VISUAL HANDBOOK · CHAPTER 02</span>
+      <strong class="poster-main-title">NUMBERVALUE：不再让地区格式替你猜</strong>
+    </div>
+    <span class="poster-function-tag">NUMBERVALUE</span>
+  </header>
+
+  <div class="poster-definition">
+    <div>
+      <strong>NUMBERVALUE(text, [decimal_separator], [group_separator])</strong>
+      <span>按照公式中指定的小数符号和分组符号，把文本解析成数值。</span>
+    </div>
+    <div class="poster-formula-demo">
+      <code>=NUMBERVALUE("1.234,56", ",", ".")</code>
+      <i aria-hidden="true">→</i>
+      <strong>1234.56</strong>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>一、三个参数分别控制什么</b>
+    <span>文本不变，解析规则由公式明确指定</span>
+  </div>
+
+  <div class="separator-map" aria-label="NUMBERVALUE 参数与文本结构映射">
+    <div class="separator-formula">
+      <span>=NUMBERVALUE(</span>
+      <code class="argument-text">"1.234,56"</code>
+      <span>,</span>
+      <code class="argument-decimal">","</code>
+      <span>,</span>
+      <code class="argument-group">"."</code>
+      <span>)</span>
+    </div>
+    <div class="separator-arguments">
+      <article class="argument-text-card">
+        <small>text</small>
+        <strong>"1.234,56"</strong>
+        <p>需要转换的原始文本。</p>
+      </article>
+      <article class="argument-decimal-card">
+        <small>decimal_separator</small>
+        <strong>","</strong>
+        <p>逗号被解释成小数点。</p>
+      </article>
+      <article class="argument-group-card">
+        <small>group_separator</small>
+        <strong>"."</strong>
+        <p>点号被解释成千位分隔符。</p>
+      </article>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>二、解析过程</b>
+    <span>先识别符号角色，再去掉分组符号并建立标准数值</span>
+  </div>
+
+  <div class="separator-pipeline" aria-label="NUMBERVALUE 解析流程">
+    <article>
+      <small>原始文本</small>
+      <strong>1.234,56</strong>
+      <p>点号和逗号此时都只是字符。</p>
+    </article>
+    <i aria-hidden="true">→</i>
+    <article class="is-parse">
+      <small>指定角色</small>
+      <div class="separator-token-row">
+        <span><b>.</b><em>千位符</em></span>
+        <span><b>,</b><em>小数点</em></span>
+      </div>
+    </article>
+    <i aria-hidden="true">→</i>
+    <article class="is-clean">
+      <small>移除显示结构</small>
+      <strong>1234 + 0.56</strong>
+      <p>分组符号不进入最终数值。</p>
+    </article>
+    <i aria-hidden="true">→</i>
+    <article class="is-result">
+      <small>返回数值</small>
+      <strong>1234.56</strong>
+      <p>结果可以继续计算和汇总。</p>
+    </article>
+  </div>
+
+  <div class="poster-section-title">
+    <b>三、为什么它比 VALUE 更可控</b>
+    <span>同一段文本可以按照不同国家或系统的分隔规则被稳定解析</span>
+  </div>
+
+  <div class="locale-compare">
+    <article>
+      <span>VALUE</span>
+      <strong>跟随当前环境</strong>
+      <code>=VALUE("1.234,56")</code>
+      <p>Excel 会参考当前地区设置判断点号和逗号的含义，换一台电脑可能需要重新检查。</p>
+    </article>
+    <div class="locale-divider" aria-hidden="true">VS</div>
+    <article class="is-explicit">
+      <span>NUMBERVALUE</span>
+      <strong>规则写进公式</strong>
+      <code>=NUMBERVALUE("1.234,56", ",", ".")</code>
+      <p>公式明确规定逗号是小数点、点号是千位符，适合处理跨地区导出的数据。</p>
+    </article>
+  </div>
+
+  <div class="poster-section-title">
+    <b>四、常见示例</b>
+    <span>关键不是文本长什么样，而是参数是否准确描述它的格式</span>
+  </div>
+
+  <div class="example-table" role="table" aria-label="NUMBERVALUE 函数常见公式示例">
+    <div class="example-head" role="row">
+      <span role="columnheader">公式</span>
+      <span role="columnheader">小数符号</span>
+      <span role="columnheader">分组符号</span>
+      <span role="columnheader">返回值</span>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=NUMBERVALUE("1.234,56", ",", ".")</code>
+      <span role="cell">逗号</span>
+      <span role="cell">点号</span>
+      <strong role="cell">1234.56</strong>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=NUMBERVALUE("1,234.56", ".", ",")</code>
+      <span role="cell">点号</span>
+      <span role="cell">逗号</span>
+      <strong role="cell">1234.56</strong>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=NUMBERVALUE("1 234,56", ",", " ")</code>
+      <span role="cell">逗号</span>
+      <span role="cell">空格</span>
+      <strong role="cell">1234.56</strong>
+    </div>
+    <div class="example-row is-error" role="row">
+      <code role="cell">=NUMBERVALUE("12a3", ".", ",")</code>
+      <span role="cell">点号</span>
+      <span role="cell">逗号</span>
+      <strong role="cell">#VALUE!</strong>
+    </div>
+  </div>
+
+  <footer class="poster-conclusion">
+    <span>最终理解</span>
+    <strong>NUMBERVALUE 与 VALUE 做的是同一类转换，但它把“如何解释分隔符”写进了公式。</strong>
+    <p>处理海外系统、网页复制和不同地区导出的数字时，优先明确数据中的小数符号和千位符号。</p>
+  </footer>
+</div>
+
+## 第三章：TEXT——把数值按指定格式输出成文本
+
+<div class="function-poster chapter-text" role="group" aria-label="Excel TEXT 函数将数值按格式代码转换为文本的完整信息图">
+  <header class="poster-title">
+    <div>
+      <span class="poster-kicker">EXCEL FUNCTION VISUAL HANDBOOK · CHAPTER 03</span>
+      <strong class="poster-main-title">TEXT：显示效果写进结果，而不只是改外观</strong>
+    </div>
+    <span class="poster-function-tag">TEXT</span>
+  </header>
+
+  <div class="poster-definition">
+    <div>
+      <strong>TEXT(value, format_text)</strong>
+      <span>按照格式代码把数值转换成指定样式的文本。</span>
+    </div>
+    <div class="poster-formula-demo">
+      <code>=TEXT(1234.5, "¥#,##0.00")</code>
+      <i aria-hidden="true">→</i>
+      <strong>"¥1,234.50"</strong>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>一、TEXT 的处理链路</b>
+    <span>数值负责内容，格式代码负责最终文本长什么样</span>
+  </div>
+
+  <div class="text-render-flow" aria-label="TEXT 函数将数值与格式代码组合成文本的流程">
+    <article class="text-source-card">
+      <small>value</small>
+      <strong>1234.5</strong>
+      <p>真正的数值，可以继续参与计算。</p>
+    </article>
+    <span class="text-plus" aria-hidden="true">+</span>
+    <article class="text-format-card">
+      <small>format_text</small>
+      <strong>¥#,##0.00</strong>
+      <p>规定货币符号、千位符和小数位数。</p>
+    </article>
+    <span class="text-arrow" aria-hidden="true">→</span>
+    <article class="text-output-card">
+      <small>TEXT 返回</small>
+      <strong>¥1,234.50</strong>
+      <p>最终结果是文本，不再是原来的数值类型。</p>
+    </article>
+  </div>
+
+  <div class="poster-section-title">
+    <b>二、格式代码是怎么被拆开的</b>
+    <span>每一段符号都负责一个显示规则</span>
+  </div>
+
+  <div class="format-code-map" aria-label="TEXT 格式代码组成说明">
+    <div class="format-code-line">
+      <span class="format-currency">¥</span>
+      <span class="format-integer">#,##0</span>
+      <span class="format-decimal">.00</span>
+    </div>
+    <div class="format-code-notes">
+      <article>
+        <i class="format-currency-dot" aria-hidden="true"></i>
+        <strong>固定字符</strong>
+        <p>在结果前面显示人民币符号。</p>
+      </article>
+      <article>
+        <i class="format-integer-dot" aria-hidden="true"></i>
+        <strong>整数规则</strong>
+        <p>使用千位分隔符，并保证至少显示一个整数位。</p>
+      </article>
+      <article>
+        <i class="format-decimal-dot" aria-hidden="true"></i>
+        <strong>小数规则</strong>
+        <p>固定保留两位小数，不足时补零。</p>
+      </article>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>三、最容易混淆的三种状态</b>
+    <span>看起来相同，不代表单元格里保存的是同一种数据</span>
+  </div>
+
+  <div class="type-state-board" aria-label="原始数值、单元格格式与 TEXT 结果的类型对比">
+    <article>
+      <span>原始数值</span>
+      <strong>1234.5</strong>
+      <code>类型：数值</code>
+      <p>没有额外显示格式，但可以直接计算。</p>
+    </article>
+    <article class="is-cell-format">
+      <span>设置单元格格式</span>
+      <strong>¥1,234.50</strong>
+      <code>类型：仍是数值</code>
+      <p>只是显示发生变化，底层数据仍然可以参与计算。</p>
+    </article>
+    <article class="is-text-result">
+      <span>使用 TEXT</span>
+      <strong>"¥1,234.50"</strong>
+      <code>类型：文本</code>
+      <p>适合拼接标题和报表文案，但不能直接当数值继续计算。</p>
+    </article>
+  </div>
+
+  <div class="poster-section-title">
+    <b>四、什么时候应该使用 TEXT</b>
+    <span>它适合生成展示文字，不适合替代真正的数值列</span>
+  </div>
+
+  <div class="text-use-grid">
+    <article class="is-good">
+      <span>适合</span>
+      <strong>把数字拼进一句完整文案</strong>
+      <code>="本月销售额："&TEXT(B2,"¥#,##0.00")</code>
+      <p>结果中的金额格式稳定，不会直接显示成一串普通数字。</p>
+    </article>
+    <article class="is-warning">
+      <span>不适合</span>
+      <strong>把整列金额永久转成文本</strong>
+      <code>金额列全部使用 =TEXT(B2,"0.00")</code>
+      <p>TEXT 的结果不是原始数值，后续汇总、排序和比较会增加处理成本。</p>
+    </article>
+  </div>
+
+  <div class="poster-section-title">
+    <b>五、常见格式示例</b>
+    <span>同一个数值可以被输出成不同用途的文本</span>
+  </div>
+
+  <div class="example-table" role="table" aria-label="TEXT 函数常见格式代码示例">
+    <div class="example-head" role="row">
+      <span role="columnheader">公式</span>
+      <span role="columnheader">输入值</span>
+      <span role="columnheader">格式作用</span>
+      <span role="columnheader">返回文本</span>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=TEXT(1234.5,"0.00")</code>
+      <span role="cell">1234.5</span>
+      <span role="cell">固定两位小数</span>
+      <strong role="cell">"1234.50"</strong>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=TEXT(1234.5,"#,##0.00")</code>
+      <span role="cell">1234.5</span>
+      <span role="cell">增加千位符并保留两位小数</span>
+      <strong role="cell">"1,234.50"</strong>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=TEXT(0.256,"0.0%")</code>
+      <span role="cell">0.256</span>
+      <span role="cell">按百分比显示一位小数</span>
+      <strong role="cell">"25.6%"</strong>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=TEXT(7,"0000")</code>
+      <span role="cell">7</span>
+      <span role="cell">不足四位时在前面补零</span>
+      <strong role="cell">"0007"</strong>
+    </div>
+  </div>
+
+  <footer class="poster-conclusion">
+    <span>最终理解</span>
+    <strong>TEXT 不是单纯“让数字变好看”，而是根据格式代码生成一段新的文本。</strong>
+    <p>需要继续计算时保留原始数值；需要拼接、展示或导出固定格式时，再使用 TEXT 生成文字结果。</p>
+  </footer>
+</div>
+
+## 第四章：XLOOKUP——从查找值定位到对应结果
+
+<div class="function-poster chapter-xlookup" role="group" aria-label="Excel XLOOKUP 函数从查找值定位对应行并返回结果的完整信息图">
+  <header class="poster-title">
+    <div>
+      <span class="poster-kicker">EXCEL FUNCTION VISUAL HANDBOOK · CHAPTER 04</span>
+      <strong class="poster-main-title">XLOOKUP：先找到记录，再从另一列取回结果</strong>
+    </div>
+    <span class="poster-function-tag">XLOOKUP</span>
+  </header>
+
+  <div class="poster-definition">
+    <div>
+      <strong>XLOOKUP(lookup_value, lookup_array, return_array, [if_not_found])</strong>
+      <span>在查找区域中定位匹配项，再从同一位置的返回区域取回结果。</span>
+    </div>
+    <div class="poster-formula-demo">
+      <code>=XLOOKUP("KB001", A2:A5, C2:C5, "未找到")</code>
+      <i aria-hidden="true">→</i>
+      <strong>129</strong>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>一、四个参数对应表格里的什么</b>
+    <span>查找值、查找列、返回列和找不到时的结果必须一一对应</span>
+  </div>
+
+  <div class="lookup-parameter-map" aria-label="XLOOKUP 参数与数据区域映射">
+    <div class="lookup-formula-line">
+      <span>=XLOOKUP(</span>
+      <code class="lookup-value-token">"KB001"</code>
+      <span>,</span>
+      <code class="lookup-array-token">A2:A5</code>
+      <span>,</span>
+      <code class="return-array-token">C2:C5</code>
+      <span>,</span>
+      <code class="not-found-token">"未找到"</code>
+      <span>)</span>
+    </div>
+    <div class="lookup-legend">
+      <span class="lookup-value-legend">要找什么</span>
+      <span class="lookup-array-legend">去哪里找</span>
+      <span class="return-array-legend">从哪里返回</span>
+      <span class="not-found-legend">找不到时显示什么</span>
+    </div>
+  </div>
+
+  <div class="poster-section-title">
+    <b>二、一次完整查找是怎么发生的</b>
+    <span>用商品代码 KB001 查找对应售价</span>
+  </div>
+
+  <div class="lookup-workbench">
+    <div class="lookup-sheet" role="table" aria-label="XLOOKUP 商品代码与价格示例表">
+      <div class="lookup-sheet-row lookup-sheet-head" role="row">
+        <span role="columnheader">行</span>
+        <span role="columnheader">A · 商品代码</span>
+        <span role="columnheader">B · 商品名称</span>
+        <span role="columnheader">C · 售价</span>
+      </div>
+      <div class="lookup-sheet-row" role="row">
+        <span role="cell">2</span>
+        <strong role="cell">KB003</strong>
+        <span role="cell">折叠键盘</span>
+        <b role="cell">199</b>
+      </div>
+      <div class="lookup-sheet-row is-hit" role="row">
+        <span role="cell">3</span>
+        <strong role="cell">KB001</strong>
+        <span role="cell">蓝牙键盘</span>
+        <b role="cell">129</b>
+      </div>
+      <div class="lookup-sheet-row" role="row">
+        <span role="cell">4</span>
+        <strong role="cell">MS002</strong>
+        <span role="cell">无线鼠标</span>
+        <b role="cell">89</b>
+      </div>
+      <div class="lookup-sheet-row" role="row">
+        <span role="cell">5</span>
+        <strong role="cell">KB005</strong>
+        <span role="cell">机械键盘</span>
+        <b role="cell">299</b>
+      </div>
+    </div>
+
+    <div class="lookup-steps" aria-label="XLOOKUP 三步定位流程">
+      <article>
+        <small>01 · 接收查找值</small>
+        <strong>KB001</strong>
+        <p>公式先确定这次要找的商品代码。</p>
+      </article>
+      <i aria-hidden="true">↓</i>
+      <article class="is-match">
+        <small>02 · 在 A2:A5 定位</small>
+        <strong>命中第 3 行</strong>
+        <p>查找区域中的 KB001 与查找值完全匹配。</p>
+      </article>
+      <i aria-hidden="true">↓</i>
+      <article class="is-return">
+        <small>03 · 从 C2:C5 返回</small>
+        <strong>129</strong>
+        <p>返回区域使用同一行的位置，所以取得 C3 的售价。</p>
+      </article>
+    </div>
+  </div>
+
+  <div class="lookup-result-strip">
+    <span>位置映射</span>
+    <code>A3 = "KB001"</code>
+    <i aria-hidden="true">→ 同一行 →</i>
+    <code>C3 = 129</code>
+    <strong>最终返回 129</strong>
+  </div>
+
+  <div class="poster-section-title">
+    <b>三、查找区域和返回区域为什么必须对齐</b>
+    <span>XLOOKUP 返回的是“相同位置”的值，不是重新猜一遍哪一行相关</span>
+  </div>
+
+  <div class="array-alignment-board">
+    <article class="is-correct">
+      <span>正确对齐</span>
+      <div>
+        <code>A2:A5</code>
+        <i aria-hidden="true">↔</i>
+        <code>C2:C5</code>
+      </div>
+      <p>两个区域都是四行，A3 命中后可以稳定映射到 C3。</p>
+    </article>
+    <article class="is-wrong">
+      <span>错位风险</span>
+      <div>
+        <code>A2:A5</code>
+        <i aria-hidden="true">↔</i>
+        <code>C3:C6</code>
+      </div>
+      <p>区域起点错开后，同一位置不再代表同一条记录，结果会对应到错误行。</p>
+    </article>
+  </div>
+
+  <div class="poster-section-title">
+    <b>四、找不到时会发生什么</b>
+    <span>第四个参数可以把默认错误改成读者看得懂的提示</span>
+  </div>
+
+  <div class="not-found-flow">
+    <article>
+      <small>查找值</small>
+      <strong>KB999</strong>
+    </article>
+    <i aria-hidden="true">→</i>
+    <article>
+      <small>查找区域</small>
+      <strong>没有匹配记录</strong>
+    </article>
+    <i aria-hidden="true">→</i>
+    <article class="is-friendly-result">
+      <small>if_not_found</small>
+      <strong>"未找到"</strong>
+    </article>
+  </div>
+
+  <div class="poster-section-title">
+    <b>五、常见公式变化</b>
+    <span>基础结构不变，变化的是查找值、返回列和未找到提示</span>
+  </div>
+
+  <div class="example-table" role="table" aria-label="XLOOKUP 函数常见公式示例">
+    <div class="example-head" role="row">
+      <span role="columnheader">公式</span>
+      <span role="columnheader">查找目标</span>
+      <span role="columnheader">返回内容</span>
+      <span role="columnheader">结果</span>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=XLOOKUP("KB001",A2:A5,C2:C5)</code>
+      <span role="cell">商品代码 KB001</span>
+      <span role="cell">对应售价</span>
+      <strong role="cell">129</strong>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=XLOOKUP("MS002",A2:A5,B2:B5)</code>
+      <span role="cell">商品代码 MS002</span>
+      <span role="cell">对应商品名称</span>
+      <strong role="cell">无线鼠标</strong>
+    </div>
+    <div class="example-row" role="row">
+      <code role="cell">=XLOOKUP("KB999",A2:A5,C2:C5,"未找到")</code>
+      <span role="cell">不存在的商品代码</span>
+      <span role="cell">自定义提示</span>
+      <strong role="cell">未找到</strong>
+    </div>
+    <div class="example-row is-error" role="row">
+      <code role="cell">=XLOOKUP("KB001",A2:A5,C3:C6)</code>
+      <span role="cell">商品代码 KB001</span>
+      <span role="cell">错位的返回区域</span>
+      <strong role="cell">可能返回错误记录</strong>
+    </div>
+  </div>
+
+  <footer class="poster-conclusion">
+    <span>最终理解</span>
+    <strong>XLOOKUP 的核心不是“搜到一个值”，而是先确定匹配位置，再从另一个对齐区域返回同一位置的内容。</strong>
+    <p>看公式时依次确认：要找什么、去哪里找、返回哪一列，以及两个区域是否代表同一批记录。</p>
+  </footer>
+</div>
+
+这篇手册后续仍会按“单函数独立信息图”继续扩展，下一轮可以进入动态数组函数，例如 `FILTER`。
 
 <div class="handbook-series-link">
   <div>
@@ -851,6 +1385,558 @@ private: false
     line-height: 1.6;
   }
 
+  .chapter-numbervalue {
+    --poster-blue: #0f766e;
+    --poster-blue-soft: #ecfdf8;
+  }
+
+  .chapter-text {
+    --poster-blue: #b45309;
+    --poster-blue-soft: #fff7ed;
+  }
+
+  .chapter-xlookup {
+    --poster-blue: #6d4bc3;
+    --poster-blue-soft: #f5f1ff;
+  }
+
+  .separator-map,
+  .format-code-map,
+  .lookup-parameter-map {
+    margin: 0 1.5rem 1.6rem;
+    overflow: hidden;
+    border: 1px solid var(--poster-line);
+    border-radius: 10px;
+    background: #fbfdff;
+  }
+
+  .separator-formula,
+  .lookup-formula-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .32rem;
+    padding: 1.15rem 1rem;
+    border-bottom: 1px solid var(--poster-line);
+    color: #34465c;
+    background: #f4f8fc;
+    font-size: .92rem;
+    font-weight: 800;
+  }
+
+  .separator-formula code,
+  .lookup-formula-line code {
+    padding: .35rem .46rem;
+    border-radius: 5px;
+    font-size: .9rem;
+    font-weight: 900;
+  }
+
+  .argument-text,
+  .lookup-value-token {
+    color: #1769dc;
+    background: #eaf3ff;
+  }
+
+  .argument-decimal,
+  .lookup-array-token {
+    color: #b45309;
+    background: #fff2dd;
+  }
+
+  .argument-group,
+  .return-array-token {
+    color: #198a61;
+    background: #eaf8f1;
+  }
+
+  .not-found-token {
+    color: #c34848;
+    background: #fff0f0;
+  }
+
+  .separator-arguments,
+  .format-code-notes,
+  .type-state-board,
+  .text-use-grid,
+  .array-alignment-board {
+    display: grid;
+    gap: 1px;
+    background: var(--poster-line);
+  }
+
+  .separator-arguments,
+  .format-code-notes,
+  .type-state-board {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .separator-arguments article,
+  .format-code-notes article,
+  .type-state-board article,
+  .text-use-grid article,
+  .array-alignment-board article {
+    padding: 1rem;
+    background: #fff;
+  }
+
+  .separator-arguments small,
+  .text-render-flow small,
+  .lookup-steps small,
+  .not-found-flow small {
+    display: block;
+    color: #748398;
+    font-size: .68rem;
+    font-weight: 900;
+    letter-spacing: .04em;
+  }
+
+  .separator-arguments strong,
+  .format-code-notes strong,
+  .type-state-board strong,
+  .text-use-grid strong,
+  .array-alignment-board strong {
+    display: block;
+    margin: .28rem 0;
+    color: #17283d;
+    font-size: .95rem;
+  }
+
+  .separator-arguments p,
+  .format-code-notes p,
+  .type-state-board p,
+  .text-use-grid p,
+  .array-alignment-board p,
+  .text-render-flow p,
+  .separator-pipeline p,
+  .lookup-steps p {
+    margin: 0;
+    color: #607186;
+    font-size: .76rem;
+    line-height: 1.6;
+  }
+
+  .argument-text-card { border-top: 3px solid #1769dc; }
+  .argument-decimal-card { border-top: 3px solid #d97706; }
+  .argument-group-card { border-top: 3px solid #198a61; }
+
+  .separator-pipeline,
+  .text-render-flow,
+  .not-found-flow {
+    display: grid;
+    align-items: stretch;
+    gap: .65rem;
+    margin: 0 1.5rem 1.6rem;
+  }
+
+  .separator-pipeline {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.05fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .separator-pipeline article,
+  .text-render-flow article,
+  .not-found-flow article {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 132px;
+    padding: .95rem;
+    border: 1px solid #c7d4e3;
+    border-radius: 9px;
+    background: #fff;
+  }
+
+  .separator-pipeline > i,
+  .text-arrow,
+  .text-plus,
+  .not-found-flow > i {
+    align-self: center;
+    color: #7a8799;
+    font-style: normal;
+    font-weight: 900;
+  }
+
+  .separator-pipeline article > small,
+  .text-render-flow article > small,
+  .not-found-flow article > small {
+    margin-bottom: .4rem;
+  }
+
+  .separator-pipeline article > strong,
+  .text-render-flow article > strong,
+  .not-found-flow article > strong {
+    display: block;
+    margin-bottom: .32rem;
+    color: #17283d;
+    font-size: 1.02rem;
+  }
+
+  .separator-pipeline .is-parse { background: #fffaf3; }
+  .separator-pipeline .is-clean { background: #f7fbff; }
+  .separator-pipeline .is-result { border-color: #9dcfb8; background: #f1fbf6; }
+
+  .separator-token-row {
+    display: flex;
+    gap: .55rem;
+  }
+
+  .separator-token-row span {
+    flex: 1;
+    padding: .55rem;
+    border: 1px solid #d3ddea;
+    border-radius: 7px;
+    text-align: center;
+    background: #fff;
+  }
+
+  .separator-token-row b,
+  .separator-token-row em {
+    display: block;
+  }
+
+  .separator-token-row b {
+    color: #18273d;
+    font-size: 1.15rem;
+  }
+
+  .separator-token-row em {
+    color: #69798d;
+    font-size: .66rem;
+    font-style: normal;
+  }
+
+  .locale-compare {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: .8rem;
+    margin: 0 1.5rem 1.6rem;
+  }
+
+  .locale-compare article {
+    padding: 1rem;
+    border: 1px solid #cbd8e8;
+    border-radius: 10px;
+    background: #fbfdff;
+  }
+
+  .locale-compare article.is-explicit {
+    border-color: #92cbbb;
+    background: #f2fbf7;
+  }
+
+  .locale-compare article > span,
+  .text-use-grid article > span,
+  .array-alignment-board article > span {
+    display: inline-block;
+    padding: .24rem .4rem;
+    border-radius: 4px;
+    color: var(--poster-blue);
+    background: var(--poster-blue-soft);
+    font-size: .68rem;
+    font-weight: 900;
+  }
+
+  .locale-compare strong,
+  .locale-compare code {
+    display: block;
+  }
+
+  .locale-compare strong {
+    margin: .5rem 0 .3rem;
+    color: #17283d;
+    font-size: 1rem;
+  }
+
+  .locale-compare code {
+    margin-bottom: .55rem;
+    color: var(--poster-blue);
+    font-size: .78rem;
+    font-weight: 800;
+  }
+
+  .locale-compare p {
+    margin: 0;
+    color: #5f7186;
+    font-size: .76rem;
+    line-height: 1.6;
+  }
+
+  .locale-divider {
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 999px;
+    color: #fff;
+    background: #617189;
+    font-size: .68rem;
+    font-weight: 900;
+  }
+
+  .text-render-flow {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .text-source-card { background: #f7fbff !important; }
+  .text-format-card { background: #fffaf2 !important; }
+  .text-output-card { border-color: #d6b06f !important; background: #fff7e8 !important; }
+
+  .format-code-line {
+    display: flex;
+    justify-content: center;
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid var(--poster-line);
+    background: #fffdf9;
+  }
+
+  .format-code-line span {
+    padding: .6rem .7rem;
+    border: 1px solid #d3ddea;
+    border-right: 0;
+    background: #fff;
+    font-size: 1.15rem;
+    font-weight: 900;
+  }
+
+  .format-code-line span:first-child { border-radius: 7px 0 0 7px; }
+  .format-code-line span:last-child { border-right: 1px solid #d3ddea; border-radius: 0 7px 7px 0; }
+  .format-currency { color: #b45309; }
+  .format-integer { color: #1769dc; }
+  .format-decimal { color: #7653c8; }
+
+  .format-code-notes i {
+    display: block;
+    width: .65rem;
+    height: .65rem;
+    margin-bottom: .45rem;
+    border-radius: 999px;
+  }
+
+  .format-currency-dot { background: #b45309; }
+  .format-integer-dot { background: #1769dc; }
+  .format-decimal-dot { background: #7653c8; }
+
+  .type-state-board,
+  .text-use-grid,
+  .array-alignment-board {
+    margin: 0 1.5rem 1.6rem;
+    overflow: hidden;
+    border: 1px solid var(--poster-line);
+    border-radius: 10px;
+  }
+
+  .type-state-board article > span {
+    color: #6b7a8d;
+    font-size: .7rem;
+    font-weight: 900;
+  }
+
+  .type-state-board article > code {
+    display: inline-block;
+    margin-bottom: .55rem;
+    padding: .24rem .4rem;
+    border-radius: 4px;
+    color: #52657b;
+    background: #eef3f8;
+    font-size: .68rem;
+  }
+
+  .type-state-board .is-cell-format { background: #f5fbf8; }
+  .type-state-board .is-text-result { background: #fff9ef; }
+
+  .text-use-grid,
+  .array-alignment-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .text-use-grid code {
+    display: block;
+    margin: .55rem 0;
+    color: var(--poster-blue);
+    font-size: .78rem;
+    font-weight: 800;
+  }
+
+  .text-use-grid .is-good { border-top: 3px solid #198a61; }
+  .text-use-grid .is-warning { border-top: 3px solid #d66f1d; }
+
+  .lookup-legend {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--poster-line);
+  }
+
+  .lookup-legend span {
+    padding: .72rem .55rem;
+    text-align: center;
+    background: #fff;
+    font-size: .7rem;
+    font-weight: 800;
+  }
+
+  .lookup-value-legend { color: #1769dc; }
+  .lookup-array-legend { color: #b45309; }
+  .return-array-legend { color: #198a61; }
+  .not-found-legend { color: #c34848; }
+
+  .lookup-workbench {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(250px, .7fr);
+    gap: 1rem;
+    margin: 0 1.5rem 1rem;
+  }
+
+  .lookup-sheet,
+  .lookup-steps {
+    overflow: hidden;
+    border: 1px solid var(--poster-line);
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .lookup-sheet-row {
+    display: grid;
+    grid-template-columns: 52px 1fr 1.15fr .65fr;
+    border-top: 1px solid var(--poster-line);
+  }
+
+  .lookup-sheet-row:first-child { border-top: 0; }
+
+  .lookup-sheet-row > * {
+    padding: .72rem .65rem;
+    border-right: 1px solid var(--poster-line);
+    color: #53667a;
+    font-size: .76rem;
+  }
+
+  .lookup-sheet-row > *:last-child { border-right: 0; }
+
+  .lookup-sheet-head {
+    background: #eee9fb;
+    font-weight: 900;
+  }
+
+  .lookup-sheet-row strong { color: #6d4bc3; }
+  .lookup-sheet-row b { color: #198a61; }
+
+  .lookup-sheet-row.is-hit {
+    position: relative;
+    background: #f4fbf7;
+    box-shadow: inset 4px 0 0 #198a61;
+  }
+
+  .lookup-steps {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: .8rem;
+    background: #faf9fe;
+  }
+
+  .lookup-steps article {
+    padding: .75rem;
+    border: 1px solid #d5c9ee;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .lookup-steps article.is-match { border-color: #e2b66e; background: #fffaf2; }
+  .lookup-steps article.is-return { border-color: #9fcdb5; background: #f2fbf7; }
+
+  .lookup-steps strong {
+    display: block;
+    margin: .25rem 0;
+    color: #17283d;
+    font-size: .92rem;
+  }
+
+  .lookup-steps > i {
+    padding: .28rem 0;
+    text-align: center;
+    color: #7c8798;
+    font-style: normal;
+    font-weight: 900;
+  }
+
+  .lookup-result-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .6rem;
+    margin: 0 1.5rem 1.6rem;
+    padding: .85rem;
+    border: 1px solid #b8d7c7;
+    border-radius: 9px;
+    background: #f3fbf7;
+  }
+
+  .lookup-result-strip span {
+    color: #527061;
+    font-size: .7rem;
+    font-weight: 900;
+  }
+
+  .lookup-result-strip code {
+    color: #4d3b93;
+    font-size: .8rem;
+    font-weight: 800;
+  }
+
+  .lookup-result-strip i {
+    color: #6e7d8f;
+    font-size: .74rem;
+    font-style: normal;
+  }
+
+  .lookup-result-strip strong {
+    color: #198a61;
+    font-size: .92rem;
+  }
+
+  .array-alignment-board article > div {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin: .55rem 0;
+  }
+
+  .array-alignment-board code {
+    padding: .42rem .55rem;
+    border: 1px solid #d1dbe8;
+    border-radius: 5px;
+    color: #4d3b93;
+    background: #fff;
+    font-size: .8rem;
+    font-weight: 800;
+  }
+
+  .array-alignment-board i {
+    color: #7d8898;
+    font-style: normal;
+    font-weight: 900;
+  }
+
+  .array-alignment-board .is-correct { border-top: 3px solid #198a61; }
+  .array-alignment-board .is-wrong { border-top: 3px solid #c34848; background: #fff9f9; }
+
+  .not-found-flow {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .not-found-flow article {
+    min-height: 105px;
+    text-align: center;
+  }
+
+  .not-found-flow .is-friendly-result {
+    border-color: #d2c1ef;
+    background: #f7f3ff;
+  }
+
   .handbook-series-link {
     display: flex;
     align-items: center;
@@ -913,6 +1999,26 @@ private: false
     .detail-note { border-bottom: 0; }
 
     .poster-bottom-grid { grid-template-columns: 1fr; }
+
+    .separator-pipeline,
+    .text-render-flow,
+    .locale-compare,
+    .lookup-workbench,
+    .not-found-flow {
+      grid-template-columns: 1fr;
+    }
+
+    .separator-pipeline > i,
+    .text-render-flow > span,
+    .not-found-flow > i {
+      display: none;
+    }
+
+    .lookup-workbench { gap: .8rem; }
+
+    .locale-divider {
+      margin: 0 auto;
+    }
   }
 
   @media (max-width: 720px) {
@@ -929,7 +2035,19 @@ private: false
     .poster-flow,
     .poster-detail-table,
     .example-table,
-    .poster-bottom-grid {
+    .poster-bottom-grid,
+    .separator-map,
+    .separator-pipeline,
+    .locale-compare,
+    .text-render-flow,
+    .format-code-map,
+    .type-state-board,
+    .text-use-grid,
+    .lookup-parameter-map,
+    .lookup-workbench,
+    .lookup-result-strip,
+    .array-alignment-board,
+    .not-found-flow {
       margin-left: .85rem;
       margin-right: .85rem;
     }
@@ -956,6 +2074,42 @@ private: false
 
     .poster-flow { grid-template-columns: 1fr; }
     .poster-flow article { min-height: 0; }
+
+    .separator-arguments,
+    .format-code-notes,
+    .type-state-board,
+    .text-use-grid,
+    .array-alignment-board {
+      grid-template-columns: 1fr;
+    }
+
+    .separator-formula,
+    .lookup-formula-line {
+      justify-content: flex-start;
+      padding: .9rem .75rem;
+    }
+
+    .separator-pipeline article,
+    .text-render-flow article,
+    .not-found-flow article {
+      min-height: 0;
+    }
+
+    .lookup-legend {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .lookup-sheet {
+      overflow-x: auto;
+    }
+
+    .lookup-sheet-row {
+      min-width: 520px;
+    }
+
+    .lookup-result-strip {
+      justify-content: flex-start;
+    }
 
     .detail-row,
     .detail-row.is-tall {
