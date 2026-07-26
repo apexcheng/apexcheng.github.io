@@ -41,6 +41,7 @@
 | `src/content/posts/excel-wildcards-functions-guide.mdx` | `教程` | Excel 通配符专题，讲清 *、?、~ 的匹配规则，整理条件统计、查找匹配和文本搜索函数的支持方式，并用 K161 前缀平均值案例对比复杂数组公式 | 写 Excel 模糊匹配、条件统计、XLOOKUP 通配符模式、编码前缀和文本搜索文章时参考 |
 | `src/content/posts/excel-lookup-functions-visual-guide.mdx` | `教程` | Excel 查找匹配函数专题，用五张内容相同、标注不同的独立案例表，逐个展示 VLOOKUP、XLOOKUP、INDEX、MATCH、XMATCH 的参数、查找过程、位置与返回结果 | 写 Excel 查找函数教学、单函数可视化案例、VLOOKUP 与 XLOOKUP 对比、INDEX + MATCH / XMATCH 组合和位置返回文章时参考 |
 | `src/content/posts/excel-intermediate-functions-case-guide.mdx` | `教程` | Excel 中级函数案例教程，使用编码日期表、运营明细表和七天销量表，讲解 18 个文本日期、动态数组与批量计算函数 | 写 Excel 动态数组、日期周期、LET、BYROW、MAP、REDUCE 和减少下拉公式的教学文章时参考 |
+| `src/content/posts/excel-value-string-to-number.mdx` | `教程` | Excel VALUE 函数原理专题，用响应式信息图解释文本数字如何经过格式解析、合法性检查并转换为可计算数值 | 写 Excel 文本转数值、数字格式识别、VALUE 与 NUMBERVALUE 区别、数据类型转换教程时参考 |
 | `src/content/posts/qianniu-ecommerce-operation-learning-map.mdx` | `教程` | 从一条商品链接出发，把 SKU、价格体系、营销推广、订单 ERP、物流售后、评价与运营优化串成完整电商经营链路，并补充面对陌生后台功能的学习方法 | 写千牛工作台、电商运营入门、新人培训、商品从上架到售后的全链路教学文章时参考 |
 | `src/content/posts/ecommerce-price-hierarchy-target-price-planning.mdx` | `教程` | 先解释单品宝、活动和营销工具让利（非活动让利），再讲当前标价如何生效、活动如何校验、覆盖叠加与活动优先级、消费端到手价检查、价盘补差，以及平时价与活动价一致时的标价反推方法 | 写电商价格体系、优惠叠加优先级、营销工具让利、活动卡控价、普惠卷后价、活动标价反推和价盘目标到手价教程时参考 |
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
