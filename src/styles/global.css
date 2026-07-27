@@ -21,6 +21,11 @@
   color-scheme: light;
 }
 
+/* 修复移动端 Safari 下 Markdown 有序列表序号颜色异常 */
+.sl-markdown-content ol > li::marker {
+  color: var(--sl-color-text);
+}
+
 html[data-style-theme='index-gradient'] {
   --body-font: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   --display-font: "Noto Serif SC", "Songti SC", Georgia, serif;
