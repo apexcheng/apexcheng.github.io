@@ -19,6 +19,7 @@ import {
 import HomeIntroState from '../components/HomeIntroState.astro';
 import HomeIndexMenu from '../components/HomeIndexMenu.astro';
 import { categoryMetaList } from '../data/categories';
+import { projects } from '../data/projects';
 import { seriesMetaList } from '../data/series';
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
@@ -50,13 +51,22 @@ const categoryCounts = categoryMetaList.map(
   (category) => posts.filter((post) => post.data.category === category.name).length,
 );
 
-const searchItems = posts.map((post) => ({
-  title: post.data.title,
-  description: post.data.description,
-  category: post.data.category,
-  href: withBase(`/articles/${post.slug}/`),
-  keywords: post.data.tags.join(' '),
-}));
+const searchItems = [
+  ...posts.map((post) => ({
+    type: '文章',
+    title: post.data.title,
+    description: post.data.description,
+    href: withBase(`/articles/${post.slug}/`),
+    keywords: [post.data.category, ...post.data.tags],
+  })),
+  ...projects.map((project) => ({
+    type: '项目',
+    title: project.title,
+    description: project.description,
+    href: project.url ?? withBase('/projects/'),
+    keywords: [project.type, ...project.tags],
+  })),
+];
 
 const formatDate = (date: Date) =>
   new Intl.DateTimeFormat('zh-CN', {
@@ -144,18 +154,19 @@ const introReturn = encodeURIComponent(isOfficialHome ? withBase('/') : withBase
 
       <section
         class="search-panel"
-        aria-label="搜索文章"
+        aria-label="搜索文章和项目"
         data-search-panel
         data-search-items={JSON.stringify(searchItems)}
+        data-articles-url={withBase('/articles/')}
       >
         <div class="search-panel-head">
-          <label for="home-redesign-1-search">搜索文章</label>
+          <label for="home-redesign-1-search">搜索文章和项目</label>
           <button type="button" data-search-close>关闭</button>
         </div>
         <input
           id="home-redesign-1-search"
           type="search"
-          placeholder="输入标题、分类或标签"
+          placeholder="搜索文章 / 项目"
           autocomplete="off"
           data-search-input
         />
@@ -435,6 +446,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
         var searchClose = document.querySelector('[data-search-close]');
         var searchInput = document.querySelector('[data-search-input]');
         var searchResults = document.querySelector('[data-search-results]');
+        var articlesUrl = searchPanel ? searchPanel.getAttribute('data-articles-url') || '#' : '#';
 
         document.querySelectorAll('[data-current-date]').forEach(function (item) {
           var date = new Date();
@@ -491,41 +503,89 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
           var items = [];
           try { items = JSON.parse(searchPanel.getAttribute('data-search-items') || '[]'); } catch (error) {}
 
-          function renderResults(query) {
-            var normalized = query.trim().toLowerCase();
-            var matches = items.filter(function (item) {
-              if (!normalized) return true;
-              return [item.title, item.description, item.category, item.keywords]
-                .join(' ')
-                .toLowerCase()
-                .includes(normalized);
-            }).slice(0, 8);
+          function itemText(item) {
+            return [item.title, item.description].concat(item.keywords || []).join(' ').toLowerCase();
+          }
 
-            searchResults.replaceChildren();
-            if (!matches.length) {
-              var empty = document.createElement('p');
-              empty.className = 'search-empty';
-              empty.textContent = '没有找到相关内容';
-              searchResults.appendChild(empty);
+          function escapeHtml(value) {
+            return String(value)
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#39;');
+          }
+
+          function resultHtml(item) {
+            return [
+              '<a class="search-result" href="' + escapeHtml(item.href) + '">',
+              '<span>' + escapeHtml(item.type) + '</span>',
+              '<strong>' + escapeHtml(item.title) + '</strong>',
+              '<small>' + escapeHtml(item.description) + '</small>',
+              '</a>',
+            ].join('');
+          }
+
+          function renderResults(query) {
+            var normalizedQuery = query.trim().toLowerCase();
+
+            if (!normalizedQuery) {
+              var filters = ['生活', '实践', '教程', '视觉实验室'];
+              var recentItems = items.filter(function (item) {
+                return item.type === '文章';
+              }).slice(0, 6);
+
+              searchResults.innerHTML = [
+                '<section class="search-section">',
+                '<div class="search-section-head"><strong>快速筛选</strong></div>',
+                '<div class="search-filters">',
+                filters.map(function (filter) {
+                  return '<button type="button" data-search-filter="' + escapeHtml(filter) + '">' + escapeHtml(filter) + '</button>';
+                }).join(''),
+                '</div>',
+                '</section>',
+                '<section class="search-section">',
+                '<div class="search-section-head"><strong>最近更新</strong><span>' + recentItems.length + ' 篇</span></div>',
+                recentItems.map(resultHtml).join(''),
+                '</section>',
+                '<a class="search-all" href="' + escapeHtml(articlesUrl) + '">查看全部文章 <span aria-hidden="true">→</span></a>',
+              ].join('');
+              searchResults.scrollTop = 0;
               return;
             }
 
-            matches.forEach(function (item) {
-              var link = document.createElement('a');
-              var category = document.createElement('span');
-              var title = document.createElement('strong');
-              var description = document.createElement('small');
-              link.href = item.href;
-              category.textContent = item.category;
-              title.textContent = item.title;
-              description.textContent = item.description;
-              link.append(category, title, description);
-              searchResults.appendChild(link);
+            var matches = items.filter(function (item) {
+              return itemText(item).includes(normalizedQuery);
             });
+
+            searchResults.innerHTML = [
+              '<div class="search-section-head search-match-head"><strong>搜索结果</strong><span>' + matches.length + ' 条</span></div>',
+              matches.length
+                ? matches.map(resultHtml).join('')
+                : '<p class="search-empty">没有找到匹配内容</p>',
+            ].join('');
+            searchResults.scrollTop = 0;
           }
 
           renderResults('');
           searchInput.addEventListener('input', function () { renderResults(searchInput.value); });
+
+          searchResults.addEventListener('click', function (event) {
+            var filter = event.target.closest('[data-search-filter]');
+            if (!filter) return;
+            searchInput.value = filter.getAttribute('data-search-filter') || '';
+            renderResults(searchInput.value);
+            searchInput.focus();
+          });
+
+          searchPanel.addEventListener('wheel', function (event) {
+            if (event.ctrlKey) return;
+            event.preventDefault();
+            var distance = event.deltaY;
+            if (event.deltaMode === 1) distance *= 18;
+            if (event.deltaMode === 2) distance *= searchResults.clientHeight;
+            searchResults.scrollTop += distance;
+          }, { passive: false });
         }
 
         document.addEventListener('keydown', function (event) {
@@ -892,9 +952,65 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .search-results {
     display: grid;
     gap: 4px;
+    min-height: 0;
     margin-top: 12px;
     overflow-y: auto;
     overscroll-behavior: contain;
+  }
+
+  .search-section {
+    display: grid;
+    gap: 4px;
+  }
+
+  .search-section + .search-section {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+
+  .search-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 12px 6px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .search-section-head strong {
+    color: var(--ink);
+    font-size: 13px;
+  }
+
+  .search-match-head {
+    margin-bottom: 2px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .search-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    padding: 0 12px 6px;
+  }
+
+  .search-filters button {
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--page);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  .search-filters button:hover,
+  .search-filters button:focus-visible {
+    border-color: var(--blue);
+    color: var(--blue);
+    outline: 0;
   }
 
   .search-results a {
@@ -924,6 +1040,30 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     font-size: 12px;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .search-section-head span {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .search-all {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 12px;
+    border-top: 1px solid var(--line);
+    color: var(--blue);
+    font-size: 13px;
+    font-weight: 720;
+  }
+
+  .search-all span {
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
   }
 
   .search-empty {
