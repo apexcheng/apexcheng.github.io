@@ -1,14 +1,15 @@
 ---
 title: "给 OpenClaw 装上长期记忆：让 AI Agent 不再每次重新认识你"
-description: "记录我如何把 GBrain 接入 OpenClaw：从安装、PostgreSQL、独立 Brain Repo，到 MCP、Context Engine、Signal Detector 和最终验收。"
+description: "记录我如何把 GBrain 接入 OpenClaw，并整理接入后最常用的查询、写入、同步、维护和验收命令。"
 date: 2026-07-10T18:20:24+08:00
-updated: 2026-07-10T18:37:00+08:00
+updated: 2026-07-28T13:38:58+08:00
 category: "实践"
 tags:
   - "GBrain"
   - "OpenClaw"
   - "Agent"
-minutes: 20
+  - "知识库"
+minutes: 32
 featured: false
 draft: false
 private: false
@@ -521,6 +522,284 @@ source_id = brain
 ```
 
 这才算“自动记忆”闭环真正成立。
+
+## 接入完成后，我最常用的 GBrain 命令
+
+接入完成只是第一步。真正开始日常使用后，最常见的问题会变成：
+
+> 我现在应该先敲哪条命令，才能知道知识库、检索和 OpenClaw 接入到底哪一层出了问题？
+
+下面这部分原本单独整理成了一篇命令手册。现在合并到这里，是因为安装、使用和排查本来就是同一条链路。
+
+<div class="gb-command-map" aria-label="GBrain 日常命令路径">
+  <div class="gb-command-map__head">
+    <span>DAILY COMMAND PATH</span>
+    <strong>先证明 GBrain 自己正常，再向上检查 OpenClaw</strong>
+  </div>
+  <div class="gb-command-map__track">
+    <div><b>01</b><span>看状态</span><code>status</code><small>确认 source、同步与数据规模</small></div>
+    <i>→</i>
+    <div><b>02</b><span>查知识</span><code>search / query</code><small>证明目标页面可以命中</small></div>
+    <i>→</i>
+    <div><b>03</b><span>写内容</span><code>capture / link</code><small>保存事实、决定和关系</small></div>
+    <i>→</i>
+    <div><b>04</b><span>做维护</span><code>sync / doctor</code><small>更新索引并检查质量</small></div>
+    <i>→</i>
+    <div class="is-final"><b>05</b><span>验收接入</span><code>openclaw mcp</code><small>确认 Agent 真能调用和召回</small></div>
+  </div>
+</div>
+
+这部分命令以我当时使用的 GBrain 0.42.57.0、OpenClaw 2026.7.1-beta.2 为基线。CLI 会继续变化，复制前可以先运行对应命令的 `--help`。
+
+### 1. 先确认 GBrain 自己是否正常
+
+刚安装、刚重启、刚同步，或者搜索结果突然异常时，先跑下面四条：
+
+```bash
+gbrain --version
+gbrain status
+gbrain stats
+gbrain health
+```
+
+它们分别回答四个问题：
+
+| 命令 | 主要看什么 |
+| --- | --- |
+| `gbrain --version` | 当前 CLI 版本，避免拿错版本的参数排查 |
+| `gbrain status` | source、最近同步、队列和嵌入状态 |
+| `gbrain stats` | 页面、分块和链接数量，确认不是空库 |
+| `gbrain health` | 过期嵌入、孤立页和坏链接等质量信号 |
+
+最短证据链是：
+
+```text
+status 看 source
+  → stats 看是否有页面
+  → search 查一个确定存在的关键词
+```
+
+如果安装时使用了 `--no-embedding`，Embedding 为 0% 可以是预期状态，不代表关键词检索不可用。
+
+### 2. 浏览、搜索和读取知识
+
+这几个命令看起来相似，但用途不同。
+
+#### 不知道库里有什么：先看目录
+
+```bash
+gbrain list --limit 10 --sort updated_desc
+gbrain list --type concept --limit 20
+gbrain list --tag openclaw --limit 20
+```
+
+#### 知道项目名或固定术语：使用 search
+
+```bash
+gbrain search "OpenClaw" --source brain --limit 10
+gbrain search "品牌雷达" --limit 5
+```
+
+`search` 更适合人名、项目名、功能名和确定存在的关键词。
+
+#### 只有完整问题：使用 query
+
+```bash
+gbrain query "OpenClaw 和 GBrain 分别负责什么？" --limit 5
+gbrain query "最近有哪些 OpenClaw 配置变化？" \
+  --since 7d --recency strong --limit 10
+```
+
+`query` 会做更完整的查询扩展，适合你知道问题，但不知道知识库里具体用了什么措辞的情况。
+
+拿到候选结果后，再用 slug 读取完整页面：
+
+```bash
+gbrain get concepts/brand-radar
+gbrain get brand-radar --fuzzy
+```
+
+需要继续看页面之间的关系时：
+
+```bash
+gbrain backlinks concepts/brand-radar
+gbrain graph concepts/brand-radar --depth 2
+```
+
+重要结论不要只看搜索摘要，最好回到 `get` 返回的完整页面确认。
+
+### 3. 写入内容，并建立关系
+
+临时保存一条值得长期保留的信息：
+
+```bash
+gbrain capture \
+  "以后博客文章默认公开，除非明确要求草稿"
+```
+
+已有完整 Markdown 文件时，可以明确 slug 和类型：
+
+```bash
+gbrain capture \
+  --file ./notes/openclaw-memory.md \
+  --slug operational/openclaw-memory \
+  --type note
+```
+
+写入后再补标签、关系和时间坐标：
+
+```bash
+gbrain tag concepts/brand-radar openclaw
+
+gbrain link projects/openclaw-memory concepts/gbrain \
+  --link-type uses \
+  --context "OpenClaw 使用 GBrain 作为长期知识层"
+
+gbrain timeline-add projects/openclaw-memory \
+  2026-07-25 \
+  "完成 GBrain 与 OpenClaw 接入验证"
+```
+
+脚本里也可以从标准输入写入，并只接收返回的 slug：
+
+```bash
+echo "GBrain 和 memory-core 可以同时使用" \
+  | gbrain capture --stdin
+
+PAGE_SLUG=$(gbrain capture "需要后续整理的事实" --quiet)
+echo "$PAGE_SLUG"
+```
+
+这里仍然要保留一个写入闸门：一句临时指令通常不值得长期保存；长期偏好、项目决定、踩坑结论，以及会改变后续执行方式的规则，才适合进入长期知识库。
+
+### 4. Markdown 修改后，同步到检索层
+
+Brain Repo 是 Markdown 源，GBrain Engine 是检索层。文件改了，不代表数据库已经自动看到变化。
+
+推荐顺序是：
+
+```bash
+gbrain sources list
+gbrain sync --source brain --dry-run
+gbrain sync --source brain
+gbrain search "确定存在的关键词" --limit 3
+```
+
+先用 `--dry-run` 看会新增、更新或删除什么，再真正同步，最后通过一次真实搜索确认目标页面已经进入检索层。
+
+其他常用恢复命令：
+
+```bash
+gbrain sync --all --parallel 2
+gbrain sync --source brain --no-embed
+gbrain embed --stale
+gbrain sync --source brain --retry-failed
+```
+
+如果嵌入服务暂时不可用，可以先用 `--no-embed` 同步文本，不阻塞关键词检索；服务恢复后再用 `gbrain embed --stale` 补齐。
+
+### 5. 写错内容时，先回退再考虑删除
+
+页面内容有问题时，先看历史：
+
+```bash
+gbrain history concepts/brand-radar
+```
+
+历史里有正确版本，就回退：
+
+```bash
+gbrain revert concepts/brand-radar <version_id>
+```
+
+页面本身不应该保留，再软删除：
+
+```bash
+gbrain delete concepts/brand-radar
+gbrain get concepts/brand-radar --include-deleted
+```
+
+安全顺序可以记成：
+
+```text
+history → revert / delete → get → search
+```
+
+不要直接操作数据库，也不要在没确认 slug 和 source 时执行删除或回退。
+
+### 6. 日常维护、升级和备份
+
+运行健康、知识质量、版本升级最好分开处理。
+
+```bash
+# 日常健康检查
+gbrain doctor --fast
+gbrain doctor
+gbrain advisor
+
+# 知识质量检查
+gbrain orphans --count
+gbrain lint ~/brain
+gbrain check-backlinks check ~/brain
+gbrain link-sources
+
+# 升级前备份
+gbrain export --dir ./gbrain-export
+gbrain check-update --json
+gbrain upgrade
+
+# 梦境维护先预演
+gbrain dream --dry-run
+gbrain dream
+```
+
+`doctor` 因 Resolver、Skill 路由或集成规范返回告警，不自动等于数据库和搜索不可用。先看 `status`、页面数量和真实搜索结果，再处理质量问题。
+
+GBrain 自己的 `dream` 与 OpenClaw 的 Memory Dreaming Promotion 也不是同一个任务，不要混在一起判断。
+
+### 7. OpenClaw 接入的命令验收
+
+MCP 配置完成后，按下面顺序检查：
+
+```bash
+openclaw mcp show gbrain --json
+openclaw mcp doctor gbrain --probe
+openclaw mcp probe gbrain --json
+```
+
+这三条分别检查保存的配置、真实连接和工具能力。
+
+Context Engine 再单独确认：
+
+```bash
+openclaw plugins inspect gbrain-context-engine --runtime
+openclaw config get plugins.slots.contextEngine
+```
+
+正确结果应该是插件正常加载，并且 slot 值为：
+
+```text
+gbrain-context
+```
+
+只改了 MCP 定义，可以先运行：
+
+```bash
+openclaw mcp reload
+```
+
+修改了插件或 Context Engine，则需要：
+
+```bash
+openclaw gateway restart
+openclaw gateway health
+```
+
+最终仍然要做行为测试：先写入一条不会和常识混淆的独特事实，再开启新会话直接提问。不手动要求搜索，仍能召回，才算自动链路成立。
+
+<HighlightBox eyebrow="日常路径" title="不需要每次把所有命令跑一遍">
+  状态异常先运行 `gbrain status`；查知识走 `search → get`；写内容走 `capture → tag / link`；文件变化走 `dry-run → sync → search`；只有 OpenClaw 行为异常时，才继续检查 MCP、插件、slot 和新会话召回。
+</HighlightBox>
 
 ## 实际使用时会是什么感觉？
 
@@ -1089,6 +1368,98 @@ Embedding、reranker、Autopilot 都可以后面再补，但“自动想起”�
     line-height: 1.65;
   }
 
+  .gb-command-map {
+    overflow: hidden;
+    width: min(1040px, calc(100vw - 2rem));
+    margin: 2rem 50% 2.5rem;
+    transform: translateX(-50%);
+    border: 1px solid rgba(47, 123, 246, .22);
+    border-radius: 24px;
+    background: linear-gradient(145deg, #071422, #0b1b2e);
+    box-shadow: 0 24px 70px rgba(7, 20, 34, .16);
+  }
+
+  .gb-command-map__head {
+    padding: 1.2rem 1.4rem;
+    border-bottom: 1px solid rgba(126, 194, 255, .14);
+  }
+
+  .gb-command-map__head span {
+    display: block;
+    margin-bottom: .35rem;
+    color: #60c5ff;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+  }
+
+  .gb-command-map__head strong {
+    color: #eff7ff;
+    font-size: 1.08rem;
+  }
+
+  .gb-command-map__track {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr) auto) minmax(0, 1fr);
+    gap: .55rem;
+    align-items: center;
+    padding: 1.15rem;
+  }
+
+  .gb-command-map__track > div {
+    min-width: 0;
+    min-height: 132px;
+    padding: .85rem;
+    border: 1px solid #29445e;
+    border-radius: 14px;
+    background: #0d2032;
+  }
+
+  .gb-command-map__track > div.is-final {
+    border-color: rgba(82, 220, 164, .38);
+    background: linear-gradient(145deg, #0d2a25, #11382f);
+  }
+
+  .gb-command-map__track b {
+    display: inline-grid;
+    width: 1.55rem;
+    height: 1.55rem;
+    place-items: center;
+    margin-right: .35rem;
+    border-radius: 50%;
+    color: #fff;
+    background: #2f7bf6;
+    font-size: .68rem;
+  }
+
+  .gb-command-map__track span {
+    color: #f3f9ff;
+    font-size: .8rem;
+    font-weight: 800;
+  }
+
+  .gb-command-map__track code {
+    display: block;
+    margin-top: .7rem;
+    color: #71dfb8;
+    font-size: .75rem;
+    white-space: normal;
+  }
+
+  .gb-command-map__track small {
+    display: block;
+    margin-top: .4rem;
+    color: #93abc0;
+    font-size: .7rem;
+    line-height: 1.45;
+  }
+
+  .gb-command-map__track > i {
+    color: #4d8dbd;
+    font-style: normal;
+    text-align: center;
+  }
+
   @media (max-width: 760px) {
     .gb-hero-map__body, .gb-role-map__split, .gb-checkboard__grid {
       grid-template-columns: 1fr;
@@ -1110,6 +1481,21 @@ Embedding、reranker、Autopilot 都可以后面再补，但“自动想起”�
 
     .gb-architecture__base {
       grid-template-columns: 1fr;
+    }
+
+    .gb-command-map {
+      width: 100%;
+      margin-right: 0;
+      margin-left: 0;
+      transform: none;
+    }
+
+    .gb-command-map__track {
+      grid-template-columns: 1fr;
+    }
+
+    .gb-command-map__track > i {
+      transform: rotate(90deg);
     }
   }
 `}</style>

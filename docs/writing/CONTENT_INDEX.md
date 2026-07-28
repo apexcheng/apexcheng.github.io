@@ -15,8 +15,7 @@
 | `src/content/posts/yingdao-agent-development-knowledge-base.mdx` | `教程` | 影刀 × Agent 开发总览，覆盖开发知识库、问题查询、真实项目规则、浏览器元素探索、代码同步和知识库更新闭环 | 写影刀编码版、Agent 辅助开发、影刀知识库、浏览器元素探索和外部代码同步时参考 |
 | `src/content/posts/automation-agent-workflow.mdx` | `实践` | Agent 执行系统图解手册，统一任务分流、状态管理、权限边界、执行循环和失败恢复 | 写 Agent 流程、自动化协作、任务拆解决策、大任务阶段管理和失败恢复文章时参考 |
 | `src/content/posts/browser-agent-shared-chrome-runtime.mdx` | `实践` | 共享 Chrome 运行时架构手册，覆盖固定 Profile、CDP、ensure 状态机、接入顺序、页面隔离、操作清单和故障分流 | 写浏览器自动化基础设施、Playwright CDP、共享登录状态、Chrome 生命周期和多 Agent 复用时参考 |
-| `src/content/posts/gbrain-openclaw-long-term-brain-setup.mdx` | `实践` | GBrain 接入 OpenClaw 的实战配置，覆盖 Context Engine 自动召回、Signal Detector 后台写入、PostgreSQL 多会话并发、Brain source 路由与高频踩坑 | 写 Agent 长期记忆、GBrain、OpenClaw Context Engine、自动记忆闭环和多进程存储选型时参考 |
-| `src/content/posts/gbrain-openclaw-command-handbook.mdx` | `教程` | GBrain / OpenClaw 运维命令图谱，覆盖状态定位、浏览检索、写入关系、同步嵌入、版本删除、健康升级、接入验收和分层排障 | 写 GBrain CLI 教程、OpenClaw 长期知识库运维、命令速查和接入验收时参考 |
+| `src/content/posts/gbrain-openclaw-long-term-brain-setup.mdx` | `实践` | GBrain 接入 OpenClaw 的完整实战，覆盖 Context Engine 自动召回、Signal Detector 后台写入、PostgreSQL 多会话并发、Brain source 路由，以及状态、检索、写入、同步、维护和接入验收命令 | 写 Agent 长期记忆、GBrain CLI、OpenClaw Context Engine、自动记忆闭环、知识库运维和分层排障时参考 |
 | `src/content/posts/blog-project-architecture.mdx` | `实践` | 维护者视角的博客系统蓝图，覆盖仓库职责、内容分区、规则控制面、写作公开流程和静态发布边界 | 写本博客说明、仓库结构、内容维护规则和发布边界时参考 |
 | `src/content/posts/blog-code-structure-runtime.mdx` | `实践` | 开发者视角的博客运行蓝图，覆盖 URL 路由、Content Collection、MDX 渲染栈、静态构建、本地与 Pages 链路和代码定位 | 写本博客代码结构、运行流程、Astro 项目拆解和故障定位时参考 |
 | `src/content/posts/css-selector-for-automation-beginners.mdx` | `教程` | CSS 定位图解手册，覆盖稳定定位层级、属性匹配、关系与伪类、影刀文字定位、唯一性验证、排错路线和坏定位改造 | 写 CSS 选择器教学、网页元素定位、影刀编码版自动化、动态 class 处理和定位排错文章时参考 |
