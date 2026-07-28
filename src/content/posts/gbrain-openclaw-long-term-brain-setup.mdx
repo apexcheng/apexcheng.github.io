@@ -1,300 +1,267 @@
 ---
 title: "给 OpenClaw 装上长期记忆：让 AI Agent 不再每次重新认识你"
-description: "记录我如何把 GBrain 接入 OpenClaw，并整理接入后最常用的查询、写入、同步、维护和验收命令。"
+description: "用一套完整的系统图和操作控制台，讲清 GBrain 如何接入 OpenClaw、形成自动召回与自动写入闭环，以及日常查询、同步、维护和排查方法。"
 date: 2026-07-10T18:20:24+08:00
-updated: 2026-07-28T13:38:58+08:00
+updated: 2026-07-28T14:03:57+08:00
 category: "实践"
 tags:
   - "GBrain"
   - "OpenClaw"
   - "Agent"
   - "知识库"
-minutes: 32
+minutes: 30
 featured: false
 draft: false
 private: false
 ---
 
-import Callout from '../../components/Callout.astro';
-import HighlightBox from '../../components/HighlightBox.astro';
-import DecisionFlow from '../../components/DecisionFlow.astro';
+很多人在长期使用 AI 助手后，都会遇到同一个问题：
 
-很多人在使用 AI 助手时都会遇到同一个问题：
+> 昨天已经告诉它的事情，今天为什么又要重新解释？
 
-> 昨天已经告诉它的事情，今天为什么又忘了？
+一次性聊天只需要当前上下文；但维护博客、开发 Agent、管理自动化流程时，项目背景、历史决策、长期偏好和踩坑经验都需要持续保留。
 
-原因很简单：大部分 AI 对话主要依赖当前聊天窗口里的上下文。对一次性任务来说够用，但当任务变成长期项目，例如维护博客、开发 Agent、管理自动化流程时，就会越来越难受。
+所以我把 GBrain 接进了自己的 OpenClaw。目标不是多装一个搜索工具，而是让 Agent 形成两条真正可运行的闭环：
 
-你会不断重复：
+- **自动想起来**：每次对话开始时，主动召回相关长期知识。
+- **自动记下来**：新消息进入后，判断哪些内容值得长期保存，并写回知识库。
 
-- 这个项目是做什么的；
-- 为什么之前没有选某个方案；
-- 我的长期偏好是什么；
-- 上次已经踩过哪些坑。
-
-所以我最近把 GBrain 接进了自己的 OpenClaw。
-
-我的目标不是再给 Agent 多装一个搜索工具，而是让它真的形成两条闭环：
-
-1. **自动想起来**：每次对话开始时，系统主动召回相关长期知识。
-2. **自动记下来**：新消息进入后，后台判断是否值得长期保存，并写回 GBrain。
-
-<div class="gb-hero-map" aria-label="普通 AI 与接入 GBrain 后的区别">
-  <div class="gb-hero-map__head">
-    <span>BEFORE / AFTER</span>
-    <strong>区别不在“多一个工具”，而在记忆能不能形成闭环</strong>
-  </div>
-  <div class="gb-hero-map__body">
-    <div class="gb-state gb-state--old">
-      <span>普通 AI</span>
-      <strong>每次重新认识你</strong>
-      <p>当前聊天结束后，项目背景、历史决策和长期偏好很容易散掉。</p>
-      <div class="gb-state__chips"><i>重复解释</i><i>上下文断裂</i><i>经验难积累</i></div>
+<div class="brain-poster brain-hero" role="group" aria-label="OpenClaw 接入 GBrain 后的长期记忆系统总览">
+  <header class="brain-poster__title">
+    <div>
+      <span>OPENCLAW × GBRAIN · LONG-TERM MEMORY SYSTEM</span>
+      <strong>让 Agent 从“每次重新认识你”，变成“持续理解你的长期助手”</strong>
     </div>
-    <div class="gb-hero-map__bridge">
-      <b>+</b>
+    <b>长期大脑</b>
+  </header>
+
+  <div class="brain-hero__comparison">
+    <section class="is-before">
+      <small>接入前</small>
+      <strong>记忆停留在当前会话</strong>
+      <p>聊天结束后，项目规则、历史决定和长期偏好容易散掉。</p>
+      <div class="brain-tags"><span>重复解释</span><span>决策断层</span><span>经验难沉淀</span></div>
+    </section>
+    <div class="brain-hero__core">
+      <span>OpenClaw</span>
+      <i>+</i>
       <span>GBrain</span>
     </div>
-    <div class="gb-state gb-state--new">
-      <span>OpenClaw + GBrain</span>
-      <strong>逐渐了解你的长期助手</strong>
-      <p>重要项目、历史决定和可复用经验会被保存，并在需要时重新召回。</p>
-      <div class="gb-state__chips"><i>自动召回</i><i>自动沉淀</i><i>长期积累</i></div>
-    </div>
+    <section class="is-after">
+      <small>接入后</small>
+      <strong>记忆进入长期闭环</strong>
+      <p>重要知识被保存，并在相关任务出现时重新注入上下文。</p>
+      <div class="brain-tags"><span>自动召回</span><span>自动沉淀</span><span>长期积累</span></div>
+    </section>
   </div>
+
+  <div class="brain-hero__loops">
+    <section>
+      <b>01</b>
+      <div><span>RECALL · 自动想起</span><strong>用户消息 → Context Engine → 长期知识注入</strong></div>
+    </section>
+    <section>
+      <b>02</b>
+      <div><span>CAPTURE · 自动记住</span><strong>用户消息 → Signal Detector → GBrain 写入</strong></div>
+    </section>
+  </div>
+
+  <footer class="brain-poster__foot">
+    <span>本文实测基线</span>
+    <strong>GBrain 0.42.57.0 · OpenClaw 2026.7.1-beta.2 · PostgreSQL 17</strong>
+    <small>版本升级后，命令参数和桥接逻辑应以本机实际结果为准。</small>
+  </footer>
 </div>
 
-<HighlightBox eyebrow="一句话理解" title="OpenClaw 负责思考和执行，GBrain 负责长期记忆">
-  普通 AI 像一个能力很强但刚入职的员工，每次聊天都需要重新介绍背景。接入长期记忆后，它更像一个持续合作、逐渐了解你的同事。
-</HighlightBox>
+## 先看整体：它不是一个插件，而是一套双闭环系统
 
-## OpenClaw 和 GBrain 分别负责什么？
+GBrain 不是另一个聊天机器人，也不是 OpenClaw 的替代品。
 
-不要把 GBrain 理解成另一个聊天机器人。
+OpenClaw 负责理解目标、推理、调用工具和执行任务；GBrain 负责保存长期项目、历史决定、人物关系和可复用经验。两者之间还需要 Context Engine、Retrieval Reflex、MCP 和 Signal Detector 把读写链路连接起来。
 
-它更像是 Agent 的长期知识库和记忆层。
-
-<div class="gb-role-map" aria-label="OpenClaw 和 GBrain 的分工">
-  <div class="gb-role-map__user">你提出一个目标</div>
-  <div class="gb-role-map__arrow">↓</div>
-  <div class="gb-role-map__agent">
-    <span>OpenClaw</span>
-    <strong>理解问题 · 推理 · 调用工具 · 执行任务</strong>
-  </div>
-  <div class="gb-role-map__split">
+<div class="brain-poster brain-system" role="group" aria-label="OpenClaw 与 GBrain 长期记忆系统分层图">
+  <header class="brain-poster__title">
     <div>
-      <span>短期状态</span>
+      <span>CHAPTER 01 · SYSTEM MAP</span>
+      <strong>一条用户消息，同时经过“当前思考”“自动召回”和“后台沉淀”</strong>
+    </div>
+    <b>系统地图</b>
+  </header>
+
+  <div class="brain-system__input">你提出一个目标</div>
+
+  <div class="brain-system__agent">
+    <span>运行中心</span>
+    <strong>OpenClaw</strong>
+    <p>理解问题 · 组织上下文 · 调用工具 · 执行任务 · 输出结果</p>
+  </div>
+
+  <div class="brain-system__layers">
+    <section>
+      <small>短期状态</small>
       <strong>Memory Core</strong>
-      <small>当前会话、最近状态、轻量偏好</small>
-    </div>
-    <div class="is-core">
-      <span>长期记忆</span>
+      <p>当前会话、最近状态和轻量偏好。</p>
+    </section>
+    <section class="is-primary">
+      <small>长期知识</small>
       <strong>GBrain</strong>
-      <small>项目、人物、公司、决策、经验和方法论</small>
-    </div>
-    <div>
-      <span>主动操作</span>
+      <p>项目、人物、公司、决定、经验和方法论。</p>
+    </section>
+    <section>
+      <small>主动操作</small>
       <strong>MCP</strong>
-      <small>搜索、读取、写入和查询长期知识</small>
+      <p>让 Agent 搜索、读取、写入和查询长期知识。</p>
+    </section>
+  </div>
+
+  <div class="brain-system__lanes">
+    <section>
+      <div class="brain-lane-label"><b>A</b><span>自动召回</span></div>
+      <div class="brain-lane-flow">
+        <div><small>01</small><strong>Context Engine</strong><span>接管上下文组装</span></div>
+        <i>→</i>
+        <div><small>02</small><strong>Retrieval Reflex</strong><span>识别实体与相关知识</span></div>
+        <i>→</i>
+        <div class="is-end"><small>03</small><strong>注入主 Agent</strong><span>带着历史继续思考</span></div>
+      </div>
+    </section>
+    <section>
+      <div class="brain-lane-label is-green"><b>B</b><span>自动写入</span></div>
+      <div class="brain-lane-flow">
+        <div><small>01</small><strong>message_received</strong><span>每条新消息到达</span></div>
+        <i>→</i>
+        <div><small>02</small><strong>Signal Detector</strong><span>判断是否值得长期保存</span></div>
+        <i>→</i>
+        <div class="is-end is-green"><small>03</small><strong>写入 brain</strong><span>后台沉淀，不阻塞回复</span></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="brain-verdict">
+    <span>核心判断</span>
+    <strong>能调用 GBrain 工具，不等于已经拥有长期记忆。</strong>
+    <p>只有自动召回和自动写入都经过真实行为测试，长期大脑才算成立。</p>
+  </div>
+</div>
+
+## 为什么只安装 MCP 还不够？
+
+我最开始也以为，安装 GBrain MCP，让 Agent 能搜索和写入知识，就已经完成接入。
+
+实际只完成了最下面一层：**Agent 可以主动使用工具**。如果每次都要靠模型临时判断“现在是不是应该搜索 GBrain”，记忆仍然不稳定。
+
+<div class="brain-poster brain-three-parts" role="group" aria-label="MCP、Context Engine 和 Signal Detector 的职责对比">
+  <header class="brain-poster__title">
+    <div>
+      <span>CHAPTER 02 · THREE REQUIRED PARTS</span>
+      <strong>长期记忆不是一个开关，而是三种能力同时工作</strong>
+    </div>
+    <b>能力分工</b>
+  </header>
+
+  <div class="brain-three-parts__grid">
+    <section>
+      <div class="brain-part-icon">MCP</div>
+      <span>主动工具</span>
+      <strong>我想查时，可以查</strong>
+      <p>提供搜索、读取、查询和写入能力，但不会保证每轮对话自动调用。</p>
+      <small>解决：能不能操作长期知识</small>
+    </section>
+    <section class="is-blue">
+      <div class="brain-part-icon">CE</div>
+      <span>Context Engine</span>
+      <strong>相关历史，自动回来</strong>
+      <p>在每轮上下文组装时识别当前问题，并主动注入相关长期知识。</p>
+      <small>解决：能不能自动想起来</small>
+    </section>
+    <section class="is-green">
+      <div class="brain-part-icon">SD</div>
+      <span>Signal Detector</span>
+      <strong>重要信息，自动留下</strong>
+      <p>判断消息是否值得长期保存，在后台完成写入，不阻塞主 Agent 回复。</p>
+      <small>解决：能不能自动记下来</small>
+    </section>
+  </div>
+
+  <div class="brain-three-parts__example">
+    <div>
+      <span>临时指令</span>
+      <code>今天帮我改一下这个标题</code>
+      <strong>通常不保存</strong>
+    </div>
+    <i>≠</i>
+    <div class="is-keep">
+      <span>长期规则</span>
+      <code>以后博客文章默认公开，除非明确要求草稿</code>
+      <strong>值得长期保存</strong>
     </div>
   </div>
 </div>
 
-简单理解：
+## 我最终采用的安装与接入路径
 
-| 部分 | 负责什么 |
-| --- | --- |
-| OpenClaw | AI 助手的运行中心，负责推理、调用工具和执行任务 |
-| Memory Core | OpenClaw 自己的短期状态和轻量记忆 |
-| GBrain | 保存长期项目、历史决策和可复用经验 |
-| GBrain MCP | 让 Agent 主动搜索、读取和写入 GBrain |
+下面不是我第一次安装时的顺序，而是排除无效尝试后留下的稳定路径。每一步都带一个验证点，上一层没有通过，不进入下一层排查。
 
-## 为什么只装 MCP 还不够？
+<div class="brain-poster brain-roadmap" role="group" aria-label="GBrain 接入 OpenClaw 的七步路径">
+  <header class="brain-poster__title">
+    <div>
+      <span>CHAPTER 03 · BUILD ROADMAP</span>
+      <strong>从 CLI、数据库、知识源，一直走到自动召回和行为验收</strong>
+    </div>
+    <b>接入路径</b>
+  </header>
 
-刚开始接入时，我也认为：
-
-> 安装 GBrain MCP，让 Agent 能调用工具，不就完成了吗？
-
-实际不是。
-
-MCP 只解决了：
-
-> Agent **可以主动**查询和写入记忆。
-
-真正的长期记忆还要补两块。
-
-### 自动想起来：Context Engine
-
-当我说到某个项目时，系统应该主动找到相关历史信息，而不是等 Agent 先猜“要不要搜索 GBrain”。
-
-这部分由 Context Engine 负责。
-
-### 自动记下来：Signal Detector
-
-聊天里也不是所有内容都值得保存。
-
-例如：
-
-```text
-今天帮我把这个标题改一下
-```
-
-通常没必要长期保存。
-
-但：
-
-```text
-以后博客文章默认公开，除非我明确要求草稿
-```
-
-这种长期规则就值得记录。
-
-这部分由 Signal Detector 判断。
-
-## 我最终跑通的完整架构
-
-我没有删除 OpenClaw 原来的 `memory-core`，而是让短期记忆和长期记忆分工。
-
-<div class="gb-architecture" aria-label="OpenClaw 和 GBrain 的完整长期记忆架构">
-  <div class="gb-architecture__head">
-    <span>LONG-TERM MEMORY SYSTEM</span>
-    <strong>同一条用户消息，同时进入“自动想起”和“自动记住”两条链路</strong>
-  </div>
-  <div class="gb-architecture__input">用户消息</div>
-  <div class="gb-architecture__lanes">
-    <section>
-      <div class="gb-lane__tag">RECALL · 自动想起</div>
-      <div class="gb-lane__track">
-        <div><b>01</b><strong>Context Engine</strong><small>接管每轮上下文组装</small></div>
-        <i>→</i>
-        <div><b>02</b><strong>Retrieval Reflex</strong><small>识别相关实体和长期知识</small></div>
-        <i>→</i>
-        <div class="is-focus"><b>03</b><strong>注入 OpenClaw</strong><small>让主 Agent 带着历史继续思考</small></div>
-      </div>
-    </section>
-    <section>
-      <div class="gb-lane__tag gb-lane__tag--green">CAPTURE · 自动记住</div>
-      <div class="gb-lane__track">
-        <div><b>01</b><strong>message_received</strong><small>每条新消息到达</small></div>
-        <i>→</i>
-        <div><b>02</b><strong>Signal Detector</strong><small>后台判断是否值得长期保存</small></div>
-        <i>→</i>
-        <div class="is-success"><b>03</b><strong>写入 GBrain</strong><small>统一保存到 brain source</small></div>
-      </div>
-    </section>
-  </div>
-  <div class="gb-architecture__base">
-    <div><span>短期层</span><strong>Memory Core</strong></div>
-    <div class="is-db"><span>长期数据层</span><strong>GBrain + PostgreSQL 17</strong></div>
+  <div class="brain-roadmap__steps">
+    <section><b>01</b><div><span>安装 GBrain</span><strong>先证明 CLI 正常</strong><small>验证：gbrain doctor 可运行</small></div></section>
+    <section><b>02</b><div><span>更换存储层</span><strong>使用 PostgreSQL 17</strong><small>验证：多会话不再抢 PGLite 锁</small></div></section>
+    <section><b>03</b><div><span>建立知识源</span><strong>独立 Brain Repo</strong><small>验证：brain source 可同步</small></div></section>
+    <section><b>04</b><div><span>接入主动工具</span><strong>Retrieval Reflex + MCP</strong><small>验证：gbrain MCP 握手成功</small></div></section>
+    <section><b>05</b><div><span>接入自动召回</span><strong>切换 Context Engine</strong><small>验证：slot = gbrain-context</small></div></section>
+    <section><b>06</b><div><span>接入自动写入</span><strong>message_received Hook</strong><small>验证：后台写入 source_id = brain</small></div></section>
+    <section class="is-final"><b>07</b><div><span>最终验收</span><strong>验证真实行为</strong><small>验证：新会话自动召回独特事实</small></div></section>
   </div>
 </div>
 
-这张图就是整篇文章最核心的东西。
+### 第一步：安装 GBrain，先确认 CLI 正常
 
-真正成为“长期大脑”后：
-
-- 旧知识能自动回来；
-- 新知识能自动沉淀；
-- 主 Agent 的回复不会被后台记忆任务卡住；
-- 多会话同时运行也不会抢同一份本地数据库锁。
-
-## 先说安装：我是怎么装 GBrain 的
-
-GBrain 官方现在更推荐让 Agent 自己读取安装说明并执行，而不是人工一条条抄命令。
-
-官方入口是：
-
-[GBrain GitHub 仓库](https://github.com/garrytan/gbrain)
-
-把下面这句话直接交给可以访问网络和终端的 Agent：
+GBrain 官方更推荐让 Agent 读取安装说明并执行。可以把下面这段直接交给能够访问网络和终端的 Agent：
 
 ```text
 Retrieve and follow the instructions at:
 https://raw.githubusercontent.com/garrytan/gbrain/master/INSTALL_FOR_AGENTS.md
 ```
 
-如果只想先装 CLI，官方也提供了手动方式：
+只安装 CLI 时，可以使用：
 
 ```bash
 bun install -g github:garrytan/gbrain
 gbrain doctor
 ```
 
-我当前本机实际使用的是：
+这篇文章不是官方安装文档的复述。官方说明负责把 GBrain 装起来；这里重点记录它怎样进入现有 OpenClaw，并形成自动召回、自动写入和多会话稳定运行。
 
-```text
-GBrain 0.42.57.0
-OpenClaw 2026.7.1-beta.2
-```
+### 第二步：多会话场景直接使用 PostgreSQL 17
 
-<Callout title="这篇文章不是照抄官方安装文档">
-  官方安装负责把 GBrain 本身装起来；这篇文章重点记录的是：我怎样把它真正接进现有 OpenClaw，并跑通自动召回、自动写入和多会话并发。
-</Callout>
+我最初使用 PGLite。单独运行 GBrain 没问题，但 OpenClaw 的 MCP runtime 会按 session 启动独立进程，多个 `gbrain serve` 可能同时争用一份数据库文件。
 
-## 我的最终配置顺序
-
-这不是我最开始走的路径，而是把踩过的坑排除后，留下来的顺序。
-
-<DecisionFlow
-  title="最终配置路径"
-  items={[
-    {
-      label: 'Step 1',
-      title: '安装 GBrain，并先确认 CLI 正常',
-      description: '先运行 gbrain doctor，确保不是在后面排查 OpenClaw 时才发现 GBrain 本身就没有装好。',
-    },
-    {
-      label: 'Step 2',
-      title: '把存储层换成 PostgreSQL 17',
-      description: '多 Agent、多会话场景不再使用 PGLite，避免多个 gbrain serve 抢同一个文件锁。',
-    },
-    {
-      label: 'Step 3',
-      title: '建立独立 Brain Repo',
-      description: '使用 ~/brain 保存长期知识，并注册成名为 brain 的 GBrain source。',
-    },
-    {
-      label: 'Step 4',
-      title: '接入 Retrieval Reflex 和 MCP',
-      description: '让 Agent 能查询、读写长期知识，并明确所有写入都落到 brain source。',
-    },
-    {
-      label: 'Step 5',
-      title: '把 Context Engine 切到 GBrain',
-      description: '让 GBrain 真正进入每轮上下文组装，而不是只作为一个可选工具存在。',
-    },
-    {
-      label: 'Step 6',
-      title: '补上 Signal Detector 事件触发',
-      description: '在 message_received 后台运行官方 Signal Detector，让值得保存的消息自动落库。',
-    },
-    {
-      label: 'Step 7',
-      title: '按行为做最终验收',
-      description: '不仅看插件 loaded，还要真实验证自动召回、自动写入和多会话并发。',
-    },
-  ]}
-/>
-
-## 1. 存储层：直接使用 PostgreSQL 17
-
-我最初使用的是 PGLite。
-
-单独运行 GBrain 时没问题，但接入 OpenClaw 后，问题马上出现了。
-
-OpenClaw 的 MCP runtime 会按 session 启动独立进程。多个会话同时加载 GBrain MCP 时，就可能出现多个 `gbrain serve` 去争同一份 PGLite 数据库文件。
-
-结果就是：
-
-```text
-第一个 gbrain serve -> 正常持有数据库锁
-第二个 gbrain serve -> 等待锁
-第三个 gbrain serve -> 继续等待
-
-最终表现：MCP 启动卡住约 30 秒
-```
-
-所以我最后改成了本地 PostgreSQL 17 + pgvector。
+<div class="brain-poster brain-lock" role="group" aria-label="PGLite 多会话锁冲突与 PostgreSQL 解决方案">
+  <header class="brain-panel-title">
+    <span>STORAGE DECISION</span>
+    <strong>问题不是 GBrain 慢，而是多个会话在抢同一把文件锁</strong>
+  </header>
+  <div class="brain-lock__flow">
+    <section><b>会话 1</b><span>gbrain serve</span><strong>持有 PGLite 锁</strong></section>
+    <section><b>会话 2</b><span>gbrain serve</span><strong>等待锁</strong></section>
+    <section><b>会话 3</b><span>gbrain serve</span><strong>继续等待</strong></section>
+    <i>→</i>
+    <section class="is-error"><b>最终表现</b><span>MCP 启动</span><strong>卡住约 30 秒</strong></section>
+  </div>
+  <div class="brain-lock__solution">
+    <span>最终方案</span>
+    <strong>PostgreSQL 17 + pgvector</strong>
+    <p>把共享状态交给数据库服务，不再让多个 session 争用同一个本地文件。</p>
+  </div>
+</div>
 
 ```bash
 brew install postgresql@17 pgvector
@@ -302,40 +269,23 @@ brew services start postgresql@17
 
 createdb gbrain
 psql gbrain -c 'CREATE EXTENSION IF NOT EXISTS vector;'
-```
 
-然后让 GBrain 直接使用 PostgreSQL：
-
-```bash
 gbrain init \
   --url "postgresql://<user>@127.0.0.1:5432/gbrain" \
   --no-embedding
 ```
 
-我当前先没有配置 Embedding，所以使用 `--no-embedding`。
+我当前没有配置 Embedding，所以使用 `--no-embedding`。这不会影响关键词搜索、实体召回、MCP 查询和 Signal Detector 写入，只是暂时没有完整的向量语义检索。
 
-这不会影响：
+我实际安装时还遇到一次版本兼容：当时 Homebrew 的 pgvector 扩展没有落到 PostgreSQL 16 的扩展目录，换成 PostgreSQL 17 后恢复正常。最终只保留一个数据库版本，避免两套服务同时占端口。
 
-- 关键词搜索；
-- 实体召回；
-- MCP 查询；
-- Signal Detector 自动写入。
+### 第三步：建立独立的 Brain Repo
 
-只是暂时没有完整的向量语义检索。
-
-<Callout title="为什么不是 PostgreSQL 16">
-  我实际安装时踩过一次版本兼容：当时 Homebrew 的 pgvector 扩展文件没有落到 PostgreSQL 16 的扩展目录，换成 PostgreSQL 17 后直接正常。最终只保留 PostgreSQL 17，避免两套数据库服务同时占端口。
-</Callout>
-
-## 2. 建立独立的 Brain Repo
-
-我没有把长期知识直接塞进 OpenClaw workspace，而是单独建立：
+长期知识没有直接塞进 OpenClaw workspace，而是单独保存在：
 
 ```text
 ~/brain
 ```
-
-这个目录本身是一个 Git 仓库，负责保存长期知识源。
 
 ```bash
 mkdir -p ~/brain
@@ -346,40 +296,24 @@ gbrain sources add brain --path ~/brain
 gbrain sync --source brain --no-pull --no-embed
 ```
 
-最终目录职责是：
+<div class="brain-poster brain-folders" role="group" aria-label="OpenClaw workspace、Brain Repo 和 PostgreSQL 的职责">
+  <div><span>工作区</span><strong>{'~/.openclaw/workspace'}</strong><p>Agent 规则、Skill 和执行环境</p></div>
+  <i>+</i>
+  <div class="is-primary"><span>知识源</span><strong>{'~/brain'}</strong><p>长期知识的 Markdown 与 Git 仓库</p></div>
+  <i>+</i>
+  <div><span>检索层</span><strong>PostgreSQL</strong><p>索引、搜索和运行数据</p></div>
+</div>
 
-```text
-~/.openclaw/workspace  -> Agent 工作区、规则、Skill
-~/brain                -> 长期知识源
-PostgreSQL              -> GBrain 检索与运行数据
-```
+我最终只保留一个明确的长期 source：`brain`。后面的 MCP 写入也必须明确落到这个 source。
 
-我最终只保留一个明确的长期 source：
+### 第四步：接入 Retrieval Reflex 和 MCP
 
-```text
-brain
-```
-
-这一步看起来简单，但后面非常重要，因为 MCP 写入也必须明确落到这个 source。
-
-## 3. 接入 Retrieval Reflex 和 MCP
-
-接下来是三块能力：
-
-- GBrain 官方 Skillpack：告诉 Agent 各类 GBrain 能力怎么使用；
-- Retrieval Reflex：提到相关实体时，主动召回长期知识；
-- MCP：提供搜索、查询、读取和写入工具。
-
-Retrieval Reflex 安装到 OpenClaw workspace：
+Retrieval Reflex 负责识别相关实体，MCP 负责让 Agent 主动搜索和写入。
 
 ```bash
 gbrain integrations install retrieval-reflex \
   --target ~/.openclaw/workspace
-```
 
-MCP 的关键不是只有 `cwd`，而是要明确指定 source：
-
-```bash
 openclaw mcp add gbrain \
   --command "$(command -v gbrain)" \
   --arg serve \
@@ -387,7 +321,13 @@ openclaw mcp add gbrain \
   --env GBRAIN_SOURCE=brain
 ```
 
-我当前实际配置的核心结构是：
+MCP 配置中最容易被忽略的不是 `cwd`，而是：
+
+```text
+GBRAIN_SOURCE=brain
+```
+
+`cwd=~/brain` 不会自动保证所有写入都路由到 `brain`。没有明确 source 时，写入可能回退到 `default`。
 
 ```json
 {
@@ -400,37 +340,19 @@ openclaw mcp add gbrain \
 }
 ```
 
-这里把个人用户名做了脱敏，真正重要的是：
-
-```text
-GBRAIN_SOURCE=brain
-```
-
-最后验证：
+最后运行：
 
 ```bash
 openclaw mcp doctor
 ```
 
-我当前真实结果是：
+我当时的真实结果是 `gbrain: ok`。
 
-```text
-gbrain: ok
-```
+### 第五步：让 GBrain 真正成为 Context Engine
 
-## 4. 让 GBrain 真正成为 Context Engine
+如果 OpenClaw 仍然使用 `contextEngine = legacy`，GBrain 只是一个可选工具，没有进入每轮上下文组装。
 
-只安装 MCP 还不够。
-
-如果 OpenClaw 仍然是：
-
-```text
-contextEngine = legacy
-```
-
-那么 GBrain 只是一个“可以被调用的工具”，并没有进入每轮上下文组装过程。
-
-我当前真正使用的 slot 是：
+我最终使用的 slot 是：
 
 ```json
 {
@@ -443,59 +365,25 @@ contextEngine = legacy
 }
 ```
 
-这代表：
+<div class="brain-poster brain-id-check" role="group" aria-label="GBrain 插件 ID 与 Context Engine ID 的区别">
+  <div class="is-wrong"><span>插件 ID</span><strong>gbrain-context-engine</strong><small>插件叫什么</small></div>
+  <i>≠</i>
+  <div class="is-right"><span>Context Engine ID</span><strong>gbrain-context</strong><small>slot 应该填写的值</small></div>
+</div>
 
-```text
-短期记忆    -> memory-core
-上下文组装  -> gbrain-context
-```
-
-这里有一个很容易踩的坑：
-
-```text
-插件 ID：gbrain-context-engine
-Context Engine ID：gbrain-context
-```
-
-slot 必须填 Context Engine ID，不是插件 ID。
-
-我的本地桥接插件位于：
-
-```text
-~/.openclaw/extensions/gbrain-context-engine
-```
-
-它的职责很克制：
+我的本地桥接插件位于 `~/.openclaw/extensions/gbrain-context-engine`，只负责三件事：
 
 1. 加载 GBrain 官方 Context Engine；
 2. 适配当前版本 OpenClaw 与 GBrain 的 `prompt` / `messages` 参数差异；
 3. 在 `message_received` 上启动官方 Signal Detector。
 
-核心不是重写 GBrain，而是把两个宿主接口接起来。
+这不是所有版本都要长期保留的代码。升级 OpenClaw 或 GBrain 后，应先检查上游是否已经原生解决，能删除桥接层就删除。
 
-<Callout title="这一段不是所有人都要照抄">
-  我当前使用的是 OpenClaw 2026.7.1-beta.2 和 GBrain 0.42.57.0，这个桥接层是为当前版本差异服务。以后升级时应该先看上游是否已经原生修复，能删除兼容代码就删除。
-</Callout>
+### 第六步：让 Signal Detector 通过系统事件自动运行
 
-## 5. 让 Signal Detector 真正自动运行
+`signal-detector/SKILL.md` 里的 `triggers:` 只是 Skill 描述，不是 OpenClaw 的原生事件机制。在 `AGENTS.md` 中写“每条消息都启动 Signal Detector”也只是 Prompt 约束，不够稳定。
 
-这一块是我误判最久的地方。
-
-GBrain 的 `signal-detector/SKILL.md` 里虽然写了触发描述，但 OpenClaw 不会因为 Skill 文件里有 `triggers:` 就自动执行它。
-
-所以只在 `AGENTS.md` 里写：
-
-```text
-每条消息都启动 Signal Detector
-```
-
-也不够稳定。
-
-这只是 Prompt 约束，不是系统事件。
-
-我最后使用 OpenClaw 原生的 `message_received` hook，在每条入站消息到来后启动隐藏子 Agent，让它执行官方 Signal Detector Skill。
-
-核心逻辑可以压缩成：
+我最终使用宿主侧 `message_received` hook，在每条入站消息后启动隐藏子 Agent：
 
 ```js
 api.on('message_received', (event, ctx) => {
@@ -504,152 +392,101 @@ api.on('message_received', (event, ctx) => {
 });
 ```
 
-这里最重要的是 `void`。
+这里最重要的是 `void`：后台记忆任务继续运行，主 Agent 不等待它完成。
 
-Signal Detector 在后台继续运行，不等待它完成，主 Agent 可以正常回复。
-
-我实际验收时：
-
-```text
-主消息 ACK：约 3 秒
-Signal Detector 后台完成：约 6.5 秒
-```
-
-并且最终写入：
-
-```text
-source_id = brain
-```
-
-这才算“自动记忆”闭环真正成立。
-
-## 接入完成后，我最常用的 GBrain 命令
-
-接入完成只是第一步。真正开始日常使用后，最常见的问题会变成：
-
-> 我现在应该先敲哪条命令，才能知道知识库、检索和 OpenClaw 接入到底哪一层出了问题？
-
-下面这部分原本单独整理成了一篇命令手册。现在合并到这里，是因为安装、使用和排查本来就是同一条链路。
-
-<div class="gb-command-map" aria-label="GBrain 日常命令路径">
-  <div class="gb-command-map__head">
-    <span>DAILY COMMAND PATH</span>
-    <strong>先证明 GBrain 自己正常，再向上检查 OpenClaw</strong>
-  </div>
-  <div class="gb-command-map__track">
-    <div><b>01</b><span>看状态</span><code>status</code><small>确认 source、同步与数据规模</small></div>
-    <i>→</i>
-    <div><b>02</b><span>查知识</span><code>search / query</code><small>证明目标页面可以命中</small></div>
-    <i>→</i>
-    <div><b>03</b><span>写内容</span><code>capture / link</code><small>保存事实、决定和关系</small></div>
-    <i>→</i>
-    <div><b>04</b><span>做维护</span><code>sync / doctor</code><small>更新索引并检查质量</small></div>
-    <i>→</i>
-    <div class="is-final"><b>05</b><span>验收接入</span><code>openclaw mcp</code><small>确认 Agent 真能调用和召回</small></div>
-  </div>
+<div class="brain-poster brain-timing" role="group" aria-label="主 Agent 回复与 Signal Detector 后台写入时序">
+  <div><span>用户消息</span><strong>进入 OpenClaw</strong></div>
+  <i>→</i>
+  <div class="is-fast"><span>主 Agent</span><strong>约 3 秒回复</strong><small>不等待记忆任务</small></div>
+  <i>∥</i>
+  <div class="is-background"><span>Signal Detector</span><strong>约 6.5 秒完成</strong><small>后台写入 source_id = brain</small></div>
 </div>
 
-这部分命令以我当时使用的 GBrain 0.42.57.0、OpenClaw 2026.7.1-beta.2 为基线。CLI 会继续变化，复制前可以先运行对应命令的 `--help`。
+这才算自动记忆闭环真正成立。
 
-### 1. 先确认 GBrain 自己是否正常
+## 日常怎么用：从状态、检索、写入到同步维护
 
-刚安装、刚重启、刚同步，或者搜索结果突然异常时，先跑下面四条：
+接入完成后，最常见的问题不再是“怎么安装”，而是：
 
-```bash
-gbrain --version
+> 现在应该先敲哪条命令，才能判断知识库、检索和 OpenClaw 接入到底哪一层有问题？
+
+下面把原命令手册合并成一套日常控制台。原则只有一个：**先证明 GBrain 自己正常，再向上检查 OpenClaw。**
+
+<div class="brain-poster brain-console" role="group" aria-label="GBrain 日常命令控制台">
+  <header class="brain-poster__title">
+    <div>
+      <span>CHAPTER 04 · DAILY CONSOLE</span>
+      <strong>状态 → 检索 → 写入 → 同步 → 维护 → OpenClaw 验收</strong>
+    </div>
+    <b>命令控制台</b>
+  </header>
+
+  <div class="brain-console__rail">
+    <div><b>01</b><span>定位</span><code>status</code></div><i>→</i>
+    <div><b>02</b><span>检索</span><code>search / query</code></div><i>→</i>
+    <div><b>03</b><span>沉淀</span><code>capture / link</code></div><i>→</i>
+    <div><b>04</b><span>同步</span><code>sync / embed</code></div><i>→</i>
+    <div><b>05</b><span>维护</span><code>doctor / export</code></div><i>→</i>
+    <div class="is-final"><b>06</b><span>验收</span><code>openclaw mcp</code></div>
+  </div>
+
+  <section class="brain-console__section">
+    <header><b>01</b><div><span>STATUS</span><strong>先确认版本、source、数据规模和质量</strong></div></header>
+    <div class="brain-console__body">
+      <pre><code>{`gbrain --version
 gbrain status
 gbrain stats
-gbrain health
-```
+gbrain health`}</code></pre>
+      <div class="brain-command-notes">
+        <p><code>status</code> 看 source、同步和嵌入状态。</p>
+        <p><code>stats</code> 看页面、分块和链接数量，确认不是空库。</p>
+        <p><code>health</code> 看孤立页、坏链接和过期嵌入等质量信号。</p>
+      </div>
+    </div>
+    <footer><strong>最短证据链：</strong><span>status 看 source → stats 看页面 → search 查确定存在的词</span></footer>
+  </section>
 
-它们分别回答四个问题：
-
-| 命令 | 主要看什么 |
-| --- | --- |
-| `gbrain --version` | 当前 CLI 版本，避免拿错版本的参数排查 |
-| `gbrain status` | source、最近同步、队列和嵌入状态 |
-| `gbrain stats` | 页面、分块和链接数量，确认不是空库 |
-| `gbrain health` | 过期嵌入、孤立页和坏链接等质量信号 |
-
-最短证据链是：
-
-```text
-status 看 source
-  → stats 看是否有页面
-  → search 查一个确定存在的关键词
-```
-
-如果安装时使用了 `--no-embedding`，Embedding 为 0% 可以是预期状态，不代表关键词检索不可用。
-
-### 2. 浏览、搜索和读取知识
-
-这几个命令看起来相似，但用途不同。
-
-#### 不知道库里有什么：先看目录
-
-```bash
-gbrain list --limit 10 --sort updated_desc
+  <section class="brain-console__section">
+    <header><b>02</b><div><span>SEARCH</span><strong>根据“知道多少”选择 list、search、query 和 get</strong></div></header>
+    <div class="brain-search-router">
+      <div>
+        <span>不知道库里有什么</span>
+        <strong>LIST · 浏览目录</strong>
+        <pre><code>{`gbrain list --limit 10 --sort updated_desc
 gbrain list --type concept --limit 20
-gbrain list --tag openclaw --limit 20
-```
-
-#### 知道项目名或固定术语：使用 search
-
-```bash
-gbrain search "OpenClaw" --source brain --limit 10
-gbrain search "品牌雷达" --limit 5
-```
-
-`search` 更适合人名、项目名、功能名和确定存在的关键词。
-
-#### 只有完整问题：使用 query
-
-```bash
-gbrain query "OpenClaw 和 GBrain 分别负责什么？" --limit 5
+gbrain list --tag openclaw --limit 20`}</code></pre>
+      </div>
+      <div>
+        <span>知道项目名或固定术语</span>
+        <strong>SEARCH · 精确找候选</strong>
+        <pre><code>{`gbrain search "OpenClaw" --source brain --limit 10
+gbrain search "品牌雷达" --limit 5`}</code></pre>
+      </div>
+      <div>
+        <span>只有问题，没有准确措辞</span>
+        <strong>QUERY · 扩展查询</strong>
+        <pre><code>{`gbrain query "OpenClaw 和 GBrain 分别负责什么？" --limit 5
 gbrain query "最近有哪些 OpenClaw 配置变化？" \
-  --since 7d --recency strong --limit 10
-```
+  --since 7d --recency strong --limit 10`}</code></pre>
+      </div>
+    </div>
+    <div class="brain-read-path">
+      <span>候选结果</span><i>→</i><code>gbrain get concepts/brand-radar</code><i>→</i><code>backlinks / graph --depth 2</code>
+    </div>
+    <footer><strong>判断：</strong><span>搜索摘要只是候选证据，重要结论回到完整页面确认。</span></footer>
+  </section>
 
-`query` 会做更完整的查询扩展，适合你知道问题，但不知道知识库里具体用了什么措辞的情况。
-
-拿到候选结果后，再用 slug 读取完整页面：
-
-```bash
-gbrain get concepts/brand-radar
-gbrain get brand-radar --fuzzy
-```
-
-需要继续看页面之间的关系时：
-
-```bash
-gbrain backlinks concepts/brand-radar
-gbrain graph concepts/brand-radar --depth 2
-```
-
-重要结论不要只看搜索摘要，最好回到 `get` 返回的完整页面确认。
-
-### 3. 写入内容，并建立关系
-
-临时保存一条值得长期保留的信息：
-
-```bash
-gbrain capture \
+  <section class="brain-console__section">
+    <header><b>03</b><div><span>CAPTURE</span><strong>先保存内容，再补标签、关系和时间坐标</strong></div></header>
+    <div class="brain-console__body is-two">
+      <pre><code>{`gbrain capture \
   "以后博客文章默认公开，除非明确要求草稿"
-```
 
-已有完整 Markdown 文件时，可以明确 slug 和类型：
-
-```bash
 gbrain capture \
   --file ./notes/openclaw-memory.md \
   --slug operational/openclaw-memory \
-  --type note
-```
-
-写入后再补标签、关系和时间坐标：
-
-```bash
-gbrain tag concepts/brand-radar openclaw
+  --type note`}</code></pre>
+      <pre><code>{`gbrain tag concepts/brand-radar openclaw
 
 gbrain link projects/openclaw-memory concepts/gbrain \
   --link-type uses \
@@ -657,304 +494,201 @@ gbrain link projects/openclaw-memory concepts/gbrain \
 
 gbrain timeline-add projects/openclaw-memory \
   2026-07-25 \
-  "完成 GBrain 与 OpenClaw 接入验证"
-```
+  "完成 GBrain 与 OpenClaw 接入验证"`}</code></pre>
+    </div>
+    <footer><strong>写入闸门：</strong><span>保存长期偏好、项目决定、踩坑结论和会改变后续执行方式的规则，不保存每条临时指令。</span></footer>
+  </section>
 
-脚本里也可以从标准输入写入，并只接收返回的 slug：
+  <section class="brain-console__section">
+    <header><b>04</b><div><span>SYNC</span><strong>Markdown 文件变化，不等于检索层已经更新</strong></div></header>
+    <div class="brain-sync-flow">
+      <div><span>SOURCE</span><code>gbrain sources list</code></div><i>→</i>
+      <div><span>PREVIEW</span><code>gbrain sync --source brain --dry-run</code></div><i>→</i>
+      <div><span>APPLY</span><code>gbrain sync --source brain</code></div><i>→</i>
+      <div class="is-final"><span>VERIFY</span><code>gbrain search "确定存在的关键词" --limit 3</code></div>
+    </div>
+    <div class="brain-mini-commands">
+      <code>gbrain sync --all --parallel 2</code>
+      <code>gbrain sync --source brain --no-embed</code>
+      <code>gbrain embed --stale</code>
+      <code>gbrain sync --source brain --retry-failed</code>
+    </div>
+    <footer><strong>恢复策略：</strong><span>嵌入暂不可用时先同步文本，服务恢复后再补齐 stale embedding。</span></footer>
+  </section>
 
-```bash
-echo "GBrain 和 memory-core 可以同时使用" \
-  | gbrain capture --stdin
-
-PAGE_SLUG=$(gbrain capture "需要后续整理的事实" --quiet)
-echo "$PAGE_SLUG"
-```
-
-这里仍然要保留一个写入闸门：一句临时指令通常不值得长期保存；长期偏好、项目决定、踩坑结论，以及会改变后续执行方式的规则，才适合进入长期知识库。
-
-### 4. Markdown 修改后，同步到检索层
-
-Brain Repo 是 Markdown 源，GBrain Engine 是检索层。文件改了，不代表数据库已经自动看到变化。
-
-推荐顺序是：
-
-```bash
-gbrain sources list
-gbrain sync --source brain --dry-run
-gbrain sync --source brain
-gbrain search "确定存在的关键词" --limit 3
-```
-
-先用 `--dry-run` 看会新增、更新或删除什么，再真正同步，最后通过一次真实搜索确认目标页面已经进入检索层。
-
-其他常用恢复命令：
-
-```bash
-gbrain sync --all --parallel 2
-gbrain sync --source brain --no-embed
-gbrain embed --stale
-gbrain sync --source brain --retry-failed
-```
-
-如果嵌入服务暂时不可用，可以先用 `--no-embed` 同步文本，不阻塞关键词检索；服务恢复后再用 `gbrain embed --stale` 补齐。
-
-### 5. 写错内容时，先回退再考虑删除
-
-页面内容有问题时，先看历史：
-
-```bash
-gbrain history concepts/brand-radar
-```
-
-历史里有正确版本，就回退：
-
-```bash
+  <section class="brain-console__section">
+    <header><b>05</b><div><span>RECOVERY & MAINTENANCE</span><strong>写错先回退；升级前先导出；维护任务分开看</strong></div></header>
+    <div class="brain-maintenance-grid">
+      <div>
+        <span>版本与删除</span>
+        <pre><code>{`gbrain history concepts/brand-radar
 gbrain revert concepts/brand-radar <version_id>
-```
-
-页面本身不应该保留，再软删除：
-
-```bash
 gbrain delete concepts/brand-radar
-gbrain get concepts/brand-radar --include-deleted
-```
-
-安全顺序可以记成：
-
-```text
-history → revert / delete → get → search
-```
-
-不要直接操作数据库，也不要在没确认 slug 和 source 时执行删除或回退。
-
-### 6. 日常维护、升级和备份
-
-运行健康、知识质量、版本升级最好分开处理。
-
-```bash
-# 日常健康检查
-gbrain doctor --fast
+gbrain get concepts/brand-radar --include-deleted`}</code></pre>
+      </div>
+      <div>
+        <span>运行与知识质量</span>
+        <pre><code>{`gbrain doctor --fast
 gbrain doctor
 gbrain advisor
-
-# 知识质量检查
 gbrain orphans --count
 gbrain lint ~/brain
-gbrain check-backlinks check ~/brain
-gbrain link-sources
-
-# 升级前备份
-gbrain export --dir ./gbrain-export
+gbrain check-backlinks check ~/brain`}</code></pre>
+      </div>
+      <div>
+        <span>升级与备份</span>
+        <pre><code>{`gbrain export --dir ./gbrain-export
 gbrain check-update --json
 gbrain upgrade
-
-# 梦境维护先预演
 gbrain dream --dry-run
-gbrain dream
-```
-
-`doctor` 因 Resolver、Skill 路由或集成规范返回告警，不自动等于数据库和搜索不可用。先看 `status`、页面数量和真实搜索结果，再处理质量问题。
-
-GBrain 自己的 `dream` 与 OpenClaw 的 Memory Dreaming Promotion 也不是同一个任务，不要混在一起判断。
-
-### 7. OpenClaw 接入的命令验收
-
-MCP 配置完成后，按下面顺序检查：
-
-```bash
-openclaw mcp show gbrain --json
-openclaw mcp doctor gbrain --probe
-openclaw mcp probe gbrain --json
-```
-
-这三条分别检查保存的配置、真实连接和工具能力。
-
-Context Engine 再单独确认：
-
-```bash
-openclaw plugins inspect gbrain-context-engine --runtime
-openclaw config get plugins.slots.contextEngine
-```
-
-正确结果应该是插件正常加载，并且 slot 值为：
-
-```text
-gbrain-context
-```
-
-只改了 MCP 定义，可以先运行：
-
-```bash
-openclaw mcp reload
-```
-
-修改了插件或 Context Engine，则需要：
-
-```bash
-openclaw gateway restart
-openclaw gateway health
-```
-
-最终仍然要做行为测试：先写入一条不会和常识混淆的独特事实，再开启新会话直接提问。不手动要求搜索，仍能召回，才算自动链路成立。
-
-<HighlightBox eyebrow="日常路径" title="不需要每次把所有命令跑一遍">
-  状态异常先运行 `gbrain status`；查知识走 `search → get`；写内容走 `capture → tag / link`；文件变化走 `dry-run → sync → search`；只有 OpenClaw 行为异常时，才继续检查 MCP、插件、slot 和新会话召回。
-</HighlightBox>
-
-## 实际使用时会是什么感觉？
-
-### 场景一：维护博客
-
-以前：
-
-```text
-每次开始写文章：
-重新告诉 AI 博客定位、目录结构、视觉要求……
-```
-
-现在，长期记忆可以保存：
-
-```text
-- 博客定位
-- 写作偏好
-- 文章默认发布规则
-- 过去做过的视觉改造
-- 已经确定过的项目决策
-```
-
-最明显的变化不是 AI 突然变聪明，而是不用不断重复背景。
-
-### 场景二：长期开发项目
-
-大型项目最怕的不是代码，而是历史决策丢失。
-
-例如：
-
-```text
-为什么不用方案 A？
-之前遇到什么问题？
-这个设计是怎么决定的？
-```
-
-长期记忆真正有价值的地方，就是把这些以后还会再次用到的上下文留下来。
-
-## 经常遇到的坑
-
-很多现象看起来都像“GBrain 没生效”，但根因完全不同。
-
-### 坑 1：装了 MCP，就以为 GBrain 已经是大脑
-
-**现象：** Agent 能看到大量 `gbrain__*` 工具，也能主动搜索，但新对话不会自动想起历史知识。
-
-**真正原因：** MCP 只提供工具调用，没有进入 OpenClaw 的 Context Engine。
-
-**修复：** 把 `plugins.slots.contextEngine` 切到 `gbrain-context`，再做不调用工具的自动召回测试。
-
----
-
-### 坑 2：把插件 ID 当成 Context Engine ID
-
-**错误配置：**
-
-```text
-contextEngine = gbrain-context-engine
-```
-
-**正确配置：**
-
-```text
-contextEngine = gbrain-context
-```
-
-插件叫什么，和它注册了哪个 Context Engine，是两层不同的 ID。
-
----
-
-### 坑 3：Context Engine 已加载，但还是不自动召回
-
-**现象：** 插件状态正常、没有降级，但新会话里依然没有 GBrain 上下文。
-
-**真正原因：** 在我当前版本组合里，OpenClaw 把当前用户输入放在 `prompt`，而 GBrain Context Engine 实际从 `messages` 读取当前用户消息。
-
-**修复：** 在插件边界把当前 `prompt` 临时补成一条 user message，调用官方 Context Engine 后再恢复原 messages。
-
----
-
-### 坑 4：PGLite 在 OpenClaw 多会话下抢锁
-
-**现象：** 每开一个新会话，GBrain MCP 可能卡约 30 秒，日志出现：
-
-```text
-Timed out waiting for PGLite lock
-```
-
-**真正原因：** OpenClaw 的 MCP runtime 按 session 隔离，每个会话可能启动新的 `gbrain serve`。
-
-**修复：** 改用 PostgreSQL 17 + pgvector。
-
----
-
-### 坑 5：Signal Detector Skill 存在，但从来不自动写入
-
-**现象：** Skill 已经存在，手动让 Agent 记忆也会回复“已记录”，但数据库里没有新页面。
-
-**真正原因：** Skill 的触发描述不是 OpenClaw 的原生事件机制。
-
-**修复：** 使用宿主侧 `message_received` hook，真实启动隐藏子 Agent。
-
----
-
-### 坑 6：明明写入成功，为什么 `brain` 里搜不到
-
-**真正原因：** `gbrain serve` 不会因为 `cwd=~/brain` 就自动把所有 MCP 写入路由到 `brain`。没有明确 source 时，会回退到 `default`。
-
-**修复：** MCP 服务必须带：
-
-```text
-GBRAIN_SOURCE=brain
-```
-
-真实验收时还要查：
-
-```text
-source_id = brain
-```
-
-不要只相信模型说“已经写入”。
-
-## 我现在故意没有开启的东西
-
-当前 GBrain 已经可以正常体验，但我没有把所有功能一次开满。
-
-### ZeroEntropy Embedding
-
-暂时不启用。
-
-当前状态：
-
-```text
-embedding_disabled = true
-```
-
-关键词、实体召回和 MCP 查询仍然可以使用。先体验基础召回，再决定是否需要完整语义检索。
-
-### Autopilot
-
-暂时不恢复。
-
-我当前本机真实状态是：
-
-```text
-Autopilot: not running
-```
-
-原因也很简单：先看 GBrain 到底记了什么、召回准不准，再增加后台维护循环。
-
-## 我的最终验收标准
-
-配置完成后，我不会只看“进程启动了没有”，而是按链路逐层验收。
-
-基础健康检查：
+gbrain dream`}</code></pre>
+      </div>
+    </div>
+    <footer><strong>重要区别：</strong><span>doctor 的规范告警，不自动等于数据库和关键词搜索不可用；GBrain dream 也不是 OpenClaw 的 Memory Dreaming Promotion。</span></footer>
+  </section>
+
+  <section class="brain-console__section">
+    <header><b>06</b><div><span>OPENCLAW ACCEPTANCE</span><strong>配置存在、服务可连、插件加载和自动召回是四种不同证据</strong></div></header>
+    <div class="brain-accept-stack">
+      <div><b>L1</b><span>MCP 配置</span><code>openclaw mcp show gbrain --json</code></div>
+      <div><b>L2</b><span>真实连接</span><code>openclaw mcp doctor gbrain --probe</code></div>
+      <div><b>L3</b><span>工具能力</span><code>openclaw mcp probe gbrain --json</code></div>
+      <div><b>L4</b><span>插件与 slot</span><code>openclaw plugins inspect gbrain-context-engine --runtime</code></div>
+      <div class="is-final"><b>L5</b><span>新会话行为</span><strong>不手动要求搜索，仍能召回独特事实</strong></div>
+    </div>
+    <div class="brain-mini-commands">
+      <code>openclaw config get plugins.slots.contextEngine</code>
+      <code>openclaw mcp reload</code>
+      <code>openclaw gateway restart</code>
+      <code>openclaw gateway health</code>
+    </div>
+  </section>
+</div>
+
+## 出了问题，不要把所有故障都叫做“没生效”
+
+很多现象看起来都像 GBrain 没有工作，但可能分别发生在 source、同步、检索、MCP、Context Engine 或 Signal Detector。正确排查方式不是反复重启，而是逐层拿证据。
+
+<div class="brain-poster brain-diagnostics" role="group" aria-label="GBrain 与 OpenClaw 分层故障诊断图">
+  <header class="brain-poster__title">
+    <div>
+      <span>CHAPTER 05 · DIAGNOSTICS</span>
+      <strong>每层先证明正常，再进入上一层</strong>
+    </div>
+    <b>故障诊断</b>
+  </header>
+
+  <ol class="brain-diagnostics__ladder">
+    <li><b>01</b><div><span>source 与同步</span><code>gbrain status</code></div><strong>证据：目标 source 存在，最近同步有记录</strong></li>
+    <li><b>02</b><div><span>页面与检索</span><code>gbrain search "确定存在的关键词" --limit 3</code></div><strong>证据：目标页面真实返回</strong></li>
+    <li><b>03</b><div><span>数据库与质量</span><code>gbrain doctor --fast</code></div><strong>证据：核心存储和检索检查正常</strong></li>
+    <li><b>04</b><div><span>MCP 传输</span><code>openclaw mcp doctor gbrain --probe</code></div><strong>证据：服务启动并完成握手</strong></li>
+    <li><b>05</b><div><span>插件与 slot</span><code>slot = gbrain-context</code></div><strong>证据：插件 loaded，Context Engine 正确</strong></li>
+    <li class="is-final"><b>06</b><div><span>自动召回行为</span><code>新会话 + 独特事实</code></div><strong>证据：回答与日志都证明注入发生</strong></li>
+  </ol>
+
+  <div class="brain-pit-grid">
+    <section>
+      <span>装了 MCP，但新会话不自动想起</span>
+      <strong>只完成了主动工具层</strong>
+      <p>检查 Context Engine 是否切到 <code>gbrain-context</code>。</p>
+    </section>
+    <section>
+      <span>插件正常，slot 仍然不生效</span>
+      <strong>插件 ID 和 Engine ID 混淆</strong>
+      <p><code>gbrain-context-engine</code> 是插件；<code>gbrain-context</code> 才是 slot 值。</p>
+    </section>
+    <section>
+      <span>Context Engine loaded，但没有注入</span>
+      <strong>prompt / messages 参数差异</strong>
+      <p>当前版本需要在插件边界把 prompt 临时补成 user message。</p>
+    </section>
+    <section>
+      <span>每开新会话就卡约 30 秒</span>
+      <strong>PGLite 多进程锁冲突</strong>
+      <p>多 session 场景改用 PostgreSQL 17。</p>
+    </section>
+    <section>
+      <span>Skill 存在，但从不自动写入</span>
+      <strong>triggers 不是系统事件</strong>
+      <p>使用宿主侧 <code>message_received</code> hook。</p>
+    </section>
+    <section>
+      <span>模型说写入成功，brain 里却搜不到</span>
+      <strong>写入落到了 default source</strong>
+      <p>MCP 必须设置 <code>GBRAIN_SOURCE=brain</code>，并真实检查 <code>source_id</code>。</p>
+    </section>
+  </div>
+
+  <div class="brain-diagnostics__split">
+    <div><span>第 2 层失败</span><strong>留在 GBrain 内排查</strong><p>处理文件入库、source、同步和搜索，不要反复改 OpenClaw 插件。</p></div>
+    <div><span>第 4 层通过，第 6 层失败</span><strong>转向 Context Engine</strong><p>MCP 已能主动读写，重点检查插件、slot、Retrieval Reflex 和真实注入。</p></div>
+  </div>
+</div>
+
+## 真正使用起来，会发生什么变化？
+
+长期记忆最明显的价值，不是让模型突然变聪明，而是减少背景重复，让历史决定继续参与今天的判断。
+
+<div class="brain-poster brain-scenarios" role="group" aria-label="GBrain 长期记忆在博客和长期开发项目中的使用场景">
+  <header class="brain-poster__title">
+    <div>
+      <span>CHAPTER 06 · REAL USE</span>
+      <strong>从重复介绍背景，变成带着历史继续工作</strong>
+    </div>
+    <b>实际使用</b>
+  </header>
+
+  <div class="brain-scenarios__grid">
+    <section>
+      <div class="brain-scenario-heading"><span>场景一</span><strong>维护个人博客</strong></div>
+      <div class="brain-before-after">
+        <div><small>以前</small><p>每次重新说明博客定位、目录结构、视觉要求和默认发布规则。</p></div>
+        <i>→</i>
+        <div class="is-after"><small>现在</small><p>相关任务出现时，自动召回写作偏好、历史改造和已确认决策。</p></div>
+      </div>
+      <div class="brain-tags"><span>博客定位</span><span>写作偏好</span><span>发布规则</span><span>视觉历史</span></div>
+    </section>
+    <section>
+      <div class="brain-scenario-heading"><span>场景二</span><strong>长期开发项目</strong></div>
+      <div class="brain-before-after">
+        <div><small>容易丢失</small><p>为什么没选方案 A？之前遇到什么问题？这个设计怎样决定？</p></div>
+        <i>→</i>
+        <div class="is-after"><small>长期保留</small><p>失败原因、方案取舍和后续边界可以在新会话中继续使用。</p></div>
+      </div>
+      <div class="brain-tags"><span>历史决策</span><span>失败原因</span><span>架构取舍</span><span>维护边界</span></div>
+    </section>
+  </div>
+</div>
+
+## 我现在故意没有开启的功能
+
+当前系统已经可以正常体验，但我没有一次把所有功能开满。先稳定最小闭环，再决定是否增加更复杂的后台能力。
+
+<div class="brain-poster brain-boundaries" role="group" aria-label="当前暂未启用的 GBrain 功能">
+  <section>
+    <span>暂不启用</span>
+    <strong>ZeroEntropy Embedding</strong>
+    <code>embedding_disabled = true</code>
+    <p>关键词搜索、实体召回和 MCP 查询仍可使用。先观察基础召回质量，再决定是否需要完整语义检索。</p>
+  </section>
+  <section>
+    <span>暂不恢复</span>
+    <strong>Autopilot</strong>
+    <code>Autopilot: not running</code>
+    <p>先确认 GBrain 到底记了什么、召回是否准确，再增加后台维护循环。</p>
+  </section>
+  <footer>
+    <strong>当前原则：</strong>
+    <span>Embedding、reranker、Autopilot 都可以后补，但自动想起和自动记住必须先真的跑通。</span>
+  </footer>
+</div>
+
+## 最终验收：不要只看插件是否 loaded
+
+配置完成后，我不会只看进程是否启动，而是按两条闭环做真实验收。
+
+基础健康检查可以先运行：
 
 ```bash
 openclaw health
@@ -962,7 +696,7 @@ openclaw mcp doctor
 gbrain status
 ```
 
-我当前本机实际状态：
+我当时的本机状态是：
 
 ```text
 GBrain 0.42.57.0
@@ -972,530 +706,1123 @@ Autopilot: not running
 MCP: gbrain ok
 ```
 
-但真正重要的是行为。
+但这些只说明服务状态，真正重要的是行为。
 
-<div class="gb-checkboard" aria-label="GBrain 最终验收标准">
-  <div class="gb-checkboard__head">
-    <span>ACCEPTANCE CHECK</span>
-    <strong>只有两条闭环都经过真实测试，才算完成</strong>
+<div class="brain-poster brain-final-check" role="group" aria-label="GBrain 接入 OpenClaw 的最终验收清单">
+  <header class="brain-poster__title">
+    <div>
+      <span>CHAPTER 07 · ACCEPTANCE</span>
+      <strong>只有两条闭环都经过真实测试，才算完成</strong>
+    </div>
+    <b>最终验收</b>
+  </header>
+
+  <div class="brain-final-check__grid">
+    <section><b>01</b><strong>自动召回</strong><p>新会话不主动要求搜索，提到已知实体时仍能看到历史知识。</p></section>
+    <section><b>02</b><strong>主回复不被阻塞</strong><p>发送长期观点后，主 Agent 先正常回复，不等待后台记忆完成。</p></section>
+    <section><b>03</b><strong>自动写入</strong><p>几秒后 Signal Detector 完成捕获，数据库出现新页面。</p></section>
+    <section><b>04</b><strong>写入正确 source</strong><p>真实检查 <code>source_id = brain</code>，不只相信模型回复。</p></section>
+    <section><b>05</b><strong>多会话稳定</strong><p>多个会话同时运行时，不再出现 PGLite 锁等待和 30 秒超时。</p></section>
+    <section class="is-final"><b>✓</b><strong>闭环成立</strong><p>自动想起 + 自动记住，GBrain 才真正成为 OpenClaw 的长期大脑。</p></section>
   </div>
-  <div class="gb-checkboard__grid">
-    <div><b>01</b><strong>自动召回</strong><p>新会话不主动调用 GBrain 工具，提到已知实体时仍能看到历史知识。</p></div>
-    <div><b>02</b><strong>主回复不被阻塞</strong><p>发送长期观点后，主 Agent 先正常回复，不等待后台记忆完成。</p></div>
-    <div><b>03</b><strong>自动写入</strong><p>几秒后 Signal Detector 显示 captured，数据库出现新页面。</p></div>
-    <div><b>04</b><strong>写入正确 source</strong><p>真实检查 source_id = brain，而不是只相信模型回复。</p></div>
-    <div><b>05</b><strong>多会话稳定</strong><p>多个会话同时运行时，不再出现 PGLite 锁等待和 30 秒超时。</p></div>
-    <div class="is-final"><b>✓</b><strong>闭环成立</strong><p>自动想起 + 自动记住，GBrain 才真正成为 OpenClaw 的长期大脑。</p></div>
+
+  <div class="brain-final-flow">
+    <div><span>自动召回</span><strong>用户消息 → Context Engine → Retrieval Reflex → 长期知识注入</strong></div>
+    <div><span>自动记忆</span><strong>用户消息 → message_received → Signal Detector → GBrain 写入</strong></div>
   </div>
 </div>
 
-<HighlightBox eyebrow="最终结论" title="不是“插件 loaded”，而是两条闭环都成立">
-  自动召回：用户消息 → Context Engine → Retrieval Reflex → 长期知识注入。自动记忆：用户消息 → message_received → Signal Detector → GBrain 写入。只有这两条链路都经过真实测试，我才认为 GBrain 真正成为了 OpenClaw 的长期大脑。
-</HighlightBox>
-
-这套配置目前仍然保留一个原则：**先让最小闭环稳定，再增加复杂能力。**
-
-Embedding、reranker、Autopilot 都可以后面再补，但“自动想起”和“自动记住”必须先真的跑通。
+这套方案最终保留的原则很简单：**先让最小闭环稳定，再增加复杂能力。**
 
 <style>{`
-  .gb-hero-map, .gb-role-map, .gb-architecture, .gb-checkboard {
-    margin: 2rem 0 2.5rem;
-  }
-
-  .gb-hero-map {
-    overflow: hidden;
-    border: 1px solid rgba(47, 123, 246, .22);
-    border-radius: 26px;
-    background: linear-gradient(145deg, #071422 0%, #0b1b2e 55%, #0a1524 100%);
-    box-shadow: 0 24px 70px rgba(7, 20, 34, .18);
-  }
-
-  .gb-hero-map__head, .gb-architecture__head, .gb-checkboard__head {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid rgba(126, 194, 255, .14);
-  }
-
-  .gb-hero-map__head span, .gb-architecture__head span, .gb-checkboard__head span {
-    display: block;
-    margin-bottom: .35rem;
-    color: #60c5ff;
-    font-size: .72rem;
-    font-weight: 800;
-    letter-spacing: .14em;
-  }
-
-  .gb-hero-map__head strong, .gb-architecture__head strong, .gb-checkboard__head strong {
-    color: #eff7ff;
-    font-size: 1.12rem;
-  }
-
-  .gb-hero-map__body {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    gap: 1.2rem;
-    align-items: stretch;
-    padding: 1.4rem;
-  }
-
-  .gb-state {
-    min-height: 220px;
-    padding: 1.4rem;
-    border: 1px solid rgba(143, 185, 224, .16);
-    border-radius: 20px;
-    background: rgba(255, 255, 255, .035);
-  }
-
-  .gb-state--new {
-    border-color: rgba(89, 212, 168, .3);
-    background: linear-gradient(145deg, rgba(58, 190, 145, .14), rgba(47, 123, 246, .08));
-  }
-
-  .gb-state > span {
-    color: #76bff1;
-    font-size: .78rem;
-    font-weight: 800;
-    letter-spacing: .08em;
-  }
-
-  .gb-state--new > span { color: #71dfb8; }
-
-  .gb-state > strong {
-    display: block;
-    margin: .6rem 0 .75rem;
-    color: #f8fbff;
-    font-size: clamp(1.2rem, 2vw, 1.65rem);
-  }
-
-  .gb-state p {
-    margin: 0;
-    color: #a9bdd1;
-    line-height: 1.75;
-  }
-
-  .gb-state__chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .5rem;
-    margin-top: 1.1rem;
-  }
-
-  .gb-state__chips i {
-    padding: .34rem .62rem;
-    color: #9db2c7;
-    border: 1px solid rgba(147, 186, 222, .14);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, .04);
-    font-size: .76rem;
-    font-style: normal;
-  }
-
-  .gb-state--new .gb-state__chips i {
-    color: #bff5df;
-    border-color: rgba(90, 215, 170, .18);
-  }
-
-  .gb-hero-map__bridge {
-    display: grid;
-    place-content: center;
-    min-width: 88px;
-    color: #7cc8ff;
-    text-align: center;
-  }
-
-  .gb-hero-map__bridge b {
-    font-size: 2rem;
-    line-height: 1;
-  }
-
-  .gb-hero-map__bridge span {
-    margin-top: .45rem;
-    font-size: .76rem;
-    font-weight: 800;
-    letter-spacing: .08em;
-  }
-
-  .gb-role-map {
-    padding: 1.4rem;
-    border: 1px solid var(--line);
-    border-radius: 26px;
-    background: linear-gradient(145deg, rgba(46, 125, 245, .07), rgba(72, 209, 161, .03));
-  }
-
-  .gb-role-map__user {
-    width: max-content;
-    margin: 0 auto;
-    padding: .7rem 1.15rem;
-    color: var(--ink);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: var(--paper);
-    font-weight: 750;
-  }
-
-  .gb-role-map__arrow {
-    padding: .55rem 0;
-    color: var(--blue);
-    font-size: 1.45rem;
-    text-align: center;
-  }
-
-  .gb-role-map__agent {
-    padding: 1.15rem 1.3rem;
-    color: #ecf7ff;
-    border: 1px solid #25496c;
-    border-radius: 18px;
-    background: linear-gradient(135deg, #0a1b2d, #0e2a46);
-    text-align: center;
-  }
-
-  .gb-role-map__agent span {
-    display: block;
-    color: #67c6ff;
-    font-size: .78rem;
-    font-weight: 800;
-    letter-spacing: .1em;
-  }
-
-  .gb-role-map__agent strong {
-    display: block;
-    margin-top: .45rem;
-    font-size: 1.05rem;
-  }
-
-  .gb-role-map__split {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: .85rem;
-    margin-top: 1rem;
-  }
-
-  .gb-role-map__split > div {
-    min-height: 145px;
-    padding: 1rem;
-    border: 1px solid var(--line);
-    border-radius: 17px;
-    background: var(--paper);
-  }
-
-  .gb-role-map__split > div.is-core {
-    border-color: rgba(47, 123, 246, .38);
-    box-shadow: inset 0 0 0 1px rgba(47, 123, 246, .08);
-  }
-
-  .gb-role-map__split span {
-    display: block;
-    color: var(--muted);
-    font-size: .76rem;
-    font-weight: 750;
-  }
-
-  .gb-role-map__split strong {
-    display: block;
-    margin: .4rem 0 .55rem;
-    color: var(--ink);
-    font-size: 1.05rem;
-  }
-
-  .gb-role-map__split small {
-    color: var(--muted);
-    line-height: 1.6;
-  }
-
-  .gb-architecture {
-    overflow: hidden;
-    border: 1px solid #23405e;
-    border-radius: 26px;
-    color: #eaf5ff;
-    background: linear-gradient(150deg, #071421, #0b1b2d);
-    box-shadow: 0 26px 74px rgba(6, 20, 34, .18);
-  }
-
-  .gb-architecture__input {
-    width: max-content;
-    margin: 1.4rem auto 1rem;
-    padding: .72rem 1.2rem;
-    border: 1px solid rgba(100, 196, 255, .3);
-    border-radius: 999px;
-    background: #102a43;
-    font-weight: 800;
-  }
-
-  .gb-architecture__lanes {
-    display: grid;
-    gap: 1rem;
-    padding: 0 1.25rem 1.25rem;
-  }
-
-  .gb-architecture__lanes section {
-    padding: 1rem;
-    border: 1px solid rgba(130, 184, 230, .14);
-    border-radius: 18px;
-    background: rgba(255, 255, 255, .028);
-  }
-
-  .gb-lane__tag {
-    color: #65c8ff;
-    font-size: .75rem;
-    font-weight: 850;
-    letter-spacing: .1em;
-  }
-
-  .gb-lane__tag--green { color: #68ddaf; }
-
-  .gb-lane__track {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
-    gap: .7rem;
-    align-items: center;
-    margin-top: .8rem;
-  }
-
-  .gb-lane__track > div {
-    min-height: 118px;
-    padding: .9rem;
-    border: 1px solid #27425d;
-    border-radius: 15px;
-    background: #0d2134;
-  }
-
-  .gb-lane__track > div.is-focus {
-    border-color: rgba(71, 170, 255, .5);
-    background: linear-gradient(145deg, #102942, #113657);
-  }
-
-  .gb-lane__track > div.is-success {
-    border-color: rgba(83, 218, 166, .42);
-    background: linear-gradient(145deg, #0d2a25, #103a31);
-  }
-
-  .gb-lane__track b {
-    display: block;
-    color: #5b9bce;
-    font-size: .72rem;
-  }
-
-  .gb-lane__track strong {
-    display: block;
-    margin: .4rem 0 .35rem;
-    color: #f3f9ff;
-  }
-
-  .gb-lane__track small {
-    color: #8fa8bd;
-    line-height: 1.5;
-  }
-
-  .gb-lane__track > i {
-    color: #4d8dbd;
-    font-size: 1.25rem;
-    font-style: normal;
-  }
-
-  .gb-architecture__base {
-    display: grid;
-    grid-template-columns: .8fr 1.2fr;
-    gap: .8rem;
-    padding: 1rem 1.25rem 1.25rem;
-    border-top: 1px solid rgba(126, 194, 255, .12);
-  }
-
-  .gb-architecture__base > div {
-    padding: .85rem 1rem;
-    border: 1px solid #27425d;
-    border-radius: 14px;
-    background: #0a1928;
-  }
-
-  .gb-architecture__base > div.is-db {
-    border-color: rgba(83, 218, 166, .28);
-  }
-
-  .gb-architecture__base span {
-    display: block;
-    color: #7895ae;
-    font-size: .72rem;
-  }
-
-  .gb-architecture__base strong {
-    display: block;
-    margin-top: .3rem;
-    color: #eaf6ff;
-  }
-
-  .gb-checkboard {
-    overflow: hidden;
-    border: 1px solid #26425e;
-    border-radius: 24px;
-    color: #e9f5ff;
-    background: #091725;
-  }
-
-  .gb-checkboard__grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .8rem;
-    padding: 1rem;
-  }
-
-  .gb-checkboard__grid > div {
-    min-height: 145px;
-    padding: 1rem;
-    border: 1px solid #29445e;
-    border-radius: 16px;
-    background: #0d2032;
-  }
-
-  .gb-checkboard__grid > div.is-final {
-    border-color: rgba(82, 220, 164, .38);
-    background: linear-gradient(145deg, #0d2a25, #11382f);
-  }
-
-  .gb-checkboard__grid b {
-    color: #62bffc;
-    font-size: .78rem;
-  }
-
-  .gb-checkboard__grid strong {
-    display: block;
-    margin: .45rem 0 .4rem;
-    color: #f7fbff;
-  }
-
-  .gb-checkboard__grid p {
-    margin: 0;
-    color: #93abc0;
-    font-size: .88rem;
-    line-height: 1.65;
-  }
-
-  .gb-command-map {
-    overflow: hidden;
-    width: min(1040px, calc(100vw - 2rem));
-    margin: 2rem 50% 2.5rem;
+  .brain-poster {
+    --brain-bg: #f4f7f5;
+    --brain-panel: #ffffff;
+    --brain-panel-soft: #eaf0ed;
+    --brain-ink: #15231d;
+    --brain-muted: #5d6e66;
+    --brain-line: #cbd8d2;
+    --brain-green: #237a58;
+    --brain-blue: #286b91;
+    --brain-cyan: #2a8ca0;
+    --brain-amber: #95661d;
+    --brain-red: #a34a4a;
+    --brain-code-bg: #10231c;
+    --brain-code-ink: #daf3e6;
+    width: min(1120px, calc(100vw - 2rem));
+    margin: 1.8rem 50% 2.6rem;
     transform: translateX(-50%);
-    border: 1px solid rgba(47, 123, 246, .22);
-    border-radius: 24px;
-    background: linear-gradient(145deg, #071422, #0b1b2e);
-    box-shadow: 0 24px 70px rgba(7, 20, 34, .16);
+    overflow: hidden;
+    border: 1px solid var(--brain-line);
+    border-radius: 22px;
+    color: var(--brain-ink);
+    background: var(--brain-bg);
+    box-shadow: 0 22px 60px rgba(29, 61, 48, .09);
   }
 
-  .gb-command-map__head {
-    padding: 1.2rem 1.4rem;
-    border-bottom: 1px solid rgba(126, 194, 255, .14);
+  html[data-theme='dark'] .brain-poster {
+    --brain-bg: #101a16;
+    --brain-panel: #18231e;
+    --brain-panel-soft: #1e2c26;
+    --brain-ink: #eef6f2;
+    --brain-muted: #a7b9b0;
+    --brain-line: #33483d;
+    --brain-green: #68c99f;
+    --brain-blue: #78b8dc;
+    --brain-cyan: #72c6d3;
+    --brain-amber: #dfb463;
+    --brain-red: #e08b8b;
+    --brain-code-bg: #09120e;
+    --brain-code-ink: #daf2e6;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, .26);
   }
 
-  .gb-command-map__head span {
-    display: block;
-    margin-bottom: .35rem;
-    color: #60c5ff;
-    font-size: .72rem;
-    font-weight: 800;
-    letter-spacing: .14em;
-  }
-
-  .gb-command-map__head strong {
-    color: #eff7ff;
-    font-size: 1.08rem;
-  }
-
-  .gb-command-map__track {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr) auto) minmax(0, 1fr);
-    gap: .55rem;
+  .brain-poster__title {
+    display: flex;
+    gap: 1rem;
     align-items: center;
-    padding: 1.15rem;
+    justify-content: space-between;
+    padding: 1.3rem 1.45rem;
+    border-bottom: 1px solid var(--brain-line);
+    background: var(--brain-panel);
   }
 
-  .gb-command-map__track > div {
-    min-width: 0;
-    min-height: 132px;
-    padding: .85rem;
-    border: 1px solid #29445e;
-    border-radius: 14px;
-    background: #0d2032;
-  }
-
-  .gb-command-map__track > div.is-final {
-    border-color: rgba(82, 220, 164, .38);
-    background: linear-gradient(145deg, #0d2a25, #11382f);
-  }
-
-  .gb-command-map__track b {
-    display: inline-grid;
-    width: 1.55rem;
-    height: 1.55rem;
-    place-items: center;
-    margin-right: .35rem;
-    border-radius: 50%;
-    color: #fff;
-    background: #2f7bf6;
-    font-size: .68rem;
-  }
-
-  .gb-command-map__track span {
-    color: #f3f9ff;
-    font-size: .8rem;
-    font-weight: 800;
-  }
-
-  .gb-command-map__track code {
+  .brain-poster__title span,
+  .brain-panel-title span {
     display: block;
-    margin-top: .7rem;
-    color: #71dfb8;
-    font-size: .75rem;
-    white-space: normal;
-  }
-
-  .gb-command-map__track small {
-    display: block;
-    margin-top: .4rem;
-    color: #93abc0;
+    margin-bottom: .38rem;
+    color: var(--brain-green);
     font-size: .7rem;
+    font-weight: 850;
+    letter-spacing: .13em;
+  }
+
+  .brain-poster__title strong,
+  .brain-panel-title strong {
+    display: block;
+    color: var(--brain-ink);
+    font-size: clamp(1.05rem, 2vw, 1.4rem);
     line-height: 1.45;
   }
 
-  .gb-command-map__track > i {
-    color: #4d8dbd;
+  .brain-poster__title > b {
+    flex: 0 0 auto;
+    padding: .5rem .75rem;
+    border: 1px solid color-mix(in srgb, var(--brain-green), transparent 55%);
+    border-radius: 999px;
+    color: var(--brain-green);
+    background: color-mix(in srgb, var(--brain-green), var(--brain-panel) 94%);
+    font-size: .76rem;
+  }
+
+  .brain-poster__foot {
+    display: grid;
+    grid-template-columns: auto minmax(0, .9fr) minmax(0, 1.3fr);
+    gap: .75rem 1rem;
+    align-items: center;
+    padding: 1rem 1.35rem;
+    border-top: 1px solid var(--brain-line);
+    background: var(--brain-panel-soft);
+  }
+
+  .brain-poster__foot span,
+  .brain-poster__foot small {
+    color: var(--brain-muted);
+    font-size: .75rem;
+    line-height: 1.55;
+  }
+
+  .brain-poster__foot strong {
+    color: var(--brain-ink);
+    font-size: .82rem;
+  }
+
+  .brain-hero__comparison {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 1rem;
+    align-items: stretch;
+    padding: 1.25rem;
+  }
+
+  .brain-hero__comparison section {
+    min-height: 210px;
+    padding: 1.25rem;
+    border: 1px solid var(--brain-line);
+    border-radius: 16px;
+    background: var(--brain-panel);
+  }
+
+  .brain-hero__comparison section.is-after {
+    border-color: color-mix(in srgb, var(--brain-green), transparent 45%);
+    background: color-mix(in srgb, var(--brain-green), var(--brain-panel) 94%);
+  }
+
+  .brain-hero__comparison small,
+  .brain-system__layers small,
+  .brain-lane-flow small {
+    color: var(--brain-green);
+    font-size: .72rem;
+    font-weight: 800;
+  }
+
+  .brain-hero__comparison strong {
+    display: block;
+    margin: .65rem 0;
+    font-size: 1.15rem;
+  }
+
+  .brain-hero__comparison p,
+  .brain-system p,
+  .brain-three-parts p,
+  .brain-lock p,
+  .brain-folders p,
+  .brain-diagnostics p,
+  .brain-scenarios p,
+  .brain-boundaries p,
+  .brain-final-check p {
+    margin: 0;
+    color: var(--brain-muted);
+    line-height: 1.65;
+  }
+
+  .brain-hero__core {
+    display: grid;
+    min-width: 110px;
+    place-content: center;
+    gap: .35rem;
+    color: var(--brain-green);
+    text-align: center;
+    font-size: .78rem;
+    font-weight: 850;
+  }
+
+  .brain-hero__core i {
+    color: var(--brain-blue);
+    font-size: 1.7rem;
     font-style: normal;
+  }
+
+  .brain-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+    margin-top: 1rem;
+  }
+
+  .brain-tags span {
+    padding: .3rem .55rem;
+    border: 1px solid var(--brain-line);
+    border-radius: 999px;
+    color: var(--brain-muted);
+    background: var(--brain-panel-soft);
+    font-size: .72rem;
+  }
+
+  .brain-hero__loops {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+    padding: 0 1.25rem 1.25rem;
+  }
+
+  .brain-hero__loops section {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: .8rem;
+    align-items: center;
+    padding: 1rem;
+    border-left: 4px solid var(--brain-blue);
+    background: var(--brain-panel);
+  }
+
+  .brain-hero__loops section:last-child { border-left-color: var(--brain-green); }
+
+  .brain-hero__loops b,
+  .brain-roadmap__steps > section > b,
+  .brain-console__section > header > b,
+  .brain-final-check__grid b {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--brain-green);
+    font-size: .72rem;
+  }
+
+  .brain-hero__loops span {
+    display: block;
+    color: var(--brain-green);
+    font-size: .7rem;
+    font-weight: 850;
+    letter-spacing: .07em;
+  }
+
+  .brain-hero__loops strong {
+    display: block;
+    margin-top: .3rem;
+    font-size: .83rem;
+    line-height: 1.5;
+  }
+
+  .brain-system__input {
+    width: fit-content;
+    margin: 1.2rem auto .7rem;
+    padding: .65rem 1rem;
+    border: 1px solid var(--brain-line);
+    border-radius: 999px;
+    background: var(--brain-panel);
+    font-weight: 800;
+  }
+
+  .brain-system__agent {
+    margin: 0 1.25rem;
+    padding: 1rem 1.2rem;
+    color: #edf8ff;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #102b3c, #16455a);
     text-align: center;
   }
 
-  @media (max-width: 760px) {
-    .gb-hero-map__body, .gb-role-map__split, .gb-checkboard__grid {
+  .brain-system__agent span {
+    color: #8ed0e6;
+    font-size: .72rem;
+    font-weight: 850;
+    letter-spacing: .08em;
+  }
+
+  .brain-system__agent strong {
+    display: block;
+    margin: .35rem 0;
+    font-size: 1.1rem;
+  }
+
+  .brain-system__agent p { color: #bcd2dc; }
+
+  .brain-system__layers {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .75rem;
+    padding: 1rem 1.25rem;
+  }
+
+  .brain-system__layers section {
+    min-height: 135px;
+    padding: .95rem;
+    border: 1px solid var(--brain-line);
+    border-radius: 12px;
+    background: var(--brain-panel);
+  }
+
+  .brain-system__layers section.is-primary {
+    border-color: color-mix(in srgb, var(--brain-green), transparent 40%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brain-green), transparent 88%);
+  }
+
+  .brain-system__layers strong {
+    display: block;
+    margin: .4rem 0;
+  }
+
+  .brain-system__lanes {
+    display: grid;
+    gap: .75rem;
+    padding: 0 1.25rem 1.25rem;
+  }
+
+  .brain-system__lanes > section {
+    padding: 1rem;
+    border: 1px solid var(--brain-line);
+    border-radius: 14px;
+    background: var(--brain-panel);
+  }
+
+  .brain-lane-label {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    color: var(--brain-blue);
+    font-size: .76rem;
+    font-weight: 850;
+  }
+
+  .brain-lane-label b {
+    display: grid;
+    width: 1.7rem;
+    height: 1.7rem;
+    place-items: center;
+    color: #fff;
+    background: var(--brain-blue);
+  }
+
+  .brain-lane-label.is-green { color: var(--brain-green); }
+  .brain-lane-label.is-green b { background: var(--brain-green); }
+
+  .brain-lane-flow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: .55rem;
+    align-items: center;
+    margin-top: .75rem;
+  }
+
+  .brain-lane-flow > div {
+    min-height: 105px;
+    padding: .8rem;
+    border: 1px solid var(--brain-line);
+    background: var(--brain-panel-soft);
+  }
+
+  .brain-lane-flow > div.is-end {
+    border-color: color-mix(in srgb, var(--brain-blue), transparent 45%);
+  }
+
+  .brain-lane-flow > div.is-end.is-green {
+    border-color: color-mix(in srgb, var(--brain-green), transparent 45%);
+  }
+
+  .brain-lane-flow strong,
+  .brain-lane-flow span {
+    display: block;
+  }
+
+  .brain-lane-flow strong { margin: .4rem 0; font-size: .86rem; }
+  .brain-lane-flow span { color: var(--brain-muted); font-size: .76rem; line-height: 1.5; }
+  .brain-lane-flow > i { color: var(--brain-green); font-style: normal; }
+
+  .brain-verdict,
+  .brain-final-flow {
+    margin: 0 1.25rem 1.25rem;
+    padding: 1rem 1.1rem;
+    border: 1px dashed var(--brain-line);
+    background: var(--brain-panel-soft);
+  }
+
+  .brain-verdict span,
+  .brain-final-flow span {
+    color: var(--brain-green);
+    font-size: .72rem;
+    font-weight: 850;
+  }
+
+  .brain-verdict strong { display: block; margin: .35rem 0; }
+
+  .brain-three-parts__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .8rem;
+    padding: 1.2rem;
+  }
+
+  .brain-three-parts__grid section {
+    min-height: 245px;
+    padding: 1rem;
+    border: 1px solid var(--brain-line);
+    border-top: 4px solid var(--brain-muted);
+    background: var(--brain-panel);
+  }
+
+  .brain-three-parts__grid section.is-blue { border-top-color: var(--brain-blue); }
+  .brain-three-parts__grid section.is-green { border-top-color: var(--brain-green); }
+
+  .brain-part-icon {
+    display: grid;
+    width: 2.6rem;
+    height: 2.6rem;
+    place-items: center;
+    margin-bottom: .8rem;
+    color: #fff;
+    background: var(--brain-ink);
+    font-size: .72rem;
+    font-weight: 900;
+  }
+
+  .brain-three-parts__grid section > span,
+  .brain-three-parts__grid section > small {
+    display: block;
+    color: var(--brain-green);
+    font-size: .72rem;
+    font-weight: 800;
+  }
+
+  .brain-three-parts__grid strong {
+    display: block;
+    margin: .5rem 0;
+  }
+
+  .brain-three-parts__grid section > small {
+    margin-top: 1rem;
+    color: var(--brain-muted);
+  }
+
+  .brain-three-parts__example {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: .8rem;
+    align-items: center;
+    padding: 0 1.2rem 1.2rem;
+  }
+
+  .brain-three-parts__example > div {
+    padding: 1rem;
+    border: 1px solid var(--brain-line);
+    background: var(--brain-panel);
+  }
+
+  .brain-three-parts__example > div.is-keep {
+    border-color: color-mix(in srgb, var(--brain-green), transparent 45%);
+  }
+
+  .brain-three-parts__example span,
+  .brain-three-parts__example code,
+  .brain-three-parts__example strong {
+    display: block;
+  }
+
+  .brain-three-parts__example span { color: var(--brain-muted); font-size: .72rem; }
+  .brain-three-parts__example code { margin: .5rem 0; color: var(--brain-ink); white-space: normal; }
+  .brain-three-parts__example strong { color: var(--brain-green); font-size: .8rem; }
+  .brain-three-parts__example > i { color: var(--brain-green); font-style: normal; }
+
+  .brain-roadmap__steps {
+    display: grid;
+    gap: .65rem;
+    padding: 1.2rem;
+  }
+
+  .brain-roadmap__steps section {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .8rem;
+    align-items: center;
+    padding: .9rem 1rem;
+    border-left: 4px solid var(--brain-line);
+    background: var(--brain-panel);
+  }
+
+  .brain-roadmap__steps section.is-final {
+    border-left-color: var(--brain-green);
+    background: color-mix(in srgb, var(--brain-green), var(--brain-panel) 95%);
+  }
+
+  .brain-roadmap__steps span,
+  .brain-roadmap__steps strong,
+  .brain-roadmap__steps small {
+    display: block;
+  }
+
+  .brain-roadmap__steps span { color: var(--brain-green); font-size: .7rem; font-weight: 850; }
+  .brain-roadmap__steps strong { margin: .25rem 0; }
+  .brain-roadmap__steps small { color: var(--brain-muted); }
+
+  .brain-panel-title {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--brain-line);
+    background: var(--brain-panel);
+  }
+
+  .brain-lock__flow {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto minmax(0, 1fr);
+    gap: .65rem;
+    align-items: center;
+    padding: 1.2rem;
+  }
+
+  .brain-lock__flow section {
+    min-height: 120px;
+    padding: .85rem;
+    border: 1px solid var(--brain-line);
+    background: var(--brain-panel);
+  }
+
+  .brain-lock__flow section.is-error {
+    border-color: color-mix(in srgb, var(--brain-red), transparent 42%);
+  }
+
+  .brain-lock__flow b,
+  .brain-lock__flow span,
+  .brain-lock__flow strong {
+    display: block;
+  }
+
+  .brain-lock__flow b { color: var(--brain-green); font-size: .72rem; }
+  .brain-lock__flow span { margin: .5rem 0; color: var(--brain-muted); }
+  .brain-lock__flow > i { color: var(--brain-red); font-style: normal; }
+
+  .brain-lock__solution {
+    margin: 0 1.2rem 1.2rem;
+    padding: 1rem;
+    border-left: 4px solid var(--brain-green);
+    background: var(--brain-panel);
+  }
+
+  .brain-lock__solution span,
+  .brain-lock__solution strong { display: block; }
+  .brain-lock__solution span { color: var(--brain-green); font-size: .72rem; font-weight: 850; }
+  .brain-lock__solution strong { margin: .35rem 0; }
+
+  .brain-folders,
+  .brain-id-check,
+  .brain-timing {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: .75rem;
+    align-items: center;
+    padding: 1.2rem;
+  }
+
+  .brain-id-check { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .brain-timing { grid-template-columns: minmax(0, .8fr) auto minmax(0, 1fr) auto minmax(0, 1fr); }
+
+  .brain-folders > div,
+  .brain-id-check > div,
+  .brain-timing > div {
+    min-height: 120px;
+    padding: 1rem;
+    border: 1px solid var(--brain-line);
+    background: var(--brain-panel);
+  }
+
+  .brain-folders > div.is-primary,
+  .brain-id-check > div.is-right,
+  .brain-timing > div.is-background {
+    border-color: color-mix(in srgb, var(--brain-green), transparent 42%);
+  }
+
+  .brain-id-check > div.is-wrong { border-color: color-mix(in srgb, var(--brain-red), transparent 45%); }
+  .brain-timing > div.is-fast { border-color: color-mix(in srgb, var(--brain-blue), transparent 45%); }
+
+  .brain-folders span,
+  .brain-folders strong,
+  .brain-id-check span,
+  .brain-id-check strong,
+  .brain-id-check small,
+  .brain-timing span,
+  .brain-timing strong,
+  .brain-timing small {
+    display: block;
+  }
+
+  .brain-folders span,
+  .brain-id-check span,
+  .brain-timing span { color: var(--brain-green); font-size: .72rem; font-weight: 850; }
+  .brain-folders strong,
+  .brain-id-check strong,
+  .brain-timing strong { margin: .45rem 0; overflow-wrap: anywhere; }
+  .brain-id-check small,
+  .brain-timing small { color: var(--brain-muted); }
+  .brain-folders > i,
+  .brain-id-check > i,
+  .brain-timing > i { color: var(--brain-green); font-style: normal; }
+
+  .brain-console__rail {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr) auto) minmax(0, 1fr);
+    gap: .45rem;
+    align-items: center;
+    padding: 1.1rem;
+    border-bottom: 1px solid var(--brain-line);
+  }
+
+  .brain-console__rail > div {
+    min-width: 0;
+    min-height: 96px;
+    padding: .75rem;
+    border: 1px solid var(--brain-line);
+    background: var(--brain-panel);
+  }
+
+  .brain-console__rail > div.is-final {
+    border-color: color-mix(in srgb, var(--brain-green), transparent 42%);
+  }
+
+  .brain-console__rail b,
+  .brain-console__rail span,
+  .brain-console__rail code { display: block; }
+  .brain-console__rail b { color: var(--brain-green); font-size: .7rem; }
+  .brain-console__rail span { margin: .35rem 0; font-weight: 800; }
+  .brain-console__rail code { color: var(--brain-green); font-size: .72rem; white-space: normal; }
+  .brain-console__rail > i { color: var(--brain-green); font-style: normal; }
+
+  .brain-console__section {
+    margin: 1rem 1.1rem;
+    overflow: hidden;
+    border: 1px solid var(--brain-line);
+    border-radius: 14px;
+    background: var(--brain-panel);
+  }
+
+  .brain-console__section > header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .75rem;
+    align-items: center;
+    padding: .85rem 1rem;
+    border-bottom: 1px solid var(--brain-line);
+    background: var(--brain-panel-soft);
+  }
+
+  .brain-console__section > header span,
+  .brain-console__section > header strong { display: block; }
+  .brain-console__section > header span { color: var(--brain-green); font-size: .68rem; font-weight: 850; letter-spacing: .08em; }
+  .brain-console__section > header strong { margin-top: .25rem; font-size: .9rem; }
+
+  .brain-console__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: .8rem;
+    padding: 1rem;
+  }
+
+  .brain-console__body.is-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .brain-console pre,
+  .brain-maintenance-grid pre {
+    overflow-x: auto;
+    margin: 0;
+    padding: .85rem;
+    border: 1px solid color-mix(in srgb, var(--brain-green), transparent 72%);
+    border-radius: 8px;
+    background: var(--brain-code-bg);
+  }
+
+  .brain-console pre.has-copy-code,
+  .brain-maintenance-grid pre.has-copy-code { padding-top: 42px; }
+
+  .brain-console pre code,
+  .brain-maintenance-grid pre code {
+    color: var(--brain-code-ink);
+    font-size: .78rem;
+    line-height: 1.6;
+    white-space: pre;
+  }
+
+  .brain-command-notes {
+    display: grid;
+    gap: .55rem;
+  }
+
+  .brain-command-notes p {
+    margin: 0;
+    padding: .75rem;
+    border-left: 3px solid var(--brain-green);
+    color: var(--brain-muted);
+    background: var(--brain-panel-soft);
+    font-size: .8rem;
+    line-height: 1.55;
+  }
+
+  .brain-console__section > footer {
+    display: flex;
+    gap: .5rem;
+    align-items: baseline;
+    padding: .8rem 1rem;
+    border-top: 1px solid var(--brain-line);
+    color: var(--brain-muted);
+    background: color-mix(in srgb, var(--brain-amber), var(--brain-panel) 94%);
+    font-size: .78rem;
+    line-height: 1.55;
+  }
+
+  .brain-console__section > footer strong { color: var(--brain-amber); }
+
+  .brain-search-router {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .7rem;
+    padding: 1rem;
+  }
+
+  .brain-search-router > div {
+    min-width: 0;
+    padding: .8rem;
+    border: 1px solid var(--brain-line);
+    background: var(--brain-panel);
+  }
+
+  .brain-search-router span,
+  .brain-search-router strong { display: block; }
+  .brain-search-router span { color: var(--brain-green); font-size: .7rem; font-weight: 850; }
+  .brain-search-router strong { margin: .35rem 0 .7rem; font-size: .84rem; }
+
+  .brain-read-path {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .55rem;
+    align-items: center;
+    margin: 0 1rem 1rem;
+    padding: .8rem;
+    border: 1px dashed var(--brain-line);
+    background: var(--brain-panel-soft);
+  }
+
+  .brain-read-path span { color: var(--brain-muted); font-size: .76rem; }
+  .brain-read-path i { color: var(--brain-green); font-style: normal; }
+  .brain-read-path code { color: var(--brain-green); font-size: .76rem; }
+
+  .brain-sync-flow {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr) auto) minmax(0, 1fr);
+    gap: .55rem;
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .brain-sync-flow > div {
+    min-width: 0;
+    min-height: 95px;
+    padding: .75rem;
+    border: 1px solid var(--brain-line);
+    background: var(--brain-panel);
+  }
+
+  .brain-sync-flow > div.is-final { border-color: color-mix(in srgb, var(--brain-green), transparent 42%); }
+  .brain-sync-flow span,
+  .brain-sync-flow code { display: block; }
+  .brain-sync-flow span { color: var(--brain-green); font-size: .68rem; font-weight: 850; }
+  .brain-sync-flow code { margin-top: .45rem; color: var(--brain-ink); font-size: .72rem; white-space: normal; overflow-wrap: anywhere; }
+  .brain-sync-flow > i { color: var(--brain-green); font-style: normal; }
+
+  .brain-mini-commands {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    padding: 0 1rem 1rem;
+  }
+
+  .brain-mini-commands code {
+    padding: .4rem .55rem;
+    color: var(--brain-code-ink);
+    background: var(--brain-code-bg);
+    font-size: .72rem;
+  }
+
+  .brain-maintenance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .7rem;
+    padding: 1rem;
+  }
+
+  .brain-maintenance-grid > div {
+    min-width: 0;
+    padding: .8rem;
+    border: 1px solid var(--brain-line);
+  }
+
+  .brain-maintenance-grid > div > span {
+    display: block;
+    margin-bottom: .6rem;
+    color: var(--brain-green);
+    font-size: .72rem;
+    font-weight: 850;
+  }
+
+  .brain-accept-stack {
+    display: grid;
+    gap: .55rem;
+    padding: 1rem;
+  }
+
+  .brain-accept-stack > div {
+    display: grid;
+    grid-template-columns: 42px 130px minmax(0, 1fr);
+    gap: .7rem;
+    align-items: center;
+    padding: .75rem;
+    border-left: 4px solid var(--brain-line);
+    background: var(--brain-panel-soft);
+  }
+
+  .brain-accept-stack > div.is-final { border-left-color: var(--brain-green); }
+  .brain-accept-stack b { color: var(--brain-green); }
+  .brain-accept-stack span { font-weight: 800; }
+  .brain-accept-stack code { color: var(--brain-green); overflow-wrap: anywhere; }
+
+  .brain-diagnostics__ladder {
+    display: grid;
+    gap: .55rem;
+    margin: 0;
+    padding: 1.1rem;
+    list-style: none;
+  }
+
+  .brain-diagnostics__ladder li {
+    display: grid;
+    grid-template-columns: 42px minmax(0, .9fr) minmax(0, 1.1fr);
+    gap: .75rem;
+    align-items: center;
+    padding: .85rem;
+    border-left: 4px solid var(--brain-line);
+    background: var(--brain-panel);
+  }
+
+  .brain-diagnostics__ladder li.is-final {
+    border-left-color: var(--brain-green);
+    background: color-mix(in srgb, var(--brain-green), var(--brain-panel) 95%);
+  }
+
+  .brain-diagnostics__ladder li > b { color: var(--brain-green); }
+  .brain-diagnostics__ladder span,
+  .brain-diagnostics__ladder code { display: block; }
+  .brain-diagnostics__ladder span { margin-bottom: .25rem; color: var(--brain-muted); font-size: .72rem; }
+  .brain-diagnostics__ladder code { color: var(--brain-green); font-size: .76rem; white-space: normal; }
+  .brain-diagnostics__ladder li > strong { font-size: .8rem; line-height: 1.5; }
+
+  .brain-pit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .7rem;
+    padding: 0 1.1rem 1.1rem;
+  }
+
+  .brain-pit-grid section {
+    min-height: 165px;
+    padding: .9rem;
+    border: 1px solid var(--brain-line);
+    background: var(--brain-panel);
+  }
+
+  .brain-pit-grid span,
+  .brain-pit-grid strong { display: block; }
+  .brain-pit-grid span { color: var(--brain-red); font-size: .72rem; font-weight: 850; }
+  .brain-pit-grid strong { margin: .4rem 0; }
+
+  .brain-diagnostics__split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .7rem;
+    padding: 0 1.1rem 1.1rem;
+  }
+
+  .brain-diagnostics__split > div {
+    padding: 1rem;
+    border-left: 4px solid var(--brain-blue);
+    background: var(--brain-panel-soft);
+  }
+
+  .brain-diagnostics__split > div:last-child { border-left-color: var(--brain-green); }
+  .brain-diagnostics__split span,
+  .brain-diagnostics__split strong { display: block; }
+  .brain-diagnostics__split span { color: var(--brain-muted); font-size: .72rem; }
+  .brain-diagnostics__split strong { margin: .35rem 0; }
+
+  .brain-scenarios__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+    padding: 1.2rem;
+  }
+
+  .brain-scenarios__grid > section {
+    padding: 1rem;
+    border: 1px solid var(--brain-line);
+    background: var(--brain-panel);
+  }
+
+  .brain-scenario-heading span,
+  .brain-scenario-heading strong { display: block; }
+  .brain-scenario-heading span { color: var(--brain-green); font-size: .72rem; font-weight: 850; }
+  .brain-scenario-heading strong { margin-top: .3rem; font-size: 1rem; }
+
+  .brain-before-after {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: .55rem;
+    align-items: center;
+    margin-top: .9rem;
+  }
+
+  .brain-before-after > div {
+    min-height: 145px;
+    padding: .8rem;
+    border: 1px solid var(--brain-line);
+    background: var(--brain-panel-soft);
+  }
+
+  .brain-before-after > div.is-after { border-color: color-mix(in srgb, var(--brain-green), transparent 45%); }
+  .brain-before-after small { color: var(--brain-green); font-weight: 850; }
+  .brain-before-after > i { color: var(--brain-green); font-style: normal; }
+
+  .brain-boundaries {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+    padding: 1.2rem;
+  }
+
+  .brain-boundaries section {
+    padding: 1rem;
+    border: 1px solid var(--brain-line);
+    background: var(--brain-panel);
+  }
+
+  .brain-boundaries span,
+  .brain-boundaries strong,
+  .brain-boundaries code { display: block; }
+  .brain-boundaries section > span { color: var(--brain-amber); font-size: .72rem; font-weight: 850; }
+  .brain-boundaries section > strong { margin: .4rem 0; }
+  .brain-boundaries section > code { margin-bottom: .7rem; color: var(--brain-green); }
+  .brain-boundaries footer {
+    grid-column: 1 / -1;
+    padding: 1rem;
+    border-left: 4px solid var(--brain-green);
+    background: var(--brain-panel-soft);
+  }
+  .brain-boundaries footer strong { margin-bottom: .3rem; color: var(--brain-green); }
+
+  .brain-final-check__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .7rem;
+    padding: 1.1rem;
+  }
+
+  .brain-final-check__grid section {
+    min-height: 150px;
+    padding: 1rem;
+    border: 1px solid var(--brain-line);
+    background: var(--brain-panel);
+  }
+
+  .brain-final-check__grid section.is-final {
+    border-color: color-mix(in srgb, var(--brain-green), transparent 42%);
+    background: color-mix(in srgb, var(--brain-green), var(--brain-panel) 94%);
+  }
+
+  .brain-final-check__grid strong {
+    display: block;
+    margin: .55rem 0 .35rem;
+  }
+
+  .brain-final-flow {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .7rem;
+  }
+
+  .brain-final-flow > div {
+    padding: .8rem;
+    border-left: 3px solid var(--brain-green);
+    background: var(--brain-panel);
+  }
+
+  .brain-final-flow strong {
+    display: block;
+    margin-top: .35rem;
+    font-size: .8rem;
+    line-height: 1.55;
+  }
+
+  @media (max-width: 1399px) {
+    .brain-poster {
+      width: 100%;
+      margin: 1.6rem 0 2.3rem;
+      transform: none;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .brain-hero__comparison,
+    .brain-system__layers,
+    .brain-three-parts__grid,
+    .brain-three-parts__example,
+    .brain-lock__flow,
+    .brain-folders,
+    .brain-id-check,
+    .brain-timing,
+    .brain-console__body,
+    .brain-console__body.is-two,
+    .brain-search-router,
+    .brain-maintenance-grid,
+    .brain-scenarios__grid,
+    .brain-boundaries,
+    .brain-final-check__grid,
+    .brain-final-flow {
       grid-template-columns: 1fr;
     }
 
-    .gb-hero-map__bridge {
+    .brain-hero__core,
+    .brain-three-parts__example > i,
+    .brain-lock__flow > i,
+    .brain-folders > i,
+    .brain-id-check > i,
+    .brain-timing > i {
       min-width: 0;
-      padding: .1rem 0;
+      padding: .2rem 0;
     }
 
-    .gb-lane__track {
-      grid-template-columns: 1fr;
-    }
-
-    .gb-lane__track > i {
+    .brain-hero__core i,
+    .brain-three-parts__example > i,
+    .brain-lock__flow > i,
+    .brain-folders > i,
+    .brain-id-check > i,
+    .brain-timing > i {
       transform: rotate(90deg);
       text-align: center;
     }
 
-    .gb-architecture__base {
+    .brain-boundaries footer { grid-column: auto; }
+
+    .brain-console__rail,
+    .brain-sync-flow {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .brain-console__rail > i,
+    .brain-sync-flow > i { display: none; }
+
+    .brain-accept-stack > div,
+    .brain-diagnostics__ladder li {
+      grid-template-columns: 42px minmax(0, 1fr);
+    }
+
+    .brain-accept-stack > div > :last-child,
+    .brain-diagnostics__ladder li > :last-child {
+      grid-column: 2;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .brain-poster__title,
+    .brain-poster__foot,
+    .brain-hero__loops,
+    .brain-lane-flow,
+    .brain-pit-grid,
+    .brain-diagnostics__split,
+    .brain-before-after {
       grid-template-columns: 1fr;
     }
 
-    .gb-command-map {
-      width: 100%;
-      margin-right: 0;
-      margin-left: 0;
-      transform: none;
+    .brain-poster__title {
+      align-items: flex-start;
     }
 
-    .gb-command-map__track {
-      grid-template-columns: 1fr;
+    .brain-poster__title > b {
+      width: fit-content;
     }
 
-    .gb-command-map__track > i {
+    .brain-lane-flow > i,
+    .brain-before-after > i {
       transform: rotate(90deg);
+      text-align: center;
+    }
+
+    .brain-console__rail,
+    .brain-sync-flow {
+      grid-template-columns: 1fr;
+    }
+
+    .brain-console__section > footer {
+      display: block;
+    }
+
+    .brain-console__section > footer strong {
+      display: block;
+      margin-bottom: .25rem;
     }
   }
 `}</style>
