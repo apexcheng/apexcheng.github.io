@@ -1,0 +1,62 @@
+---
+title: "Excel / WPS 奇怪问题记录"
+description: "持续记录 Excel、WPS 和影刀表格自动化中不常见但容易踩坑的问题。第一节记录 set_range 写入等号文本时的 COM 异常。"
+date: 2026-07-29T23:39:00+08:00
+category: "教程"
+tags:
+  - "Excel"
+  - "WPS"
+  - "影刀RPA"
+  - "数据处理"
+minutes: 3
+featured: false
+series: "excel-functions"
+seriesOrder: 7
+draft: false
+private: false
+---
+
+这篇文章只记录结论和解决方法，不展开排查过程。以后遇到类似的 Excel / WPS 奇怪问题，会继续追加在这里。
+
+## 01｜WPS `set_range()` 写入等号文本时报 COM 异常
+
+### 现象
+
+使用影刀的 WPS 驱动批量写入二维数据：
+
+```python
+sheet.set_range(1, "E", data)
+```
+
+可能出现下面的异常，并且同一份数据总是卡在固定区域：
+
+```text
+pywintypes.com_error: (-2147352567, '发生意外。', ..., -1880948725)
+```
+
+### 原因
+
+数据中存在**以 `=` 开头的普通文本**，例如客服备注：
+
+```text
+=键盘和鼠标寄回换货，已建单发群
+```
+
+WPS 会把它当成公式解析。内容不是合法公式时，`set_range()` 就可能直接报 COM 异常。
+
+### 解决方法
+
+确认这些内容本来就是文本后，在写入前加一个英文单引号：
+
+```python
+for row in data:
+    for index, value in enumerate(row):
+        if isinstance(value, str) and value.startswith("="):
+            row[index] = "'" + value
+
+sheet.set_range(1, "E", data)
+```
+
+英文单引号不会显示在单元格中，看到的内容仍然以 `=` 开头。
+
+> 只处理确定属于文本的内容。真正需要执行的公式不能加英文单引号。
