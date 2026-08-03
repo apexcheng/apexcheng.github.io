@@ -37,5 +37,6 @@
 | `src/content/posts/github-pages-deployment-guide.mdx` | `实践` | GitHub Pages 部署原理图解手册，覆盖访问链路、Astro 构建、Actions artifact、站点路径映射、发布检查和分层排障 | 写部署说明、构建发布、静态站点原理和 Pages 故障排查时参考 |
 | `src/content/posts/wsl-devspace-caddy-chmlfrp-chatgpt.mdx` | `实践` | 在 WSL 中用 DevSpace、Caddy 和 ChmlFrp 暴露公网 HTTPS MCP 地址，包含完整配置、systemd 常驻、Windows KeepAlive、验证命令和常见配置坑 | 写 WSL 本地 MCP 公网接入、DevSpace、Caddy、ChmlFrp、ChatGPT 连接教程时参考 |
 | `src/content/posts/wsl-devspace-tailscale-funnel-chatgpt.mdx` | `实践` | 通用 DevSpace + Tailscale Funnel 教程，覆盖 Linux、WSL、Windows 和 macOS 的环境选择，并按本地 401、OAuth metadata、Funnel 和 ChatGPT 真实调用逐层验收 | 写本地 MCP 公网接入、跨平台 DevSpace 启动方式、Tailscale Funnel、ChatGPT OAuth 连接和分层排查时参考 |
+| `src/content/posts/repetitive-reporting-is-not-execution.mdx` | `实践` | 从全平台商品退款率和抖音每日报表两套制度出发，批评把重复下载、筛选、填写和刷新当作执行力，并提出统一订单数据源、自动日期口径和异常驱动的人机分工 | 写数据报表流程优化、RPA 自动化、重复劳动治理、执行力与人才评价文章时参考 |
 | `src/content/posts/performance-review-should-recognize-talent.mdx` | `生活` | 从运营助理分级考核表出发，批评统一能力清单如何用短板限制长板，并提出共同底线加专项晋升路线 | 写职场观察、绩效考核、人才管理、专人专项和制度批评类文章时参考 |
 | `src/content/posts/h-pylori-acid-drink-note.mdx` | `生活` | 幽门螺杆菌、胃酸过多和气泡饮料的个人判断笔记 | 写生活判断清单、风险边界提醒、个人健康记录类文章时参考 |
