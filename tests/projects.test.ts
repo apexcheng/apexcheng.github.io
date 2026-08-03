@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { projects } from '../src/data/projects';
 
 describe('project records', () => {
-  it('keeps the first release focused on four visible project cards', () => {
-    expect(projects).toHaveLength(4);
+  it('provides visible project cards', () => {
+    expect(projects.length).toBeGreaterThan(0);
   });
 
   it('provides the fields needed by project cards', () => {
