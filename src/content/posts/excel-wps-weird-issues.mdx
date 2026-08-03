@@ -71,18 +71,18 @@ sheet.set_range(1, "E", data)
 ```excel
 =XLOOKUP(
     E2#,
-    全店!C:C,
-    全店!A:A,
+    汇总表!C:C,
+    汇总表!A:A,
     XLOOKUP(
         E2#,
-        '曾兴-京东自营'!C:C,
-        '曾兴-京东自营'!A:A,
+        渠道A!C:C,
+        渠道A!A:A,
         "----------"
     )
 )
 ```
 
-单独用 `XMATCH` 检查时，目标 ID 明明可以在「曾兴-京东自营」中找到；但放回整列公式后，部分结果仍然显示 `----------`。
+单独用 `XMATCH` 检查时，目标 ID 明明可以在「渠道A」中找到；但放回整列公式后，部分结果仍然显示 `----------`。
 
 ### 原因
 
@@ -109,20 +109,20 @@ sheet.set_range(1, "E", data)
 ```excel
 =LET(
     ID,IFERROR(--TRIM(CLEAN(SUBSTITUTE(SUBSTITUTE(E2#,CHAR(160),""),UNICHAR(12288),""))),"")&"",
-    全店ID,IFERROR(--TRIM(CLEAN(SUBSTITUTE(SUBSTITUTE(全店!C2:C50000,CHAR(160),""),UNICHAR(12288),""))),"")&"",
-    自营ID,IFERROR(--TRIM(CLEAN(SUBSTITUTE(SUBSTITUTE('曾兴-京东自营'!C2:C50000,CHAR(160),""),UNICHAR(12288),""))),"")&"",
-    天猫ID,IFERROR(--TRIM(CLEAN(SUBSTITUTE(SUBSTITUTE(天猫旗舰店!C2:C50000,CHAR(160),""),UNICHAR(12288),""))),"")&"",
-    所有ID,VSTACK(全店ID,自营ID,天猫ID),
+    汇总ID,IFERROR(--TRIM(CLEAN(SUBSTITUTE(SUBSTITUTE(汇总表!C2:C50000,CHAR(160),""),UNICHAR(12288),""))),"")&"",
+    渠道AID,IFERROR(--TRIM(CLEAN(SUBSTITUTE(SUBSTITUTE(渠道A!C2:C50000,CHAR(160),""),UNICHAR(12288),""))),"")&"",
+    渠道BID,IFERROR(--TRIM(CLEAN(SUBSTITUTE(SUBSTITUTE(渠道B!C2:C50000,CHAR(160),""),UNICHAR(12288),""))),"")&"",
+    所有ID,VSTACK(汇总ID,渠道AID,渠道BID),
     所有结果,VSTACK(
-        全店!A2:A50000,
-        '曾兴-京东自营'!A2:A50000,
-        天猫旗舰店!D2:D50000
+        汇总表!A2:A50000,
+        渠道A!A2:A50000,
+        渠道B!D2:D50000
     ),
     IF(ID="","",XLOOKUP(ID,所有ID,所有结果,"----------"))
 )
 ```
 
-`VSTACK` 的顺序就是匹配优先级：先查「全店」，再查「曾兴-京东自营」，最后查「天猫旗舰店」。
+`VSTACK` 的顺序就是匹配优先级：先查「汇总表」，再查「渠道A」，最后查「渠道B」。
 
 这样 `[if_not_found]` 只需要返回一个普通文本，不再承担“数组套数组”的逐项回退。
 
