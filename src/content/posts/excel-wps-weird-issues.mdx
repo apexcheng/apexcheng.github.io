@@ -1,14 +1,15 @@
 ---
 title: "Excel / WPS 奇怪问题记录"
-description: "持续记录 Excel、WPS 和影刀表格自动化中不常见但容易踩坑的问题。第一节记录 set_range 写入等号文本时的 COM 异常。"
+description: "持续记录 Excel、WPS 和影刀表格自动化中不常见但容易踩坑的问题，包括影刀 set_range 写入异常和 XLOOKUP 数组回退失效。"
 date: 2026-07-29T23:39:00+08:00
+updated: 2026-08-03T10:24:00+08:00
 category: "教程"
 tags:
   - "Excel"
   - "WPS"
   - "影刀RPA"
   - "数据处理"
-minutes: 3
+minutes: 5
 featured: false
 series: "excel-functions"
 seriesOrder: 7
@@ -18,11 +19,11 @@ private: false
 
 这篇文章只记录结论和解决方法，不展开排查过程。以后遇到类似的 Excel / WPS 奇怪问题，会继续追加在这里。
 
-## 01｜WPS `set_range()` 写入等号文本时报 COM 异常
+## 01｜影刀 `set_range()` 写入等号文本时报 COM 异常
 
 ### 现象
 
-使用影刀的 WPS 驱动批量写入二维数据：
+使用影刀批量写入 WPS 二维数据：
 
 ```python
 sheet.set_range(1, "E", data)
@@ -42,7 +43,7 @@ pywintypes.com_error: (-2147352567, '发生意外。', ..., -1880948725)
 =键盘和鼠标寄回换货，已建单发群
 ```
 
-WPS 会把它当成公式解析。内容不是合法公式时，`set_range()` 就可能直接报 COM 异常。
+影刀调用 `set_range()` 写入时，会把这类内容交给 WPS 按公式解析。内容不是合法公式时，影刀就可能收到 COM 异常。
 
 ### 解决方法
 
@@ -60,3 +61,69 @@ sheet.set_range(1, "E", data)
 英文单引号不会显示在单元格中，看到的内容仍然以 `=` 开头。
 
 > 只处理确定属于文本的内容。真正需要执行的公式不能加英文单引号。
+
+## 02｜数组 `XLOOKUP` 的 `[if_not_found]` 没有逐项回退
+
+### 现象
+
+需要按顺序从多个工作表查找同一个 ID，最开始使用了嵌套 `XLOOKUP`：
+
+```excel
+=XLOOKUP(
+    E2#,
+    全店!C:C,
+    全店!A:A,
+    XLOOKUP(
+        E2#,
+        '曾兴-京东自营'!C:C,
+        '曾兴-京东自营'!A:A,
+        "----------"
+    )
+)
+```
+
+单独用 `XMATCH` 检查时，目标 ID 明明可以在「曾兴-京东自营」中找到；但放回整列公式后，部分结果仍然显示 `----------`。
+
+### 原因
+
+当第一个 `XLOOKUP` 使用 `E2#` 进行数组查询时，它返回的是一整组结果，例如：
+
+```text
+[值1, 值2, #N/A, 值3, #N/A, ...]
+```
+
+这里不是整个结果都没找到，而是**数组中的部分元素没找到**。
+
+在当前 WPS 场景中，外层 `XLOOKUP` 的 `[if_not_found]` 没有继续针对数组里的每个 `#N/A` 逐项执行内层查询。结果数组整体已经产生了匹配值，因此部分未匹配元素没有按预期回退到第二个工作表。
+
+这也是为什么：
+
+- 单独查询某一个 ID 可以找到；
+- 使用 `E2#` 批量查询时却出现漏匹配；
+- 清洗空格、统一转数值或文本都无法解决。
+
+### 解决方法
+
+先把多个查询区域纵向合并，再只执行一次 `XLOOKUP`：
+
+```excel
+=LET(
+    ID,IFERROR(--TRIM(CLEAN(SUBSTITUTE(SUBSTITUTE(E2#,CHAR(160),""),UNICHAR(12288),""))),"")&"",
+    全店ID,IFERROR(--TRIM(CLEAN(SUBSTITUTE(SUBSTITUTE(全店!C2:C50000,CHAR(160),""),UNICHAR(12288),""))),"")&"",
+    自营ID,IFERROR(--TRIM(CLEAN(SUBSTITUTE(SUBSTITUTE('曾兴-京东自营'!C2:C50000,CHAR(160),""),UNICHAR(12288),""))),"")&"",
+    天猫ID,IFERROR(--TRIM(CLEAN(SUBSTITUTE(SUBSTITUTE(天猫旗舰店!C2:C50000,CHAR(160),""),UNICHAR(12288),""))),"")&"",
+    所有ID,VSTACK(全店ID,自营ID,天猫ID),
+    所有结果,VSTACK(
+        全店!A2:A50000,
+        '曾兴-京东自营'!A2:A50000,
+        天猫旗舰店!D2:D50000
+    ),
+    IF(ID="","",XLOOKUP(ID,所有ID,所有结果,"----------"))
+)
+```
+
+`VSTACK` 的顺序就是匹配优先级：先查「全店」，再查「曾兴-京东自营」，最后查「天猫旗舰店」。
+
+这样 `[if_not_found]` 只需要返回一个普通文本，不再承担“数组套数组”的逐项回退。
+
+> 如果不想纵向合并，也可以让每个 `XLOOKUP` 单独返回数组，再用 `IFNA` 逐项替换。关键是不要继续把一个数组查询直接放进另一个数组 `XLOOKUP` 的 `[if_not_found]` 中。
