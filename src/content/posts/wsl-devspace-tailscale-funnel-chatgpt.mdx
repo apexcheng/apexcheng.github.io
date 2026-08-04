@@ -2,11 +2,12 @@
 title: "用 Tailscale Funnel 暴露 DevSpace 给 ChatGPT"
 description: "让 DevSpace 和 Tailscale Funnel 运行在同一个本地环境，用公网 HTTPS MCP 地址把本机项目接入 ChatGPT。"
 date: 2026-07-09T10:32:25+08:00
+updated: 2026-08-04T18:46:00+08:00
 category: "实践"
 tags:
   - "DevSpace"
   - "MCP"
-minutes: 13
+minutes: 15
 featured: false
 draft: false
 private: false
@@ -426,6 +427,75 @@ curl -sS -o /dev/null -w '%{http_code}\n' \
 这一步只是把第四步的三个本地信号搬到公网再验收一次。如果本地已经是 `401 / 200 / 200`，公网却不是，就只查 Funnel、域名和 Host 校验，不要回头改 DevSpace 业务逻辑。
 
 刚启用 Funnel 时，公网 DNS 可能需要一点时间生效。一次解析失败不代表 Tailscale 安装坏了，先看 `tailscale funnel status` 是否正确，再继续判断。
+
+## 补充：Windows 浏览器无法访问 Funnel 的代理坑
+
+有时同一个 Funnel 地址会出现一种很迷惑的现象：手机可以访问，Windows 浏览器超时，但 Windows 上的 `curl.exe` 能正常返回 `401`。这通常不是 Funnel 或 DevSpace 故障，而是 **Windows 系统代理错误接管了 Tailscale 私网流量**。
+
+Windows 安装 Tailscale 后，MagicDNS 可能把 Funnel 域名解析到 `100.x` Tailnet 私网地址。浏览器又默认使用 `127.0.0.1:7892` 一类系统代理，如果代理规则没有绕过 Tailscale 域名，请求链路就会变成：
+
+```text
+浏览器 -> 本地代理 -> 100.x Tailnet 私网地址 -> TLS 握手失败
+```
+
+手机不使用电脑上的系统代理，所以可以正常访问；`curl.exe` 默认也不会读取 WinINET 系统代理配置，因此直连测试可能正常。
+
+先检查域名解析和直连结果：
+
+```powershell
+Resolve-DnsName devspace-device.your-tailnet.ts.net
+
+curl.exe -sS -D - -o NUL `
+  "https://devspace-device.your-tailnet.ts.net/mcp"
+```
+
+直连返回 `HTTP/1.1 401 Unauthorized` 是正确结果。再强制经过代理复现：
+
+```powershell
+curl.exe -x http://127.0.0.1:7892 `
+  "https://devspace-device.your-tailnet.ts.net/mcp"
+```
+
+如果此时出现 `SSL/TLS handshake failed`，基本可以确认问题在代理规则。可以再查看 Windows 系统代理配置：
+
+```powershell
+Get-ItemProperty `
+  'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings' |
+  Select-Object ProxyEnable, ProxyServer, ProxyOverride
+```
+
+修复时，在系统代理绕过列表中加入自己的 Tailnet 域名后缀，例如：
+
+```text
+*.your-tailnet.ts.net
+```
+
+更持久的做法是在 Clash 或其他代理软件中添加直连规则：
+
+```yaml
+- DOMAIN-SUFFIX,your-tailnet.ts.net,DIRECT
+- IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
+```
+
+修改后完全退出并重启浏览器，再检查 Windows 是否判定为直连：
+
+```powershell
+$uri = [Uri]'https://devspace-device.your-tailnet.ts.net/mcp'
+$proxy = [System.Net.WebRequest]::DefaultWebProxy
+
+$proxy.IsBypassed($uri)
+$proxy.GetProxy($uri)
+```
+
+`IsBypassed` 应为 `True`。随后访问 authorization server metadata，应返回 JSON 和 `200`：
+
+```text
+https://devspace-device.your-tailnet.ts.net/.well-known/oauth-authorization-server/mcp
+```
+
+<Callout title="不要把 401 当成连接失败">
+  `/mcp` 不是普通网页。未携带 OAuth 凭据时返回 `401 Unauthorized`，反而说明域名、TLS、Funnel、MCP 端点和 OAuth 保护都已经生效。另一个容易混淆的点是：DevSpace 中设置 `NO_PROXY` 只能影响 DevSpace 自身及其子进程的出站请求，不能决定 Windows 浏览器是否使用系统代理。
+</Callout>
 
 ## 第七步：在 ChatGPT 中连接
 
