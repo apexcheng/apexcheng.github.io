@@ -1,0 +1,215 @@
+---
+title: "别再用上周利润率猜本周利润：重做电商链接利润算法"
+description: "复盘一套用历史利润率估算当前推广利润的旧方法，并把链接利润重构为订单级成本、成熟退款率和广告费统一汇总的一张表。"
+date: 2026-08-10T16:47:00+08:00
+category: "实践"
+tags:
+  - "电商数据"
+  - "利润核算"
+  - "广告投放"
+  - "退款率"
+minutes: 10
+featured: false
+draft: false
+private: false
+---
+
+<div class="profit-rebuild-hero">
+  <div class="profit-rebuild-hero-copy">
+    <span class="profit-rebuild-kicker">链接利润模型重构</span>
+    <h2>别再用上周利润率，<br />猜这周赚不赚钱</h2>
+    <p>旧方法看起来有利润、有利润率、有 ROI，公式也不少。但最关键的问题是：本周期到底赚了多少钱，并没有被直接计算，而是被上一个周期的平均利润率“推测”出来。</p>
+  </div>
+  <div class="profit-rebuild-hero-compare" aria-label="旧方法和新方法的核心差别">
+    <section class="profit-old"><small>旧方法</small><strong>历史平均值</strong><span>→</span><strong>推测本期利润</strong></section>
+    <section class="profit-new"><small>新方法</small><strong>每笔订单成本</strong><span>→</span><strong>直接汇总利润</strong></section>
+  </div>
+</div>
+
+这套旧方法最初并不是没有道理。
+
+当系统拿不到每笔订单对应的商品采购成本、快递费、后勤分摊等数据时，只能先算出一个链接过去大概能赚多少，再用历史利润率去估算当前推广销售能贡献多少利润。
+
+问题是，一旦订单级成本已经可以拿到，继续使用这套“历史平均值代理当前利润”的方法，就会从临时方案变成错误的数据模型。
+
+> **判断一个链接现在赚不赚钱，最可靠的方法不是先问“它上周平均赚多少”，而是直接把这 7 天每一笔订单赚了多少加起来，再扣掉退款损失和广告费。**
+
+## 旧方法到底在算什么
+
+旧方法把“链接赚不赚钱”拆成了两张表。
+
+<div class="profit-rebuild-old-flow" aria-label="旧方法两张表的利润计算链路">
+  <section>
+    <span>表 1 · 上个自然周</span>
+    <h3>先算历史链接利润</h3>
+    <p>上周销售收入</p><i>−</i><p>退款、店铺杂费、快递、后勤、采购成本</p><i>−</i><p>上周广告费</p><b>= 上周链接利润</b>
+  </section>
+  <div class="profit-rebuild-old-bridge">
+    <small>再生成一个代理变量</small>
+    <strong>历史利润率</strong>
+    <code>上周利润 ÷ 上周未税销售额</code>
+  </div>
+  <section>
+    <span>表 2 · 本周期近 7 天</span>
+    <h3>再用历史利润率估算现在</h3>
+    <p>本期推广销售额</p><i>×</i><p>历史利润率</p><i>−</i><p>本期广告花费</p><b>≈ 本期推广利润</b>
+  </section>
+</div>
+
+<div class="profit-rebuild-thesis">
+  <span>旧模型的核心假设</span>
+  <strong>“这个链接这周每卖 1 元，大概还能像上周一样赚那么多。”</strong>
+</div>
+
+只要这个假设成立，模型就能用。但电商链接恰恰很难满足这个假设。
+
+## 最大的问题：平均利润率把真实订单吃掉了
+
+同一个商品链接下面可能有多个 SKU，不同 SKU 的采购成本、售价、促销力度、快递方式都不同。
+
+上周如果主要卖高利润 SKU，这个链接会得到一个很好看的历史利润率；本周广告恰好把流量打到低利润 SKU，旧模型仍然会拿上周的高利润率计算。
+
+<div class="profit-rebuild-sku-board" aria-label="不同 SKU 结构导致历史利润率失真">
+  <div class="profit-rebuild-sku-head"><span>同一个链接</span><strong>SKU 结构变了，历史平均利润率却没有跟着变</strong></div>
+  <div class="profit-rebuild-sku-grid">
+    <section><small>SKU A</small><strong>高利润</strong><p>上周主销</p></section>
+    <section><small>SKU B</small><strong>中利润</strong><p>稳定销售</p></section>
+    <section><small>SKU C</small><strong>低利润 / 亏损</strong><p>本周广告主销</p></section>
+  </div>
+  <div class="profit-rebuild-sku-result"><span>旧算法仍然看到</span><b>“历史利润率不错”</b><span>真实情况却可能已经变成</span><b>“卖得越多，亏得越快”</b></div>
+</div>
+
+历史利润率把 SKU 差异、订单差异、物流差异全部压缩成了一个平均数。这个平均数适合做历史观察，但不适合代替本期真实成本。
+
+## 旧方法的四个结构性问题
+
+<div class="profit-rebuild-problems">
+  <section><span>01</span><h3>用过去代理现在</h3><p>上周利润率被直接拿来推算本周，默认售价、SKU 结构、成本和活动环境基本不变。</p></section>
+  <section><span>02</span><h3>用平均值覆盖订单差异</h3><p>不同 SKU、不同快递、不同采购成本最后都被压成一个链接平均利润率，真实亏损订单很容易被隐藏。</p></section>
+  <section><span>03</span><h3>自然销售和推广销售被割裂</h3><p>广告可能带来自然搜索、回访和间接成交。只盯“推广归因销售”很难回答广告开着以后链接整体到底赚没赚钱。</p></section>
+  <section><span>04</span><h3>两张表制造了二次推导</h3><p>表 1 先生成历史利润率，表 2 再用这个中间变量估算当前利润。链路越长，越难定位误差来自哪里。</p></section>
+</div>
+
+旧方法真正的问题，不是公式不够复杂，而是**计算单位选错了**。利润发生在订单上，却先把订单汇总成链接平均利润率，再反过来猜订单。
+
+## 一个示意：旧模型甚至可能把“亏损”判断成“盈利”
+
+下面只是为了说明模型误差的示意数字，不代表真实经营数据。
+
+假设某链接上周销售 10 万元，历史利润率为 20%。本周推广销售 2 万元，广告花费 3000 元。
+
+<div class="profit-rebuild-example">
+  <section class="profit-example-old">
+    <small>旧模型</small>
+    <div><span>本周推广销售</span><b>¥20,000</b></div><div><span>历史利润率</span><b>20%</b></div><div><span>预计商品利润</span><b>¥4,000</b></div><div><span>广告费</span><b>− ¥3,000</b></div>
+    <strong>判断：盈利 ¥1,000</strong>
+  </section>
+  <section class="profit-example-new">
+    <small>如果本周实际订单结构已经变化</small>
+    <div><span>本周真实订单贡献率</span><b>5%</b></div><div><span>订单贡献利润</span><b>¥1,000</b></div><div><span>广告费</span><b>− ¥3,000</b></div>
+    <strong>真实方向：亏损 ¥2,000</strong>
+  </section>
+</div>
+
+同样一批推广数据，只因为历史利润率没有反映本周 SKU 和成本结构，推广决策就可能完全相反。最危险的不是“利润少算了几百块”，而是它会直接影响**继续投、降预算、整改链接还是停投**。
+
+## 新方法：利润回到订单上计算
+
+新的计算单位应该从“链接历史平均利润率”下沉到“订单”。按照当前内部核算口径，一笔订单可以拆成三层。
+
+<div class="profit-rebuild-order-stack" aria-label="订单级利润计算结构">
+  <section><span>01 · 收入</span><h3>订单未税收入</h3><code>商家实收金额 ÷ 1.13</code></section>
+  <section><span>02 · 成本</span><h3>订单经营成本</h3><p>销售额 × 4% 店铺杂费</p><p>快递费 × 件数</p><p>后勤分摊 × 件数</p><p>订单关联商品采购成本未税合计</p><p>发货成本</p></section>
+  <section class="profit-order-result"><span>03 · 结果</span><h3>订单贡献利润</h3><code>订单未税收入 − 订单经营成本</code></section>
+</div>
+
+这样每一笔订单使用的都是当期真实成本结构，不再需要先生成一个“上周链接利润率”。链接层只需要把这个链接近 7 天所有订单汇总起来。
+
+<div class="profit-rebuild-link-pipeline" aria-label="从订单利润汇总到链接利润的流程">
+  <div><small>订单 1</small><b>收入 − 成本</b></div>
+  <div><small>订单 2</small><b>收入 − 成本</b></div>
+  <div><small>订单 3…N</small><b>收入 − 成本</b></div>
+  <i>→</i>
+  <section><small>近 7 天链接层</small><strong>Σ 订单贡献利润</strong><span>− 预计退款损失</span><span>− 广告费未税</span><b>= 预计链接利润</b></section>
+</div>
+
+这里有一个重要变化：**是否开推广不再决定这个链接要不要进入利润表。**只要近 7 天产生了销售，这个链接就应该进入链接利润表。广告数据只是其中一组诊断指标。
+
+## 退款率要保留，但角色要改
+
+近 7 天订单还没有完全走完退款周期，如果完全不考虑退款，利润一定会偏乐观。
+
+因此退款率仍然需要进入新模型，但不应该混进订单成本，也不应该直接用最近订单计算。
+
+<div class="profit-rebuild-refund-window" aria-label="成熟退款率的时间窗口">
+  <div class="profit-rebuild-refund-axis"><span>T−30</span><b>成熟订单样本</b><span>T−14</span><em>退款尚未充分暴露</em><span>今天</span></div>
+  <div class="profit-rebuild-refund-note"><strong>金额退款率</strong><code>成熟样本退款金额 ÷ 成熟样本销售金额</code><p>优先使用金额退款率，而不是退款订单数 ÷ 总订单数。利润核算关心的是损失了多少钱，不只是退了多少单。</p></div>
+</div>
+
+<div class="profit-rebuild-formula"><small>预计退款损失</small><strong>近 7 天总销售额 × 成熟金额退款率 ÷ 1.13</strong></div>
+
+<div class="profit-rebuild-final-formula"><span>预计链接利润</span><strong>Σ 订单贡献利润</strong><i>−</i><strong>预计退款损失</strong><i>−</i><strong>广告费 ÷ 1.06</strong></div>
+
+需要注意一个实现边界：如果“商家实收金额”本身已经扣除了当前已经发生的退款，就不能再对这部分重复扣退款损失。此时历史退款率应该只用于估计**尚未成熟、未来可能发生的退款部分**。
+
+## 最终只保留一张「链接利润表」
+
+旧系统用“上周利润表 + 本期推广表”两层推导。新系统可以直接收敛成一张近 7 天链接利润表。
+
+<div class="profit-rebuild-table-wrap" role="region" aria-label="新版链接利润表字段示意" tabindex="0">
+  <table class="profit-rebuild-table">
+    <thead><tr><th>链接</th><th>型号</th><th>是否推广</th><th>点击率</th><th>PPC</th><th>ROI</th><th>推广件数</th><th>推广花费</th><th>推广销售额</th><th>总件数</th><th>总销售额</th><th>成熟退款率</th><th>预计退款损失</th><th>总订单成本</th><th>预计链接利润</th><th>推广建议</th></tr></thead>
+    <tbody><tr><td>A123</td><td>K 系列</td><td>推广中</td><td>3.8%</td><td>¥0.82</td><td>2.6</td><td>126</td><td>¥8,420</td><td>¥21,900</td><td>184</td><td>¥31,600</td><td>12.4%</td><td>¥3,469</td><td>¥17,800</td><td class="profit-loss">− ¥330</td><td><b>推广利润 −330 元，建议整改</b></td></tr></tbody>
+  </table>
+</div>
+
+表里的数字只是结构示意。真正重要的是这张表把两件事放在同一行：**经营结果**看链接近 7 天整体赚还是亏；**推广诊断**看点击率、PPC、ROI、推广花费等指标为什么把结果推到这里。
+
+<div class="profit-rebuild-decision">
+  <section><small>先看结果</small><strong>预计链接利润 &gt; 0</strong><p>链接整体赚钱，再分析广告是否还有放量空间。</p></section>
+  <section><small>再找原因</small><strong>预计链接利润 &lt; 0</strong><p>结合 ROI、PPC、点击率、退款率、SKU 成本结构定位亏损来源。</p></section>
+  <section><small>最后给动作</small><strong>整改 / 降投 / 停投 / 放量</strong><p>建议应该来自利润结果，而不是由某个单一推广指标直接决定。</p></section>
+</div>
+
+## 历史利润不是没用，只是不该代替当前利润
+
+旧表 1 最值得保留的，不是“历史利润率作为当前成本模型”，而是**历史结果作为比较基准**。
+
+<div class="profit-rebuild-history"><span>上周期</span><strong>盈利 ¥860</strong><i>→</i><span>本周期</span><strong>亏损 ¥330</strong><b>盈利能力明显恶化</b></div>
+
+历史数据应该回答“这个链接和自己过去相比，变好了还是变差了？”，而不是“因为它过去赚 20%，所以我假设它现在也赚 20%”。
+
+## 从“估算模型”升级成“核算模型”
+
+旧方法解决的是一个历史阶段的问题：没有订单级成本，只能用平均利润率估算。现在数据已经可以落到订单和 SKU，利润模型就应该跟着升级。
+
+<div class="profit-rebuild-ending">
+  <small>真正的变化不是少了一张表</small>
+  <strong>而是利润终于从“猜”变成了“算”</strong>
+  <div><p><span>旧</span> 链接历史平均利润率 → 推测本期</p><p><span>新</span> 当期订单真实成本 → 汇总本期</p></div>
+</div>
+
+如果订单成本已经能够直接拿到，还继续用上周利润率去判断这周是否赚钱，本质上就是放着明细不用，主动把真实数据重新压成平均数，再用平均数猜回真实结果。
+
+这不是简化计算，而是在制造误差。
+
+<style>{`
+  .profit-rebuild-hero,.profit-rebuild-old-flow,.profit-rebuild-sku-board,.profit-rebuild-problems,.profit-rebuild-example,.profit-rebuild-order-stack,.profit-rebuild-link-pipeline,.profit-rebuild-refund-window,.profit-rebuild-decision,.profit-rebuild-ending{--profit-old:#ef4444;--profit-old-soft:color-mix(in srgb,var(--profit-old) 12%,transparent);--profit-new:#16a085;--profit-new-soft:color-mix(in srgb,var(--profit-new) 12%,transparent)}
+  .profit-rebuild-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(18rem,.85fr);gap:clamp(1.5rem,4vw,3.5rem);margin:1.2rem 0 2.5rem;padding:clamp(1.5rem,4vw,3rem);border:1px solid color-mix(in srgb,var(--sl-color-gray-5) 75%,var(--profit-new));border-radius:1.5rem;background:radial-gradient(circle at 8% 12%,color-mix(in srgb,var(--profit-old) 13%,transparent),transparent 30%),radial-gradient(circle at 92% 88%,color-mix(in srgb,var(--profit-new) 17%,transparent),transparent 34%),linear-gradient(145deg,var(--sl-color-bg-nav),var(--sl-color-bg));overflow:hidden}
+  .profit-rebuild-kicker{color:var(--profit-new);font-size:.78rem;font-weight:850;letter-spacing:.1em;text-transform:uppercase}.profit-rebuild-hero h2{margin:.75rem 0 1rem;max-width:12ch;font-size:clamp(2.2rem,5.8vw,4.6rem);line-height:1.02;letter-spacing:-.055em}.profit-rebuild-hero-copy p{margin:0;color:var(--sl-color-gray-2);font-size:1.04rem;line-height:1.8}
+  .profit-rebuild-hero-compare{display:grid;gap:.9rem;align-content:center}.profit-rebuild-hero-compare section{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:.7rem;padding:1.15rem;border-radius:1rem}.profit-rebuild-hero-compare small{grid-column:1/-1;font-weight:800}.profit-old{border:1px solid color-mix(in srgb,var(--profit-old) 35%,var(--sl-color-gray-5));background:var(--profit-old-soft)}.profit-old small,.profit-old span{color:var(--profit-old)}.profit-new{border:1px solid color-mix(in srgb,var(--profit-new) 35%,var(--sl-color-gray-5));background:var(--profit-new-soft)}.profit-new small,.profit-new span{color:var(--profit-new)}
+  .profit-rebuild-old-flow{display:grid;grid-template-columns:minmax(0,1fr) minmax(12rem,.6fr) minmax(0,1fr);gap:1rem;margin:1.5rem 0 2.2rem}.profit-rebuild-old-flow>section,.profit-rebuild-old-bridge{padding:1.2rem;border:1px solid var(--sl-color-gray-5);border-radius:1rem;background:color-mix(in srgb,var(--sl-color-bg-nav) 86%,transparent)}.profit-rebuild-old-flow section>span{color:var(--profit-old);font-size:.78rem;font-weight:850}.profit-rebuild-old-flow h3{margin:.55rem 0 1rem}.profit-rebuild-old-flow section p,.profit-rebuild-old-flow section i,.profit-rebuild-old-flow section b{display:block;margin:.45rem 0}.profit-rebuild-old-flow section p{padding:.58rem .7rem;border-radius:.7rem;background:color-mix(in srgb,var(--sl-color-gray-6) 58%,transparent)}.profit-rebuild-old-flow section i{color:var(--profit-old);font-style:normal;font-weight:900;text-align:center}.profit-rebuild-old-bridge{display:flex;flex-direction:column;justify-content:center;text-align:center;border-color:color-mix(in srgb,var(--profit-old) 36%,var(--sl-color-gray-5));background:var(--profit-old-soft)}.profit-rebuild-old-bridge strong{margin:.5rem 0;color:var(--profit-old);font-size:1.35rem}.profit-rebuild-old-bridge code{white-space:normal}
+  .profit-rebuild-thesis,.profit-rebuild-formula,.profit-rebuild-final-formula{margin:1.35rem 0 2rem;padding:1.2rem 1.3rem;border-left:.28rem solid var(--profit-old,#ef4444);border-radius:.2rem 1rem 1rem .2rem;background:color-mix(in srgb,var(--sl-color-bg-nav) 88%,transparent)}.profit-rebuild-thesis span,.profit-rebuild-formula small{display:block;margin-bottom:.35rem;color:var(--sl-color-gray-3);font-size:.82rem;font-weight:750}.profit-rebuild-thesis strong,.profit-rebuild-formula strong{font-size:clamp(1.05rem,2.4vw,1.35rem);line-height:1.55}
+  .profit-rebuild-sku-board{margin:1.5rem 0 2.2rem;padding:1.25rem;border:1px solid var(--sl-color-gray-5);border-radius:1.2rem;background:linear-gradient(145deg,color-mix(in srgb,var(--profit-old) 7%,var(--sl-color-bg-nav)),var(--sl-color-bg))}.profit-rebuild-sku-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem 1rem;padding-bottom:1rem;border-bottom:1px solid var(--sl-color-gray-5)}.profit-rebuild-sku-head span{color:var(--profit-old);font-size:.8rem;font-weight:850}.profit-rebuild-sku-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem;margin:1rem 0}.profit-rebuild-sku-grid section{padding:1rem;border-radius:.9rem;background:color-mix(in srgb,var(--sl-color-bg) 88%,transparent)}.profit-rebuild-sku-grid small,.profit-rebuild-sku-grid strong{display:block}.profit-rebuild-sku-grid strong{margin:.25rem 0;font-size:1.12rem}.profit-rebuild-sku-grid p{margin:0;color:var(--sl-color-gray-3)}.profit-rebuild-sku-result{display:grid;grid-template-columns:auto 1fr;gap:.4rem .8rem;padding-top:1rem;border-top:1px solid var(--sl-color-gray-5)}.profit-rebuild-sku-result span{color:var(--sl-color-gray-3)}.profit-rebuild-sku-result b:last-child{color:var(--profit-old)}
+  .profit-rebuild-problems{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1.5rem 0 2.2rem}.profit-rebuild-problems section{position:relative;padding:1.15rem 1.15rem 1.15rem 3.8rem;border:1px solid var(--sl-color-gray-5);border-radius:1rem;background:color-mix(in srgb,var(--sl-color-bg-nav) 86%,transparent)}.profit-rebuild-problems section>span{position:absolute;top:1rem;left:1rem;color:var(--profit-old);font-size:1.05rem;font-weight:900}.profit-rebuild-problems h3{margin:0 0 .45rem}.profit-rebuild-problems p{margin:0;color:var(--sl-color-gray-2);line-height:1.7}
+  .profit-rebuild-example{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1.5rem 0 2.2rem}.profit-rebuild-example section{padding:1.2rem;border-radius:1rem}.profit-example-old{border:1px solid color-mix(in srgb,var(--profit-new) 28%,var(--sl-color-gray-5));background:var(--profit-new-soft)}.profit-example-new{border:1px solid color-mix(in srgb,var(--profit-old) 30%,var(--sl-color-gray-5));background:var(--profit-old-soft)}.profit-rebuild-example small{display:block;margin-bottom:.8rem;font-weight:850}.profit-rebuild-example section div{display:flex;justify-content:space-between;gap:1rem;padding:.42rem 0;border-bottom:1px dashed color-mix(in srgb,var(--sl-color-gray-4) 55%,transparent)}.profit-rebuild-example section>strong{display:block;margin-top:.9rem;font-size:1.22rem}.profit-example-old>strong{color:var(--profit-new)}.profit-example-new>strong{color:var(--profit-old)}
+  .profit-rebuild-order-stack{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.3fr) minmax(0,.85fr);gap:1rem;margin:1.5rem 0 2rem}.profit-rebuild-order-stack section{padding:1.15rem;border:1px solid var(--sl-color-gray-5);border-radius:1rem;background:color-mix(in srgb,var(--sl-color-bg-nav) 86%,transparent)}.profit-rebuild-order-stack section>span{color:var(--profit-new);font-size:.78rem;font-weight:850}.profit-rebuild-order-stack h3{margin:.55rem 0 .8rem}.profit-rebuild-order-stack p{margin:.4rem 0;color:var(--sl-color-gray-2)}.profit-rebuild-order-stack code{white-space:normal;font-weight:800}.profit-order-result{border-color:color-mix(in srgb,var(--profit-new) 35%,var(--sl-color-gray-5))!important;background:var(--profit-new-soft)!important}
+  .profit-rebuild-link-pipeline{display:grid;grid-template-columns:repeat(3,minmax(8rem,.65fr)) auto minmax(16rem,1.35fr);gap:.7rem;align-items:center;margin:1.4rem 0 2rem}.profit-rebuild-link-pipeline>div,.profit-rebuild-link-pipeline>section{padding:1rem;border:1px solid var(--sl-color-gray-5);border-radius:.9rem;background:color-mix(in srgb,var(--sl-color-bg-nav) 86%,transparent)}.profit-rebuild-link-pipeline small,.profit-rebuild-link-pipeline strong,.profit-rebuild-link-pipeline span,.profit-rebuild-link-pipeline b{display:block}.profit-rebuild-link-pipeline small{margin-bottom:.35rem;color:var(--sl-color-gray-3)}.profit-rebuild-link-pipeline>i{color:var(--profit-new);font-size:1.4rem;font-style:normal;font-weight:900}.profit-rebuild-link-pipeline>section{border-color:color-mix(in srgb,var(--profit-new) 36%,var(--sl-color-gray-5));background:var(--profit-new-soft)}.profit-rebuild-link-pipeline>section span{margin-top:.45rem}.profit-rebuild-link-pipeline>section b{margin-top:.65rem;color:var(--profit-new)}
+  .profit-rebuild-refund-window{margin:1.4rem 0 1.8rem;padding:1.2rem;border:1px solid var(--sl-color-gray-5);border-radius:1.1rem;background:color-mix(in srgb,var(--sl-color-bg-nav) 88%,transparent)}.profit-rebuild-refund-axis{display:grid;grid-template-columns:auto 1fr auto .8fr auto;align-items:center;gap:.55rem}.profit-rebuild-refund-axis span{display:grid;place-items:center;min-width:3.5rem;min-height:3.5rem;border:1px solid color-mix(in srgb,var(--profit-new) 45%,var(--sl-color-gray-5));border-radius:999px;color:var(--profit-new);background:var(--profit-new-soft);font-weight:900}.profit-rebuild-refund-axis b,.profit-rebuild-refund-axis em{padding:.65rem;border-radius:999px;text-align:center;font-size:.82rem}.profit-rebuild-refund-axis b{color:var(--profit-new);background:var(--profit-new-soft)}.profit-rebuild-refund-axis em{color:var(--sl-color-gray-2);background:var(--sl-color-gray-6);font-style:normal}.profit-rebuild-refund-note{display:grid;grid-template-columns:auto 1fr;gap:.45rem .8rem;margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--sl-color-gray-5)}.profit-rebuild-refund-note strong{color:var(--profit-new)}.profit-rebuild-refund-note code{white-space:normal}.profit-rebuild-refund-note p{grid-column:1/-1;margin:.2rem 0 0;color:var(--sl-color-gray-2)}.profit-rebuild-formula,.profit-rebuild-final-formula{border-left-color:var(--profit-new)}.profit-rebuild-final-formula{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem}.profit-rebuild-final-formula>span{width:100%;color:var(--profit-new);font-size:.82rem;font-weight:850}.profit-rebuild-final-formula>i{color:var(--profit-old);font-style:normal;font-weight:900}
+  .profit-rebuild-table-wrap{width:100%;margin:1.4rem 0 1.8rem;overflow-x:auto;border:1px solid var(--sl-color-gray-5);border-radius:1rem;background:var(--sl-color-bg-nav)}.profit-rebuild-table{width:max-content;min-width:100%;margin:0;border-collapse:collapse;font-size:.82rem}.profit-rebuild-table th,.profit-rebuild-table td{padding:.78rem .72rem;white-space:nowrap;border-bottom:1px solid var(--sl-color-gray-5)}.profit-rebuild-table th{color:var(--sl-color-gray-2);background:color-mix(in srgb,var(--sl-color-gray-6) 64%,transparent);font-weight:850}.profit-loss{color:#ef4444;font-weight:900}
+  .profit-rebuild-decision{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin:1.4rem 0 2.2rem}.profit-rebuild-decision section{padding:1.1rem;border:1px solid var(--sl-color-gray-5);border-radius:1rem;background:color-mix(in srgb,var(--sl-color-bg-nav) 86%,transparent)}.profit-rebuild-decision small,.profit-rebuild-decision strong{display:block}.profit-rebuild-decision small{color:var(--profit-new);font-weight:850}.profit-rebuild-decision strong{margin:.45rem 0;font-size:1.04rem}.profit-rebuild-decision p{margin:0;color:var(--sl-color-gray-2)}
+  .profit-rebuild-history{display:grid;grid-template-columns:auto 1fr auto auto 1fr;gap:.55rem .8rem;align-items:center;margin:1.4rem 0 1.8rem;padding:1.1rem;border:1px solid var(--sl-color-gray-5);border-radius:1rem;background:color-mix(in srgb,var(--sl-color-bg-nav) 88%,transparent)}.profit-rebuild-history span{color:var(--sl-color-gray-3);font-size:.82rem}.profit-rebuild-history strong:last-of-type,.profit-rebuild-history b{color:#ef4444}.profit-rebuild-history i{font-style:normal;font-weight:900}.profit-rebuild-history b{grid-column:1/-1;padding-top:.6rem;border-top:1px solid var(--sl-color-gray-5)}
+  .profit-rebuild-ending{margin:2rem 0 .5rem;padding:clamp(1.4rem,4vw,2.4rem);border:1px solid color-mix(in srgb,var(--profit-new) 38%,var(--sl-color-gray-5));border-radius:1.3rem;background:linear-gradient(120deg,color-mix(in srgb,var(--profit-old) 8%,transparent),transparent 42%),linear-gradient(300deg,color-mix(in srgb,var(--profit-new) 12%,transparent),transparent 48%),var(--sl-color-bg-nav)}.profit-rebuild-ending>small,.profit-rebuild-ending>strong{display:block}.profit-rebuild-ending>small{color:var(--sl-color-gray-3);font-weight:800}.profit-rebuild-ending>strong{margin:.4rem 0 1.15rem;font-size:clamp(1.55rem,4vw,2.7rem);line-height:1.15;letter-spacing:-.035em}.profit-rebuild-ending div{display:grid;gap:.55rem}.profit-rebuild-ending p{margin:0;padding:.72rem .85rem;border-radius:.75rem;background:color-mix(in srgb,var(--sl-color-bg) 72%,transparent)}.profit-rebuild-ending p span{display:inline-grid;place-items:center;width:1.65rem;height:1.65rem;margin-right:.5rem;border-radius:999px;font-weight:900}.profit-rebuild-ending p:first-child span{color:var(--profit-old);background:var(--profit-old-soft)}.profit-rebuild-ending p:last-child span{color:var(--profit-new);background:var(--profit-new-soft)}
+  @media(max-width:800px){.profit-rebuild-hero,.profit-rebuild-old-flow,.profit-rebuild-example,.profit-rebuild-order-stack,.profit-rebuild-decision{grid-template-columns:1fr}.profit-rebuild-link-pipeline{grid-template-columns:1fr}.profit-rebuild-link-pipeline>i{transform:rotate(90deg);text-align:center}.profit-rebuild-refund-axis{grid-template-columns:1fr;justify-items:center}.profit-rebuild-refund-axis b,.profit-rebuild-refund-axis em{width:min(100%,18rem)}.profit-rebuild-history{grid-template-columns:1fr}.profit-rebuild-history b{grid-column:auto}}
+  @media(max-width:560px){.profit-rebuild-hero{padding:1.15rem}.profit-rebuild-hero h2{font-size:clamp(2rem,12vw,3rem)}.profit-rebuild-hero-compare section{grid-template-columns:1fr}.profit-rebuild-sku-grid,.profit-rebuild-problems{grid-template-columns:1fr}.profit-rebuild-sku-result,.profit-rebuild-refund-note{grid-template-columns:1fr}.profit-rebuild-final-formula strong,.profit-rebuild-final-formula i{width:100%}}
+`}</style>
