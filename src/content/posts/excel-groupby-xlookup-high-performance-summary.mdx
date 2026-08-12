@@ -1,0 +1,855 @@
+---
+title: "告别重复 SUMIFS：用 GROUPBY + XLOOKUP 重构高性能汇总公式"
+description: "用真实报表公式讲清如何把反复扫描源表的 SUMIFS，改造成 GROUPBY 一次汇总、XLOOKUP 批量查回，并说明什么时候值得这样改。"
+date: 2026-08-12T10:52:00+08:00
+category: "教程"
+tags:
+  - "Excel"
+  - "GROUPBY"
+  - "XLOOKUP"
+  - "性能优化"
+minutes: 16
+featured: false
+series: "excel-functions"
+seriesOrder: 8
+draft: false
+private: false
+---
+
+很多 Excel 报表真正拖慢计算的，不一定是某个公式“写得很长”，而是**同一份源数据被反复做同一种汇总**。
+
+最典型的场景就是：目标表有几百、几千个 Key，每一行都要去订单明细里按条件求和。习惯上很容易写成 `SUMIFS`，而当目标查询越来越多时，也就意味着同一份源表要被不断重新参与条件汇总。
+
+这类问题可以换一个思路：**先把源数据集中汇总一次，再让所有目标去查这个汇总结果。**
+
+<div class="perf-hero" role="group" aria-label="SUMIFS 与 GROUPBY XLOOKUP 汇总方式对比">
+  <div class="perf-hero__copy">
+    <span>EXCEL PERFORMANCE PATTERN</span>
+    <strong>不要让每个目标都重新汇总源表</strong>
+    <p>把“重复条件扫描”改成“先压缩，再查回”。性能收益来自减少重复汇总，而不是某个函数名字天然更快。</p>
+  </div>
+  <div class="perf-hero__compare">
+    <section class="is-old">
+      <small>传统写法</small>
+      <b>SUMIFS × 很多目标</b>
+      <div>目标 1 → 汇总源数据</div>
+      <div>目标 2 → 再汇总</div>
+      <div>目标 3 → 再汇总</div>
+      <em>……</em>
+    </section>
+    <i aria-hidden="true">→</i>
+    <section class="is-new">
+      <small>重构思路</small>
+      <b>GROUPBY → XLOOKUP</b>
+      <div>源数据 → 汇总一次</div>
+      <div>得到唯一 Key 小表</div>
+      <div>所有目标 → 批量查回</div>
+    </section>
+  </div>
+</div>
+
+先说结论：**这不是“GROUPBY + XLOOKUP 在任何情况下都一定比 SUMIFS 快”。**
+
+- 源数据只有几百行、目标查询也很少时，两种写法通常都很快，没必要为了优化而优化。
+- 数据量越大、目标查询行越多、同一份源数据被重复汇总的次数越多，先 `GROUPBY` 再 `XLOOKUP` 的价值通常越明显。
+- 真正值得学习的是这套计算结构：**一次汇总 → 生成较小结果集 → 批量查回。**
+
+> 兼容性提醒：本文核心函数 `GROUPBY` 当前适用于 Microsoft 365。若你的 Excel 版本没有 `GROUPBY`，不要直接照搬本文公式。
+
+## 一、一个很典型的 SUMIFS：每个目标都去源表汇总
+
+假设目标表 `A2#` 每一行代表一个：
+
+**日期 + 商品 ID + 直播间**
+
+现在要去 `平台订单明细` 中，把对应组合的 F 列金额或件数汇总回来。
+
+最直接的写法是：
+
+```text
+=SUMIFS(
+    平台订单明细!F2#,
+    平台订单明细!I2#,
+    CHOOSECOLS(A2#,3),
+    平台订单明细!C2#,
+    CHOOSECOLS(A2#,2),
+    平台订单明细!A2#,
+    CHOOSECOLS(A2#,1)
+)
+```
+
+业务上很好理解：
+
+| 条件 | 源数据字段 | 目标表字段 |
+| --- | --- | --- |
+| 直播间 | `平台订单明细!I2#` | `CHOOSECOLS(A2#,3)` |
+| 商品 ID | `平台订单明细!C2#` | `CHOOSECOLS(A2#,2)` |
+| 日期 | `平台订单明细!A2#` | `CHOOSECOLS(A2#,1)` |
+| 汇总值 | `平台订单明细!F2#` | SUM |
+
+公式本身没有错。问题出现在**目标行很多**的时候。
+
+目标表里有一个组合，就要算一次这个组合；再多一个组合，又要继续针对相同源数据做条件汇总。单次并不一定慢，但当这种结构出现在很多列、很多 Sheet、很多目标行时，重复计算会不断累积。
+
+<div class="scan-board" role="group" aria-label="SUMIFS 重复汇总源数据的计算方式">
+  <div class="scan-board__source">
+    <span>平台订单明细</span>
+    <strong>同一份源数据</strong>
+    <small>订单行不断增加</small>
+  </div>
+  <div class="scan-board__targets">
+    <div><b>目标 01</b><span>直播间 A + 商品 1001 + 8/10</span><em>汇总一次</em></div>
+    <div><b>目标 02</b><span>直播间 A + 商品 1002 + 8/10</span><em>再汇总</em></div>
+    <div><b>目标 03</b><span>直播间 B + 商品 1001 + 8/11</span><em>再汇总</em></div>
+    <div class="is-more"><b>……</b><span>目标组合继续增加</span><em>继续计算</em></div>
+  </div>
+</div>
+
+所以需要优化的不是“SUMIFS 这个函数”，而是：**不要让大量目标反复做同一类源表汇总。**
+
+## 二、先认识 GROUPBY：把源表一次压缩成汇总表
+
+先别急着看组合 Key。`GROUPBY` 最基本的写法只有三部分：
+
+```text
+=GROUPBY(
+    分组字段,
+    汇总字段,
+    SUM
+)
+```
+
+例如：
+
+```text
+=GROUPBY(
+    CHOOSECOLS(A2#,1),
+    D2#,
+    SUM
+)
+```
+
+它的意思就是：**按照 `A2#` 第一列分组，把同一个 ID 对应的 `D2#` 自动求和。**
+
+假设源数据是：
+
+| ID | 金额 |
+| --- | ---: |
+| A | 10 |
+| A | 20 |
+| B | 5 |
+
+经过 `GROUPBY` 后，核心结果就变成：
+
+| ID | SUM |
+| --- | ---: |
+| A | 30 |
+| B | 5 |
+
+基础写法会使用 `GROUPBY` 的默认表头和总计规则，因此实际结果还可能出现总计行。后面要把结果交给 `XLOOKUP` 时，我会明确写成 `GROUPBY(...,0,0)`，让 `g` 只保留用于查找的分组字段和汇总值。
+
+这一步非常关键：原来可能有几万行订单，汇总后只剩下“唯一 Key + 汇总值”。后面的查询不再面对完整订单明细，而是面对这个已经压缩过的小结果集。
+
+### CHOOSEROWS 和 CHOOSECOLS 不要写反
+
+动态数组里很容易把这两个函数搞混：
+
+```text
+=CHOOSEROWS(A2#,1)
+```
+
+这是**取第一行**。
+
+```text
+=CHOOSECOLS(A2#,1)
+```
+
+这才是**取第一列**。
+
+如果只是要第一列，也可以写：
+
+```text
+=TAKE(A2#,,1)
+```
+
+三者没有必要混着炫技。知道自己要的是“行”还是“列”就够了。
+
+## 三、TAKE：把 GROUPBY 结果拆成“查找列”和“返回列”
+
+后面会频繁看到这两个写法：
+
+```text
+=TAKE(g,,1)
+```
+
+表示：**取数组 `g` 的第一列。**
+
+```text
+=TAKE(g,,-1)
+```
+
+表示：**从末尾取 1 列，也就是取 `g` 的最后一列。**
+
+所以：
+
+```text
+=XLOOKUP(
+    target,
+    TAKE(g,,1),
+    TAKE(g,,-1),
+    0
+)
+```
+
+翻译成人话就是：
+
+<div class="lookup-path" role="group" aria-label="XLOOKUP 从 GROUPBY 结果查回数据的路径">
+  <div><span>目标</span><strong>target Key</strong></div>
+  <i>→</i>
+  <div><span>去哪里找</span><strong>g 的第一列</strong><code>TAKE(g,,1)</code></div>
+  <i>→</i>
+  <div><span>返回什么</span><strong>g 的最后一列</strong><code>TAKE(g,,-1)</code></div>
+</div>
+
+也就是：**用目标 Key → 去 GROUPBY 第一列找 → 返回 GROUPBY 最后一列的汇总结果。**
+
+## 四、先看最简单的单 Key 版本
+
+假设以前的需求只是：按照 ID 汇总金额，再把结果对应到 `A2#`。
+
+原来可能写：
+
+```text
+=SUMIFS(金额列,ID列,A2#)
+```
+
+可以改成：
+
+```text
+=LET(
+    g,
+    GROUPBY(
+        ID列,
+        金额列,
+        SUM,
+        0,
+        0
+    ),
+    XLOOKUP(
+        A2#,
+        TAKE(g,,1),
+        TAKE(g,,-1),
+        0
+    )
+)
+```
+
+这里的逻辑只有两步：
+
+1. `GROUPBY` 把同一个 ID 的金额先合并成一行。
+2. `XLOOKUP` 把每个目标 ID 的汇总值一次查回来。
+
+这里特意写了 `GROUPBY(...,0,0)`：
+
+- 第 4 个参数 `0`：不把源数组当作带表头的数据，也不输出字段表头。
+- 第 5 个参数 `0`：不生成总计行。
+
+这样 `g` 就保持最适合查找的两列结构：**Key | 汇总值**。
+
+如果只有几百行数据、几十个查询，这种改造未必会让你肉眼感觉到速度变化。它的意义是先建立正确结构，等源表和查询数量上来以后，不需要让同一类汇总继续无限复制。
+
+## 五、真实多条件场景：组合 Key + GROUPBY + XLOOKUP
+
+回到开头的真实业务：
+
+**直播间 + 商品 ID + 日期**
+
+这里需要把三个条件先变成一个唯一组合 Key。
+
+完整公式：
+
+```text
+=LET(
+    srcKey,
+    平台订单明细!I2#&CHAR(1)&
+    平台订单明细!C2#&CHAR(1)&
+    平台订单明细!A2#,
+    targetKey,
+    CHOOSECOLS(A2#,3)&CHAR(1)&
+    CHOOSECOLS(A2#,2)&CHAR(1)&
+    CHOOSECOLS(A2#,1),
+    g,
+    GROUPBY(
+        srcKey,
+        平台订单明细!F2#,
+        SUM,
+        0,
+        0
+    ),
+    XLOOKUP(
+        targetKey,
+        TAKE(g,,1),
+        TAKE(g,,-1),
+        0
+    )
+)
+```
+
+看起来比一条 `SUMIFS` 长，但它其实只是把处理过程明确拆成了三个阶段：
+
+<div class="pipeline" role="group" aria-label="组合 Key GROUPBY XLOOKUP 三阶段执行流程">
+  <article>
+    <small>01</small>
+    <strong>组合 Key</strong>
+    <p>把直播间、商品 ID、日期拼成一个可以唯一匹配的键。</p>
+    <code>srcKey / targetKey</code>
+  </article>
+  <i>→</i>
+  <article>
+    <small>02</small>
+    <strong>一次汇总</strong>
+    <p>源数据按组合 Key 集中做一次 SUM。</p>
+    <code>GROUPBY(...)</code>
+  </article>
+  <i>→</i>
+  <article>
+    <small>03</small>
+    <strong>批量查回</strong>
+    <p>目标表全部去已经压缩后的结果中查找。</p>
+    <code>XLOOKUP(...)</code>
+  </article>
+</div>
+
+### 1. `srcKey`：把多个条件拼成一个 Key
+
+```text
+srcKey,
+平台订单明细!I2#&CHAR(1)&
+平台订单明细!C2#&CHAR(1)&
+平台订单明细!A2#
+```
+
+原来三个独立条件：
+
+```text
+直播间 A
+商品 1001
+2026/8/10
+```
+
+现在把它们拼成一个用于匹配的组合值。
+
+`targetKey` 做完全相同的事情，只不过来源换成目标表 `A2#`。
+
+组合 Key 只负责把多个字段连接起来，不会自动修正数据类型。如果源表里的日期是真正的日期值，而目标表里的日期是文本，两边拼出来的 Key 仍然可能不同；实际使用时要先保证参与拼接的字段口径一致。
+
+### 2. 为什么用 `CHAR(1)`，而不是 `*`
+
+很多人拼 Key 会这样写：
+
+```text
+=直播间&"*"&商品ID&"*"&日期
+```
+
+能不能用？当然能。
+
+但 `*` 是正常业务文本中有可能出现的字符。如果字段本身也包含 `*`，组合值的边界就不够干净。
+
+这里使用：
+
+```text
+CHAR(1)
+```
+
+它对应一个业务文本里极少出现的控制字符，用作分隔符时，更不容易和真实字段内容撞在一起。
+
+重点不是必须迷信 `CHAR(1)`，而是：**组合 Key 的分隔符应该尽量避免出现在业务数据本身。**
+
+### 3. `GROUPBY`：把整个源表按 Key 汇总一次
+
+```text
+g,
+GROUPBY(
+    srcKey,
+    平台订单明细!F2#,
+    SUM,
+    0,
+    0
+)
+```
+
+假设组合后得到：
+
+| srcKey | F 列 |
+| --- | ---: |
+| A | 10 |
+| A | 20 |
+| B | 5 |
+
+`GROUPBY` 后就是：
+
+| Key | 汇总结果 |
+| --- | ---: |
+| A | 30 |
+| B | 5 |
+
+源表里的重复 Key 被压成了唯一 Key。
+
+### 4. `TAKE(g,,1)`：取第一列 Key
+
+```text
+TAKE(g,,1)
+```
+
+得到：
+
+```text
+A
+B
+```
+
+### 5. `TAKE(g,,-1)`：取最后一列汇总值
+
+```text
+TAKE(g,,-1)
+```
+
+得到：
+
+```text
+30
+5
+```
+
+### 6. `XLOOKUP`：所有目标一次查回
+
+```text
+XLOOKUP(
+    targetKey,
+    TAKE(g,,1),
+    TAKE(g,,-1),
+    0
+)
+```
+
+现在目标表已经不需要继续面对完整订单明细。它只需要去 `g` 这张已经汇总好的小表里找结果。
+
+## 六、日期范围场景：先 FILTER，再 GROUPBY，再 XLOOKUP
+
+另一个非常常见的报表需求是：
+
+> 只统计某个日期范围内，每个 ID 的金额。
+
+例如统计 `N1` 到 `P1` 之间的直播花费：
+
+```text
+=LET(
+    ids,【辅助】直播花费分摊!B2#,
+    dt,【辅助】直播花费分摊!A2#,
+    amt,【辅助】直播花费分摊!G2#,
+    f,FILTER(
+        HSTACK(ids,amt),
+        (ids<>"")*(dt>=N1)*(dt<=P1)
+    ),
+    g,GROUPBY(
+        TAKE(f,,1),
+        TAKE(f,,-1),
+        SUM,
+        0,
+        0
+    ),
+    XLOOKUP(
+        A2#,
+        TAKE(g,,1),
+        TAKE(g,,-1),
+        0
+    )
+)
+```
+
+不要从外往里硬读。按执行路径看就很简单：
+
+<div class="date-flow" role="group" aria-label="FILTER GROUPBY XLOOKUP 日期范围汇总执行路径">
+  <div><span>源数据</span><strong>ID + 日期 + 金额</strong></div>
+  <i>↓</i>
+  <div><span>FILTER</span><strong>日期范围只筛一次</strong><code>N1 ≤ dt ≤ P1</code></div>
+  <i>↓</i>
+  <div><span>GROUPBY</span><strong>筛选结果只汇总一次</strong><code>ID → SUM(金额)</code></div>
+  <i>↓</i>
+  <div><span>XLOOKUP</span><strong>目标 ID 批量查回</strong><code>A2# → 汇总结果</code></div>
+</div>
+
+这类结构特别适合周报、近 7 天、近 14 天、活动周期等场景，因为日期条件不需要随着每个目标 ID 一遍又一遍参与完整汇总。
+
+## 七、为什么这种结构通常更适合大数据报表
+
+不需要编造“快 3 倍”“快 10 倍”这种没有测试环境支撑的数字。真正的区别看计算结构就够了。
+
+### SUMIFS 模式
+
+```text
+目标 1 → 针对源数据计算条件汇总
+目标 2 → 再计算一次条件汇总
+目标 3 → 再计算一次条件汇总
+目标 4 → 再计算一次条件汇总
+……
+```
+
+源数据越大、目标越多，重复工作越容易累积。
+
+### GROUPBY + XLOOKUP 模式
+
+```text
+源数据
+↓
+集中汇总一次
+↓
+生成较小的唯一 Key 汇总表
+↓
+所有目标去汇总表 XLOOKUP
+```
+
+这里真正的优化点是：
+
+> **把“很多目标分别做汇总”，改成“源表统一做一次汇总”。**
+
+`GROUPBY` 只是刚好很适合承担“集中汇总”这一步，`XLOOKUP` 则负责把结果映射回目标表。
+
+因此不要机械理解成：
+
+> GROUPBY 比 SUMIFS 高级，所以一定更快。
+
+正确理解应该是：
+
+> **当同一份源数据需要被大量重复汇总时，先 GROUPBY 压缩结果，再 XLOOKUP 查回，通常更值得考虑。**
+
+小数据里，两者差异可能完全感觉不到；甚至一条简单的 `SUMIFS` 反而更直观。公式优化也要看实际计算形状，而不是追求“新函数”。
+
+## 八、什么时候该换？直接看这张表
+
+| 场景 | 推荐 |
+| --- | --- |
+| 源数据几百行、查询很少 | `SUMIFS` 或 `GROUPBY + XLOOKUP` 都可以，优先可读性 |
+| 数据几千行，但大量公式反复汇总同一个源表 | 倾向 `GROUPBY + XLOOKUP` |
+| 几万～几十万行订单数据，且目标查询很多 | 优先考虑 `GROUPBY + XLOOKUP` |
+| Key 已经唯一，不需要汇总 | 直接 `XLOOKUP` |
+| 需要先筛日期范围再汇总 | `FILTER + GROUPBY + XLOOKUP` |
+| 多条件汇总 | 组合 Key + `GROUPBY + XLOOKUP` |
+
+还有一个很实用的判断方法：
+
+**如果你发现自己正在同一个 Sheet 里写很多列 `SUMIFS`，而这些公式反复读取同一张订单明细，只是目标 Key 不同，就值得停下来看看能不能先生成一次汇总结果。**
+
+## 九、最终记住的不是公式，而是这条数据流
+
+这篇文章最值得带走的，不是某一条很长的 `LET` 公式，而是一个报表计算习惯：
+
+<div class="final-flow" role="group" aria-label="高性能汇总公式最终数据流">
+  <div><small>01</small><strong>先缩小数据</strong><span>需要日期条件就先 FILTER</span></div>
+  <i>→</i>
+  <div><small>02</small><strong>集中汇总</strong><span>GROUPBY 只做一次</span></div>
+  <i>→</i>
+  <div><small>03</small><strong>批量映射</strong><span>XLOOKUP 查回目标表</span></div>
+</div>
+
+以后再遇到：
+
+> “按 Key 汇总源数据，再把结果填回目标表”
+
+先别急着继续复制 `SUMIFS`。
+
+可以先问一句：
+
+**这份源数据，能不能先汇总一次？**
+
+如果答案是可以，那么 `GROUPBY + XLOOKUP` 往往就是一条更适合大型动态报表的计算路径。
+
+<style>{`
+  .perf-hero,
+  .scan-board,
+  .lookup-path,
+  .pipeline,
+  .date-flow,
+  .final-flow {
+    margin: 2rem 0;
+  }
+
+  .perf-hero {
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 24px;
+    padding: clamp(1.2rem, 3vw, 2rem);
+    background:
+      radial-gradient(circle at 88% 10%, rgba(34, 197, 94, 0.12), transparent 32%),
+      radial-gradient(circle at 12% 88%, rgba(59, 130, 246, 0.12), transparent 34%),
+      rgba(15, 23, 42, 0.72);
+    overflow: hidden;
+  }
+
+  .perf-hero__copy > span {
+    display: inline-block;
+    margin-bottom: 0.65rem;
+    color: #7dd3fc;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+  }
+
+  .perf-hero__copy > strong {
+    display: block;
+    color: #f8fafc;
+    font-size: clamp(1.55rem, 4vw, 2.65rem);
+    line-height: 1.15;
+  }
+
+  .perf-hero__copy > p {
+    max-width: 760px;
+    margin: 0.85rem 0 0;
+    color: #cbd5e1;
+    line-height: 1.75;
+  }
+
+  .perf-hero__compare {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 1rem;
+    align-items: stretch;
+    margin-top: 1.5rem;
+  }
+
+  .perf-hero__compare > i,
+  .pipeline > i,
+  .lookup-path > i,
+  .final-flow > i {
+    align-self: center;
+    color: #64748b;
+    font-style: normal;
+    font-size: 1.4rem;
+  }
+
+  .perf-hero__compare section {
+    padding: 1.1rem;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.74);
+  }
+
+  .perf-hero__compare section.is-old { border-color: rgba(248, 113, 113, 0.3); }
+  .perf-hero__compare section.is-new { border-color: rgba(74, 222, 128, 0.34); }
+
+  .perf-hero__compare small,
+  .perf-hero__compare b,
+  .perf-hero__compare div,
+  .perf-hero__compare em {
+    display: block;
+  }
+
+  .perf-hero__compare small {
+    color: #94a3b8;
+    font-weight: 700;
+  }
+
+  .perf-hero__compare b {
+    margin: 0.25rem 0 0.8rem;
+    color: #f8fafc;
+    font-size: 1.05rem;
+  }
+
+  .perf-hero__compare div {
+    margin-top: 0.45rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 10px;
+    color: #cbd5e1;
+    background: rgba(148, 163, 184, 0.08);
+    font-size: 0.9rem;
+  }
+
+  .perf-hero__compare em {
+    margin-top: 0.45rem;
+    color: #64748b;
+    font-style: normal;
+    text-align: center;
+  }
+
+  .scan-board {
+    display: grid;
+    grid-template-columns: minmax(170px, 0.7fr) minmax(0, 1.6fr);
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .scan-board__source,
+  .scan-board__targets {
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.48);
+  }
+
+  .scan-board__source {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1.2rem;
+    text-align: center;
+  }
+
+  .scan-board__source span,
+  .scan-board__source small {
+    color: #94a3b8;
+  }
+
+  .scan-board__source strong {
+    margin: 0.35rem 0;
+    color: #f8fafc;
+    font-size: 1.25rem;
+  }
+
+  .scan-board__targets {
+    display: grid;
+    gap: 0.65rem;
+    padding: 0.8rem;
+  }
+
+  .scan-board__targets > div {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr) 76px;
+    gap: 0.7rem;
+    align-items: center;
+    padding: 0.7rem 0.8rem;
+    border-radius: 12px;
+    background: rgba(148, 163, 184, 0.07);
+  }
+
+  .scan-board__targets b { color: #7dd3fc; }
+  .scan-board__targets span { color: #cbd5e1; }
+  .scan-board__targets em { color: #fca5a5; font-style: normal; text-align: right; }
+
+  .lookup-path,
+  .pipeline,
+  .final-flow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+
+  .lookup-path > div,
+  .pipeline > article,
+  .final-flow > div {
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid rgba(96, 165, 250, 0.24);
+    border-radius: 16px;
+    background: rgba(30, 41, 59, 0.5);
+  }
+
+  .lookup-path span,
+  .lookup-path strong,
+  .lookup-path code,
+  .pipeline small,
+  .pipeline strong,
+  .pipeline code,
+  .final-flow small,
+  .final-flow strong,
+  .final-flow span {
+    display: block;
+  }
+
+  .lookup-path span,
+  .pipeline small,
+  .final-flow small {
+    color: #7dd3fc;
+    font-size: 0.76rem;
+    font-weight: 800;
+  }
+
+  .lookup-path strong,
+  .pipeline strong,
+  .final-flow strong {
+    margin-top: 0.3rem;
+    color: #f8fafc;
+  }
+
+  .lookup-path code,
+  .pipeline code {
+    margin-top: 0.55rem;
+    color: #86efac;
+    overflow-wrap: anywhere;
+  }
+
+  .pipeline p {
+    margin: 0.45rem 0 0;
+    color: #cbd5e1;
+    line-height: 1.6;
+  }
+
+  .date-flow {
+    display: grid;
+    gap: 0.55rem;
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .date-flow > div {
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(74, 222, 128, 0.2);
+    border-radius: 14px;
+    background: rgba(20, 83, 45, 0.1);
+  }
+
+  .date-flow > i {
+    color: #64748b;
+    font-style: normal;
+    text-align: center;
+  }
+
+  .date-flow span { color: #86efac; font-weight: 800; }
+  .date-flow strong { color: #f8fafc; }
+  .date-flow code { color: #cbd5e1; }
+
+  .final-flow > div {
+    text-align: center;
+  }
+
+  .final-flow span {
+    margin-top: 0.4rem;
+    color: #94a3b8;
+    font-size: 0.88rem;
+  }
+
+  @media (max-width: 760px) {
+    .perf-hero__compare,
+    .scan-board,
+    .lookup-path,
+    .pipeline,
+    .final-flow {
+      grid-template-columns: 1fr;
+    }
+
+    .perf-hero__compare > i,
+    .lookup-path > i,
+    .pipeline > i,
+    .final-flow > i {
+      transform: rotate(90deg);
+      justify-self: center;
+    }
+
+    .scan-board__targets > div {
+      grid-template-columns: 70px minmax(0, 1fr);
+    }
+
+    .scan-board__targets em {
+      grid-column: 2;
+      text-align: left;
+    }
+
+    .date-flow > div {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+    }
+  }
+`}</style>
