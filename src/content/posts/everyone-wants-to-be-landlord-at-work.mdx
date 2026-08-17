@@ -260,13 +260,24 @@ A 实际上默认：
   .landlord-flow,
   .landlord-outcomes > div,
   .landlord-contrast > section {
-    border: 1px solid color-mix(in srgb, var(--border-color, #64748b) 30%, transparent);
+    border: 1px solid var(--line);
     border-radius: 18px;
-    background: color-mix(in srgb, var(--card-bg, #0f172a) 94%, transparent);
+    background: var(--paper-soft);
+    color: var(--ink);
   }
 
   .landlord-thesis > div:not(.landlord-thesis__arrow) {
     padding: 1.25rem;
+  }
+
+  .landlord-thesis > div:first-child {
+    border-color: color-mix(in srgb, var(--blue) 28%, var(--line));
+    background: color-mix(in srgb, var(--blue) 5%, var(--paper));
+  }
+
+  .landlord-thesis > div:last-child {
+    border-color: color-mix(in srgb, #d9482f 28%, var(--line));
+    background: color-mix(in srgb, #d9482f 5%, var(--paper));
   }
 
   .landlord-thesis span,
@@ -279,7 +290,7 @@ A 实际上默认：
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    opacity: 0.68;
+    color: var(--muted);
   }
 
   .landlord-thesis strong {
@@ -298,7 +309,7 @@ A 实际上默认：
     place-items: center;
     padding: 0 0.25rem;
     font-size: 1.5rem;
-    opacity: 0.48;
+    color: var(--soft);
   }
 
   .landlord-flow-grid {
@@ -323,7 +334,7 @@ A 实际上默认：
     flex: 1;
     padding: 0.7rem;
     border-radius: 12px;
-    background: color-mix(in srgb, currentColor 7%, transparent);
+    background: color-mix(in srgb, var(--paper) 78%, var(--line-soft));
     text-align: center;
     font-size: 0.92rem;
   }
@@ -333,11 +344,15 @@ A 实际上默认：
   }
 
   .landlord-flow--good {
-    box-shadow: inset 0 3px 0 color-mix(in srgb, #22c55e 70%, transparent);
+    border-color: color-mix(in srgb, var(--green) 30%, var(--line));
+    background: color-mix(in srgb, var(--green) 6%, var(--paper));
+    box-shadow: inset 0 3px 0 color-mix(in srgb, var(--green) 78%, transparent);
   }
 
   .landlord-flow--bad {
-    box-shadow: inset 0 3px 0 color-mix(in srgb, #f97316 75%, transparent);
+    border-color: color-mix(in srgb, #d9482f 30%, var(--line));
+    background: color-mix(in srgb, #d9482f 6%, var(--paper));
+    box-shadow: inset 0 3px 0 color-mix(in srgb, #d9482f 78%, transparent);
   }
 
   .landlord-outcomes {
