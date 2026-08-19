@@ -46,6 +46,13 @@ Changes applied:
 - No P0, P1, or P2 issues remained.
 - Intentional P3-level difference: the horizontal source flow reflows to a 3 × 2 desktop grid and a one-column mobile sequence to respect the existing article shell.
 
+### Pass 3
+
+- Added a compact before/after compression band ahead of the six-stage board.
+- The production example now exposes the 8-row detail input and 4-row unique-Key output before readers enter the formula stages.
+- Desktop uses a 317 / 150 / 317 pixel comparison; mobile stacks the same sequence into one 269-pixel column.
+- No desktop or mobile horizontal overflow was introduced.
+
 ## Mandatory fidelity surfaces
 
 - Typography and iconography: existing production font and icon systems retained.
@@ -59,6 +66,8 @@ Changes applied:
 
 - Desktop horizontal overflow: none.
 - Mobile horizontal overflow: none.
+- Compression band desktop bounds: 803.687 × 123.75 CSS pixels.
+- Compression band mobile bounds: 269.203 × 364.687 CSS pixels.
 - Console errors: none.
 - Primary interaction: table-of-contents link navigates to the GROUPBY section and aligns the heading with the viewport.
 - Build and automated test results are recorded in the delivery verification.

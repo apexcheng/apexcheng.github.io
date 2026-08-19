@@ -37,6 +37,31 @@ private: false
     </div>
   </header>
 
+  <section class="compression-impact" aria-label="演示数据从 8 行明细压缩为 4 行唯一 Key 结果">
+    <div class="compression-impact__side is-before">
+      <small>压缩前</small>
+      <strong><b>8</b> 行明细</strong>
+      <span>重复 Key 分散在多行</span>
+      <div class="compression-impact__density" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+    </div>
+    <div class="compression-impact__engine">
+      <small>集中汇总一次</small>
+      <strong>GROUPBY</strong>
+      <span>相同 Key 合并</span>
+      <i aria-hidden="true">→</i>
+    </div>
+    <div class="compression-impact__side is-after">
+      <small>压缩后</small>
+      <strong><b>4</b> 行结果</strong>
+      <span>每个 Key 只留一个 SUM</span>
+      <div class="compression-impact__density" aria-hidden="true">
+        <i></i><i></i><i></i><i></i>
+      </div>
+    </div>
+  </section>
+
   <ol class="runtime-index" aria-label="公式六步执行索引">
     <li><b>01</b><span>源表</span></li>
     <li><b>02</b><span>拼 Key</span></li>
@@ -842,6 +867,153 @@ XLOOKUP(
     font-size: 0.78rem;
   }
 
+  .compression-impact {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1fr);
+    gap: 0.6rem;
+    align-items: stretch;
+    margin: 1rem 0;
+  }
+
+  .compression-impact__side {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0.8rem 0.9rem 0.72rem;
+    border: 2px solid;
+    border-radius: 14px;
+    background: #fff;
+  }
+
+  .compression-impact__side.is-before {
+    border-color: #e3a99c;
+    background: var(--rt-coral-soft);
+    box-shadow: 0 9px 20px rgba(169, 71, 53, 0.1);
+  }
+
+  .compression-impact__side.is-after {
+    border-color: #84caaa;
+    background: var(--rt-green-soft);
+    box-shadow: 0 9px 20px rgba(23, 123, 83, 0.1);
+  }
+
+  .compression-impact__side small,
+  .compression-impact__side strong,
+  .compression-impact__side span {
+    display: block;
+  }
+
+  .compression-impact__side small {
+    color: var(--rt-coral);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+  }
+
+  .compression-impact__side.is-after small { color: var(--rt-green); }
+
+  .compression-impact__side strong {
+    margin-top: 0.08rem;
+    color: var(--rt-ink);
+    font-size: 0.94rem;
+  }
+
+  .compression-impact__side strong b {
+    color: var(--rt-coral);
+    font-size: 1.65rem;
+    line-height: 1;
+  }
+
+  .compression-impact__side.is-after strong b { color: var(--rt-green); }
+
+  .compression-impact__side span {
+    margin-top: 0.18rem;
+    color: var(--rt-muted);
+    font-size: 0.7rem;
+  }
+
+  .compression-impact__density {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.22rem;
+    margin-top: 0.58rem;
+  }
+
+  .compression-impact__density i {
+    height: 7px;
+    border-radius: 3px;
+    background: #d77864;
+    opacity: 0.78;
+  }
+
+  .compression-impact__side.is-before .compression-impact__density i:nth-child(3n) {
+    opacity: 0.42;
+  }
+
+  .compression-impact__side.is-after .compression-impact__density {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .compression-impact__side.is-after .compression-impact__density i {
+    height: 10px;
+    background: #39a773;
+    opacity: 0.86;
+  }
+
+  .compression-impact__engine {
+    display: grid;
+    place-content: center;
+    position: relative;
+    min-width: 0;
+    padding: 0.75rem;
+    border: 1px solid #bba0dc;
+    border-radius: 999px;
+    color: #fff;
+    background: var(--rt-violet);
+    box-shadow: 0 10px 24px rgba(116, 67, 185, 0.2);
+    text-align: center;
+  }
+
+  .compression-impact__engine small,
+  .compression-impact__engine strong,
+  .compression-impact__engine span {
+    display: block;
+  }
+
+  .compression-impact__engine small {
+    color: #f1eaff;
+    font-size: 0.64rem;
+  }
+
+  .compression-impact__engine strong {
+    margin: 0.12rem 0;
+    color: #fff;
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+  }
+
+  .compression-impact__engine span {
+    color: #f1eaff;
+    font-size: 0.64rem;
+  }
+
+  .compression-impact__engine > i {
+    position: absolute;
+    right: -0.56rem;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 1.12rem;
+    height: 1.12rem;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    color: var(--rt-violet);
+    background: #fff;
+    box-shadow: 0 0 0 1px #bba0dc;
+    font-style: normal;
+    font-weight: 900;
+  }
+
   .runtime-index {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -906,6 +1078,7 @@ XLOOKUP(
     background: var(--rt-surface);
   }
 
+  .runtime-stage.is-source { border-color: #e4b1a5; background: var(--rt-coral-soft); }
   .runtime-stage.is-key { border-color: #bcd7ee; background: var(--rt-blue-soft); }
   .runtime-stage.is-groupby,
   .runtime-stage.is-result { border-color: #d6c4ee; background: var(--rt-violet-soft); }
@@ -1760,6 +1933,7 @@ XLOOKUP(
   }
 
   html[data-theme='dark'] .runtime-index li,
+  html[data-theme='dark'] .compression-impact__side,
   html[data-theme='dark'] .runtime-stage,
   html[data-theme='dark'] .mini-sheet,
   html[data-theme='dark'] .key-builder > div span,
@@ -1786,6 +1960,16 @@ XLOOKUP(
   html[data-theme='dark'] .runtime-core-formula > header {
     border-color: #304d64;
     background: #172c3e;
+  }
+
+  html[data-theme='dark'] .compression-impact__side.is-before {
+    border-color: #8f4d42;
+    background: var(--rt-coral-soft);
+  }
+
+  html[data-theme='dark'] .compression-impact__side.is-after {
+    border-color: #397b5d;
+    background: var(--rt-green-soft);
   }
 
   html[data-theme='dark'] .mini-sheet__head,
@@ -1827,6 +2011,7 @@ XLOOKUP(
     }
 
     .runtime-index { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .compression-impact,
     .runtime-grid,
     .scan-board,
     .compression-lab,
@@ -1834,6 +2019,18 @@ XLOOKUP(
     .formula-stages,
     .final-flow {
       grid-template-columns: 1fr;
+    }
+
+    .compression-impact__engine {
+      min-height: 104px;
+      border-radius: 18px;
+    }
+
+    .compression-impact__engine > i {
+      right: 50%;
+      top: auto;
+      bottom: -0.56rem;
+      transform: translateX(50%) rotate(90deg);
     }
 
     .final-flow > i {
