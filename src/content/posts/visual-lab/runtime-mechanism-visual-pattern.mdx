@@ -1,0 +1,594 @@
+---
+title: "运行机制可视化 Demo：让公式和业务逻辑在页面里跑起来"
+description: "提炼两篇正式文章的共同视觉方法：展示输入、处理、中间结果、边界和最终判断，让读者看见公式与业务模型怎样运行。"
+date: 2026-08-19T23:58:00+08:00
+category: "视觉实验室"
+tags:
+  - "文章设计"
+  - "数据流程"
+  - "公式可视化"
+  - "业务逻辑"
+minutes: 8
+featured: false
+draft: false
+private: false
+---
+
+有些内容的难点不在结论，而在结论之前发生了什么。
+
+公式会把明细压缩成汇总表，利润模型会把订单、退款、成本和推广花费放进不同口径。只写最终公式，读者能复制，却未必真正理解；只画一条流程线，也看不到每一步的数据怎样变化。
+
+这套模式的目标是：**把页面设计成一个运行现场，让输入、处理、中间结果和最终判断同时可见。**
+
+<div class="runtime-lab" aria-label="运行机制可视化模式总览">
+  <header class="runtime-lab__hero">
+    <div>
+      <span>PRIORITY PATTERN · HOW IT RUNS</span>
+      <strong>不要只告诉读者答案<br />让过程在页面里跑一遍</strong>
+      <p>适合公式运行、数据处理、多阶段业务逻辑、旧新方案对比和成本模型。</p>
+    </div>
+    <div class="runtime-lab__verdict">
+      <small>视觉实验室参考级别</small>
+      <b>P0</b>
+      <span>同类文章优先参考</span>
+    </div>
+  </header>
+
+  <ol class="runtime-lab__spine" aria-label="运行机制可视化五层结构">
+    <li><b>01</b><span>输入</span><small>原始事实</small></li>
+    <li><b>02</b><span>处理</span><small>规则或函数</small></li>
+    <li><b>03</b><span>中间结果</span><small>变化必须可见</small></li>
+    <li><b>04</b><span>边界</span><small>何时会失真</small></li>
+    <li><b>05</b><span>结论</span><small>得到什么判断</small></li>
+  </ol>
+</div>
+
+## 一套方法，两种运行现场
+
+这套风格不是固定配色或卡片模板。真正需要复用的是信息组织方式：**先找出读者看不见的变化，再给变化设计舞台。**
+
+<div class="runtime-lab__modes">
+  <article class="runtime-mode is-formula">
+    <header>
+      <span>MODE 01 · 公式运行</span>
+      <strong>让数据变化成为主角</strong>
+      <p>重点展示明细如何被筛选、组合、压缩和查回。</p>
+    </header>
+    <div class="formula-run" aria-label="公式从明细到结果的运行示例">
+      <section>
+        <small>输入 · 明细表</small>
+        <div class="mini-data is-source">
+          <span>A</span><b>10</b>
+          <span>A</span><b>20</b>
+          <span>B</span><b>5</b>
+          <span>B</span><b>15</b>
+        </div>
+      </section>
+      <i aria-hidden="true">→</i>
+      <section class="is-engine">
+        <small>处理</small>
+        <strong>GROUPBY</strong>
+        <span>相同 Key 合并</span>
+      </section>
+      <i aria-hidden="true">→</i>
+      <section>
+        <small>中间结果 · 小表</small>
+        <div class="mini-data is-result">
+          <span>A</span><b>30</b>
+          <span>B</span><b>20</b>
+        </div>
+      </section>
+    </div>
+    <div class="runtime-mode__lesson">
+      <span>读者真正看懂的瞬间</span>
+      <strong>4 行明细被压成 2 行唯一 Key</strong>
+      <p>不是给 `GROUPBY` 加一张装饰图，而是直接把它造成的数据变化摆在读者眼前。</p>
+    </div>
+  </article>
+
+  <article class="runtime-mode is-business">
+    <header>
+      <span>MODE 02 · 业务模型</span>
+      <strong>让口径与判断成为主角</strong>
+      <p>重点展示不同事实如何进入模型，以及错误口径在哪里改变结论。</p>
+    </header>
+    <div class="business-run" aria-label="业务模型从事实到经营判断的运行示例">
+      <div class="business-run__inputs">
+        <span><small>订单</small><b>销售事实</b></span>
+        <span><small>退款</small><b>同批订单</b></span>
+        <span><small>履约</small><b>包裹成本</b></span>
+        <span><small>推广</small><b>当期花费</b></span>
+      </div>
+      <div class="business-run__engine">
+        <small>统一周期 · 统一颗粒度</small>
+        <strong>利润模型</strong>
+        <span>先对齐，再计算</span>
+      </div>
+      <div class="business-run__outputs">
+        <section class="is-old"><small>旧模型</small><b>+ ¥4,000</b><span>继续投</span></section>
+        <section class="is-new"><small>穿透后</small><b>− ¥2,000</b><span>先止损</span></section>
+      </div>
+    </div>
+    <div class="runtime-mode__lesson">
+      <span>读者真正看懂的瞬间</span>
+      <strong>同一条链接，因为口径不同得到相反判断</strong>
+      <p>对比不是左右各放一段文字，而是让输入、模型和结果之间的因果关系连续出现。</p>
+    </div>
+  </article>
+</div>
+
+## 页面应该怎样推进
+
+运行机制文章不需要每一节都套卡片，但整页应有清晰的推进关系。
+
+<div class="runtime-lab__sequence" aria-label="运行机制文章的页面推进顺序">
+  <section>
+    <b>01</b>
+    <div><small>先制造认知冲突</small><strong>同一份数据，为什么得到两个答案？</strong></div>
+    <span>用前后数字或错误结果建立阅读动机。</span>
+  </section>
+  <section>
+    <b>02</b>
+    <div><small>再打开黑箱</small><strong>数据究竟经过了哪些步骤？</strong></div>
+    <span>把源表、处理动作和中间结果放在同一个视觉现场。</span>
+  </section>
+  <section>
+    <b>03</b>
+    <div><small>解释关键变化</small><strong>哪一步改变了数据含义？</strong></div>
+    <span>放大压缩、匹配、分摊、过滤或口径切换。</span>
+  </section>
+  <section>
+    <b>04</b>
+    <div><small>补上适用边界</small><strong>什么时候不能照搬？</strong></div>
+    <span>把数据规模、时间窗口、颗粒度和异常情况说清楚。</span>
+  </section>
+  <section>
+    <b>05</b>
+    <div><small>最后交付结论</small><strong>读者下一步应该怎样做？</strong></div>
+    <span>保留可复制公式、正式口径或明确行动。</span>
+  </section>
+</div>
+
+## 优先参考的两篇正式文章
+
+这套方法来自两篇已经完成的正式文章。它们不是要被逐块复制的模板，而是两个优先级最高的实际样本。
+
+<div class="runtime-lab__references">
+  <a href="/articles/excel-groupby-xlookup-high-performance-summary/">
+    <span>公式运行参考</span>
+    <strong>告别重复 SUMIFS：用 GROUPBY + XLOOKUP 重构高性能汇总公式</strong>
+    <p>重点观察：压缩前后数量对比、六步运行索引、源表到唯一 Key 小表，以及 XLOOKUP 批量查回。</p>
+    <b>查看正式文章 →</b>
+  </a>
+  <a href="/articles/ecommerce-link-profit-model-rebuild/">
+    <span>业务模型参考</span>
+    <strong>别再用上周利润率猜本周利润：重做电商链接利润算法</strong>
+    <p>重点观察：旧新结论冲突、四种口径错位、退款窗口、成本分层，以及最终利润运行过程。</p>
+    <b>查看正式文章 →</b>
+  </a>
+</div>
+
+## 什么时候优先使用
+
+<div class="runtime-lab__router" aria-label="运行机制可视化的使用判断">
+  <section class="is-use">
+    <header><span>优先使用</span><strong>读者需要理解“怎么算”</strong></header>
+    <ul>
+      <li><b>公式</b><span>存在多步计算或明显中间结果</span></li>
+      <li><b>数据</b><span>需要展示筛选、压缩、匹配、合并或分摊</span></li>
+      <li><b>业务</b><span>多个口径、周期或颗粒度共同影响结论</span></li>
+      <li><b>对比</b><span>旧方案与新方案得到不同结果</span></li>
+      <li><b>自动化</b><span>输入、判断、执行和输出构成完整链路</span></li>
+    </ul>
+  </section>
+  <section class="is-skip">
+    <header><span>不必强用</span><strong>一句话或普通表格已经足够</strong></header>
+    <ul>
+      <li><b>单一事实</b><span>没有过程需要解释</span></li>
+      <li><b>简单步骤</b><span>三两句话即可准确复现</span></li>
+      <li><b>纯观点</b><span>重点是语言节奏而非运行逻辑</span></li>
+      <li><b>静态清单</b><span>没有状态变化或因果关系</span></li>
+      <li><b>装饰需求</b><span>只是希望页面“多几张图”</span></li>
+    </ul>
+  </section>
+</div>
+
+<div class="runtime-lab__check">
+  <span>完成前只问四件事</span>
+  <div>
+    <p><b>变化可见</b><small>能否看见处理前后发生了什么？</small></p>
+    <p><b>中间结果可见</b><small>是否打开了最关键的黑箱？</small></p>
+    <p><b>因果连续</b><small>输入、处理和结论能否顺着读下来？</small></p>
+    <p><b>移动端成立</b><small>横向流程纵向后是否仍然清楚？</small></p>
+  </div>
+</div>
+
+<style>{`
+  .runtime-lab,
+  .runtime-mode,
+  .runtime-lab__sequence,
+  .runtime-lab__references,
+  .runtime-lab__router,
+  .runtime-lab__check {
+    --rl-ink: #17324d;
+    --rl-muted: #617386;
+    --rl-line: #d8e5ef;
+    --rl-blue: #1d66d1;
+    --rl-cyan: #0b8ca5;
+    --rl-green: #16855b;
+    --rl-coral: #c85443;
+    --rl-paper: #f7fbfe;
+  }
+
+  .runtime-lab {
+    margin: 2rem 0 3rem;
+    overflow: hidden;
+    border: 1px solid #c7dbea;
+    border-radius: 28px;
+    background:
+      radial-gradient(circle at 88% 10%, rgba(66, 194, 220, 0.18), transparent 27%),
+      linear-gradient(145deg, #f8fcff 0%, #edf7fb 54%, #f9fcff 100%);
+    box-shadow: 0 24px 64px rgba(38, 77, 108, 0.12);
+  }
+
+  .runtime-lab__hero {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 2rem;
+    color: var(--rl-ink);
+  }
+
+  .runtime-lab__hero > div:first-child { max-width: 660px; }
+
+  .runtime-lab__hero span,
+  .runtime-mode > header span,
+  .runtime-mode__lesson > span,
+  .runtime-lab__references > a > span,
+  .runtime-lab__check > span {
+    display: block;
+    color: var(--rl-cyan);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .runtime-lab__hero strong {
+    display: block;
+    margin-top: 0.65rem;
+    font-size: clamp(1.65rem, 4vw, 2.8rem);
+    line-height: 1.08;
+    letter-spacing: -0.045em;
+  }
+
+  .runtime-lab__hero p {
+    margin: 0.85rem 0 0;
+    color: var(--rl-muted);
+    font-size: 0.95rem;
+  }
+
+  .runtime-lab__verdict {
+    flex: 0 0 150px;
+    padding: 1.1rem;
+    border: 1px solid rgba(29, 102, 209, 0.16);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.78);
+    text-align: center;
+  }
+
+  .runtime-lab__verdict small,
+  .runtime-lab__verdict b,
+  .runtime-lab__verdict span { display: block; }
+  .runtime-lab__verdict small { color: var(--rl-muted); font-size: 0.69rem; }
+  .runtime-lab__verdict b { margin: 0.3rem 0; color: var(--rl-blue); font-size: 2.4rem; line-height: 1; }
+  .runtime-lab__verdict span { color: var(--rl-ink); font-size: 0.76rem; font-weight: 700; }
+
+  .runtime-lab__spine {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid #d4e4ee;
+    list-style: none;
+  }
+
+  .runtime-lab__spine li {
+    position: relative;
+    display: grid;
+    gap: 0.18rem;
+    padding: 1rem 1.05rem 1.15rem;
+    border-right: 1px solid #d4e4ee;
+  }
+
+  .runtime-lab__spine li:last-child { border-right: 0; }
+  .runtime-lab__spine b { color: var(--rl-blue); font-size: 0.7rem; }
+  .runtime-lab__spine span { color: var(--rl-ink); font-weight: 800; }
+  .runtime-lab__spine small { color: var(--rl-muted); font-size: 0.69rem; }
+
+  .runtime-lab__modes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0 3rem;
+  }
+
+  .runtime-mode {
+    overflow: hidden;
+    border: 1px solid var(--rl-line);
+    border-radius: 24px;
+    background: #fbfdff;
+    box-shadow: 0 16px 40px rgba(38, 77, 108, 0.08);
+  }
+
+  .runtime-mode > header { padding: 1.35rem 1.4rem 1rem; }
+  .runtime-mode > header strong { display: block; margin-top: 0.35rem; color: var(--rl-ink); font-size: 1.25rem; }
+  .runtime-mode > header p { margin: 0.35rem 0 0; color: var(--rl-muted); font-size: 0.82rem; }
+
+  .formula-run {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 24px minmax(100px, 0.8fr) 24px minmax(0, 1fr);
+    gap: 0.35rem;
+    align-items: center;
+    min-height: 230px;
+    padding: 1rem;
+    background: #edf6fb;
+  }
+
+  .formula-run > section { min-width: 0; }
+  .formula-run > section > small { display: block; margin-bottom: 0.45rem; color: var(--rl-muted); font-size: 0.65rem; }
+  .formula-run > i { color: #8ba4b8; font-style: normal; text-align: center; }
+
+  .mini-data {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: hidden;
+    border: 1px solid #c7dce9;
+    border-radius: 12px;
+    background: white;
+  }
+
+  .mini-data span,
+  .mini-data b { padding: 0.45rem; border-bottom: 1px solid #e4edf3; font-size: 0.72rem; }
+  .mini-data span { color: var(--rl-ink); }
+  .mini-data b { border-left: 1px solid #e4edf3; color: var(--rl-blue); text-align: right; }
+  .mini-data span:nth-last-child(-n + 2),
+  .mini-data b:nth-last-child(-n + 2) { border-bottom: 0; }
+
+  .formula-run .is-engine {
+    padding: 1rem 0.45rem;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #1768d2, #0d849a);
+    color: white;
+    text-align: center;
+  }
+
+  .formula-run .is-engine small,
+  .formula-run .is-engine strong,
+  .formula-run .is-engine span { display: block; color: white; }
+  .formula-run .is-engine strong { font-size: 0.82rem; }
+  .formula-run .is-engine span { margin-top: 0.25rem; font-size: 0.62rem; opacity: 0.78; }
+
+  .business-run {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(105px, 0.75fr) minmax(0, 1fr);
+    gap: 0.65rem;
+    align-items: center;
+    min-height: 230px;
+    padding: 1rem;
+    background: #f5f4f0;
+  }
+
+  .business-run__inputs { display: grid; gap: 0.35rem; }
+  .business-run__inputs > span,
+  .business-run__outputs section {
+    padding: 0.55rem 0.65rem;
+    border: 1px solid #e0ddd3;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.82);
+  }
+
+  .business-run__inputs small,
+  .business-run__inputs b,
+  .business-run__outputs small,
+  .business-run__outputs b,
+  .business-run__outputs span { display: block; }
+  .business-run__inputs small,
+  .business-run__outputs small { color: var(--rl-muted); font-size: 0.62rem; }
+  .business-run__inputs b { color: var(--rl-ink); font-size: 0.72rem; }
+
+  .business-run__engine {
+    padding: 1rem 0.55rem;
+    border-radius: 16px;
+    background: #21384c;
+    color: white;
+    text-align: center;
+  }
+
+  .business-run__engine small,
+  .business-run__engine strong,
+  .business-run__engine span { display: block; }
+  .business-run__engine small { font-size: 0.6rem; opacity: 0.68; }
+  .business-run__engine strong { margin-top: 0.25rem; font-size: 0.88rem; }
+  .business-run__engine span { margin-top: 0.25rem; font-size: 0.62rem; opacity: 0.76; }
+
+  .business-run__outputs { display: grid; gap: 0.5rem; }
+  .business-run__outputs section.is-old { border-color: #e6bcb6; background: #fff4f1; }
+  .business-run__outputs section.is-new { border-color: #b9ddcd; background: #effaf5; }
+  .business-run__outputs b { margin-top: 0.2rem; font-size: 1rem; }
+  .business-run__outputs .is-old b { color: var(--rl-coral); }
+  .business-run__outputs .is-new b { color: var(--rl-green); }
+  .business-run__outputs span { color: var(--rl-ink); font-size: 0.65rem; }
+
+  .runtime-mode__lesson { min-height: 140px; padding: 1.15rem 1.4rem 1.35rem; }
+  .runtime-mode__lesson strong { display: block; margin-top: 0.3rem; color: var(--rl-ink); font-size: 0.96rem; }
+  .runtime-mode__lesson p { margin: 0.45rem 0 0; color: var(--rl-muted); font-size: 0.79rem; }
+
+  .runtime-lab__sequence {
+    display: grid;
+    gap: 0.7rem;
+    margin: 1.5rem 0 3rem;
+    padding: 1.2rem;
+    border: 1px solid var(--rl-line);
+    border-radius: 24px;
+    background: var(--rl-paper);
+  }
+
+  .runtime-lab__sequence section {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 0.9rem;
+    align-items: center;
+    padding: 0.85rem;
+    border-radius: 15px;
+    background: white;
+  }
+
+  .runtime-lab__sequence section > b {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border-radius: 12px;
+    background: #e8f2ff;
+    color: var(--rl-blue);
+    font-size: 0.72rem;
+  }
+
+  .runtime-lab__sequence small,
+  .runtime-lab__sequence strong { display: block; }
+  .runtime-lab__sequence small { color: var(--rl-cyan); font-size: 0.67rem; font-weight: 800; }
+  .runtime-lab__sequence strong { margin-top: 0.18rem; color: var(--rl-ink); font-size: 0.88rem; }
+  .runtime-lab__sequence section > span { color: var(--rl-muted); font-size: 0.76rem; }
+
+  .runtime-lab__references {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0 3rem;
+  }
+
+  .runtime-lab__references > a {
+    display: flex;
+    min-height: 260px;
+    flex-direction: column;
+    padding: 1.5rem;
+    border: 1px solid var(--rl-line);
+    border-radius: 22px;
+    background: linear-gradient(145deg, #f9fcff, #edf6fb);
+    color: inherit;
+    text-decoration: none;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+
+  .runtime-lab__references > a:nth-child(2) { background: linear-gradient(145deg, #fffdf9, #f2f1ec); }
+  .runtime-lab__references > a:hover { transform: translateY(-3px); box-shadow: 0 18px 38px rgba(38, 77, 108, 0.12); }
+  .runtime-lab__references strong { display: block; margin-top: 0.6rem; color: var(--rl-ink); font-size: 1.08rem; line-height: 1.35; }
+  .runtime-lab__references p { margin: 0.75rem 0 1rem; color: var(--rl-muted); font-size: 0.8rem; }
+  .runtime-lab__references > a > b { margin-top: auto; color: var(--rl-blue); font-size: 0.78rem; }
+
+  .runtime-lab__router {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .runtime-lab__router > section {
+    overflow: hidden;
+    border: 1px solid var(--rl-line);
+    border-radius: 22px;
+    background: #fbfdff;
+  }
+
+  .runtime-lab__router header { padding: 1.1rem 1.2rem; border-bottom: 1px solid var(--rl-line); }
+  .runtime-lab__router header span,
+  .runtime-lab__router header strong { display: block; }
+  .runtime-lab__router header span { color: var(--rl-green); font-size: 0.68rem; font-weight: 800; }
+  .runtime-lab__router .is-skip header span { color: var(--rl-coral); }
+  .runtime-lab__router header strong { margin-top: 0.2rem; color: var(--rl-ink); font-size: 0.92rem; }
+  .runtime-lab__router ul { margin: 0; padding: 0.65rem 1.2rem 1.1rem; list-style: none; }
+  .runtime-lab__router li { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 0.7rem; padding: 0.55rem 0; border-bottom: 1px dashed #dbe5ec; }
+  .runtime-lab__router li:last-child { border-bottom: 0; }
+  .runtime-lab__router li b { color: var(--rl-ink); font-size: 0.76rem; }
+  .runtime-lab__router li span { color: var(--rl-muted); font-size: 0.73rem; }
+
+  .runtime-lab__check {
+    margin: 2rem 0 1rem;
+    padding: 1.5rem;
+    border-radius: 24px;
+    background: #17324d;
+    color: white;
+  }
+
+  .runtime-lab__check > span { color: #83dfec; }
+  .runtime-lab__check > div { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.65rem; margin-top: 0.9rem; }
+  .runtime-lab__check p { margin: 0; padding: 0.9rem; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 15px; background: rgba(255, 255, 255, 0.06); }
+  .runtime-lab__check b,
+  .runtime-lab__check small { display: block; }
+  .runtime-lab__check b { font-size: 0.82rem; }
+  .runtime-lab__check small { margin-top: 0.3rem; color: #b9cada; font-size: 0.68rem; line-height: 1.55; }
+
+  html[data-theme='dark'] .runtime-lab,
+  html[data-theme='dark'] .runtime-mode,
+  html[data-theme='dark'] .runtime-lab__sequence,
+  html[data-theme='dark'] .runtime-lab__references,
+  html[data-theme='dark'] .runtime-lab__router {
+    --rl-ink: #e9f3fa;
+    --rl-muted: #a8bac9;
+    --rl-line: #2c465b;
+    --rl-paper: #132536;
+  }
+
+  html[data-theme='dark'] .runtime-lab { border-color: #31536b; background: radial-gradient(circle at 88% 10%, rgba(35, 159, 180, 0.18), transparent 27%), #102230; }
+  html[data-theme='dark'] .runtime-lab__verdict,
+  html[data-theme='dark'] .runtime-mode,
+  html[data-theme='dark'] .runtime-lab__sequence section,
+  html[data-theme='dark'] .runtime-lab__references > a,
+  html[data-theme='dark'] .runtime-lab__router > section { background: #172d3e; }
+  html[data-theme='dark'] .runtime-lab__spine { border-color: #315063; }
+  html[data-theme='dark'] .runtime-lab__spine li { border-color: #315063; }
+  html[data-theme='dark'] .formula-run { background: #102737; }
+  html[data-theme='dark'] .mini-data { border-color: #315063; background: #172d3e; }
+  html[data-theme='dark'] .mini-data span,
+  html[data-theme='dark'] .mini-data b { border-color: #315063; }
+  html[data-theme='dark'] .business-run { background: #242923; }
+  html[data-theme='dark'] .business-run__inputs > span,
+  html[data-theme='dark'] .business-run__outputs section { border-color: #3d4b51; background: #1b303d; }
+  html[data-theme='dark'] .business-run__outputs section.is-old { border-color: #704940; background: #352823; }
+  html[data-theme='dark'] .business-run__outputs section.is-new { border-color: #35644f; background: #18372b; }
+
+  @media (max-width: 900px) {
+    .runtime-lab__modes { grid-template-columns: 1fr; }
+    .runtime-mode__lesson { min-height: 0; }
+    .runtime-lab__check > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 720px) {
+    .runtime-lab__hero { align-items: stretch; flex-direction: column; }
+    .runtime-lab__verdict { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.65rem; align-items: center; flex-basis: auto; text-align: left; }
+    .runtime-lab__verdict b { margin: 0; }
+    .runtime-lab__spine { grid-template-columns: 1fr; }
+    .runtime-lab__spine li { grid-template-columns: 38px 90px minmax(0, 1fr); align-items: center; border-right: 0; border-bottom: 1px solid #d4e4ee; }
+    .runtime-lab__spine li:last-child { border-bottom: 0; }
+    .formula-run { grid-template-columns: 1fr; }
+    .formula-run > i { transform: rotate(90deg); }
+    .business-run { grid-template-columns: 1fr; }
+    .runtime-lab__sequence section { grid-template-columns: 44px minmax(0, 1fr); }
+    .runtime-lab__sequence section > span { grid-column: 2; }
+    .runtime-lab__references,
+    .runtime-lab__router { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .runtime-lab__hero { padding: 1.35rem; }
+    .runtime-lab__verdict { grid-template-columns: 1fr auto; }
+    .runtime-lab__verdict span { grid-column: 1 / -1; }
+    .runtime-lab__check > div { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .runtime-lab__references > a { transition: none; }
+  }
+`}</style>

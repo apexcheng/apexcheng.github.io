@@ -51,6 +51,8 @@
 | 案例过程 | 时间线、问题链路或案例拆解 |
 | 公式和数据 | 参数映射板、示例表和结果区 |
 
+公式运行、数据处理、新旧方案对比和多阶段业务逻辑，优先参考 `src/content/posts/visual-lab/runtime-mechanism-visual-pattern.mdx`：先展示输入与处理过程，再让关键中间结果、适用边界和最终判断依次可见。
+
 模式细节只在需要时参考 `docs/MDX_PATTERN_LIBRARY.md`。
 
 ## 视觉语言
