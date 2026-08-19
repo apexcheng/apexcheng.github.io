@@ -2,6 +2,7 @@
 title: "告别重复 SUMIFS：用 GROUPBY + XLOOKUP 重构高性能汇总公式"
 description: "用真实报表公式讲清如何把反复扫描源表的 SUMIFS，改造成 GROUPBY 一次汇总、XLOOKUP 批量查回，并说明什么时候值得这样改。"
 date: 2026-08-12T10:52:00+08:00
+updated: 2026-08-19T21:00:00+08:00
 category: "教程"
 tags:
   - "Excel"
@@ -22,30 +23,149 @@ private: false
 
 这类问题可以换一个思路：**先把源数据集中汇总一次，再让所有目标去查这个汇总结果。**
 
-<div class="perf-hero" role="group" aria-label="SUMIFS 与 GROUPBY XLOOKUP 汇总方式对比">
-  <div class="perf-hero__copy">
-    <span>EXCEL PERFORMANCE PATTERN</span>
-    <strong>不要让每个目标都重新汇总源表</strong>
-    <p>把“重复条件扫描”改成“先压缩，再查回”。性能收益来自减少重复汇总，而不是某个函数名字天然更快。</p>
+<div class="runtime-theater" role="group" aria-label="GROUPBY XLOOKUP 从源表到批量查回的完整运行机制">
+  <header class="runtime-theater__header">
+    <div>
+      <span>EXCEL FORMULA · HOW IT RUNS</span>
+      <strong>同一份源数据，只做一次汇总</strong>
+      <p>先拼 Key，再把重复行压成唯一 Key 小表，最后让全部目标去小表中查结果。</p>
+    </div>
+    <div class="runtime-theater__summary">
+      <small>计算结构</small>
+      <b>1 次汇总</b>
+      <span>+ 批量查回</span>
+    </div>
+  </header>
+
+  <ol class="runtime-index" aria-label="公式六步执行索引">
+    <li><b>01</b><span>源表</span></li>
+    <li><b>02</b><span>拼 Key</span></li>
+    <li><b>03</b><span>GROUPBY</span></li>
+    <li><b>04</b><span>唯一 Key 小表</span></li>
+    <li><b>05</b><span>TAKE 拆列</span></li>
+    <li><b>06</b><span>XLOOKUP</span></li>
+  </ol>
+
+  <div class="runtime-grid">
+    <article class="runtime-stage is-source">
+      <header><span>01 · 源表</span><strong>订单明细有重复 Key</strong></header>
+      <div class="mini-sheet mini-sheet--source" role="table" aria-label="源数据示例">
+        <div class="mini-sheet__head" role="row">
+          <span role="columnheader">日期</span><span role="columnheader">商品</span><span role="columnheader">直播间</span><span role="columnheader">金额</span>
+        </div>
+        <div role="row"><span>8/10</span><span>1001</span><span>A</span><b>120</b></div>
+        <div role="row"><span>8/10</span><span>1001</span><span>A</span><b>80</b></div>
+        <div role="row"><span>8/10</span><span>1002</span><span>A</span><b>90</b></div>
+        <div role="row"><span>8/11</span><span>1001</span><span>A</span><b>60</b></div>
+        <div role="row"><span>8/11</span><span>1001</span><span>F2</span><b>150</b></div>
+        <div class="is-faded" role="row"><span>…</span><span>…</span><span>…</span><b>…</b></div>
+      </div>
+      <footer><b>大量明细行</b><span>同一组合可能出现多次</span></footer>
+    </article>
+
+    <article class="runtime-stage is-key">
+      <header><span>02 · srcKey</span><strong>逐行拼成组合 Key</strong></header>
+      <div class="key-builder" aria-label="日期商品直播间拼接为组合 Key">
+        <div><span>8/10</span><i>+</i><span>1001</span><i>+</i><span>A</span></div>
+        <b>8/10<span>¦</span>1001<span>¦</span>A</b>
+        <div><span>8/11</span><i>+</i><span>1001</span><i>+</i><span>F2</span></div>
+        <b>8/11<span>¦</span>1001<span>¦</span>F2</b>
+      </div>
+      <code>日期 &amp; CHAR(1) &amp; 商品ID &amp; CHAR(1) &amp; 直播间</code>
+    </article>
+
+    <article class="runtime-stage is-groupby">
+      <header><span>03 · GROUPBY</span><strong>按 Key 集中汇总一次</strong></header>
+      <div class="groupby-core">
+        <small>输入</small>
+        <b>重复 Key + 金额</b>
+        <i aria-hidden="true">↓</i>
+        <strong>GROUPBY</strong>
+        <code>SUM · 0 · 0</code>
+        <i aria-hidden="true">↓</i>
+        <small>输出</small>
+        <b>唯一 Key + SUM</b>
+      </div>
+      <footer><b>8 行 → 4 行</b><span>演示数据被一次压缩</span></footer>
+    </article>
+
+    <article class="runtime-stage is-result">
+      <header><span>04 · g</span><strong>生成唯一 Key 小表</strong></header>
+      <div class="mini-sheet mini-sheet--result" role="table" aria-label="GROUPBY 汇总结果示例">
+        <div class="mini-sheet__head" role="row"><span role="columnheader">Key</span><span role="columnheader">SUM</span></div>
+        <div role="row"><span>8/10¦1001¦A</span><b>200</b></div>
+        <div role="row"><span>8/10¦1002¦A</span><b>90</b></div>
+        <div role="row"><span>8/11¦1001¦A</span><b>60</b></div>
+        <div role="row"><span>8/11¦1001¦F2</span><b>150</b></div>
+      </div>
+      <footer><b>小结果集</b><span>后续不再面对完整明细</span></footer>
+    </article>
+
+    <article class="runtime-stage is-take">
+      <header><span>05 · TAKE</span><strong>拆成查找列和返回列</strong></header>
+      <div class="take-columns">
+        <section>
+          <code>TAKE(g,,1)</code>
+          <small>查找列</small>
+          <span>8/10¦1001¦A</span>
+          <span>8/10¦1002¦A</span>
+          <span>8/11¦1001¦A</span>
+        </section>
+        <section>
+          <code>TAKE(g,,-1)</code>
+          <small>返回列</small>
+          <b>200</b><b>90</b><b>60</b>
+        </section>
+      </div>
+    </article>
+
+    <article class="runtime-stage is-lookup">
+      <header><span>06 · XLOOKUP</span><strong>所有目标批量查回</strong></header>
+      <div class="lookup-results" aria-label="目标 Key 批量查回结果">
+        <div><span>8/10¦1001¦A</span><i>匹配</i><b>200</b></div>
+        <div><span>8/11¦1001¦F2</span><i>匹配</i><b>150</b></div>
+        <div><span>8/11¦1001¦A</span><i>匹配</i><b>60</b></div>
+      </div>
+      <code>XLOOKUP(targetKey, 查找列, 返回列, 0)</code>
+    </article>
   </div>
-  <div class="perf-hero__compare">
-    <section class="is-old">
-      <small>传统写法</small>
-      <b>SUMIFS × 很多目标</b>
-      <div>目标 1 → 汇总源数据</div>
-      <div>目标 2 → 再汇总</div>
-      <div>目标 3 → 再汇总</div>
-      <em>……</em>
-    </section>
-    <i aria-hidden="true">→</i>
-    <section class="is-new">
-      <small>重构思路</small>
-      <b>GROUPBY → XLOOKUP</b>
-      <div>源数据 → 汇总一次</div>
-      <div>得到唯一 Key 小表</div>
-      <div>所有目标 → 批量查回</div>
-    </section>
+
+  <div class="runtime-formula-route" aria-label="核心公式数据流">
+    <span>srcKey</span><i aria-hidden="true">→</i><span>GROUPBY</span><i aria-hidden="true">→</i><span>g：Key | SUM</span><i aria-hidden="true">→</i><span>TAKE</span><i aria-hidden="true">→</i><strong>XLOOKUP</strong>
   </div>
+
+  <div class="runtime-core-formula" aria-label="组合 Key GROUPBY XLOOKUP 核心公式">
+    <header><span>核心公式</span><small>每个变量都能在上面的中间结果中找到</small></header>
+    <code>
+      <span>=LET(</span>
+      <span><b class="token-blue">srcKey</b>, 平台订单明细!I2#&amp;CHAR(1)&amp;平台订单明细!C2#&amp;CHAR(1)&amp;平台订单明细!A2#,</span>
+      <span><b class="token-blue">targetKey</b>, CHOOSECOLS(A2#,3)&amp;CHAR(1)&amp;CHOOSECOLS(A2#,2)&amp;CHAR(1)&amp;CHOOSECOLS(A2#,1),</span>
+      <span><b class="token-violet">g</b>, GROUPBY(srcKey, 平台订单明细!F2#, SUM, 0, 0),</span>
+      <span><b class="token-green">XLOOKUP</b>(targetKey, TAKE(g,,1), TAKE(g,,-1), 0)</span>
+      <span>)</span>
+    </code>
+  </div>
+
+  <section class="repeat-strip" aria-label="SUMIFS 重复扫描与新结构的计算次数对比">
+    <header>
+      <span>为什么传统写法容易累积重复计算</span>
+      <strong>每增加一个目标，SUMIFS 都要再次面对同一份源表</strong>
+    </header>
+    <div class="repeat-strip__body">
+      <div class="repeat-strip__source"><small>同一源表</small><b>完整订单明细</b></div>
+      <div class="repeat-strip__targets">
+        <span><b>目标 01</b><em>扫描一次</em></span>
+        <span><b>目标 02</b><em>再扫描</em></span>
+        <span><b>目标 03</b><em>再扫描</em></span>
+        <span><b>目标 N</b><em>继续扫描</em></span>
+      </div>
+    </div>
+  </section>
+
+  <footer class="runtime-theater__conclusion">
+    <b>性能收益来自减少重复汇总</b>
+    <span>不是因为新函数的名字天然更快</span>
+  </footer>
 </div>
 
 先说结论：**这不是“GROUPBY + XLOOKUP 在任何情况下都一定比 SUMIFS 快”。**
@@ -146,6 +266,32 @@ private: false
 | A | 30 |
 | B | 5 |
 
+<div class="compression-lab" role="group" aria-label="GROUPBY 将重复行压缩为唯一 Key 汇总表">
+  <section>
+    <header><span>汇总前</span><strong>3 行明细</strong></header>
+    <div class="compression-table" role="table" aria-label="汇总前数据">
+      <div role="row"><b role="columnheader">ID</b><b role="columnheader">金额</b></div>
+      <div role="row"><span>A</span><strong>10</strong></div>
+      <div role="row" class="is-repeat"><span>A</span><strong>20</strong></div>
+      <div role="row"><span>B</span><strong>5</strong></div>
+    </div>
+  </section>
+  <div class="compression-lab__engine">
+    <small>同 Key 合并</small>
+    <strong>GROUPBY</strong>
+    <code>SUM</code>
+    <span>3 行 → 2 个 Key</span>
+  </div>
+  <section class="is-output">
+    <header><span>汇总后</span><strong>唯一 Key 小表</strong></header>
+    <div class="compression-table" role="table" aria-label="GROUPBY 汇总后数据">
+      <div role="row"><b role="columnheader">ID</b><b role="columnheader">SUM</b></div>
+      <div role="row"><span>A</span><strong>30</strong></div>
+      <div role="row"><span>B</span><strong>5</strong></div>
+    </div>
+  </section>
+</div>
+
 基础写法会使用 `GROUPBY` 的默认表头和总计规则，因此实际结果还可能出现总计行。后面要把结果交给 `XLOOKUP` 时，我会明确写成 `GROUPBY(...,0,0)`，让 `g` 只保留用于查找的分组字段和汇总值。
 
 这一步非常关键：原来可能有几万行订单，汇总后只剩下“唯一 Key + 汇总值”。后面的查询不再面对完整订单明细，而是面对这个已经压缩过的小结果集。
@@ -203,12 +349,29 @@ private: false
 
 翻译成人话就是：
 
-<div class="lookup-path" role="group" aria-label="XLOOKUP 从 GROUPBY 结果查回数据的路径">
-  <div><span>目标</span><strong>target Key</strong></div>
-  <i>→</i>
-  <div><span>去哪里找</span><strong>g 的第一列</strong><code>TAKE(g,,1)</code></div>
-  <i>→</i>
-  <div><span>返回什么</span><strong>g 的最后一列</strong><code>TAKE(g,,-1)</code></div>
+<div class="take-lab" role="group" aria-label="TAKE 拆分 GROUPBY 结果并交给 XLOOKUP 查回">
+  <section class="take-lab__target">
+    <span>目标</span>
+    <strong>target Key</strong>
+    <code>A</code>
+  </section>
+  <div class="take-lab__table" role="table" aria-label="数组 g 的两列结构">
+    <div class="take-lab__head" role="row">
+      <span role="columnheader">g 的第一列</span>
+      <span role="columnheader">g 的最后一列</span>
+    </div>
+    <div role="row"><b>A</b><strong>30</strong></div>
+    <div role="row"><b>B</b><strong>5</strong></div>
+    <footer>
+      <code>TAKE(g,,1)</code>
+      <code>TAKE(g,,-1)</code>
+    </footer>
+  </div>
+  <section class="take-lab__return">
+    <span>XLOOKUP 返回</span>
+    <strong>30</strong>
+    <small>A 命中第一行</small>
+  </section>
 </div>
 
 也就是：**用目标 Key → 去 GROUPBY 第一列找 → 返回 GROUPBY 最后一列的汇总结果。**
@@ -297,25 +460,24 @@ private: false
 
 看起来比一条 `SUMIFS` 长，但它其实只是把处理过程明确拆成了三个阶段：
 
-<div class="pipeline" role="group" aria-label="组合 Key GROUPBY XLOOKUP 三阶段执行流程">
-  <article>
-    <small>01</small>
-    <strong>组合 Key</strong>
-    <p>把直播间、商品 ID、日期拼成一个可以唯一匹配的键。</p>
+<div class="formula-stages" role="group" aria-label="组合 Key GROUPBY XLOOKUP 三阶段中间结果">
+  <article class="is-key">
+    <header><small>01 · 组合 Key</small><strong>先把三个条件变成一个值</strong></header>
+    <div class="formula-stages__tokens"><span>直播间 A</span><i>+</i><span>商品 1001</span><i>+</i><span>8/10</span></div>
     <code>srcKey / targetKey</code>
   </article>
-  <i>→</i>
-  <article>
-    <small>02</small>
-    <strong>一次汇总</strong>
-    <p>源数据按组合 Key 集中做一次 SUM。</p>
-    <code>GROUPBY(...)</code>
+  <article class="is-group">
+    <header><small>02 · 一次汇总</small><strong>重复 Key 在这里合并</strong></header>
+    <div class="formula-stages__rows">
+      <span><b>A¦1001¦8/10</b><em>10</em></span>
+      <span><b>A¦1001¦8/10</b><em>20</em></span>
+      <strong><b>A¦1001¦8/10</b><em>30</em></strong>
+    </div>
+    <code>g = GROUPBY(...)</code>
   </article>
-  <i>→</i>
-  <article>
-    <small>03</small>
-    <strong>批量查回</strong>
-    <p>目标表全部去已经压缩后的结果中查找。</p>
+  <article class="is-lookup">
+    <header><small>03 · 批量查回</small><strong>目标只查询压缩后的小表</strong></header>
+    <div class="formula-stages__match"><span>targetKey</span><i>命中</i><strong>30</strong></div>
     <code>XLOOKUP(...)</code>
   </article>
 </div>
@@ -565,281 +727,1151 @@ XLOOKUP(
 如果答案是可以，那么 `GROUPBY + XLOOKUP` 往往就是一条更适合大型动态报表的计算路径。
 
 <style>{`
-  .perf-hero,
+  /* 2026-08 visual redesign: data compression theater */
+  .runtime-theater,
   .scan-board,
-  .lookup-path,
-  .pipeline,
+  .compression-lab,
+  .take-lab,
+  .formula-stages,
   .date-flow,
   .final-flow {
-    margin: 2rem 0;
+    --rt-ink: #17263a;
+    --rt-text: #34495f;
+    --rt-muted: #5c7084;
+    --rt-line: #ceddea;
+    --rt-surface: #ffffff;
+    --rt-soft: #f7faff;
+    --rt-blue: #176cc5;
+    --rt-blue-soft: #edf6ff;
+    --rt-violet: #7443b9;
+    --rt-violet-soft: #f5f0ff;
+    --rt-green: #177b53;
+    --rt-green-soft: #edf9f3;
+    --rt-coral: #a94735;
+    --rt-coral-soft: #fff3ef;
+    --rt-amber: #9c651b;
+    --rt-amber-soft: #fff8e8;
+    color: var(--rt-text);
   }
 
-  .perf-hero {
-    border: 1px solid rgba(148, 163, 184, 0.24);
+  .runtime-theater *,
+  .scan-board *,
+  .compression-lab *,
+  .take-lab *,
+  .formula-stages *,
+  .date-flow *,
+  .final-flow * {
+    box-sizing: border-box;
+  }
+
+  .runtime-theater {
+    margin: 2.2rem 0 2.5rem;
+    padding: clamp(1rem, 2.4vw, 1.5rem);
+    border: 1px solid #bfd5e7;
     border-radius: 24px;
-    padding: clamp(1.2rem, 3vw, 2rem);
-    background:
-      radial-gradient(circle at 88% 10%, rgba(34, 197, 94, 0.12), transparent 32%),
-      radial-gradient(circle at 12% 88%, rgba(59, 130, 246, 0.12), transparent 34%),
-      rgba(15, 23, 42, 0.72);
-    overflow: hidden;
+    background: #f8fbff;
+    box-shadow: 0 18px 45px rgba(39, 84, 126, 0.09);
   }
 
-  .perf-hero__copy > span {
-    display: inline-block;
-    margin-bottom: 0.65rem;
-    color: #7dd3fc;
-    font-size: 0.76rem;
-    font-weight: 800;
-    letter-spacing: 0.12em;
+  .runtime-theater__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.2rem;
+    align-items: flex-start;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--rt-line);
   }
 
-  .perf-hero__copy > strong {
+  .runtime-theater__header > div:first-child {
+    min-width: 0;
+  }
+
+  .runtime-theater__header > div:first-child > span {
     display: block;
-    color: #f8fafc;
-    font-size: clamp(1.55rem, 4vw, 2.65rem);
-    line-height: 1.15;
+    margin-bottom: 0.38rem;
+    color: var(--rt-blue);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
   }
 
-  .perf-hero__copy > p {
-    max-width: 760px;
-    margin: 0.85rem 0 0;
-    color: #cbd5e1;
-    line-height: 1.75;
+  .runtime-theater__header > div:first-child > strong {
+    display: block;
+    color: var(--rt-ink);
+    font-size: clamp(1.35rem, 3.3vw, 2rem);
+    line-height: 1.22;
   }
 
-  .perf-hero__compare {
+  .runtime-theater__header p {
+    max-width: 620px;
+    margin: 0.55rem 0 0;
+    color: var(--rt-muted);
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
+  .runtime-theater__summary {
+    flex: 0 0 132px;
+    padding: 0.75rem;
+    border: 1px solid #b9ddca;
+    border-radius: 14px;
+    background: var(--rt-green-soft);
+    text-align: center;
+  }
+
+  .runtime-theater__summary small,
+  .runtime-theater__summary b,
+  .runtime-theater__summary span {
+    display: block;
+  }
+
+  .runtime-theater__summary small {
+    color: var(--rt-muted);
+    font-size: 0.72rem;
+  }
+
+  .runtime-theater__summary b {
+    margin-top: 0.2rem;
+    color: var(--rt-green);
+    font-size: 1.12rem;
+  }
+
+  .runtime-theater__summary span {
+    margin-top: 0.08rem;
+    color: var(--rt-text);
+    font-size: 0.78rem;
+  }
+
+  .runtime-index {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    gap: 1rem;
-    align-items: stretch;
-    margin-top: 1.5rem;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.38rem;
+    margin: 1rem 0 0.75rem;
+    padding: 0;
+    list-style: none;
   }
 
-  .perf-hero__compare > i,
-  .pipeline > i,
-  .lookup-path > i,
-  .final-flow > i {
-    align-self: center;
-    color: #64748b;
-    font-style: normal;
-    font-size: 1.4rem;
+  .runtime-index li {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+    min-width: 0;
+    padding: 0.45rem 0.5rem;
+    border: 1px solid #d5e2ee;
+    border-radius: 9px;
+    background: #fff;
   }
 
-  .perf-hero__compare section {
-    padding: 1.1rem;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    border-radius: 18px;
-    background: rgba(15, 23, 42, 0.74);
+  .runtime-index b {
+    display: grid;
+    flex: 0 0 22px;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--rt-blue);
+    font-size: 0.65rem;
   }
 
-  .perf-hero__compare section.is-old { border-color: rgba(248, 113, 113, 0.3); }
-  .perf-hero__compare section.is-new { border-color: rgba(74, 222, 128, 0.34); }
+  .runtime-index li:nth-child(3) b,
+  .runtime-index li:nth-child(4) b { background: var(--rt-violet); }
+  .runtime-index li:nth-child(5) b { background: var(--rt-amber); }
+  .runtime-index li:nth-child(6) b { background: var(--rt-green); }
 
-  .perf-hero__compare small,
-  .perf-hero__compare b,
-  .perf-hero__compare div,
-  .perf-hero__compare em {
+  .runtime-index span {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--rt-text);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .runtime-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .runtime-stage {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 272px;
+    padding: 0.8rem;
+    border: 1px solid var(--rt-line);
+    border-radius: 15px;
+    background: var(--rt-surface);
+  }
+
+  .runtime-stage.is-key { border-color: #bcd7ee; background: var(--rt-blue-soft); }
+  .runtime-stage.is-groupby,
+  .runtime-stage.is-result { border-color: #d6c4ee; background: var(--rt-violet-soft); }
+  .runtime-stage.is-take { border-color: #ead5a9; background: var(--rt-amber-soft); }
+  .runtime-stage.is-lookup { border-color: #b9dfcc; background: var(--rt-green-soft); }
+
+  .runtime-stage > header span,
+  .runtime-stage > header strong {
     display: block;
   }
 
-  .perf-hero__compare small {
-    color: #94a3b8;
-    font-weight: 700;
+  .runtime-stage > header span {
+    color: var(--rt-blue);
+    font-size: 0.72rem;
+    font-weight: 900;
   }
 
-  .perf-hero__compare b {
-    margin: 0.25rem 0 0.8rem;
-    color: #f8fafc;
-    font-size: 1.05rem;
+  .runtime-stage.is-groupby > header span,
+  .runtime-stage.is-result > header span { color: var(--rt-violet); }
+  .runtime-stage.is-take > header span { color: var(--rt-amber); }
+  .runtime-stage.is-lookup > header span { color: var(--rt-green); }
+
+  .runtime-stage > header strong {
+    margin-top: 0.16rem;
+    color: var(--rt-ink);
+    font-size: 0.93rem;
+    line-height: 1.4;
   }
 
-  .perf-hero__compare div {
-    margin-top: 0.45rem;
-    padding: 0.55rem 0.7rem;
+  .runtime-stage > footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.55rem;
+    align-items: baseline;
+    margin-top: auto;
+    padding-top: 0.55rem;
+    color: var(--rt-muted);
+    font-size: 0.68rem;
+  }
+
+  .runtime-stage > footer b { color: var(--rt-ink); }
+
+  .mini-sheet {
+    overflow: hidden;
+    margin: 0.7rem 0;
+    border: 1px solid #cbd9e6;
     border-radius: 10px;
-    color: #cbd5e1;
-    background: rgba(148, 163, 184, 0.08);
-    font-size: 0.9rem;
+    background: #fff;
+    font-size: 0.68rem;
   }
 
-  .perf-hero__compare em {
-    margin-top: 0.45rem;
-    color: #64748b;
+  .mini-sheet > div {
+    display: grid;
+    border-bottom: 1px solid #e1e9f0;
+  }
+
+  .mini-sheet > div:last-child { border-bottom: 0; }
+  .mini-sheet--source > div { grid-template-columns: 1.05fr 0.85fr 0.9fr 0.7fr; }
+  .mini-sheet--result > div { grid-template-columns: minmax(0, 1fr) 46px; }
+
+  .mini-sheet span,
+  .mini-sheet b {
+    min-width: 0;
+    padding: 0.32rem 0.3rem;
+    overflow: hidden;
+    border-right: 1px solid #e1e9f0;
+    color: #465b70;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mini-sheet span:last-child,
+  .mini-sheet b:last-child { border-right: 0; }
+  .mini-sheet b { color: var(--rt-green); text-align: right; }
+
+  .mini-sheet__head {
+    color: var(--rt-ink);
+    background: #edf2f7;
+    font-weight: 900;
+  }
+
+  .mini-sheet__head span { color: var(--rt-ink); }
+  .mini-sheet .is-faded { opacity: 0.6; }
+
+  .key-builder {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0.8rem 0;
+  }
+
+  .key-builder > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    align-items: center;
+  }
+
+  .key-builder > div span,
+  .key-builder > b {
+    padding: 0.28rem 0.4rem;
+    border: 1px solid #bcd5ea;
+    border-radius: 7px;
+    color: #285d8d;
+    background: #fff;
+    font-size: 0.7rem;
+  }
+
+  .key-builder > div i {
+    color: #7392ad;
+    font-style: normal;
+  }
+
+  .key-builder > b {
+    display: block;
+    overflow-wrap: anywhere;
+    color: var(--rt-blue);
+    border-color: #9fc6e8;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  .key-builder > b span { color: #8ea0b3; }
+
+  .runtime-stage > code {
+    display: block;
+    margin-top: auto;
+    overflow-wrap: anywhere;
+    color: var(--rt-blue);
+    font-size: 0.68rem;
+    line-height: 1.55;
+  }
+
+  .runtime-stage.is-lookup > code { color: var(--rt-green); }
+
+  .groupby-core {
+    display: grid;
+    gap: 0.24rem;
+    place-items: center;
+    margin: 0.75rem 0;
+    padding: 0.75rem 0.55rem;
+    border: 1px solid #cbb5e5;
+    border-radius: 48px;
+    background: #fff;
+    text-align: center;
+  }
+
+  .groupby-core small {
+    color: var(--rt-muted);
+    font-size: 0.66rem;
+  }
+
+  .groupby-core b {
+    color: var(--rt-text);
+    font-size: 0.72rem;
+  }
+
+  .groupby-core > strong {
+    color: var(--rt-violet);
+    font-size: 1.02rem;
+    letter-spacing: 0.04em;
+  }
+
+  .groupby-core code {
+    color: var(--rt-violet);
+    font-size: 0.7rem;
+  }
+
+  .groupby-core i {
+    color: #9b7abb;
+    font-style: normal;
+  }
+
+  .take-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(58px, 0.65fr);
+    gap: 0.45rem;
+    margin-top: 0.75rem;
+  }
+
+  .take-columns section {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #dfc789;
+    border-radius: 9px;
+    background: #fff;
+  }
+
+  .take-columns code,
+  .take-columns small,
+  .take-columns span,
+  .take-columns b {
+    display: block;
+    min-width: 0;
+    padding: 0.3rem 0.36rem;
+    overflow: hidden;
+    border-bottom: 1px solid #eee4c8;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .take-columns code {
+    color: var(--rt-amber);
+    background: #fffaf0;
+    font-size: 0.67rem;
+    font-weight: 800;
+  }
+
+  .take-columns small {
+    color: var(--rt-muted);
+    font-size: 0.66rem;
+  }
+
+  .take-columns span,
+  .take-columns b {
+    color: var(--rt-text);
+    font-size: 0.66rem;
+  }
+
+  .take-columns b {
+    color: var(--rt-green);
+    text-align: right;
+  }
+
+  .lookup-results {
+    display: grid;
+    gap: 0.42rem;
+    margin: 0.78rem 0;
+  }
+
+  .lookup-results > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto 38px;
+    gap: 0.35rem;
+    align-items: center;
+    padding: 0.48rem;
+    border: 1px solid #c3dfd0;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 0.68rem;
+  }
+
+  .lookup-results span {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--rt-text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lookup-results i {
+    color: var(--rt-green);
+    font-size: 0.64rem;
+    font-style: normal;
+  }
+
+  .lookup-results b {
+    color: var(--rt-green);
+    text-align: right;
+  }
+
+  .runtime-formula-route {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.15fr) auto minmax(0, 0.8fr) auto minmax(0, 1fr);
+    gap: 0.34rem;
+    align-items: center;
+    margin-top: 0.8rem;
+    padding: 0.75rem;
+    border: 1px solid #c8d9e8;
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .runtime-formula-route span,
+  .runtime-formula-route strong {
+    min-width: 0;
+    padding: 0.4rem;
+    border-radius: 7px;
+    color: var(--rt-blue);
+    background: var(--rt-blue-soft);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.7rem;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .runtime-formula-route span:nth-of-type(2),
+  .runtime-formula-route span:nth-of-type(3) {
+    color: var(--rt-violet);
+    background: var(--rt-violet-soft);
+  }
+
+  .runtime-formula-route span:nth-of-type(4) {
+    color: var(--rt-amber);
+    background: var(--rt-amber-soft);
+  }
+
+  .runtime-formula-route strong {
+    color: var(--rt-green);
+    background: var(--rt-green-soft);
+  }
+
+  .runtime-formula-route i {
+    color: #8aa0b5;
     font-style: normal;
     text-align: center;
   }
 
+  .runtime-core-formula {
+    margin-top: 0.8rem;
+    overflow: hidden;
+    border: 1px solid #c7d9e8;
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .runtime-core-formula > header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.7rem;
+    align-items: center;
+    padding: 0.58rem 0.72rem;
+    border-bottom: 1px solid #d9e4ed;
+    background: #f4f8fc;
+  }
+
+  .runtime-core-formula > header span {
+    color: var(--rt-green);
+    font-size: 0.72rem;
+    font-weight: 900;
+  }
+
+  .runtime-core-formula > header small {
+    color: var(--rt-muted);
+    font-size: 0.65rem;
+  }
+
+  .runtime-core-formula > code {
+    display: grid;
+    gap: 0.18rem;
+    padding: 0.72rem;
+    overflow-x: auto;
+    color: var(--rt-text);
+    font-size: 0.68rem;
+    line-height: 1.5;
+  }
+
+  .runtime-core-formula > code span {
+    min-width: max-content;
+  }
+
+  .runtime-core-formula .token-blue { color: var(--rt-blue); }
+  .runtime-core-formula .token-violet { color: var(--rt-violet); }
+  .runtime-core-formula .token-green { color: var(--rt-green); }
+
+  .repeat-strip {
+    margin-top: 0.8rem;
+    overflow: hidden;
+    border: 1px solid #ebc1b7;
+    border-radius: 13px;
+    background: #fff;
+  }
+
+  .repeat-strip > header {
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid #f0d2cb;
+    background: var(--rt-coral-soft);
+  }
+
+  .repeat-strip > header span,
+  .repeat-strip > header strong {
+    display: block;
+  }
+
+  .repeat-strip > header span {
+    color: var(--rt-coral);
+    font-size: 0.68rem;
+    font-weight: 900;
+  }
+
+  .repeat-strip > header strong {
+    margin-top: 0.12rem;
+    color: var(--rt-ink);
+    font-size: 0.86rem;
+  }
+
+  .repeat-strip__body {
+    display: grid;
+    grid-template-columns: 135px minmax(0, 1fr);
+    gap: 0.55rem;
+    padding: 0.7rem;
+  }
+
+  .repeat-strip__source {
+    display: grid;
+    place-content: center;
+    min-height: 92px;
+    padding: 0.6rem;
+    border: 1px solid #d7e1ea;
+    border-radius: 9px;
+    background: #f7f9fb;
+    text-align: center;
+  }
+
+  .repeat-strip__source small,
+  .repeat-strip__source b { display: block; }
+  .repeat-strip__source small { color: var(--rt-muted); font-size: 0.65rem; }
+  .repeat-strip__source b { margin-top: 0.18rem; color: var(--rt-ink); font-size: 0.78rem; }
+
+  .repeat-strip__targets {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .repeat-strip__targets span {
+    display: grid;
+    place-content: center;
+    min-width: 0;
+    padding: 0.55rem;
+    border: 1px solid #efc8bf;
+    border-radius: 9px;
+    background: #fff8f5;
+    text-align: center;
+  }
+
+  .repeat-strip__targets b,
+  .repeat-strip__targets em { display: block; }
+  .repeat-strip__targets b { color: var(--rt-ink); font-size: 0.7rem; }
+  .repeat-strip__targets em { margin-top: 0.18rem; color: var(--rt-coral); font-size: 0.63rem; font-style: normal; }
+
+  .runtime-theater__conclusion {
+    display: flex;
+    justify-content: center;
+    gap: 0.45rem;
+    align-items: baseline;
+    margin-top: 0.8rem;
+    padding: 0.72rem;
+    border: 1px solid #b9ddca;
+    border-radius: 11px;
+    color: var(--rt-green);
+    background: var(--rt-green-soft);
+    text-align: center;
+  }
+
+  .runtime-theater__conclusion span {
+    color: var(--rt-text);
+    font-size: 0.78rem;
+  }
+
   .scan-board {
     display: grid;
-    grid-template-columns: minmax(170px, 0.7fr) minmax(0, 1.6fr);
-    gap: 1rem;
+    grid-template-columns: minmax(150px, 0.6fr) minmax(0, 1.7fr);
+    gap: 0.75rem;
     align-items: stretch;
+    margin: 2rem 0;
   }
 
   .scan-board__source,
   .scan-board__targets {
-    border: 1px solid rgba(148, 163, 184, 0.22);
-    border-radius: 18px;
-    background: rgba(15, 23, 42, 0.48);
+    border: 1px solid #e4bfb6;
+    border-radius: 15px;
+    background: #fff8f5;
   }
 
   .scan-board__source {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 1.2rem;
+    position: relative;
+    padding: 1rem;
     text-align: center;
   }
 
   .scan-board__source span,
-  .scan-board__source small {
-    color: #94a3b8;
-  }
-
-  .scan-board__source strong {
-    margin: 0.35rem 0;
-    color: #f8fafc;
-    font-size: 1.25rem;
-  }
+  .scan-board__source small { color: var(--rt-coral); }
+  .scan-board__source strong { color: var(--rt-ink); }
 
   .scan-board__targets {
     display: grid;
-    gap: 0.65rem;
-    padding: 0.8rem;
+    gap: 0.48rem;
+    padding: 0.65rem;
   }
 
   .scan-board__targets > div {
     display: grid;
-    grid-template-columns: 76px minmax(0, 1fr) 76px;
-    gap: 0.7rem;
+    grid-template-columns: 68px minmax(0, 1fr) 76px;
+    gap: 0.55rem;
     align-items: center;
-    padding: 0.7rem 0.8rem;
-    border-radius: 12px;
-    background: rgba(148, 163, 184, 0.07);
+    padding: 0.62rem 0.68rem;
+    border: 1px solid #efd4cd;
+    border-radius: 9px;
+    background: #fff;
   }
 
-  .scan-board__targets b { color: #7dd3fc; }
-  .scan-board__targets span { color: #cbd5e1; }
-  .scan-board__targets em { color: #fca5a5; font-style: normal; text-align: right; }
+  .scan-board__targets b { color: var(--rt-coral); }
+  .scan-board__targets span { color: var(--rt-text); }
+  .scan-board__targets em { color: var(--rt-coral); font-style: normal; text-align: right; }
 
-  .lookup-path,
-  .pipeline,
-  .final-flow {
+  .compression-lab {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 130px minmax(0, 1fr);
     gap: 0.75rem;
-    align-items: stretch;
+    align-items: center;
+    margin: 1.5rem 0 1.8rem;
+    padding: 0.85rem;
+    border: 1px solid #cbdbe8;
+    border-radius: 18px;
+    background: #f8fbff;
   }
 
-  .lookup-path > div,
-  .pipeline > article,
-  .final-flow > div {
+  .compression-lab > section {
     min-width: 0;
-    padding: 1rem;
-    border: 1px solid rgba(96, 165, 250, 0.24);
-    border-radius: 16px;
-    background: rgba(30, 41, 59, 0.5);
+    padding: 0.65rem;
+    border: 1px solid #cfdeea;
+    border-radius: 12px;
+    background: #fff;
   }
 
-  .lookup-path span,
-  .lookup-path strong,
-  .lookup-path code,
-  .pipeline small,
-  .pipeline strong,
-  .pipeline code,
-  .final-flow small,
-  .final-flow strong,
-  .final-flow span {
-    display: block;
+  .compression-lab > section.is-output {
+    border-color: #cbb9e3;
+    background: var(--rt-violet-soft);
   }
 
-  .lookup-path span,
-  .pipeline small,
-  .final-flow small {
-    color: #7dd3fc;
-    font-size: 0.76rem;
-    font-weight: 800;
+  .compression-lab section > header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.55rem;
   }
 
-  .lookup-path strong,
-  .pipeline strong,
-  .final-flow strong {
-    margin-top: 0.3rem;
-    color: #f8fafc;
+  .compression-lab section > header span {
+    color: var(--rt-blue);
+    font-size: 0.7rem;
+    font-weight: 900;
   }
 
-  .lookup-path code,
-  .pipeline code {
-    margin-top: 0.55rem;
-    color: #86efac;
+  .compression-lab .is-output > header span { color: var(--rt-violet); }
+  .compression-lab section > header strong { color: var(--rt-ink); font-size: 0.8rem; }
+
+  .compression-table {
+    overflow: hidden;
+    border: 1px solid #d4e0ea;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .compression-table > div {
+    display: grid;
+    grid-template-columns: 1fr 70px;
+    border-bottom: 1px solid #e2e9ef;
+  }
+
+  .compression-table > div:last-child { border-bottom: 0; }
+
+  .compression-table span,
+  .compression-table strong,
+  .compression-table b {
+    padding: 0.42rem 0.5rem;
+    color: var(--rt-text);
+    font-size: 0.74rem;
+  }
+
+  .compression-table strong,
+  .compression-table b:last-child { border-left: 1px solid #e2e9ef; text-align: right; }
+  .compression-table > div:first-child { background: #eef3f7; }
+  .compression-table .is-repeat { background: var(--rt-blue-soft); }
+  .compression-table strong { color: var(--rt-green); }
+
+  .compression-lab__engine {
+    display: grid;
+    place-items: center;
+    min-height: 150px;
+    padding: 0.8rem 0.55rem;
+    border: 1px solid #c7afe3;
+    border-radius: 50px;
+    background: #fff;
+    text-align: center;
+  }
+
+  .compression-lab__engine small,
+  .compression-lab__engine strong,
+  .compression-lab__engine code,
+  .compression-lab__engine span { display: block; }
+  .compression-lab__engine small { color: var(--rt-muted); font-size: 0.68rem; }
+  .compression-lab__engine strong { color: var(--rt-violet); font-size: 1rem; }
+  .compression-lab__engine code { color: var(--rt-violet); }
+  .compression-lab__engine span { color: var(--rt-text); font-size: 0.67rem; }
+
+  .take-lab {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr) 140px;
+    gap: 0.75rem;
+    align-items: center;
+    margin: 1.5rem 0 1.8rem;
+    padding: 0.9rem;
+    border: 1px solid #c9dbe9;
+    border-radius: 18px;
+    background: #f8fbff;
+  }
+
+  .take-lab__target,
+  .take-lab__return {
+    padding: 0.85rem 0.65rem;
+    border: 1px solid #b9d4ea;
+    border-radius: 12px;
+    background: var(--rt-blue-soft);
+    text-align: center;
+  }
+
+  .take-lab__return {
+    border-color: #b9ddca;
+    background: var(--rt-green-soft);
+  }
+
+  .take-lab__target span,
+  .take-lab__target strong,
+  .take-lab__target code,
+  .take-lab__return span,
+  .take-lab__return strong,
+  .take-lab__return small { display: block; }
+  .take-lab__target span { color: var(--rt-blue); font-size: 0.7rem; font-weight: 900; }
+  .take-lab__target strong { margin: 0.2rem 0; color: var(--rt-ink); }
+  .take-lab__target code { color: var(--rt-blue); font-size: 1rem; }
+  .take-lab__return span { color: var(--rt-green); font-size: 0.7rem; font-weight: 900; }
+  .take-lab__return strong { margin: 0.2rem 0; color: var(--rt-green); font-size: 1.5rem; }
+  .take-lab__return small { color: var(--rt-muted); font-size: 0.67rem; }
+
+  .take-lab__table {
+    overflow: hidden;
+    border: 1px solid #d4c0ea;
+    border-radius: 11px;
+    background: #fff;
+  }
+
+  .take-lab__table > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid #e2e8ef;
+  }
+
+  .take-lab__table span,
+  .take-lab__table b,
+  .take-lab__table strong,
+  .take-lab__table code {
+    min-width: 0;
+    padding: 0.45rem 0.55rem;
+    border-right: 1px solid #e2e8ef;
+    color: var(--rt-text);
+    font-size: 0.74rem;
+  }
+
+  .take-lab__table strong { color: var(--rt-green); text-align: right; }
+  .take-lab__head { background: var(--rt-violet-soft); }
+  .take-lab__head span { color: var(--rt-violet); font-size: 0.68rem; font-weight: 900; }
+
+  .take-lab__table footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .take-lab__table footer code {
+    color: var(--rt-amber);
+    background: var(--rt-amber-soft);
     overflow-wrap: anywhere;
   }
 
-  .pipeline p {
-    margin: 0.45rem 0 0;
-    color: #cbd5e1;
-    line-height: 1.6;
+  .formula-stages {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+    margin: 1.5rem 0 1.8rem;
   }
+
+  .formula-stages > article {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 0.9rem;
+    border: 1px solid #bfd7eb;
+    border-radius: 15px;
+    background: var(--rt-blue-soft);
+  }
+
+  .formula-stages > article.is-group { border-color: #d2bce9; background: var(--rt-violet-soft); }
+  .formula-stages > article.is-lookup { border-color: #b9ddca; background: var(--rt-green-soft); }
+
+  .formula-stages header small,
+  .formula-stages header strong { display: block; }
+  .formula-stages header small { color: var(--rt-blue); font-weight: 900; }
+  .formula-stages .is-group header small { color: var(--rt-violet); }
+  .formula-stages .is-lookup header small { color: var(--rt-green); }
+  .formula-stages header strong { margin-top: 0.25rem; color: var(--rt-ink); font-size: 0.9rem; }
+  .formula-stages code { display: block; margin-top: auto; padding-top: 0.65rem; color: var(--rt-blue); overflow-wrap: anywhere; }
+  .formula-stages .is-group code { color: var(--rt-violet); }
+  .formula-stages .is-lookup code { color: var(--rt-green); }
+
+  .formula-stages__tokens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    align-items: center;
+    margin: 0.75rem 0;
+  }
+
+  .formula-stages__tokens span {
+    padding: 0.35rem 0.42rem;
+    border: 1px solid #b9d4e9;
+    border-radius: 7px;
+    color: var(--rt-blue);
+    background: #fff;
+    font-size: 0.7rem;
+  }
+
+  .formula-stages__tokens i { color: #86a0b8; font-style: normal; }
+
+  .formula-stages__rows {
+    display: grid;
+    gap: 0.28rem;
+    margin: 0.75rem 0;
+  }
+
+  .formula-stages__rows > span,
+  .formula-stages__rows > strong {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.4rem;
+    padding: 0.36rem 0.42rem;
+    border: 1px solid #dbcbea;
+    border-radius: 7px;
+    color: var(--rt-text);
+    background: #fff;
+    font-size: 0.67rem;
+  }
+
+  .formula-stages__rows > strong {
+    color: var(--rt-violet);
+    border-color: #bda0dd;
+  }
+
+  .formula-stages__rows b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .formula-stages__rows em { color: var(--rt-green); font-style: normal; }
+
+  .formula-stages__match {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto 52px;
+    gap: 0.42rem;
+    align-items: center;
+    margin: 0.75rem 0;
+    padding: 0.65rem;
+    border: 1px solid #b9ddca;
+    border-radius: 9px;
+    background: #fff;
+  }
+
+  .formula-stages__match span { color: var(--rt-text); font-size: 0.72rem; }
+  .formula-stages__match i { color: var(--rt-green); font-size: 0.66rem; font-style: normal; }
+  .formula-stages__match strong { color: var(--rt-green); text-align: right; }
 
   .date-flow {
     display: grid;
-    gap: 0.55rem;
-    max-width: 680px;
-    margin-left: auto;
-    margin-right: auto;
+    max-width: 760px;
+    gap: 0.38rem;
+    margin: 2rem auto;
   }
 
   .date-flow > div {
     display: grid;
-    grid-template-columns: 90px minmax(0, 1fr) auto;
-    gap: 0.75rem;
+    grid-template-columns: 86px minmax(0, 1fr) auto;
+    gap: 0.7rem;
     align-items: center;
-    padding: 0.85rem 1rem;
-    border: 1px solid rgba(74, 222, 128, 0.2);
-    border-radius: 14px;
-    background: rgba(20, 83, 45, 0.1);
+    padding: 0.72rem 0.85rem;
+    border: 1px solid #c5dceb;
+    border-radius: 10px;
+    background: #f8fbff;
   }
 
-  .date-flow > i {
-    color: #64748b;
-    font-style: normal;
-    text-align: center;
-  }
+  .date-flow > div:nth-of-type(2) { border-color: #bcd8ec; background: var(--rt-blue-soft); }
+  .date-flow > div:nth-of-type(3) { border-color: #d4c2e8; background: var(--rt-violet-soft); }
+  .date-flow > div:nth-of-type(4) { border-color: #b9ddca; background: var(--rt-green-soft); }
+  .date-flow > i { color: #8aa0b5; font-style: normal; text-align: center; }
+  .date-flow span { color: var(--rt-blue); }
+  .date-flow strong { color: var(--rt-ink); }
+  .date-flow code { color: var(--rt-green); }
 
-  .date-flow span { color: #86efac; font-weight: 800; }
-  .date-flow strong { color: #f8fafc; }
-  .date-flow code { color: #cbd5e1; }
+  .final-flow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 0.65rem;
+    align-items: stretch;
+    margin: 2rem 0;
+  }
 
   .final-flow > div {
-    text-align: center;
+    padding: 1rem;
+    border: 1px solid #c7dbea;
+    border-radius: 14px;
+    background: #f8fbff;
   }
 
-  .final-flow span {
-    margin-top: 0.4rem;
-    color: #94a3b8;
-    font-size: 0.88rem;
+  .final-flow > div:nth-of-type(2) { border-color: #d4c2e8; background: var(--rt-violet-soft); }
+  .final-flow > div:nth-of-type(3) { border-color: #b9ddca; background: var(--rt-green-soft); }
+  .final-flow > div { text-align: center; }
+  .final-flow > i { align-self: center; color: #8aa0b5; font-style: normal; }
+  .final-flow small,
+  .final-flow strong,
+  .final-flow span { display: block; }
+  .final-flow small { color: var(--rt-blue); }
+  .final-flow strong { color: var(--rt-ink); }
+  .final-flow span { margin-top: 0.4rem; color: var(--rt-muted); font-size: 0.88rem; }
+
+  html[data-theme='dark'] .runtime-theater,
+  html[data-theme='dark'] .scan-board,
+  html[data-theme='dark'] .compression-lab,
+  html[data-theme='dark'] .take-lab,
+  html[data-theme='dark'] .formula-stages,
+  html[data-theme='dark'] .date-flow,
+  html[data-theme='dark'] .final-flow {
+    --rt-ink: #edf5fc;
+    --rt-text: #cfdeea;
+    --rt-muted: #99adbd;
+    --rt-line: #2d4960;
+    --rt-surface: #102233;
+    --rt-soft: #0d1d2b;
+    --rt-blue: #75baff;
+    --rt-blue-soft: #102a40;
+    --rt-violet: #c3a0f2;
+    --rt-violet-soft: #261f3a;
+    --rt-green: #79d4a7;
+    --rt-green-soft: #153329;
+    --rt-coral: #f29a87;
+    --rt-coral-soft: #3a241f;
+    --rt-amber: #e9bc72;
+    --rt-amber-soft: #352b1d;
+  }
+
+  html[data-theme='dark'] .runtime-theater,
+  html[data-theme='dark'] .compression-lab,
+  html[data-theme='dark'] .take-lab {
+    border-color: #31506a;
+    background: #0d1c2a;
+    box-shadow: none;
+  }
+
+  html[data-theme='dark'] .scan-board__source,
+  html[data-theme='dark'] .scan-board__targets,
+  html[data-theme='dark'] .scan-board__targets > div,
+  html[data-theme='dark'] .repeat-strip__source,
+  html[data-theme='dark'] .date-flow > div,
+  html[data-theme='dark'] .final-flow > div {
+    border-color: #304d64;
+    background: #102233;
+  }
+
+  html[data-theme='dark'] .runtime-index li,
+  html[data-theme='dark'] .runtime-stage,
+  html[data-theme='dark'] .mini-sheet,
+  html[data-theme='dark'] .key-builder > div span,
+  html[data-theme='dark'] .key-builder > b,
+  html[data-theme='dark'] .groupby-core,
+  html[data-theme='dark'] .take-columns section,
+  html[data-theme='dark'] .lookup-results > div,
+  html[data-theme='dark'] .runtime-formula-route,
+  html[data-theme='dark'] .runtime-core-formula,
+  html[data-theme='dark'] .repeat-strip,
+  html[data-theme='dark'] .repeat-strip__targets span,
+  html[data-theme='dark'] .compression-lab > section,
+  html[data-theme='dark'] .compression-lab__engine,
+  html[data-theme='dark'] .compression-table,
+  html[data-theme='dark'] .take-lab__table,
+  html[data-theme='dark'] .formula-stages__tokens span,
+  html[data-theme='dark'] .formula-stages__rows > span,
+  html[data-theme='dark'] .formula-stages__rows > strong,
+  html[data-theme='dark'] .formula-stages__match {
+    border-color: #304d64;
+    background: #102233;
+  }
+
+  html[data-theme='dark'] .runtime-core-formula > header {
+    border-color: #304d64;
+    background: #172c3e;
+  }
+
+  html[data-theme='dark'] .mini-sheet__head,
+  html[data-theme='dark'] .compression-table > div:first-child {
+    background: #172c3e;
+  }
+
+  html[data-theme='dark'] .mini-sheet span,
+  html[data-theme='dark'] .mini-sheet b,
+  html[data-theme='dark'] .take-columns code,
+  html[data-theme='dark'] .take-columns small,
+  html[data-theme='dark'] .take-columns span,
+  html[data-theme='dark'] .take-columns b,
+  html[data-theme='dark'] .take-lab__table span,
+  html[data-theme='dark'] .take-lab__table b,
+  html[data-theme='dark'] .take-lab__table strong,
+  html[data-theme='dark'] .take-lab__table code {
+    border-color: #2c475e;
+  }
+
+  @media (max-width: 900px) {
+    .runtime-index { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .runtime-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .repeat-strip__targets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-width: 760px) {
-    .perf-hero__compare,
+    .runtime-theater__header {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .runtime-theater__summary {
+      display: flex;
+      flex-basis: auto;
+      gap: 0.45rem;
+      align-items: baseline;
+      justify-content: center;
+    }
+
+    .runtime-index { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .runtime-grid,
     .scan-board,
-    .lookup-path,
-    .pipeline,
+    .compression-lab,
+    .take-lab,
+    .formula-stages,
     .final-flow {
       grid-template-columns: 1fr;
     }
 
-    .perf-hero__compare > i,
-    .lookup-path > i,
-    .pipeline > i,
     .final-flow > i {
       transform: rotate(90deg);
       justify-self: center;
     }
 
+    .runtime-stage { min-height: 0; }
+
+    .runtime-formula-route {
+      grid-template-columns: 1fr;
+    }
+
+    .runtime-core-formula > header {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .runtime-formula-route i {
+      transform: rotate(90deg);
+    }
+
+    .repeat-strip__body {
+      grid-template-columns: 1fr;
+    }
+
+    .repeat-strip__source { min-height: 72px; }
+
+    .compression-lab__engine {
+      min-height: 110px;
+      border-radius: 18px;
+    }
+
+    .take-lab__target,
+    .take-lab__return { text-align: left; }
+
     .scan-board__targets > div {
-      grid-template-columns: 70px minmax(0, 1fr);
+      grid-template-columns: 64px minmax(0, 1fr);
     }
 
     .scan-board__targets em {
@@ -849,7 +1881,20 @@ XLOOKUP(
 
     .date-flow > div {
       grid-template-columns: 1fr;
-      gap: 0.25rem;
     }
+  }
+
+  @media (max-width: 480px) {
+    .runtime-theater {
+      margin-right: -0.15rem;
+      margin-left: -0.15rem;
+      padding: 0.8rem;
+      border-radius: 18px;
+    }
+
+    .runtime-index span { font-size: 0.66rem; }
+    .repeat-strip__targets { grid-template-columns: 1fr; }
+    .take-columns { grid-template-columns: minmax(0, 1.35fr) minmax(54px, 0.65fr); }
+    .runtime-theater__conclusion { align-items: center; flex-direction: column; }
   }
 `}</style>
