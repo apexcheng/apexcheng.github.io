@@ -19,6 +19,7 @@
 | `src/content/posts/blog-project-architecture.mdx` | `实践` | 维护者视角的博客系统蓝图，覆盖仓库职责、内容分区、规则控制面、写作公开流程和静态发布边界 | 写本博客说明、仓库结构、内容维护规则和发布边界时参考 |
 | `src/content/posts/blog-code-structure-runtime.mdx` | `实践` | 开发者视角的博客运行蓝图，覆盖 URL 路由、Content Collection、MDX 渲染栈、静态构建、本地与 Pages 链路和代码定位 | 写本博客代码结构、运行流程、Astro 项目拆解和故障定位时参考 |
 | `src/content/posts/css-selector-for-automation-beginners.mdx` | `教程` | CSS 定位图解手册，覆盖稳定定位层级、属性匹配、关系与伪类、影刀文字定位、唯一性验证、排错路线和坏定位改造 | 写 CSS 选择器教学、网页元素定位、影刀编码版自动化、动态 class 处理和定位排错文章时参考 |
+| `src/content/posts/xpath-practical-guide.mdx` | `教程` | XPath 实战速查，覆盖基础路径、属性和文本定位、ancestor/following-sibling 关系定位、表格定位、动态网页选择器和稳定定位原则 | 写 XPath、浏览器自动化、影刀元素定位和 RPA 新人培训时参考 |
 | `src/content/posts/python-basic-assessment-20-questions.mdx` | `教程` | Python 基础考核题，包含 17 道基础编码题和 3 道基础理解题，覆盖类型转换、循环、字典、函数、文件、JSON、类、浅拷贝与默认参数，并提供可下载附件 | 写 Python 入门考核、基础练习题、编程能力检查和培训测验文章时参考 |
 | `src/content/posts/excel-functions-from-basic-to-intermediate.mdx` | `教程` | Excel 函数知识地图，把 57 个常用函数整理成 9 个函数家族，并说明基础函数、中级函数、综合应用和系列阅读路线 | 写 Excel / WPS 函数学习地图、函数分类、系列入口和表格能力分层文章时参考 |
 | `src/content/posts/excel-basic-functions-case-guide.mdx` | `教程` | Excel 基础函数案例教程，使用订单明细和商品资料两张示例表，逐个演示 39 个统计、条件、查找、文本、逻辑和日期函数的公式、结果与组合练习 | 写 Excel 基础函数实操、函数案例讲解、订单明细统计和新手练习文章时参考 |

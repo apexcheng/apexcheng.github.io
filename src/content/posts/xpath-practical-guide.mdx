@@ -1,0 +1,271 @@
+---
+title: XPath 实战速查：从基础语法到稳定元素定位
+description: 整理浏览器自动化和 RPA 开发中最常用的 XPath 写法，重点讲清文本、属性、关系定位和稳定选择器设计。
+date: 2026-08-22T08:50:00+08:00
+category: 教程
+tags:
+  - XPath
+  - 浏览器自动化
+  - RPA
+minutes: 10
+featured: false
+draft: false
+private: false
+---
+
+XPath 是浏览器自动化、RPA、爬虫开发中最常用的元素定位方式之一。
+
+很多新人学习 XPath 时，会关注“记住多少语法”，但实际项目中更重要的是：
+
+- 能否快速找到目标元素。
+- 能否写出网页改版后仍然稳定的定位方式。
+- 能否避免依赖容易变化的 class、坐标和固定位置。
+
+本文整理实际开发中高频使用的 XPath 写法。
+
+## 一、基础结构
+
+|语法|含义|
+|-|-|
+|`/`|从根节点开始|
+|`//`|匹配任意位置的后代节点|
+|`.`|当前节点|
+|`..`|父节点|
+|`@`|属性|
+
+例如：
+
+```xpath
+//button
+```
+
+查找页面所有按钮。
+
+```xpath
+//input
+```
+
+查找所有输入框。
+
+## 二、属性定位
+
+根据 id：
+
+```xpath
+//*[@id='main']
+```
+
+class 经常包含多个值：
+
+```html
+<div class="button primary large">
+```
+
+不要依赖完整 class：
+
+```xpath
+//*[contains(@class,'button')]
+```
+
+多个条件组合：
+
+```xpath
+//input[@type='text' and @name='username']
+```
+
+## 三、文本定位
+
+精确文本：
+
+```xpath
+//button[text()='登录']
+```
+
+模糊文本更适合复杂页面：
+
+```xpath
+//*[contains(.,'登录')]
+```
+
+`text()` 只匹配当前节点文本，而 `.` 会匹配当前节点和所有子节点文本。
+
+例如：
+
+```html
+<div>
+  <span>提交</span>
+</div>
+```
+
+此时：
+
+```xpath
+//div[text()='提交']
+```
+
+无法匹配。
+
+```xpath
+//div[contains(.,'提交')]
+```
+
+可以匹配。
+
+## 四、常用函数
+
+### contains
+
+包含判断：
+
+```xpath
+contains(@class,'active')
+```
+
+### starts-with
+
+开头匹配：
+
+```xpath
+starts-with(@name,'user')
+```
+
+### normalize-space
+
+去除文本空格：
+
+```xpath
+//button[normalize-space()='提交']
+```
+
+比直接使用 `text()` 更稳定。
+
+## 五、关系定位
+
+复杂后台系统中，经常需要根据一个已知元素寻找关联元素。
+
+### ancestor 向上查找父级
+
+例如根据按钮找到所在卡片：
+
+```xpath
+//button[text()='购买']/ancestor::div[1]
+```
+
+### following-sibling 查找后面的兄弟节点
+
+例如：
+
+```html
+<span>价格</span>
+<input>
+```
+
+定位输入框：
+
+```xpath
+//span[text()='价格']/following-sibling::input
+```
+
+## 六、表格定位
+
+后台系统大量使用表格。
+
+例如：
+
+|商品|价格|
+|-|-|
+|键盘|100|
+|鼠标|50|
+
+找到键盘所在行：
+
+```xpath
+//tr[td[text()='键盘']]
+```
+
+获取价格列：
+
+```xpath
+//tr[td[text()='键盘']]/td[2]
+```
+
+## 七、动态网页定位原则
+
+现代网页经常生成动态 class：
+
+```html
+<div class="a8f31_button">
+```
+
+刷新后可能变成：
+
+```html
+<div class="b91kx_button">
+```
+
+因此不要写：
+
+```xpath
+//*[@class='a8f31_button']
+```
+
+应该使用业务特征：
+
+```xpath
+//*[contains(@class,'button')]
+```
+
+## 八、XPath 调试
+
+Chrome 控制台可以直接测试：
+
+```javascript
+$x("//button[text()='登录']")
+```
+
+查看数量：
+
+```javascript
+$x("//div").length
+```
+
+## 九、实际项目定位优先级
+
+推荐顺序：
+
+1. 唯一 id。
+2. 稳定业务属性，例如 `data-id`、`aria-label`。
+3. 固定文本。
+4. 父子结构和关系定位。
+5. class 模糊匹配。
+6. 坐标点击。
+
+坐标点击应该作为最后手段，因为页面缩放、窗口大小和元素位置变化都会导致失败。
+
+## 十、常用 XPath TOP 10
+
+```xpath
+//*[@id='xxx']
+
+//*[contains(@class,'xxx')]
+
+//*[text()='xxx']
+
+//*[contains(.,'xxx')]
+
+//input[@placeholder='xxx']
+
+//div[@class='xxx']//span
+
+//tr[td='xxx']
+
+//xxx/ancestor::div[1]
+
+//xxx/following-sibling::xxx
+
+//xxx[last()]
+```
+
+XPath 的核心不是记住所有函数，而是理解网页结构。
+
+在影刀、浏览器自动化和爬虫项目中，能够写出稳定定位，比写出复杂 XPath 更重要。
