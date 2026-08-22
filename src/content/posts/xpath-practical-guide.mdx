@@ -1,271 +1,1916 @@
 ---
 title: XPath 实战速查：从基础语法到稳定元素定位
-description: 整理浏览器自动化和 RPA 开发中最常用的 XPath 写法，重点讲清文本、属性、关系定位和稳定选择器设计。
+description: 把 XPath 当作一条穿过 DOM 的路径，直观看懂基础语法、属性与文本筛选、关系轴、表格定位和稳定性优先级。
 date: 2026-08-22T08:50:00+08:00
+updated: 2026-08-22T09:30:00+08:00
 category: 教程
 tags:
   - XPath
   - 浏览器自动化
   - RPA
-minutes: 10
+minutes: 16
 featured: false
 draft: false
 private: false
 ---
 
-XPath 是浏览器自动化、RPA、爬虫开发中最常用的元素定位方式之一。
+import {
+  Anchor,
+  Bug,
+  CircleCheck,
+  CircleDot,
+  CircleX,
+  Crosshair,
+  Funnel,
+  GitBranch,
+  Link2,
+  Map,
+  MousePointer2,
+  Route,
+  ScanSearch,
+  Search,
+  ShieldCheck,
+  Table2,
+  Terminal,
+  TriangleAlert,
+  Type,
+} from '@lucide/astro';
 
-很多新人学习 XPath 时，会关注“记住多少语法”，但实际项目中更重要的是：
+XPath 不是一串需要死记的符号，而是一条在 DOM 中寻找元素的路径：先确定锚点，再向下搜索，用条件筛选，必要时借助关系轴，最后确认只命中一个目标。
 
-- 能否快速找到目标元素。
-- 能否写出网页改版后仍然稳定的定位方式。
-- 能否避免依赖容易变化的 class、坐标和固定位置。
+真正影响自动化稳定性的，不是 XPath 写得多复杂，而是这条路径依赖的信息会不会轻易变化。
 
-本文整理实际开发中高频使用的 XPath 写法。
+<div class="xpath-atlas xpath-atlas--hero" role="group" aria-label="XPath 路径地图与定位稳定性优先级">
+  <div class="xpath-atlas-head">
+    <div class="xpath-atlas-title">
+      <span class="xpath-atlas-icon"><Map size={22} strokeWidth={1.8} aria-hidden="true" /></span>
+      <div>
+        <span>01 · XPATH ROUTE MAP</span>
+        <strong>XPath 路径地图</strong>
+      </div>
+    </div>
+    <p>从宽到窄，逐步缩小范围；目标不是“能找到”，而是“稳定且唯一地找到”。</p>
+  </div>
 
-## 一、基础结构
+  <div class="xpath-atlas-grid">
+    <div class="xpath-route" aria-label="XPath 定位五步路线">
+      <div class="xpath-route-step">
+        <b>1</b>
+        <span class="xpath-route-icon"><Anchor size={21} strokeWidth={1.8} aria-hidden="true" /></span>
+        <div><strong>锚点</strong><p>从稳定的父级或业务区域开始。</p><code>{"//form[@id='loginForm']"}</code></div>
+      </div>
+      <div class="xpath-route-step">
+        <b>2</b>
+        <span class="xpath-route-icon"><Search size={21} strokeWidth={1.8} aria-hidden="true" /></span>
+        <div><strong>后代搜索</strong><p>沿 DOM 结构向下寻找候选。</p><code>.//button</code></div>
+      </div>
+      <div class="xpath-route-step">
+        <b>3</b>
+        <span class="xpath-route-icon"><Funnel size={21} strokeWidth={1.8} aria-hidden="true" /></span>
+        <div><strong>条件筛选</strong><p>用属性或文本过滤候选元素。</p><code>{"[@type='submit']"}</code></div>
+      </div>
+      <div class="xpath-route-step">
+        <b>4</b>
+        <span class="xpath-route-icon"><GitBranch size={21} strokeWidth={1.8} aria-hidden="true" /></span>
+        <div><strong>关系定位</strong><p>借助父级、同级关系找到关联元素。</p><code>following-sibling::input</code></div>
+      </div>
+      <div class="xpath-route-step">
+        <b>5</b>
+        <span class="xpath-route-icon"><Crosshair size={21} strokeWidth={1.8} aria-hidden="true" /></span>
+        <div><strong>唯一目标</strong><p>结果可见、可交互，并且只命中一个。</p><code>(.//button)[1]</code></div>
+      </div>
+    </div>
 
-|语法|含义|
-|-|-|
-|`/`|从根节点开始|
-|`//`|匹配任意位置的后代节点|
-|`.`|当前节点|
-|`..`|父节点|
-|`@`|属性|
+    <div class="xpath-dom-specimen">
+      <div class="xpath-subhead"><span>DOM 结构样本</span><small>蓝色行为当前目标</small></div>
+      <ol class="xpath-dom-code" aria-label="登录表单 DOM 示例">
+        <li><code>&lt;html&gt;</code></li>
+        <li><code>&nbsp;&nbsp;&lt;body&gt;</code></li>
+        <li><code>{'    <main id="app">'}</code></li>
+        <li><code>{'      <form id="loginForm">'}</code></li>
+        <li><code>{'        <div class="field">'}</code></li>
+        <li><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;label&gt;用户名&lt;/label&gt;</code></li>
+        <li><code>{'          <input id="username" />'}</code></li>
+        <li><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;</code></li>
+        <li><code>{'        <div class="actions">'}</code></li>
+        <li class="is-target"><code>{'          <button type="submit">登录</button>'}</code></li>
+        <li><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;</code></li>
+        <li><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/form&gt;</code></li>
+        <li><code>&nbsp;&nbsp;&nbsp;&nbsp;&lt;/main&gt;</code></li>
+        <li><code>&nbsp;&nbsp;&lt;/body&gt;</code></li>
+        <li><code>&lt;/html&gt;</code></li>
+      </ol>
+      <div class="xpath-dom-result">
+        <span>最终路径</span>
+        <code>{"//form[@id='loginForm']//button[@type='submit']"}</code>
+      </div>
+    </div>
 
-例如：
+    <div class="xpath-priority">
+      <div class="xpath-subhead"><span>定位稳定性优先级</span><small>越往下，维护风险越高</small></div>
+      <div class="xpath-priority-list">
+        <div class="is-safe">
+          <span><ShieldCheck size={21} strokeWidth={1.8} aria-hidden="true" /></span>
+          <div><strong>稳定业务属性</strong><p>优先使用具备业务或测试语义的属性。</p><code>{"//*[@data-testid='login']"}</code></div>
+        </div>
+        <div class="is-structural">
+          <span><Link2 size={21} strokeWidth={1.8} aria-hidden="true" /></span>
+          <div><strong>结构 + 属性组合</strong><p>单一条件不够时，再补必要范围。</p><code>{"//form[@id='loginForm']//button"}</code></div>
+        </div>
+        <div class="is-caution">
+          <span><TriangleAlert size={21} strokeWidth={1.8} aria-hidden="true" /></span>
+          <div><strong>文本或部分匹配</strong><p>可读性高，但要考虑文案变化和误匹配。</p><code>{"//button[contains(.,'登录')]"}</code></div>
+        </div>
+        <div class="is-risk">
+          <span><MousePointer2 size={21} strokeWidth={1.8} aria-hidden="true" /></span>
+          <div><strong>坐标点击（最后手段）</strong><p>页面缩放、窗口和布局变化都会让它失效。</p><code>click(560, 420)</code></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="xpath-atlas-verdict">
+    <Route size={20} strokeWidth={1.8} aria-hidden="true" />
+    <strong>先确定范围，再选择特征，最后验证唯一性。路径越能表达业务含义，后期越容易维护。</strong>
+  </div>
+</div>
+
+## 一、五个基础符号，分别控制路径的哪一段？
+
+基础语法不需要孤立记忆。把它们放回一条路径中，就能看见每个符号负责什么。
+
+<div class="xpath-panel" role="group" aria-label="XPath 五个基础符号">
+  <div class="xpath-panel-head">
+    <div><span>02 · PATH TOKENS</span><strong>五个符号，一条路径</strong></div>
+    <p>起点、搜索范围、当前上下文和属性条件，共同决定 XPath 从哪里走到哪里。</p>
+  </div>
+  <div class="xpath-token-grid">
+    <div><code>/</code><strong>从根开始</strong><p>绝对路径从文档根节点逐层向下。</p></div>
+    <div class="is-primary"><code>//</code><strong>搜索后代</strong><p>从当前上下文中寻找任意深度的后代节点。</p></div>
+    <div><code>.</code><strong>当前节点</strong><p>表示当前上下文，也可读取当前节点完整字符串值。</p></div>
+    <div><code>..</code><strong>父节点</strong><p>从当前节点返回上一层父节点。</p></div>
+    <div><code>@</code><strong>属性</strong><p>在条件中读取 id、name、data-* 等属性。</p></div>
+  </div>
+  <div class="xpath-path-compare">
+    <div class="is-risk">
+      <span>不优先 · 绝对路径</span>
+      <code>/html/body/div[2]/div[1]/form/button</code>
+      <p>依赖完整层级和位置，页面插入一层容器就可能失效。</p>
+    </div>
+    <div class="is-safe">
+      <span>更稳定 · 语义路径</span>
+      <code>{"//form[@id='loginForm']//button[@type='submit']"}</code>
+      <p>直接表达“登录表单里的提交按钮”，结构变化时更容易维护。</p>
+    </div>
+  </div>
+</div>
+
+最常见的候选搜索很简单：
 
 ```xpath
 //button
 ```
 
-查找页面所有按钮。
+它会找到当前文档中的所有按钮。若已经拿到某个容器元素，则用 `.//` 从当前容器继续搜索，避免重新扫整个页面：
 
 ```xpath
-//input
+.//input
 ```
 
-查找所有输入框。
+## 二、属性定位：先找不会轻易变化的业务特征
 
-## 二、属性定位
+属性定位的关键不是“看到什么就写什么”，而是判断哪个属性真正表达元素用途。
 
-根据 id：
+<div class="xpath-panel" role="group" aria-label="XPath 属性定位优先级">
+  <div class="xpath-panel-head">
+    <div><span>03 · ATTRIBUTE ANCHORS</span><strong>属性就是路径的锚点</strong></div>
+    <p>稳定且有业务含义的属性优先；展示文案和随机样式名只适合作为补充条件。</p>
+  </div>
+  <div class="xpath-anchor-lanes">
+    <div class="is-safe">
+      <span><ShieldCheck size={20} strokeWidth={1.8} aria-hidden="true" />优先</span>
+      <strong>业务 / 测试属性</strong>
+      <code>{"//*[@data-testid='submit-order']"}</code>
+      <code>{"//input[@name='username']"}</code>
+      <code>{"//*[@aria-label='关闭']"}</code>
+    </div>
+    <div class="is-stable">
+      <span><Anchor size={20} strokeWidth={1.8} aria-hidden="true" />确认稳定后使用</span>
+      <strong>唯一且有意义的 id</strong>
+      <code>{"//*[@id='main']"}</code>
+      <p>“唯一”不等于“稳定”，仍要确认它不是运行时随机生成。</p>
+    </div>
+    <div class="is-caution">
+      <span><Funnel size={20} strokeWidth={1.8} aria-hidden="true" />需要验证</span>
+      <strong>class 片段匹配</strong>
+      <code>{"//*[contains(@class,'button')]"}</code>
+      <p>可能误命中 `button-group`，要结合业务范围并检查数量。</p>
+    </div>
+  </div>
+  <div class="xpath-class-token">
+    <div><span>class 是多个独立词时</span><code>{'<div class="button primary large">'}</code></div>
+    <div><span>严格匹配其中一个 class token</span><code>{"//*[contains(concat(' ', normalize-space(@class), ' '), ' button ')]"}</code></div>
+  </div>
+</div>
 
-```xpath
-//*[@id='main']
-```
-
-class 经常包含多个值：
-
-```html
-<div class="button primary large">
-```
-
-不要依赖完整 class：
-
-```xpath
-//*[contains(@class,'button')]
-```
-
-多个条件组合：
+多个条件只有在确实需要消除歧义时再组合：
 
 ```xpath
 //input[@type='text' and @name='username']
 ```
 
-## 三、文本定位
+条件不是越多越稳定。多写一个会变化的条件，反而多一个失效点。
 
-精确文本：
+## 三、文本定位：`text()` 和 `.` 到底差在哪？
 
-```xpath
-//button[text()='登录']
-```
+文本定位最常见的坑，是页面看起来写着“提交”，但文本实际包在子节点中。
 
-模糊文本更适合复杂页面：
-
-```xpath
-//*[contains(.,'登录')]
-```
-
-`text()` 只匹配当前节点文本，而 `.` 会匹配当前节点和所有子节点文本。
-
-例如：
-
-```html
-<div>
+<div class="xpath-panel" role="group" aria-label="XPath text 与点号文本定位对比">
+  <div class="xpath-panel-head">
+    <div><span>04 · TEXT MATCHING</span><strong>看得见的文字，不一定是直接文本</strong></div>
+    <p>`text()` 只检查当前元素的直接文本节点；`.` 的字符串值会包含所有后代文本。</p>
+  </div>
+  <div class="xpath-text-lab">
+    <div class="xpath-text-source">
+      <span>页面结构</span>
+      <pre><code class="language-html">{`<div class="dialog-action">
   <span>提交</span>
+</div>`}</code></pre>
+    </div>
+    <div class="xpath-text-result is-fail">
+      <CircleX size={24} strokeWidth={1.8} aria-hidden="true" />
+      <span>直接文本</span>
+      <code>{"//div[text()='提交']"}</code>
+      <strong>0 个结果</strong>
+      <p>`div` 自身没有值为“提交”的直接文本节点。</p>
+    </div>
+    <div class="xpath-text-result is-pass">
+      <CircleCheck size={24} strokeWidth={1.8} aria-hidden="true" />
+      <span>完整字符串值</span>
+      <code>{"//div[normalize-space(.)='提交']"}</code>
+      <strong>1 个结果</strong>
+      <p>`.` 读取了子节点 `span` 中的文字，并清理首尾空白。</p>
+    </div>
+  </div>
+  <div class="xpath-text-rules">
+    <div><Type size={20} strokeWidth={1.8} aria-hidden="true" /><strong>精确文本</strong><code>{"//button[normalize-space(.)='登录']"}</code></div>
+    <div><ScanSearch size={20} strokeWidth={1.8} aria-hidden="true" /><strong>包含文本</strong><code>{"//*[contains(normalize-space(.),'登录')]"}</code></div>
+  </div>
 </div>
-```
 
-此时：
+模糊文本的范围更宽，复杂页面中可能同时命中按钮、弹窗和外层容器。能精确匹配时，不要先用 `contains()`。
 
-```xpath
-//div[text()='提交']
-```
+## 四、三个常用函数，分别处理什么变化？
 
-无法匹配。
+函数的作用可以归纳成三类：匹配片段、匹配前缀、清理空白。
 
-```xpath
-//div[contains(.,'提交')]
-```
+<div class="xpath-panel xpath-panel--functions" role="group" aria-label="XPath 三个常用函数">
+  <div class="xpath-panel-head">
+    <div><span>05 · FUNCTION TRACK</span><strong>三个函数，解决三种变化</strong></div>
+    <p>函数不是为了让 XPath 变复杂，而是为了把不可控变化压缩成稳定片段。</p>
+  </div>
+  <div class="xpath-function-track">
+    <div>
+      <b>01</b><strong>contains()</strong><span>值里包含稳定片段</span>
+      <code>{"contains(@class,'active')"}</code>
+      <p>适合动态属性中仍保留固定业务片段的情况。</p>
+    </div>
+    <div>
+      <b>02</b><strong>starts-with()</strong><span>值的开头固定</span>
+      <code>{"starts-with(@name,'user')"}</code>
+      <p>后缀会变化，但前缀仍能表达同一类字段。</p>
+    </div>
+    <div>
+      <b>03</b><strong>normalize-space()</strong><span>清理首尾与连续空白</span>
+      <code>{"//button[normalize-space(.)='提交']"}</code>
+      <p>处理换行、缩进和多余空格，比直接比较文本更稳定。</p>
+    </div>
+  </div>
+</div>
 
-可以匹配。
+## 五、关系定位：先找到锚点，再沿关系轴移动
 
-## 四、常用函数
+复杂后台页面里，目标元素不一定有好用属性，但它附近通常有稳定标签、标题或按钮。此时不要从页面根部硬写长路径，而是先找已知元素，再沿 DOM 关系移动。
 
-### contains
+<div class="xpath-panel" role="group" aria-label="XPath ancestor 与 following-sibling 关系定位">
+  <div class="xpath-panel-head">
+    <div><span>06 · RELATION AXES</span><strong>把已知元素当作锚点</strong></div>
+    <p>关系轴表达“向上找父级”或“在同一层向后找兄弟”，比依赖固定位置更容易读懂。</p>
+  </div>
+  <div class="xpath-axis-lab">
+    <div class="xpath-axis-dom">
+      <span>DOM 结构</span>
+      <div class="xpath-axis-node is-parent"><code>{'<div class="product-card">'}</code><small>商品卡片</small></div>
+      <div class="xpath-axis-node"><code>&lt;span&gt;价格&lt;/span&gt;</code><small>已知文本</small></div>
+      <div class="xpath-axis-node is-target"><code>{'<input name="price">'}</code><small>目标输入框</small></div>
+      <div class="xpath-axis-node"><code>&lt;button&gt;购买&lt;/button&gt;</code><small>已知按钮</small></div>
+    </div>
+    <div class="xpath-axis-routes">
+      <div>
+        <span><Anchor size={20} strokeWidth={1.8} aria-hidden="true" />向上</span>
+        <strong>ancestor:: 找最近父级</strong>
+        <code>{"//button[normalize-space(.)='购买']/ancestor::div[1]"}</code>
+        <p>从“购买”按钮回到它所在的第一层 `div` 卡片。</p>
+      </div>
+      <div>
+        <span><GitBranch size={20} strokeWidth={1.8} aria-hidden="true" />向后</span>
+        <strong>following-sibling:: 找后续兄弟</strong>
+        <code>{"//span[normalize-space(.)='价格']/following-sibling::input"}</code>
+        <p>从“价格”标签移动到同一父级下后面的输入框。</p>
+      </div>
+    </div>
+  </div>
+</div>
 
-包含判断：
+关系定位依赖页面结构，但它依赖的是“业务关系”，不是“第几个 `div`”。仍然要在页面改版后复查锚点与目标是否保持同一层级关系。
 
-```xpath
-contains(@class,'active')
-```
+## 六、表格定位：先锁定行，再读取列
 
-### starts-with
+表格定位最清晰的方式，是把动作拆成两步：先通过业务文本找到目标行，再从该行读取指定列。
 
-开头匹配：
+<div class="xpath-panel" role="group" aria-label="XPath 表格行列定位过程">
+  <div class="xpath-panel-head">
+    <div><span>07 · TABLE ROUTE</span><strong>从业务值走到目标单元格</strong></div>
+    <p>先把搜索范围缩小到一行，再取列；不要直接依赖整张表里的绝对位置。</p>
+  </div>
+  <div class="xpath-table-lab">
+    <div class="xpath-table-sample">
+      <Table2 size={22} strokeWidth={1.8} aria-hidden="true" />
+      <table>
+        <thead><tr><th>商品</th><th>价格</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr class="is-target"><td>键盘</td><td>100</td><td>在售</td></tr>
+          <tr><td>鼠标</td><td>50</td><td>在售</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="xpath-table-steps">
+      <div><b>1</b><span>先锁定“键盘”所在行</span><code>{"//tr[td[normalize-space(.)='键盘']]"}</code></div>
+      <div><b>2</b><span>再读取这一行的第 2 列</span><code>{"//tr[td[normalize-space(.)='键盘']]/td[2]"}</code></div>
+      <div class="is-result"><Crosshair size={21} strokeWidth={1.8} aria-hidden="true" /><span>最终结果</span><strong>100</strong></div>
+    </div>
+  </div>
+</div>
 
-```xpath
-starts-with(@name,'user')
-```
+如果列顺序也可能变化，应该先根据表头确定列号，再组合 XPath，而不是永久写死 `td[2]`。
 
-### normalize-space
+## 七、动态页面：匹配稳定片段，不复制随机值
 
-去除文本空格：
+现代前端经常为 class 或 id 生成随机前后缀。复制一次完整值，往往只能保证“现在能用”。
 
-```xpath
-//button[normalize-space()='提交']
-```
+<div class="xpath-panel" role="group" aria-label="动态 class 前后变化与稳定片段定位">
+  <div class="xpath-panel-head">
+    <div><span>08 · DYNAMIC CLASS</span><strong>变化的是随机段，保留的是业务段</strong></div>
+    <p>先对比刷新前后，识别稳定片段；再结合业务范围和唯一性验证。</p>
+  </div>
+  <div class="xpath-dynamic-compare">
+    <div><span>刷新前</span><code>{'<div class="a8f31_button">'}</code></div>
+    <div><span>刷新后</span><code>{'<div class="b91kx_button">'}</code></div>
+    <div class="is-stable"><span>稳定片段</span><code>button</code></div>
+  </div>
+  <div class="xpath-dynamic-result">
+    <div class="is-fail"><CircleX size={20} strokeWidth={1.8} aria-hidden="true" /><span>不要复制完整随机值</span><code>{"//*[@class='a8f31_button']"}</code></div>
+    <div class="is-pass"><CircleCheck size={20} strokeWidth={1.8} aria-hidden="true" /><span>在明确范围内匹配稳定片段</span><code>{"//section[@data-module='actions']//*[contains(@class,'_button')]"}</code></div>
+  </div>
+</div>
 
-比直接使用 `text()` 更稳定。
+`contains()` 只是放宽匹配条件，不会自动让选择器变稳定。稳定片段是否唯一、所在范围是否正确，仍然需要调试验证。
 
-## 五、关系定位
+## 八、XPath 调试：先看结果是 0、1 还是多个
 
-复杂后台系统中，经常需要根据一个已知元素寻找关联元素。
+调试 XPath 时，第一步不是点击，而是查看匹配数量和实际节点。
 
-### ancestor 向上查找父级
+<div class="xpath-console" role="group" aria-label="XPath 浏览器控制台调试示例">
+  <div class="xpath-console-head">
+    <div><Terminal size={21} strokeWidth={1.8} aria-hidden="true" /><span>XPATH VALIDATION CONSOLE</span></div>
+    <small>Chrome DevTools</small>
+  </div>
+  <div class="xpath-console-query">
+    <span>查询</span>
+    <code>{`$x("//button[normalize-space(.)='登录']")`}</code>
+  </div>
+  <div class="xpath-console-counts">
+    <div class="is-zero"><CircleX size={22} strokeWidth={1.8} aria-hidden="true" /><b>0</b><strong>未找到</strong><p>检查语法、加载状态、iframe 和弹窗上下文。</p></div>
+    <div class="is-one"><CircleCheck size={22} strokeWidth={1.8} aria-hidden="true" /><b>1</b><strong>理想结果</strong><p>继续确认文本、属性和业务语义是否正确。</p></div>
+    <div class="is-many"><Bug size={22} strokeWidth={1.8} aria-hidden="true" /><b>2+</b><strong>范围过宽</strong><p>补充业务容器或必要条件，不直接点击第一个。</p></div>
+  </div>
+  <div class="xpath-console-footer"><span>只查看数量</span><code>{'$x("//div").length'}</code></div>
+</div>
 
-例如根据按钮找到所在卡片：
+在影刀或其它 RPA 工具中，也应该先获取候选集合并检查数量。把“0 个”和“多个”变成明确错误，比静默点击错误元素更安全。
 
-```xpath
-//button[text()='购买']/ancestor::div[1]
-```
+## 九、实际项目中，按什么顺序选择定位方式？
 
-### following-sibling 查找后面的兄弟节点
+定位优先级取决于稳定性和业务语义，不取决于语法看起来是否高级。
 
-例如：
+<div class="xpath-panel" role="group" aria-label="实际项目 XPath 定位优先级">
+  <div class="xpath-panel-head">
+    <div><span>09 · STABILITY LADDER</span><strong>越接近业务语义，越值得优先使用</strong></div>
+    <p>先用最稳定的信息完成定位；只有前一层不足以唯一命中时，才进入下一层。</p>
+  </div>
+  <ol class="xpath-stability-ladder">
+    <li class="is-best"><b>1</b><div><strong>稳定业务 / 测试属性</strong><span>`data-*`、`name`、`aria-label`</span></div><small>优先</small></li>
+    <li><b>2</b><div><strong>稳定且有意义的 id</strong><span>确认不是随机生成，并且页面中唯一</span></div><small>稳定</small></li>
+    <li><b>3</b><div><strong>固定文本</strong><span>使用 `normalize-space(.)` 处理空白与子节点</span></div><small>可读</small></li>
+    <li><b>4</b><div><strong>业务范围 + 关系轴</strong><span>父级、同级、表格行列等结构关系</span></div><small>需复查结构</small></li>
+    <li><b>5</b><div><strong>class 片段匹配</strong><span>限定范围，并验证 0 / 1 / 多个</span></div><small>较宽松</small></li>
+    <li class="is-last"><b>6</b><div><strong>坐标点击</strong><span>受缩放、窗口大小和元素位置影响</span></div><small>最后手段</small></li>
+  </ol>
+</div>
 
-```html
-<span>价格</span>
-<input>
-```
-
-定位输入框：
-
-```xpath
-//span[text()='价格']/following-sibling::input
-```
-
-## 六、表格定位
-
-后台系统大量使用表格。
-
-例如：
-
-|商品|价格|
-|-|-|
-|键盘|100|
-|鼠标|50|
-
-找到键盘所在行：
-
-```xpath
-//tr[td[text()='键盘']]
-```
-
-获取价格列：
-
-```xpath
-//tr[td[text()='键盘']]/td[2]
-```
-
-## 七、动态网页定位原则
-
-现代网页经常生成动态 class：
-
-```html
-<div class="a8f31_button">
-```
-
-刷新后可能变成：
-
-```html
-<div class="b91kx_button">
-```
-
-因此不要写：
-
-```xpath
-//*[@class='a8f31_button']
-```
-
-应该使用业务特征：
-
-```xpath
-//*[contains(@class,'button')]
-```
-
-## 八、XPath 调试
-
-Chrome 控制台可以直接测试：
-
-```javascript
-$x("//button[text()='登录']")
-```
-
-查看数量：
-
-```javascript
-$x("//div").length
-```
-
-## 九、实际项目定位优先级
-
-推荐顺序：
-
-1. 唯一 id。
-2. 稳定业务属性，例如 `data-id`、`aria-label`。
-3. 固定文本。
-4. 父子结构和关系定位。
-5. class 模糊匹配。
-6. 坐标点击。
-
-坐标点击应该作为最后手段，因为页面缩放、窗口大小和元素位置变化都会导致失败。
+如果一个定位必须依赖位置，优先回头确认页面是否存在更稳定的父容器、业务字段或可读文本。
 
 ## 十、常用 XPath TOP 10
 
-```xpath
-//*[@id='xxx']
+最后把高频写法按用途收拢。复制前先替换示例值，并在实际页面验证匹配数量。
 
-//*[contains(@class,'xxx')]
+<div class="xpath-recipes" role="group" aria-label="常用 XPath 十个模板">
+  <div><b>01</b><span>稳定 id</span><code>{"//*[@id='xxx']"}</code></div>
+  <div><b>02</b><span>class 片段</span><code>{"//*[contains(@class,'xxx')]"}</code></div>
+  <div><b>03</b><span>精确文本</span><code>{"//*[normalize-space(.)='xxx']"}</code></div>
+  <div><b>04</b><span>包含文本</span><code>{"//*[contains(normalize-space(.),'xxx')]"}</code></div>
+  <div><b>05</b><span>输入框属性</span><code>{"//input[@placeholder='xxx']"}</code></div>
+  <div><b>06</b><span>先限范围</span><code>{"//div[@data-module='xxx']//span"}</code></div>
+  <div><b>07</b><span>表格目标行</span><code>{"//tr[td[normalize-space(.)='xxx']]"}</code></div>
+  <div><b>08</b><span>最近父级</span><code>//xxx/ancestor::div[1]</code></div>
+  <div><b>09</b><span>后续兄弟</span><code>//xxx/following-sibling::xxx</code></div>
+  <div><b>10</b><span>最后一个</span><code>(//xxx)[last()]</code></div>
+</div>
 
-//*[text()='xxx']
+<div class="xpath-final-verdict">
+  <CircleDot size={23} strokeWidth={1.8} aria-hidden="true" />
+  <div><span>最终判断</span><strong>XPath 的核心不是记住所有函数，而是理解网页结构，并把定位过程写成一条稳定、可读、可验证的路径。</strong></div>
+</div>
 
-//*[contains(.,'xxx')]
+在影刀、浏览器自动化和爬虫项目中，能写出稳定定位，比写出复杂 XPath 更重要。
 
-//input[@placeholder='xxx']
+<style>{`
+  .xpath-atlas,
+  .xpath-panel,
+  .xpath-console,
+  .xpath-recipes,
+  .xpath-final-verdict {
+    --xa-ink: #0f1d36;
+    --xa-muted: #5f6f86;
+    --xa-soft: #8795a9;
+    --xa-line: #dbe5f1;
+    --xa-line-strong: #cbd8e8;
+    --xa-paper: #ffffff;
+    --xa-paper-soft: #f7faff;
+    --xa-blue: #1769e0;
+    --xa-blue-soft: #edf5ff;
+    --xa-cyan: #0b8f83;
+    --xa-cyan-soft: #ebf9f6;
+    --xa-amber: #c77909;
+    --xa-amber-soft: #fff7e8;
+    --xa-red: #d74343;
+    --xa-red-soft: #fff1f1;
+    color: var(--xa-ink);
+    font-family: inherit;
+  }
 
-//div[@class='xxx']//span
+  .xpath-atlas *,
+  .xpath-panel *,
+  .xpath-console *,
+  .xpath-recipes *,
+  .xpath-final-verdict * {
+    box-sizing: border-box;
+  }
 
-//tr[td='xxx']
+  .xpath-atlas {
+    background: var(--xa-paper);
+    border: 1px solid var(--xa-line-strong);
+    border-radius: 24px;
+    box-shadow: 0 22px 56px rgba(29, 63, 108, 0.08);
+    margin: 30px 0 38px -36px;
+    overflow: hidden;
+    width: calc(100% + 72px);
+  }
 
-//xxx/ancestor::div[1]
+  .xpath-atlas-head,
+  .xpath-panel-head {
+    align-items: end;
+    display: flex;
+    gap: 24px;
+    justify-content: space-between;
+  }
 
-//xxx/following-sibling::xxx
+  .xpath-atlas-head {
+    border-bottom: 1px solid var(--xa-line);
+    padding: 24px 28px 20px;
+  }
 
-//xxx[last()]
-```
+  .xpath-atlas-title {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+  }
 
-XPath 的核心不是记住所有函数，而是理解网页结构。
+  .xpath-atlas-icon {
+    align-items: center;
+    background: var(--xa-blue-soft);
+    border: 1px solid #cfe1fb;
+    border-radius: 12px;
+    color: var(--xa-blue);
+    display: inline-flex;
+    height: 42px;
+    justify-content: center;
+    width: 42px;
+  }
 
-在影刀、浏览器自动化和爬虫项目中，能够写出稳定定位，比写出复杂 XPath 更重要。
+  .xpath-atlas-title div,
+  .xpath-panel-head div {
+    display: grid;
+    gap: 4px;
+  }
+
+  .xpath-atlas-title div > span,
+  .xpath-panel-head div > span {
+    color: var(--xa-blue);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+  }
+
+  .xpath-atlas-title strong,
+  .xpath-panel-head strong {
+    color: var(--xa-ink);
+    font-size: 22px;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+  }
+
+  .xpath-atlas-head > p,
+  .xpath-panel-head > p {
+    color: var(--xa-muted);
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 440px;
+    text-align: right;
+  }
+
+  .xpath-atlas-grid {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.32fr) minmax(0, 0.95fr);
+    padding: 26px 28px 28px;
+  }
+
+  .xpath-route {
+    display: grid;
+    gap: 0;
+    min-width: 0;
+    position: relative;
+  }
+
+  .xpath-route::before {
+    background: var(--xa-blue);
+    bottom: 32px;
+    content: '';
+    left: 14px;
+    opacity: 0.86;
+    position: absolute;
+    top: 24px;
+    width: 2px;
+  }
+
+  .xpath-route-step {
+    display: grid;
+    gap: 9px;
+    grid-template-columns: 30px 30px minmax(0, 1fr);
+    min-height: 112px;
+    position: relative;
+  }
+
+  .xpath-route-step > b {
+    align-items: center;
+    background: var(--xa-blue);
+    border: 3px solid var(--xa-paper);
+    border-radius: 999px;
+    color: #fff;
+    display: inline-flex;
+    font-size: 12px;
+    height: 30px;
+    justify-content: center;
+    position: relative;
+    width: 30px;
+    z-index: 1;
+  }
+
+  .xpath-route-icon {
+    color: var(--xa-ink);
+    display: inline-flex;
+    padding-top: 4px;
+  }
+
+  .xpath-route-step > div {
+    min-width: 0;
+  }
+
+  .xpath-route-step strong {
+    display: block;
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .xpath-route-step p {
+    color: var(--xa-muted);
+    font-size: 12px;
+    line-height: 1.55;
+    margin: 5px 0 8px;
+  }
+
+  .xpath-route-step code,
+  .xpath-dom-result code,
+  .xpath-priority code,
+  .xpath-path-compare code,
+  .xpath-anchor-lanes code,
+  .xpath-class-token code,
+  .xpath-text-result code,
+  .xpath-text-rules code,
+  .xpath-function-track code,
+  .xpath-axis-routes code,
+  .xpath-axis-node code,
+  .xpath-table-steps code,
+  .xpath-dynamic-compare code,
+  .xpath-dynamic-result code,
+  .xpath-console code,
+  .xpath-recipes code {
+    background: var(--xa-blue-soft);
+    border: 1px solid #d5e5fa;
+    border-radius: 7px;
+    color: #1458b8;
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.55;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    padding: 5px 7px;
+    white-space: normal;
+  }
+
+  .xpath-dom-specimen,
+  .xpath-priority {
+    min-width: 0;
+  }
+
+  .xpath-subhead {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    margin-bottom: 11px;
+  }
+
+  .xpath-subhead span {
+    color: var(--xa-ink);
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .xpath-subhead small {
+    color: var(--xa-soft);
+    font-size: 10px;
+  }
+
+  .xpath-dom-code {
+    background: #fbfdff;
+    border: 1px solid var(--xa-line);
+    border-radius: 16px;
+    display: grid;
+    list-style: none;
+    margin: 0;
+    min-height: 490px;
+    overflow: hidden;
+    padding: 14px 0;
+  }
+
+  .xpath-dom-code li {
+    border-left: 3px solid transparent;
+    color: #4f6179;
+    font-size: 11px;
+    line-height: 1.45;
+    margin: 0;
+    min-width: 0;
+    padding: 4px 12px;
+  }
+
+  .xpath-dom-code li code {
+    background: transparent;
+    border: 0;
+    color: inherit;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    padding: 0;
+    white-space: pre-wrap;
+  }
+
+  .xpath-dom-code li.is-target {
+    background: var(--xa-blue-soft);
+    border-left-color: var(--xa-blue);
+    color: #1157b6;
+    font-weight: 800;
+  }
+
+  .xpath-dom-result {
+    background: var(--xa-paper-soft);
+    border: 1px solid var(--xa-line);
+    border-radius: 12px;
+    display: grid;
+    gap: 7px;
+    margin-top: 12px;
+    padding: 11px;
+  }
+
+  .xpath-dom-result span {
+    color: var(--xa-muted);
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .xpath-priority-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .xpath-priority-list > div {
+    border-bottom: 1px solid var(--xa-line);
+    display: grid;
+    gap: 9px;
+    grid-template-columns: 28px minmax(0, 1fr);
+    padding: 2px 0 13px;
+  }
+
+  .xpath-priority-list > div:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .xpath-priority-list > div > span {
+    display: inline-flex;
+    padding-top: 2px;
+  }
+
+  .xpath-priority-list strong {
+    display: block;
+    font-size: 14px;
+  }
+
+  .xpath-priority-list p {
+    color: var(--xa-muted);
+    font-size: 11px;
+    line-height: 1.55;
+    margin: 5px 0 8px;
+  }
+
+  .xpath-priority-list .is-safe > span,
+  .xpath-priority-list .is-safe strong {
+    color: var(--xa-cyan);
+  }
+
+  .xpath-priority-list .is-safe code {
+    background: var(--xa-cyan-soft);
+    border-color: #ccece5;
+    color: #087a70;
+  }
+
+  .xpath-priority-list .is-structural > span,
+  .xpath-priority-list .is-structural strong {
+    color: var(--xa-blue);
+  }
+
+  .xpath-priority-list .is-caution > span,
+  .xpath-priority-list .is-caution strong {
+    color: var(--xa-amber);
+  }
+
+  .xpath-priority-list .is-caution code {
+    background: var(--xa-amber-soft);
+    border-color: #f3dfb3;
+    color: #9d6109;
+  }
+
+  .xpath-priority-list .is-risk > span,
+  .xpath-priority-list .is-risk strong {
+    color: var(--xa-red);
+  }
+
+  .xpath-priority-list .is-risk code {
+    background: var(--xa-red-soft);
+    border-color: #f4d0d0;
+    color: #b83434;
+  }
+
+  .xpath-atlas-verdict {
+    align-items: center;
+    background: var(--xa-blue-soft);
+    border-top: 1px solid #d4e4f9;
+    color: var(--xa-blue);
+    display: flex;
+    gap: 11px;
+    padding: 17px 28px;
+  }
+
+  .xpath-atlas-verdict strong {
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .xpath-panel {
+    background: var(--xa-paper);
+    border: 1px solid var(--xa-line-strong);
+    border-radius: 21px;
+    box-shadow: 0 16px 40px rgba(29, 63, 108, 0.06);
+    margin: 24px 0 30px;
+    overflow: hidden;
+  }
+
+  .xpath-panel-head {
+    border-bottom: 1px solid var(--xa-line);
+    padding: 22px 24px 18px;
+  }
+
+  .xpath-token-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding: 0 24px;
+  }
+
+  .xpath-token-grid > div {
+    border-right: 1px solid var(--xa-line);
+    min-width: 0;
+    padding: 22px 14px;
+  }
+
+  .xpath-token-grid > div:first-child {
+    padding-left: 0;
+  }
+
+  .xpath-token-grid > div:last-child {
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .xpath-token-grid code {
+    background: transparent;
+    color: var(--xa-blue);
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 29px;
+    font-weight: 850;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .xpath-token-grid strong {
+    display: block;
+    font-size: 13px;
+    margin-top: 12px;
+  }
+
+  .xpath-token-grid p {
+    color: var(--xa-muted);
+    font-size: 11px;
+    line-height: 1.55;
+    margin: 6px 0 0;
+  }
+
+  .xpath-token-grid .is-primary {
+    background: var(--xa-blue-soft);
+  }
+
+  .xpath-path-compare {
+    border-top: 1px solid var(--xa-line);
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 20px 24px 24px;
+  }
+
+  .xpath-path-compare > div {
+    border: 1px solid var(--xa-line);
+    border-radius: 14px;
+    min-width: 0;
+    padding: 15px;
+  }
+
+  .xpath-path-compare span {
+    display: block;
+    font-size: 11px;
+    font-weight: 850;
+    margin-bottom: 9px;
+  }
+
+  .xpath-path-compare p {
+    color: var(--xa-muted);
+    font-size: 11px;
+    line-height: 1.55;
+    margin: 9px 0 0;
+  }
+
+  .xpath-path-compare .is-risk {
+    background: #fffafa;
+  }
+
+  .xpath-path-compare .is-risk span {
+    color: var(--xa-red);
+  }
+
+  .xpath-path-compare .is-safe {
+    background: #f7fcfb;
+  }
+
+  .xpath-path-compare .is-safe span {
+    color: var(--xa-cyan);
+  }
+
+  .xpath-anchor-lanes {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 22px 24px;
+  }
+
+  .xpath-anchor-lanes > div {
+    border: 1px solid var(--xa-line);
+    border-radius: 15px;
+    min-width: 0;
+    padding: 16px;
+  }
+
+  .xpath-anchor-lanes > div > span {
+    align-items: center;
+    display: flex;
+    font-size: 11px;
+    font-weight: 850;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .xpath-anchor-lanes strong {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 11px;
+  }
+
+  .xpath-anchor-lanes code + code {
+    margin-top: 6px;
+  }
+
+  .xpath-anchor-lanes p {
+    color: var(--xa-muted);
+    font-size: 11px;
+    line-height: 1.55;
+    margin: 9px 0 0;
+  }
+
+  .xpath-anchor-lanes .is-safe {
+    background: var(--xa-cyan-soft);
+    border-color: #ccece5;
+  }
+
+  .xpath-anchor-lanes .is-safe > span,
+  .xpath-anchor-lanes .is-safe strong {
+    color: var(--xa-cyan);
+  }
+
+  .xpath-anchor-lanes .is-stable {
+    background: var(--xa-blue-soft);
+    border-color: #d5e5fa;
+  }
+
+  .xpath-anchor-lanes .is-stable > span,
+  .xpath-anchor-lanes .is-stable strong {
+    color: var(--xa-blue);
+  }
+
+  .xpath-anchor-lanes .is-caution {
+    background: var(--xa-amber-soft);
+    border-color: #f3dfb3;
+  }
+
+  .xpath-anchor-lanes .is-caution > span,
+  .xpath-anchor-lanes .is-caution strong {
+    color: var(--xa-amber);
+  }
+
+  .xpath-class-token {
+    border-top: 1px solid var(--xa-line);
+    display: grid;
+    gap: 10px;
+    padding: 18px 24px 22px;
+  }
+
+  .xpath-class-token > div {
+    align-items: center;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1.6fr);
+  }
+
+  .xpath-class-token span {
+    color: var(--xa-muted);
+    font-size: 12px;
+    font-weight: 750;
+  }
+
+  .xpath-text-lab {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 1.15fr 1fr 1fr;
+    padding: 22px 24px;
+  }
+
+  .xpath-text-source,
+  .xpath-text-result {
+    border: 1px solid var(--xa-line);
+    border-radius: 15px;
+    min-width: 0;
+    padding: 15px;
+  }
+
+  .xpath-text-source > span,
+  .xpath-text-result > span {
+    color: var(--xa-muted);
+    display: block;
+    font-size: 11px;
+    font-weight: 850;
+    margin-bottom: 10px;
+  }
+
+  .xpath-text-source pre {
+    margin: 0;
+  }
+
+  .xpath-text-source pre code {
+    font-size: 11px;
+    line-height: 1.7;
+  }
+
+  .xpath-text-result > svg {
+    margin-bottom: 10px;
+  }
+
+  .xpath-text-result strong {
+    display: block;
+    font-size: 18px;
+    margin-top: 12px;
+  }
+
+  .xpath-text-result p {
+    color: var(--xa-muted);
+    font-size: 11px;
+    line-height: 1.55;
+    margin: 7px 0 0;
+  }
+
+  .xpath-text-result.is-fail {
+    background: var(--xa-red-soft);
+    border-color: #f4d0d0;
+    color: var(--xa-red);
+  }
+
+  .xpath-text-result.is-pass {
+    background: var(--xa-cyan-soft);
+    border-color: #ccece5;
+    color: var(--xa-cyan);
+  }
+
+  .xpath-text-rules {
+    border-top: 1px solid var(--xa-line);
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 18px 24px 22px;
+  }
+
+  .xpath-text-rules > div {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 24px minmax(90px, 0.5fr) minmax(0, 1.5fr);
+    min-width: 0;
+  }
+
+  .xpath-text-rules svg {
+    color: var(--xa-blue);
+  }
+
+  .xpath-text-rules strong {
+    font-size: 12px;
+  }
+
+  .xpath-function-track {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 0 24px;
+  }
+
+  .xpath-function-track > div {
+    border-right: 1px solid var(--xa-line);
+    min-width: 0;
+    padding: 24px 18px;
+  }
+
+  .xpath-function-track > div:first-child {
+    padding-left: 0;
+  }
+
+  .xpath-function-track > div:last-child {
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .xpath-function-track b {
+    color: var(--xa-blue);
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  .xpath-function-track strong {
+    display: block;
+    font-size: 17px;
+    margin-top: 8px;
+  }
+
+  .xpath-function-track span {
+    color: var(--xa-muted);
+    display: block;
+    font-size: 11px;
+    margin: 5px 0 12px;
+  }
+
+  .xpath-function-track p {
+    color: var(--xa-muted);
+    font-size: 11px;
+    line-height: 1.55;
+    margin: 10px 0 0;
+  }
+
+  .xpath-axis-lab {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.55fr);
+    padding: 22px 24px 24px;
+  }
+
+  .xpath-axis-dom {
+    background: var(--xa-paper-soft);
+    border: 1px solid var(--xa-line);
+    border-radius: 16px;
+    display: grid;
+    gap: 8px;
+    padding: 16px;
+  }
+
+  .xpath-axis-dom > span {
+    color: var(--xa-muted);
+    font-size: 11px;
+    font-weight: 850;
+    margin-bottom: 4px;
+  }
+
+  .xpath-axis-node {
+    background: var(--xa-paper);
+    border: 1px solid var(--xa-line);
+    border-radius: 9px;
+    display: grid;
+    gap: 6px;
+    padding: 9px;
+  }
+
+  .xpath-axis-node:not(.is-parent) {
+    margin-left: 20px;
+  }
+
+  .xpath-axis-node.is-target {
+    border-color: #8bb7f3;
+    box-shadow: inset 3px 0 0 var(--xa-blue);
+  }
+
+  .xpath-axis-node small {
+    color: var(--xa-soft);
+    font-size: 10px;
+  }
+
+  .xpath-axis-routes {
+    display: grid;
+    gap: 13px;
+  }
+
+  .xpath-axis-routes > div {
+    border: 1px solid var(--xa-line);
+    border-radius: 15px;
+    min-width: 0;
+    padding: 16px;
+  }
+
+  .xpath-axis-routes span {
+    align-items: center;
+    color: var(--xa-blue);
+    display: flex;
+    font-size: 11px;
+    font-weight: 850;
+    gap: 6px;
+  }
+
+  .xpath-axis-routes strong {
+    display: block;
+    font-size: 14px;
+    margin: 10px 0;
+  }
+
+  .xpath-axis-routes p {
+    color: var(--xa-muted);
+    font-size: 11px;
+    line-height: 1.55;
+    margin: 9px 0 0;
+  }
+
+  .xpath-table-lab {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: minmax(230px, 0.9fr) minmax(0, 1.5fr);
+    padding: 22px 24px 24px;
+  }
+
+  .xpath-table-sample {
+    color: var(--xa-blue);
+  }
+
+  .xpath-table-sample > svg {
+    margin-bottom: 10px;
+  }
+
+  .xpath-table-sample table {
+    border: 1px solid var(--xa-line);
+    border-collapse: separate;
+    border-radius: 12px;
+    border-spacing: 0;
+    margin: 0;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .xpath-table-sample th,
+  .xpath-table-sample td {
+    border-bottom: 1px solid var(--xa-line);
+    border-right: 1px solid var(--xa-line);
+    color: var(--xa-ink);
+    font-size: 11px;
+    padding: 10px;
+    white-space: nowrap;
+  }
+
+  .xpath-table-sample th:last-child,
+  .xpath-table-sample td:last-child {
+    border-right: 0;
+  }
+
+  .xpath-table-sample tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .xpath-table-sample th {
+    background: var(--xa-paper-soft);
+    font-weight: 850;
+  }
+
+  .xpath-table-sample tr.is-target td {
+    background: var(--xa-blue-soft);
+    color: #1458b8;
+    font-weight: 750;
+  }
+
+  .xpath-table-steps {
+    display: grid;
+    gap: 12px;
+  }
+
+  .xpath-table-steps > div {
+    align-items: center;
+    border: 1px solid var(--xa-line);
+    border-radius: 13px;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 28px minmax(120px, 0.65fr) minmax(0, 1.35fr);
+    min-width: 0;
+    padding: 12px;
+  }
+
+  .xpath-table-steps b {
+    align-items: center;
+    background: var(--xa-blue);
+    border-radius: 999px;
+    color: #fff;
+    display: inline-flex;
+    font-size: 11px;
+    height: 25px;
+    justify-content: center;
+    width: 25px;
+  }
+
+  .xpath-table-steps span {
+    color: var(--xa-muted);
+    font-size: 11px;
+    font-weight: 750;
+  }
+
+  .xpath-table-steps .is-result {
+    background: var(--xa-cyan-soft);
+    border-color: #ccece5;
+    color: var(--xa-cyan);
+    grid-template-columns: 28px 1fr auto;
+  }
+
+  .xpath-table-steps .is-result strong {
+    font-size: 22px;
+  }
+
+  .xpath-dynamic-compare {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 22px 24px 16px;
+  }
+
+  .xpath-dynamic-compare > div {
+    background: var(--xa-paper-soft);
+    border: 1px solid var(--xa-line);
+    border-radius: 13px;
+    min-width: 0;
+    padding: 14px;
+  }
+
+  .xpath-dynamic-compare span {
+    color: var(--xa-muted);
+    display: block;
+    font-size: 11px;
+    font-weight: 850;
+    margin-bottom: 9px;
+  }
+
+  .xpath-dynamic-compare .is-stable {
+    background: var(--xa-cyan-soft);
+    border-color: #ccece5;
+  }
+
+  .xpath-dynamic-compare .is-stable span {
+    color: var(--xa-cyan);
+  }
+
+  .xpath-dynamic-result {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0 24px 24px;
+  }
+
+  .xpath-dynamic-result > div {
+    border: 1px solid var(--xa-line);
+    border-radius: 13px;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 24px minmax(0, 1fr);
+    min-width: 0;
+    padding: 14px;
+  }
+
+  .xpath-dynamic-result span {
+    font-size: 11px;
+    font-weight: 850;
+  }
+
+  .xpath-dynamic-result code {
+    grid-column: 1 / -1;
+  }
+
+  .xpath-dynamic-result .is-fail {
+    background: var(--xa-red-soft);
+    border-color: #f4d0d0;
+    color: var(--xa-red);
+  }
+
+  .xpath-dynamic-result .is-pass {
+    background: var(--xa-cyan-soft);
+    border-color: #ccece5;
+    color: var(--xa-cyan);
+  }
+
+  .xpath-console {
+    background: #111b2d;
+    border: 1px solid #253550;
+    border-radius: 20px;
+    box-shadow: 0 18px 44px rgba(15, 29, 54, 0.2);
+    color: #eaf1fb;
+    margin: 24px 0 30px;
+    overflow: hidden;
+  }
+
+  .xpath-console-head {
+    align-items: center;
+    border-bottom: 1px solid #2b3b56;
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 18px;
+  }
+
+  .xpath-console-head > div {
+    align-items: center;
+    color: #8ab6ff;
+    display: flex;
+    gap: 8px;
+  }
+
+  .xpath-console-head span,
+  .xpath-console-head small {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .xpath-console-head small {
+    color: #8090aa;
+  }
+
+  .xpath-console-query {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 18px;
+  }
+
+  .xpath-console-query > span,
+  .xpath-console-footer > span {
+    color: #91a0b7;
+    font-size: 11px;
+    font-weight: 800;
+    padding-top: 7px;
+  }
+
+  .xpath-console code {
+    background: #0b1322;
+    border-color: #33435f;
+    color: #b6d2ff;
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  .xpath-console-counts {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 0 18px 18px;
+  }
+
+  .xpath-console-counts > div {
+    background: #17243a;
+    border: 1px solid #30415e;
+    border-radius: 13px;
+    min-width: 0;
+    padding: 14px;
+  }
+
+  .xpath-console-counts svg {
+    color: #8ba4c8;
+  }
+
+  .xpath-console-counts b {
+    display: block;
+    font-size: 28px;
+    line-height: 1;
+    margin: 12px 0 7px;
+  }
+
+  .xpath-console-counts strong {
+    display: block;
+    font-size: 13px;
+  }
+
+  .xpath-console-counts p {
+    color: #9aa9bf;
+    font-size: 11px;
+    line-height: 1.55;
+    margin: 7px 0 0;
+  }
+
+  .xpath-console-counts .is-zero b,
+  .xpath-console-counts .is-zero strong,
+  .xpath-console-counts .is-zero svg {
+    color: #ff8d8d;
+  }
+
+  .xpath-console-counts .is-one {
+    border-color: #2c806f;
+  }
+
+  .xpath-console-counts .is-one b,
+  .xpath-console-counts .is-one strong,
+  .xpath-console-counts .is-one svg {
+    color: #66d4bc;
+  }
+
+  .xpath-console-counts .is-many b,
+  .xpath-console-counts .is-many strong,
+  .xpath-console-counts .is-many svg {
+    color: #f3bd67;
+  }
+
+  .xpath-console-footer {
+    align-items: start;
+    border-top: 1px solid #2b3b56;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 15px 18px;
+  }
+
+  .xpath-stability-ladder {
+    list-style: none;
+    margin: 0;
+    padding: 8px 24px 22px;
+  }
+
+  .xpath-stability-ladder li {
+    align-items: center;
+    border-bottom: 1px solid var(--xa-line);
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    margin: 0;
+    padding: 15px 0;
+  }
+
+  .xpath-stability-ladder li:last-child {
+    border-bottom: 0;
+  }
+
+  .xpath-stability-ladder b {
+    align-items: center;
+    background: var(--xa-blue-soft);
+    border-radius: 999px;
+    color: var(--xa-blue);
+    display: inline-flex;
+    font-size: 12px;
+    height: 30px;
+    justify-content: center;
+    width: 30px;
+  }
+
+  .xpath-stability-ladder li > div {
+    display: grid;
+    gap: 3px;
+  }
+
+  .xpath-stability-ladder strong {
+    font-size: 14px;
+  }
+
+  .xpath-stability-ladder span {
+    color: var(--xa-muted);
+    font-size: 11px;
+  }
+
+  .xpath-stability-ladder small {
+    background: var(--xa-paper-soft);
+    border: 1px solid var(--xa-line);
+    border-radius: 999px;
+    color: var(--xa-muted);
+    font-size: 10px;
+    font-weight: 800;
+    padding: 5px 8px;
+  }
+
+  .xpath-stability-ladder li.is-best b,
+  .xpath-stability-ladder li.is-best small {
+    background: var(--xa-cyan-soft);
+    border-color: #ccece5;
+    color: var(--xa-cyan);
+  }
+
+  .xpath-stability-ladder li.is-last b,
+  .xpath-stability-ladder li.is-last small {
+    background: var(--xa-red-soft);
+    border-color: #f4d0d0;
+    color: var(--xa-red);
+  }
+
+  .xpath-recipes {
+    background: var(--xa-paper);
+    border: 1px solid var(--xa-line-strong);
+    border-radius: 20px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 24px 0 30px;
+    overflow: hidden;
+  }
+
+  .xpath-recipes > div {
+    align-items: center;
+    border-bottom: 1px solid var(--xa-line);
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 30px minmax(92px, 0.55fr) minmax(0, 1.45fr);
+    min-width: 0;
+    padding: 13px 15px;
+  }
+
+  .xpath-recipes > div:nth-child(odd) {
+    border-right: 1px solid var(--xa-line);
+  }
+
+  .xpath-recipes > div:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+
+  .xpath-recipes b {
+    color: var(--xa-blue);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+  }
+
+  .xpath-recipes span {
+    color: var(--xa-muted);
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .xpath-final-verdict {
+    align-items: center;
+    background: var(--xa-blue-soft);
+    border: 1px solid #d3e3f8;
+    border-radius: 18px;
+    color: var(--xa-blue);
+    display: flex;
+    gap: 14px;
+    margin: 28px 0 18px;
+    padding: 18px 20px;
+  }
+
+  .xpath-final-verdict > div {
+    display: grid;
+    gap: 4px;
+  }
+
+  .xpath-final-verdict span {
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+  }
+
+  .xpath-final-verdict strong {
+    color: var(--xa-ink);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  @media (max-width: 1250px) {
+    .xpath-atlas-grid {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.35fr);
+    }
+
+    .xpath-priority {
+      grid-column: 1 / -1;
+    }
+
+    .xpath-priority-list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .xpath-priority-list > div {
+      border-bottom: 0;
+      border-right: 1px solid var(--xa-line);
+      grid-template-columns: 25px minmax(0, 1fr);
+      padding: 0 12px;
+    }
+
+    .xpath-priority-list > div:first-child {
+      padding-left: 0;
+    }
+
+    .xpath-priority-list > div:last-child {
+      border-right: 0;
+      padding-right: 0;
+    }
+  }
+
+  @media (max-width: 980px) {
+    .xpath-atlas {
+      margin-left: 0;
+      width: 100%;
+    }
+
+    .xpath-atlas-grid,
+    .xpath-text-lab,
+    .xpath-axis-lab,
+    .xpath-table-lab {
+      grid-template-columns: 1fr;
+    }
+
+    .xpath-priority {
+      grid-column: auto;
+    }
+
+    .xpath-priority-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .xpath-priority-list > div:nth-child(2) {
+      border-right: 0;
+    }
+
+    .xpath-priority-list > div:nth-child(-n + 2) {
+      border-bottom: 1px solid var(--xa-line);
+      padding-bottom: 12px;
+    }
+
+    .xpath-token-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .xpath-token-grid > div {
+      border-bottom: 1px solid var(--xa-line);
+    }
+
+    .xpath-token-grid > div:nth-child(3) {
+      border-right: 0;
+    }
+
+    .xpath-token-grid > div:nth-last-child(-n + 2) {
+      border-bottom: 0;
+    }
+
+    .xpath-text-source {
+      grid-column: 1 / -1;
+    }
+
+    .xpath-anchor-lanes,
+    .xpath-function-track {
+      grid-template-columns: 1fr;
+    }
+
+    .xpath-function-track > div {
+      border-bottom: 1px solid var(--xa-line);
+      border-right: 0;
+      padding: 20px 0;
+    }
+
+    .xpath-function-track > div:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .xpath-atlas-head,
+    .xpath-panel-head {
+      align-items: start;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .xpath-atlas-head > p,
+    .xpath-panel-head > p {
+      max-width: none;
+      text-align: left;
+    }
+
+    .xpath-atlas-head,
+    .xpath-atlas-grid,
+    .xpath-atlas-verdict,
+    .xpath-panel-head,
+    .xpath-token-grid,
+    .xpath-path-compare,
+    .xpath-anchor-lanes,
+    .xpath-class-token,
+    .xpath-text-lab,
+    .xpath-text-rules,
+    .xpath-function-track,
+    .xpath-axis-lab,
+    .xpath-table-lab,
+    .xpath-dynamic-compare,
+    .xpath-dynamic-result,
+    .xpath-stability-ladder {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    .xpath-atlas-title strong,
+    .xpath-panel-head strong {
+      font-size: 19px;
+    }
+
+    .xpath-route-step {
+      min-height: 104px;
+    }
+
+    .xpath-priority-list,
+    .xpath-token-grid,
+    .xpath-path-compare,
+    .xpath-anchor-lanes,
+    .xpath-text-lab,
+    .xpath-text-rules,
+    .xpath-dynamic-compare,
+    .xpath-dynamic-result,
+    .xpath-console-counts,
+    .xpath-recipes {
+      grid-template-columns: 1fr;
+    }
+
+    .xpath-priority-list > div,
+    .xpath-priority-list > div:nth-child(2) {
+      border-bottom: 1px solid var(--xa-line);
+      border-right: 0;
+      padding: 0 0 12px;
+    }
+
+    .xpath-priority-list > div:last-child {
+      border-bottom: 0;
+    }
+
+    .xpath-token-grid > div,
+    .xpath-token-grid > div:first-child,
+    .xpath-token-grid > div:last-child {
+      border-bottom: 1px solid var(--xa-line);
+      border-right: 0;
+      padding: 17px 0;
+    }
+
+    .xpath-token-grid > div:last-child {
+      border-bottom: 0;
+    }
+
+    .xpath-class-token > div,
+    .xpath-text-rules > div,
+    .xpath-table-steps > div,
+    .xpath-table-steps .is-result,
+    .xpath-recipes > div {
+      align-items: start;
+      grid-template-columns: 1fr;
+    }
+
+    .xpath-text-rules > div {
+      border-bottom: 1px solid var(--xa-line);
+      padding-bottom: 12px;
+    }
+
+    .xpath-text-rules > div:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .xpath-console-query,
+    .xpath-console-footer {
+      grid-template-columns: 1fr;
+    }
+
+    .xpath-console-query > span,
+    .xpath-console-footer > span {
+      padding-top: 0;
+    }
+
+    .xpath-console-counts {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .xpath-stability-ladder li {
+      align-items: start;
+      grid-template-columns: 34px minmax(0, 1fr);
+    }
+
+    .xpath-stability-ladder small {
+      grid-column: 2;
+      justify-self: start;
+    }
+
+    .xpath-recipes > div,
+    .xpath-recipes > div:nth-child(odd),
+    .xpath-recipes > div:nth-last-child(-n + 2) {
+      border-bottom: 1px solid var(--xa-line);
+      border-right: 0;
+      gap: 7px;
+    }
+
+    .xpath-recipes > div:last-child {
+      border-bottom: 0;
+    }
+
+    .xpath-final-verdict {
+      align-items: start;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .xpath-atlas *,
+    .xpath-panel *,
+    .xpath-console *,
+    .xpath-recipes * {
+      scroll-behavior: auto;
+    }
+  }
+`}</style>
