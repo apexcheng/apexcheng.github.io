@@ -16,6 +16,7 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
+const tocHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const seriesMeta = post.data.series ? getSeriesMeta(post.data.series) : undefined;
 const seriesPosts = post.data.series
   ? (await getCollection('posts'))
@@ -56,10 +57,21 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
             <span>收起</span>
           </button>
         </div>
-        {headings.filter((heading) => heading.depth === 2 || heading.depth === 3).map((heading) => (
+        {tocHeadings.map((heading) => (
           <a class={`toc-link toc-link-depth-${heading.depth}`} href={`#${heading.slug}`}>{heading.text}</a>
         ))}
       </aside>
+      <details class="mobile-toc-panel">
+        <summary>
+          <strong>本文目录</strong>
+          <span>{tocHeadings.length} 节 · 点击展开</span>
+        </summary>
+        <nav aria-label="本文目录">
+          {tocHeadings.map((heading) => (
+            <a class={`toc-link toc-link-depth-${heading.depth}`} href={`#${heading.slug}`}>{heading.text}</a>
+          ))}
+        </nav>
+      </details>
     </div>
     <article class="article-content">
       <div class="article-sidebar-restore" data-article-sidebar-restore-wrap hidden>

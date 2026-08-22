@@ -1662,6 +1662,10 @@ h3 {
   overscroll-behavior: contain;
 }
 
+.mobile-toc-panel {
+  display: none;
+}
+
 .article-info h2,
 .toc-panel h2 {
   font-size: 16px;
@@ -3192,8 +3196,70 @@ html[data-theme='dark'] .report-dashboard {
   }
 
   .toc-panel {
-    max-height: none;
-    overflow: visible;
+    display: none;
+  }
+
+  .mobile-toc-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    display: block;
+    overflow: hidden;
+  }
+
+  .mobile-toc-panel summary {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    list-style: none;
+    min-height: 54px;
+    padding: 14px 18px;
+  }
+
+  .mobile-toc-panel summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobile-toc-panel summary strong {
+    color: var(--ink);
+    font-size: 15px;
+  }
+
+  .mobile-toc-panel summary span {
+    color: var(--soft);
+    font-size: 12px;
+  }
+
+  .mobile-toc-panel nav {
+    border-top: 1px solid var(--line-soft);
+    padding: 4px 18px 10px;
+  }
+
+  .mobile-toc-panel a {
+    border-bottom: 1px solid var(--line-soft);
+    color: var(--muted);
+    display: block;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+    padding: 10px 0;
+  }
+
+  .mobile-toc-panel a:last-child {
+    border-bottom: 0;
+  }
+
+  .mobile-toc-panel .toc-link-depth-3 {
+    color: var(--soft);
+    font-size: 13px;
+    padding-left: 14px;
+  }
+
+  .mobile-toc-panel summary:focus-visible,
+  .mobile-toc-panel a:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--blue) 24%, transparent);
+    outline-offset: -2px;
   }
 
   .topic-grid,
