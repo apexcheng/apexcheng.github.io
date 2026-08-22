@@ -1,75 +1,86 @@
-# Design QA — GROUPBY + XLOOKUP 高性能汇总
+# XPath article redesign - Design QA
 
-## Visual truth
+**Findings**
 
-- Selected direction: option 2, “data compression theater”.
-- Full source reference: `/workspace/scratch/64ac202b2fc4/generated_images/exec-ccd2da54-3856-4f06-bad7-aff37de36b98.png` (1487 × 1058).
-- Mechanism crop used for comparison: `/workspace/scratch/64ac202b2fc4/source-option-2-mechanism.png` (1090 × 775).
-- Formula crop used for focused comparison: `/workspace/scratch/64ac202b2fc4/source-option-2-formula.png`.
+- No actionable P0, P1, or P2 issues remain.
+- [P3] The generated reference uses dotted route-to-DOM connectors; the implementation keeps the five-step route, DOM highlight, and final path without cross-column connectors. This does not affect reading order or meaning and is safer at responsive breakpoints.
 
-## Implementation evidence
+**Comparison Target**
 
-- Desktop capture: `/tmp/groupby-runtime-desktop-qa2.png` (854 × 1323 pixels).
-- Desktop CSS bounds: 853.687 × 1322.508 at approximately 1× density.
-- Focused formula capture: `/tmp/groupby-formula-focused-qa2.png` (1608 × 348 Retina capture).
-- Mobile capture: `/tmp/groupby-runtime-mobile-qa2.png` (390 × 844 viewport).
-- Mobile runtime bounds: 296.797 × 3014.867 CSS pixels.
-- Tested state: article default state, plus table-of-contents navigation to the GROUPBY section.
+- source visual truth path: `/workspace/scratch/b362a5dc8a6d/generated_images/exec-80354677-d953-4508-a134-a0ce377040f7.png`
+- implementation URL: `https://apexcheng.github.io/articles/xpath-practical-guide/?qa=e7f7100`
+- implementation screenshot path: `/workspace/scratch/xpath-redesign-qa-1787363168031.jpg`
+- viewport: browser `1363 x 936 CSS px`; document client width `1348 CSS px`; DPR `1`
+- state: desktop, light theme, article nav active, sidebar expanded, page top, commit `e7f7100`
 
-## Full-view comparison
+**Density Normalization**
 
-The implementation preserves the selected reference's principal mechanism: source rows become a composite key, GROUPBY compresses repeated records into unique key/sum pairs, TAKE exposes lookup and return columns, and XLOOKUP returns the result array. Numbered stages, warm paper background, navy/coral/mustard accents, and the repeated-scan comparison remain visually aligned with the source direction.
+- source: `1487 x 1058 px`
+- implementation: `1348 x 926 px`
+- full view: source top-cropped to `1487 x 1021`, then downsampled to `1348 x 926`; implementation kept at native `1348 x 926`
+- full-view comparison: `/workspace/scratch/xpath-design-qa-comparison-1787363168031.png`
+- focused comparison: `/workspace/scratch/xpath-design-qa-focus-stacked-1787363168031.png`
 
-The reference's single horizontal row was deliberately reflowed into a 3 × 2 desktop grid because the production article uses a constrained reading column with persistent metadata and table-of-contents rails. This preserves legibility and avoids collisions while maintaining the same reading order. On mobile, the stages become one sequential column.
+**Full-view Comparison Evidence**
 
-## Focused comparison
+- Site chrome and article rail remain intact. Main content leads with title, concise description, metadata, and the selected path map.
+- Major regions match the reference: five-step route, DOM specimen, and stability priority.
+- Title is one line at `34px / 40.12px`; the page has no horizontal overflow (`clientWidth = scrollWidth = 1348`).
+- The path map begins at `y = 266.2px`, keeping its heading and three-column structure above the fold.
 
-The formula panel was checked separately against the source formula crop. The implementation uses the article's exact formula and maps each highlighted sub-expression to its visual stage. This is more semantically accurate than the generated reference text while keeping the same hierarchy and color-coded mechanism.
+**Focused-region Comparison Evidence**
 
-## Comparison history
+- The focused comparison covers the map heading, route steps, DOM sample, code pills, target highlight, and stability column.
+- All five route snippets fit at `9px` monospace with `clientWidth = scrollWidth = 147px`; no wrapping or clipping remains.
+- Icons use the installed Lucide family with consistent stroke treatment. The source contains no required photo, logo, illustration, or product-image asset.
 
-### Pass 1
+**Required Fidelity Surfaces**
 
-- P2: The principal board did not expose the exact formula-to-stage mapping clearly enough.
-- P2: Several internal labels and muted accents were too small or too low-contrast for sustained reading.
+- Fonts and typography: existing blog sans and monospace stacks retained; hierarchy, line height, wrapping, truncation, and optical weight checked.
+- Spacing and layout: frame, rail, grid tracks, margins, padding, gaps, borders, radii, shadow, and vertical rhythm checked.
+- Colors and tokens: navy, crystal blue, teal, amber, red, pale-blue surfaces, neutral borders, and shadows align with the reference and site tokens.
+- Image and asset fidelity: no target raster imagery exists; no placeholder image, emoji, handcrafted SVG, or fake image asset was introduced.
+- Copy and content: Chinese labels are coherent; XPath examples are technically valid and use straight ASCII quotes.
+- Accessibility: semantic headings and native controls retained; visual groups are labeled; decorative icons are hidden; contrast and keyboard-reachable TOC controls checked.
+- Responsiveness: the selected source is desktop. Breakpoints at `1250px`, `980px`, and `720px` were reviewed in source. Mobile pixel capture was unavailable in the selected cloud browser, so it remains a P3 test gap rather than a blocker for this desktop target.
 
-Changes applied:
+**Primary Interactions Tested**
 
-- Added an exact formula panel beneath the six-stage runtime board.
-- Added color-coded mappings for srcKey, GROUPBY, TAKE, and XLOOKUP.
-- Increased internal table and label type sizes.
-- Adjusted muted and coral tokens to meet contrast targets.
-- Added explicit dark-mode tokens and responsive stacking.
+- Sidebar collapse changed `aria-expanded` from `true` to `false`; no overflow appeared.
+- Sidebar restore returned `aria-expanded` to `true`; layout remained stable.
+- The second TOC link updated the URL hash, scrolled to the section, and became active.
 
-### Pass 2
+**Console Errors Checked**
 
-- No P0, P1, or P2 issues remained.
-- Intentional P3-level difference: the horizontal source flow reflows to a 3 × 2 desktop grid and a one-column mobile sequence to respect the existing article shell.
+- No errors originated from the XPath article route or its current Astro assets.
+- Cloud-browser extension metadata noise and a pre-existing optional intro-animation WebGL-disabled error were observed; neither is caused by this redesign or affects the article.
 
-### Pass 3
+**Comparison History**
 
-- Added a compact before/after compression band ahead of the six-stage board.
-- The production example now exposes the 8-row detail input and 4-row unique-Key output before readers enter the formula stages.
-- Desktop uses a 317 / 150 / 317 pixel comparison; mobile stacks the same sequence into one 269-pixel column.
-- No desktop or mobile horizontal overflow was introduced.
+1. Pass 1 - `/workspace/scratch/xpath-redesign-live-1787362385592.jpg`
+   - P1: the `48px` two-line title and duplicate lead paragraphs pushed the map too far below the intended first screen.
+   - P2: the first route XPath wrapped.
+   - Fix: title reduced to `34px`, duplicate lead removed, spacing tightened, and route code set to one line.
+2. Pass 2 - `/workspace/scratch/xpath-redesign-final-1787362963971.jpg`
+   - Post-fix: title became one line and the map entered the first viewport.
+   - P2: long route snippets were horizontally clipped.
+   - Fix: route code reduced to `9px` and its visible pill width extended by `8px`.
+3. Pass 3 - `/workspace/scratch/xpath-redesign-qa-1787363168031.jpg`
+   - Post-fix: all five snippets satisfy `clientWidth = scrollWidth`; no actionable P0/P1/P2 issues remain.
 
-## Mandatory fidelity surfaces
+**Implementation Checklist**
 
-- Typography and iconography: existing production font and icon systems retained.
-- Logos and imagery: existing site logo retained; no external raster asset is required for the mechanism diagram.
-- Hero or decorative graphics: reference cylinder is represented as a semantic GROUPBY engine card.
-- Key colors and gradients: navy, coral, mustard, mint, and warm-paper palette retained with dark-mode equivalents.
-- Visual treatments: numbered stages, data tables, arrows, route strip, formula strip, and repeated-scan comparison retained.
-- Layout and density: information density preserved while adapting to the production reading column.
+- [x] Match the selected desktop hierarchy and three-column map.
+- [x] Keep the title and lead compact enough for the map to enter the first viewport.
+- [x] Preserve technically valid XPath with straight quotes.
+- [x] Remove page overflow and route-code clipping.
+- [x] Test sidebar controls and TOC navigation.
+- [x] Check the browser console.
+- [x] Pass build and automated tests.
 
-## Browser verification
+**Follow-up Polish**
 
-- Desktop horizontal overflow: none.
-- Mobile horizontal overflow: none.
-- Compression band desktop bounds: 803.687 × 123.75 CSS pixels.
-- Compression band mobile bounds: 269.203 × 364.687 CSS pixels.
-- Console errors: none.
-- Primary interaction: table-of-contents link navigates to the GROUPBY section and aligns the heading with the viewport.
-- Build and automated test results are recorded in the delivery verification.
+- Optional P3: capture a dedicated mobile viewport when the selected browser exposes viewport emulation.
+- Optional P3: add subtle library-icon direction cues if closer connector fidelity is desired.
 
 final result: passed
