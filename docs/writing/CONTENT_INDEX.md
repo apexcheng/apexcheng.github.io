@@ -33,6 +33,7 @@
 | `src/content/posts/ecommerce-price-hierarchy-target-price-planning.mdx` | `教程` | 先解释单品宝、活动和营销工具让利（非活动让利），再讲当前标价如何生效、活动如何校验、覆盖叠加与活动优先级、消费端到手价检查、价盘补差，以及平时价与活动价一致时的标价反推方法 | 写电商价格体系、优惠叠加优先级、营销工具让利、活动卡控价、普惠卷后价、活动标价反推和价盘目标到手价教程时参考 |
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
 | `src/content/posts/ecommerce-link-profit-model-rebuild.mdx` | `实践` | 从同批订单、时间、成本性质和计算粒度四类错位解释旧利润模型，并重构为 T-21～T-8 成熟金额退款率、包裹级沉没成本、拍单与售后损耗、三类推广费和 5% 保留统一汇总的近 7 天链接利润表 | 写电商链接利润、广告投放盈亏、订单级成本、退款率口径和利润模型重构时参考 |
+| `src/content/posts/jd-self-operated-sku-profit-model.mdx` | `实践` | 京东自营 SKU 利润模型图解，从供货金额、双退款率、订单沉没与售后损耗，到全站/非全站/联盟推广、毛保、0.6% 扣点、小额打款和 8% 保留，完整跑通预测利润与利润率 | 写京东自营利润核算、SKU 成本拆解、毛保、推广分摊和销售额成本率文章时参考 |
 | `src/content/posts/ecommerce-review-analysis-agent-workflow.mdx` | `实践` | 电商评价分析 Agent 整页视觉案例，以滚动叙事方式展示两张评价表统一、Python 事实包、日报与周期对比、钉钉交付闸门和发送成功后的分表状态回写 | 写电商评价分析、钉钉 AI 表格、事实包、Agent 报告、Webhook 交付闭环、状态回写和整页数据故事时参考 |
 | `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `实践` | 东南亚仓网与发货决策信息图，覆盖三国雅仓、同国双平台共享、跨国隔离、本地优先、深圳兜底和后台核对口径 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
 | `src/content/posts/ai-product-image-agent-workflow.mdx` | `实践` | AI 商品图工作流重构复盘，覆盖从逐张临场决策到规划前移、Art Direction、同组差异化、纯执行生成、人工审查和规则单一来源 | 写商品图生成、Agent 工作流重构、视觉规划、Prompt 设计和执行边界时参考 |

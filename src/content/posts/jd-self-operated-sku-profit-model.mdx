@@ -1,0 +1,801 @@
+---
+title: "京东自营 SKU 利润怎么算：把供货、退款、毛保和推广费放进同一条公式"
+description: "从供货金额出发，拆解京东自营 SKU 利润模型里的退款率、采购成本、订单沉没成本、售后损耗、推广花费、毛保、固定扣点、小额打款和 8% 保留，最终算出预测利润与利润率。"
+date: 2026-08-22T21:23:00+08:00
+category: "实践"
+tags:
+  - "京东自营"
+  - "利润核算"
+  - "Excel"
+minutes: 16
+featured: false
+draft: false
+private: false
+---
+
+<div class="jd-profit-hero" aria-label="京东自营 SKU 利润模型总览">
+  <div class="jd-profit-hero__copy">
+    <span class="jd-profit-kicker">JD SELF-OPERATED · SKU PROFIT LEDGER</span>
+    <div class="jd-profit-hero__title">利润不是“销售额减采购”。<br />它是一张逐项结算的账。</div>
+    <p>京东自营里同时存在供货金额、消费者成交额、两种退款率、毛保、推广费、正逆向物流和固定扣点。把它们混成一个百分比，利润很容易看起来正确、实际却失真。</p>
+  </div>
+  <div class="jd-profit-hero__ledger">
+    <span><small>收入起点</small><strong>净供货金额</strong></span>
+    <i aria-hidden="true">−</i>
+    <span><small>八类真实支出</small><strong>总支出</strong></span>
+    <i aria-hidden="true">=</i>
+    <span class="is-result"><small>最终结果</small><strong>预测利润</strong></span>
+  </div>
+</div>
+
+这套模型的第一原则，是先区分“谁付给谁的钱”。**京东面向消费者的成交金额，不等于我方向京东结算的供货金额。** 最终利润以供货金额为收入基础；京东商智的消费者成交额只进入毛保计算，不直接替代供货收入。
+
+第二个原则，是每一种成本只按它真实发生的方式计算。采购成本会随着退货件数变化，已经发出去的快递和后勤不会；全站营销原始粒度是 SPU，最终利润却要落到 SKU；售后损耗按退货运单发生，也不能简单按退货商品行重复计费。
+
+<div class="jd-profit-thesis">
+  <span>整张表最后只回答一个问题</span>
+  <strong>最近 7 个完整自然日里，每个 SKU 的供货收入，扣完未来退款风险和已经真实发生的所有支出后，还剩多少钱？</strong>
+</div>
+
+## 先把总公式钉死
+
+最终计算颗粒度是一行一个 `SKUID`。当前 Excel 会把出货、退货、非全站营销、全站营销分摊结果、京东联盟和小额打款中出现的有效 SKU 合并成最终 SKU 集合。
+
+<div class="jd-profit-equation" aria-label="京东自营 SKU 利润总公式">
+  <section class="is-income">
+    <small>01 · 收入</small>
+    <strong>净供货金额</strong>
+    <code>含税供货金额 ÷ 1.13 × (1 − 金额退款率)</code>
+  </section>
+  <div class="jd-profit-equation__operator">−</div>
+  <section class="is-cost">
+    <small>02 · 支出</small>
+    <strong>总支出</strong>
+    <code>8 类成本与费用之和</code>
+  </section>
+  <div class="jd-profit-equation__operator">=</div>
+  <section class="is-profit">
+    <small>03 · 结果</small>
+    <strong>预测利润</strong>
+    <code>净供货金额 − 总支出</code>
+  </section>
+</div>
+
+利润率的分母固定使用**退款前未税供货金额**：
+
+```text
+利润率 = 预测利润 / 未税供货金额
+```
+
+这里故意不使用“净供货金额”做分母。这样利润率表达的是：原始 1 元未税供货收入，最终真正留下多少利润；退款本身造成的收入损失也会反映在结果里。
+
+## 两个时间窗口，各做各的事
+
+利润周期和退款率周期不能混在一起。
+
+<div class="jd-profit-window" aria-label="京东自营利润周期与退款率周期">
+  <div class="jd-profit-window__ticks">
+    <span>T−21</span><span>T−8</span><span>T−7</span><span>T−1</span><span>今天</span>
+  </div>
+  <div class="jd-profit-window__bands">
+    <section class="is-refund"><small>14 天历史窗口</small><strong>退款率样本</strong><span>T−21 ～ T−8</span></section>
+    <section class="is-profit"><small>7 个完整自然日</small><strong>正式利润周期</strong><span>T−7 ～ T−1</span></section>
+    <section class="is-today"><small>不参与</small><strong>今天</strong><span>数据仍在变化</span></section>
+  </div>
+</div>
+
+历史窗口负责估计两种退款率：
+
+```text
+件数退款率 = 历史退款件数 / 历史出货件数
+金额退款率 = 历史供货口径退款金额 / 历史供货金额
+```
+
+两者虽然都叫退款率，但用途不同。**金额退款率影响收入和毛保，件数退款率影响商品采购成本。** 当前模型会把两种退款率最高限制在 100%。
+
+退货金额也不能直接拿消费者退款金额。每笔退货要回查同一个 SKU 在退货日前最近一次历史供货价，再计算：
+
+```text
+供货口径退款金额 = 退货件数 × 最近历史供货价
+```
+
+这样退款率的分子和分母才处在同一套“我方向京东供货”的金额口径里。
+
+## 收入侧：真正进入利润的是供货金额
+
+<div class="jd-profit-income-flow" aria-label="从出货到净供货金额的计算路径">
+  <section><small>出货事实</small><strong>全国采购价 × 出货件数</strong><span>得到含税供货金额</span></section>
+  <i aria-hidden="true">→</i>
+  <section><small>价税分离</small><strong>÷ 1.13</strong><span>得到未税供货金额</span></section>
+  <i aria-hidden="true">→</i>
+  <section><small>预测退款</small><strong>× (1 − 金额退款率)</strong><span>得到净供货金额</span></section>
+</div>
+
+完整公式是：
+
+```text
+含税供货金额
+= Σ(全国采购价 × 出货件数)
+
+未税供货金额
+= 含税供货金额 / 1.13
+
+净供货金额
+= 未税供货金额 × (1 - 金额退款率)
+```
+
+京东商智的消费者成交金额不会走进这条收入链。它只有一个主要作用：判断京东卖给消费者以后，是否达到了约定毛利，也就是后面的毛保。
+
+## 总支出由八块组成
+
+<div class="jd-profit-cost-grid" aria-label="京东自营利润模型八类支出">
+  <section><span>01</span><strong>净采购成本</strong><code>原始采购成本 × (1 − 件数退款率)</code><p>商品退回来以后，采购成本按件数退款风险折减。</p></section>
+  <section><span>02</span><strong>订单沉没成本</strong><code>出货件数 × 单件履约成本</code><p>发货后已经产生的快递和后勤，不再乘退款率。</p></section>
+  <section><span>03</span><strong>售后损耗</strong><code>退货快递费 + 后勤分摊</code><p>按唯一退货运单发生，再分摊到该运单下的 SKU。</p></section>
+  <section><span>04</span><strong>未税总花费</strong><code>(全站 + 非全站 + 联盟) ÷ 1.06</code><p>三类真实推广费用最终全部进入利润。</p></section>
+  <section><span>05</span><strong>净毛保支出</strong><code>毛保支出 ÷ 1.13 × (1 − 金额退款率)</code><p>毛保是独立支出，不再从供货收入里重复扣。</p></section>
+  <section><span>06</span><strong>0.6% 固定扣点</strong><code>[含税供货 × (1 − R) − 毛保] × 0.6%</code><p>按含税口径直接计提。</p></section>
+  <section><span>07</span><strong>小额打款</strong><code>Σ 打款成功的 SKU 关联金额</code><p>客服实际打给客户的钱，只统计成功记录。</p></section>
+  <section><span>08</span><strong>8% 保留</strong><code>净供货金额 × 8%</code><p>以退款后的净供货金额为计提基数。</p></section>
+</div>
+
+因此总支出可以直接展开为：
+
+```text
+总支出
+= 净采购成本
++ 订单沉没成本
++ 售后损耗
++ 未税总花费
++ 净毛保支出
++ 0.6%固定扣点
++ 小额打款支出
++ 8%保留
+```
+
+这也是当前 Excel `【预测】链接利润` 最终实际使用的闭环。
+
+## 发货成本和售后成本为什么必须拆开
+
+同样都是物流费用，正向发货和逆向售后发生的触发条件完全不同。
+
+<div class="jd-profit-logistics" aria-label="正向发货与逆向售后成本对比">
+  <section class="is-forward">
+    <header><span>正向</span><strong>订单沉没成本</strong></header>
+    <div><small>键盘 / 鼠标</small><b>1.1 元快递 + 9.5 元后勤</b></div>
+    <div><small>平板电脑配件</small><b>2 元快递 + 9.5 元后勤</b></div>
+    <p>按实际出货件数计算。订单已经发出，这笔钱就已经发生，不因为未来退款而消失。</p>
+  </section>
+  <section class="is-return">
+    <header><span>逆向</span><strong>售后损耗</strong></header>
+    <div><small>快递费</small><b>每个唯一退货运单 1.1 / 2 元</b></div>
+    <div><small>后勤</small><b>每个唯一有效运单 9.5 元</b></div>
+    <p>同一运单有多个 SKU 时，按退货件数占比分摊，但整张运单的费用合计必须守恒。</p>
+  </section>
+</div>
+
+售后分摊必须满足：
+
+```text
+Σ(同一退货运单下所有 SKU 售后损耗)
+= 该运单快递费（1.1 或 2） + 9.5
+```
+
+这条守恒关系比逐个单元格检查更有价值。只要合计超出，就说明同一运单被重复计费；合计不足，则说明某个 SKU 没有分到成本。
+
+## 毛保：消费者成交额只在这里出现
+
+京东自营的毛保本质上是在检查：京东按照当前成交价卖给消费者以后，毛利是否达到约定比例。
+
+毛保按**每日 × SKUID**独立计算，不能用某一天的高毛利去抵另一天下的低毛利。
+
+<div class="jd-profit-margin" aria-label="京东自营毛保计算结构">
+  <div class="jd-profit-margin__rates">
+    <span><small>键盘</small><strong>18%</strong></span>
+    <span><small>鼠标</small><strong>18%</strong></span>
+    <span><small>平板电脑配件</small><strong>28%</strong></span>
+  </div>
+  <div class="jd-profit-margin__steps">
+    <section><small>京东商智</small><code>成交金额 ÷ 成交件数</code><strong>消费者平均成交价</strong></section>
+    <i aria-hidden="true">×</i>
+    <section><small>实际出货</small><code>平均成交价 × 出货件数</code><strong>预测自营销售额</strong></section>
+    <i aria-hidden="true">→</i>
+    <section class="is-result"><small>毛保</small><code>MAX(0, 供货金额 − 预测自营销售额 × (1 − 毛保比例))</code><strong>毛保支出</strong></section>
+  </div>
+</div>
+
+使用“平均成交价 × 实际出货件数”而不是直接使用京东商智成交金额，是为了把商智里可能包含的秒退款件数剔除掉，再和真正出货的数据对齐。
+
+得到含税毛保后，还要转换成正式进入利润的净毛保支出：
+
+```text
+净毛保支出
+= 毛保支出 / 1.13 × (1 - 金额退款率)
+```
+
+如果某天实际有出货，但京东商智没有同日同 SKU 数据，或者成交件数为 0，模型会标记“毛保无法计算”。这时平均成交价可以保留 `#N/A` 暴露数据缺口，但毛保支出按 0 处理，避免一个辅助数据缺失直接阻断整条利润链。
+
+## 推广花费：先解决粒度，再统一除税
+
+三种推广费用进入利润前的处理方式不同。
+
+<div class="jd-profit-marketing" aria-label="京东自营三类推广费用归集方式">
+  <section>
+    <span>全站营销</span>
+    <strong>日期 + SPU → 日期 + SKU</strong>
+    <p>当天有发货：按 SKU 发货件数占比分摊。</p>
+    <p>当天 SPU 总发货为 0：按 SPU 下 SKU 数量平均分。</p>
+  </section>
+  <section>
+    <span>非全站营销</span>
+    <strong>日期 + SKU</strong>
+    <p>直接按正式周期和 SKU 汇总实际花费。</p>
+  </section>
+  <section>
+    <span>京东联盟</span>
+    <strong>日期 + SKU</strong>
+    <p>使用总佣金，已经包含佣金、平台技术服务费和团长服务费。</p>
+  </section>
+</div>
+
+全站营销的分摊还必须满足一条成本守恒：
+
+```text
+Σ(SPU 当天所有 SKU 分摊花费) = SPU 当天原始全站花费
+```
+
+三类子项都保持含税值，最后只除税一次：
+
+```text
+含税总花费 = 全站花费 + 非全站花费 + 京东联盟
+未税总花费 = 含税总花费 / 1.06
+```
+
+不要对子项先 `/1.06`，汇总后又再除一次，否则同一笔税会被重复处理。
+
+## 用一组演算数字把整条利润跑通
+
+下面只做公式演算，数字是为了展示计算过程，并非真实经营数据。
+
+<div class="jd-profit-runtime" aria-label="京东自营 SKU 利润演算示例">
+  <header>
+    <span><small>含税供货金额</small><strong>¥11,300</strong></span>
+    <span><small>金额退款率</small><strong>10%</strong></span>
+    <span><small>件数退款率</small><strong>8%</strong></span>
+    <span><small>出货</small><strong>100 件键盘</strong></span>
+  </header>
+  <div class="jd-profit-runtime__steps">
+    <section><small>净供货金额</small><code>11,300 ÷ 1.13 × 90%</code><strong>¥9,000.00</strong></section>
+    <section><small>净采购成本</small><code>5,000 × 92%</code><strong>¥4,600.00</strong></section>
+    <section><small>订单沉没成本</small><code>100 × (1.1 + 9.5)</code><strong>¥1,060.00</strong></section>
+    <section><small>售后损耗</small><code>10 个唯一键盘退货运单 × 10.6</code><strong>¥106.00</strong></section>
+    <section><small>未税推广</small><code>含税 ¥1,060 ÷ 1.06</code><strong>¥1,000.00</strong></section>
+    <section><small>原始毛保</small><code>MAX(0, 11,300 − 13,000 × 82%)</code><strong>¥640.00</strong></section>
+    <section><small>净毛保</small><code>640 ÷ 1.13 × 90%</code><strong>¥509.73</strong></section>
+    <section><small>0.6% 扣点</small><code>(11,300 × 90% − 640) × 0.6%</code><strong>¥57.18</strong></section>
+    <section><small>小额打款</small><code>成功打款汇总</code><strong>¥80.00</strong></section>
+    <section><small>8% 保留</small><code>9,000 × 8%</code><strong>¥720.00</strong></section>
+  </div>
+  <div class="jd-profit-runtime__result">
+    <span><small>总支出</small><strong>¥8,132.91</strong></span>
+    <span class="is-profit"><small>预测利润</small><strong>¥867.09</strong></span>
+    <span><small>利润率</small><strong>8.67%</strong></span>
+  </div>
+</div>
+
+这组数字里，未税供货金额是 `¥10,000`，金额退款率 10% 以后净供货只剩 `¥9,000`。随后再逐项扣掉真实支出，最终利润是 `¥867.09`：
+
+```text
+预测利润
+= 9,000
+- 4,600
+- 1,060
+- 106
+- 1,000
+- 509.73
+- 57.18
+- 80
+- 720
+= 867.09
+```
+
+最后利润率仍然除以退款前的未税供货金额 `¥10,000`，所以得到 `8.67%`，而不是用 `¥9,000` 做分母。
+
+## “采购%、推广%”不是支出结构占比
+
+当前最终利润表还会把支出换算成销售额成本率：
+
+<div class="jd-profit-ratios" aria-label="最终利润表五类销售额成本率">
+  <section><span>采购%</span><code>净采购成本 / 未税供货金额</code></section>
+  <section><span>推广%</span><code>未税总花费 / 未税供货金额</code></section>
+  <section><span>快递售后%</span><code>(订单沉没成本 + 售后损耗) / 未税供货金额</code></section>
+  <section><span>毛保%</span><code>净毛保支出 / 未税供货金额</code></section>
+  <section><span>其它%</span><code>(8%保留 + 0.6%扣点 + 小额打款) / 未税供货金额</code></section>
+</div>
+
+这组百分比的分母统一是销售额，目的不是回答“总支出内部每一块占多少”，而是回答：**每卖 1 元未税供货金额，要承担多少采购、推广、物流售后、毛保和其它支出。**
+
+所以它们不需要加起来等于 100%。如果要分析真正的支出结构，分母才应该换成总支出；这是另一套指标，不能把两者混在同一个列名下。
+
+## 怎么判断这张利润表有没有算歪
+
+比起随机抽几个公式，更有效的是检查几条必须成立的关系。
+
+<div class="jd-profit-proof" aria-label="京东自营 SKU 利润模型验证规则">
+  <section><span>利润闭环</span><code>预测利润 = 净供货金额 − 总支出</code><p>结果层最基本的恒等式。</p></section>
+  <section><span>推广守恒</span><code>含税总花费 = 全站 + 非全站 + 联盟</code><p>全站 SPU 分摊前后金额也必须保持一致。</p></section>
+  <section><span>售后守恒</span><code>同一退货运单 SKU 分摊合计 = 快递费 + 9.5</code><p>防止按商品行重复收取逆向物流成本。</p></section>
+  <section><span>退款边界</span><code>0 ≤ 件数退款率、金额退款率 ≤ 100%</code><p>异常时先查时间、重复、SKU 和历史供货价映射。</p></section>
+  <section><span>小额打款</span><code>只汇总“打款成功”</code><p>失败记录不得进入最终利润。</p></section>
+  <section><span>税口径</span><code>供货 ÷ 1.13；推广总额 ÷ 1.06</code><p>不在子项和总额上重复除税。</p></section>
+</div>
+
+利润模型最危险的情况并不是出现 `#N/A`，而是所有公式都正常返回数字，但不同来源、不同时间和不同成本性质的数据被悄悄混到了一起。**能暴露缺口的错误，往往比一个看起来完整却口径错误的利润率更安全。**
+
+## 最后把模型压缩成一张账
+
+<div class="jd-profit-final-ledger" aria-label="京东自营 SKU 利润模型最终账本">
+  <header><span>每个 SKUID · 最近 7 个完整自然日</span><strong>从供货到利润，只走这一条主链</strong></header>
+  <div class="jd-profit-final-ledger__income">
+    <small>净供货金额</small>
+    <code>含税供货金额 ÷ 1.13 × (1 − 金额退款率)</code>
+  </div>
+  <div class="jd-profit-final-ledger__costs">
+    <span>− 净采购成本</span>
+    <span>− 订单沉没成本</span>
+    <span>− 售后损耗</span>
+    <span>− 未税总花费</span>
+    <span>− 净毛保支出</span>
+    <span>− 0.6% 固定扣点</span>
+    <span>− 小额打款</span>
+    <span>− 8% 保留</span>
+  </div>
+  <div class="jd-profit-final-ledger__result">
+    <span><small>得到</small><strong>预测利润</strong></span>
+    <span><small>再除以</small><strong>未税供货金额</strong></span>
+    <span><small>得到</small><strong>利润率</strong></span>
+  </div>
+</div>
+
+这套模型真正要解决的，不是把 Excel 公式写得多复杂，而是让每一笔钱都有明确来源、时间、粒度和成本性质。只要这四件事没有混掉，利润表就能继续向下追溯；一旦某一块出现异常，也知道应该回到哪张事实表排查，而不是在最终利润单元格里猜原因。
+
+<style>{`
+  .jd-profit-hero,
+  .jd-profit-equation,
+  .jd-profit-window,
+  .jd-profit-income-flow,
+  .jd-profit-cost-grid,
+  .jd-profit-logistics,
+  .jd-profit-margin,
+  .jd-profit-marketing,
+  .jd-profit-runtime,
+  .jd-profit-ratios,
+  .jd-profit-proof,
+  .jd-profit-final-ledger,
+  .jd-profit-thesis {
+    --jd-ink: #172033;
+    --jd-muted: #697386;
+    --jd-line: #dce2ea;
+    --jd-paper: #f7f8fa;
+    --jd-red: #d82f35;
+    --jd-red-soft: #fff1f1;
+    --jd-blue: #2356a8;
+    --jd-blue-soft: #eef4ff;
+    --jd-green: #17765f;
+    --jd-green-soft: #edf8f4;
+    box-sizing: border-box;
+  }
+
+  .jd-profit-hero {
+    margin: 1.5rem 0 2.5rem;
+    padding: clamp(1.4rem, 4vw, 2.6rem);
+    border: 1px solid var(--jd-line);
+    border-radius: 28px;
+    background:
+      linear-gradient(135deg, rgba(216, 47, 53, 0.08), transparent 45%),
+      linear-gradient(180deg, #fff, #f8f9fb);
+    color: var(--jd-ink);
+  }
+
+  .jd-profit-kicker {
+    display: inline-block;
+    margin-bottom: .8rem;
+    color: var(--jd-red);
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+  }
+
+  .jd-profit-hero__title {
+    max-width: 780px;
+    font-size: clamp(2rem, 5.2vw, 4.2rem);
+    line-height: 1.05;
+    font-weight: 860;
+    letter-spacing: -.04em;
+  }
+
+  .jd-profit-hero__copy p {
+    max-width: 760px;
+    margin: 1rem 0 0;
+    color: var(--jd-muted);
+    font-size: 1.02rem;
+  }
+
+  .jd-profit-hero__ledger {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: center;
+    gap: .75rem;
+    margin-top: 2rem;
+  }
+
+  .jd-profit-hero__ledger span,
+  .jd-profit-equation section {
+    min-height: 112px;
+    padding: 1rem;
+    border: 1px solid var(--jd-line);
+    border-radius: 18px;
+    background: #fff;
+  }
+
+  .jd-profit-hero__ledger small,
+  .jd-profit-equation small,
+  .jd-profit-runtime small,
+  .jd-profit-final-ledger small {
+    display: block;
+    color: var(--jd-muted);
+    font-size: .76rem;
+  }
+
+  .jd-profit-hero__ledger strong,
+  .jd-profit-equation strong {
+    display: block;
+    margin-top: .35rem;
+    font-size: 1.18rem;
+  }
+
+  .jd-profit-hero__ledger i {
+    color: var(--jd-muted);
+    font-size: 1.4rem;
+    font-style: normal;
+  }
+
+  .jd-profit-hero__ledger .is-result,
+  .jd-profit-equation .is-profit {
+    border-color: rgba(23, 118, 95, .32);
+    background: var(--jd-green-soft);
+  }
+
+  .jd-profit-thesis {
+    margin: 2rem 0 2.5rem;
+    padding: 1.25rem 1.4rem;
+    border-left: 4px solid var(--jd-red);
+    background: var(--jd-red-soft);
+  }
+
+  .jd-profit-thesis span {
+    display: block;
+    margin-bottom: .3rem;
+    color: var(--jd-red);
+    font-size: .78rem;
+    font-weight: 800;
+  }
+
+  .jd-profit-thesis strong { color: var(--jd-ink); }
+
+  .jd-profit-equation {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: stretch;
+    gap: .75rem;
+    margin: 1.5rem 0;
+  }
+
+  .jd-profit-equation section { min-height: 132px; }
+  .jd-profit-equation .is-income { background: var(--jd-blue-soft); }
+  .jd-profit-equation .is-cost { background: var(--jd-red-soft); }
+
+  .jd-profit-equation code,
+  .jd-profit-income-flow code,
+  .jd-profit-cost-grid code,
+  .jd-profit-margin code,
+  .jd-profit-ratios code,
+  .jd-profit-proof code,
+  .jd-profit-final-ledger code {
+    display: block;
+    margin-top: .55rem;
+    color: var(--jd-muted);
+    white-space: normal;
+  }
+
+  .jd-profit-equation__operator {
+    display: grid;
+    place-items: center;
+    color: var(--jd-muted);
+    font-size: 1.6rem;
+  }
+
+  .jd-profit-window { margin: 1.5rem 0 2rem; }
+
+  .jd-profit-window__ticks {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    margin-bottom: .45rem;
+    color: var(--jd-muted);
+    font-size: .72rem;
+  }
+
+  .jd-profit-window__ticks span:last-child { text-align: right; }
+
+  .jd-profit-window__bands {
+    display: grid;
+    grid-template-columns: 14fr 7fr 3fr;
+    gap: .55rem;
+  }
+
+  .jd-profit-window__bands section {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+
+  .jd-profit-window__bands small,
+  .jd-profit-window__bands span {
+    display: block;
+    font-size: .74rem;
+  }
+
+  .jd-profit-window__bands strong { display: block; margin: .25rem 0; }
+  .jd-profit-window__bands .is-refund { background: var(--jd-blue-soft); }
+  .jd-profit-window__bands .is-profit { background: var(--jd-green-soft); }
+  .jd-profit-window__bands .is-today { background: var(--jd-paper); }
+
+  .jd-profit-income-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: center;
+    gap: .7rem;
+    margin: 1.5rem 0;
+  }
+
+  .jd-profit-income-flow section {
+    min-height: 118px;
+    padding: 1rem;
+    border: 1px solid var(--jd-line);
+    border-radius: 16px;
+    background: #fff;
+  }
+
+  .jd-profit-income-flow small,
+  .jd-profit-income-flow span { display: block; color: var(--jd-muted); font-size: .76rem; }
+  .jd-profit-income-flow strong { display: block; margin: .35rem 0; }
+  .jd-profit-income-flow i { color: var(--jd-muted); font-style: normal; }
+
+  .jd-profit-cost-grid,
+  .jd-profit-proof {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+    margin: 1.5rem 0;
+  }
+
+  .jd-profit-cost-grid section,
+  .jd-profit-proof section,
+  .jd-profit-marketing section,
+  .jd-profit-ratios section {
+    padding: 1rem 1.05rem;
+    border: 1px solid var(--jd-line);
+    border-radius: 16px;
+    background: #fff;
+  }
+
+  .jd-profit-cost-grid section > span,
+  .jd-profit-proof section > span,
+  .jd-profit-marketing section > span,
+  .jd-profit-ratios section > span {
+    color: var(--jd-red);
+    font-size: .76rem;
+    font-weight: 800;
+  }
+
+  .jd-profit-cost-grid strong,
+  .jd-profit-marketing strong { display: block; margin: .25rem 0; }
+  .jd-profit-cost-grid p,
+  .jd-profit-proof p,
+  .jd-profit-marketing p { margin: .45rem 0 0; color: var(--jd-muted); font-size: .88rem; }
+
+  .jd-profit-logistics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .9rem;
+    margin: 1.5rem 0;
+  }
+
+  .jd-profit-logistics section {
+    padding: 1.1rem;
+    border-radius: 18px;
+  }
+
+  .jd-profit-logistics .is-forward { background: var(--jd-blue-soft); }
+  .jd-profit-logistics .is-return { background: var(--jd-red-soft); }
+  .jd-profit-logistics header { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
+  .jd-profit-logistics header span { font-size: .76rem; font-weight: 800; }
+  .jd-profit-logistics div { display: flex; justify-content: space-between; gap: 1rem; padding: .55rem 0; border-top: 1px solid rgba(23, 32, 51, .1); }
+  .jd-profit-logistics small { color: var(--jd-muted); }
+  .jd-profit-logistics p { margin: .8rem 0 0; color: var(--jd-muted); font-size: .88rem; }
+
+  .jd-profit-margin {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    border: 1px solid var(--jd-line);
+    border-radius: 20px;
+    background: var(--jd-paper);
+  }
+
+  .jd-profit-margin__rates {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .65rem;
+    margin-bottom: .8rem;
+  }
+
+  .jd-profit-margin__rates span {
+    padding: .8rem;
+    border-radius: 14px;
+    background: #fff;
+    text-align: center;
+  }
+
+  .jd-profit-margin__rates small { display: block; color: var(--jd-muted); }
+  .jd-profit-margin__rates strong { font-size: 1.25rem; }
+
+  .jd-profit-margin__steps {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1.35fr;
+    align-items: stretch;
+    gap: .6rem;
+  }
+
+  .jd-profit-margin__steps section {
+    padding: .9rem;
+    border-radius: 14px;
+    background: #fff;
+  }
+
+  .jd-profit-margin__steps small { display: block; color: var(--jd-muted); font-size: .74rem; }
+  .jd-profit-margin__steps strong { display: block; margin-top: .4rem; }
+  .jd-profit-margin__steps i { display: grid; place-items: center; color: var(--jd-muted); font-style: normal; }
+  .jd-profit-margin__steps .is-result { background: var(--jd-red-soft); }
+
+  .jd-profit-marketing,
+  .jd-profit-ratios {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .8rem;
+    margin: 1.5rem 0;
+  }
+
+  .jd-profit-ratios { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .jd-profit-ratios section { padding: .85rem; }
+  .jd-profit-ratios code { font-size: .76rem; }
+
+  .jd-profit-runtime {
+    margin: 1.5rem 0;
+    overflow: hidden;
+    border: 1px solid var(--jd-line);
+    border-radius: 22px;
+    background: #fff;
+  }
+
+  .jd-profit-runtime > header {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--jd-line);
+  }
+
+  .jd-profit-runtime > header span { padding: 1rem; background: var(--jd-paper); }
+  .jd-profit-runtime > header strong { display: block; margin-top: .2rem; }
+
+  .jd-profit-runtime__steps {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+  }
+
+  .jd-profit-runtime__steps section {
+    padding: 1rem;
+    border-top: 1px solid var(--jd-line);
+  }
+
+  .jd-profit-runtime__steps section:nth-child(odd) { border-right: 1px solid var(--jd-line); }
+  .jd-profit-runtime__steps code { display: block; margin: .28rem 0; color: var(--jd-muted); white-space: normal; }
+  .jd-profit-runtime__steps strong { display: block; }
+
+  .jd-profit-runtime__result {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    padding-top: 1px;
+    background: var(--jd-line);
+  }
+
+  .jd-profit-runtime__result span { padding: 1rem; background: var(--jd-paper); }
+  .jd-profit-runtime__result strong { display: block; margin-top: .2rem; font-size: 1.25rem; }
+  .jd-profit-runtime__result .is-profit { background: var(--jd-green-soft); color: var(--jd-green); }
+
+  .jd-profit-proof { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  .jd-profit-final-ledger {
+    margin: 1.5rem 0 2rem;
+    border: 1px solid var(--jd-line);
+    border-radius: 22px;
+    overflow: hidden;
+  }
+
+  .jd-profit-final-ledger header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.15rem;
+    background: var(--jd-ink);
+    color: #fff;
+  }
+
+  .jd-profit-final-ledger__income { padding: 1.1rem; background: var(--jd-blue-soft); }
+  .jd-profit-final-ledger__income code { margin-top: .3rem; color: var(--jd-blue); }
+
+  .jd-profit-final-ledger__costs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--jd-line);
+  }
+
+  .jd-profit-final-ledger__costs span { padding: .8rem 1rem; background: #fff; }
+
+  .jd-profit-final-ledger__result {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--jd-line);
+  }
+
+  .jd-profit-final-ledger__result span { padding: 1rem; background: var(--jd-green-soft); }
+  .jd-profit-final-ledger__result strong { display: block; margin-top: .2rem; color: var(--jd-green); }
+
+  @media (max-width: 760px) {
+    .jd-profit-hero__ledger,
+    .jd-profit-equation,
+    .jd-profit-income-flow,
+    .jd-profit-margin__steps {
+      grid-template-columns: 1fr;
+    }
+
+    .jd-profit-hero__ledger i,
+    .jd-profit-equation__operator,
+    .jd-profit-income-flow i,
+    .jd-profit-margin__steps i {
+      transform: rotate(90deg);
+      min-height: 22px;
+      text-align: center;
+    }
+
+    .jd-profit-window__bands,
+    .jd-profit-cost-grid,
+    .jd-profit-logistics,
+    .jd-profit-marketing,
+    .jd-profit-ratios,
+    .jd-profit-proof,
+    .jd-profit-runtime > header,
+    .jd-profit-runtime__steps,
+    .jd-profit-runtime__result,
+    .jd-profit-final-ledger__costs,
+    .jd-profit-final-ledger__result {
+      grid-template-columns: 1fr;
+    }
+
+    .jd-profit-window__ticks { display: none; }
+    .jd-profit-runtime__steps section:nth-child(odd) { border-right: 0; }
+    .jd-profit-final-ledger header { flex-direction: column; }
+  }
+`}</style>
