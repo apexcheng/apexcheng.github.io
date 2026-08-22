@@ -14,6 +14,7 @@
 | `src/content/posts/yingdao-daily-report-to-business-dashboard.mdx` | `实践` | 从 40+ 个零散影刀应用复盘人机协作、维护责任、日报边界和经营看板升级方向 | 写影刀应用治理、日报自动化、经营看板、人机协作和维护责任文章时参考 |
 | `src/content/posts/yingdao-agent-development-knowledge-base.mdx` | `教程` | 影刀 × Agent 开发总览，覆盖开发知识库、问题查询、真实项目规则、浏览器元素探索、代码同步和知识库更新闭环 | 写影刀编码版、Agent 辅助开发、影刀知识库、浏览器元素探索和外部代码同步时参考 |
 | `src/content/posts/automation-agent-workflow.mdx` | `实践` | Agent 执行系统图解手册，统一任务分流、状态管理、权限边界、执行循环和失败恢复 | 写 Agent 流程、自动化协作、任务拆解决策、大任务阶段管理和失败恢复文章时参考 |
+| `src/content/posts/hermes-agent-guide-for-openclaw-users.mdx` | `教程` | 面向 OpenClaw 用户的 Hermes Agent 入门图解，覆盖当前运行结构、OpenClaw 概念映射、安装与官方迁移、模型/OAuth、Tools/Skills/MCP、Session/Memory、Gateway 和使用场景判断 | 写 Hermes Agent、OpenClaw 迁移、多 Agent 运行环境、模型认证、Skills/MCP、消息网关和工具生态文章时参考 |
 | `src/content/posts/browser-agent-shared-chrome-runtime.mdx` | `实践` | 共享 Chrome 运行时架构手册，覆盖固定 Profile、CDP、ensure 状态机、接入顺序、页面隔离、操作清单和故障分流 | 写浏览器自动化基础设施、Playwright CDP、共享登录状态、Chrome 生命周期和多 Agent 复用时参考 |
 | `src/content/posts/gbrain-openclaw-long-term-brain-setup.mdx` | `实践` | GBrain 接入 OpenClaw 的完整实战，覆盖 Context Engine 自动召回、Signal Detector 后台写入、PostgreSQL 多会话并发、Brain source 路由，以及状态、检索、写入、同步、维护和接入验收命令 | 写 Agent 长期记忆、GBrain CLI、OpenClaw Context Engine、自动记忆闭环、知识库运维和分层排障时参考 |
 | `src/content/posts/blog-project-architecture.mdx` | `实践` | 维护者视角的博客系统蓝图，覆盖仓库职责、内容分区、规则控制面、写作公开流程和静态发布边界 | 写本博客说明、仓库结构、内容维护规则和发布边界时参考 |

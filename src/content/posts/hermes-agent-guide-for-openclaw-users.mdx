@@ -1,0 +1,855 @@
+---
+title: "OpenClaw 用户上手 Hermes Agent：从概念迁移到真正跑起来"
+description: "站在 OpenClaw 用户视角，重新理解 Hermes Agent 的运行方式、模型与 OAuth、Tools / Skills / MCP、Session / Memory、Gateway，以及如何安全迁移现有 OpenClaw 配置。"
+date: 2026-08-22T22:03:00+08:00
+category: "教程"
+tags:
+  - "Hermes Agent"
+  - "OpenClaw"
+  - "Agent"
+minutes: 22
+featured: false
+draft: false
+private: false
+---
+
+如果已经熟悉 OpenClaw，再看 Hermes Agent，最容易犯的错误是：**把 OpenClaw 的名词一一套过去，然后认为 Hermes 只是另一套 CLI 外壳。**
+
+这在 2026 年已经不准确了。
+
+Hermes 当然可以在终端里直接运行，但现在它同时拥有 Desktop、Dashboard、Project、Profile、Gateway、Session、Memory、Skills、MCP、Cron 等完整能力；更关键的是，官方已经直接提供了 **OpenClaw → Hermes 的迁移工具**。
+
+<div class="hermes-hero" role="group" aria-label="OpenClaw 用户理解 Hermes Agent 的核心视角">
+  <div class="hermes-hero__copy">
+    <span>HERMES AGENT · OPENCLAW USER FIELD GUIDE</span>
+    <strong>不要先背命令。先把你熟悉的 OpenClaw 心智模型，翻译成 Hermes 的运行结构。</strong>
+    <p>理解运行边界 → 跑通模型 → 看懂 Tools / Skills / MCP → 分清 Session / Memory → 最后再接 Gateway。</p>
+  </div>
+  <div class="hermes-hero__route" aria-label="学习路线">
+    <div><b>01</b><span>Runtime</span><small>它到底在运行什么</small></div>
+    <i>→</i>
+    <div><b>02</b><span>Capability</span><small>工具能力从哪里来</small></div>
+    <i>→</i>
+    <div><b>03</b><span>State</span><small>会话和记忆如何留下</small></div>
+    <i>→</i>
+    <div class="is-final"><b>04</b><span>Gateway</span><small>再把它接到消息渠道</small></div>
+  </div>
+  <footer>
+    <span>本文核验基线</span>
+    <strong>2026-08-22 · Hermes Agent v0.20.5（v2026.8.19）</strong>
+    <small>Hermes 更新非常快，具体命令和配置仍应以官方文档与本机 `--help` 为准。</small>
+  </footer>
+</div>
+
+本文不是官方文档翻译，而是把我原来两份 Hermes 笔记重新拆掉后，按当前版本重新组织。旧稿里已经失效或明显过时的内容直接删除，不保留“历史写法”。
+
+官方参考入口：[Hermes Agent 文档](https://hermes-agent.nousresearch.com/docs/)、[CLI Reference](https://hermes-agent.nousresearch.com/docs/reference/cli-commands)、[GitHub Releases](https://github.com/NousResearch/hermes-agent/releases)。
+
+## 先纠正一个旧印象：Hermes 已经不只是本地 CLI 工具箱
+
+旧稿里，我把 Hermes 概括成“本地优先的 agent runtime + 一部分 gateway + tools + skills”。这个理解曾经有帮助，但放到现在已经太窄。
+
+Hermes 的核心仍然是 Agent Runtime：接收任务、组织上下文、调用模型、选择工具、执行动作、保存状态。但围绕这个 Runtime，已经长出一整套完整表面。
+
+<section class="hermes-board hermes-surface" aria-label="Hermes Agent 当前能力表面">
+  <header class="hermes-board__head">
+    <div><span>01 · SYSTEM SURFACE</span><strong>同一个 Agent Runtime，可以从很多入口进入</strong></div>
+    <p>CLI 只是最轻的入口，不再等于 Hermes 的全部。</p>
+  </header>
+  <div class="hermes-surface__core">
+    <div class="hermes-surface__inputs">
+      <article><b>CLI / TUI</b><span>终端直接工作</span></article>
+      <article><b>Desktop</b><span>原生桌面入口</span></article>
+      <article><b>Dashboard</b><span>浏览器管理配置与会话</span></article>
+      <article><b>Gateway</b><span>消息平台持续接入</span></article>
+    </div>
+    <div class="hermes-surface__agent">
+      <small>RUNTIME</small>
+      <strong>Hermes Agent</strong>
+      <span>模型推理 · 工具调用 · 规则 · 状态 · 自动化</span>
+    </div>
+    <div class="hermes-surface__state">
+      <article><b>Project</b><span>命名项目 / 多目录工作区</span></article>
+      <article><b>Profile</b><span>隔离配置、会话与 Skills</span></article>
+      <article><b>Session</b><span>一次持续对话的运行状态</span></article>
+      <article><b>Memory</b><span>跨会话保留的信息</span></article>
+    </div>
+  </div>
+</section>
+
+所以今天更合适的理解是：
+
+> **Hermes 是一套完整的 Agent 运行环境。CLI 是它最直接的入口，但不是它的边界。**
+
+这和 OpenClaw 的差别，也不再是“一个有 Gateway，一个没有 Gateway”。两者现在都有完整运行时、Skills、工具、会话和消息渠道，只是组织方式和使用重心不同。
+
+## 用 OpenClaw 的词汇翻译 Hermes
+
+下面这张图不是“协议级对应”，而是为了降低迁移时的理解成本。
+
+<section class="hermes-board hermes-map" aria-label="OpenClaw 与 Hermes Agent 概念对照">
+  <header class="hermes-board__head">
+    <div><span>02 · CONCEPT MAP</span><strong>可以类比，但不要假设完全等价</strong></div>
+    <p>先找到熟悉的概念，再看它在 Hermes 里是怎么重新组织的。</p>
+  </header>
+  <div class="hermes-map__rows">
+    <div><span>OpenClaw</span><i>↔</i><span>Hermes</span><b>理解重点</b></div>
+    <article><strong>Agent Runtime</strong><i>→</i><strong>Hermes Agent</strong><p>都负责模型、工具和上下文的主循环。</p></article>
+    <article><strong>Workspace</strong><i>→</i><strong>cwd / Project</strong><p>OpenClaw 强调每个 Agent 有明确 workspace；Hermes 既能从当前目录启动，也有 Project 管理层。</p></article>
+    <article><strong>Tools</strong><i>→</i><strong>Tools / Toolsets</strong><p>可执行能力。Hermes 通过 toolset 组合、开关和平台策略组织。</p></article>
+    <article><strong>Skills</strong><i>→</i><strong>Skills</strong><p>两边都以 `SKILL.md` 为核心，用知识和流程指导 Agent 使用能力。</p></article>
+    <article><strong>MCP</strong><i>→</i><strong>MCP</strong><p>都用于接入外部工具服务器；Hermes 也能反过来把自己暴露成 MCP server。</p></article>
+    <article><strong>Sessions</strong><i>→</i><strong>Sessions</strong><p>保存持续对话与运行上下文，但具体路由和存储结构不同。</p></article>
+    <article><strong>MEMORY / USER</strong><i>→</i><strong>MEMORY / USER + Provider</strong><p>Hermes 内置记忆始终存在，还可叠加一个外部 Memory Provider。</p></article>
+    <article><strong>Gateway / Channels</strong><i>→</i><strong>Gateway / Platforms</strong><p>都把同一套 Agent 接入 Telegram、Discord、Slack、钉钉等消息渠道。</p></article>
+    <article><strong>Model Provider</strong><i>→</i><strong>Provider / Model / Auth</strong><p>Hermes 把模型选择、OAuth/API Key 和凭据池拆成不同管理面。</p></article>
+  </div>
+</section>
+
+最重要的差异之一，是 **OpenClaw 的 workspace 是 Agent 的明确“家”**；Hermes 则允许你直接在项目目录里启动 Agent，同时又通过 `hermes project` 和 `hermes profile` 管理更复杂的项目和隔离实例。
+
+所以，旧稿里“Hermes 没有显式 Workspace”的说法现在也应该删除。
+
+## Hermes 实际在做什么：看一条完整运行链路
+
+如果把所有名词都拿掉，一次 Hermes 任务其实只有四层。
+
+<section class="hermes-board hermes-runtime" aria-label="Hermes Agent 运行链路">
+  <header class="hermes-board__head">
+    <div><span>03 · RUNTIME PATH</span><strong>输入不是重点，关键是任务如何穿过四层系统</strong></div>
+    <p>CLI、Desktop 和 Gateway 最终都会进入同一个 Agent 执行逻辑。</p>
+  </header>
+  <div class="hermes-runtime__track">
+    <article><b>01</b><span>INPUT</span><strong>用户任务</strong><p>CLI、TUI、Desktop、Gateway、Cron。</p></article>
+    <i>→</i>
+    <article class="is-blue"><b>02</b><span>REASON</span><strong>Agent + Model</strong><p>读取规则、上下文和当前 Session，决定下一步。</p></article>
+    <i>→</i>
+    <article class="is-purple"><b>03</b><span>ACT</span><strong>Tools / Skills / MCP</strong><p>读文件、执行命令、浏览网页、调用外部服务。</p></article>
+    <i>→</i>
+    <article class="is-green"><b>04</b><span>STATE</span><strong>结果 + Session + Memory</strong><p>返回结果，并把该留下的状态保存下来。</p></article>
+  </div>
+  <div class="hermes-runtime__note">
+    <span>一句话</span>
+    <strong>模型负责判断下一步；Tools / MCP 负责真正执行；Skills 负责告诉 Agent 应该怎样做；Session / Memory 负责让下一轮不从零开始。</strong>
+  </div>
+</section>
+
+这也是理解 Hermes 最重要的一条线：**Tool 和 Skill 绝不是同一个东西，Session 和 Memory 也绝不是同一个东西。**
+
+## 安装：现在不必只盯着 WSL2
+
+旧稿默认“Windows 用户 → WSL2 → 安装 Hermes”。现在官方已经明确支持 macOS、Linux、WSL2、Windows Native，macOS / Windows 还提供 Hermes Desktop 安装器。
+
+如果本来就在 WSL2 里维护代码和 OpenClaw，继续装在 WSL2 完全合理；但它已经不是唯一正确路径。
+
+<section class="hermes-board hermes-install" aria-label="Hermes Agent 安装路径">
+  <header class="hermes-board__head">
+    <div><span>04 · INSTALL</span><strong>先选运行环境，再只做最短验证</strong></div>
+    <p>目标不是一次配齐所有能力，而是先证明模型和 Agent Loop 正常。</p>
+  </header>
+  <div class="hermes-install__grid">
+    <article>
+      <span>macOS / Windows</span>
+      <strong>Desktop Installer</strong>
+      <p>官方当前推荐的桌面安装路径，适合希望直接使用 GUI 的用户。</p>
+      <small>也可以只安装 CLI</small>
+    </article>
+    <article class="is-primary">
+      <span>Linux / macOS / WSL2</span>
+      <strong>CLI Install</strong>
+      <p>最接近传统 OpenClaw / Coding Agent 的使用方式。</p>
+      <small>适合服务器、WSL2、SSH 环境</small>
+    </article>
+    <article>
+      <span>Windows Native</span>
+      <strong>PowerShell</strong>
+      <p>不再要求为了 Hermes 单独进入 WSL2。</p>
+      <small>适合原生 Windows 工作流</small>
+    </article>
+  </div>
+</section>
+
+Linux / macOS / WSL2 的当前官方 CLI 安装命令：
+
+```bash
+curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+```
+
+Windows Native：
+
+```powershell
+iex (irm https://hermes-agent.nousresearch.com/install.ps1)
+```
+
+安装后先做最小检查：
+
+```bash
+hermes version
+hermes doctor
+```
+
+然后只处理模型，不要马上接 Gateway、Browser、MCP：
+
+```bash
+hermes model
+hermes chat -q "Reply with exactly: OK"
+```
+
+如果这个最小聊天都不通，继续配置更多能力只会增加变量。
+
+官方安装与 Quickstart：[Installation](https://hermes-agent.nousresearch.com/docs/getting-started/installation/)、[Quickstart](https://hermes-agent.nousresearch.com/docs/getting-started/quickstart)。
+
+## OpenClaw 用户最值得先看的，其实是官方迁移工具
+
+这是旧稿里完全没有、但现在最值得 OpenClaw 用户知道的一项能力。
+
+Hermes 会在首次 `hermes setup` 时检测 `~/.openclaw`，并询问是否查看迁移计划。也可以随时手动执行：
+
+```bash
+hermes claw migrate --dry-run
+```
+
+这个命令只预览，不写入。
+
+<section class="hermes-board hermes-migrate" aria-label="OpenClaw 迁移到 Hermes 的流程">
+  <header class="hermes-board__head">
+    <div><span>05 · OPENCLAW MIGRATION</span><strong>不要手工复制配置，先让 Hermes 给出迁移计划</strong></div>
+    <p>官方迁移器已经理解两套系统之间大量字段和目录的映射。</p>
+  </header>
+  <div class="hermes-migrate__flow">
+    <article><b>1</b><strong>读取 OpenClaw</strong><span>{'~/.openclaw'}</span><p>识别 persona、memory、skills、provider、MCP、gateway 等配置。</p></article>
+    <i>→</i>
+    <article class="is-preview"><b>2</b><strong>Dry Run</strong><span>只生成迁移预览</span><p>先看会迁什么、冲突在哪里、什么需要人工处理。</p></article>
+    <i>→</i>
+    <article class="is-apply"><b>3</b><strong>Apply</strong><span>确认后才写入</span><p>迁移到 `~/.hermes`，冲突按策略处理。</p></article>
+  </div>
+  <div class="hermes-migrate__split">
+    <section>
+      <span>可以直接映射</span>
+      <strong>SOUL · MEMORY · USER · Skills · Model · MCP · Gateway · Approval 等</strong>
+      <p>当前 CLI Reference 已列出 30+ 类迁移项。</p>
+    </section>
+    <section class="is-review">
+      <span>需要归档 / 人工复核</span>
+      <strong>Cron · Plugins · Hooks · Multi-Agent · 部分 UI / Identity 等</strong>
+      <p>没有可靠一一对应的内容不会硬塞进 Hermes。</p>
+    </section>
+  </div>
+  <footer><b>安全默认值：</b>即使使用 `full` preset，也不会自动迁移 secrets；只有显式加 `--migrate-secrets` 才会包含密钥。</footer>
+</section>
+
+我更建议的路径是：
+
+```bash
+# 1. 只看计划
+hermes claw migrate --dry-run
+
+# 2. 只迁用户数据，不碰 secrets
+hermes claw migrate --preset user-data
+```
+
+如果确实准备把现有 OpenClaw 配置完整迁过去，再查看 `hermes claw migrate --help`，逐项决定 provider、gateway、skills 冲突和 workspace instruction 怎么处理。
+
+官方文档：[Migrate from OpenClaw](https://hermes-agent.nousresearch.com/docs/guides/migrate-from-openclaw)。
+
+## Model / Provider / OAuth：不要把这三个概念揉成一个
+
+OpenClaw 用户通常已经习惯“Provider + Model”。Hermes 还多了一层非常显眼的 Auth 管理。
+
+现在最简单的原则是：
+
+<section class="hermes-board hermes-model" aria-label="Hermes 模型与认证关系">
+  <header class="hermes-board__head">
+    <div><span>06 · MODEL & AUTH</span><strong>选谁提供推理、选哪个模型、凭什么登录，是三件事</strong></div>
+    <p>多数配置都应该先从 `hermes model` 进入，而不是手改 YAML。</p>
+  </header>
+  <div class="hermes-model__columns">
+    <article><span>PROVIDER</span><strong>谁提供推理</strong><p>Nous Portal、OpenRouter、Anthropic、OpenAI API、Gemini、Copilot、自建 endpoint……</p></article>
+    <i>+</i>
+    <article><span>MODEL</span><strong>具体用哪个模型</strong><p>同一个 Provider 下面可以切换多个模型，也可以做 fallback / routing。</p></article>
+    <i>+</i>
+    <article><span>AUTH</span><strong>凭什么访问</strong><p>API Key、OAuth、device code、credential pool 等。</p></article>
+  </div>
+  <div class="hermes-model__paths">
+    <section><b>A</b><strong>Nous Portal</strong><span>`hermes setup --portal`</span><p>一次 OAuth 配好模型入口和 Tool Gateway。适合已经使用 Nous Portal 的用户。</p></section>
+    <section><b>B</b><strong>OAuth Provider</strong><span>`hermes model`</span><p>Codex、Anthropic、Copilot、Qwen、MiniMax 等支持对应 OAuth 流程。</p></section>
+    <section><b>C</b><strong>API Key / 自建</strong><span>`hermes model` / `.env`</span><p>OpenRouter、Gemini、DeepSeek、OpenAI-compatible endpoint 等。</p></section>
+  </div>
+</section>
+
+这里有一个非常容易混淆的地方：
+
+- `hermes model`：终端外执行。负责**新增 Provider、OAuth 登录、录入 API Key、选择模型**。
+- `/model`：Hermes 会话里面执行。只负责**在已经配置好的模型之间切换**。
+- `hermes auth`：更偏**凭据池和认证状态管理**，不是普通用户第一次配置模型的首选入口。
+
+所以旧笔记里把 OpenAI Codex 的主流程写成 `hermes auth add openai-codex`，现在不应该继续保留。当前更稳定的入口是：
+
+```bash
+hermes model
+```
+
+在模型向导里选择 ChatGPT / Codex Subscription，并完成 OAuth。
+
+官方 Provider 文档：[AI Providers](https://hermes-agent.nousresearch.com/docs/integrations/providers)。
+
+## Tools、Skills、MCP：一个负责做，一个负责教，一个负责扩展
+
+这是最需要讲清楚的一组概念。
+
+<section class="hermes-board hermes-capability" aria-label="Tools Skills MCP 三者区别">
+  <header class="hermes-board__head">
+    <div><span>07 · CAPABILITY LAYERS</span><strong>Tool 能执行，Skill 能指导，MCP 能把外部能力接进来</strong></div>
+    <p>三者最终都会影响 Agent 能不能完成任务，但工作层级完全不同。</p>
+  </header>
+  <div class="hermes-capability__grid">
+    <article class="is-tool">
+      <span>TOOL</span>
+      <strong>真正产生动作</strong>
+      <p>terminal、file、web、browser、memory、cron、delegation……</p>
+      <small>像 OpenClaw 的 tools / exec / browser</small>
+    </article>
+    <article class="is-skill">
+      <span>SKILL</span>
+      <strong>告诉 Agent 应该怎么做</strong>
+      <p>按需加载 `SKILL.md`，提供领域知识、流程、规则和工具使用方法。</p>
+      <small>不是“执行函数”，而是任务知识</small>
+    </article>
+    <article class="is-mcp">
+      <span>MCP</span>
+      <strong>把外部工具接进来</strong>
+      <p>GitHub、数据库、公司服务、文件系统、第三方工具服务器。</p>
+      <small>外部能力进入 Hermes 的标准桥梁之一</small>
+    </article>
+  </div>
+  <div class="hermes-capability__example">
+    <span>例子</span>
+    <strong>“帮我修这个仓库里的 Bug”</strong>
+    <i>→</i>
+    <div><b>Skill</b> 先告诉 Agent 项目规则和排查方法</div>
+    <i>→</i>
+    <div><b>Tool</b> 读文件、执行测试、修改代码</div>
+    <i>→</i>
+    <div><b>MCP</b> 如果需要，再调用 GitHub 或外部系统</div>
+  </div>
+</section>
+
+常用查看命令：
+
+```bash
+hermes tools --summary
+hermes skills list
+hermes skills search <keyword>
+hermes mcp
+```
+
+当前 Hermes 的 Skills 已经不仅是“本地放一份 SKILL.md”。CLI 支持 browse、search、inspect、install、update、audit、publish，也有 Skill 写入审批和 curator 等机制。
+
+MCP 也比旧稿成熟得多。Hermes 可以作为 MCP Client 连接 stdio / HTTP server，也可以执行：
+
+```bash
+hermes mcp serve
+```
+
+把自己的消息会话能力暴露成 MCP server，给其他 Agent 使用。
+
+另外，旧稿中 MCP 工具名举例写成了 `mcp_github_create_issue`。当前官方规则是类似：
+
+```text
+mcp__server_name__tool_name
+```
+
+例如 server 名和 tool 名中的特殊字符会被清洗后注册。
+
+官方文档：[Tools & Toolsets](https://hermes-agent.nousresearch.com/docs/user-guide/features/tools/)、[MCP](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp)。
+
+## Session 和 Memory：一个负责“这次聊到哪”，一个负责“以后还记得什么”
+
+这两个概念经常被写在一起，实际应该分开。
+
+<section class="hermes-board hermes-state" aria-label="Session 和 Memory 的区别">
+  <header class="hermes-board__head">
+    <div><span>08 · STATE MODEL</span><strong>Session 是运行上下文，Memory 是跨会话知识</strong></div>
+    <p>“没有清空聊天”不等于长期记忆；“写进 Memory”也不等于永远把全部内容塞进当前上下文。</p>
+  </header>
+  <div class="hermes-state__split">
+    <article>
+      <span>SESSION</span>
+      <strong>这一段对话进行到哪里</strong>
+      <ul>
+        <li>保存消息、模型、工具调用和会话状态</li>
+        <li>Gateway 中按聊天来源路由</li>
+        <li>可以 browse、resume、rename、export、prune</li>
+        <li>当前主存储以 `~/.hermes/state.db` 为核心</li>
+      </ul>
+      <code>hermes sessions browse</code>
+    </article>
+    <article class="is-memory">
+      <span>MEMORY</span>
+      <strong>跨 Session 仍值得保留什么</strong>
+      <ul>
+        <li>内置 `MEMORY.md` / `USER.md` 始终可用</li>
+        <li>可叠加一个外部 Memory Provider</li>
+        <li>外部 Provider 是增强，不会替代内置 Memory</li>
+        <li>适合稳定偏好、项目事实、长期知识</li>
+      </ul>
+      <code>hermes memory status</code>
+    </article>
+  </div>
+</section>
+
+管理 Session：
+
+```bash
+hermes sessions list
+hermes sessions browse
+hermes sessions stats
+```
+
+管理外部 Memory Provider：
+
+```bash
+hermes memory setup
+hermes memory status
+hermes memory off
+```
+
+当前官方文档列出的外部 Memory Provider 包括 Honcho、OpenViking、Mem0、Hindsight、Holographic、RetainDB、ByteRover、Supermemory 等；同时只激活一个外部 Provider，内置 Memory 始终继续工作。
+
+官方文档：[Memory Providers](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory-providers/)。
+
+## Gateway：它和 OpenClaw 的 Gateway 最像，但仍不要默认完全等价
+
+如果已经把 OpenClaw 当作一个“消息渠道 ↔ Agent Runtime”的统一入口，那么 Hermes Gateway 很容易理解。
+
+<section class="hermes-board hermes-gateway" aria-label="Hermes Gateway 消息渠道架构">
+  <header class="hermes-board__head">
+    <div><span>09 · MESSAGING GATEWAY</span><strong>一套 Agent，接入多个真实消息渠道</strong></div>
+    <p>Gateway 负责平台连接、会话路由、Cron 和消息投递，不是模型本身。</p>
+  </header>
+  <div class="hermes-gateway__platforms">
+    <span>Telegram</span><span>Discord</span><span>Slack</span><span>WhatsApp</span><span>Signal</span><span>钉钉</span><span>飞书</span><span>企业微信</span><span>Teams</span><span>Matrix</span><span>更多</span>
+  </div>
+  <div class="hermes-gateway__flow">
+    <strong>Platform Adapter</strong><i>→</i><strong>Per-chat Session</strong><i>→</i><strong>Hermes Agent</strong><i>→</i><strong>Tool / Model</strong><i>→</i><strong>Deliver</strong>
+  </div>
+  <footer>安全重点：一个能执行 Terminal 的 Bot，不应该默认允许所有陌生用户调用。优先使用 allowlist / pairing，再决定管理员与普通用户权限。</footer>
+</section>
+
+最简单的配置入口：
+
+```bash
+hermes gateway setup
+```
+
+运行方式：
+
+```bash
+hermes gateway run
+hermes gateway status
+```
+
+WSL 用户要特别注意：当前官方 CLI Reference 明确建议 WSL 场景优先使用前台 `hermes gateway run`，而不是依赖 `gateway start` 的 systemd 服务模式。
+
+Hermes Gateway 当前支持的渠道已经远多于旧笔记记录，官方列表包括 Telegram、Discord、Slack、WhatsApp、Signal、Email、Mattermost、Matrix、DingTalk、Feishu/Lark、WeCom、Microsoft Teams、LINE 等。
+
+官方文档：[Messaging Gateway](https://hermes-agent.nousresearch.com/docs/user-guide/messaging)。
+
+## 常用命令：只保留现在真正值得记的
+
+旧笔记最大的问题，是把大量“可能存在 / 版本可能支持”的命令也写了进去。日常使用其实不需要背那么多。
+
+<div class="hermes-command-strip" aria-label="Hermes 常用命令分组">
+  <span><b>安装 / 检查</b> version · doctor · status · update</span>
+  <span><b>模型 / 登录</b> setup · model · auth</span>
+  <span><b>能力</b> tools · skills · mcp · memory</span>
+  <span><b>状态</b> sessions · profile · project</span>
+  <span><b>消息</b> gateway · send · pairing</span>
+</div>
+
+```bash
+# 基础状态
+hermes version
+hermes doctor
+hermes status --all --deep
+hermes update --check
+
+# 模型与认证
+hermes setup
+hermes model
+hermes auth list
+
+# 工具与扩展
+hermes tools --summary
+hermes skills list
+hermes mcp
+hermes memory status
+
+# 会话
+hermes sessions browse
+
+# Gateway
+hermes gateway setup
+hermes gateway status
+
+# OpenClaw 迁移
+hermes claw migrate --dry-run
+```
+
+会话内更常用的是：
+
+```text
+/model
+/status
+/new
+/sessions
+/resume
+/tools
+/skills
+/memory
+/reload-mcp
+/help
+```
+
+真正不知道时，优先看：
+
+```bash
+hermes --help
+hermes <command> --help
+```
+
+而不是继续找旧笔记里的命令。
+
+## 到底什么时候用 Hermes，什么时候继续用 OpenClaw？
+
+我不建议把这个问题理解成“谁替代谁”。更实用的判断是：**你当前想优化的是哪一层。**
+
+<section class="hermes-board hermes-decision" aria-label="Hermes 与 OpenClaw 使用场景选择">
+  <header class="hermes-board__head">
+    <div><span>10 · DECISION MAP</span><strong>不是二选一，而是看现有系统哪一套更接近你的工作中心</strong></div>
+    <p>两边能力已经高度重叠，迁移成本和既有生态往往比功能清单更重要。</p>
+  </header>
+  <div class="hermes-decision__grid">
+    <article class="is-hermes">
+      <span>更值得试 Hermes</span>
+      <strong>你想重新搭一套 Agent 工作环境</strong>
+      <ul>
+        <li>希望 CLI / Desktop / Gateway 用同一套 Hermes 状态</li>
+        <li>重视多 Provider / OAuth / Profile / Project</li>
+        <li>想使用 Hermes 当前的 Skills、Plugins、Memory Provider 生态</li>
+        <li>希望直接用官方 `hermes claw migrate` 迁移 OpenClaw 数据</li>
+      </ul>
+    </article>
+    <article class="is-openclaw">
+      <span>继续用 OpenClaw</span>
+      <strong>现有体系已经稳定运行</strong>
+      <ul>
+        <li>现有 workspace、skills、gateway、channels 已经形成稳定习惯</li>
+        <li>大量项目规则和自动化已经围绕 OpenClaw 构建</li>
+        <li>当前没有明确痛点，不需要为了“换 Agent”重新迁移运维体系</li>
+        <li>更重视稳定延续，而不是尝试另一套运行环境</li>
+      </ul>
+    </article>
+  </div>
+  <div class="hermes-decision__verdict">
+    <span>最小成本策略</span>
+    <strong>先并行试用，再决定迁移。</strong>
+    <p>用 Hermes 跑一个真实项目，体验模型、Tools、Skills、Session 和 Gateway；确认确实更适合，再对 OpenClaw 做 dry-run migration，而不是先删掉旧系统。</p>
+  </div>
+</section>
+
+如果已经是 OpenClaw 重度用户，我会先做下面这组最小实验：
+
+```bash
+# 1. 安装并跑通模型
+hermes model
+hermes chat -q "检查当前目录，并总结这个项目是做什么的"
+
+# 2. 看工具边界
+hermes tools --summary
+
+# 3. 看 OpenClaw 迁移计划，但暂时不写入
+hermes claw migrate --dry-run
+
+# 4. 确认真正想迁的内容，再决定是否执行
+```
+
+这样你得到的不是一张“功能对比表”，而是一次真实体验：**Hermes 在你的工作流里，到底能不能比现有 OpenClaw 更顺。**
+
+<div class="hermes-summary">
+  <span>TAKEAWAY</span>
+  <strong>OpenClaw 用户学 Hermes，最省时间的方法不是重新学习一套 Agent 概念，而是先翻译已有经验，再把不等价的地方单独学清楚。</strong>
+  <p>先跑通 Runtime，再理解 Tools / Skills / MCP；先分清 Session / Memory，再接 Gateway。真正准备迁移时，从 `hermes claw migrate --dry-run` 开始。</p>
+</div>
+
+<style>{`
+  .hermes-hero,
+  .hermes-board,
+  .hermes-command-strip,
+  .hermes-summary {
+    --ink: #17233a;
+    --muted: #617087;
+    --line: #d7e0ea;
+    --blue: #2d6cdf;
+    --purple: #7452c8;
+    --green: #16816a;
+    --orange: #c56a2a;
+    color: var(--ink);
+  }
+
+  .hermes-hero {
+    width: min(1100px, calc(100vw - 2rem));
+    margin: 1.5rem 0 2.1rem 50%;
+    overflow: hidden;
+    border: 1px solid #ccd9ec;
+    border-radius: 22px;
+    background:
+      radial-gradient(circle at 88% 12%, rgba(116,82,200,.15), transparent 28%),
+      linear-gradient(135deg, #f4f8ff, #fbfaff 58%, #f4fffb);
+    box-shadow: 0 22px 56px rgba(33, 57, 95, .11);
+    transform: translateX(-50%);
+  }
+  .hermes-hero__copy { padding: 1.55rem 1.7rem 1.25rem; }
+  .hermes-hero__copy span,
+  .hermes-board__head span,
+  .hermes-summary > span { display: block; color: var(--blue); font-size: .7rem; font-weight: 900; letter-spacing: .09em; }
+  .hermes-hero__copy strong { display: block; max-width: 820px; margin: .42rem 0 .55rem; color: #20365d; font-size: clamp(1.25rem, 2.9vw, 2rem); line-height: 1.35; }
+  .hermes-hero__copy p { max-width: 780px; margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.7; }
+  .hermes-hero__route { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; gap: .65rem; align-items: center; padding: 1.15rem 1.7rem; border-top: 1px solid #dbe4f0; border-bottom: 1px solid #dbe4f0; background: rgba(255,255,255,.66); }
+  .hermes-hero__route div { min-height: 92px; padding: .78rem .85rem; border: 1px solid #d9e2ee; border-radius: 12px; background: rgba(255,255,255,.86); }
+  .hermes-hero__route b { display: block; color: var(--purple); font-size: .7rem; }
+  .hermes-hero__route span { display: block; margin: .25rem 0; color: #30476c; font-weight: 850; }
+  .hermes-hero__route small { color: var(--muted); font-size: .76rem; }
+  .hermes-hero__route i { color: #93a4bd; font-style: normal; font-weight: 900; }
+  .hermes-hero__route .is-final { border-color: #bfe0d5; background: #f4fbf8; }
+  .hermes-hero footer { display: grid; grid-template-columns: auto 1fr auto; gap: .75rem; align-items: center; padding: .78rem 1.7rem; color: var(--muted); font-size: .76rem; }
+  .hermes-hero footer strong { color: #385174; }
+  .hermes-hero footer small { color: #7b899a; }
+
+  .hermes-board {
+    width: min(1100px, calc(100vw - 2rem));
+    margin: 1.45rem 0 2rem 50%;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 18px 46px rgba(34, 55, 87, .09);
+    transform: translateX(-50%);
+  }
+  .hermes-board__head { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(220px, .65fr); gap: 1rem; padding: 1.15rem 1.35rem; border-bottom: 1px solid var(--line); background: linear-gradient(110deg, rgba(45,108,223,.075), transparent 58%); }
+  .hermes-board__head strong { display: block; margin-top: .3rem; color: #233b63; font-size: clamp(1.08rem, 2.1vw, 1.45rem); line-height: 1.4; }
+  .hermes-board__head p { align-self: end; margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.6; }
+
+  .hermes-surface__core { display: grid; grid-template-columns: 1fr 220px 1fr; gap: .9rem; align-items: center; padding: 1.25rem 1.35rem; background: radial-gradient(#e6edf5 1px, transparent 1px); background-size: 16px 16px; }
+  .hermes-surface__inputs,
+  .hermes-surface__state { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+  .hermes-surface article { min-height: 92px; padding: .72rem; border: 1px solid #d8e1ec; border-radius: 10px; background: rgba(255,255,255,.96); }
+  .hermes-surface article b { display: block; color: #385b8d; font-size: .82rem; }
+  .hermes-surface article span { display: block; margin-top: .28rem; color: var(--muted); font-size: .76rem; line-height: 1.45; }
+  .hermes-surface__agent { padding: 1.25rem 1rem; text-align: center; border: 1px solid #c8b9ed; border-radius: 18px; background: linear-gradient(145deg, #f7f3ff, #f1f6ff); box-shadow: 0 14px 28px rgba(95, 73, 157, .12); }
+  .hermes-surface__agent small { color: var(--purple); font-size: .68rem; font-weight: 900; letter-spacing: .08em; }
+  .hermes-surface__agent strong { display: block; margin: .35rem 0; color: #412f75; font-size: 1.08rem; }
+  .hermes-surface__agent span { color: #6b5d8c; font-size: .76rem; line-height: 1.5; }
+
+  .hermes-map__rows { padding: .65rem 1.35rem 1.2rem; }
+  .hermes-map__rows > div,
+  .hermes-map__rows > article { display: grid; grid-template-columns: 1fr 42px 1fr 1.5fr; gap: .75rem; align-items: center; }
+  .hermes-map__rows > div { padding: .55rem .7rem; color: #789; font-size: .68rem; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; }
+  .hermes-map__rows > article { padding: .72rem; border-top: 1px solid #e3e9f0; }
+  .hermes-map__rows strong { color: #334a6c; font-size: .82rem; }
+  .hermes-map__rows i { color: #9aa8ba; text-align: center; font-style: normal; }
+  .hermes-map__rows p { margin: 0; color: var(--muted); font-size: .76rem; line-height: 1.48; }
+
+  .hermes-runtime__track { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; gap: .6rem; align-items: center; padding: 1.25rem 1.35rem .95rem; }
+  .hermes-runtime__track article { min-height: 152px; padding: .82rem; border: 1px solid #d9e1eb; border-radius: 11px; background: #fbfdff; }
+  .hermes-runtime__track article b { color: #8798ae; font-size: .68rem; }
+  .hermes-runtime__track article > span { display: block; margin: .22rem 0 .35rem; color: var(--blue); font-size: .67rem; font-weight: 900; letter-spacing: .08em; }
+  .hermes-runtime__track article strong { display: block; color: #2d4368; font-size: .92rem; }
+  .hermes-runtime__track article p { margin: .45rem 0 0; color: var(--muted); font-size: .76rem; line-height: 1.55; }
+  .hermes-runtime__track i { color: #93a3b8; font-style: normal; font-weight: 900; }
+  .hermes-runtime__track .is-blue { background: #f5f9ff; border-color: #c7d8f0; }
+  .hermes-runtime__track .is-purple { background: #faf7ff; border-color: #d7ccee; }
+  .hermes-runtime__track .is-purple > span { color: var(--purple); }
+  .hermes-runtime__track .is-green { background: #f4fbf8; border-color: #c2dfd5; }
+  .hermes-runtime__track .is-green > span { color: var(--green); }
+  .hermes-runtime__note { display: grid; grid-template-columns: 90px 1fr; gap: .8rem; margin: 0 1.35rem 1.2rem; padding: .8rem .9rem; border: 1px solid #dce4ee; border-radius: 10px; background: #f8fafc; }
+  .hermes-runtime__note span { color: var(--purple); font-size: .72rem; font-weight: 900; }
+  .hermes-runtime__note strong { color: #4a5d78; font-size: .8rem; line-height: 1.55; }
+
+  .hermes-install__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; padding: 1.2rem 1.35rem; }
+  .hermes-install__grid article { min-height: 170px; padding: .9rem; border: 1px solid #d9e1eb; border-radius: 12px; background: #fbfcfe; }
+  .hermes-install__grid article > span { color: #71819a; font-size: .7rem; font-weight: 850; }
+  .hermes-install__grid strong { display: block; margin: .35rem 0; color: #30486d; }
+  .hermes-install__grid p { margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.6; }
+  .hermes-install__grid small { display: block; margin-top: .6rem; color: #8290a2; font-size: .7rem; }
+  .hermes-install__grid .is-primary { border-color: #bfd0eb; background: #f3f8ff; }
+  .hermes-install__grid .is-primary > span { color: var(--blue); }
+
+  .hermes-migrate__flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: .65rem; align-items: center; padding: 1.2rem 1.35rem .85rem; }
+  .hermes-migrate__flow article { min-height: 160px; padding: .85rem; border: 1px solid #d7e0ec; border-radius: 11px; background: #fbfdff; }
+  .hermes-migrate__flow b { color: var(--blue); font-size: .7rem; }
+  .hermes-migrate__flow strong { display: block; margin: .28rem 0; color: #304768; font-size: .9rem; }
+  .hermes-migrate__flow span { display: block; color: #5f7390; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .72rem; }
+  .hermes-migrate__flow p { margin: .45rem 0 0; color: var(--muted); font-size: .76rem; line-height: 1.52; }
+  .hermes-migrate__flow i { color: #94a3b6; font-style: normal; font-weight: 900; }
+  .hermes-migrate__flow .is-preview { border-color: #e9cba9; background: #fffaf4; }
+  .hermes-migrate__flow .is-preview b { color: var(--orange); }
+  .hermes-migrate__flow .is-apply { border-color: #bedfd4; background: #f3fbf7; }
+  .hermes-migrate__flow .is-apply b { color: var(--green); }
+  .hermes-migrate__split { display: grid; grid-template-columns: 1fr 1fr; margin: 0 1.35rem 1rem; overflow: hidden; border: 1px solid #dae3ed; border-radius: 11px; }
+  .hermes-migrate__split section { padding: .85rem; background: #f6fbf8; }
+  .hermes-migrate__split section + section { border-left: 1px solid #dae3ed; }
+  .hermes-migrate__split span { color: var(--green); font-size: .7rem; font-weight: 900; }
+  .hermes-migrate__split strong { display: block; margin: .3rem 0; color: #345a50; font-size: .83rem; line-height: 1.5; }
+  .hermes-migrate__split p { margin: 0; color: var(--muted); font-size: .75rem; line-height: 1.5; }
+  .hermes-migrate__split .is-review { background: #fff9f5; }
+  .hermes-migrate__split .is-review span { color: var(--orange); }
+  .hermes-migrate__split .is-review strong { color: #74513b; }
+  .hermes-migrate footer { padding: .75rem 1.35rem; border-top: 1px solid #eadfd7; color: #745f53; background: #fffaf6; font-size: .78rem; line-height: 1.55; }
+
+  .hermes-model__columns { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: .7rem; align-items: center; padding: 1.2rem 1.35rem .8rem; }
+  .hermes-model__columns article { min-height: 150px; padding: .85rem; border: 1px solid #d9e1ec; border-radius: 11px; background: #fbfdff; }
+  .hermes-model__columns article > span { color: var(--blue); font-size: .68rem; font-weight: 900; letter-spacing: .08em; }
+  .hermes-model__columns strong { display: block; margin: .35rem 0; color: #30496e; }
+  .hermes-model__columns p { margin: 0; color: var(--muted); font-size: .76rem; line-height: 1.55; }
+  .hermes-model__columns > i { color: #9ba8ba; font-style: normal; font-weight: 900; }
+  .hermes-model__paths { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; padding: 0 1.35rem 1.2rem; }
+  .hermes-model__paths section { padding: .75rem .8rem; border: 1px solid #dce4ed; border-radius: 9px; background: #f8fafc; }
+  .hermes-model__paths b { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: .35rem; border-radius: 50%; color: #fff; background: var(--purple); font-size: .68rem; }
+  .hermes-model__paths strong { color: #405675; font-size: .82rem; }
+  .hermes-model__paths span { display: block; margin: .45rem 0 .25rem; color: var(--blue); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .72rem; }
+  .hermes-model__paths p { margin: 0; color: var(--muted); font-size: .75rem; line-height: 1.5; }
+
+  .hermes-capability__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; padding: 1.2rem 1.35rem .9rem; }
+  .hermes-capability__grid article { min-height: 210px; padding: 1rem; border: 1px solid #d8e1ec; border-radius: 13px; }
+  .hermes-capability__grid span { font-size: .7rem; font-weight: 900; letter-spacing: .09em; }
+  .hermes-capability__grid strong { display: block; margin: .4rem 0; color: #31486b; font-size: .95rem; }
+  .hermes-capability__grid p { margin: 0; color: var(--muted); font-size: .77rem; line-height: 1.58; }
+  .hermes-capability__grid small { display: block; margin-top: .75rem; color: #7b899a; font-size: .7rem; }
+  .hermes-capability__grid .is-tool { background: #f4f8ff; border-color: #c4d4ec; }
+  .hermes-capability__grid .is-tool span { color: var(--blue); }
+  .hermes-capability__grid .is-skill { background: #faf7ff; border-color: #d8cbed; }
+  .hermes-capability__grid .is-skill span { color: var(--purple); }
+  .hermes-capability__grid .is-mcp { background: #f4fbf8; border-color: #c1dfd4; }
+  .hermes-capability__grid .is-mcp span { color: var(--green); }
+  .hermes-capability__example { display: grid; grid-template-columns: auto 1.1fr auto 1fr auto 1fr auto 1fr; gap: .55rem; align-items: center; margin: 0 1.35rem 1.2rem; padding: .8rem .9rem; border: 1px solid #dbe3ed; border-radius: 10px; background: #f9fafc; }
+  .hermes-capability__example > span { color: var(--purple); font-size: .68rem; font-weight: 900; }
+  .hermes-capability__example > strong { color: #405675; font-size: .78rem; }
+  .hermes-capability__example > div { color: #596b82; font-size: .73rem; line-height: 1.42; }
+  .hermes-capability__example > div b { color: #344e74; }
+  .hermes-capability__example > i { color: #96a5b8; font-style: normal; }
+
+  .hermes-state__split { display: grid; grid-template-columns: 1fr 1fr; }
+  .hermes-state__split article { padding: 1.15rem 1.3rem 1.25rem; background: #f7faff; }
+  .hermes-state__split article + article { border-left: 1px solid #dbe4ee; }
+  .hermes-state__split article > span { color: var(--blue); font-size: .7rem; font-weight: 900; letter-spacing: .09em; }
+  .hermes-state__split strong { display: block; margin: .35rem 0 .55rem; color: #30496e; }
+  .hermes-state__split ul { margin: 0; padding-left: 1.1rem; color: var(--muted); font-size: .78rem; line-height: 1.75; }
+  .hermes-state__split code { display: block; margin-top: .8rem; padding: .55rem .65rem; border-radius: 8px; color: #38547a; background: #eef4fc; font-size: .76rem; }
+  .hermes-state__split .is-memory { background: #f6fbf8; }
+  .hermes-state__split .is-memory > span { color: var(--green); }
+  .hermes-state__split .is-memory code { color: #2f6659; background: #eaf7f1; }
+
+  .hermes-gateway__platforms { display: flex; flex-wrap: wrap; gap: .48rem; padding: 1rem 1.35rem .7rem; }
+  .hermes-gateway__platforms span { padding: .38rem .58rem; border: 1px solid #d7e1ec; border-radius: 999px; color: #536780; background: #fbfcfe; font-size: .73rem; font-weight: 750; }
+  .hermes-gateway__flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr auto 1fr; gap: .5rem; align-items: center; margin: 0 1.35rem 1rem; padding: .85rem; border: 1px solid #dbe4ef; border-radius: 11px; background: linear-gradient(90deg, #f7faff, #faf8ff, #f5fbf8); }
+  .hermes-gateway__flow strong { color: #3d5374; text-align: center; font-size: .76rem; }
+  .hermes-gateway__flow i { color: #98a7ba; font-style: normal; }
+  .hermes-gateway footer { padding: .78rem 1.35rem; border-top: 1px solid #eaded9; color: #785d51; background: #fff9f6; font-size: .77rem; line-height: 1.55; }
+
+  .hermes-command-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: .6rem; width: min(1000px, calc(100vw - 2rem)); margin: 1.15rem 0 1.4rem 50%; transform: translateX(-50%); }
+  .hermes-command-strip span { min-height: 92px; padding: .7rem; border: 1px solid #d8e1ec; border-radius: 10px; color: var(--muted); background: #fbfcfe; font-size: .72rem; line-height: 1.5; }
+  .hermes-command-strip b { display: block; margin-bottom: .28rem; color: #3c5578; font-size: .78rem; }
+
+  .hermes-decision__grid { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; padding: 1.2rem 1.35rem .9rem; }
+  .hermes-decision__grid article { padding: 1rem; border: 1px solid #d9e1eb; border-radius: 13px; }
+  .hermes-decision__grid article > span { font-size: .7rem; font-weight: 900; letter-spacing: .06em; }
+  .hermes-decision__grid strong { display: block; margin: .38rem 0 .55rem; color: #31496d; }
+  .hermes-decision__grid ul { margin: 0; padding-left: 1.1rem; color: var(--muted); font-size: .78rem; line-height: 1.72; }
+  .hermes-decision__grid .is-hermes { border-color: #c9bced; background: #faf7ff; }
+  .hermes-decision__grid .is-hermes > span { color: var(--purple); }
+  .hermes-decision__grid .is-openclaw { border-color: #bfd5eb; background: #f5f9ff; }
+  .hermes-decision__grid .is-openclaw > span { color: var(--blue); }
+  .hermes-decision__verdict { display: grid; grid-template-columns: 110px 1fr; gap: .55rem .8rem; margin: 0 1.35rem 1.2rem; padding: .85rem .95rem; border: 1px solid #c5dfd5; border-radius: 10px; background: #f3fbf7; }
+  .hermes-decision__verdict span { grid-row: span 2; color: var(--green); font-size: .7rem; font-weight: 900; }
+  .hermes-decision__verdict strong { color: #315e53; font-size: .88rem; }
+  .hermes-decision__verdict p { margin: 0; color: #5b756f; font-size: .76rem; line-height: 1.52; }
+
+  .hermes-summary { width: min(920px, calc(100vw - 2rem)); margin: 1.7rem 0 2.4rem 50%; padding: 1.15rem 1.3rem; border: 1px solid #c8d6e8; border-radius: 15px; background: linear-gradient(115deg, #f3f8ff, #faf7ff 62%, #f5fbf8); transform: translateX(-50%); }
+  .hermes-summary > span { color: var(--purple); }
+  .hermes-summary strong { display: block; margin: .38rem 0; color: #2f456a; font-size: 1rem; line-height: 1.55; }
+  .hermes-summary p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.6; }
+
+  @media (max-width: 1400px) and (min-width: 761px) {
+    .hermes-hero,
+    .hermes-board,
+    .hermes-command-strip,
+    .hermes-summary {
+      width: 100%;
+      margin-left: 0;
+      transform: none;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .hermes-hero,
+    .hermes-board,
+    .hermes-command-strip,
+    .hermes-summary { width: auto; margin: 1.1rem -.35rem 1.6rem; border-radius: 14px; transform: none; }
+    .hermes-hero__copy { padding: 1.1rem; }
+    .hermes-hero__route,
+    .hermes-surface__core,
+    .hermes-runtime__track,
+    .hermes-install__grid,
+    .hermes-migrate__flow,
+    .hermes-model__columns,
+    .hermes-model__paths,
+    .hermes-capability__grid,
+    .hermes-state__split,
+    .hermes-decision__grid,
+    .hermes-command-strip { grid-template-columns: 1fr; }
+    .hermes-hero__route i,
+    .hermes-runtime__track > i,
+    .hermes-migrate__flow > i,
+    .hermes-model__columns > i { display: none; }
+    .hermes-hero__route div,
+    .hermes-runtime__track article,
+    .hermes-install__grid article,
+    .hermes-migrate__flow article,
+    .hermes-model__columns article,
+    .hermes-capability__grid article { min-height: 0; }
+    .hermes-hero footer,
+    .hermes-board__head { grid-template-columns: 1fr; }
+    .hermes-hero footer { padding: .85rem 1.1rem; gap: .2rem; }
+    .hermes-board__head { padding: 1rem; }
+    .hermes-surface__inputs,
+    .hermes-surface__state { grid-template-columns: 1fr 1fr; }
+    .hermes-surface__core,
+    .hermes-runtime__track,
+    .hermes-install__grid,
+    .hermes-migrate__flow,
+    .hermes-model__columns,
+    .hermes-model__paths,
+    .hermes-capability__grid,
+    .hermes-decision__grid { padding-left: 1rem; padding-right: 1rem; }
+    .hermes-map__rows { overflow-x: auto; padding-left: 1rem; padding-right: 1rem; }
+    .hermes-map__rows > div,
+    .hermes-map__rows > article { min-width: 700px; }
+    .hermes-migrate__split,
+    .hermes-state__split { grid-template-columns: 1fr; }
+    .hermes-migrate__split { margin-left: 1rem; margin-right: 1rem; }
+    .hermes-migrate__split section + section,
+    .hermes-state__split article + article { border-top: 1px solid #dbe4ee; border-left: 0; }
+    .hermes-runtime__note,
+    .hermes-decision__verdict { grid-template-columns: 1fr; margin-left: 1rem; margin-right: 1rem; }
+    .hermes-decision__verdict span { grid-row: auto; }
+    .hermes-capability__example { display: flex; flex-direction: column; align-items: stretch; margin-left: 1rem; margin-right: 1rem; }
+    .hermes-capability__example > i { transform: rotate(90deg); text-align: center; }
+    .hermes-gateway__platforms { padding-left: 1rem; padding-right: 1rem; }
+    .hermes-gateway__flow { display: flex; flex-direction: column; margin-left: 1rem; margin-right: 1rem; }
+    .hermes-gateway__flow i { transform: rotate(90deg); }
+    .hermes-command-strip { gap: .5rem; }
+    .hermes-command-strip span { min-height: 0; }
+    .hermes-summary { padding: 1rem; }
+  }
+`}</style>
