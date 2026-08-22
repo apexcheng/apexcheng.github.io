@@ -2,11 +2,11 @@
 title: "Python 基础考核：20 道覆盖不同知识点的入门题"
 description: "一套可直接使用的 Python 基础考核题，覆盖类型转换、循环、字典、函数、文件、JSON、类、浅拷贝和默认参数，并提供完整附件下载。"
 date: 2026-07-24T15:48:25+08:00
-updated: 2026-08-22T23:22:00+08:00
+updated: 2026-08-23T00:35:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 12
+minutes: 18
 featured: false
 series: "python-basics"
 seriesOrder: 8
@@ -30,10 +30,10 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   <MetricCard label="外部依赖" value="0 个" detail="全部使用 Python 自带语法和标准库。" tone="green" />
 </VisualGrid>
 
-<HighlightBox eyebrow="附件下载" title="下载两个文件后即可开始考核">
+<HighlightBox eyebrow="两种作答方式" title="网页直接看题，或下载文件到本地完成">
   <p><a href="/files/python-basic-assessment/python-basic-assessment.py" download>下载完整 Python 考核题（PY）</a></p>
   <p><a href="/files/python-basic-assessment/test.txt" download>下载文件读取测试素材（TXT）</a></p>
-  请把两个文件放在同一个文件夹中。第 13 题会读取 `test.txt`，其余题目都在 Python 文件内完成。
+  下面已经包含完整 20 道题，不下载也能阅读和作答。如果要直接在本地代码里完成，请把两个文件放在同一个文件夹中，第 13 题会读取 `test.txt`。
 </HighlightBox>
 
 ## 这套题怎么安排
@@ -97,54 +97,206 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 | 19 | 浅拷贝 | 判断嵌套列表为什么会共同变化 |
 | 20 | 默认参数 | 判断可变默认参数跨调用保留状态的结果 |
 
-## 代表题型
+## 20 道完整题目
 
-完整题目请下载附件。下面挑选四类题目，说明这套考核具体在检查什么。
+不需要先下载附件。下面四组可以直接展开做题；下载版只是方便你把答案写进一个 `.py` 文件里。
 
-### 类型转换不是字符串拼接
+<details class="assessment-group" open>
+  <summary><span>01–04</span><strong>基础数据处理</strong><small>类型、列表、字典、字符串</small></summary>
+
+<div class="assessment-title"><b>01</b><strong>类型转换</strong></div>
+
+已知商品单价和购买数量都是字符串。计算订单总金额，并输出 `总金额: 239.8`。结果必须来自数值计算，不能直接拼接字符串。
 
 ```python
 price = "119.9"
 quantity = "2"
-
-# 计算订单总金额，并输出：总金额: 239.8
 ```
 
-这道题很简单，但可以直接看出考核者是否知道外部输入经常是字符串，以及数值计算前需要先转换类型。
+<div class="assessment-title"><b>02</b><strong>列表、循环与条件</strong></div>
 
-### 字典统计是否能独立写出来
+从 `scores` 中筛选所有大于等于 60 分的成绩，并计算这些及格成绩的平均分。期望得到 `[78, 92, 65, 88]` 和 `80.75`。
+
+```python
+scores = [45, 78, 92, 58, 65, 88]
+```
+
+<div class="assessment-title"><b>03</b><strong>字典统计</strong></div>
+
+统计下面列表中每种商品出现的次数。期望得到 `{'键盘': 3, '鼠标': 2, '耳机': 1}`。
 
 ```python
 products = ["键盘", "鼠标", "键盘", "耳机", "鼠标", "键盘"]
-
-# 期望输出：
-# {'键盘': 3, '鼠标': 2, '耳机': 1}
 ```
 
-这道题不限定必须使用哪种高级写法。重点是能否用循环、判断和字典完成一个完整统计过程。
+<div class="assessment-title"><b>04</b><strong>字符串处理</strong></div>
 
-### 文件题要和附件一起使用
+去除 `username` 首尾空格并转成小写，然后判断处理后的用户名是否等于 `"admin"`。
 
 ```python
-# 请读取 test.txt 文件内容并打印。
+username = "  Admin  "
+```
+</details>
+
+<details class="assessment-group">
+  <summary><span>05–12</span><strong>循环、函数与容器</strong><small>把基础语法组合成任务</small></summary>
+
+<div class="assessment-title"><b>05</b><strong>函数与返回值</strong></div>
+
+补全函数：金额大于等于 500 元时打 9 折，否则不打折。函数应返回最终金额。
+
+```python
+def calculate_total(amount):
+    pass
+
+print(calculate_total(600))  # 540.0
+print(calculate_total(300))  # 300
 ```
 
-`test.txt` 已作为第二个附件提供。把它和 Python 文件放在同一目录，就可以检查相对路径、文件打开和内容读取这些基础操作。
+<div class="assessment-title"><b>06</b><strong>去重与排序</strong></div>
 
-### 最后三题不允许运行代码
+删除重复用户 ID，并按从小到大排序。期望得到 `[101, 102, 103, 105]`。
+
+```python
+user_ids = [103, 101, 102, 101, 105, 103]
+```
+
+<div class="assessment-title"><b>07</b><strong>循环与条件</strong></div>
+
+统计 `numbers` 中大于 10 的数字数量。
+
+```python
+numbers = [5, 12, 8, 20, 15, 3]
+```
+
+<div class="assessment-title"><b>08</b><strong>列表推导式</strong></div>
+
+使用列表推导式生成平方列表 `[1, 4, 9, 16, 25]`。
+
+```python
+numbers = [1, 2, 3, 4, 5]
+```
+
+<div class="assessment-title"><b>09</b><strong>元组不可变</strong></div>
+
+不运行代码，说明下面代码为什么会报错。
+
+```python
+data = ("Python", "SQL")
+data[0] = "Java"
+```
+
+<div class="assessment-title"><b>10</b><strong>集合去重</strong></div>
+
+使用集合去除重复数据，并输出去重后的结果。
+
+```python
+tags = ["AI", "Python", "AI", "RPA"]
+```
+
+<div class="assessment-title"><b>11</b><strong><code>*args</code></strong></div>
+
+补全函数，使它能接收任意数量参数并计算总和。
+
+```python
+def total(*args):
+    pass
+
+print(total(10, 20, 30))
+```
+
+<div class="assessment-title"><b>12</b><strong>异常处理</strong></div>
+
+使用 `try / except` 处理除数为 0 的情况。
+
+```python
+a = 10
+b = 0
+```
+</details>
+
+<details class="assessment-group">
+  <summary><span>13–17</span><strong>文件与真实数据</strong><small>文件、JSON、类、模块、综合处理</small></summary>
+
+<div class="assessment-title"><b>13</b><strong>文件读取</strong></div>
+
+读取并打印 `test.txt`。如果在本地做题，请先下载页面顶部提供的测试素材并和 Python 文件放在同一目录。
+
+<div class="assessment-title"><b>14</b><strong>JSON</strong></div>
+
+把下面字典转换成 JSON 字符串。
+
+```python
+user = {"name": "张三", "age": 20}
+```
+
+<div class="assessment-title"><b>15</b><strong>类与对象</strong></div>
+
+创建一个 `User` 类，包含 `name` 属性和 `say_hello` 方法。
+
+<div class="assessment-title"><b>16</b><strong>模块导入</strong></div>
+
+使用 `pathlib` 输出当前工作目录。要求写出正确的 import，并调用 `Path.cwd()`。
+
+<div class="assessment-title"><b>17</b><strong>综合数据处理</strong></div>
+
+根据下面订单数据统计销售总金额。
+
+```python
+orders = [
+    {"name": "键盘", "price": 100, "count": 2},
+    {"name": "鼠标", "price": 50, "count": 3},
+]
+```
+</details>
+
+<details class="assessment-group">
+  <summary><span>18–20</span><strong>运行机制理解</strong><small>先判断结果，再解释原因</small></summary>
+
+<div class="assessment-title"><b>18</b><strong>变量引用</strong></div>
+
+不运行代码，写出两个 `print` 的结果并说明原因。
+
+```python
+a = [1, 2]
+b = a
+b.append(3)
+
+print(a)
+print(b)
+```
+
+<div class="assessment-title"><b>19</b><strong>浅拷贝</strong></div>
+
+不运行代码，写出两个 `print` 的结果，并解释为什么修改 `copy_data["skills"]` 会影响 `original`。
 
 ```python
 original = {
     "name": "张三",
-    "skills": ["Python", "SQL"]
+    "skills": ["Python", "SQL"],
 }
 
 copy_data = original.copy()
 copy_data["name"] = "李四"
 copy_data["skills"].append("Linux")
+
+print(original)
+print(copy_data)
 ```
 
-这里不是考察是否会背 `copy()`，而是看考核者能否区分：外层字典已经复制，但内部的列表仍然指向同一个对象。
+<div class="assessment-title"><b>20</b><strong>可变默认参数</strong></div>
+
+不运行代码，写出两次调用的输出结果并说明原因。
+
+```python
+def add_item(item, items=[]):
+    items.append(item)
+    return items
+
+print(add_item("A"))
+print(add_item("B"))
+```
+</details>
 
 ## 怎么判断完成质量
 
@@ -158,3 +310,77 @@ copy_data["skills"].append("Linux")
 <HighlightBox eyebrow="完成标准" title="会写基础代码，也能解释代码为什么这样运行">
   这 20 题不用于筛选算法能力。它更适合判断一个人是否已经越过“只看过语法”的阶段，能够独立完成小型数据处理任务，并理解几个最容易出错的 Python 基础机制。
 </HighlightBox>
+
+<style>{`
+  .assessment-group {
+    margin: 1rem 0;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+    border-radius: 18px;
+    background: rgba(148, 163, 184, 0.04);
+    overflow: clip;
+  }
+
+  .assessment-group > summary {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 1rem 1.1rem;
+    cursor: pointer;
+  }
+
+  .assessment-group > summary span,
+  .assessment-group > summary small {
+    color: var(--text-muted, #64748b);
+  }
+
+  .assessment-group > summary span {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.82rem;
+  }
+
+  .assessment-group > summary small {
+    font-size: 0.82rem;
+  }
+
+  .assessment-group[open] > summary {
+    border-bottom: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+  }
+
+  .assessment-group > :not(summary) {
+    margin-left: 1.1rem;
+    margin-right: 1.1rem;
+  }
+
+  .assessment-group > :last-child {
+    margin-bottom: 1.2rem;
+  }
+
+  .assessment-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.65rem;
+    margin-top: 1.35rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .assessment-title b {
+    color: var(--text-muted, #64748b);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.82rem;
+  }
+
+  .assessment-title strong {
+    font-size: 1rem;
+  }
+
+  @media (max-width: 680px) {
+    .assessment-group > summary {
+      grid-template-columns: auto 1fr;
+    }
+
+    .assessment-group > summary small {
+      grid-column: 1 / -1;
+    }
+  }
+`}</style>

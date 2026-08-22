@@ -2,7 +2,7 @@
 title: "Python 零基础学习路线：从看懂一行代码到写出简单脚本"
 description: "一套面向数据处理、RPA、API 和简单脚本场景的 Python 零基础学习路线，先建立代码运行直觉，再逐步进入真实数据与自动化任务。"
 date: 2026-08-22T22:30:00+08:00
-updated: 2026-08-22T23:22:00+08:00
+updated: 2026-08-23T00:35:00+08:00
 category: "教程"
 tags:
   - "Python"
@@ -202,33 +202,59 @@ if stock < 5:
 
 不要只记住“`if` 是判断”。可以把 `stock` 改成 `8`，观察为什么什么都不输出；再加一个 `else`，看两条分支如何只执行其中一条。
 
-## 最小运行环境
+## 第一次把 Python 真正跑起来
 
-这个系列默认你已经有一个可以运行 Python 3 的环境。先确认：
+如果你已经能运行 Python 3，这一节可以快速跳过。先在终端里试：
 
 ```bash
 python --version
 ```
 
-部分 macOS / Linux 环境需要使用：
+macOS / Linux 更常见的是：
 
 ```bash
 python3 --version
 ```
 
-只要能看到 Python 3 的版本号，就可以把代码保存成例如 `demo.py`，再运行：
+Windows 也可以试：
+
+```bash
+py --version
+```
+
+只要其中一个命令能看到 Python 3 的版本号，就已经可以开始。
+
+如果三个命令都不可用，先安装 Python 3，再重新打开终端确认版本。这里不展开 IDE、虚拟环境和包管理，零基础第一步只需要完成一个最小闭环：
+
+<div class="py-first-run" aria-label="第一次运行 Python 脚本的三个步骤">
+  <div><b>01</b><strong>创建文件</strong><code>demo.py</code><span>放在自己找得到的文件夹里</span></div>
+  <i>→</i>
+  <div><b>02</b><strong>写一行代码</strong><code>print("Hello Python")</code><span>保存文件</span></div>
+  <i>→</i>
+  <div><b>03</b><strong>在终端运行</strong><code>python demo.py</code><span>或使用 python3 / py</span></div>
+</div>
+
+例如 `demo.py`：
+
+```python
+print("Hello Python")
+```
+
+进入这个文件所在目录后运行：
 
 ```bash
 python demo.py
 ```
 
-或：
+如果你的环境使用的是 `python3` 或 `py`，把命令里的 `python` 换掉即可。
 
-```bash
-python3 demo.py
+看到：
+
+```text
+Hello Python
 ```
 
-编辑器可以用你已经熟悉的工具。这个系列不会把重点放在 IDE 配置上，因为真正需要建立的是代码运行直觉。
+就说明环境已经够用了。编辑器可以使用你已经熟悉的工具，这个系列不会把重点放在 IDE 配置上。
 
 ## 学完以后能做什么
 
@@ -291,6 +317,45 @@ python3 demo.py
     display: block;
   }
 
+  .py-first-run {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 0.7rem;
+    align-items: stretch;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .py-first-run > div {
+    padding: 0.95rem;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+    border-radius: 15px;
+    background: rgba(148, 163, 184, 0.06);
+  }
+
+  .py-first-run b,
+  .py-first-run strong,
+  .py-first-run code,
+  .py-first-run span {
+    display: block;
+  }
+
+  .py-first-run b,
+  .py-first-run span {
+    color: var(--text-muted, #64748b);
+    font-size: 0.82rem;
+  }
+
+  .py-first-run strong,
+  .py-first-run code {
+    margin-top: 0.4rem;
+  }
+
+  .py-first-run > i {
+    align-self: center;
+    color: var(--text-muted, #64748b);
+    font-style: normal;
+  }
+
   .py-roadmap-steps b {
     margin-bottom: 1.25rem;
     color: var(--text-muted, #64748b);
@@ -325,6 +390,15 @@ python3 demo.py
       left: 0.9rem;
       top: 0.85rem;
       margin: 0;
+    }
+
+    .py-first-run {
+      grid-template-columns: 1fr;
+    }
+
+    .py-first-run > i {
+      justify-self: center;
+      transform: rotate(90deg);
     }
   }
 `}</style>

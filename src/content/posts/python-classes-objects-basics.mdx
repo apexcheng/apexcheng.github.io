@@ -2,6 +2,7 @@
 title: "Python 类与对象入门：什么时候比字典加函数更合适"
 description: "用商品库存对象讲清 Python class、对象、__init__、self、属性和方法，并比较类与字典加函数的使用边界，避免零基础阶段过度面向对象。"
 date: 2026-08-22T22:42:00+08:00
+updated: 2026-08-23T00:35:00+08:00
 category: "教程"
 tags:
   - "Python"
@@ -125,19 +126,15 @@ product = Product("K161", 3)
 
 Python 会创建一个新对象，并调用 `__init__` 给它准备初始状态。
 
-可以把数据流看成：
-
-```text
-Product("K161", 3)
-        ↓
-sku = "K161"
-stock = 3
-        ↓
-self.sku = "K161"
-self.stock = 3
-        ↓
-product 对象拥有两个属性
-```
+<div class="py-init-flow" aria-label="创建 Product 对象时参数进入对象属性的过程">
+  <div><span>调用</span><strong>Product("K161", 3)</strong><small>创建一个新对象</small></div>
+  <i>→</i>
+  <div><span>进入 __init__ 参数</span><code>sku = "K161"</code><code>stock = 3</code></div>
+  <i>→</i>
+  <div><span>写入当前对象</span><code>self.sku = sku</code><code>self.stock = stock</code></div>
+  <i>→</i>
+  <div><span>得到对象</span><strong>product</strong><code>sku = "K161"</code><code>stock = 3</code></div>
+</div>
 
 ## `self`：当前正在操作的这个对象
 
@@ -149,10 +146,11 @@ self.sku = sku
 
 左右两个 `sku` 不是同一个概念。
 
-```text
-右边 sku       创建对象时传进来的参数
-左边 self.sku  保存到当前对象身上的属性
-```
+<div class="py-self-map" aria-label="self.sku 等于 sku 的左右两边含义">
+  <div><span>右边 · 参数</span><code>sku</code><strong>这次调用传进来的值</strong><small>"K161"</small></div>
+  <i>→ 保存到 →</i>
+  <div><span>左边 · 对象属性</span><code>self.sku</code><strong>当前对象自己的数据</strong><small>以后通过 product.sku 读取</small></div>
+</div>
 
 例如：
 
@@ -223,6 +221,14 @@ print(product.need_restock())
 调用 `product.need_restock()` 时，不需要手工传 `self`。
 
 Python 会把当前的 `product` 对象自动交给 `self`。
+
+<div class="py-method-call" aria-label="对象调用方法时 self 的对应关系">
+  <div><span>你写的代码</span><code>product.need_restock()</code></div>
+  <i>→</i>
+  <div><span>Python 处理</span><strong>当前 product 交给 self</strong></div>
+  <i>→</i>
+  <div><span>方法内部</span><code>self.stock &lt; 5</code><small>读取当前对象的库存</small></div>
+</div>
 
 方法于是能访问：
 
@@ -409,17 +415,7 @@ for data in raw_products:
 
 ## 这一系列不会继续展开高级 OOP
 
-你接下来当然还会遇到：
-
-- 继承。
-- 类属性。
-- `@classmethod`。
-- `@staticmethod`。
-- `property`。
-- 数据类 `dataclass`。
-- 魔术方法。
-
-但它们不是“零基础读完才能开始写脚本”的前置条件。
+以后还会遇到继承、类属性、数据类等更深入的 OOP 内容，但它们不是“零基础读完才能开始写脚本”的前置条件，这个系列不继续展开。
 
 当前阶段真正需要达到的是：当你在别人代码里看到：
 
@@ -480,7 +476,10 @@ product2 = Product("K162", 8)
 
   .class-blueprint,
   .class-instance,
-  .py-object-pair > div {
+  .py-object-pair > div,
+  .py-init-flow > div,
+  .py-self-map > div,
+  .py-method-call > div {
     padding: 1rem;
     border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
     border-radius: 18px;
@@ -534,9 +533,76 @@ product2 = Product("K162", 8)
     font-size: 1.15rem;
   }
 
+  .py-init-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+    gap: 0.65rem;
+    align-items: stretch;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .py-self-map,
+  .py-method-call {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.7rem;
+    align-items: stretch;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .py-method-call {
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+  }
+
+  .py-init-flow span,
+  .py-init-flow strong,
+  .py-init-flow code,
+  .py-init-flow small,
+  .py-self-map span,
+  .py-self-map code,
+  .py-self-map strong,
+  .py-self-map small,
+  .py-method-call span,
+  .py-method-call code,
+  .py-method-call strong,
+  .py-method-call small {
+    display: block;
+  }
+
+  .py-init-flow span,
+  .py-init-flow small,
+  .py-self-map span,
+  .py-self-map small,
+  .py-method-call span,
+  .py-method-call small {
+    color: var(--text-muted, #64748b);
+    font-size: 0.82rem;
+  }
+
+  .py-init-flow strong,
+  .py-init-flow code,
+  .py-self-map code,
+  .py-self-map strong,
+  .py-method-call code,
+  .py-method-call strong {
+    margin-top: 0.4rem;
+  }
+
+  .py-init-flow > i,
+  .py-self-map > i,
+  .py-method-call > i {
+    align-self: center;
+    color: var(--text-muted, #64748b);
+    font-style: normal;
+    text-align: center;
+  }
+
   @media (max-width: 680px) {
     .py-class-map,
-    .py-object-pair {
+    .py-object-pair,
+    .py-init-flow,
+    .py-self-map,
+    .py-method-call {
       grid-template-columns: 1fr;
     }
 
@@ -544,6 +610,13 @@ product2 = Product("K162", 8)
       white-space: normal;
       justify-self: center;
       padding: 0.2rem 0;
+    }
+
+    .py-init-flow > i,
+    .py-self-map > i,
+    .py-method-call > i {
+      justify-self: center;
+      transform: rotate(90deg);
     }
   }
 `}</style>
