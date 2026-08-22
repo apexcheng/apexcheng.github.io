@@ -442,13 +442,27 @@ import {
 
 <style>{`
   main.article-shell {
-    padding-top: 36px;
+    padding-top: 16px;
+  }
+
+  .article-content {
+    padding-top: 20px;
   }
 
   .article-content > h1 {
     font-size: clamp(30px, 2.6vw, 34px);
     line-height: 1.18;
-    margin-bottom: 12px;
+    margin: 10px 0 8px;
+  }
+
+  .article-content > .article-description {
+    font-size: 14px;
+    line-height: 1.65;
+    margin: 8px 0;
+  }
+
+  .article-content > .meta-row {
+    margin-top: 10px;
   }
 
   .xpath-atlas,
@@ -488,7 +502,7 @@ import {
     border: 1px solid var(--xa-line-strong);
     border-radius: 24px;
     box-shadow: 0 22px 56px rgba(29, 63, 108, 0.08);
-    margin: 30px 0 38px -36px;
+    margin: 16px 0 38px -36px;
     overflow: hidden;
     width: calc(100% + 72px);
   }
