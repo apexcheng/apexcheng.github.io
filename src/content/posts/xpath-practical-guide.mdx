@@ -36,10 +36,6 @@ import {
   Type,
 } from '@lucide/astro';
 
-XPath 不是一串需要死记的符号，而是一条在 DOM 中寻找元素的路径：先确定锚点，再向下搜索，用条件筛选，必要时借助关系轴，最后确认只命中一个目标。
-
-真正影响自动化稳定性的，不是 XPath 写得多复杂，而是这条路径依赖的信息会不会轻易变化。
-
 <div class="xpath-atlas xpath-atlas--hero" role="group" aria-label="XPath 路径地图与定位稳定性优先级">
   <div class="xpath-atlas-head">
     <div class="xpath-atlas-title">
@@ -445,6 +441,16 @@ XPath 不是一串需要死记的符号，而是一条在 DOM 中寻找元素的
 在影刀、浏览器自动化和爬虫项目中，能写出稳定定位，比写出复杂 XPath 更重要。
 
 <style>{`
+  main.article-shell {
+    padding-top: 36px;
+  }
+
+  .article-content > h1 {
+    font-size: clamp(30px, 2.6vw, 34px);
+    line-height: 1.18;
+    margin-bottom: 12px;
+  }
+
   .xpath-atlas,
   .xpath-panel,
   .xpath-console,
@@ -655,6 +661,18 @@ XPath 不是一串需要死记的符号，而是一条在 DOM 中寻找元素的
   .xpath-dom-specimen,
   .xpath-priority {
     min-width: 0;
+  }
+
+  .xpath-route-step code {
+    font-size: 10px;
+    overflow-wrap: normal;
+    overflow-x: auto;
+    scrollbar-width: none;
+    white-space: nowrap;
+  }
+
+  .xpath-route-step code::-webkit-scrollbar {
+    display: none;
   }
 
   .xpath-subhead {
