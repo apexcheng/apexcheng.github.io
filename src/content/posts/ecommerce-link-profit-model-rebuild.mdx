@@ -8,40 +8,33 @@ tags:
   - "数据处理"
   - "利润核算"
   - "电商运营"
-minutes: 18
+minutes: 14
 featured: false
 draft: false
 private: false
 ---
 
-<div class="profit-hero" aria-label="同一条链接在旧模型和新模型下得到相反结论的示意">
+<div class="profit-hero profit-hero--compact" aria-label="旧模型和当前模型的核心区别">
   <div class="profit-hero__copy">
     <span class="profit-eyebrow">抖音链接利润模型</span>
     <div class="profit-hero__title">同一条链接，<br />旧模型说赚，穿透后却亏</div>
-    <p>问题不在某一个 Excel 公式，而在数据是否属于同一批订单、同一时间、同一成本性质和同一计算粒度。</p>
-    <div class="profit-hero__inputs" aria-label="示意输入">
-      <span><small>本周推广销售</small><strong>¥20,000</strong></span>
-      <span><small>历史最终利润率</small><strong>20%</strong></span>
-      <span><small>本期扣广告前净额</small><strong>¥1,000</strong></span>
-      <span><small>本期推广花费</small><strong>¥3,000</strong></span>
-    </div>
+    <p>旧模型把历史利润率当成代理变量；当前模型直接用本期发货、采购、物流、售后和推广事实重新核算。</p>
   </div>
   <div class="profit-hero__verdict">
     <section class="is-old">
       <small>旧模型 · 用过去推现在</small>
-      <code>¥20,000 × 20%</code>
-      <strong>+ ¥4,000</strong>
-      <span>判断：继续投</span>
+      <code>历史利润率 × 本期推广销售额</code>
+      <strong>用过去猜现在</strong>
+      <span>当结构变化时，利润判断容易失真</span>
     </section>
     <div class="profit-hero__flip"><span>同一周</span><b>经营方向完全相反</b></div>
     <section class="is-new">
       <small>新模型 · 穿透本期真实数据</small>
-      <code>¥1,000 − ¥3,000</code>
-      <strong>− ¥2,000</strong>
-      <span>判断：先止损并定位原因</span>
+      <code>本期事实数据 → 当前利润</code>
+      <strong>重新核算</strong>
+      <span>每一项收入和支出都能回到事实来源</span>
     </section>
   </div>
-  <p class="profit-figure-note">示意数字沿用原文案例，只用于展示模型方向差异，不代表真实经营数据。</p>
 </div>
 
 本文记录的是一套实际用于抖音商品链接核算的利润模型。主利润颗粒度是 `商品ID / 商品链接`，利润周期取最近 7 个完整自然日 `T−7 ～ T−1`；退款风险不直接拿本期退货去除本期发货，而是单独使用 `T−21 ～ T−8` 的成熟发货样本估计。
@@ -55,110 +48,64 @@ private: false
   <strong>是不是同一批订单？是不是同一个周期？这笔钱会不会随退款消失？它真实发生在订单、包裹还是商品链接上？</strong>
 </div>
 
+## 先看最终怎么算
+
+这套模型最终只需要记住两层：
+
+<div class="profit-equation-stack profit-equation-stack--lead">
+  <section><small>第一层 · 总成本</small><code>净采购成本 + 店铺杂费 + 订单沉没成本 + 售后损耗 + 拍单总成本 + 未税总推广花费</code></section>
+  <section><small>第二层 · 预测利润</small><code>净销售额 − 总成本 − 5% 保留</code></section>
+  <section><small>利润率</small><code>预测利润 ÷ 退款前未税销售额</code></section>
+</div>
+
+真正容易出错的不是加减法，而是每个数字该不该乘退款率、该按订单还是包裹归属、该取本期事实还是历史代理值。先用一组教学数字把整条链跑完，再拆这些细节。
+
+<div class="profit-runtime" aria-label="链接利润公式完整演算">
+  <header>
+    <span><small>含税销售额</small><strong>¥22,600</strong></span>
+    <span><small>金额退款率 R</small><strong>10%</strong></span>
+    <span><small>含税推广花费</small><strong>¥5,300</strong></span>
+  </header>
+  <div class="profit-runtime__stages">
+    <section><small>01 · 价税分离</small><code>¥22,600 ÷ 1.13</code><strong>未税销售额 ¥20,000</strong></section>
+    <section><small>02 · 同批退款风险</small><code>¥20,000 × 90%</code><strong>净销售额 ¥18,000</strong></section>
+    <section><small>03 · 店铺杂费</small><code>¥20,000 × 4% × 90%</code><strong>进入总成本 ¥720</strong></section>
+    <section><small>04 · 推广转未税</small><code>¥5,300 ÷ 1.06</code><strong>未税推广 ¥5,000</strong></section>
+    <section><small>05 · 5% 保留</small><code>¥18,000 × 5%</code><strong>单独保留 ¥900</strong></section>
+  </div>
+  <div class="profit-runtime__unknowns">
+    <span>采购 ¥8,000 × 90% = 净采购 ¥7,200</span><span>订单沉没 ¥650</span><span>售后损耗 ¥130</span><span>拍单总成本 ¥200</span>
+    <b>总成本 = ¥7,200 + ¥720 + ¥650 + ¥130 + ¥200 + ¥5,000 = ¥13,900</b>
+  </div>
+  <div class="profit-runtime__formula">
+    <small>最终结果</small>
+    <code><span>预测利润 = ¥18,000 − ¥13,900 − ¥900 = ¥3,200</span><span>利润率 = ¥3,200 ÷ ¥20,000 = 16%</span><span>总费用率 = ¥13,900 ÷ ¥20,000 = 69.5%</span></code>
+  </div>
+</div>
+
+上面所有数字都是**纯教学示意**，不代表真实经营结果。关键在于顺序：销售额、采购成本和店铺杂费先统一承受退款风险；已经发生的物流、售后、拍单和推广支出直接全额扣除；5% 保留最后单独扣减。
+
 ## 旧模型怎样把订单明细压成一个猜测
 
-旧链路最关键的问题，不是步骤少，而是中间生成了一个承担过多含义的代理变量。
+旧链路最关键的问题，不是步骤少，而是把大量明细压成一个承担过多含义的“历史利润率”，再拿它解释下一周期。
 
-<div class="profit-compression" aria-label="旧模型从订单明细压缩到历史利润率，再估算本期利润的过程">
-  <section>
-    <small>01 · 上周明细</small>
-    <strong>订单收入与真实成本</strong>
-    <span>SKU、采购、包裹、退款、广告</span>
-  </section>
-  <i aria-hidden="true">→</i>
-  <section>
-    <small>02 · 链接汇总</small>
-    <strong>上周链接利润</strong>
-    <span>明细差异开始被合并</span>
-  </section>
-  <i aria-hidden="true">→</i>
-  <section class="is-bottleneck">
-    <small>03 · 压缩</small>
-    <strong>历史最终利润率</strong>
-    <code>上周利润 ÷ 上周未税销售额</code>
-  </section>
-  <i aria-hidden="true">→</i>
-  <section>
-    <small>04 · 本周输入</small>
-    <strong>推广归因销售额</strong>
-    <span>不等于 ERP 真实发货销售</span>
-  </section>
-  <i aria-hidden="true">→</i>
-  <section class="is-result">
-    <small>05 · 输出</small>
-    <strong>估算推广利润</strong>
-    <code>本周推广销售 × 历史利润率</code>
-  </section>
+<div class="profit-old-model" aria-label="旧利润模型的压缩链路和四类错位">
+  <div class="profit-old-model__flow">
+    <span>上周订单明细</span><i>→</i><span>上周链接利润</span><i>→</i><strong>历史利润率</strong><i>→</i><span>× 本周推广销售</span><i>→</i><strong>估算本周利润</strong>
+  </div>
+  <div class="profit-old-model__risks">
+    <section><b>01 · 人群错位</b><p>退款分子和发货分母不是同一批订单。</p></section>
+    <section><b>02 · 时间错位</b><p>售价、SKU、采购、退款和广告都可能已经变化。</p></section>
+    <section><b>03 · 成本性质错位</b><p>已经真实花掉的钱被错误地继续乘退款率。</p></section>
+    <section><b>04 · 计算粒度错位</b><p>包裹、商品行和广告归因被混在同一层计算。</p></section>
+  </div>
 </div>
 
-<div class="profit-compression__losses" aria-label="历史利润率压缩后丢失的信息">
-  <header><span>压缩时被隐藏的差异</span><strong>它们本周都可能已经变化</strong></header>
-  <div><span>SKU 销售结构</span><b>高利润 SKU → 低利润 SKU</b></div>
-  <div><span>真实采购成本</span><b>规格、数量和单价变化</b></div>
-  <div><span>履约与售后</span><b>包裹、补发、退货入库变化</b></div>
-  <div><span>推广效率</span><b>全域、直播、达人实际花费变化</b></div>
-</div>
-
-历史利润率里如果已经包含上周广告费，它就不是纯商品利润率，而是上周广告效率、商品结构和退款情况共同产生的最终结果。拿它推本周时，再扣本周广告费会重复口径；不扣又无法反映本周真实花费。这个中间变量从一开始就不适合代替本期核算。
-
-## 真正的问题是四种“错位”
-
-补充材料里出现的多个公式问题，可以归到四个稳定的判断维度。以后再审查新字段，也可以先用这四个维度检查。
-
-<div class="profit-mismatch-grid">
-  <section>
-    <span>01 · 人群错位</span>
-    <strong>分子和分母不是同一批订单</strong>
-    <div><small>错误拼接</small><code>本期退回件数 ÷ 本期发货件数</code></div>
-    <p>本期退回的可能是更早发出的订单，本期刚发出的订单又还没充分退款。</p>
-  </section>
-  <section>
-    <span>02 · 时间错位</span>
-    <strong>拿上周结构解释本周</strong>
-    <div><small>错误代理</small><code>上周利润率 × 本周推广销售额</code></div>
-    <p>售价、SKU、采购、退款和广告都可能已经改变。</p>
-  </section>
-  <section>
-    <span>03 · 成本性质错位</span>
-    <strong>已花掉的钱被假装能退回来</strong>
-    <div><small>错误折减</small><code>快递 + 后勤 + 推广费，再 × (1-R)</code></div>
-    <p>真实发生的沉没成本不会因为后续退款按比例消失。</p>
-  </section>
-  <section>
-    <span>04 · 计算粒度错位</span>
-    <strong>包裹、商品行和广告归因混算</strong>
-    <div><small>错误颗粒度</small><code>每一行商品都收一次包裹成本</code></div>
-    <p>一张订单可有多条商品行，一个物流单号却只发生一次快递与后勤。</p>
-  </section>
-</div>
-
-Excel 能顺利算出数字，并不代表数字具有经营含义。错位造成的误差有时还会互相抵消：一个地方漏掉成本，另一个地方又重复扣退款，最终总利润看起来“差不多”，但订单结构一变，误差就会突然放大。
+如果历史利润率已经包含上周广告费，它本身就是上周广告效率、商品结构和退款情况共同产生的结果。拿它推本周时，再扣本周广告费会重复口径；不扣又无法反映本周真实花费。Excel 能顺利算出数字，并不代表数字具有经营含义。
 
 ## 退款率：先锁定一批订单，再看这批订单后来怎样
 
-旧退款率最直观的异常，是可能算出超过 100% 的结果。
-
-<div class="profit-refund-contrast">
-  <section class="is-wrong">
-    <header><span>错位口径示意</span><strong>只因为发生在同一天，就被放进同一个除法</strong></header>
-    <div class="profit-refund-contrast__math">
-      <span><small>今天新发货</small><b>5 件</b></span>
-      <i>÷</i>
-      <span><small>今天收到历史退货</small><b>10 件</b></span>
-      <strong>“退款率” 200%</strong>
-    </div>
-    <p>10 件退货来自更早订单，不是今天 5 件新发货的子集。</p>
-  </section>
-  <section class="is-right">
-    <header><span>正式金额口径</span><strong>分子始终来自同一批成熟发货样本</strong></header>
-    <div class="profit-refund-contrast__cohort">
-      <span><small>固定样本</small><b>T−21 ～ T−8 非拍单 ERP 发货</b></span>
-      <i aria-hidden="true">→</i>
-      <span><small>回看状态</small><b>这批发货中后来关闭的金额</b></span>
-    </div>
-    <code>R = 同批已关闭发货金额 ÷ 同批非拍单发货金额</code>
-  </section>
-</div>
+旧算法如果拿“今天收到的 10 件历史退货”去除以“今天刚发出的 5 件新货”，会得到 `200%`。问题不是 Excel 除法，而是这两批货根本不是同一批订单。当前模型先锁定成熟发货样本，再回看这批订单后来关闭了多少。
 
 <div class="profit-window" aria-label="利润周期与成熟退款率窗口">
   <div class="profit-window__ticks"><span>T−21</span><span>T−8</span><span>T−7</span><span>T−1</span><span>今天</span></div>
@@ -232,59 +179,35 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
 
 ### 没有正常销售收入，也可能有真实成本
 
-<div class="profit-zero-revenue">
-  <section>
-    <header><span>拍单 / HS</span><strong>假的收入拿掉，真的成本留下</strong></header>
-    <div><small>示意含税金额</small><b>¥100</b></div>
-    <div><small>正常经营收入</small><b>¥0</b></div>
-    <div><small>拍单税额</small><b>¥100 − ¥100 ÷ 1.13 = ¥11.50</b></div>
-    <div><small>拍单店铺杂费</small><b>¥100 ÷ 1.13 × 4% = ¥3.54</b></div>
-    <div><small>示意采购成本</small><b>¥40</b></div>
-    <p>快递与后勤另在“订单沉没成本”中计算一次，不能再塞进拍单总成本重复扣除。</p>
-  </section>
-  <section>
-    <header><span>补发 / 换货</span><strong>销售额为 0，不等于成本为 0</strong></header>
-    <div><small>新增销售额</small><b>¥0</b></div>
-    <div><small>补发商品采购</small><b>¥8</b></div>
-    <div><small>非顺丰包裹成本</small><b>¥3.5 + ¥9.5</b></div>
-    <div class="is-total"><small>真实损失</small><b>¥21</b></div>
-    <p>因此 ERP 记录不能只因为没有销售额就整条过滤。</p>
-  </section>
-</div>
+拍单 / HS 的原则很简单：**假的收入拿掉，真的成本留下。** 拍单不计正常经营收入和成交件数，但拍单采购、税额和店铺杂费仍然保留；快递与后勤继续只在“订单沉没成本”中计算一次，不能重复扣除。
+
+补发、换货同样如此：销售额可能是 `0`，但采购、快递和后勤都已经真实发生，所以不能因为“没有销售收入”就把整条 ERP 记录过滤掉。
 
 ## 新模型的数据怎样汇到一条链接上
 
 新模型不再让历史利润率充当代理变量，而是让每类数据只回答自己擅长的问题，最后统一按商品链接汇总。
 
 <div class="profit-data-map" aria-label="链接利润模型的数据处理流程">
-  <div class="profit-data-map__sources">
+  <div class="profit-data-map__sources profit-data-map__sources--compact">
     <section>
       <small>T−7 ～ T−1</small>
       <strong>ERP 实际发货</strong>
-      <span>非拍单让利后金额</span>
-      <span>实际采购成本</span>
-      <span>拍单成本</span>
+      <span>销售额 / 采购 / 拍单</span>
     </section>
     <section>
       <small>T−21 ～ T−8</small>
       <strong>成熟发货 + 平台状态</strong>
-      <span>同批非拍单发货金额</span>
-      <span>同批已关闭金额</span>
-      <span>金额退款率 R</span>
+      <span>同批发货 → 金额退款率 R</span>
     </section>
     <section>
       <small>本期真实发生</small>
       <strong>发货与退货物流</strong>
-      <span>订单沉没成本</span>
-      <span>退货入库售后损耗</span>
-      <span>包裹级分摊</span>
+      <span>沉没成本 / 售后损耗</span>
     </section>
     <section>
       <small>含税实际费用</small>
       <strong>全域 + 直播 + 达人</strong>
-      <span>全域实际消耗</span>
-      <span>直播间消耗分摊</span>
-      <span>精选联盟实际佣金</span>
+      <span>实际推广支出</span>
     </section>
   </div>
   <div class="profit-data-map__merge">
@@ -299,99 +222,25 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
 
 直播链接利润只是在同一算法上增加 `直播间名称` 维度，不另建一套利润公式。推广后台的成交金额、ROI、点击率和 PPC 继续保留，但只负责解释投放表现，不直接冒充 ERP 真实发货利润。
 
-## 让公式真正跑一遍：从销售额算到最终利润
-
-为了让整条公式能从头跑到尾，下面使用一组**纯教学示意数字**，不代表真实经营数据。假设某条链接近 7 个完整自然日含税销售额为 `¥22,600`，成熟金额退款率为 `10%`，采购成本为 `¥8,000`，订单沉没成本 `¥650`，售后损耗 `¥130`，拍单总成本 `¥200`，含税推广花费 `¥5,300`。
-
-<div class="profit-runtime" aria-label="链接利润公式中间结果">
-  <header>
-    <span><small>含税销售额</small><strong>¥22,600</strong></span>
-    <span><small>金额退款率 R</small><strong>10%</strong></span>
-    <span><small>含税推广花费</small><strong>¥5,300</strong></span>
-  </header>
-  <div class="profit-runtime__stages">
-    <section>
-      <small>01 · 价税分离</small>
-      <code>¥22,600 ÷ 1.13</code>
-      <strong>未税销售额 ¥20,000</strong>
-    </section>
-    <section>
-      <small>02 · 同批退款风险</small>
-      <code>¥20,000 × 90%</code>
-      <strong>净销售额 ¥18,000</strong>
-    </section>
-    <section>
-      <small>03 · 店铺杂费</small>
-      <code>¥20,000 × 4% × 90%</code>
-      <strong>进入总成本 ¥720</strong>
-    </section>
-    <section>
-      <small>04 · 推广转未税</small>
-      <code>¥5,300 ÷ 1.06</code>
-      <strong>未税推广 ¥5,000</strong>
-    </section>
-    <section>
-      <small>05 · 5% 保留</small>
-      <code>¥18,000 × 5%</code>
-      <strong>单独保留 ¥900</strong>
-    </section>
-  </div>
-  <div class="profit-runtime__unknowns">
-    <span>采购 ¥8,000 × 90% = 净采购 ¥7,200</span>
-    <span>订单沉没 ¥650</span>
-    <span>售后损耗 ¥130</span>
-    <span>拍单总成本 ¥200</span>
-    <b>总成本 = ¥7,200 + ¥720 + ¥650 + ¥130 + ¥200 + ¥5,000 = ¥13,900</b>
-  </div>
-  <div class="profit-runtime__formula">
-    <small>最终结果</small>
-    <code>
-      <span>预测利润 = ¥18,000 − ¥13,900 − ¥900 = ¥3,200</span>
-      <span>利润率 = ¥3,200 ÷ ¥20,000 = 16%</span>
-      <span>总费用率 = ¥13,900 ÷ ¥20,000 = 69.5%</span>
-    </code>
-  </div>
-</div>
-
-这个例子最重要的不是 `¥3,200` 本身，而是每个数字的位置：销售额、采购成本和店铺杂费先统一承受退款风险；快递、后勤、售后、拍单和推广属于已经发生的支出，直接全额扣除；5% 保留最后单独扣减。真实报表里如果缺采购成本等关键事实，仍然应该显示“不可计算”，不能用示意值或平均数把缺口补掉。
-
-主公式也可以收束成两层：
-
-<div class="profit-equation-stack">
-  <section><small>第一层 · 总成本</small><code>净采购成本 + 店铺杂费 + 订单沉没成本 + 售后损耗 + 拍单总成本 + 未税总推广花费</code></section>
-  <section><small>第二层 · 预测利润</small><code>净销售额 − 总成本 − 5% 保留</code></section>
-  <section><small>利润率</small><code>预测利润 ÷ 退款前未税销售额</code></section>
-</div>
-
 文中的 `1.13` 和 `1.06` 是当前内部核算使用的价税分离系数，不是永远固定的通用常数；财务税率或发票口径变化时，模型也必须同步调整。
 
 ## 最终一张表，要同时看见结果、来源和异常
 
 新版链接利润表不应该只给一个利润数字。它需要保留足够的中间结果，让使用者能从“亏了多少”继续追到“为什么亏”。
 
-<div class="profit-sheet" aria-label="新版链接利润表的字段分区">
+<div class="profit-sheet profit-sheet--compact" aria-label="新版链接利润表的字段分区">
   <section class="is-result">
-    <small>01 · 结果区</small>
+    <small>01 · 结果</small>
     <strong>先回答赚不赚钱</strong>
     <span>净销售额</span><span>总成本</span><span>5% 保留</span><span>预测利润</span><span>利润率</span>
   </section>
   <section>
-    <small>02 · 经营价值区</small>
-    <strong>看退款前后保留了多少价值</strong>
-    <span>含税 / 未税销售额</span><span>成熟金额退款率</span><span>净采购成本</span><span>店铺杂费</span>
-  </section>
-  <section>
-    <small>03 · 已发生支出区</small>
-    <strong>看钱实际花在哪里</strong>
-    <span>订单沉没成本</span><span>售后损耗</span><span>拍单总成本</span><span>全域 / 直播 / 达人花费</span>
-  </section>
-  <section>
-    <small>04 · 推广诊断区</small>
-    <strong>解释结果，不替代结果</strong>
-    <span>点击率</span><span>PPC</span><span>ROI</span><span>推广成交金额</span><span>实际推广花费</span>
+    <small>02 · 原因</small>
+    <strong>看利润为什么变成这样</strong>
+    <span>退款率</span><span>采购</span><span>推广</span><span>履约 / 售后</span><span>拍单</span>
   </section>
   <section class="is-quality">
-    <small>05 · 数据质量区</small>
+    <small>03 · 异常</small>
     <strong>明确什么时候不能直接相信利润</strong>
     <span>缺采购成本</span><span>无成熟退款样本</span><span>商品归属近似</span><span>零销售额亏损</span>
   </section>
@@ -425,14 +274,7 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
 
 历史利润当然仍然有用，只是用途应该变成比较：这条链接比上周期变好还是变差，而不是因为上周赚 20%，就假设本周也赚 20%。
 
-<div class="profit-ending">
-  <small>真正的变化不是多写了几个公式</small>
-  <strong>而是让每一个数字都回到它真实发生的订单、包裹、周期和费用来源</strong>
-  <div><span>旧</span><p>看到同一时间段里的数字，就想办法放进一个公式。</p></div>
-  <div><span>新</span><p>先确认同批、同周期、同性质、同粒度，再决定怎样计算。</p></div>
-</div>
-
-利润模型最重要的不是看起来完整，而是每一步都能从结果穿透回事实。能算出数字只是开始，能解释数字为什么成立，才是核算。
+利润模型最重要的不是看起来完整，而是每一步都能从结果穿透回事实。**能算出数字只是开始，能解释数字为什么成立，才是核算。**
 
 <style>{`
   :root {
@@ -472,22 +314,17 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
 
   .profit-hero,
   .profit-thesis,
-  .profit-compression,
-  .profit-compression__losses,
-  .profit-mismatch-grid,
-  .profit-refund-contrast,
+  .profit-old-model,
   .profit-window,
   .profit-cost-lanes,
   .profit-package-lab,
-  .profit-zero-revenue,
   .profit-data-map,
   .profit-runtime,
   .profit-equation-stack,
   .profit-sheet,
   .profit-decision-path,
   .profit-proof-grid,
-  .profit-boundaries,
-  .profit-ending {
+  .profit-boundaries {
     color: var(--pr-ink);
   }
 
@@ -504,6 +341,17 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
       radial-gradient(circle at 5% 8%, color-mix(in srgb, var(--pr-blue) 13%, transparent), transparent 30%),
       radial-gradient(circle at 96% 94%, color-mix(in srgb, var(--pr-green) 13%, transparent), transparent 32%),
       var(--pr-panel);
+  }
+
+  .profit-hero--compact {
+    align-items: center;
+    gap: clamp(0.9rem, 2vw, 1.4rem);
+    margin-bottom: 1.6rem;
+    padding: clamp(1rem, 2.2vw, 1.5rem);
+  }
+
+  .profit-hero--compact .profit-hero__title {
+    font-size: clamp(1.9rem, 4.2vw, 3.35rem);
   }
 
   .profit-eyebrow {
@@ -528,37 +376,6 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
     color: var(--pr-text);
     font-size: 1rem;
     line-height: 1.75;
-  }
-
-  .profit-hero__inputs {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.55rem;
-    margin-top: 1.2rem;
-  }
-
-  .profit-hero__inputs span {
-    min-width: 0;
-    padding: 0.65rem 0.72rem;
-    border: 1px solid var(--pr-border);
-    border-radius: 0.72rem;
-    background: color-mix(in srgb, var(--pr-bg) 82%, transparent);
-  }
-
-  .profit-hero__inputs small,
-  .profit-hero__inputs strong {
-    display: block;
-  }
-
-  .profit-hero__inputs small {
-    color: var(--pr-muted);
-    font-size: 0.67rem;
-  }
-
-  .profit-hero__inputs strong {
-    margin-top: 0.2rem;
-    color: var(--pr-ink);
-    font-size: 0.94rem;
   }
 
   .profit-hero__verdict {
@@ -636,13 +453,6 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
     color: var(--pr-coral);
   }
 
-  .profit-figure-note {
-    grid-column: 1 / -1;
-    margin: -0.4rem 0 0;
-    color: var(--pr-muted);
-    font-size: 0.72rem;
-  }
-
   .profit-thesis {
     margin: 1.4rem 0 2.1rem;
     padding: 1rem 1.15rem;
@@ -668,291 +478,64 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
     line-height: 1.6;
   }
 
-  .profit-compression {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.05fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
-    gap: 0.38rem;
-    align-items: stretch;
-    margin: 1.5rem 0 0;
-    padding: 0.8rem;
-    border: 1px solid #c6d7e5;
-    border-radius: 1.05rem 1.05rem 0 0;
-    background: var(--pr-panel);
-  }
-
-  .profit-compression > section {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 9.5rem;
-    padding: 0.72rem;
-    border: 1px solid var(--pr-border);
-    border-radius: 0.72rem;
-    background: var(--pr-bg);
-  }
-
-  .profit-compression > section.is-bottleneck {
-    border-color: #d8b8a7;
-    background: var(--pr-coral-soft);
-  }
-
-  .profit-compression > section.is-result {
-    border-color: #c7b4df;
-    background: var(--pr-violet-soft);
-  }
-
-  .profit-compression small,
-  .profit-compression strong,
-  .profit-compression span,
-  .profit-compression code {
-    display: block;
-  }
-
-  .profit-compression small {
-    color: var(--pr-blue);
-    font-size: 0.64rem;
-    font-weight: 900;
-  }
-
-  .profit-compression strong {
-    margin: 0.35rem 0;
-    font-size: 0.82rem;
-  }
-
-  .profit-compression span,
-  .profit-compression code {
-    margin-top: auto;
-    color: var(--pr-muted);
-    font-size: 0.65rem;
-    line-height: 1.55;
-    overflow-wrap: anywhere;
-  }
-
-  .profit-compression code {
-    color: var(--pr-coral);
-  }
-
-  .profit-compression > i {
-    align-self: center;
-    color: var(--pr-muted);
-    font-style: normal;
-    font-weight: 900;
-  }
-
-  .profit-compression__losses {
-    margin: 0 0 2rem;
+  .profit-old-model {
+    margin: 1.35rem 0 1.6rem;
     overflow: hidden;
-    border: 1px solid #e2bfb7;
-    border-top: 0;
-    border-radius: 0 0 1.05rem 1.05rem;
-    background: var(--pr-bg);
-  }
-
-  .profit-compression__losses header,
-  .profit-compression__losses > div {
-    display: grid;
-    grid-template-columns: minmax(9rem, 0.7fr) minmax(0, 1.3fr);
-    gap: 0.75rem;
-    padding: 0.6rem 0.8rem;
-    border-bottom: 1px solid var(--pr-border);
-  }
-
-  .profit-compression__losses header {
-    background: var(--pr-coral-soft);
-    color: var(--pr-coral);
-    font-size: 0.7rem;
-  }
-
-  .profit-compression__losses > div:last-child {
-    border-bottom: 0;
-  }
-
-  .profit-compression__losses span {
-    color: var(--pr-text);
-  }
-
-  .profit-compression__losses b {
-    color: var(--pr-coral);
-  }
-
-  .profit-mismatch-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.8rem;
-    margin: 1.5rem 0 2rem;
-  }
-
-  .profit-mismatch-grid > section {
-    padding: 1rem;
-    border: 1px solid var(--pr-border);
-    border-radius: 0.9rem;
-    background: var(--pr-panel);
-  }
-
-  .profit-mismatch-grid > section > span,
-  .profit-mismatch-grid > section > strong {
-    display: block;
-  }
-
-  .profit-mismatch-grid > section > span {
-    color: var(--pr-coral);
-    font-size: 0.7rem;
-    font-weight: 900;
-  }
-
-  .profit-mismatch-grid > section > strong {
-    margin: 0.3rem 0 0.75rem;
-    font-size: 0.98rem;
-  }
-
-  .profit-mismatch-grid > section > div {
-    padding: 0.62rem;
-    border: 1px solid #dfc3bd;
-    border-radius: 0.62rem;
-    background: var(--pr-coral-soft);
-  }
-
-  .profit-mismatch-grid small,
-  .profit-mismatch-grid code {
-    display: block;
-  }
-
-  .profit-mismatch-grid small {
-    color: var(--pr-muted);
-    font-size: 0.64rem;
-  }
-
-  .profit-mismatch-grid code {
-    margin-top: 0.2rem;
-    color: var(--pr-coral);
-    font-size: 0.74rem;
-    white-space: normal;
-  }
-
-  .profit-mismatch-grid p {
-    margin: 0.7rem 0 0;
-    color: var(--pr-text);
-    font-size: 0.84rem;
-    line-height: 1.65;
-  }
-
-  .profit-refund-contrast {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.8rem;
-    margin: 1.5rem 0 1rem;
-  }
-
-  .profit-refund-contrast > section {
-    padding: 1rem;
-    border: 1px solid var(--pr-border);
+    border: 1px solid #d9c2bc;
     border-radius: 0.95rem;
     background: var(--pr-panel);
   }
 
-  .profit-refund-contrast > section.is-wrong {
-    border-color: #e0bab2;
+  .profit-old-model__flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    align-items: center;
+    padding: 0.8rem;
     background: var(--pr-coral-soft);
   }
 
-  .profit-refund-contrast > section.is-right {
-    border-color: #b8d9cb;
-    background: var(--pr-green-soft);
-  }
-
-  .profit-refund-contrast header span,
-  .profit-refund-contrast header strong {
-    display: block;
-  }
-
-  .profit-refund-contrast header span {
-    color: var(--pr-coral);
-    font-size: 0.7rem;
-    font-weight: 900;
-  }
-
-  .profit-refund-contrast .is-right header span {
-    color: var(--pr-green);
-  }
-
-  .profit-refund-contrast header strong {
-    margin-top: 0.25rem;
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-
-  .profit-refund-contrast__math {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 0.45rem;
-    align-items: center;
-    margin: 0.9rem 0;
-  }
-
-  .profit-refund-contrast__math span,
-  .profit-refund-contrast__cohort span {
-    padding: 0.62rem;
-    border: 1px solid color-mix(in srgb, var(--pr-coral) 30%, var(--pr-border));
-    border-radius: 0.65rem;
+  .profit-old-model__flow span,
+  .profit-old-model__flow strong {
+    padding: 0.42rem 0.55rem;
+    border-radius: 0.5rem;
     background: var(--pr-bg);
+    font-size: 0.72rem;
   }
 
-  .profit-refund-contrast__math small,
-  .profit-refund-contrast__math b,
-  .profit-refund-contrast__cohort small,
-  .profit-refund-contrast__cohort b {
-    display: block;
+  .profit-old-model__flow strong {
+    color: var(--pr-coral);
   }
 
-  .profit-refund-contrast__math small,
-  .profit-refund-contrast__cohort small {
-    color: var(--pr-muted);
-    font-size: 0.64rem;
-  }
-
-  .profit-refund-contrast__math b,
-  .profit-refund-contrast__cohort b {
-    margin-top: 0.18rem;
-    font-size: 0.78rem;
-  }
-
-  .profit-refund-contrast__math i,
-  .profit-refund-contrast__cohort i {
+  .profit-old-model__flow i {
     color: var(--pr-muted);
     font-style: normal;
-    text-align: center;
   }
 
-  .profit-refund-contrast__math > strong {
-    grid-column: 1 / -1;
-    color: var(--pr-coral);
-    text-align: center;
-  }
-
-  .profit-refund-contrast__cohort {
+  .profit-old-model__risks {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 0.45rem;
-    align-items: center;
-    margin: 0.9rem 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .profit-refund-contrast__cohort span {
-    border-color: color-mix(in srgb, var(--pr-green) 30%, var(--pr-border));
+  .profit-old-model__risks section {
+    padding: 0.7rem 0.8rem;
+    border-top: 1px solid var(--pr-border);
   }
 
-  .profit-refund-contrast > section > code {
-    display: block;
-    color: var(--pr-green);
-    font-size: 0.78rem;
-    white-space: normal;
+  .profit-old-model__risks section:nth-child(odd) {
+    border-right: 1px solid var(--pr-border);
   }
 
-  .profit-refund-contrast p {
-    margin: 0;
+  .profit-old-model__risks b {
+    color: var(--pr-coral);
+    font-size: 0.72rem;
+  }
+
+  .profit-old-model__risks p {
+    margin: 0.25rem 0 0;
     color: var(--pr-text);
-    font-size: 0.82rem;
-    line-height: 1.6;
+    font-size: 0.76rem;
+    line-height: 1.55;
   }
 
   .profit-window {
@@ -1193,69 +776,6 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
     font-size: 0.68rem;
   }
 
-  .profit-zero-revenue {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.8rem;
-    margin: 1.3rem 0 2rem;
-  }
-
-  .profit-zero-revenue > section {
-    padding: 1rem;
-    border: 1px solid var(--pr-border);
-    border-radius: 0.9rem;
-    background: var(--pr-panel);
-  }
-
-  .profit-zero-revenue header {
-    margin-bottom: 0.75rem;
-  }
-
-  .profit-zero-revenue header span,
-  .profit-zero-revenue header strong {
-    display: block;
-  }
-
-  .profit-zero-revenue header span {
-    color: var(--pr-violet);
-    font-size: 0.7rem;
-    font-weight: 900;
-  }
-
-  .profit-zero-revenue header strong {
-    margin-top: 0.22rem;
-    font-size: 0.92rem;
-  }
-
-  .profit-zero-revenue > section > div {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.8rem;
-    padding: 0.43rem 0;
-    border-bottom: 1px dashed var(--pr-border);
-  }
-
-  .profit-zero-revenue > section > div.is-total {
-    color: var(--pr-coral);
-    border-bottom: 0;
-    font-size: 1.05rem;
-  }
-
-  .profit-zero-revenue small {
-    color: var(--pr-muted);
-  }
-
-  .profit-zero-revenue b {
-    text-align: right;
-  }
-
-  .profit-zero-revenue p {
-    margin: 0.75rem 0 0;
-    color: var(--pr-text);
-    font-size: 0.78rem;
-    line-height: 1.6;
-  }
-
   .profit-data-map {
     margin: 1.5rem 0 2rem;
     padding: 0.9rem;
@@ -1300,6 +820,15 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
     margin-top: 0.27rem;
     color: var(--pr-text);
     font-size: 0.67rem;
+  }
+
+  .profit-data-map__sources--compact section {
+    padding: 0.65rem;
+  }
+
+  .profit-data-map__sources--compact strong {
+    min-height: 0;
+    margin-bottom: 0.3rem;
   }
 
   .profit-data-map__merge {
@@ -1710,80 +1239,7 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
     line-height: 1.55;
   }
 
-  .profit-ending {
-    margin: 1.8rem 0 0.6rem;
-    padding: clamp(1.25rem, 3vw, 2rem);
-    border: 1px solid #b8d6ca;
-    border-radius: 1.1rem;
-    background:
-      linear-gradient(130deg, color-mix(in srgb, var(--pr-blue) 9%, transparent), transparent 45%),
-      linear-gradient(310deg, color-mix(in srgb, var(--pr-green) 12%, transparent), transparent 48%),
-      var(--pr-panel);
-  }
-
-  .profit-ending > small,
-  .profit-ending > strong {
-    display: block;
-  }
-
-  .profit-ending > small {
-    color: var(--pr-green);
-    font-weight: 900;
-  }
-
-  .profit-ending > strong {
-    max-width: 25ch;
-    margin: 0.35rem 0 1rem;
-    font-size: clamp(1.4rem, 3.4vw, 2.35rem);
-    line-height: 1.2;
-    letter-spacing: -0.035em;
-  }
-
-  .profit-ending > div {
-    display: grid;
-    grid-template-columns: 2rem 1fr;
-    gap: 0.55rem;
-    align-items: center;
-    margin-top: 0.5rem;
-    padding: 0.65rem;
-    border-radius: 0.65rem;
-    background: color-mix(in srgb, var(--pr-bg) 82%, transparent);
-  }
-
-  .profit-ending > div > span {
-    display: grid;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 999px;
-    color: var(--pr-coral);
-    background: var(--pr-coral-soft);
-    font-weight: 900;
-  }
-
-  .profit-ending > div:last-child > span {
-    color: var(--pr-green);
-    background: var(--pr-green-soft);
-  }
-
-  .profit-ending p {
-    margin: 0;
-    color: var(--pr-text);
-  }
-
   @media (max-width: 980px) {
-    .profit-compression {
-      grid-template-columns: 1fr;
-    }
-
-    .profit-compression > section {
-      min-height: auto;
-    }
-
-    .profit-compression > i {
-      transform: rotate(90deg);
-    }
-
     .profit-data-map__sources,
     .profit-runtime__stages {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1796,16 +1252,11 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
 
   @media (max-width: 800px) {
     .profit-hero,
-    .profit-refund-contrast,
     .profit-cost-lanes,
     .profit-package-lab,
     .profit-equation-stack,
     .profit-decision-path {
       grid-template-columns: 1fr;
-    }
-
-    .profit-figure-note {
-      grid-column: auto;
     }
 
     .profit-window__ticks {
@@ -1830,9 +1281,6 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
       font-size: clamp(2rem, 11vw, 3rem);
     }
 
-    .profit-hero__inputs,
-    .profit-mismatch-grid,
-    .profit-zero-revenue,
     .profit-data-map__sources,
     .profit-data-map__outputs,
     .profit-runtime > header,
@@ -1847,35 +1295,21 @@ Excel 能顺利算出数字，并不代表数字具有经营含义。错位造�
       grid-column: auto;
     }
 
-    .profit-compression__losses header,
-    .profit-compression__losses > div,
     .profit-boundaries > div {
       grid-template-columns: 1fr;
     }
 
-    .profit-refund-contrast__math,
-    .profit-refund-contrast__cohort {
+    .profit-old-model__risks {
       grid-template-columns: 1fr;
     }
 
-    .profit-refund-contrast__math i,
-    .profit-refund-contrast__cohort i {
-      transform: rotate(90deg);
+    .profit-old-model__risks section:nth-child(odd) {
+      border-right: 0;
     }
 
     .profit-package-lab__results {
       grid-template-columns: 1fr;
     }
 
-    .profit-zero-revenue > section > div {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.1rem;
-    }
-
-    .profit-zero-revenue b {
-      text-align: left;
-      overflow-wrap: anywhere;
-    }
   }
 `}</style>
