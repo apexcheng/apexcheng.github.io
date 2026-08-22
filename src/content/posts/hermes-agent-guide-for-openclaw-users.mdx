@@ -41,13 +41,11 @@ Hermes 当然可以在终端里直接运行，但现在它同时拥有 Desktop�
   </footer>
 </div>
 
-本文不是官方文档翻译，而是把我原来两份 Hermes 笔记重新拆掉后，按当前版本重新组织。旧稿里已经失效或明显过时的内容直接删除，不保留“历史写法”。
+本文不是官方文档翻译。重点是站在 OpenClaw 用户已经具备的认知基础上，快速建立 Hermes 的运行模型，再把真正需要的安装、能力、状态和 Gateway 串起来。
 
 官方参考入口：[Hermes Agent 文档](https://hermes-agent.nousresearch.com/docs/)、[CLI Reference](https://hermes-agent.nousresearch.com/docs/reference/cli-commands)、[GitHub Releases](https://github.com/NousResearch/hermes-agent/releases)。
 
-## 先纠正一个旧印象：Hermes 已经不只是本地 CLI 工具箱
-
-旧稿里，我把 Hermes 概括成“本地优先的 agent runtime + 一部分 gateway + tools + skills”。这个理解曾经有帮助，但放到现在已经太窄。
+## 先认识 Hermes：它是一套完整的 Agent 运行环境
 
 Hermes 的核心仍然是 Agent Runtime：接收任务、组织上下文、调用模型、选择工具、执行动作、保存状态。但围绕这个 Runtime，已经长出一整套完整表面。
 
@@ -108,8 +106,6 @@ Hermes 的核心仍然是 Agent Runtime：接收任务、组织上下文、调�
 
 最重要的差异之一，是 **OpenClaw 的 workspace 是 Agent 的明确“家”**；Hermes 则允许你直接在项目目录里启动 Agent，同时又通过 `hermes project` 和 `hermes profile` 管理更复杂的项目和隔离实例。
 
-所以，旧稿里“Hermes 没有显式 Workspace”的说法现在也应该删除。
-
 ## Hermes 实际在做什么：看一条完整运行链路
 
 如果把所有名词都拿掉，一次 Hermes 任务其实只有四层。
@@ -136,11 +132,9 @@ Hermes 的核心仍然是 Agent Runtime：接收任务、组织上下文、调�
 
 这也是理解 Hermes 最重要的一条线：**Tool 和 Skill 绝不是同一个东西，Session 和 Memory 也绝不是同一个东西。**
 
-## 安装：现在不必只盯着 WSL2
+## 安装：先选择适合你的运行环境
 
-旧稿默认“Windows 用户 → WSL2 → 安装 Hermes”。现在官方已经明确支持 macOS、Linux、WSL2、Windows Native，macOS / Windows 还提供 Hermes Desktop 安装器。
-
-如果本来就在 WSL2 里维护代码和 OpenClaw，继续装在 WSL2 完全合理；但它已经不是唯一正确路径。
+Hermes 当前支持 macOS、Linux、WSL2 和 Windows Native；macOS / Windows 还提供 Hermes Desktop。选择时不必先从操作系统出发，先决定自己要的是桌面应用还是 CLI 更简单。
 
 <section class="hermes-board hermes-install" aria-label="Hermes Agent 安装路径">
   <header class="hermes-board__head">
@@ -201,7 +195,7 @@ hermes chat -q "Reply with exactly: OK"
 
 ## OpenClaw 用户最值得先看的，其实是官方迁移工具
 
-这是旧稿里完全没有、但现在最值得 OpenClaw 用户知道的一项能力。
+如果你已经有一套 OpenClaw 配置，这可能是最值得先看的能力。
 
 Hermes 会在首次 `hermes setup` 时检测 `~/.openclaw`，并询问是否查看迁移计划。也可以随时手动执行：
 
@@ -283,7 +277,7 @@ OpenClaw 用户通常已经习惯“Provider + Model”。Hermes 还多了一层
 - `/model`：Hermes 会话里面执行。只负责**在已经配置好的模型之间切换**。
 - `hermes auth`：更偏**凭据池和认证状态管理**，不是普通用户第一次配置模型的首选入口。
 
-所以旧笔记里把 OpenAI Codex 的主流程写成 `hermes auth add openai-codex`，现在不应该继续保留。当前更稳定的入口是：
+以 OpenAI Codex 为例，当前推荐直接通过 Hermes 的登录入口完成 OAuth：
 
 ```bash
 hermes model
@@ -345,7 +339,7 @@ hermes mcp
 
 当前 Hermes 的 Skills 已经不仅是“本地放一份 SKILL.md”。CLI 支持 browse、search、inspect、install、update、audit、publish，也有 Skill 写入审批和 curator 等机制。
 
-MCP 也比旧稿成熟得多。Hermes 可以作为 MCP Client 连接 stdio / HTTP server，也可以执行：
+Hermes 可以作为 MCP Client 连接 stdio / HTTP server，也可以执行：
 
 ```bash
 hermes mcp serve
@@ -353,7 +347,7 @@ hermes mcp serve
 
 把自己的消息会话能力暴露成 MCP server，给其他 Agent 使用。
 
-另外，旧稿中 MCP 工具名举例写成了 `mcp_github_create_issue`。当前官方规则是类似：
+MCP 工具进入 Hermes 后，会使用类似下面的命名规则：
 
 ```text
 mcp__server_name__tool_name
@@ -451,13 +445,13 @@ hermes gateway status
 
 WSL 用户要特别注意：当前官方 CLI Reference 明确建议 WSL 场景优先使用前台 `hermes gateway run`，而不是依赖 `gateway start` 的 systemd 服务模式。
 
-Hermes Gateway 当前支持的渠道已经远多于旧笔记记录，官方列表包括 Telegram、Discord、Slack、WhatsApp、Signal、Email、Mattermost、Matrix、DingTalk、Feishu/Lark、WeCom、Microsoft Teams、LINE 等。
+Hermes Gateway 当前支持 Telegram、Discord、Slack、WhatsApp、Signal、Email、Mattermost、Matrix、DingTalk、Feishu/Lark、WeCom、Microsoft Teams、LINE 等渠道。
 
 官方文档：[Messaging Gateway](https://hermes-agent.nousresearch.com/docs/user-guide/messaging)。
 
 ## 常用命令：只保留现在真正值得记的
 
-旧笔记最大的问题，是把大量“可能存在 / 版本可能支持”的命令也写了进去。日常使用其实不需要背那么多。
+日常使用其实不需要背很多命令。先记住下面这组高频入口，其余功能需要时再查 `--help`。
 
 <div class="hermes-command-strip" aria-label="Hermes 常用命令分组">
   <span><b>安装 / 检查</b> version · doctor · status · update</span>
@@ -518,7 +512,7 @@ hermes --help
 hermes <command> --help
 ```
 
-而不是继续找旧笔记里的命令。
+这样比维护一张越来越长、很快过期的命令表可靠得多。
 
 ## 到底什么时候用 Hermes，什么时候继续用 OpenClaw？
 
