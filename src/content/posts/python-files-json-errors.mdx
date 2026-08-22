@@ -1,0 +1,525 @@
+---
+title: "Python 文件、JSON 与异常处理：从练习代码走向真实脚本"
+description: "从 TXT、JSON 文件和接口返回结构出发，讲清 Python 文件读取与写入、json 模块、嵌套数据提取，以及 ValueError、FileNotFoundError 等常见异常如何处理。"
+date: 2026-08-22T22:40:00+08:00
+category: "教程"
+tags:
+  - "Python"
+minutes: 17
+featured: false
+series: "python-basics"
+seriesOrder: 6
+draft: false
+private: false
+---
+
+import HighlightBox from '../../components/HighlightBox.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+前面的例子里，订单和商品数据都直接写在代码里：
+
+```python
+orders = [
+    {"order_no": "A001", "amount": 129.0},
+    {"order_no": "A002", "amount": 88.0},
+]
+```
+
+真实脚本很少永远这样工作。数据通常来自 TXT、CSV、JSON 文件，或者来自某个 API 的返回结果。
+
+这一篇就是从“我会写代码”跨到“我能接真实数据”的那一步。
+
+<Mermaid
+  title="真实脚本最常见的数据流"
+  caption="不同来源的数据进入 Python 后，最终都会先变成字符串、列表、字典等基础对象，再进入前面已经学过的判断、循环和函数。"
+  chart={`flowchart LR
+    A[TXT / JSON 文件] --> C[读取]
+    B[API 返回 JSON] --> D[解析]
+    C --> E[Python 数据<br/>str / list / dict]
+    D --> E
+    E --> F[清洗 / 判断 / 循环 / 函数]
+    F --> G[结果]
+    G --> H[打印 / 写文件 / 交给下一步]`}
+/>
+
+## 读取一个文本文件
+
+假设当前目录里有一个 `order_no.txt`：
+
+```text
+A001
+A002
+A003
+```
+
+读取整个文件：
+
+```python
+with open("order_no.txt", "r", encoding="utf-8") as file:
+    content = file.read()
+
+print(content)
+```
+
+先只看这几个部分：
+
+```text
+open(...)            打开文件
+"order_no.txt"       文件路径
+"r"                  读取模式 read
+encoding="utf-8"     指定文本编码
+with ... as file      用完后自动关闭文件
+file.read()           把全部内容读成字符串
+```
+
+`with` 是推荐写法，因为无论后面代码正常结束还是发生异常，文件资源都能被正确关闭。
+
+## 一行一行处理文件
+
+如果文件很大，或者本来就想逐行处理，不需要先把所有内容读成一个大字符串。
+
+```python
+with open("order_no.txt", "r", encoding="utf-8") as file:
+    for line in file:
+        order_no = line.strip()
+        print(order_no)
+```
+
+这里已经把前面几篇串起来了：
+
+```text
+文件对象
+  ↓ for
+每次拿到一行字符串
+  ↓ strip()
+去掉换行和两端空白
+  ↓
+得到干净订单号
+```
+
+很多简单数据清洗脚本就是这种结构。
+
+## 写入一个结果文件
+
+```python
+result = ["A001", "A003"]
+
+with open("result.txt", "w", encoding="utf-8") as file:
+    for order_no in result:
+        file.write(order_no + "\n")
+```
+
+`"w"` 表示写入。如果文件已经存在，会覆盖原内容。
+
+如果你明确希望追加到文件末尾，可以用：
+
+```python
+"a"
+```
+
+所以写文件前一定先想清楚：**我要覆盖，还是追加？**
+
+## 文件路径：先理解相对路径
+
+```python
+open("data/orders.txt", "r", encoding="utf-8")
+```
+
+这是相对路径。它不是“相对于 Python 文件本身”这么简单，而是相对于程序运行时的当前工作目录。
+
+入门阶段最容易遇到的问题就是：文件明明在电脑上，Python 却说找不到。
+
+可以先看当前工作目录：
+
+```python
+from pathlib import Path
+
+print(Path.cwd())
+```
+
+`pathlib` 是 Python 标准库的一部分，不需要额外安装。
+
+如果想构造路径：
+
+```python
+from pathlib import Path
+
+file_path = Path("data") / "orders.txt"
+print(file_path)
+```
+
+这里只先认识这种写法，不需要现在深入各种路径 API。
+
+## JSON：接口和配置里最常见的数据格式之一
+
+下面是一段 JSON 文本：
+
+```json
+{
+  "code": 0,
+  "data": {
+    "orders": [
+      {"order_no": "A001", "amount": 129.0},
+      {"order_no": "A002", "amount": 88.0}
+    ]
+  }
+}
+```
+
+它看起来很像 Python 字典，但它现在只是**一种文本格式**。
+
+JSON 与 Python 常见类型的对应关系：
+
+| JSON | Python |
+| --- | --- |
+| object `{}` | `dict` |
+| array `[]` | `list` |
+| string | `str` |
+| number | `int` / `float` |
+| `true` / `false` | `True` / `False` |
+| `null` | `None` |
+
+注意大小写：JSON 是 `true`，Python 是 `True`。
+
+## `json.loads()`：把 JSON 字符串变成 Python 数据
+
+```python
+import json
+
+api_text = '''
+{
+  "code": 0,
+  "data": {
+    "orders": [
+      {"order_no": "A001", "amount": 129.0},
+      {"order_no": "A002", "amount": 88.0}
+    ]
+  }
+}
+'''
+
+response = json.loads(api_text)
+
+print(type(response))
+print(response["code"])
+```
+
+输出：
+
+```text
+<class 'dict'>
+0
+```
+
+`loads` 可以记成：**load string**，把 JSON 字符串解析成 Python 对象。
+
+一旦解析完成，后面的操作就回到了上一篇学过的字典和列表：
+
+```python
+orders = response["data"]["orders"]
+
+for order in orders:
+    print(order["order_no"], order["amount"])
+```
+
+## `json.dumps()`：把 Python 数据变成 JSON 字符串
+
+```python
+import json
+
+order = {
+    "order_no": "A001",
+    "status": "已支付",
+}
+
+text = json.dumps(order, ensure_ascii=False, indent=2)
+print(text)
+```
+
+输出会类似：
+
+```json
+{
+  "order_no": "A001",
+  "status": "已支付"
+}
+```
+
+这里：
+
+- `ensure_ascii=False` 让中文直接显示，而不是变成 `\uXXXX`。
+- `indent=2` 让 JSON 更容易阅读。
+
+## JSON 文件：`load()` 和 `dump()`
+
+如果 `orders.json` 本身就是一个 JSON 文件，可以直接：
+
+```python
+import json
+
+with open("orders.json", "r", encoding="utf-8") as file:
+    orders = json.load(file)
+```
+
+和前面的区别：
+
+```text
+json.loads(text)   解析字符串
+json.load(file)    从文件对象读取并解析
+```
+
+写入 JSON 文件：
+
+```python
+import json
+
+with open("result.json", "w", encoding="utf-8") as file:
+    json.dump(orders, file, ensure_ascii=False, indent=2)
+```
+
+对应地：
+
+```text
+json.dumps(data)   得到 JSON 字符串
+json.dump(data, file)  直接写入文件
+```
+
+## API 返回结果和 JSON 文件，本质上可以进入同一套处理逻辑
+
+以后你用某个 HTTP 库请求接口，常见流程会像这样：
+
+```text
+发送请求
+  ↓
+收到 JSON
+  ↓
+解析成 dict / list
+  ↓
+取字段
+  ↓
+for 遍历
+  ↓
+if 筛选
+  ↓
+函数处理
+```
+
+这个系列暂时不引入第三方 HTTP 库。等你把本篇的 JSON 和异常处理掌握以后，再学 `requests`、`httpx` 或自动化平台自己的 HTTP API，会自然很多。
+
+## 为什么需要异常处理
+
+真实数据不会永远干净。
+
+上一篇学过：
+
+```python
+quantity = int("2")
+```
+
+正常。
+
+但：
+
+```python
+quantity = int("两件")
+```
+
+会抛出 `ValueError`。
+
+如果这个异常是业务里可以预期的，就可以处理它。
+
+## `try / except`：只接住你明确知道可能失败的地方
+
+```python
+raw_quantity = "两件"
+
+try:
+    quantity = int(raw_quantity)
+except ValueError:
+    quantity = 0
+
+print(quantity)
+```
+
+执行逻辑：
+
+<Mermaid
+  title="try / except 的执行分支"
+  chart={`flowchart LR
+    A[执行 int raw_quantity] --> B{转换成功?}
+    B -- 是 --> C[得到 quantity]
+    B -- 否 ValueError --> D[进入 except ValueError]
+    D --> E[quantity = 0]
+    C --> F[继续后面代码]
+    E --> F`}
+/>
+
+这里有一个重要边界：不要为了“程序永远不报错”把所有代码都塞进巨大的 `try`。
+
+异常本来就是告诉你哪里出了问题。只有你**知道某类失败可以合理处理**时，才应该接住它。
+
+## 文件不存在：`FileNotFoundError`
+
+```python
+try:
+    with open("orders.txt", "r", encoding="utf-8") as file:
+        content = file.read()
+except FileNotFoundError:
+    print("没有找到 orders.txt")
+```
+
+这比：
+
+```text
+except Exception:
+    print("失败")
+```
+
+更清楚，因为你知道自己处理的是“文件不存在”，不是把编码错误、权限错误、代码 bug 全部吞掉。
+
+## JSON 格式错误：`JSONDecodeError`
+
+```python
+import json
+
+text = '{"order_no": "A001"'
+
+try:
+    data = json.loads(text)
+except json.JSONDecodeError:
+    print("JSON 格式不正确")
+```
+
+这里也一样：只处理自己真正理解的异常。
+
+## 一个更完整的真实小案例
+
+假设 `orders.json` 内容是：
+
+```json
+[
+  {"order_no": "A001", "amount": "129.0", "status": "已支付"},
+  {"order_no": "A002", "amount": "88.0", "status": "已退款"},
+  {"order_no": "A003", "amount": "abc", "status": "已支付"}
+]
+```
+
+目标：只统计已支付、并且金额可以正常转换的订单。
+
+```python
+import json
+
+with open("orders.json", "r", encoding="utf-8") as file:
+    orders = json.load(file)
+
+total = 0
+
+for order in orders:
+    if order["status"] != "已支付":
+        continue
+
+    try:
+        amount = float(order["amount"])
+    except ValueError:
+        print("金额异常：", order["order_no"])
+        continue
+
+    total = total + amount
+
+print("有效已支付金额：", total)
+```
+
+这段代码已经具备一个真正小脚本的完整形状：
+
+```text
+读取文件
+  ↓
+解析 JSON
+  ↓
+遍历多条订单
+  ↓
+条件筛选
+  ↓
+类型转换
+  ↓ 失败
+记录异常并跳过
+  ↓ 成功
+累计结果
+  ↓
+输出最终结果
+```
+
+## `import`：把标准库模块拿进来使用
+
+这一篇已经出现：
+
+```python
+import json
+```
+
+以及：
+
+```python
+from pathlib import Path
+```
+
+可以先这样理解：Python 自己带了很多现成模块，你不需要把 JSON 解析、路径处理这些功能重新写一遍。
+
+模块调用常见两种写法：
+
+```python
+import json
+json.loads(...)
+```
+
+或者：
+
+```python
+from pathlib import Path
+Path.cwd()
+```
+
+现在只要能看懂这两种形式即可。包管理、虚拟环境和第三方依赖放到真正需要使用外部库时再学。
+
+## 本篇最容易混淆的四组概念
+
+| 容易混淆 | 区别 |
+| --- | --- |
+| `read()` / `json.load()` | 前者读文本，后者直接读并解析 JSON |
+| `json.loads()` / `json.load()` | 字符串 vs 文件对象 |
+| `json.dumps()` / `json.dump()` | 得到字符串 vs 写到文件 |
+| 正常分支 / 异常分支 | `if` 处理业务条件，`except` 处理执行失败 |
+
+最后一条尤其重要。
+
+例如“订单状态是已退款”不是异常，它只是一个正常业务状态，应该用 `if`。
+
+“把 `abc` 转成数字失败”才是异常。
+
+## 动手练习：读取并筛选订单 JSON
+
+创建一个 `orders.json`：
+
+```json
+[
+  {"order_no": "B001", "status": "已支付", "amount": "99.9"},
+  {"order_no": "B002", "status": "已关闭", "amount": "120"},
+  {"order_no": "B003", "status": "已支付", "amount": "bad"},
+  {"order_no": "B004", "status": "已支付", "amount": "199"}
+]
+```
+
+完成一个脚本：
+
+1. 读取 JSON 文件。
+2. 只处理 `已支付` 订单。
+3. 金额转成 `float`。
+4. 金额异常时打印订单号并跳过。
+5. 最终输出有效订单数量和总金额。
+6. 把两个结果写到一个 `result.json` 文件中。
+
+如果能独立完成，这时你已经不是只会写课堂示例，而是在完成一个很小但完整的数据处理任务。
+
+<HighlightBox eyebrow="下一篇" title="最后补上够用的类与对象">
+  很多数据处理和自动化脚本用“列表 + 字典 + 函数”就足够了。下一篇会讲清什么时候类能让代码更自然，以及 `class`、`__init__`、`self`、属性和方法到底在做什么，不会把入门课程带进复杂 OOP。
+</HighlightBox>

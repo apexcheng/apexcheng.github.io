@@ -1,0 +1,575 @@
+---
+title: "Python 函数入门：把一段处理逻辑变成可以重复使用的小工具"
+description: "从订单金额和状态判断出发，讲清 Python 函数定义、参数、return、默认参数、关键字参数、可变参数、局部变量和可变默认参数陷阱。"
+date: 2026-08-22T22:38:00+08:00
+category: "教程"
+tags:
+  - "Python"
+minutes: 15
+featured: false
+series: "python-basics"
+seriesOrder: 5
+draft: false
+private: false
+---
+
+import HighlightBox from '../../components/HighlightBox.astro';
+
+前面已经能写出这样的代码：
+
+```python
+amount = 129.0
+
+if amount >= 100:
+    result = "高金额"
+else:
+    result = "普通金额"
+```
+
+如果只判断一次，这样完全没问题。如果很多订单都需要做同一个判断，就可以把它变成一个函数。
+
+## 函数先理解成“有名字的一段处理逻辑”
+
+```python
+def get_amount_level(amount):
+    if amount >= 100:
+        return "高金额"
+    else:
+        return "普通金额"
+```
+
+调用：
+
+```python
+level = get_amount_level(129.0)
+print(level)
+```
+
+<div class="py-function-machine" aria-label="函数输入处理输出过程">
+  <div class="machine-input"><span>输入</span><strong>129.0</strong><small>传给 amount</small></div>
+  <div class="machine-arrow">→</div>
+  <div class="machine-core"><span>函数</span><strong>get_amount_level</strong><small>判断 amount 是否 ≥ 100</small></div>
+  <div class="machine-arrow">→</div>
+  <div class="machine-output"><span>返回</span><strong>"高金额"</strong><small>交给调用位置</small></div>
+</div>
+
+函数最重要的三个部分就是：
+
+```text
+输入 → 处理 → 输出
+```
+
+## `def` 只是定义，调用时才真正执行
+
+```python
+def say_hello():
+    print("你好")
+```
+
+只运行这三行，不会看到输出。
+
+因为这里只是告诉 Python：“以后有一个叫 `say_hello` 的函数，它里面要做这些事。”
+
+真正执行：
+
+```python
+say_hello()
+```
+
+才会输出：
+
+```text
+你好
+```
+
+## 参数：函数接收外部数据的入口
+
+```python
+def show_order(order_no, amount):
+    print(f"订单 {order_no}，金额 {amount}")
+
+show_order("A001", 129.0)
+```
+
+定义函数时：
+
+```python
+order_no
+amount
+```
+
+叫参数。
+
+调用函数时传进去的：
+
+```python
+"A001"
+129.0
+```
+
+是具体的实参值。
+
+入门时不用纠结术语，只要理解：**函数需要哪些数据，就把这些数据作为参数交进去。**
+
+## `return`：把结果交回给后面的代码
+
+```python
+def calculate_amount(price, quantity):
+    return price * quantity
+
+amount = calculate_amount(129.9, 2)
+print(amount)
+```
+
+结果：
+
+```text
+259.8
+```
+
+`return` 有两个关键作用：
+
+1. 把结果返回给调用位置。
+2. 函数执行到 `return` 后就结束。
+
+例如：
+
+```python
+def check_stock(stock):
+    if stock <= 0:
+        return "缺货"
+
+    return "有库存"
+```
+
+当 `stock <= 0` 成立时，第一个 `return` 执行，函数不会继续走到下面。
+
+## `print()` 和 `return` 完全不是一回事
+
+错误理解最常见于这里。
+
+函数 A：
+
+```python
+def add(a, b):
+    print(a + b)
+```
+
+函数 B：
+
+```python
+def add(a, b):
+    return a + b
+```
+
+第一种只是把结果显示在屏幕上。
+
+第二种才是把结果交给外面的代码：
+
+```python
+result = add(3, 5)
+taxed_result = result * 1.13
+```
+
+可以这样记：
+
+```text
+print  → 给人看
+return → 给后面的代码用
+```
+
+真实数据处理函数通常更需要 `return`。
+
+## 函数可以接收字典
+
+```python
+def get_order_amount(order):
+    return order["price"] * order["quantity"]
+
+order = {
+    "order_no": "A001",
+    "price": 129.9,
+    "quantity": 2,
+}
+
+amount = get_order_amount(order)
+print(amount)
+```
+
+这种写法很常见，但不要因为方便就把一个巨大字典传给所有函数。
+
+如果函数只需要两个明确值，也可以直接写：
+
+```python
+def calculate_amount(price, quantity):
+    return price * quantity
+```
+
+到底传字典还是传具体字段，优先看哪个更直观。
+
+## 位置参数和关键字参数
+
+普通调用：
+
+```python
+def show_order(order_no, status):
+    print(order_no, status)
+
+show_order("A001", "已支付")
+```
+
+Python 按位置对应：
+
+```text
+"A001"   → order_no
+"已支付" → status
+```
+
+也可以明确写参数名：
+
+```python
+show_order(status="已支付", order_no="A001")
+```
+
+这叫关键字参数。参数多时，它往往更容易读。
+
+## 默认参数：不传时使用默认值
+
+```python
+def build_message(order_no, prefix="订单"):
+    return f"{prefix}：{order_no}"
+
+print(build_message("A001"))
+print(build_message("A001", prefix="退款订单"))
+```
+
+输出：
+
+```text
+订单：A001
+退款订单：A001
+```
+
+默认参数适合真正存在“常用默认值”的场景。
+
+## 一个必须提前知道的坑：不要把可变对象直接当默认值
+
+下面这段代码看起来很自然：
+
+```python
+def add_order(order_no, orders=[]):
+    orders.append(order_no)
+    return orders
+
+print(add_order("A001"))
+print(add_order("A002"))
+```
+
+很多新手会猜第二次输出：
+
+```text
+['A002']
+```
+
+实际却是：
+
+```text
+['A001']
+['A001', 'A002']
+```
+
+原因是默认列表在函数定义时就创建了，后续多次调用会继续使用同一个列表。
+
+正确的常见写法：
+
+```python
+def add_order(order_no, orders=None):
+    if orders is None:
+        orders = []
+
+    orders.append(order_no)
+    return orders
+```
+
+这样每次没有传 `orders` 时，都会在函数内部创建一个新列表。
+
+这个问题在综合考核里会再次出现，因为它非常能检验你是否真正理解“变量和对象的关系”。
+
+## `*args`：参数数量确实不固定时再用
+
+```python
+def total_amount(*amounts):
+    total = 0
+
+    for amount in amounts:
+        total = total + amount
+
+    return total
+
+print(total_amount(10, 20, 30))
+```
+
+输出：
+
+```text
+60
+```
+
+函数内部的 `amounts` 可以看成一个元组：
+
+```python
+(10, 20, 30)
+```
+
+不要因为看到 `*args` 很灵活就到处使用。参数数量固定时，普通参数更清楚。
+
+## 局部变量：函数里面创建的名字通常只在函数里使用
+
+```python
+def calculate_amount(price, quantity):
+    amount = price * quantity
+    return amount
+
+print(amount)
+```
+
+最后一行会报错，因为 `amount` 是函数内部的局部变量，外面不能直接使用它。
+
+应该接住返回值：
+
+```python
+result = calculate_amount(129.9, 2)
+print(result)
+```
+
+这种边界其实是好事：函数内部的临时变量不会到处污染外部代码。
+
+## 列表和字典传进函数后，可能会被直接修改
+
+```python
+def mark_processed(order):
+    order["processed"] = True
+
+order = {"order_no": "A001"}
+mark_processed(order)
+
+print(order)
+```
+
+输出：
+
+```text
+{'order_no': 'A001', 'processed': True}
+```
+
+因为函数里的 `order` 和外面的 `order` 指向同一个字典对象。
+
+如果函数不应该修改原数据，可以先创建新字典：
+
+```python
+def mark_processed(order):
+    result = order.copy()
+    result["processed"] = True
+    return result
+```
+
+但别忘了上一篇讲过：`.copy()` 是浅拷贝，如果里面还有嵌套列表，仍然要理解共享引用问题。
+
+## 函数和方法：看到点号时要区分
+
+```python
+text = "  K161  "
+
+print(len(text))
+print(text.strip())
+```
+
+`len(text)` 是调用函数。
+
+`text.strip()` 是调用字符串对象自己的方法。
+
+再例如：
+
+```python
+orders.append(order)
+```
+
+`append()` 是列表的方法。
+
+入门阶段不需要研究它们底层怎么绑定，只要能看懂：
+
+```text
+名字(...)       → 常见函数调用
+数据.名字(...)  → 常见方法调用
+```
+
+## 什么时候值得写成函数
+
+不是“代码超过 5 行就写函数”。可以先看这几个信号：
+
+- 同一段逻辑需要重复使用。
+- 一段处理已经可以用一个清楚的动作命名。
+- 主流程太长，拆出一个独立步骤后更容易读。
+- 这段逻辑有明确输入和输出。
+
+例如：
+
+```python
+def is_valid_order(order):
+    return order["status"] == "已支付" and order["amount"] > 0
+```
+
+这个函数名字本身就在说明业务含义。
+
+反过来，如果只有一行而且只使用一次，没必要为了“像工程项目”强行封装。
+
+## 一个完整小案例：计算有效订单金额
+
+```python
+def is_valid_order(order):
+    return order["status"] == "已支付" and order["amount"] > 0
+
+
+def get_valid_amount(orders):
+    total = 0
+
+    for order in orders:
+        if not is_valid_order(order):
+            continue
+
+        total = total + order["amount"]
+
+    return total
+
+
+orders = [
+    {"order_no": "A001", "amount": 129.0, "status": "已支付"},
+    {"order_no": "A002", "amount": 88.0, "status": "已退款"},
+    {"order_no": "A003", "amount": 199.0, "status": "已支付"},
+]
+
+result = get_valid_amount(orders)
+print(result)
+```
+
+执行关系：
+
+```text
+orders
+  ↓
+get_valid_amount()
+  ↓ 每条订单交给
+is_valid_order()
+  ↓ True / False
+有效订单金额累加
+  ↓
+return 328.0
+```
+
+这里没有类，没有设计模式，也没有复杂抽象。对于一个小脚本来说，这种函数拆分已经足够清楚。
+
+## 这一阶段先不把 `lambda` 当重点
+
+你以后会看到：
+
+```python
+lambda x: x * 2
+```
+
+它是一种简短函数表达式。但对于零基础学习，先把 `def`、参数和 `return` 用稳更重要。
+
+看到 `lambda` 时知道它“创建了一个小函数”即可，不需要现在主动用它改写普通函数。
+
+## 动手练习：把库存判断拆成函数
+
+给定：
+
+```python
+products = [
+    {"sku": "K161", "stock": 3},
+    {"sku": "K162", "stock": 8},
+    {"sku": "K163", "stock": 0},
+]
+```
+
+完成两个函数：`need_restock(stock)` 返回 `True / False`，`get_restock_skus(products)` 返回需要补货的 SKU 列表。
+
+参考实现：
+
+```python
+def need_restock(stock):
+    return stock < 5
+
+
+def get_restock_skus(products):
+    restock_skus = []
+
+    for product in products:
+        if need_restock(product["stock"]):
+            restock_skus.append(product["sku"])
+
+    return restock_skus
+```
+
+重点不是代码短，而是能说清：
+
+```text
+need_restock      输入一个库存，返回一个判断结果
+get_restock_skus  输入一批商品，返回一批需要补货的 SKU
+```
+
+<HighlightBox eyebrow="下一篇" title="函数已经能组织逻辑，下一步接真实数据">
+  下一篇会从 TXT 和 JSON 文件开始，再把同一套结构映射到 API 返回结果，并用 `try / except` 处理真正会失败的输入。
+</HighlightBox>
+
+<style>{`
+  .py-function-machine {
+    display: grid;
+    grid-template-columns: 1fr auto 1.5fr auto 1fr;
+    gap: 0.75rem;
+    align-items: stretch;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .py-function-machine > div:not(.machine-arrow) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 8.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+    border-radius: 18px;
+    background: rgba(148, 163, 184, 0.06);
+  }
+
+  .py-function-machine span,
+  .py-function-machine small {
+    color: var(--text-muted, #64748b);
+  }
+
+  .py-function-machine strong {
+    margin: 0.45rem 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  .machine-arrow {
+    align-self: center;
+    font-size: 1.35rem;
+    color: var(--text-muted, #64748b);
+  }
+
+  @media (max-width: 700px) {
+    .py-function-machine {
+      grid-template-columns: 1fr;
+    }
+
+    .py-function-machine > div:not(.machine-arrow) {
+      min-height: auto;
+    }
+
+    .machine-arrow {
+      justify-self: center;
+      transform: rotate(90deg);
+    }
+  }
+`}</style>

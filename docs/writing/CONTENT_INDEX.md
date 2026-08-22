@@ -21,7 +21,14 @@
 | `src/content/posts/blog-code-structure-runtime.mdx` | `实践` | 开发者视角的博客运行蓝图，覆盖 URL 路由、Content Collection、MDX 渲染栈、静态构建、本地与 Pages 链路和代码定位 | 写本博客代码结构、运行流程、Astro 项目拆解和故障定位时参考 |
 | `src/content/posts/css-selector-for-automation-beginners.mdx` | `教程` | CSS 定位图解手册，覆盖稳定定位层级、属性匹配、关系与伪类、影刀文字定位、唯一性验证、排错路线和坏定位改造 | 写 CSS 选择器教学、网页元素定位、影刀编码版自动化、动态 class 处理和定位排错文章时参考 |
 | `src/content/posts/xpath-practical-guide.mdx` | `教程` | XPath 实战速查，覆盖基础路径、属性和文本定位、ancestor/following-sibling 关系定位、表格定位、动态网页选择器和稳定定位原则 | 写 XPath、浏览器自动化、影刀元素定位和 RPA 新人培训时参考 |
-| `src/content/posts/python-basic-assessment-20-questions.mdx` | `教程` | Python 基础考核题，包含 17 道基础编码题和 3 道基础理解题，覆盖类型转换、循环、字典、函数、文件、JSON、类、浅拷贝与默认参数，并提供可下载附件 | 写 Python 入门考核、基础练习题、编程能力检查和培训测验文章时参考 |
+| `src/content/posts/python-zero-basics-roadmap.mdx` | `教程` | Python 零基础系列入口，从数据如何进入、处理和输出出发，规划变量、容器、判断循环、函数、文件 JSON、基础 OOP 到综合考核的完整路线 | 写 Python 零基础学习路线、数据处理/RPA/API 学习顺序和系列入口文章时参考 |
+| `src/content/posts/python-variables-basic-types.mdx` | `教程` | 用 SKU、价格、库存和订单字段讲变量、str/int/float/bool/None、比较、f-string、type 与类型转换，并展示外部文本到判断结果的状态变化 | 写 Python 变量、基础类型、类型转换和零基础数据概念教学时参考 |
+| `src/content/posts/python-containers-practical.mdx` | `教程` | 用订单与接口嵌套数据讲字符串、列表、字典的常用操作，补充元组、集合、列表推导式、对象引用和浅拷贝 | 写 Python 字符串、列表、字典、嵌套数据和容器选择教学时参考 |
+| `src/content/posts/python-conditions-loops.mdx` | `教程` | 用库存和订单筛选讲 if/elif/else、and/or/not、in、for、while、break、continue、range，并逐轮展示循环变量和累计结果变化 | 写 Python 条件判断、循环、计数累计和批量数据处理教学时参考 |
+| `src/content/posts/python-functions-practical.mdx` | `教程` | 从订单处理逻辑讲函数输入/处理/输出、参数、return、默认参数、关键字参数、*args、局部变量、可变对象修改和可变默认参数陷阱 | 写 Python 函数、return、参数、代码拆分和基础运行机制教学时参考 |
+| `src/content/posts/python-files-json-errors.mdx` | `教程` | 从 TXT、JSON 文件和 API 返回结构讲文件读写、pathlib、json load/loads/dump/dumps、import 与常见异常处理，形成真实小脚本数据流 | 写 Python 文件处理、JSON、API 数据准备、异常处理和标准库入门时参考 |
+| `src/content/posts/python-classes-objects-basics.mdx` | `教程` | 用商品库存对象讲 class、对象、__init__、self、属性和方法，同时对比类与字典+函数的适用边界，避免零基础阶段过度 OOP | 写 Python 类与对象、self、实例状态和基础面向对象边界教学时参考 |
+| `src/content/posts/python-basic-assessment-20-questions.mdx` | `教程` | Python 零基础系列最终综合考核，包含 17 道基础编码题和 3 道基础理解题，覆盖类型转换、循环、字典、函数、文件、JSON、类、浅拷贝与默认参数，并提供可下载附件 | 写 Python 入门考核、基础练习题、编程能力检查和培训测验文章时参考 |
 | `src/content/posts/excel-functions-from-basic-to-intermediate.mdx` | `教程` | Excel 函数知识地图，把 57 个常用函数整理成 9 个函数家族，并说明基础函数、中级函数、综合应用和系列阅读路线 | 写 Excel / WPS 函数学习地图、函数分类、系列入口和表格能力分层文章时参考 |
 | `src/content/posts/excel-basic-functions-case-guide.mdx` | `教程` | Excel 基础函数案例教程，使用订单明细和商品资料两张示例表，逐个演示 39 个统计、条件、查找、文本、逻辑和日期函数的公式、结果与组合练习 | 写 Excel 基础函数实操、函数案例讲解、订单明细统计和新手练习文章时参考 |
 | `src/content/posts/excel-wildcards-functions-guide.mdx` | `教程` | Excel 通配符专题，讲清 *、?、~ 的匹配规则，整理条件统计、查找匹配和文本搜索函数的支持方式，并用 K161 前缀平均值案例对比复杂数组公式 | 写 Excel 模糊匹配、条件统计、XLOOKUP 通配符模式、编码前缀和文本搜索文章时参考 |

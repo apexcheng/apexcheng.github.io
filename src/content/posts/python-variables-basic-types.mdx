@@ -1,0 +1,425 @@
+---
+title: "Python 变量与基础数据类型：先看懂一份数据是什么"
+description: "从订单号、价格、库存和状态出发，讲清 Python 变量、字符串、整数、小数、布尔值、None、比较、类型转换和常见类型错误。"
+date: 2026-08-22T22:32:00+08:00
+category: "教程"
+tags:
+  - "Python"
+minutes: 13
+featured: false
+series: "python-basics"
+seriesOrder: 2
+draft: false
+private: false
+---
+
+import HighlightBox from '../../components/HighlightBox.astro';
+
+写 Python 时，最先遇到的不是循环，也不是函数，而是**数据本身**。
+
+订单号是文字，库存是整数，单价可能有小数，“是否缺货”是一个真假判断。只要先能分清这些数据，后面的判断、循环和函数才不会变成一堆符号。
+
+## 先看一条商品数据
+
+```python
+sku = "K161"
+price = 129.9
+stock = 8
+is_available = stock > 0
+remark = None
+```
+
+<div class="py-types-board" aria-label="变量和数据类型对应关系">
+  <div><code>sku</code><strong>"K161"</strong><span>str · 文字</span></div>
+  <div><code>price</code><strong>129.9</strong><span>float · 小数</span></div>
+  <div><code>stock</code><strong>8</strong><span>int · 整数</span></div>
+  <div><code>is_available</code><strong>True</strong><span>bool · 真 / 假</span></div>
+  <div><code>remark</code><strong>None</strong><span>None · 暂时没有值</span></div>
+</div>
+
+这五行已经覆盖了自动化脚本里最常见的几类基础值。
+
+## 变量不是“一个盒子”，更像一个名字
+
+```python
+stock = 8
+```
+
+入门时可以把它理解成：“给数字 `8` 起了一个名字叫 `stock`。”
+
+更准确一点说，Python 创建了一个整数对象 `8`，变量名 `stock` 指向它。现在不需要深入对象模型，只要先记住一个重要事实：**变量名和变量里保存的值不是一回事。**
+
+```python
+sku = "K161"
+```
+
+这里：
+
+- `sku` 是变量名。
+- `"K161"` 是字符串值。
+- `=` 不是数学里的“等于”，而是把右边的值绑定给左边的变量名。
+
+所以：
+
+```python
+stock = 8
+stock = 5
+```
+
+第二行执行以后，`stock` 现在代表的是 `5`。
+
+## `str`：订单号、SKU、状态都通常是字符串
+
+字符串就是文本数据，用引号包起来：
+
+```python
+order_no = "JD20260822001"
+sku = "K161"
+status = "已支付"
+```
+
+即使内容全是数字，只要加了引号，它仍然是字符串：
+
+```python
+order_no = "1008611"
+```
+
+不要因为看起来像数字，就急着转成 `int`。订单号、手机号、SKU 这类字段通常是**标识**，不是拿来做加减乘除的数字。
+
+字符串可以拼接：
+
+```python
+sku = "K161"
+print("当前 SKU：" + sku)
+```
+
+但更推荐新代码使用 f-string：
+
+```python
+stock = 8
+print(f"当前库存：{stock}")
+```
+
+它的好处是数字不需要先手动 `str()`：
+
+```python
+sku = "K161"
+stock = 8
+print(f"{sku} 当前库存 {stock} 件")
+```
+
+输出：
+
+```text
+K161 当前库存 8 件
+```
+
+## `int` 和 `float`：真正参与计算的数字
+
+```python
+quantity = 2
+price = 129.9
+amount = quantity * price
+
+print(amount)
+```
+
+输出：
+
+```text
+259.8
+```
+
+`int` 是整数，`float` 是浮点数，也就是日常说的小数。
+
+| 值 | 类型 | 适合表示 |
+| --- | --- | --- |
+| `2` | `int` | 件数、次数、库存 |
+| `129.9` | `float` | 单价、金额、比例 |
+| `"2"` | `str` | 文本形式的数字，还不能直接参与数值运算 |
+
+除法 `/` 即使两个数都是整数，结果也会是浮点数：
+
+```python
+print(10 / 2)
+```
+
+结果是：
+
+```text
+5.0
+```
+
+## `bool`：很多判断最后都会变成 True 或 False
+
+```python
+stock = 3
+is_low_stock = stock < 5
+
+print(is_low_stock)
+```
+
+输出：
+
+```text
+True
+```
+
+这里不是手工把 `True` 写进去，而是比较表达式 `stock < 5` 计算出了一个布尔值。
+
+常见比较：
+
+```python
+stock == 0      # 是否等于 0
+stock != 0      # 是否不等于 0
+stock > 5       # 是否大于 5
+stock >= 5      # 是否大于等于 5
+stock < 5       # 是否小于 5
+stock <= 5      # 是否小于等于 5
+```
+
+注意：判断相等用 `==`，赋值用 `=`。
+
+```python
+status = "已支付"          # 赋值
+status == "已支付"         # 判断，结果是 True 或 False
+```
+
+这两个符号是新手非常常见的混淆点。
+
+## `None`：不是空字符串，也不是 0
+
+真实数据里经常会遇到“暂时没有值”：
+
+```python
+tracking_no = None
+```
+
+`None` 表示没有具体值。
+
+它和下面这些都不一样：
+
+```python
+""      # 空字符串
+0       # 数字零
+False   # 布尔假值
+None    # 没有值
+```
+
+以后处理 JSON、API 或缺失字段时，会经常遇到它。
+
+判断是否为 `None`，通常写：
+
+```python
+if tracking_no is None:
+    print("还没有物流单号")
+```
+
+`if` 会在后面的条件判断文章里完整展开，这里只需要认识写法。
+
+## `type()`：不确定时直接看类型
+
+```python
+sku = "K161"
+stock = 8
+price = 129.9
+
+print(type(sku))
+print(type(stock))
+print(type(price))
+```
+
+你会看到类似：
+
+```text
+<class 'str'>
+<class 'int'>
+<class 'float'>
+```
+
+调试脚本时，如果一个字段“看起来像数字却算不了”，`type()` 是非常直接的排查方法。
+
+## 最常见的类型错误：看起来一样，实际上不是一类数据
+
+```python
+price = "119.9"
+quantity = "2"
+
+print(price * quantity)
+```
+
+这会报错。原因不是 Python 不会乘法，而是两个变量都是字符串。
+
+把它们转成真正的数字：
+
+```python
+price = float("119.9")
+quantity = int("2")
+
+amount = price * quantity
+print(amount)
+```
+
+输出：
+
+```text
+239.8
+```
+
+常见转换函数：
+
+```python
+int("20")       # 20
+float("19.9")   # 19.9
+str(20)          # "20"
+bool(1)          # True
+```
+
+但转换不是“强制成功”：
+
+```python
+int("K161")
+```
+
+这会报 `ValueError`，因为 `K161` 不是一个合法整数。
+
+以后处理外部文件或接口数据时，我们会用异常处理来接住这类情况。
+
+## 一次看懂数据状态怎么变化
+
+下面这段代码模拟一个从文本读到库存数字，再计算库存状态的过程：
+
+```python
+raw_stock = "3"
+stock = int(raw_stock)
+is_low_stock = stock < 5
+message = f"库存：{stock}，需要补货：{is_low_stock}"
+
+print(message)
+```
+
+<div class="py-state-flow" aria-label="变量状态变化">
+  <div><span>输入</span><code>raw_stock = "3"</code><small>str</small></div>
+  <i>→</i>
+  <div><span>转换</span><code>stock = 3</code><small>int</small></div>
+  <i>→</i>
+  <div><span>比较</span><code>3 &lt; 5</code><small>True</small></div>
+  <i>→</i>
+  <div><span>输出</span><code>"库存：3…"</code><small>str</small></div>
+</div>
+
+这就是以后很多数据脚本的基本形态：**外部数据先进入 Python → 转成合适类型 → 做计算或判断 → 生成结果。**
+
+## 这一篇先不要学太多运算符
+
+你目前只需要熟悉：
+
+```text
++  -  *  /          # 基础算术
+== != > >= < <=     # 基础比较
+```
+
+`//`、`%`、`**` 等运算符当然也有用，但不需要为了“完整”现在全部背完。以后遇到具体场景再补更容易记住。
+
+## 动手练习：一条订单的基础字段
+
+先写：
+
+```python
+order_no = "A1001"
+price = "129.9"
+quantity = "2"
+is_refunded = False
+
+amount = float(price) * int(quantity)
+
+print(f"订单号：{order_no}")
+print(f"订单金额：{amount}")
+print(f"是否退款：{is_refunded}")
+```
+
+然后自己完成三次修改：
+
+1. 把数量改成 `"3"`，确认金额如何变化。
+2. 把 `price` 直接改成数字 `129.9`，再调整计算代码。
+3. 把 `is_refunded` 改成 `True`，观察输出。
+
+如果你能解释每一个变量当前是什么类型、为什么这样转换，这一篇就已经达标。
+
+<HighlightBox eyebrow="下一篇" title="从“一份值”进入“一批真实数据”">
+  下一篇会重点学习字符串、列表和字典，并补充元组、集合、列表推导式与浅拷贝。你会开始处理“多条订单”和“一条订单的多个字段”。
+</HighlightBox>
+
+<style>{`
+  .py-types-board {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .py-types-board > div,
+  .py-state-flow > div {
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+    border-radius: 16px;
+    padding: 1rem;
+    background: rgba(148, 163, 184, 0.06);
+  }
+
+  .py-types-board code,
+  .py-types-board strong,
+  .py-types-board span,
+  .py-state-flow span,
+  .py-state-flow code,
+  .py-state-flow small {
+    display: block;
+  }
+
+  .py-types-board strong {
+    margin: 0.7rem 0 0.25rem;
+    font-size: 1.08rem;
+  }
+
+  .py-types-board span,
+  .py-state-flow small {
+    color: var(--text-muted, #64748b);
+    font-size: 0.82rem;
+  }
+
+  .py-state-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+    align-items: stretch;
+    gap: 0.65rem;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .py-state-flow i {
+    align-self: center;
+    font-style: normal;
+    color: var(--text-muted, #64748b);
+  }
+
+  .py-state-flow code {
+    margin: 0.55rem 0 0.2rem;
+  }
+
+  @media (max-width: 760px) {
+    .py-types-board {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .py-types-board > div:last-child {
+      grid-column: 1 / -1;
+    }
+
+    .py-state-flow {
+      grid-template-columns: 1fr;
+    }
+
+    .py-state-flow i {
+      text-align: center;
+      transform: rotate(90deg);
+    }
+  }
+`}</style>

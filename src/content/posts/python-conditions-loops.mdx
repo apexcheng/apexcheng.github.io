@@ -1,0 +1,439 @@
+---
+title: "Python 条件判断与循环：让代码自己决定、重复和筛选"
+description: "用库存判断和订单筛选讲清 if、elif、else、and、or、in、for、while、break、continue、range，以及循环中的变量如何一步步变化。"
+date: 2026-08-22T22:36:00+08:00
+category: "教程"
+tags:
+  - "Python"
+minutes: 15
+featured: false
+series: "python-basics"
+seriesOrder: 4
+draft: false
+private: false
+---
+
+import HighlightBox from '../../components/HighlightBox.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+前面已经能把订单放进列表、把一条订单放进字典。接下来要让代码真正开始工作：**什么情况执行，什么情况跳过，一批数据怎么逐条处理。**
+
+条件判断负责“决定”，循环负责“重复”。真实脚本经常把两者放在一起。
+
+## `if`：条件成立才执行
+
+```python
+stock = 3
+
+if stock < 5:
+    print("需要补货")
+```
+
+`stock < 5` 会先计算出 `True` 或 `False`。
+
+<Mermaid
+  title="一条 if 判断的执行过程"
+  chart={`flowchart LR
+    A[stock = 3] --> B{stock < 5 ?}
+    B -- True --> C[输出 需要补货]
+    B -- False --> D[跳过 if 内代码]`}
+/>
+
+注意两个语法点：
+
+```python
+if stock < 5:
+    print("需要补货")
+```
+
+- 条件后面有冒号 `:`。
+- 属于 `if` 的代码要缩进。
+
+缩进不是为了好看，而是在告诉 Python 哪些代码属于这个分支。
+
+## `if / else`：两条路只走一条
+
+```python
+stock = 8
+
+if stock < 5:
+    print("需要补货")
+else:
+    print("库存正常")
+```
+
+结果：
+
+```text
+库存正常
+```
+
+一次判断里，`if` 和 `else` 不会同时执行。
+
+## `if / elif / else`：多个状态从上往下检查
+
+```python
+stock = 0
+
+if stock == 0:
+    level = "缺货"
+elif stock < 5:
+    level = "库存偏低"
+else:
+    level = "库存正常"
+
+print(level)
+```
+
+这里的顺序非常重要。
+
+如果写成：
+
+```python
+if stock < 5:
+    level = "库存偏低"
+elif stock == 0:
+    level = "缺货"
+```
+
+当 `stock = 0` 时，第一个条件已经成立，第二个分支永远不会执行。
+
+所以多条件判断时，不只是看“条件对不对”，还要看**哪个条件应该先判断**。
+
+## 多个条件：`and`、`or`、`not`
+
+### `and`：两个条件都要成立
+
+```python
+status = "已支付"
+amount = 129.0
+
+if status == "已支付" and amount > 100:
+    print("进入高金额已支付订单")
+```
+
+### `or`：任意一个成立即可
+
+```python
+status = "已退款"
+
+if status == "已退款" or status == "已关闭":
+    print("订单不再继续处理")
+```
+
+### `not`：把真假反过来
+
+```python
+is_refunded = False
+
+if not is_refunded:
+    print("订单未退款")
+```
+
+复杂条件不要为了省行数全部挤在一起。先拆成有名字的布尔变量，通常更容易检查：
+
+```python
+is_paid = status == "已支付"
+is_large_order = amount > 100
+
+if is_paid and is_large_order:
+    print("需要处理")
+```
+
+## `in`：判断一个值是否在一组数据里
+
+```python
+status = "已退款"
+closed_statuses = ["已退款", "已关闭", "已取消"]
+
+if status in closed_statuses:
+    print("订单已结束")
+```
+
+这通常比连续写很多个 `or` 更直观。
+
+字符串也可以用 `in`：
+
+```python
+title = "K161 无线键盘"
+
+if "键盘" in title:
+    print("这是键盘类商品")
+```
+
+## `for`：把列表里的数据一条一条拿出来
+
+```python
+skus = ["K161", "K162", "K163"]
+
+for sku in skus:
+    print(sku)
+```
+
+执行时可以想成：
+
+| 第几次 | `sku` 当前值 | 执行 `print(sku)` |
+| ---: | --- | --- |
+| 1 | `"K161"` | 输出 K161 |
+| 2 | `"K162"` | 输出 K162 |
+| 3 | `"K163"` | 输出 K163 |
+
+`sku` 不是整个列表，它只是**当前这一轮取出来的一个元素**。
+
+这是理解循环最关键的一点。
+
+## 真实场景：逐条检查订单
+
+```python
+orders = [
+    {"order_no": "A001", "amount": 129.0, "status": "已支付"},
+    {"order_no": "A002", "amount": 88.0, "status": "已退款"},
+    {"order_no": "A003", "amount": 199.0, "status": "已支付"},
+]
+
+for order in orders:
+    if order["status"] == "已支付":
+        print(order["order_no"], order["amount"])
+```
+
+把执行过程展开：
+
+| 循环 | 当前 `order` | 判断结果 | 输出 |
+| ---: | --- | --- | --- |
+| 1 | A001 / 已支付 | `True` | A001 129.0 |
+| 2 | A002 / 已退款 | `False` | 不输出 |
+| 3 | A003 / 已支付 | `True` | A003 199.0 |
+
+循环本身没有“筛选”能力。真正决定是否输出的是循环里面的 `if`。
+
+## 在循环里累计数量
+
+```python
+orders = [
+    {"status": "已支付"},
+    {"status": "已退款"},
+    {"status": "已支付"},
+]
+
+paid_count = 0
+
+for order in orders:
+    if order["status"] == "已支付":
+        paid_count = paid_count + 1
+
+print(paid_count)
+```
+
+变量变化：
+
+| 循环前 / 第几轮 | 状态 | `paid_count` |
+| --- | --- | ---: |
+| 循环前 | — | 0 |
+| 第 1 轮 | 已支付 | 1 |
+| 第 2 轮 | 已退款 | 1 |
+| 第 3 轮 | 已支付 | 2 |
+
+这就是最基础的“计数器”。
+
+也可以累加金额：
+
+```python
+total_amount = 0
+
+for order in orders:
+    total_amount = total_amount + order["amount"]
+```
+
+很多数据统计的底层思路都来自这种“循环 + 状态变量”。
+
+## `continue`：当前这一条不处理，继续下一条
+
+```python
+orders = [
+    {"order_no": "A001", "status": "已支付"},
+    {"order_no": "A002", "status": "已退款"},
+    {"order_no": "A003", "status": "已支付"},
+]
+
+for order in orders:
+    if order["status"] == "已退款":
+        continue
+
+    print("处理订单", order["order_no"])
+```
+
+遇到 A002 时，执行 `continue`，本轮下面的代码不再执行，但循环会继续处理 A003。
+
+可以记成：
+
+```text
+continue = 这条跳过，下一条继续
+```
+
+## `break`：整个循环直接结束
+
+```python
+target_order_no = "A002"
+
+for order in orders:
+    if order["order_no"] == target_order_no:
+        print("找到了", order)
+        break
+```
+
+如果目标已经找到，后面的订单不需要继续检查，就可以 `break`。
+
+```text
+break = 到此为止，整个循环结束
+```
+
+和 `continue` 的区别一定要分清。
+
+## `range()`：需要重复固定次数时
+
+```python
+for i in range(3):
+    print(i)
+```
+
+输出：
+
+```text
+0
+1
+2
+```
+
+`range(3)` 产生的是从 `0` 到 `3` 之前的整数序列。
+
+如果只是“对列表里的每一项做事”，不要为了拿下标硬写 `range(len(...))`。直接遍历元素通常更清楚：
+
+```python
+for order in orders:
+    print(order)
+```
+
+如果确实同时需要序号，可以认识 `enumerate()`：
+
+```python
+for index, order in enumerate(orders, start=1):
+    print(index, order["order_no"])
+```
+
+## `while`：不知道要循环多少次，但知道什么时候停
+
+`for` 适合处理一个已有集合；`while` 更像“只要条件还成立，就继续”。
+
+```python
+retry_count = 0
+
+while retry_count < 3:
+    print("执行第", retry_count + 1, "次")
+    retry_count = retry_count + 1
+```
+
+看 `while` 时固定检查三件事：
+
+```text
+初始值       retry_count = 0
+继续条件     retry_count < 3
+状态变化     retry_count = retry_count + 1
+```
+
+如果没有第三步：
+
+```python
+while retry_count < 3:
+    print("一直执行")
+```
+
+条件永远不会变化，就会形成死循环。
+
+## `for` 还是 `while`
+
+| 场景 | 更自然的选择 |
+| --- | --- |
+| 遍历订单列表 | `for` |
+| 遍历文件里的每一行 | `for` |
+| 固定执行 3 次 | `for range(3)` |
+| 失败后重试，直到成功或达到上限 | `while` |
+| 等待某个状态发生变化 | `while`（真实自动化还要配合等待与超时） |
+
+入门时优先把 `for` 用熟。很多新手为了“高级”而滥用 `while`，反而更容易写出停不下来的循环。
+
+## 一个完整小案例：筛选并统计订单
+
+```python
+orders = [
+    {"order_no": "A001", "amount": 129.0, "status": "已支付"},
+    {"order_no": "A002", "amount": 88.0, "status": "已退款"},
+    {"order_no": "A003", "amount": 199.0, "status": "已支付"},
+    {"order_no": "A004", "amount": 59.0, "status": "已支付"},
+]
+
+paid_count = 0
+paid_amount = 0
+
+for order in orders:
+    if order["status"] != "已支付":
+        continue
+
+    paid_count = paid_count + 1
+    paid_amount = paid_amount + order["amount"]
+
+print(f"已支付订单：{paid_count} 单")
+print(f"已支付金额：{paid_amount}")
+```
+
+数据流是：
+
+```text
+orders
+  ↓ for 一条一条取
+order
+  ↓ if 检查状态
+非已支付 → continue 跳过
+已支付   → 计数 +1，金额累加
+  ↓
+最终统计结果
+```
+
+如果你能跟着表格说清每一轮 `order`、`paid_count` 和 `paid_amount` 分别是什么值，循环就不是“背语法”，而是真的看懂了。
+
+## 动手练习：库存补货清单
+
+```python
+products = [
+    {"sku": "K161", "stock": 3, "enabled": True},
+    {"sku": "K162", "stock": 8, "enabled": True},
+    {"sku": "K163", "stock": 0, "enabled": False},
+    {"sku": "K164", "stock": 2, "enabled": True},
+]
+```
+
+目标：
+
+1. 逐条遍历商品。
+2. `enabled` 为 `False` 的商品直接跳过。
+3. 库存小于 5 时输出 SKU 和库存。
+4. 统计最终有几个 SKU 需要补货。
+
+先自己写，再参考思路：
+
+```python
+restock_count = 0
+
+for product in products:
+    if not product["enabled"]:
+        continue
+
+    if product["stock"] < 5:
+        print(product["sku"], product["stock"])
+        restock_count = restock_count + 1
+
+print("需要补货 SKU 数：", restock_count)
+```
+
+<HighlightBox eyebrow="下一篇" title="代码能跑之后，再开始拆函数">
+  下一篇不会一上来追求“工程化”。我们只做一件事：把已经看懂的输入、处理和输出整理成函数，让一段逻辑可以清楚地重复使用。
+</HighlightBox>

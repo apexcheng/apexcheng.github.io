@@ -1,0 +1,622 @@
+---
+title: "Python 字符串、列表与字典实战：把真实数据组织起来"
+description: "用 SKU、订单和接口字段讲清 Python 字符串、列表、字典的常用操作，并补充元组、集合、列表推导式和浅拷贝这些入门后很快会遇到的知识。"
+date: 2026-08-22T22:34:00+08:00
+category: "教程"
+tags:
+  - "Python"
+minutes: 16
+featured: false
+series: "python-basics"
+seriesOrder: 3
+draft: false
+private: false
+---
+
+import HighlightBox from '../../components/HighlightBox.astro';
+
+上一篇解决的是“一份值是什么”。真正开始处理业务数据以后，很快会遇到另一个问题：**一条订单有多个字段，很多条订单又应该怎么放？**
+
+这一篇重点只抓三种最常用的结构：字符串、列表、字典。元组和集合会讲，但只讲够用的部分。
+
+## 先看一个最常见的数据形状
+
+```python
+orders = [
+    {
+        "order_no": "A001",
+        "sku": "K161",
+        "amount": 129.0,
+        "status": "已支付",
+    },
+    {
+        "order_no": "A002",
+        "sku": "K162",
+        "amount": 88.0,
+        "status": "已退款",
+    },
+]
+```
+
+不要急着看符号，先看结构：
+
+<div class="py-data-shape" aria-label="订单数据的层级结构">
+  <div class="shape-list">
+    <span>orders · list</span>
+    <strong>多条订单放在一个列表里</strong>
+    <div class="shape-row">
+      <span>第 1 项</span>
+      <div class="shape-dict">
+        <b>order · dict</b>
+        <code>order_no → "A001"</code>
+        <code>sku → "K161"</code>
+        <code>amount → 129.0</code>
+        <code>status → "已支付"</code>
+      </div>
+    </div>
+    <div class="shape-row">
+      <span>第 2 项</span>
+      <div class="shape-dict muted">
+        <b>order · dict</b>
+        <code>order_no → "A002"</code>
+        <code>sku → "K162"</code>
+        <code>amount → 88.0</code>
+        <code>status → "已退款"</code>
+      </div>
+    </div>
+  </div>
+</div>
+
+一句话记住：**列表负责“有很多条”，字典负责“一条里有很多字段”。**
+
+## 字符串：先学会取、改、拆
+
+SKU、订单号、状态、文件名、接口字段，绝大多数文本都是字符串。
+
+```python
+sku = "K161-PH"
+```
+
+### 用下标取单个字符
+
+```python
+print(sku[0])
+print(sku[1])
+```
+
+输出：
+
+```text
+K
+1
+```
+
+Python 的下标从 `0` 开始。
+
+### 用切片取一段
+
+```python
+print(sku[:4])
+print(sku[5:])
+```
+
+输出：
+
+```text
+K161
+PH
+```
+
+`sku[:4]` 可以读成：“从开头取到下标 4 之前”。右边界不包含在结果里。
+
+### 清理字符串
+
+外部数据经常带空格：
+
+```python
+raw_status = "  已支付  "
+status = raw_status.strip()
+
+print(status)
+```
+
+`strip()` 去掉两端空白。
+
+常见字符串方法：
+
+```python
+text.strip()                  # 去掉两端空白
+text.lower()                  # 英文字母转小写
+text.upper()                  # 英文字母转大写
+text.replace("旧", "新")     # 替换
+text.split("-")              # 按分隔符拆成列表
+```
+
+例如：
+
+```python
+sku = "K161-PH"
+parts = sku.split("-")
+
+print(parts)
+```
+
+结果：
+
+```text
+['K161', 'PH']
+```
+
+注意这里发生了一个很重要的变化：**字符串经过 `split()` 后变成了列表。**
+
+## 列表：一批有顺序的数据
+
+```python
+skus = ["K161", "K162", "K163"]
+```
+
+列表适合“多个同类数据”，而且有顺序。
+
+```python
+print(skus[0])
+print(skus[-1])
+print(len(skus))
+```
+
+输出：
+
+```text
+K161
+K163
+3
+```
+
+`-1` 表示最后一个元素。
+
+### 添加和修改
+
+```python
+skus.append("K164")
+skus[1] = "K162-A"
+
+print(skus)
+```
+
+### 删除
+
+```python
+skus.remove("K163")
+```
+
+如果你知道位置，也可以用：
+
+```python
+del skus[0]
+```
+
+### 判断一个值在不在列表里
+
+```python
+if "K161" in skus:
+    print("找到了")
+```
+
+这里先认识 `in`。下一篇判断与循环会完整展开。
+
+## 字典：一条数据的多个字段
+
+```python
+order = {
+    "order_no": "A001",
+    "sku": "K161",
+    "amount": 129.0,
+    "status": "已支付",
+}
+```
+
+字典不是靠“第几个”取值，而是靠 key：
+
+```python
+print(order["sku"])
+print(order["amount"])
+```
+
+输出：
+
+```text
+K161
+129.0
+```
+
+可以直接修改或增加字段：
+
+```python
+order["status"] = "已完成"
+order["shop"] = "旗舰店"
+```
+
+## `dict.get()`：处理外部数据时非常常用
+
+如果 key 不存在：
+
+```python
+print(order["tracking_no"])
+```
+
+会抛出 `KeyError`。
+
+如果这个字段本来就可能不存在，可以用：
+
+```python
+tracking_no = order.get("tracking_no")
+print(tracking_no)
+```
+
+得到：
+
+```text
+None
+```
+
+也可以给默认值：
+
+```python
+tracking_no = order.get("tracking_no", "暂无物流")
+```
+
+以后处理 API 返回结果时，`.get()` 会非常常见。但不要把它当成所有字段都应该无脑使用的写法：**如果一个字段按业务规则必须存在，直接暴露缺失错误有时反而更容易发现数据问题。**
+
+## 列表里放字典：真实数据最常见的组合
+
+```python
+orders = [
+    {"order_no": "A001", "amount": 129.0},
+    {"order_no": "A002", "amount": 88.0},
+    {"order_no": "A003", "amount": 199.0},
+]
+```
+
+现在取第二条订单的金额：
+
+```python
+print(orders[1]["amount"])
+```
+
+可以拆开看：
+
+```python
+second_order = orders[1]
+amount = second_order["amount"]
+```
+
+先从列表取出第二个字典，再从字典里按 key 取金额。
+
+如果一长串取值让你看不懂，**就先拆成中间变量**。入门阶段可读性比“写成一行”更重要。
+
+## 嵌套数据：先一层一层取
+
+接口数据经常更深：
+
+```python
+response = {
+    "code": 0,
+    "data": {
+        "orders": [
+            {"order_no": "A001", "amount": 129.0}
+        ]
+    }
+}
+```
+
+一行写法是：
+
+```python
+order_no = response["data"]["orders"][0]["order_no"]
+```
+
+但新手更适合先拆：
+
+```python
+data = response["data"]
+orders = data["orders"]
+first_order = orders[0]
+order_no = first_order["order_no"]
+```
+
+它们结果一样，但第二种更容易看见每一步的数据类型。
+
+## 元组：知道“不能修改”就先够了
+
+```python
+point = (120, 30)
+```
+
+元组和列表一样可以按位置取值：
+
+```python
+print(point[0])
+```
+
+但元组不能像列表这样修改：
+
+```python
+point[0] = 100
+```
+
+会报错。
+
+入门阶段，不需要主动把大量数据都改成元组。先知道当你看到 `(a, b)` 这种结构时，它可能是一个固定组合即可。
+
+## 集合：去重和成员判断
+
+```python
+skus = ["K161", "K162", "K161", "K163"]
+unique_skus = set(skus)
+
+print(unique_skus)
+```
+
+集合会去掉重复值。
+
+集合不保证像列表那样按原顺序取“第几个”，所以它适合：
+
+- 去重。
+- 判断某个值是否存在。
+- 比较两组值之间的交集、差集。
+
+如果你后面还需要稳定顺序，就不要把集合当成列表替代品。
+
+## 列表推导式：先会看懂，再决定要不要用
+
+普通写法：
+
+```python
+numbers = [1, 2, 3, 4]
+squares = []
+
+for number in numbers:
+    squares.append(number * number)
+```
+
+列表推导式可以写成：
+
+```python
+numbers = [1, 2, 3, 4]
+squares = [number * number for number in numbers]
+```
+
+结果都是：
+
+```text
+[1, 4, 9, 16]
+```
+
+这一阶段不要求你所有循环都改成推导式。**只要逻辑一复杂，普通 `for` 往往更容易读。**
+
+下一篇会正式学习 `for`，到时再回头看这个写法会更自然。
+
+## 一个很重要的坑：两个变量可能指向同一个列表
+
+```python
+original = ["K161", "K162"]
+copy_data = original
+
+copy_data.append("K163")
+
+print(original)
+```
+
+结果：
+
+```text
+['K161', 'K162', 'K163']
+```
+
+因为 `copy_data = original` 并没有创建新列表，只是让两个变量名指向同一个列表。
+
+<div class="py-reference-map" aria-label="两个变量引用同一个列表">
+  <div><code>original</code></div>
+  <span>↘</span>
+  <strong>["K161", "K162"]</strong>
+  <span>↗</span>
+  <div><code>copy_data</code></div>
+</div>
+
+如果只想复制外层列表：
+
+```python
+copy_data = original.copy()
+```
+
+现在 `copy_data.append(...)` 不会修改 `original` 的外层结构。
+
+## 为什么“浅拷贝”还会让嵌套数据一起变化
+
+看一个稍微进阶但非常值得提前知道的例子：
+
+```python
+original = {
+    "name": "张三",
+    "skills": ["Python", "SQL"],
+}
+
+copy_data = original.copy()
+copy_data["name"] = "李四"
+copy_data["skills"].append("Linux")
+```
+
+这里：
+
+- 外层字典复制了，所以改 `name` 不会影响原字典的 `name`。
+- 里面的 `skills` 列表却还是同一个对象，所以追加 `Linux` 会同时出现在两边。
+
+这就是“浅拷贝”：**只复制最外层，里面嵌套的可变对象仍然可能共用。**
+
+现在不要求你掌握所有深拷贝规则，但一定不要把 `.copy()` 理解成“里面所有东西都彻底复制了一份”。综合考核会专门检查这个理解。
+
+## 什么时候用哪一种结构
+
+| 需求 | 优先想到 | 例子 |
+| --- | --- | --- |
+| 一段文本 | `str` | 订单号、SKU、状态 |
+| 多个有顺序的同类值 | `list` | SKU 列表、订单列表 |
+| 一条数据的多个字段 | `dict` | 一条订单、一个商品 |
+| 固定组合，不希望修改 | `tuple` | 坐标、固定二元组 |
+| 去重或快速判断成员 | `set` | 已处理订单号集合 |
+
+真实脚本里最常见的通常不是单独某一种，而是：
+
+```text
+list
+ ├─ dict
+ │   ├─ str
+ │   ├─ int / float
+ │   └─ list
+ └─ dict
+     └─ ...
+```
+
+## 动手练习：整理订单字段
+
+从这份数据开始：
+
+```python
+orders = [
+    {"order_no": " A001 ", "sku": "k161-ph", "tags": ["新品", "键盘"]},
+    {"order_no": " A002 ", "sku": "k162", "tags": ["鼠标"]},
+]
+```
+
+先不要写循环，直接操作第一条：
+
+```python
+first_order = orders[0]
+
+order_no = first_order["order_no"].strip()
+sku = first_order["sku"].upper()
+sku_parts = sku.split("-")
+
+print(order_no)
+print(sku)
+print(sku_parts)
+print(first_order.get("tracking_no", "暂无物流"))
+```
+
+然后自己完成：
+
+1. 给第一条订单新增 `status: "已支付"`。
+2. 把 `tags` 里的内容转成集合，观察类型和输出。
+3. 复制第一条订单，再修改复制结果的 `order_no`。
+4. 解释为什么如果你修改复制结果里的 `tags` 列表，原数据仍可能变化。
+
+<HighlightBox eyebrow="下一篇" title="现在让 Python 一条一条处理这些数据">
+  有了字符串、列表和字典，下一步就是 `if` 和 `for`：一条订单是否处理，由条件决定；一批订单如何逐条处理，由循环负责。
+</HighlightBox>
+
+<style>{`
+  .py-data-shape {
+    margin: 1.5rem 0 2rem;
+  }
+
+  .shape-list {
+    border-left: 4px solid currentColor;
+    padding: 1.1rem 1.1rem 1.1rem 1.4rem;
+    background: rgba(148, 163, 184, 0.06);
+    border-radius: 0 18px 18px 0;
+  }
+
+  .shape-list > span,
+  .shape-list > strong {
+    display: block;
+  }
+
+  .shape-list > span {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8rem;
+    color: var(--text-muted, #64748b);
+  }
+
+  .shape-list > strong {
+    margin: 0.3rem 0 1rem;
+  }
+
+  .shape-row {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr);
+    gap: 0.8rem;
+    align-items: start;
+    margin-top: 0.8rem;
+  }
+
+  .shape-row > span {
+    padding-top: 0.75rem;
+    color: var(--text-muted, #64748b);
+    font-size: 0.86rem;
+  }
+
+  .shape-dict {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    padding: 0.8rem;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+    border-radius: 14px;
+  }
+
+  .shape-dict b {
+    grid-column: 1 / -1;
+  }
+
+  .shape-dict code {
+    padding: 0.5rem 0.6rem;
+    border-radius: 9px;
+    background: rgba(148, 163, 184, 0.08);
+  }
+
+  .shape-dict.muted {
+    opacity: 0.78;
+  }
+
+  .py-reference-map {
+    display: grid;
+    grid-template-columns: 1fr auto minmax(12rem, 2fr) auto 1fr;
+    gap: 0.7rem;
+    align-items: center;
+    margin: 1.5rem 0 2rem;
+    text-align: center;
+  }
+
+  .py-reference-map > div,
+  .py-reference-map > strong {
+    padding: 0.9rem;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+    border-radius: 14px;
+    background: rgba(148, 163, 184, 0.06);
+  }
+
+  @media (max-width: 680px) {
+    .shape-row {
+      grid-template-columns: 1fr;
+    }
+
+    .shape-row > span {
+      padding-top: 0;
+    }
+
+    .shape-dict {
+      grid-template-columns: 1fr;
+    }
+
+    .shape-dict b {
+      grid-column: auto;
+    }
+
+    .py-reference-map {
+      grid-template-columns: 1fr;
+    }
+
+    .py-reference-map > span {
+      transform: rotate(90deg);
+    }
+  }
+`}</style>

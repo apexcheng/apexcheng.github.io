@@ -1,0 +1,549 @@
+---
+title: "Python 类与对象入门：什么时候比字典加函数更合适"
+description: "用商品库存对象讲清 Python class、对象、__init__、self、属性和方法，并比较类与字典加函数的使用边界，避免零基础阶段过度面向对象。"
+date: 2026-08-22T22:42:00+08:00
+category: "教程"
+tags:
+  - "Python"
+minutes: 14
+featured: false
+series: "python-basics"
+seriesOrder: 7
+draft: false
+private: false
+---
+
+import HighlightBox from '../../components/HighlightBox.astro';
+
+学 Python 入门时，经常很早就会遇到 `class`、`self`、`__init__`。这些词看起来比列表、字典复杂很多，于是很容易产生两个极端：要么完全看不懂，要么觉得“正式代码就应该全部写成类”。
+
+都不需要。
+
+对于数据处理、RPA 和简单脚本，很多任务用**列表 + 字典 + 函数**已经足够。类真正有价值的时候，是你有一类反复出现的对象，每个对象都有自己的状态，又有一组和这些状态紧密相关的行为。
+
+## 先看不用类怎么写
+
+```python
+product = {
+    "sku": "K161",
+    "stock": 3,
+}
+
+
+def need_restock(product):
+    return product["stock"] < 5
+
+
+print(need_restock(product))
+```
+
+这段代码完全没有问题。
+
+数据在字典里，行为在函数里：
+
+```text
+product 字典      保存 sku / stock
+need_restock()    根据 stock 做判断
+```
+
+如果脚本只有几十行，这种写法往往已经最直接。
+
+## 用类表达同一件事
+
+```python
+class Product:
+    def __init__(self, sku, stock):
+        self.sku = sku
+        self.stock = stock
+
+    def need_restock(self):
+        return self.stock < 5
+
+
+product = Product("K161", 3)
+
+print(product.sku)
+print(product.need_restock())
+```
+
+<div class="py-class-map" aria-label="类、对象、属性和方法的关系">
+  <div class="class-blueprint">
+    <span>类 · Product</span>
+    <strong>定义一类商品应该有什么</strong>
+    <code>属性：sku / stock</code>
+    <code>方法：need_restock()</code>
+  </div>
+  <div class="class-arrow">→ 创建对象 →</div>
+  <div class="class-instance">
+    <span>对象 · product</span>
+    <strong>一个具体商品</strong>
+    <code>sku = "K161"</code>
+    <code>stock = 3</code>
+  </div>
+</div>
+
+类可以先理解成“这一类对象的定义”，对象是根据这个定义创建出来的具体实例。
+
+## `class Product`：定义一种新的类型
+
+最小的类甚至可以只有：
+
+```python
+class Product:
+    pass
+```
+
+然后创建对象：
+
+```python
+product1 = Product()
+product2 = Product()
+```
+
+`Product` 是类。
+
+`Product()` 是创建一个对象。
+
+`product1` 和 `product2` 是两个不同对象。
+
+入门阶段不用把“类是模板”理解得太机械。更实用的理解是：**类定义了一组对象应该怎样保存数据、怎样处理自己的数据。**
+
+## `__init__`：创建对象时准备初始数据
+
+```python
+class Product:
+    def __init__(self, sku, stock):
+        self.sku = sku
+        self.stock = stock
+```
+
+当你写：
+
+```python
+product = Product("K161", 3)
+```
+
+Python 会创建一个新对象，并调用 `__init__` 给它准备初始状态。
+
+可以把数据流看成：
+
+```text
+Product("K161", 3)
+        ↓
+sku = "K161"
+stock = 3
+        ↓
+self.sku = "K161"
+self.stock = 3
+        ↓
+product 对象拥有两个属性
+```
+
+## `self`：当前正在操作的这个对象
+
+最容易卡住的是：
+
+```python
+self.sku = sku
+```
+
+左右两个 `sku` 不是同一个概念。
+
+```text
+右边 sku       创建对象时传进来的参数
+左边 self.sku  保存到当前对象身上的属性
+```
+
+例如：
+
+```python
+product = Product("K161", 3)
+```
+
+执行 `__init__` 时，可以暂时把 `self` 理解成正在创建的 `product`。
+
+所以：
+
+```python
+self.sku = sku
+```
+
+最终就让：
+
+```python
+product.sku
+```
+
+得到：
+
+```text
+K161
+```
+
+## 属性：对象自己保存的数据
+
+```python
+print(product.sku)
+print(product.stock)
+```
+
+也可以修改：
+
+```python
+product.stock = 8
+```
+
+现在这个对象的库存状态已经变化。
+
+属性特别适合保存“这个对象自己的状态”：
+
+- 商品的 SKU、库存。
+- 订单的订单号、状态。
+- 任务的重试次数、执行状态。
+
+## 方法：让对象根据自己的数据做事
+
+```python
+class Product:
+    def __init__(self, sku, stock):
+        self.sku = sku
+        self.stock = stock
+
+    def need_restock(self):
+        return self.stock < 5
+```
+
+调用：
+
+```python
+product = Product("K161", 3)
+print(product.need_restock())
+```
+
+调用 `product.need_restock()` 时，不需要手工传 `self`。
+
+Python 会把当前的 `product` 对象自动交给 `self`。
+
+方法于是能访问：
+
+```python
+self.stock
+```
+
+也就是当前这个商品自己的库存。
+
+## 方法也可以修改对象状态
+
+```python
+class Product:
+    def __init__(self, sku, stock):
+        self.sku = sku
+        self.stock = stock
+
+    def add_stock(self, quantity):
+        self.stock = self.stock + quantity
+
+
+product = Product("K161", 3)
+product.add_stock(5)
+
+print(product.stock)
+```
+
+输出：
+
+```text
+8
+```
+
+这里的方法不是返回新值，而是直接修改这个对象保存的状态。
+
+这也是类比“单纯函数”更有意义的地方之一：**数据和操作这份数据的行为被放在了一起。**
+
+## 两个对象为什么互不影响
+
+```python
+product1 = Product("K161", 3)
+product2 = Product("K162", 10)
+
+product1.add_stock(5)
+
+print(product1.stock)
+print(product2.stock)
+```
+
+结果：
+
+```text
+8
+10
+```
+
+`product1` 和 `product2` 是两个不同对象，各自保存自己的 `stock`。
+
+<div class="py-object-pair" aria-label="两个对象分别保存独立状态">
+  <div>
+    <span>product1</span>
+    <code>sku = "K161"</code>
+    <strong>stock = 8</strong>
+  </div>
+  <div>
+    <span>product2</span>
+    <code>sku = "K162"</code>
+    <strong>stock = 10</strong>
+  </div>
+</div>
+
+修改一个对象的普通实例属性，不会自动修改另一个对象。
+
+## 一个稍完整但仍然简单的订单类
+
+```python
+class Order:
+    def __init__(self, order_no, amount, status):
+        self.order_no = order_no
+        self.amount = amount
+        self.status = status
+
+    def is_valid(self):
+        return self.status == "已支付" and self.amount > 0
+
+    def close(self):
+        self.status = "已关闭"
+
+
+order = Order("A001", 129.0, "已支付")
+
+print(order.is_valid())
+order.close()
+print(order.status)
+```
+
+现在一个订单对象同时拥有：
+
+```text
+数据
+├─ order_no
+├─ amount
+└─ status
+
+行为
+├─ is_valid()
+└─ close()
+```
+
+如果后续代码里大量地方都需要操作“订单对象”，这种组织方式可能比不断传字典更自然。
+
+## 什么时候继续用字典 + 函数，什么时候考虑类
+
+| 场景 | 更简单的起点 |
+| --- | --- |
+| 读取 JSON 后筛选 100 条订单 | 列表 + 字典 + 函数 |
+| 一个 30 行的批量文件脚本 | 函数 |
+| 数据只是临时中间结果 | 字典 |
+| 同一种对象会长期保留自己的状态 | 可以考虑类 |
+| 对象有多项行为，都依赖自己的状态 | 类开始变得自然 |
+| 只是为了“代码看起来高级” | 不要加类 |
+
+不要把“用类”当成代码质量等级。
+
+下面这个函数完全没有必要变成类：
+
+```python
+def calculate_amount(price, quantity):
+    return price * quantity
+```
+
+为了一个乘法写：
+
+```python
+class AmountCalculator:
+    pass
+```
+
+只会让入门脚本更难理解。
+
+## 类和 JSON 数据怎么结合
+
+假设接口解析后得到：
+
+```python
+data = {
+    "sku": "K161",
+    "stock": 3,
+}
+```
+
+可以创建对象：
+
+```python
+product = Product(data["sku"], data["stock"])
+```
+
+多个商品：
+
+```python
+raw_products = [
+    {"sku": "K161", "stock": 3},
+    {"sku": "K162", "stock": 8},
+]
+
+products = []
+
+for data in raw_products:
+    product = Product(data["sku"], data["stock"])
+    products.append(product)
+```
+
+但这里也要问一句：后面真的需要对象的方法和状态吗？
+
+如果只是筛选一次库存：
+
+```python
+for data in raw_products:
+    if data["stock"] < 5:
+        print(data["sku"])
+```
+
+明显更简单。
+
+## 这一系列不会继续展开高级 OOP
+
+你接下来当然还会遇到：
+
+- 继承。
+- 类属性。
+- `@classmethod`。
+- `@staticmethod`。
+- `property`。
+- 数据类 `dataclass`。
+- 魔术方法。
+
+但它们不是“零基础读完才能开始写脚本”的前置条件。
+
+当前阶段真正需要达到的是：当你在别人代码里看到：
+
+```python
+class User:
+    def __init__(self, name):
+        self.name = name
+
+    def say_name(self):
+        return self.name
+```
+
+你能解释类、对象、`self`、属性、方法分别是什么，也能自己写一个同等复杂度的小类。
+
+## 动手练习：商品库存对象
+
+自己完成：
+
+```python
+class Product:
+    def __init__(self, sku, stock):
+        self.sku = sku
+        self.stock = stock
+
+    def need_restock(self):
+        return self.stock < 5
+
+    def add_stock(self, quantity):
+        self.stock = self.stock + quantity
+```
+
+然后创建：
+
+```python
+product1 = Product("K161", 3)
+product2 = Product("K162", 8)
+```
+
+依次验证：
+
+1. `product1.need_restock()` 是不是 `True`。
+2. 给 `product1` 增加 5 件库存后，结果是否变成 `False`。
+3. `product2.stock` 是否仍然是 `8`。
+4. 用自己的话解释为什么修改 `product1` 没有影响 `product2`。
+
+<HighlightBox eyebrow="下一篇" title="基础内容到这里结束，最后用 20 道题验收">
+  下一篇不再继续教新语法，而是综合检查类型转换、循环、字典、函数、异常、文件、JSON、类、引用、浅拷贝和默认参数。能独立完成大部分题目，就说明这套零基础学习已经形成闭环。
+</HighlightBox>
+
+<style>{`
+  .py-class-map {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.85rem;
+    align-items: center;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .class-blueprint,
+  .class-instance,
+  .py-object-pair > div {
+    padding: 1rem;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+    border-radius: 18px;
+    background: rgba(148, 163, 184, 0.06);
+  }
+
+  .class-blueprint span,
+  .class-blueprint strong,
+  .class-blueprint code,
+  .class-instance span,
+  .class-instance strong,
+  .class-instance code,
+  .py-object-pair span,
+  .py-object-pair code,
+  .py-object-pair strong {
+    display: block;
+  }
+
+  .class-blueprint span,
+  .class-instance span,
+  .py-object-pair span {
+    color: var(--text-muted, #64748b);
+    font-size: 0.82rem;
+  }
+
+  .class-blueprint strong,
+  .class-instance strong {
+    margin: 0.4rem 0 0.7rem;
+  }
+
+  .class-blueprint code,
+  .class-instance code {
+    margin-top: 0.35rem;
+  }
+
+  .class-arrow {
+    color: var(--text-muted, #64748b);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .py-object-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .py-object-pair strong {
+    margin-top: 0.35rem;
+    font-size: 1.15rem;
+  }
+
+  @media (max-width: 680px) {
+    .py-class-map,
+    .py-object-pair {
+      grid-template-columns: 1fr;
+    }
+
+    .class-arrow {
+      white-space: normal;
+      justify-self: center;
+      padding: 0.2rem 0;
+    }
+  }
+`}</style>
