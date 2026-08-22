@@ -2,6 +2,7 @@
 title: "Python 文件、JSON 与异常处理：从练习代码走向真实脚本"
 description: "从 TXT、JSON 文件和接口返回结构出发，讲清 Python 文件读取与写入、json 模块、嵌套数据提取，以及 ValueError、FileNotFoundError 等常见异常如何处理。"
 date: 2026-08-22T22:40:00+08:00
+updated: 2026-08-22T23:22:00+08:00
 category: "教程"
 tags:
   - "Python"
@@ -14,7 +15,6 @@ private: false
 ---
 
 import HighlightBox from '../../components/HighlightBox.astro';
-import Mermaid from '../../components/Mermaid.astro';
 
 前面的例子里，订单和商品数据都直接写在代码里：
 
@@ -25,22 +25,25 @@ orders = [
 ]
 ```
 
-真实脚本很少永远这样工作。数据通常来自 TXT、CSV、JSON 文件，或者来自某个 API 的返回结果。
+真实脚本很少永远这样工作。数据通常来自 TXT、JSON 文件，或者来自某个 API 的返回结果。
 
 这一篇就是从“我会写代码”跨到“我能接真实数据”的那一步。
 
-<Mermaid
-  title="真实脚本最常见的数据流"
-  caption="不同来源的数据进入 Python 后，最终都会先变成字符串、列表、字典等基础对象，再进入前面已经学过的判断、循环和函数。"
-  chart={`flowchart LR
-    A[TXT / JSON 文件] --> C[读取]
-    B[API 返回 JSON] --> D[解析]
-    C --> E[Python 数据<br/>str / list / dict]
-    D --> E
-    E --> F[清洗 / 判断 / 循环 / 函数]
-    F --> G[结果]
-    G --> H[打印 / 写文件 / 交给下一步]`}
-/>
+<div class="py-real-data-flow" aria-label="真实脚本最常见的数据流">
+  <div class="data-sources">
+    <span>数据从外部进入</span>
+    <strong>TXT / JSON 文件</strong>
+    <strong>API 返回 JSON</strong>
+  </div>
+  <i>→</i>
+  <div><span>读取 / 解析</span><strong>变成 Python 数据</strong><code>str / list / dict</code></div>
+  <i>→</i>
+  <div><span>处理</span><strong>清洗 / 判断 / 循环 / 函数</strong></div>
+  <i>→</i>
+  <div><span>结果</span><strong>打印 / 写文件 / 交给下一步</strong></div>
+</div>
+
+不同来源的数据进入 Python 后，最终都会先变成字符串、列表、字典等基础对象，再进入前面已经学过的判断、循环和函数。
 
 ## 读取一个文本文件
 
@@ -336,27 +339,33 @@ raw_quantity = "两件"
 try:
     quantity = int(raw_quantity)
 except ValueError:
-    quantity = 0
-
-print(quantity)
+    print("数量格式异常：", raw_quantity)
 ```
 
 执行逻辑：
 
-<Mermaid
-  title="try / except 的执行分支"
-  chart={`flowchart LR
-    A[执行 int raw_quantity] --> B{转换成功?}
-    B -- 是 --> C[得到 quantity]
-    B -- 否 ValueError --> D[进入 except ValueError]
-    D --> E[quantity = 0]
-    C --> F[继续后面代码]
-    E --> F`}
-/>
+<div class="py-error-branch" aria-label="try except 的成功和失败分支">
+  <div class="error-entry"><span>尝试执行</span><strong>int(raw_quantity)</strong></div>
+  <div class="error-options">
+    <div><b>转换成功</b><code>quantity 得到数字</code><span>继续正常处理</span></div>
+    <div><b>发生 ValueError</b><code>进入 except ValueError</code><span>明确记录异常；在循环中也可以跳过当前数据</span></div>
+  </div>
+</div>
 
 这里有一个重要边界：不要为了“程序永远不报错”把所有代码都塞进巨大的 `try`。
 
 异常本来就是告诉你哪里出了问题。只有你**知道某类失败可以合理处理**时，才应该接住它。
+
+例如除数为 0 会抛出 `ZeroDivisionError`：
+
+```python
+try:
+    result = 10 / 0
+except ZeroDivisionError:
+    print("除数不能为 0")
+```
+
+这和 `ValueError` 一样，重点不是背完所有异常名称，而是遇到明确失败时，捕获对应的具体异常。
 
 ## 文件不存在：`FileNotFoundError`
 
@@ -523,3 +532,94 @@ Path.cwd()
 <HighlightBox eyebrow="下一篇" title="最后补上够用的类与对象">
   很多数据处理和自动化脚本用“列表 + 字典 + 函数”就足够了。下一篇会讲清什么时候类能让代码更自然，以及 `class`、`__init__`、`self`、属性和方法到底在做什么，不会把入门课程带进复杂 OOP。
 </HighlightBox>
+
+<style>{`
+  .py-real-data-flow {
+    display: grid;
+    grid-template-columns: 1.2fr auto 1fr auto 1fr auto 1fr;
+    gap: 0.65rem;
+    align-items: stretch;
+    margin: 1.5rem 0 1rem;
+  }
+
+  .py-real-data-flow > div,
+  .error-entry,
+  .error-options > div {
+    padding: 0.9rem;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+    border-radius: 15px;
+    background: rgba(148, 163, 184, 0.06);
+  }
+
+  .py-real-data-flow span,
+  .py-real-data-flow strong,
+  .py-real-data-flow code,
+  .error-entry span,
+  .error-entry strong,
+  .error-options b,
+  .error-options code,
+  .error-options span {
+    display: block;
+  }
+
+  .py-real-data-flow span,
+  .error-entry span,
+  .error-options span {
+    color: var(--text-muted, #64748b);
+    font-size: 0.82rem;
+  }
+
+  .py-real-data-flow strong,
+  .py-real-data-flow code,
+  .error-entry strong,
+  .error-options code {
+    margin-top: 0.45rem;
+  }
+
+  .py-real-data-flow > i {
+    align-self: center;
+    color: var(--text-muted, #64748b);
+    font-style: normal;
+  }
+
+  .data-sources strong + strong {
+    margin-top: 0.3rem;
+  }
+
+  .py-error-branch {
+    display: grid;
+    grid-template-columns: minmax(10rem, 0.7fr) minmax(0, 1.5fr);
+    gap: 0.8rem;
+    align-items: stretch;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .error-entry {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .error-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+  }
+
+  .error-options b {
+    margin-bottom: 0.45rem;
+  }
+
+  @media (max-width: 760px) {
+    .py-real-data-flow,
+    .py-error-branch,
+    .error-options {
+      grid-template-columns: 1fr;
+    }
+
+    .py-real-data-flow > i {
+      justify-self: center;
+      transform: rotate(90deg);
+    }
+  }
+`}</style>

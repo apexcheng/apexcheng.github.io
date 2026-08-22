@@ -2,6 +2,7 @@
 title: "Python 函数入门：把一段处理逻辑变成可以重复使用的小工具"
 description: "从订单金额和状态判断出发，讲清 Python 函数定义、参数、return、默认参数、关键字参数、可变参数、局部变量和可变默认参数陷阱。"
 date: 2026-08-22T22:38:00+08:00
+updated: 2026-08-22T23:22:00+08:00
 category: "教程"
 tags:
   - "Python"
@@ -111,6 +112,14 @@ amount
 
 入门时不用纠结术语，只要理解：**函数需要哪些数据，就把这些数据作为参数交进去。**
 
+<div class="py-parameter-map" aria-label="函数调用值进入参数的对应关系">
+  <div><span>调用时给出的值</span><code>"A001"</code><code>129.0</code></div>
+  <i>→</i>
+  <div><span>进入函数参数</span><code>order_no</code><code>amount</code></div>
+  <i>→</i>
+  <div><span>函数内部使用</span><code>print(...)</code><small>参数名代表本次调用传进来的值</small></div>
+</div>
+
 ## `return`：把结果交回给后面的代码
 
 ```python
@@ -177,6 +186,11 @@ taxed_result = result * 1.13
 print  → 给人看
 return → 给后面的代码用
 ```
+
+<div class="py-return-compare" aria-label="print 和 return 的区别">
+  <div><span>print()</span><strong>结果停在屏幕上</strong><code>add(3, 5) → 显示 8</code><small>适合调试、提示和最终展示</small></div>
+  <div><span>return</span><strong>结果回到调用位置</strong><code>result = add(3, 5)</code><small>result 得到 8，还能继续参与计算</small></div>
+</div>
 
 真实数据处理函数通常更需要 `return`。
 
@@ -292,6 +306,12 @@ def add_order(order_no, orders=None):
 ```
 
 这样每次没有传 `orders` 时，都会在函数内部创建一个新列表。
+
+<div class="py-default-memory" aria-label="可变默认参数跨调用保留状态">
+  <div><b>第一次调用</b><code>add_order("A001")</code><span>默认列表变成</span><strong>["A001"]</strong></div>
+  <p>同一个默认列表继续被使用 ↓</p>
+  <div><b>第二次调用</b><code>add_order("A002")</code><span>继续追加后变成</span><strong>["A001", "A002"]</strong></div>
+</div>
 
 这个问题在综合考核里会再次出现，因为它非常能检验你是否真正理解“变量和对象的关系”。
 
@@ -454,17 +474,15 @@ print(result)
 
 执行关系：
 
-```text
-orders
-  ↓
-get_valid_amount()
-  ↓ 每条订单交给
-is_valid_order()
-  ↓ True / False
-有效订单金额累加
-  ↓
-return 328.0
-```
+<div class="py-function-chain" aria-label="两个函数协作处理订单的执行链">
+  <div><span>输入</span><strong>orders</strong><small>3 条订单</small></div>
+  <i>→</i>
+  <div><span>主函数</span><strong>get_valid_amount()</strong><small>逐条遍历</small></div>
+  <i>→</i>
+  <div><span>判断函数</span><strong>is_valid_order()</strong><small>每条返回 True / False</small></div>
+  <i>→</i>
+  <div><span>累计并返回</span><strong>328.0</strong><small>只有有效订单进入金额累计</small></div>
+</div>
 
 这里没有类，没有设计模式，也没有复杂抽象。对于一个小脚本来说，这种函数拆分已经足够清楚。
 
@@ -558,8 +576,102 @@ get_restock_skus  输入一批商品，返回一批需要补货的 SKU
     color: var(--text-muted, #64748b);
   }
 
+  .py-parameter-map,
+  .py-function-chain {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 0.7rem;
+    align-items: stretch;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .py-function-chain {
+    grid-template-columns: 1fr auto 1.15fr auto 1.15fr auto 1fr;
+  }
+
+  .py-parameter-map > div,
+  .py-function-chain > div,
+  .py-return-compare > div,
+  .py-default-memory > div {
+    padding: 0.9rem;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+    border-radius: 15px;
+    background: rgba(148, 163, 184, 0.06);
+  }
+
+  .py-parameter-map span,
+  .py-parameter-map code,
+  .py-parameter-map small,
+  .py-function-chain span,
+  .py-function-chain strong,
+  .py-function-chain small,
+  .py-return-compare span,
+  .py-return-compare strong,
+  .py-return-compare code,
+  .py-return-compare small,
+  .py-default-memory b,
+  .py-default-memory code,
+  .py-default-memory span,
+  .py-default-memory strong {
+    display: block;
+  }
+
+  .py-parameter-map span,
+  .py-parameter-map small,
+  .py-function-chain span,
+  .py-function-chain small,
+  .py-return-compare span,
+  .py-return-compare small,
+  .py-default-memory span,
+  .py-default-memory p {
+    color: var(--text-muted, #64748b);
+    font-size: 0.82rem;
+  }
+
+  .py-parameter-map code + code,
+  .py-return-compare strong,
+  .py-return-compare code {
+    margin-top: 0.4rem;
+  }
+
+  .py-parameter-map > i,
+  .py-function-chain > i {
+    align-self: center;
+    color: var(--text-muted, #64748b);
+    font-style: normal;
+    text-align: center;
+  }
+
+  .py-return-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .py-default-memory {
+    display: grid;
+    gap: 0.55rem;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .py-default-memory > div {
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr) auto minmax(8rem, 1fr);
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .py-default-memory p {
+    margin: 0;
+    text-align: center;
+  }
+
   @media (max-width: 700px) {
-    .py-function-machine {
+    .py-function-machine,
+    .py-parameter-map,
+    .py-function-chain,
+    .py-return-compare {
       grid-template-columns: 1fr;
     }
 
@@ -567,9 +679,16 @@ get_restock_skus  输入一批商品，返回一批需要补货的 SKU
       min-height: auto;
     }
 
-    .machine-arrow {
+    .machine-arrow,
+    .py-parameter-map > i,
+    .py-function-chain > i {
       justify-self: center;
       transform: rotate(90deg);
+    }
+
+    .py-default-memory > div {
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
     }
   }
 `}</style>

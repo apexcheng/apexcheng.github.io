@@ -1,7 +1,8 @@
 ---
 title: "Python 字符串、列表与字典实战：把真实数据组织起来"
-description: "用 SKU、订单和接口字段讲清 Python 字符串、列表、字典的常用操作，并补充元组、集合、列表推导式和浅拷贝这些入门后很快会遇到的知识。"
+description: "用 SKU、订单和接口字段讲清 Python 字符串、列表、字典的常用操作，并补充元组、集合、变量引用和浅拷贝这些入门后很快会遇到的知识。"
 date: 2026-08-22T22:34:00+08:00
+updated: 2026-08-22T23:22:00+08:00
 category: "教程"
 tags:
   - "Python"
@@ -194,6 +195,23 @@ skus.remove("K163")
 del skus[0]
 ```
 
+### 排序：需要有序结果时用 `sorted()`
+
+```python
+user_ids = [103, 101, 102, 101]
+sorted_ids = sorted(user_ids)
+
+print(sorted_ids)
+```
+
+输出：
+
+```text
+[101, 101, 102, 103]
+```
+
+`sorted()` 会得到一个排序后的新列表，原来的 `user_ids` 不会被修改。后面如果先用集合去重，再排序，也可以把两个操作组合起来。
+
 ### 判断一个值在不在列表里
 
 ```python
@@ -366,36 +384,11 @@ print(unique_skus)
 
 如果你后面还需要稳定顺序，就不要把集合当成列表替代品。
 
-## 列表推导式：先会看懂，再决定要不要用
-
-普通写法：
-
-```python
-numbers = [1, 2, 3, 4]
-squares = []
-
-for number in numbers:
-    squares.append(number * number)
-```
-
-列表推导式可以写成：
-
-```python
-numbers = [1, 2, 3, 4]
-squares = [number * number for number in numbers]
-```
-
-结果都是：
-
-```text
-[1, 4, 9, 16]
-```
-
-这一阶段不要求你所有循环都改成推导式。**只要逻辑一复杂，普通 `for` 往往更容易读。**
-
-下一篇会正式学习 `for`，到时再回头看这个写法会更自然。
-
 ## 一个很重要的坑：两个变量可能指向同一个列表
+
+<HighlightBox eyebrow="进阶补充" title="第一次阅读可以先跳过下面两节">
+  变量引用和浅拷贝不是你开始写循环的前置条件。先把字符串、列表和字典用熟更重要；等后面遇到“为什么我改了副本，原数据也变了”时，再回来理解这两节。
+</HighlightBox>
 
 ```python
 original = ["K161", "K162"]

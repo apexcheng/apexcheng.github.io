@@ -2,6 +2,7 @@
 title: "Python 条件判断与循环：让代码自己决定、重复和筛选"
 description: "用库存判断和订单筛选讲清 if、elif、else、and、or、in、for、while、break、continue、range，以及循环中的变量如何一步步变化。"
 date: 2026-08-22T22:36:00+08:00
+updated: 2026-08-22T23:22:00+08:00
 category: "教程"
 tags:
   - "Python"
@@ -210,9 +211,9 @@ for order in orders:
 
 ```python
 orders = [
-    {"status": "已支付"},
-    {"status": "已退款"},
-    {"status": "已支付"},
+    {"status": "已支付", "amount": 129.0},
+    {"status": "已退款", "amount": 88.0},
+    {"status": "已支付", "amount": 199.0},
 ]
 
 paid_count = 0
@@ -319,6 +320,35 @@ for order in orders:
 for index, order in enumerate(orders, start=1):
     print(index, order["order_no"])
 ```
+
+## 列表推导式：先把普通 `for` 看懂，再认识简写
+
+现在已经理解了 `for`，再看列表推导式就不会只是背符号。
+
+普通写法：
+
+```python
+numbers = [1, 2, 3, 4]
+squares = []
+
+for number in numbers:
+    squares.append(number * number)
+```
+
+列表推导式把同一件事压成一行：
+
+```python
+numbers = [1, 2, 3, 4]
+squares = [number * number for number in numbers]
+```
+
+两种写法都会得到：
+
+```text
+[1, 4, 9, 16]
+```
+
+入门阶段不需要强行把循环改成推导式。**一旦条件或处理步骤开始变复杂，普通 `for` 往往更容易读。**
 
 ## `while`：不知道要循环多少次，但知道什么时候停
 

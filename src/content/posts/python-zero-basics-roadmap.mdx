@@ -2,6 +2,7 @@
 title: "Python 零基础学习路线：从看懂一行代码到写出简单脚本"
 description: "一套面向数据处理、RPA、API 和简单脚本场景的 Python 零基础学习路线，先建立代码运行直觉，再逐步进入真实数据与自动化任务。"
 date: 2026-08-22T22:30:00+08:00
+updated: 2026-08-22T23:22:00+08:00
 category: "教程"
 tags:
   - "Python"
@@ -14,7 +15,6 @@ private: false
 ---
 
 import HighlightBox from '../../components/HighlightBox.astro';
-import Mermaid from '../../components/Mermaid.astro';
 
 如果你学 Python 的目标不是参加算法竞赛，而是想处理 Excel 导出的数据、写 RPA 辅助脚本、调用 API，或者把重复操作变成一段自动执行的代码，那么入门顺序应该围绕一个问题展开：**数据进来以后，Python 到底怎么一步一步把它变成结果？**
 
@@ -26,18 +26,32 @@ import Mermaid from '../../components/Mermaid.astro';
 
 ## 先看完整路线
 
-<Mermaid
-  title="从数据到脚本的学习路径"
-  caption="前半段建立运行直觉，后半段开始接触真实文件、JSON 和代码组织。"
-  chart={`flowchart LR
-    A[1 学习路线<br/>知道先学什么] --> B[2 基础类型<br/>一份数据是什么]
-    B --> C[3 常用容器<br/>一批数据怎么装]
-    C --> D[4 判断与循环<br/>怎么决定和重复]
-    D --> E[5 函数<br/>怎么把步骤封装]
-    E --> F[6 文件 JSON 异常<br/>怎么接真实数据]
-    F --> G[7 类与对象<br/>只学够用的组织方式]
-    G --> H[8 综合考核<br/>确认能独立动手]`}
-/>
+<div class="py-roadmap" aria-label="从数据到脚本的八步学习路径">
+  <div class="py-roadmap-stage">
+    <div class="py-roadmap-stage-title">
+      <span>前半段</span>
+      <strong>先建立代码运行直觉</strong>
+    </div>
+    <div class="py-roadmap-steps">
+      <div><b>01</b><strong>学习路线</strong><span>知道先学什么</span></div>
+      <div><b>02</b><strong>基础类型</strong><span>一份数据是什么</span></div>
+      <div><b>03</b><strong>常用容器</strong><span>一批数据怎么装</span></div>
+      <div><b>04</b><strong>判断与循环</strong><span>怎么决定和重复</span></div>
+    </div>
+  </div>
+  <div class="py-roadmap-stage">
+    <div class="py-roadmap-stage-title">
+      <span>后半段</span>
+      <strong>开始接真实任务</strong>
+    </div>
+    <div class="py-roadmap-steps">
+      <div><b>05</b><strong>函数</strong><span>把步骤整理成工具</span></div>
+      <div><b>06</b><strong>文件 / JSON / 异常</strong><span>接入真实数据</span></div>
+      <div><b>07</b><strong>类与对象</strong><span>只学够用的组织方式</span></div>
+      <div><b>08</b><strong>综合考核</strong><span>确认能独立动手</span></div>
+    </div>
+  </div>
+</div>
 
 这条路线有一个刻意的取舍：**类和对象放得比较后。** 对零基础读者来说，先会处理数据、写判断、写循环、写函数，比一开始理解面向对象更重要。很多几十行以内的自动化脚本，甚至完全不需要自己写类。
 
@@ -230,3 +244,87 @@ python3 demo.py
 <HighlightBox eyebrow="下一篇" title="先把“一份数据”看懂">
   下一篇从变量、字符串、数字、布尔值和类型转换开始。目标不是背 `str`、`int` 这些名字，而是看懂一个值为什么能这样用、为什么有时会报类型错误。
 </HighlightBox>
+
+<style>{`
+  .py-roadmap {
+    display: grid;
+    gap: 1rem;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .py-roadmap-stage {
+    padding: 1rem;
+    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+    border-radius: 18px;
+    background: rgba(148, 163, 184, 0.05);
+  }
+
+  .py-roadmap-stage-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.65rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .py-roadmap-stage-title span {
+    color: var(--text-muted, #64748b);
+    font-size: 0.8rem;
+  }
+
+  .py-roadmap-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .py-roadmap-steps > div {
+    position: relative;
+    min-height: 7.6rem;
+    padding: 0.85rem;
+    border-radius: 14px;
+    background: var(--paper, rgba(255, 255, 255, 0.76));
+  }
+
+  .py-roadmap-steps b,
+  .py-roadmap-steps strong,
+  .py-roadmap-steps span {
+    display: block;
+  }
+
+  .py-roadmap-steps b {
+    margin-bottom: 1.25rem;
+    color: var(--text-muted, #64748b);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.78rem;
+  }
+
+  .py-roadmap-steps span {
+    margin-top: 0.25rem;
+    color: var(--text-muted, #64748b);
+    font-size: 0.82rem;
+  }
+
+  @media (max-width: 760px) {
+    .py-roadmap-stage-title {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .py-roadmap-steps {
+      grid-template-columns: 1fr;
+    }
+
+    .py-roadmap-steps > div {
+      min-height: auto;
+      padding-left: 3.6rem;
+    }
+
+    .py-roadmap-steps b {
+      position: absolute;
+      left: 0.9rem;
+      top: 0.85rem;
+      margin: 0;
+    }
+  }
+`}</style>

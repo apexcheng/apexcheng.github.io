@@ -2,7 +2,7 @@
 title: "Python 基础考核：20 道覆盖不同知识点的入门题"
 description: "一套可直接使用的 Python 基础考核题，覆盖类型转换、循环、字典、函数、文件、JSON、类、浅拷贝和默认参数，并提供完整附件下载。"
 date: 2026-07-24T15:48:25+08:00
-updated: 2026-08-22T22:44:00+08:00
+updated: 2026-08-22T23:22:00+08:00
 category: "教程"
 tags:
   - "Python"
@@ -15,7 +15,6 @@ private: false
 ---
 
 import MetricCard from '../../components/MetricCard.astro';
-import FeatureCard from '../../components/FeatureCard.astro';
 import VisualGrid from '../../components/VisualGrid.astro';
 import HighlightBox from '../../components/HighlightBox.astro';
 import DecisionFlow from '../../components/DecisionFlow.astro';
@@ -67,47 +66,11 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 ## 考核说明
 
-- 建议用时：15～20 分钟。
+- 建议用时：30～45 分钟。第一次独立完成时，不需要追求速度。
 - 不允许使用第三方库。
 - 第 1～17 题按题目要求补全代码或说明原因。
 - 第 18～20 题先写出运行结果，再解释原因。
 - 题目文件不包含答案，避免考核者直接查看。
-
-## 20 道题的知识地图
-
-<VisualGrid columns={2}>
-  <FeatureCard title="基础语法与数据" meta="1～4" description="先确认能否处理最常见的数据输入和容器。">
-    <ul>
-      <li>类型转换与数值计算</li>
-      <li>列表筛选与平均值</li>
-      <li>字典计数</li>
-      <li>字符串清洗与比较</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="循环、函数与容器" meta="5～12" description="检查能否把基础语法组合成完整的小任务。">
-    <ul>
-      <li>函数返回值与条件判断</li>
-      <li>列表去重、排序与推导式</li>
-      <li>元组、集合与可变参数</li>
-      <li>异常处理</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="实际文件与对象" meta="13～17" description="检查是否接触过真实的数据输入、结构和标准库。">
-    <ul>
-      <li>文本文件读取</li>
-      <li>JSON 序列化</li>
-      <li>类与对象</li>
-      <li>模块导入与综合数据处理</li>
-    </ul>
-  </FeatureCard>
-  <FeatureCard title="Python 运行机制" meta="18～20" description="检查是否理解代码表面结果背后的对象关系。">
-    <ul>
-      <li>变量引用</li>
-      <li>浅拷贝与嵌套可变对象</li>
-      <li>可变对象作为默认参数</li>
-    </ul>
-  </FeatureCard>
-</VisualGrid>
 
 ## 题目目录
 
@@ -128,7 +91,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 | 13 | 文件读取 | 读取并打印 `test.txt` |
 | 14 | JSON | 把字典转换为 JSON 字符串 |
 | 15 | 类与对象 | 创建带属性和方法的 `User` 类 |
-| 16 | 模块导入 | 正确使用 Python 标准库 |
+| 16 | 模块导入 | 使用 `pathlib` 输出当前工作目录 |
 | 17 | 综合数据处理 | 根据订单列表计算销售总金额 |
 | 18 | 变量引用 | 判断两个变量指向同一列表后的结果 |
 | 19 | 浅拷贝 | 判断嵌套列表为什么会共同变化 |
