@@ -1,0 +1,705 @@
+---
+title: "刚开始 AI 编程，先听懂这些开发术语"
+description: "不是背编程词典，而是沿一次真实开发流程，讲懂 Bug、测试、重构、API、Git、缓存、构建和部署等最常遇到的术语。"
+date: 2026-08-23T00:43:00+08:00
+category: "教程"
+tags:
+  - "AI 编程"
+minutes: 18
+featured: false
+draft: false
+private: false
+---
+
+刚开始接触编程，真正让人难受的往往不是代码，而是讨论里突然冒出来的一串词：
+
+> “这个 Bug 能稳定复现吗？”“先补个单测，跑一下回归。”“这里耦合太高，先别重写，做个小重构。”“本地没问题，可能是生产环境依赖不一样。”“先 commit，别急着 push。”
+
+每个字都认识，连在一起却像另一门语言。
+
+这篇文章不打算做一份“术语大全”。只保留 AI 编程、RPA、数据处理和日常开发里真正高频的词，并把它们放回实际场景里。目标只有一个：**以后看 AI 的解释、同事的代码评审和项目报错时，至少知道大家正在讨论哪一层问题。**
+
+<section class="term-guide term-guide--hero" aria-label="一次真实开发流程里的编程术语地图">
+  <div class="term-guide__eyebrow">DEVELOPER LANGUAGE MAP</div>
+  <div class="term-hero-grid">
+    <div>
+      <span class="term-pill term-pill--blue">一句话理解</span>
+      <h2>术语不是知识点，<br />而是开发过程里的路标。</h2>
+      <p>先知道一个词会在什么时候出现，再理解它的定义，比从 A 到 Z 背词典有效得多。</p>
+    </div>
+    <div class="term-console" aria-label="开发现场对话示例">
+      <span>AI / 同事</span>
+      <p>“先复现 → 看日志 → 修 Bug → 跑单测 → 回归 → commit → 构建 → 部署。”</p>
+      <strong>你真正需要听懂的是这一整条链路。</strong>
+    </div>
+  </div>
+  <div class="term-route" aria-label="开发流程术语路线">
+    <div><b>01</b><span>发现问题</span><small>Bug · 异常 · 复现 · 日志</small></div>
+    <i>→</i>
+    <div><b>02</b><span>修改代码</span><small>重构 · 耦合 · 硬编码 · 依赖</small></div>
+    <i>→</i>
+    <div><b>03</b><span>验证结果</span><small>单测 · 集成 · E2E · 回归</small></div>
+    <i>→</i>
+    <div><b>04</b><span>协作交付</span><small>Git · 构建 · 部署 · 回滚</small></div>
+  </div>
+</section>
+
+## 先从最常见的一句话开始：这是 Bug，还是异常？
+
+很多新手会把“程序报错”统称为 Bug。实际开发里，这两个词不是一回事。
+
+<section class="term-guide" aria-label="Bug 和异常对照">
+  <div class="term-compare term-compare--bug">
+    <div>
+      <span class="term-label">BUG</span>
+      <strong>代码或设计本身有缺陷</strong>
+      <p>程序做出了不符合预期的结果，即使它没有报错，也可能是 Bug。</p>
+      <small>场景：利润公式写错了，页面正常打开，但算出来的利润少扣了一项成本。</small>
+    </div>
+    <div class="term-vs">VS</div>
+    <div>
+      <span class="term-label term-label--orange">EXCEPTION / 异常</span>
+      <strong>程序运行时发生了一个异常事件</strong>
+      <p>异常可能来自 Bug，也可能只是外部条件不满足，而且很多异常本来就应该被程序处理。</p>
+      <small>场景：调用 API 时网络断开，程序收到超时异常；代码未必写错。</small>
+    </div>
+  </div>
+  <div class="term-note">
+    <b>所以：</b>“出现异常”不等于“代码一定有 Bug”；“没有异常”也不等于“程序没有 Bug”。
+  </div>
+</section>
+
+<p class="term-subhead"><strong>复现</strong><span>先证明问题到底怎样发生</span></p>
+
+**复现（Reproduce）**，就是按照明确步骤重新触发同一个问题。
+
+场景：有人说“导出 Excel 偶尔失败”，开发者通常不会立刻改代码，而会先问：用了哪个店铺、什么日期范围、点了哪个按钮、失败时页面是什么状态。能把这些条件重新走一遍并再次失败，才叫“复现出来了”。
+
+复现很重要，因为它把一句“好像有问题”，变成一个可以验证的输入和结果。
+
+<p class="term-subhead"><strong>偶现</strong><span>不是每次都坏，才最难查</span></p>
+
+**偶现**指问题不是每次都出现，相同操作有时成功、有时失败。
+
+场景：RPA 连续跑 20 次，19 次正常，1 次因为网页加载慢而找不到按钮。它不是“无法复现”，而是需要找到触发它的时机、网络、数据或页面状态。
+
+<p class="term-subhead"><strong>边界条件</strong><span>专门看最容易被忽略的极端情况</span></p>
+
+**边界条件（Edge Case）**不是单纯指“大数、小数”，而是正常规则走到边缘时的情况。
+
+场景：订单数量为 `0`、退款率刚好 `100%`、API 返回空列表、Excel 只有表头没有数据、文件名里有中文和空格。这些输入平时不多，但特别容易暴露程序假设。
+
+<p class="term-subhead"><strong>日志</strong><span>程序给自己留下的运行记录</span></p>
+
+**日志（Log）**可以理解为程序运行时留下的“时间线”。
+
+场景：自动化凌晨失败，人不在现场。第二天通过日志看到“02:13 打开订单页 → 02:14 请求超时 → 重试 3 次 → 02:16 任务退出”，排查就不必靠猜。
+
+日志不是越多越好。真正有用的是能回答：**执行到哪一步、输入是什么、发生了什么、为什么停下。**
+
+## 测试不是一个动作，而是从小到大检查不同范围
+
+“跑一下测试”听起来像一件事，实际可能是在测试一个函数，也可能是在模拟用户从登录一路点到提交。
+
+<section class="term-guide term-guide--test" aria-label="测试范围从单元测试到 E2E 的层级图">
+  <div class="term-head">
+    <div><span>TESTING RANGE</span><strong>越往右，越接近真实用户；越往左，越容易快速定位问题。</strong></div>
+  </div>
+  <div class="test-spectrum">
+    <div class="test-spectrum__axis"><span>小、快、容易定位</span><i></i><span>真实、慢、覆盖整条链路</span></div>
+    <div class="test-spectrum__items">
+      <div>
+        <b>单元测试</b><small>Unit Test</small>
+        <p>只测一个较小的函数或逻辑单元。</p>
+        <em>例：输入含税销售额 113 元，确认未税结果是 100 元。</em>
+      </div>
+      <div>
+        <b>集成测试</b><small>Integration Test</small>
+        <p>检查多个模块接起来后能否正确协作。</p>
+        <em>例：订单读取 + 成本匹配 + 利润汇总一起运行。</em>
+      </div>
+      <div>
+        <b>E2E</b><small>End-to-End</small>
+        <p>从用户入口一路跑到最终结果。</p>
+        <em>例：登录后台 → 选择日期 → 导入文件 → 页面显示利润结果。</em>
+      </div>
+    </div>
+  </div>
+</section>
+
+<p class="term-subhead"><strong>冒烟测试</strong><span>先确认系统没“整体趴下”</span></p>
+
+**冒烟测试（Smoke Test）**不是追求全面，而是先跑最关键的几条主流程。
+
+场景：刚部署一个新版本，不急着把全部测试跑一遍，先打开首页、登录、创建一条任务、保存成功。如果这几步都挂了，就没必要继续测细节。
+
+<p class="term-subhead"><strong>回归测试</strong><span>这次修好了，别把旧功能改坏</span></p>
+
+**回归测试（Regression Test）**关注的是：代码变化之后，原来正常的功能是否仍然正常。
+
+场景：你修复了“退款金额计算错误”，除了验证退款计算本身，还要确认没有顺手破坏销售额、采购成本和看板汇总。
+
+<section class="term-guide term-guide--mini" aria-label="单元测试与 E2E 对照">
+  <div class="mini-compare">
+    <div><b>单元测试</b><span>像检查一个齿轮</span><p>快、定位准，但无法证明整台机器已经接好。</p></div>
+    <div><b>E2E</b><span>像真的把机器开起来</span><p>最接近用户，但慢，而且失败时不一定马上知道是哪一层坏了。</p></div>
+  </div>
+</section>
+
+## AI 说“重构一下”时，它到底想改什么？
+
+这一组词最容易让 AI 编程新手误判“代码是不是写得不高级”。很多时候，简单代码反而更好。
+
+<p class="term-subhead"><strong>重构 vs 重写</strong><span>一个尽量保留，一个重新做</span></p>
+
+<section class="term-guide" aria-label="重构和重写对照">
+  <div class="rewrite-board">
+    <div>
+      <span class="term-pill term-pill--green">重构 Refactor</span>
+      <strong>功能目标基本不变，调整内部结构。</strong>
+      <p>场景：原来 80 行重复判断拆成两个清楚的业务步骤，输入输出保持不变。</p>
+    </div>
+    <div class="rewrite-board__arrow">≠</div>
+    <div>
+      <span class="term-pill term-pill--red">重写 Rewrite</span>
+      <strong>旧实现基本放弃，重新做一套。</strong>
+      <p>场景：原来的 Excel VBA 方案不再维护，重新做成一个 Web 系统。</p>
+    </div>
+  </div>
+  <div class="term-note"><b>判断重点：</b>重构通常是“小步保持行为”；重写意味着更大的范围、更高的验证成本。</div>
+</section>
+
+<p class="term-subhead"><strong>技术债</strong><span>今天省下来的时间，未来可能要还</span></p>
+
+**技术债（Technical Debt）**是为了更快交付而接受的代码或设计负担。
+
+场景：临时把店铺名称写死，今天 10 分钟就能上线；一个月后增加第二个店铺时，到处都要找这个名称改。这个“以后要处理的成本”就是技术债。
+
+技术债不等于“烂代码”。有时为了先验证业务，主动欠一点债是合理选择，关键是知道自己欠了什么。
+
+<p class="term-subhead"><strong>硬编码</strong><span>把本来会变化的东西直接写死</span></p>
+
+**硬编码（Hardcoding）**是把应该来自配置、输入或数据源的值，直接固定在代码里。
+
+```python
+shop_name = "航世京东自营旗舰店"
+```
+
+如果这个脚本永远只服务一个固定店铺，这不一定有问题；如果下一周就要支持多个店铺，写死就会变成维护负担。
+
+所以“硬编码”不是看到常量就判错，关键要问：**这个值是不是业务上会变化。**
+
+<p class="term-subhead"><strong>耦合</strong><span>改 A 的时候，为什么 B、C、D 都跟着动？</span></p>
+
+**耦合（Coupling）**描述模块之间依赖有多强。
+
+场景：一个导出函数同时负责读数据库、算利润、拼 HTML、发钉钉。现在只想改导出格式，却担心消息发送也受影响，这就是耦合过强带来的维护成本。
+
+<p class="term-subhead"><strong>封装</strong><span>我只需要知道怎么用，不必知道里面怎么做</span></p>
+
+**封装（Encapsulation）**就是把内部细节藏在明确入口后面。
+
+场景：业务代码只调用 `get_order_cost(order_id)`，不需要每次都重新关心数据库连哪个表、税率怎样处理、异常怎样记录。这些细节由函数内部负责。
+
+<p class="term-subhead"><strong>抽象</strong><span>把几个具体问题提炼成一个共同规则</span></p>
+
+**抽象（Abstraction）**是从多个具体实现里找共同概念。
+
+场景：抖音、京东、淘宝都要“读取订单”。如果它们真的有稳定的共同输入输出，可以抽象成统一的订单读取接口；如果三套逻辑差异很大，强行抽象反而会更难懂。
+
+**抽象不是代码越少越高级。** 对新项目来说，先把真实逻辑写清楚，往往比提前设计“万能框架”更可靠。
+
+<p class="term-subhead"><strong>幂等</strong><span>点两次，不应该多做一份</span></p>
+
+**幂等（Idempotent）**指同一个操作重复执行时，不会因为“重复”而额外改变预期结果。
+
+场景：自动化因为网络超时，不确定“订单状态更新”到底成功没有，于是重试一次。如果接口是幂等的，两次请求仍然只把订单改成同一个状态；如果不是，可能重复扣库存、重复发消息。
+
+幂等强调的是**业务效果**，不要求每次返回的时间戳、请求 ID 都一模一样。
+
+<p class="term-subhead"><strong>依赖</strong><span>你的项目需要别人提供的什么东西？</span></p>
+
+**依赖（Dependency）**是项目运行、构建或开发所依赖的库、工具或模块。
+
+场景：Python 项目用了 `pandas`，它就是项目依赖；前端项目需要某个 npm 包，这也是依赖。别人说“先安装依赖”，通常就是先把这些外部库装齐。
+
+## API、SDK、CLI：都是“使用能力”的入口，但入口长得不一样
+
+<section class="term-guide term-guide--interface" aria-label="API SDK CLI 三种使用入口关系图">
+  <div class="term-head">
+    <div><span>THREE INTERFACES</span><strong>同一个服务，可能同时提供三种使用方式。</strong></div>
+  </div>
+  <div class="interface-hub">
+    <div class="interface-hub__service"><small>某个服务</small><b>订单系统</b></div>
+    <div class="interface-hub__paths">
+      <div><span>API</span><strong>程序对程序</strong><p>你的代码发送请求，服务返回数据。</p><em>“给我订单 123 的详情。”</em></div>
+      <div><span>SDK</span><strong>别人帮你封装 API</strong><p>直接调用现成方法，不必手写底层请求。</p><em>`client.get_order(123)`</em></div>
+      <div><span>CLI</span><strong>人在终端里发命令</strong><p>通过命令行操作工具或服务。</p><em>`git status` / `npm run build`</em></div>
+    </div>
+  </div>
+</section>
+
+<p class="term-subhead"><strong>API</strong><span>程序之间约定好的“办事窗口”</span></p>
+
+**API（Application Programming Interface）**可以先理解成程序之间约定好的调用方式。
+
+场景：你的 Python 脚本向订单平台发送“查询订单”请求，平台按约定返回订单编号、金额和状态。你不需要知道对方内部数据库怎样设计，只需要按 API 规则调用。
+
+<div class="api-basics" aria-label="API 调用里常见的 Request Response Token">
+  <div><b>Request · 请求</b><p>你发送给 API 的内容。</p><small>场景：请求“查询订单 123”，同时带上订单号和认证信息。</small></div>
+  <div><b>Response · 响应</b><p>API 处理后返回给你的结果。</p><small>场景：返回订单金额、状态，或者返回“订单不存在”的错误信息。</small></div>
+  <div><b>Token · 令牌</b><p>常用于证明“你有权限调用这个 API”。</p><small>场景：请求头里带上访问 Token，服务端验证通过后才返回数据。</small></div>
+</div>
+
+<p class="term-subhead"><strong>SDK</strong><span>把常用调用封装成一套开发工具</span></p>
+
+**SDK（Software Development Kit）**通常包含现成的代码库、类型、示例或工具，让开发者更方便使用某个平台能力。
+
+场景：平台原本要求你自己拼 URL、签名、请求头；官方 SDK 把这些细节包起来，你只调用 `client.send_message()`。
+
+<p class="term-subhead"><strong>CLI</strong><span>不点界面，直接在终端发命令</span></p>
+
+**CLI（Command-Line Interface）**就是命令行界面。
+
+场景：`git status` 看代码状态，`npm run build` 构建网站，`python app.py` 运行脚本。AI 编程时经常会看到 Agent 执行 CLI 命令验证项目。
+
+## 前端、后端：一个更靠近用户，一个更靠近数据和规则
+
+**前端（Frontend）**通常负责用户直接看到和操作的部分：页面、按钮、表格、输入框、交互。
+
+**后端（Backend）**通常负责服务器侧的业务逻辑、权限、数据处理、数据库读写和 API。
+
+场景：利润看板上“日期筛选器不好用”，更像前端问题；“同一个 SKU 的利润算错了”，可能发生在后端计算逻辑或数据层。
+
+这不是绝对边界。静态网站可能没有传统后端，桌面程序也可能把界面和数据处理放在一个项目里。先把它理解成“用户界面层”和“业务 / 数据处理层”的常见分工即可。
+
+## 同步 vs 异步：要不要原地等它做完？
+
+<section class="term-guide" aria-label="同步和异步执行对照">
+  <div class="async-lanes">
+    <div>
+      <span>同步 SYNC</span>
+      <div class="lane"><b>发请求</b><i>等待……</i><b>拿结果</b><b>继续下一步</b></div>
+      <p>当前任务等前一步完成再继续。</p>
+      <small>场景：先读取 Excel，拿到数据后才开始计算。</small>
+    </div>
+    <div>
+      <span>异步 ASYNC</span>
+      <div class="lane lane--async"><b>提交任务</b><i>先做别的</i><b>收到结果</b><b>处理结果</b></div>
+      <p>耗时操作执行期间，不必让当前流程一直原地阻塞。</p>
+      <small>场景：上传文件后后台处理，页面可以继续操作，完成后再显示结果。</small>
+    </div>
+  </div>
+</section>
+
+异步不是“更快”的同义词。它主要解决的是**等待期间怎么安排其它工作**。
+
+<p class="term-subhead"><strong>Webhook</strong><span>别一直问“好了吗”，好了以后它来告诉你</span></p>
+
+**Webhook**是一种事件通知方式：某件事发生后，对方主动向你提供的地址发送请求。
+
+场景：支付完成后，支付平台主动通知你的系统“这笔订单已付款”。这样你的程序不必每隔 5 秒去问一次“付款了吗”。
+
+与 Webhook 相对的常见做法是**轮询（Polling）**：自己定期去检查状态有没有变化。
+
+## 数据库和缓存，都是存数据，但目的完全不同
+
+<section class="term-guide" aria-label="数据库缓存和日志的数据角色图">
+  <div class="data-stack">
+    <div class="data-stack__request"><span>程序要读取商品信息</span></div>
+    <div class="data-stack__arrow">↓</div>
+    <div class="data-stack__cache"><b>缓存 Cache</b><span>先找“近期常用副本”</span><small>重点：更快</small></div>
+    <div class="data-stack__arrow">↓ 找不到 / 已过期</div>
+    <div class="data-stack__db"><b>数据库 Database</b><span>读取正式、可持续管理的数据</span><small>重点：可靠保存与查询</small></div>
+    <div class="data-stack__log"><b>日志 Log</b><span>另外记录“刚才发生了什么”</span><small>重点：观察与排错</small></div>
+  </div>
+</section>
+
+<p class="term-subhead"><strong>数据库</strong><span>系统长期管理结构化数据的地方</span></p>
+
+**数据库（Database）**用来持久保存和查询业务数据。
+
+场景：订单、商品、用户、任务状态长期保存在数据库里，程序重启后数据仍然存在。
+
+<p class="term-subhead"><strong>缓存</strong><span>拿空间换时间，减少重复计算或重复查询</span></p>
+
+**缓存（Cache）**把近期常用、获取成本较高的数据临时保存起来，下次优先读取副本。
+
+场景：商品资料每分钟会被程序查几百次，但一天只变化一次。把结果缓存 10 分钟，可以减少重复访问数据库或 API。
+
+缓存的麻烦也很典型：**源数据已经变了，缓存还没过期。** 所以遇到“明明改了，页面怎么还是旧的”，开发者常会先怀疑缓存。
+
+## Git：它不是“上传代码”，而是一套修改历史
+
+AI 编程很快就会碰到 Git。先把它理解成：**在本地保存一系列可追踪的代码版本，再选择什么时候和远端仓库同步。**
+
+<section class="term-guide term-guide--git" aria-label="Git 本地与远端工作流">
+  <div class="git-map">
+    <div class="git-map__local">
+      <span>你的电脑</span>
+      <div><b>工作区</b><small>正在改的文件</small></div>
+      <i>commit</i>
+      <div><b>本地仓库</b><small>已经保存的版本历史</small></div>
+    </div>
+    <div class="git-map__bridge">
+      <b>push →</b>
+      <b>← pull</b>
+    </div>
+    <div class="git-map__remote">
+      <span>GitHub 等远端</span>
+      <div><b>远端仓库</b><small>团队共享 / 备份 / 发布来源</small></div>
+    </div>
+  </div>
+</section>
+
+<p class="term-subhead"><strong>Repository / Repo</strong><span>仓库</span></p>
+
+**仓库（Repository，常简称 Repo）**是被 Git 管理的一套项目文件和历史记录。
+
+场景：博客项目整个目录就是一个 Git 仓库，其中既有当前文件，也有过去每次提交留下的历史。
+
+<p class="term-subhead"><strong>Branch</strong><span>分支</span></p>
+
+**分支（Branch）**是一条独立的修改线路。
+
+场景：正式代码在 `main`，你另开一个分支做新功能。功能没完成时，不必让主线代码跟着一起变化。
+
+<p class="term-subhead"><strong>Commit</strong><span>在本地历史里保存一个明确版本</span></p>
+
+**提交（Commit）**可以理解成给当前一组代码变化拍一个带说明的“版本快照”。
+
+场景：修完搜索按钮后执行 commit，并写“fix home search layout”。以后可以知道这次到底改了哪些文件。
+
+<p class="term-subhead"><strong>Push</strong><span>把本地提交发到远端</span></p>
+
+**Push**是把本地已经存在的 commit 上传到 GitHub 等远端仓库。
+
+所以“已经 commit”不等于“GitHub 已经有了”。
+
+<p class="term-subhead"><strong>Pull</strong><span>把远端的新变化取回来并整合到本地</span></p>
+
+**Pull**通常意味着把远端最新提交获取下来，再合并到当前分支。
+
+场景：另一台电脑昨晚 push 了新代码，今天这台电脑先 pull，再继续开发，避免基于旧版本修改。
+
+<p class="term-subhead"><strong>Merge / Conflict</strong><span>合并，以及“双方都改了这里怎么办”</span></p>
+
+**Merge（合并）**是把两条开发历史整合起来。
+
+**Conflict（冲突）**出现在 Git 无法自动判断该保留哪一份改动时。
+
+场景：你和同事同时改了同一行配置。Git 不敢替你决定，于是标记冲突，让人明确选择最终内容。
+
+## 环境、构建、部署：为什么“我电脑上能跑”还不算结束？
+
+<section class="term-guide term-guide--deploy" aria-label="从源码到线上运行的交付链路">
+  <div class="deploy-pipeline">
+    <div><span>01</span><b>源码</b><small>Source</small></div>
+    <i>+</i>
+    <div><span>02</span><b>依赖 / 配置</b><small>Dependencies</small></div>
+    <i>→</i>
+    <div><span>03</span><b>构建</b><small>Build</small></div>
+    <i>→</i>
+    <div><span>04</span><b>可发布产物</b><small>Artifact</small></div>
+    <i>→</i>
+    <div><span>05</span><b>部署</b><small>Deploy</small></div>
+    <i>→</i>
+    <div class="is-live"><span>06</span><b>目标环境</b><small>Running</small></div>
+  </div>
+</section>
+
+<p class="term-subhead"><strong>环境</strong><span>同一份代码，是在哪套条件里运行？</span></p>
+
+**环境（Environment）**是程序运行时所处的一整套条件，包括操作系统、运行时版本、依赖、配置、数据库和外部服务等。
+
+常见说法：
+
+- **开发环境（Development）**：开发者日常写代码和调试。
+- **测试 / 预发布环境（Test / Staging）**：上线前验证。
+- **生产环境（Production，常简称 Prod）**：真实用户正在使用。
+
+场景：“本地正常、线上报错”，经常不是玄学，而是两边环境不一致，例如 Python 版本、环境变量或依赖版本不同。
+
+<p class="term-subhead"><strong>环境变量</strong><span>把运行配置放在代码外面</span></p>
+
+**环境变量（Environment Variable）**是程序从运行环境读取的一类配置。
+
+场景：数据库地址、API Token、运行模式不直接写进仓库，而由部署环境提供。
+
+环境变量并不会自动变安全；敏感值是否安全，还取决于保存方式、权限和日志是否泄露。
+
+<p class="term-subhead"><strong>构建</strong><span>把源码加工成可运行或可发布的产物</span></p>
+
+**构建（Build）**是把开发阶段的源码、资源和依赖经过编译、打包、生成等步骤，变成目标环境需要的产物。
+
+场景：Astro 博客执行 `npm run build` 后生成静态 HTML、CSS 和 JavaScript 文件；这时只是“产物做好了”，还没有自动出现在网站上。
+
+<p class="term-subhead"><strong>部署</strong><span>把产物送到目标环境，并让它真正提供服务</span></p>
+
+**部署（Deploy）**发生在构建之后：把版本放到服务器、云平台或静态托管平台，并切换到可访问状态。
+
+场景：博客构建完成后，GitHub Actions 把静态产物发布到 GitHub Pages，这一步才是部署。
+
+<section class="term-guide term-guide--mini" aria-label="构建和部署一句话对照">
+  <div class="mini-compare">
+    <div><b>构建 Build</b><span>把东西“做出来”</span><p>输入是源码，输出是可运行 / 可发布产物。</p></div>
+    <div><b>部署 Deploy</b><span>把东西“放上去并启用”</span><p>输入是一个版本，输出是目标环境里的可用服务。</p></div>
+  </div>
+</section>
+
+<p class="term-subhead"><strong>CI/CD</strong><span>把重复的验证和交付流程自动化</span></p>
+
+**CI/CD**不是某一个具体工具，而是一类自动化流程。
+
+- **CI（Continuous Integration，持续集成）**：代码变化后自动执行测试、检查、构建等验证。
+- **CD（Continuous Delivery / Deployment）**：把验证通过的版本继续交付或部署到目标环境。
+
+场景：你 push 到 `main` 后，GitHub Actions 自动安装依赖、构建博客、发布 Pages，这就是一条 CI/CD 流程。
+
+<p class="term-subhead"><strong>回滚</strong><span>新版本不对，先退回已知可用版本</span></p>
+
+**回滚（Rollback）**是在新版本出现严重问题时恢复到之前的稳定版本或状态。
+
+场景：新版本上线后首页打不开。与其在线上边猜边修，不如先恢复上一版，让服务恢复，再继续排查。
+
+## 旧术语表里有些词，我为什么没有继续塞进正文？
+
+原笔记里还有竞态条件、死锁、内存泄漏、索引、事务、守护进程、心跳、容器化、限流等术语。它们都是真实而且重要的概念，但对刚开始 AI 编程的人，不需要在第一篇里一次吃完。
+
+<section class="term-guide term-guide--later" aria-label="进阶术语按需学习建议">
+  <div class="later-map">
+    <div><b>遇到并发问题再学</b><span>竞态条件 · 死锁</span></div>
+    <div><b>做数据库再深入</b><span>索引 · 事务</span></div>
+    <div><b>做长期服务再学</b><span>守护进程 · 心跳 · 内存泄漏</span></div>
+    <div><b>做线上系统再深入</b><span>限流 · 容器化 · 灰度发布</span></div>
+  </div>
+  <p>学习顺序应该由真实任务推动，而不是因为“术语表里有这个词”就提前背定义。</p>
+</section>
+
+## 最后，把常见开发对话翻译成人话
+
+<div class="term-dialogues" role="list" aria-label="常见开发对话翻译">
+  <div role="listitem"><span>“这个 Bug 先稳定复现。”</span><b>→ 先找到一套能重复触发问题的步骤，别凭感觉改。</b></div>
+  <div role="listitem"><span>“补个单测，再跑回归。”</span><b>→ 先证明这块逻辑修对，再确认旧功能没有被带坏。</b></div>
+  <div role="listitem"><span>“这里先小重构，不要重写。”</span><b>→ 保持功能不变，缩小修改范围，先把结构理顺。</b></div>
+  <div role="listitem"><span>“不要硬编码，放环境变量。”</span><b>→ 这个配置以后会变化，不要把它固定在源码里。</b></div>
+  <div role="listitem"><span>“API 有 SDK，直接调 SDK。”</span><b>→ 官方已经把底层请求封装好了，不必自己从头拼协议。</b></div>
+  <div role="listitem"><span>“这是异步任务，等 Webhook 回来。”</span><b>→ 提交后先做别的，完成时对方会主动通知。</b></div>
+  <div role="listitem"><span>“先 commit，确认后再 push。”</span><b>→ 先在本地保存这个版本，不要立刻同步到远端。</b></div>
+  <div role="listitem"><span>“构建过了，但部署失败。”</span><b>→ 产物已经生成，问题发生在把这个版本发布到目标环境的阶段。</b></div>
+</div>
+
+如果以后再遇到一个陌生术语，不必先问“标准定义是什么”。先问三个问题通常更有效：**它出现在开发流程的哪一步？它解决什么问题？如果不理解它，我现在会做错什么？**
+
+这才是术语真正有用的地方。
+
+<style>{`
+  .term-guide {
+    --term-ink: #12213a;
+    --term-muted: #65738a;
+    --term-line: #dce4ee;
+    --term-blue: #2563eb;
+    --term-green: #138a63;
+    --term-orange: #d97706;
+    --term-red: #c44753;
+    position: relative;
+    left: 50%;
+    width: min(1080px, calc(100vw - 2.5rem));
+    max-width: none;
+    margin: 2rem 0 2.7rem;
+    padding: clamp(1rem, 2.5vw, 1.65rem);
+    transform: translateX(-50%);
+    overflow: hidden;
+    border: 1px solid var(--term-line);
+    border-radius: 26px;
+    color: var(--term-ink);
+    background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 20px 55px rgba(42, 63, 94, .09);
+    box-sizing: border-box;
+  }
+
+  .term-guide *, .term-guide *::before, .term-guide *::after { box-sizing: border-box; }
+  .term-guide p, .term-guide small { line-height: 1.65; }
+  .term-guide p { font-size: max(.88rem, 14px); }
+  .term-guide small { font-size: max(.78rem, 13px); }
+
+  .term-subhead {
+    display: flex;
+    align-items: baseline;
+    gap: .55rem;
+    margin: 1.8rem 0 .55rem;
+    line-height: 1.4;
+  }
+  .term-subhead strong { color: #173f73; font-size: 1.06rem; }
+  .term-subhead span { color: #69778b; font-size: .92rem; font-weight: 700; }
+
+  .term-guide--hero {
+    background:
+      radial-gradient(circle at 88% 12%, rgba(37, 99, 235, .14), transparent 28%),
+      linear-gradient(145deg, #fdfefe 0%, #f2f7ff 100%);
+  }
+  .term-guide__eyebrow,
+  .term-head span {
+    color: var(--term-blue);
+    font-size: max(.7rem, 12px);
+    font-weight: 900;
+    letter-spacing: .13em;
+  }
+  .term-hero-grid { display: grid; grid-template-columns: 1.2fr .8fr; align-items: center; gap: 1.2rem; }
+  .term-hero-grid h2 { margin: .8rem 0; font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1.15; letter-spacing: -.04em; }
+  .term-hero-grid > div > p { max-width: 650px; margin: 0; color: var(--term-muted); }
+  .term-pill { display: inline-flex; width: fit-content; padding: .3rem .62rem; border-radius: 999px; color: #1455b8; background: #e7f0ff; font-size: max(.7rem, 12px); font-weight: 900; }
+  .term-pill--green { color: #0d6f4f; background: #e5f7ef; }
+  .term-pill--red { color: #a43843; background: #ffe9ec; }
+  .term-console { padding: 1rem; border: 1px solid #253a57; border-radius: 18px; color: #e8f2ff; background: #0c1b2f; box-shadow: 0 18px 40px rgba(13, 28, 48, .2); }
+  .term-console span { color: #79b5ff; font-size: max(.72rem, 12px); font-weight: 900; letter-spacing: .08em; }
+  .term-console p { margin: .65rem 0; color: #c7d8eb; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .term-console strong { display: block; font-size: max(.84rem, 13px); }
+  .term-route { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; align-items: center; gap: .55rem; margin-top: 1.2rem; }
+  .term-route > div { min-width: 0; padding: .75rem; border: 1px solid #cfdced; border-radius: 13px; background: rgba(255,255,255,.82); }
+  .term-route b, .term-route span, .term-route small { display: block; }
+  .term-route b { color: var(--term-blue); font-size: max(.68rem, 12px); }
+  .term-route span { margin: .25rem 0; font-weight: 900; }
+  .term-route small { color: var(--term-muted); }
+  .term-route > i { color: #8da0b8; font-style: normal; }
+
+  .term-compare { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: .8rem; }
+  .term-compare > div:not(.term-vs) { padding: 1rem; border: 1px solid var(--term-line); border-radius: 16px; background: #fff; }
+  .term-compare strong { display: block; margin: .55rem 0; font-size: max(1rem, 15px); }
+  .term-compare p { margin: 0; color: var(--term-muted); }
+  .term-compare small { display: block; margin-top: .75rem; color: #42536b; }
+  .term-vs { display: grid; place-items: center; color: #8ca0ba; font-weight: 950; }
+  .term-label { color: var(--term-blue); font-size: max(.7rem, 12px); font-weight: 950; letter-spacing: .08em; }
+  .term-label--orange { color: var(--term-orange); }
+  .term-note { margin-top: .8rem; padding: .8rem 1rem; border: 1px solid #b9d9cd; border-radius: 12px; background: #f1fbf6; font-size: max(.84rem, 13px); }
+  .term-note b { color: var(--term-green); }
+
+  .term-head { margin-bottom: 1rem; }
+  .term-head strong { display: block; margin-top: .25rem; font-size: clamp(1rem, 2vw, 1.35rem); }
+  .test-spectrum__axis { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .7rem; color: var(--term-muted); font-size: max(.72rem, 12px); font-weight: 800; }
+  .test-spectrum__axis i { height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--term-green), var(--term-blue), var(--term-orange)); }
+  .test-spectrum__items { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin-top: .85rem; }
+  .test-spectrum__items > div { padding: .9rem; border: 1px solid var(--term-line); border-top: 4px solid var(--term-blue); border-radius: 14px; background: #fff; }
+  .test-spectrum__items > div:first-child { border-top-color: var(--term-green); }
+  .test-spectrum__items > div:last-child { border-top-color: var(--term-orange); }
+  .test-spectrum__items b, .test-spectrum__items small, .test-spectrum__items em { display: block; }
+  .test-spectrum__items small { margin-top: .1rem; color: var(--term-muted); }
+  .test-spectrum__items p { min-height: 3.2em; margin: .55rem 0; color: #405168; }
+  .test-spectrum__items em { padding-top: .55rem; border-top: 1px dashed #d8e1ea; color: var(--term-muted); font-size: max(.78rem, 13px); font-style: normal; }
+
+  .term-guide--mini { padding: 1rem; }
+  .mini-compare { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+  .mini-compare > div { padding: .85rem; border-radius: 13px; background: #f4f8fc; }
+  .mini-compare b, .mini-compare span { display: block; }
+  .mini-compare b { color: var(--term-blue); }
+  .mini-compare span { margin: .25rem 0; font-weight: 850; }
+  .mini-compare p { margin: 0; color: var(--term-muted); }
+
+  .rewrite-board { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .8rem; }
+  .rewrite-board > div:not(.rewrite-board__arrow) { padding: .95rem; border: 1px solid var(--term-line); border-radius: 15px; background: #fff; }
+  .rewrite-board strong { display: block; margin: .7rem 0 .35rem; }
+  .rewrite-board p { margin: 0; color: var(--term-muted); }
+  .rewrite-board__arrow { color: #98a8bb; font-size: 1.4rem; font-weight: 950; }
+
+  .interface-hub { display: grid; grid-template-columns: 170px 1fr; align-items: stretch; gap: .9rem; }
+  .interface-hub__service { display: grid; place-content: center; padding: 1rem; border-radius: 18px; color: #fff; background: linear-gradient(145deg, #12345e, #1d5fa5); text-align: center; }
+  .interface-hub__service small, .interface-hub__service b { display: block; }
+  .interface-hub__service small { color: #afd2f7; }
+  .interface-hub__service b { margin-top: .25rem; font-size: 1.2rem; }
+  .interface-hub__paths { display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem; }
+  .interface-hub__paths > div { position: relative; padding: .85rem; border: 1px solid var(--term-line); border-radius: 14px; background: #fff; }
+  .interface-hub__paths span, .interface-hub__paths strong, .interface-hub__paths em { display: block; }
+  .interface-hub__paths span { color: var(--term-blue); font-size: .85rem; font-weight: 950; }
+  .interface-hub__paths strong { margin: .35rem 0; }
+  .interface-hub__paths p { margin: 0; color: var(--term-muted); }
+  .interface-hub__paths em { margin-top: .55rem; color: #41536c; font-size: max(.76rem, 13px); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
+  .api-basics { display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem; margin: 1rem 0 1.25rem; }
+  .api-basics > div { padding: .8rem; border: 1px solid #dbe4ee; border-radius: 12px; background: #f8fbff; }
+  .api-basics b, .api-basics small { display: block; }
+  .api-basics b { color: #1f5da8; font-size: .88rem; }
+  .api-basics p { margin: .3rem 0; color: #405168; }
+  .api-basics small { color: #6a788c; }
+
+  .async-lanes { display: grid; gap: .75rem; }
+  .async-lanes > div { padding: .85rem; border: 1px solid var(--term-line); border-radius: 14px; background: #fff; }
+  .async-lanes > div > span { color: var(--term-blue); font-size: max(.72rem, 12px); font-weight: 950; letter-spacing: .08em; }
+  .lane { display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; gap: .5rem; margin: .65rem 0; }
+  .lane b, .lane i { padding: .55rem; border-radius: 9px; text-align: center; }
+  .lane b { border: 1px solid #c9daed; color: #164f98; background: #eef6ff; }
+  .lane i { color: #7c8796; background: #f1f3f5; font-style: normal; }
+  .lane--async i { border: 1px dashed #9ecab8; color: var(--term-green); background: #f0fbf6; }
+  .async-lanes p { margin: 0; color: #42536a; }
+  .async-lanes small { display: block; margin-top: .3rem; color: var(--term-muted); }
+
+  .data-stack { display: grid; grid-template-columns: 1fr; justify-items: center; gap: .45rem; }
+  .data-stack > div { width: min(720px, 100%); padding: .75rem 1rem; border-radius: 13px; text-align: center; }
+  .data-stack__request { border: 1px solid #cdd9e7; background: #fff; }
+  .data-stack__cache { border: 1px solid #9fcde0; background: #eefaff; }
+  .data-stack__db { border: 1px solid #a9d8c7; background: #f0fbf6; }
+  .data-stack__log { border: 1px dashed #d2b891; background: #fffaf0; }
+  .data-stack b, .data-stack span, .data-stack small { display: block; }
+  .data-stack span { margin: .2rem 0; }
+  .data-stack small { color: var(--term-muted); }
+  .data-stack__arrow { padding: 0 !important; color: #8ca0b6; background: transparent !important; font-size: max(.75rem, 12px); }
+
+  .git-map { display: grid; grid-template-columns: 1fr auto .8fr; align-items: center; gap: 1rem; }
+  .git-map__local, .git-map__remote { padding: .9rem; border: 1px solid var(--term-line); border-radius: 16px; background: #fff; }
+  .git-map__local > span, .git-map__remote > span { display: block; margin-bottom: .6rem; color: var(--term-muted); font-size: max(.72rem, 12px); font-weight: 850; }
+  .git-map__local > div, .git-map__remote > div { padding: .7rem; border-radius: 10px; background: #f3f7fb; }
+  .git-map__local > i { display: block; margin: .35rem; color: var(--term-blue); text-align: center; font-style: normal; font-weight: 900; }
+  .git-map b, .git-map small { display: block; }
+  .git-map small { margin-top: .2rem; color: var(--term-muted); }
+  .git-map__bridge { display: grid; gap: .5rem; color: var(--term-blue); font-size: max(.78rem, 13px); text-align: center; }
+
+  .deploy-pipeline { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr auto 1fr auto 1fr; align-items: center; gap: .45rem; }
+  .deploy-pipeline > div { min-width: 0; padding: .7rem .5rem; border: 1px solid var(--term-line); border-radius: 12px; background: #fff; text-align: center; }
+  .deploy-pipeline > div.is-live { border-color: #a5d4c2; background: #effbf5; }
+  .deploy-pipeline span, .deploy-pipeline b, .deploy-pipeline small { display: block; }
+  .deploy-pipeline span { color: var(--term-blue); font-size: max(.65rem, 11px); font-weight: 900; }
+  .deploy-pipeline b { margin: .2rem 0; font-size: max(.78rem, 13px); }
+  .deploy-pipeline small { color: var(--term-muted); }
+  .deploy-pipeline > i { color: #91a1b5; font-style: normal; font-weight: 900; }
+
+  .later-map { display: grid; grid-template-columns: repeat(2, 1fr); gap: .65rem; }
+  .later-map > div { padding: .8rem; border: 1px solid var(--term-line); border-radius: 12px; background: #fff; }
+  .later-map b, .later-map span { display: block; }
+  .later-map b { color: var(--term-blue); }
+  .later-map span { margin-top: .3rem; color: var(--term-muted); }
+  .term-guide--later > p { margin: .85rem 0 0; color: var(--term-muted); text-align: center; }
+
+  .term-dialogues {
+    margin: 1.4rem 0 2rem;
+    overflow: hidden;
+    border: 1px solid #dce4ed;
+    border-radius: 16px;
+    background: #fff;
+  }
+  .term-dialogues > div { display: grid; grid-template-columns: minmax(220px, .8fr) 1.2fr; gap: 1rem; padding: .9rem 1rem; }
+  .term-dialogues > div + div { border-top: 1px solid #e5eaf0; }
+  .term-dialogues span { color: #234e86; font-weight: 850; }
+  .term-dialogues b { color: #526276; font-weight: 600; }
+
+  @media (max-width: 800px) {
+    .term-guide { width: calc(100vw - 1.15rem); border-radius: 20px; }
+    .term-hero-grid,
+    .term-compare,
+    .rewrite-board,
+    .interface-hub,
+    .git-map { grid-template-columns: 1fr; }
+    .term-vs, .rewrite-board__arrow { min-height: 28px; }
+    .term-route { grid-template-columns: 1fr; }
+    .term-route > i { transform: rotate(90deg); text-align: center; }
+    .test-spectrum__items,
+    .interface-hub__paths,
+    .api-basics,
+    .mini-compare,
+    .later-map { grid-template-columns: 1fr; }
+    .test-spectrum__items p { min-height: 0; }
+    .lane { grid-template-columns: 1fr; }
+    .git-map__bridge { grid-template-columns: 1fr 1fr; }
+    .deploy-pipeline { grid-template-columns: 1fr; }
+    .deploy-pipeline > i { transform: rotate(90deg); text-align: center; }
+    .term-dialogues > div { grid-template-columns: 1fr; gap: .3rem; }
+    .term-subhead { align-items: flex-start; flex-direction: column; gap: .15rem; }
+  }
+`}</style>

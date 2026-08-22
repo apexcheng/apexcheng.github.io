@@ -29,6 +29,7 @@
 | `src/content/posts/python-files-json-errors.mdx` | `教程` | 从 TXT、JSON 文件和 API 返回结构讲文件读写、pathlib、json load/loads/dump/dumps、import 与常见异常处理，形成真实小脚本数据流 | 写 Python 文件处理、JSON、API 数据准备、异常处理和标准库入门时参考 |
 | `src/content/posts/python-classes-objects-basics.mdx` | `教程` | 用商品库存对象讲 class、对象、__init__、self、属性和方法，同时对比类与字典+函数的适用边界，避免零基础阶段过度 OOP | 写 Python 类与对象、self、实例状态和基础面向对象边界教学时参考 |
 | `src/content/posts/python-basic-assessment-20-questions.mdx` | `教程` | Python 零基础系列最终综合考核，包含 17 道基础编码题和 3 道基础理解题，覆盖类型转换、循环、字典、函数、文件、JSON、类、浅拷贝与默认参数，并提供可下载附件 | 写 Python 入门考核、基础练习题、编程能力检查和培训测验文章时参考 |
+| `src/content/posts/programming-terms-for-ai-coding-beginners.mdx` | `教程` | 面向 AI 编程、RPA 和数据处理新手的开发术语翻译手册，沿真实开发流程讲 Bug、异常、测试、重构、API、同步异步、数据库缓存、Git、构建部署与 CI/CD | 写非科班编程入门、AI 编程术语、Git/API/测试/部署基础和新人开发沟通指南时参考 |
 | `src/content/posts/excel-functions-from-basic-to-intermediate.mdx` | `教程` | Excel 函数知识地图，把 57 个常用函数整理成 9 个函数家族，并说明基础函数、中级函数、综合应用和系列阅读路线 | 写 Excel / WPS 函数学习地图、函数分类、系列入口和表格能力分层文章时参考 |
 | `src/content/posts/excel-basic-functions-case-guide.mdx` | `教程` | Excel 基础函数案例教程，使用订单明细和商品资料两张示例表，逐个演示 39 个统计、条件、查找、文本、逻辑和日期函数的公式、结果与组合练习 | 写 Excel 基础函数实操、函数案例讲解、订单明细统计和新手练习文章时参考 |
 | `src/content/posts/excel-wildcards-functions-guide.mdx` | `教程` | Excel 通配符专题，讲清 *、?、~ 的匹配规则，整理条件统计、查找匹配和文本搜索函数的支持方式，并用 K161 前缀平均值案例对比复杂数组公式 | 写 Excel 模糊匹配、条件统计、XLOOKUP 通配符模式、编码前缀和文本搜索文章时参考 |
