@@ -55,5 +55,6 @@
 | `src/content/posts/repetitive-reporting-is-not-execution.mdx` | `实践` | 从全平台商品退款率和抖音每日报表两套制度出发，批评把重复下载、筛选、填写和刷新当作执行力，并提出统一订单数据源、自动日期口径和异常驱动的人机分工 | 写数据报表流程优化、RPA 自动化、重复劳动治理、执行力与人才评价文章时参考 |
 | `src/content/posts/performance-review-should-recognize-talent.mdx` | `生活` | 从运营助理分级考核表出发，批评统一能力清单如何用短板限制长板，并提出共同底线加专项晋升路线 | 写职场观察、绩效考核、人才管理、专人专项和制度批评类文章时参考 |
 | `src/content/posts/everyone-wants-to-be-landlord-at-work.mdx` | `生活` | 用“人人都是农民，人人都想当地主”的隐喻讨论职场权力膨胀，从 A/B/C 任务分派案例拆解权力上收、责任下沉、越级指挥和“你应该懂”的管理逻辑 | 写职场权力、管理责任、上下级协作、任务分派和权责边界类文章时参考 |
+| `src/content/posts/when-people-dismiss-complex-systems.mdx` | `生活` | 从利润模型出发讨论“学不会→看不懂→无法评价→转而否定”的职场认知路径，并区分现实复杂度、实现复杂度和真正应该删除的坏复杂度 | 写职场认知、复杂系统评价、专业判断、学习门槛和“复杂是否必要”类文章时参考 |
 | `src/content/posts/ram-resale-cashflow-profit-assets.mdx` | `生活` | 用 500 元旧内存卖 1500 元、再花 400 元买替代品的真实小案例，拆清 600 元现金余额变化、1000 元交易收益、1100 元净现金流入和最终资产的不同口径 | 写生活账本、现金流与利润区别、资产重新配置和日常财务概念解释类文章时参考 |
 | `src/content/posts/h-pylori-acid-drink-note.mdx` | `生活` | 幽门螺杆菌、胃酸过多和气泡饮料的个人判断笔记 | 写生活判断清单、风险边界提醒、个人健康记录类文章时参考 |
