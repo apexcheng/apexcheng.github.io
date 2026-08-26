@@ -1,13 +1,13 @@
 ---
-title: "Excel 基础函数案例详解：用两张示例表掌握 39 个常用函数"
-description: "用订单明细和商品资料两张示例表，逐个讲解 SUM、IF、XLOOKUP、文本与日期等 39 个 Excel 基础函数的实际写法、结果和使用场景。"
+title: "Excel 基础函数案例详解：用两张示例表掌握 44 个常用函数"
+description: "用订单明细和商品资料两张示例表，逐个讲解 SUM、IF、XLOOKUP、文本与日期等 44 个 Excel 基础函数的实际写法、结果和使用场景。"
 date: 2026-07-14T22:38:28+08:00
-updated: 2026-07-17T10:38:22+08:00
+updated: 2026-08-26T21:27:00+08:00
 category: "教程"
 tags:
   - "Excel"
   - "数据处理"
-minutes: 28
+minutes: 31
 featured: false
 series: "excel-functions"
 seriesOrder: 2
@@ -20,7 +20,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 上一篇 [Excel 常用函数清单](/articles/excel-functions-from-basic-to-intermediate/) 解决的是“有哪些函数、分别属于哪一类”。这篇文章只展开其中的 **基础函数清单**，用同一组订单与商品数据逐个演示公式怎么写、会得到什么结果，以及实际什么时候用。
 
-不用一次记住 39 个函数。先把示例表复制到 Excel 或 WPS，再跟着案例输入公式，理解速度会比只看语法快得多。
+不用一次记住 44 个函数。先把示例表复制到 Excel 或 WPS，再跟着案例输入公式，理解速度会比只看语法快得多。
 
 <div class="basic-function-hero" role="group" aria-label="Excel 基础函数案例练习总览">
   <div class="basic-function-hero__intro">
@@ -30,7 +30,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   </div>
 
   <div class="basic-function-hero__metrics">
-    <div><b>39</b><span>基础函数</span></div>
+    <div><b>44</b><span>基础函数</span></div>
     <div><b>2</b><span>示例工作表</span></div>
     <div><b>6</b><span>任务分组</span></div>
     <div><b>3</b><span>组合练习</span></div>
@@ -47,7 +47,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     <i>→</i>
     <div><span>05</span><strong>判断</strong><small>生成状态和提醒</small></div>
     <i>→</i>
-    <div><span>06</span><strong>日期</strong><small>提取年月日</small></div>
+    <div><span>06</span><strong>日期</strong><small>转换、构造与计算</small></div>
   </div>
 </div>
 
@@ -485,9 +485,9 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   </article>
 </div>
 
-## 六、获取和拆分日期
+## 六、获取、转换和计算日期
 
-Excel 中的日期不是普通文字，而是一种可以计算的数值。日期函数可以获取当前时间，也可以把一个完整日期拆成年、月、日。
+Excel 中的日期不是普通文字，而是一种可以计算的数值。除了获取当前时间和拆分年月日，实际工作中还经常需要把文本转成日期、重新构造日期，以及计算上个月或月末日期。
 
 <div class="date-split-board" role="group" aria-label="日期拆分为年月日">
   <div class="date-split-board__source"><span>订单明细!A2</span><strong>2026/7/1</strong><small>真实日期值，可以继续计算</small></div>
@@ -513,6 +513,27 @@ Excel 中的日期不是普通文字，而是一种可以计算的数值。日�
   </article>
 
   <article class="function-case is-date">
+    <header><code>DATE</code><span>构造日期</span></header>
+    <p>问题：已知年、月、日，重新组成一个可以计算的日期。</p>
+    <div class="function-case__formula"><code>=DATE(2026,7,1)</code></div>
+    <dl><div><dt>结果</dt><dd>2026/7/1</dd></div><div><dt>关键点</dt><dd>三个参数依次是年、月、日，返回真正的日期值，不是文本。</dd></div></dl>
+  </article>
+
+  <article class="function-case is-date">
+    <header><code>DATEVALUE</code><span>文本转日期</span></header>
+    <p>问题：导入的数据里“2026/7/1”是文本，先转换成可以计算的日期。</p>
+    <div class="function-case__formula"><code>=DATEVALUE("2026/7/1")</code></div>
+    <dl><div><dt>结果</dt><dd>2026/7/1</dd></div><div><dt>关键点</dt><dd>只能转换 Excel 或 WPS 能识别的日期文本；日期格式不明确时，先统一文本格式再转换。</dd></div></dl>
+  </article>
+
+  <article class="function-case is-date">
+    <header><code>TEXT</code><span>格式化日期文本</span></header>
+    <p>问题：把 A2 的日期显示成“2026-07”，用于月份标签或文字拼接。</p>
+    <div class="function-case__formula"><code>=TEXT(A2,"yyyy-mm")</code></div>
+    <dl><div><dt>结果</dt><dd>2026-07</dd></div><div><dt>关键点</dt><dd>返回的是格式化后的文本；如果后面还要做日期计算，应继续保留原始日期值。</dd></div></dl>
+  </article>
+
+  <article class="function-case is-date">
     <header><code>YEAR</code><span>提取年份</span></header>
     <p>问题：从 A2 的日期中提取年份。</p>
     <div class="function-case__formula"><code>=YEAR(A2)</code></div>
@@ -531,6 +552,20 @@ Excel 中的日期不是普通文字，而是一种可以计算的数值。日�
     <p>问题：从 A2 的日期中提取一个月中的第几天。</p>
     <div class="function-case__formula"><code>=DAY(A2)</code></div>
     <dl><div><dt>结果</dt><dd>1</dd></div><div><dt>关键点</dt><dd>返回日期中的“日”，不是星期几，也不是相差天数。</dd></div></dl>
+  </article>
+
+  <article class="function-case is-date">
+    <header><code>EDATE</code><span>按月份移动日期</span></header>
+    <p>问题：计算 A2 的上个月同一天。</p>
+    <div class="function-case__formula"><code>=EDATE(A2,-1)</code></div>
+    <dl><div><dt>结果</dt><dd>2026/6/1</dd></div><div><dt>关键点</dt><dd>第二个参数为负数表示向前移动月份，为正数表示向后移动月份。</dd></div></dl>
+  </article>
+
+  <article class="function-case is-date">
+    <header><code>EOMONTH</code><span>获取月末日期</span></header>
+    <p>问题：计算 A2 所在月份的最后一天。</p>
+    <div class="function-case__formula"><code>=EOMONTH(A2,0)</code></div>
+    <dl><div><dt>结果</dt><dd>2026/7/31</dd></div><div><dt>关键点</dt><dd>第二个参数为 0 表示本月，-1 表示上月，1 表示下月。</dd></div></dl>
   </article>
 </div>
 
@@ -567,11 +602,11 @@ Excel 中的日期不是普通文字，而是一种可以计算的数值。日�
   <div><b>03</b><strong>看到“根据编码补名称或价格”</strong><span>能想到 `VLOOKUP`、`XLOOKUP` 或 `INDEX + MATCH`。</span></div>
   <div><b>04</b><strong>看到“编码拆分、标题清洗、文字拼接”</strong><span>能从 `LEFT`、`MID`、`TRIM`、`TEXTJOIN` 等函数中选择。</span></div>
   <div><b>05</b><strong>看到“达标、预警、异常”</strong><span>能用 `IF`、`IFS`、`AND`、`OR` 写出判断条件。</span></div>
-  <div><b>06</b><strong>看到“年份、月份、今天”</strong><span>能区分 `TODAY`、`NOW`、`YEAR`、`MONTH`、`DAY`。</span></div>
+  <div><b>06</b><strong>看到“文本日期、月份、月末、今天”</strong><span>能从 `DATEVALUE`、`DATE`、`TEXT`、`EDATE`、`EOMONTH` 和年月日函数中选择。</span></div>
 </div>
 
 <HighlightBox eyebrow="完成标准" title="不需要背语法，但要能判断函数类别">
-  真正的基础不是默写 39 个函数，而是遇到问题时先判断：这是统计、条件、查找、文本、逻辑还是日期问题。函数类别选对以后，再参考现成公式修改区域和条件即可。
+  真正的基础不是默写 44 个函数，而是遇到问题时先判断：这是统计、条件、查找、文本、逻辑还是日期问题。函数类别选对以后，再参考现成公式修改区域和条件即可。
 </HighlightBox>
 
 <style>{`
