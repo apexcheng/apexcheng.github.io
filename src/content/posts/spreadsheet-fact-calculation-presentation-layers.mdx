@@ -1,461 +1,264 @@
 ---
-title: "为什么表格要分事实层、计算层、展示层：别把计算结果当事实"
-description: "用预测销量、综合成本和可售库存三个例子，讲清事实层、计算层、展示层的边界，以及把计算结果固化成事实后为什么会让报表越来越难维护。"
+title: "表格为什么要分事实层、计算层、展示层"
+description: "用预测销量、综合成本和可售库存三个例子，讲清三层边界：计算结果即使被粘贴成值，也不会变成事实。"
 date: 2026-08-26T16:43:00+08:00
 category: "实践"
 tags:
   - "Excel"
   - "数据处理"
-minutes: 6
+minutes: 5
 featured: false
 draft: false
 private: false
 ---
 
-很多表格一开始并不复杂：导入几张源表，加几列公式，再做一个汇总页。
+很多表格一开始都很简单：导入源表，加几列公式，再做一个汇总页。真正让它逐渐失控的，往往不是公式太多，而是**事实和计算结果混在了一起**。
 
-真正让表格逐渐失控的，往往不是公式多，而是**事实和计算结果混在了一起**。
+假设某个链接的原始销量是 `100`，根据历史退款率 `18%`，预测最终真实销量为 `82`。这个预测可以很合理，但即使把 `82` 复制、粘贴成值，它也不会因此变成事实。
 
-一个很典型的例子是：某个链接原始销量是 `100`，根据历史退款率 `18%`，预测最终真实销量：
+<div class="dl-hero" role="group" aria-label="事实层、计算层、展示层的数据血缘总览">
+  <header class="dl-hero__intro">
+    <div>
+      <span>DATA LINEAGE · 数据血缘</span>
+      <strong>一个数字从哪里来<br />决定它属于哪一层</strong>
+    </div>
+    <p>不要用“是不是公式”判断事实，<br />要沿着数字的来源往回看。</p>
+  </header>
 
-```text
-100 × (1 - 18%) = 82
-```
-
-`82` 可以是一个合理的预测结果，但它不是原始销量。即使把 `82` 复制、粘贴成值，永久固化下来，它也不会因此变成“事实”。
-
-问题就在这里。
-
-<div class="layer-hero" role="group" aria-label="事实层、计算层、展示层的数据流">
-  <section class="layer-card layer-card--fact">
-    <span>FACT</span>
-    <strong>事实层</strong>
-    <p>客观发生了什么</p>
-    <small>原始销量 100</small>
-  </section>
-  <div class="layer-arrow" aria-hidden="true">→</div>
-  <section class="layer-card layer-card--calc">
-    <span>LOGIC</span>
-    <strong>计算层</strong>
-    <p>根据事实和规则怎么算</p>
-    <small>100 × (1 - 18%) = 82</small>
-  </section>
-  <div class="layer-arrow" aria-hidden="true">→</div>
-  <section class="layer-card layer-card--view">
-    <span>VIEW</span>
-    <strong>展示层</strong>
-    <p>最终希望业务看到什么</p>
-    <small>预测真实销量 82</small>
-  </section>
-</div>
-
-一套比较清楚的表格结构，通常可以简单分成：**事实层 → 计算层 → 展示层**。
-
-## 三层到底分别放什么
-
-事实层回答的是：**业务真实发生了什么？**
-
-例如订单号、原始销量、销售额、采购价、退款金额、当前库存。这些数字应该尽可能接近源系统，能和 ERP、平台后台、仓库数据直接对账。
-
-计算层回答的是：**基于这些事实和业务规则，推导出了什么？**
-
-例如退款率、预测真实销量、广告费分摊、综合成本、预测利润、安全库存、可售库存。这些值依赖公式、参数、时间窗口或者业务假设。
-
-展示层回答的是：**最终想让使用者看到什么？**
-
-例如链接利润表、经营看板、库存预警、负责人日报。展示层可以隐藏很多中间过程，但不能反过来污染事实层。
-
-<div class="layer-rule" role="note">
-  <span>判断边界的一个简单问题</span>
-  <strong>这个数字，是源业务直接发生的，还是“原始数据 + 规则”算出来的？</strong>
-  <p>只要中间经过了退款率、分摊规则、安全库存、预测系数、时间窗口等业务逻辑，它通常就属于计算层。</p>
-</div>
-
-## 最容易犯的错：把计算结果重新命名成事实
-
-这类错误危险的地方，不是某一次算错，而是**计算血缘被隐藏了**。
-
-下面三个例子很常见。
-
-### 例子一：预测销量被当成原始销量
-
-<div class="case-flow" role="group" aria-label="预测销量错误进入事实层的过程">
-  <div class="case-input">
-    <span>事实</span>
-    <strong>原始销量 100</strong>
+  <div class="dl-hero__pipeline">
+    <section class="is-fact"><small>01 · SOURCE</small><strong>事实层</strong><p>业务真实发生的数据</p><b>原始销量 100</b></section>
+    <section class="is-calc"><small>02 · MODEL</small><strong>计算层</strong><p>事实经过规则后的推导</p><b>100 × (1 − 18%) = 82</b></section>
+    <section class="is-view"><small>03 · DECISION</small><strong>展示层</strong><p>交付给使用者的决策信息</p><b>预测真实销量 82</b></section>
   </div>
-  <div class="case-op">× (1 - 18%)</div>
-  <div class="case-output">
-    <span>计算结果</span>
-    <strong>预测真实销量 82</strong>
+
+  <footer><span>FACT ≠ STATIC VALUE</span><strong>固化的计算结果，仍然是计算结果。</strong></footer>
+</div>
+
+## 先用来源判断三层边界
+
+三层的区别不在文件名、Sheet 名或单元格格式，而在数据的来源和用途。
+
+<div class="dl-layer-map" role="group" aria-label="事实层、计算层、展示层的边界">
+  <section class="is-fact">
+    <div class="dl-layer-map__name"><span>01</span><strong>事实层</strong></div>
+    <div><small>回答什么</small><b>业务真实发生了什么？</b></div>
+    <p>订单号、原始销量、销售额、采购价、退款金额、实际库存。应尽可能接近源系统，并能直接对账。</p>
+  </section>
+  <section class="is-calc">
+    <div class="dl-layer-map__name"><span>02</span><strong>计算层</strong></div>
+    <div><small>回答什么</small><b>基于事实和规则，推导出了什么？</b></div>
+    <p>退款率、预测销量、广告分摊、综合成本、预测利润、安全库存、可售库存。它们都依赖参数或业务口径。</p>
+  </section>
+  <section class="is-view">
+    <div class="dl-layer-map__name"><span>03</span><strong>展示层</strong></div>
+    <div><small>回答什么</small><b>最终需要看见什么，做什么决定？</b></div>
+    <p>链接利润表、经营看板、库存预警、负责人日报。可以隐藏中间过程，但不能反过来覆盖原始事实。</p>
+  </section>
+</div>
+
+<div class="dl-rule" role="note">
+  <span>快速判断</span>
+  <strong>只要经过退款率、分摊规则、安全库存、预测系数或时间窗口，它通常就属于计算层。</strong>
+</div>
+
+## 三个例子，看见数字怎样改变含义
+
+问题通常发生在同一个动作：**把计算结果写回一个看起来像事实的字段。** 公式消失了，数据血缘也随之被隐藏。
+
+<div class="dl-casebook">
+  <article class="dl-case">
+    <header><span>CASE 01</span><div><strong>预测销量被当成原始销量</strong><p>结果写回“销量”，退款率就可能被扣两次。</p></div></header>
+    <div class="dl-run" role="group" aria-label="原始销量经过退款率计算并被错误写回销量字段">
+      <section class="is-fact"><small>事实</small><strong>100</strong><span>原始销量</span></section><i class="is-arrow" aria-hidden="true">→</i>
+      <section class="is-calc"><small>规则</small><strong>× (1 − 18%)</strong><span>历史退款率</span></section><i class="is-arrow" aria-hidden="true">→</i>
+      <section class="is-result"><small>结果</small><strong>82</strong><span>预测真实销量</span></section><i class="is-arrow" aria-hidden="true">→</i>
+      <section class="is-wrong"><small>错误写回</small><strong>销量 = 82</strong><span>身份被改写</span></section>
+    </div>
+    <footer><span>重复计算</span><strong>82 × (1 − 18%) = 67.24</strong><p>公式看起来合理，但同一退款逻辑已经被重复应用。</p></footer>
+  </article>
+
+  <article class="dl-case">
+    <header><span>CASE 02</span><div><strong>综合成本被当成采购成本</strong><p>多个组成部分被压成一个值，之后就无法准确重算。</p></div></header>
+    <div class="dl-run" role="group" aria-label="采购成本、物流费和广告分摊组成综合成本">
+      <section class="is-fact"><small>事实</small><strong>50 + 3</strong><span>采购价 + 物流费</span></section><i class="is-arrow" aria-hidden="true">→</i>
+      <section class="is-calc"><small>规则</small><strong>+ 8</strong><span>广告费分摊</span></section><i class="is-arrow" aria-hidden="true">→</i>
+      <section class="is-result"><small>结果</small><strong>61 元</strong><span>综合成本</span></section><i class="is-arrow" aria-hidden="true">→</i>
+      <section class="is-wrong"><small>错误写回</small><strong>采购成本 = 61</strong><span>组成部分消失</span></section>
+    </div>
+    <footer><span>无法重算</span><strong>采购价 50 → 52，综合成本应为 63</strong><p>如果只剩固化的 `61`，就无法分辨采购、物流和广告各占多少。</p></footer>
+  </article>
+
+  <article class="dl-case">
+    <header><span>CASE 03</span><div><strong>可售库存被当成实际库存</strong><p>仓库和销售表看似对不上，其实是两个字段口径不同。</p></div></header>
+    <div class="dl-run" role="group" aria-label="实际库存扣除安全库存得到可售库存">
+      <section class="is-fact"><small>事实</small><strong>100 件</strong><span>仓库实际库存</span></section><i class="is-arrow" aria-hidden="true">→</i>
+      <section class="is-calc"><small>规则</small><strong>− 30 件</strong><span>安全库存</span></section><i class="is-arrow" aria-hidden="true">→</i>
+      <section class="is-result"><small>结果</small><strong>70 件</strong><span>当前可售库存</span></section><i class="is-arrow" aria-hidden="true">→</i>
+      <section class="is-wrong"><small>错误写回</small><strong>库存 = 70</strong><span>事实被覆盖</span></section>
+    </div>
+    <footer><span>参数过期</span><strong>安全库存 30 → 20，可售库存应为 80</strong><p>保留计算关系会自动更新；固化的 `70` 不会。</p></footer>
+  </article>
+</div>
+
+## 混层不是一个错误，而是一条故障链
+
+当原始数据、加工结果和手工覆盖值共用“销量”“成本”“库存”等字段名，问题会沿着整张报表继续传递。
+
+<div class="dl-failure" role="group" aria-label="事实和计算混淆后的故障链">
+  <header><span>LINEAGE BROKEN</span><strong>数字还在，解释数字的路径断了</strong></header>
+  <div>
+    <section><b>01</b><strong>事实丢失</strong><p>只剩加工后的结果，无法还原业务最初发生了多少。</p></section>
+    <section><b>02</b><strong>无法重算</strong><p>退款率、分摊规则或安全库存变化，旧值立刻过期。</p></section>
+    <section><b>03</b><strong>重复计算</strong><p>使用者不知道值已被加工，很容易再次套用相同规则。</p></section>
+    <section><b>04</b><strong>无法对账</strong><p>源系统都正确，报表却因为口径被改写而始终对不上。</p></section>
   </div>
-  <div class="case-wrong">
-    <span>错误固化</span>
-    <strong>销量 = 82</strong>
-  </div>
 </div>
 
-这里的 `100` 是事实，`18%` 是模型参数，`82` 是模型输出。
+最严重的结果往往不是“数字不准”，而是**没人知道它为什么不准**。
 
-如果把 `82` 写回“销量”字段，后续的人就很难知道它已经扣过退款率。最典型的问题是再次计算：
+## 把表格整理成可追溯的结构
 
-```text
-82 × (1 - 18%) = 67.24
-```
+以链接经营分析为例，可以把字段按照数据身份组织起来。这里的“三层”是逻辑边界，不强制拆成三个工作簿，甚至不一定拆成三个 Sheet。
 
-同一个逻辑被重复扣了一次，但从表面上看公式完全“合理”。
-
-### 例子二：综合成本被当成采购成本
-
-假设一件商品的真实采购价是 `50 元`，物流费 `3 元`，广告费按规则分摊后是 `8 元/件`：
-
-```text
-综合成本 = 50 + 3 + 8 = 61 元
-```
-
-`61 元` 可以用于利润计算，但不能因此把事实层里的“采购成本”改成 `61 元`。
-
-<div class="case-breakdown" role="group" aria-label="综合成本的构成">
-  <div><span>采购成本</span><strong>50</strong><small>事实</small></div>
-  <i>+</i>
-  <div><span>物流费</span><strong>3</strong><small>事实 / 费用</small></div>
-  <i>+</i>
-  <div><span>广告分摊</span><strong>8</strong><small>计算规则</small></div>
-  <i>=</i>
-  <div class="case-breakdown__result"><span>综合成本</span><strong>61</strong><small>计算结果</small></div>
-</div>
-
-否则以后采购价从 50 元调整到 52 元时，就会遇到一个很麻烦的问题：`61` 里面到底有多少采购成本、多少物流费、多少广告费？
-
-当组成部分被压成一个值，重新计算和对账都会变困难。
-
-### 例子三：可售库存被当成实际库存
-
-仓库真实有 `100 件`，业务要求保留 `30 件` 安全库存，于是：
-
-```text
-可售库存 = 100 - 30 = 70 件
-```
-
-`100` 是库存事实，`30` 是业务规则，`70` 是面向销售的计算结果。
-
-如果直接把 `70` 存成“库存”，仓库盘点会看到 100，销售表却只有 70。两边看起来像数据不一致，实际上只是字段含义被混淆了。
-
-更麻烦的是，安全库存以后从 30 改成 20，正确结果应该自动变成 80；固化下来的 70 却不会自己更新。
-
-## 混在一起以后，会发生什么
-
-<div class="risk-grid" role="group" aria-label="事实和计算混淆后的五类风险">
-  <section>
-    <b>01</b>
-    <strong>原始事实丢失</strong>
-    <p>只剩结果，不知道业务最初实际发生了多少。</p>
+<div class="dl-sheet" role="table" aria-label="链接经营分析的三层表格结构">
+  <header role="row"><span>数据身份</span><span>保存什么</span><span>典型字段</span><span>边界规则</span></header>
+  <section class="is-fact" role="row">
+    <strong role="cell"><small>01 · SOURCE</small>事实层</strong><p role="cell">可追溯的原始业务数据</p><p role="cell">日期、链接、SKU、订单号、原始销量、采购价、实际库存</p><p role="cell">接近源系统，不用计算结果覆盖</p>
   </section>
-  <section>
-    <b>02</b>
-    <strong>参数变化无法重算</strong>
-    <p>退款率、分摊规则或安全库存一变，历史固化值立刻过期。</p>
+  <section class="is-calc" role="row">
+    <strong role="cell"><small>02 · MODEL</small>计算层</strong><p role="cell">统一的参数、公式和中间结果</p><p role="cell">退款率、预测销量、广告分摊、综合成本、可售库存</p><p role="cell">规则有来源，参数变化后可以重算</p>
   </section>
-  <section>
-    <b>03</b>
-    <strong>重复计算</strong>
-    <p>后续使用者不知道这个值已经加工过，很容易再套一次同样规则。</p>
-  </section>
-  <section>
-    <b>04</b>
-    <strong>无法对账</strong>
-    <p>ERP、仓库和平台都对，但报表就是对不上，因为报表保存的已经不是同一口径。</p>
-  </section>
-  <section>
-    <b>05</b>
-    <strong>数据血缘断掉</strong>
-    <p>没人说得清一个结果由哪些原始字段、参数和公式得到。</p>
+  <section class="is-view" role="row">
+    <strong role="cell"><small>03 · DECISION</small>展示层</strong><p role="cell">真正用于阅读和决策的信息</p><p role="cell">链接利润、利润率、异常预警、库存风险、经营看板</p><p role="cell">可以隐藏过程，但必须能追溯口径</p>
   </section>
 </div>
 
-其中最严重的往往不是“数字不准”，而是**没人知道它为什么不准**。
-
-当一张表里同时存在原始数据、加工结果、手工覆盖值，而且字段名还都叫“销量”“库存”“成本”，再复杂的公式都救不了这套结构。
-
-## 一个更稳妥的表格结构
-
-以链接经营分析为例，可以把数据明确拆开：
-
-<div class="structure-board" role="group" aria-label="链接经营分析的三层表格结构">
-  <section>
-    <span>事实层</span>
-    <strong>保存可追溯的原始业务数据</strong>
-    <ul>
-      <li>日期、链接、SKU、订单号</li>
-      <li>原始销量、原始销售额</li>
-      <li>退款金额、采购价、广告实际花费</li>
-      <li>实际库存</li>
-    </ul>
-  </section>
-  <section>
-    <span>计算层</span>
-    <strong>统一维护规则和中间结果</strong>
-    <ul>
-      <li>金额退款率</li>
-      <li>预测真实销量、预测净销售额</li>
-      <li>广告分摊、综合成本</li>
-      <li>预测利润、可售库存</li>
-    </ul>
-  </section>
-  <section>
-    <span>展示层</span>
-    <strong>只呈现最终需要决策的信息</strong>
-    <ul>
-      <li>链接销量与利润</li>
-      <li>利润率与异常预警</li>
-      <li>库存风险</li>
-      <li>负责人经营看板</li>
-    </ul>
-  </section>
-</div>
-
-这样做并不意味着每个 Excel 都必须真的拆成三个工作簿，甚至不一定要拆成三个 Sheet。
-
-关键是**逻辑上必须分层**：原始事实不要被覆盖，计算规则有明确来源，最终展示知道自己引用的是事实还是模型结果。
+实现时只需要守住三件事：原始事实不被覆盖，计算规则有明确来源，展示字段知道自己引用的是事实还是模型结果。
 
 ## 最后只记住一条
 
-判断一个字段属于事实层还是计算层，不要看它是不是“已经固化成值”，而要看它是怎么来的。
-
-<div class="final-check" role="note">
-  <span>FACT ≠ STATIC VALUE</span>
-  <strong>固化的计算结果，仍然是计算结果。</strong>
-  <p>事实是业务真实发生的数据；计算是事实经过规则后的推导；展示只是选择最终给人看什么。</p>
+<div class="dl-final" role="note">
+  <div><span>THE ONE RULE</span><strong>判断一个字段属于哪一层，<br />不要看它现在长什么样，要看它是怎么来的。</strong></div>
+  <ul>
+    <li><b>能对账</b><span>事实保留源系统口径</span></li>
+    <li><b>能重算</b><span>规则和参数没有被藏进结果</span></li>
+    <li><b>能解释</b><span>展示结果可以一路追溯到来源</span></li>
+  </ul>
 </div>
 
-一旦这三个概念分清楚，很多复杂报表的问题都会变简单：源数据能对账，规则能重算，结果能解释，表格也更容易长期维护。
+事实是业务真实发生的数据；计算是事实经过规则后的推导；展示只是选择最终给人看什么。三层边界一旦清楚，复杂报表才有机会长期维护。
 
 <style>{`
-  .layer-hero,
-  .structure-board {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1rem;
-    margin: 2rem 0;
+  .dl-hero, .dl-layer-map, .dl-rule, .dl-casebook, .dl-failure, .dl-sheet, .dl-final {
+    --dl-ink: #142334; --dl-muted: #627386; --dl-line: #d9e2ea; --dl-paper: #f5f8fa; --dl-panel: #ffffff;
+    --dl-fact: #16836f; --dl-fact-soft: #e8f7f2; --dl-calc: #6f56c7; --dl-calc-soft: #f0edfb;
+    --dl-view: #c87519; --dl-view-soft: #fff3df; color: var(--dl-ink);
   }
 
-  .layer-hero {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: center;
+  .dl-hero {
+    margin: 2rem 0 3rem; overflow: hidden; border: 1px solid #20394e; border-radius: 28px;
+    background: radial-gradient(circle at 88% 0%, rgba(69, 120, 160, 0.26), transparent 32%), #102232;
+    color: #f5f9fc; box-shadow: 0 24px 60px rgba(20, 45, 65, 0.18);
   }
+  .dl-hero__intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; padding: 2rem; }
+  .dl-hero__intro span, .dl-final > div > span { display: block; color: #6fd5c2; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em; }
+  .dl-hero__intro strong { display: block; margin-top: 0.65rem; font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1.08; letter-spacing: -0.045em; }
+  .dl-hero__intro p { margin: 0; color: #b7c8d5; font-size: 0.88rem; line-height: 1.7; text-align: right; }
+  .dl-hero__pipeline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-block: 1px solid rgba(255, 255, 255, 0.12); }
+  .dl-hero__pipeline section { position: relative; min-width: 0; padding: 1.5rem 1.6rem 1.7rem; border-right: 1px solid rgba(255, 255, 255, 0.12); }
+  .dl-hero__pipeline section:last-child { border-right: 0; }
+  .dl-hero__pipeline section::before { position: absolute; inset: 0 0 auto; height: 4px; background: currentColor; content: ''; }
+  .dl-hero__pipeline .is-fact { color: #65d3bd; } .dl-hero__pipeline .is-calc { color: #ae9df2; } .dl-hero__pipeline .is-view { color: #f0b96c; }
+  .dl-hero__pipeline small, .dl-hero__pipeline strong, .dl-hero__pipeline b { display: block; }
+  .dl-hero__pipeline small { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; }
+  .dl-hero__pipeline strong { margin-top: 0.65rem; color: #fff; font-size: 1.3rem; }
+  .dl-hero__pipeline p { margin: 0.35rem 0 1.25rem; color: #afc0cc; font-size: 0.82rem; }
+  .dl-hero__pipeline b { color: inherit; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+  .dl-hero footer { display: flex; align-items: center; gap: 1rem; padding: 1rem 2rem; }
+  .dl-hero footer span { padding: 0.32rem 0.55rem; border: 1px solid rgba(111, 213, 194, 0.36); border-radius: 999px; color: #6fd5c2; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.08em; white-space: nowrap; }
+  .dl-hero footer strong { font-size: 0.86rem; }
 
-  .layer-card,
-  .structure-board section,
-  .risk-grid section,
-  .layer-rule,
-  .final-check {
-    border: 1px solid color-mix(in srgb, var(--sl-color-gray-5, #64748b) 32%, transparent);
-    border-radius: 18px;
-    background: color-mix(in srgb, var(--sl-color-bg, #fff) 92%, var(--sl-color-gray-6, #e2e8f0));
-  }
+  .dl-layer-map { margin: 1.5rem 0 2rem; overflow: hidden; border: 1px solid var(--dl-line); border-radius: 24px; background: var(--dl-panel); box-shadow: 0 14px 36px rgba(37, 62, 82, 0.07); }
+  .dl-layer-map section { display: grid; grid-template-columns: 150px minmax(210px, 0.85fr) minmax(0, 1.35fr); gap: 1.25rem; align-items: center; padding: 1.2rem 1.35rem; border-bottom: 1px solid var(--dl-line); border-left: 5px solid currentColor; }
+  .dl-layer-map section:last-child { border-bottom: 0; } .dl-layer-map .is-fact { color: var(--dl-fact); } .dl-layer-map .is-calc { color: var(--dl-calc); } .dl-layer-map .is-view { color: var(--dl-view); }
+  .dl-layer-map__name { display: flex; align-items: center; gap: 0.7rem; }
+  .dl-layer-map__name span { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: color-mix(in srgb, currentColor 12%, transparent); font-size: 0.68rem; font-weight: 900; }
+  .dl-layer-map__name strong { color: var(--dl-ink); }
+  .dl-layer-map section > div:nth-child(2) small, .dl-layer-map section > div:nth-child(2) b { display: block; }
+  .dl-layer-map section > div:nth-child(2) small { color: currentColor; font-size: 0.65rem; font-weight: 800; }
+  .dl-layer-map section > div:nth-child(2) b { margin-top: 0.25rem; color: var(--dl-ink); font-size: 0.86rem; }
+  .dl-layer-map p { margin: 0; color: var(--dl-muted); font-size: 0.8rem; line-height: 1.65; }
 
-  .layer-card {
-    min-height: 180px;
-    padding: 1.3rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
+  .dl-rule { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem; align-items: center; margin: 2rem 0 3rem; padding: 1.05rem 1.25rem; border: 1px solid #d7ccef; border-radius: 16px; background: linear-gradient(100deg, var(--dl-calc-soft), var(--dl-panel)); }
+  .dl-rule span { padding: 0.35rem 0.55rem; border-radius: 8px; background: var(--dl-calc); color: white; font-size: 0.67rem; font-weight: 800; }
+  .dl-rule strong { font-size: 0.87rem; line-height: 1.6; }
 
-  .layer-card span,
-  .structure-board span,
-  .layer-rule span,
-  .final-check span,
-  .case-flow span {
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    opacity: 0.72;
-  }
+  .dl-casebook { display: grid; gap: 1rem; margin: 1.5rem 0 3rem; }
+  .dl-case { overflow: hidden; border: 1px solid var(--dl-line); border-radius: 24px; background: var(--dl-panel); box-shadow: 0 14px 36px rgba(37, 62, 82, 0.07); }
+  .dl-case > header { display: flex; gap: 1rem; align-items: flex-start; padding: 1.25rem 1.4rem; }
+  .dl-case > header > span { flex: 0 0 auto; padding: 0.38rem 0.56rem; border-radius: 8px; background: var(--dl-ink); color: white; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.08em; }
+  .dl-case > header strong { display: block; font-size: 1.05rem; } .dl-case > header p { margin: 0.25rem 0 0; color: var(--dl-muted); font-size: 0.78rem; }
+  .dl-run { display: grid; grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr); gap: 0.35rem; align-items: stretch; padding: 1rem 1.4rem; border-block: 1px solid var(--dl-line); background: var(--dl-paper); }
+  .dl-run section { display: flex; min-width: 0; min-height: 105px; flex-direction: column; justify-content: center; padding: 0.9rem; border: 1px solid var(--dl-line); border-radius: 14px; background: var(--dl-panel); }
+  .dl-run section small, .dl-run section strong, .dl-run section span { display: block; }
+  .dl-run section small { font-size: 0.64rem; font-weight: 800; } .dl-run section strong { margin: 0.28rem 0; color: var(--dl-ink); font-size: 1.02rem; font-variant-numeric: tabular-nums; } .dl-run section span { color: var(--dl-muted); font-size: 0.7rem; }
+  .dl-run section.is-fact { border-color: color-mix(in srgb, var(--dl-fact) 30%, var(--dl-line)); background: var(--dl-fact-soft); } .dl-run section.is-fact small { color: var(--dl-fact); }
+  .dl-run section.is-calc { border-color: color-mix(in srgb, var(--dl-calc) 30%, var(--dl-line)); background: var(--dl-calc-soft); } .dl-run section.is-calc small { color: var(--dl-calc); }
+  .dl-run section.is-result { border-color: color-mix(in srgb, var(--dl-view) 30%, var(--dl-line)); background: var(--dl-view-soft); } .dl-run section.is-result small { color: var(--dl-view); }
+  .dl-run section.is-wrong { border-color: #df9c91; border-style: dashed; background: #fff2ef; } .dl-run section.is-wrong small { color: #b7493d; }
+  .dl-run i { align-self: center; color: #92a1ae; font-style: normal; font-weight: 900; text-align: center; }
+  .dl-case > footer { display: grid; grid-template-columns: auto minmax(220px, 0.75fr) minmax(0, 1.25fr); gap: 1rem; align-items: center; padding: 1rem 1.4rem 1.15rem; }
+  .dl-case > footer span { color: #b7493d; font-size: 0.65rem; font-weight: 900; } .dl-case > footer strong { font-size: 0.82rem; font-variant-numeric: tabular-nums; } .dl-case > footer p { margin: 0; color: var(--dl-muted); font-size: 0.75rem; }
 
-  .layer-card strong {
-    margin-top: 0.35rem;
-    font-size: 1.35rem;
-  }
+  .dl-failure { margin: 1.5rem 0 2rem; overflow: hidden; border-radius: 24px; background: #241c22; color: #fff8f5; box-shadow: 0 18px 46px rgba(49, 25, 30, 0.16); }
+  .dl-failure > header { padding: 1.45rem 1.5rem 1.1rem; } .dl-failure > header span { display: block; color: #ee9c8e; font-size: 0.67rem; font-weight: 900; letter-spacing: 0.12em; } .dl-failure > header strong { display: block; margin-top: 0.35rem; font-size: 1.25rem; }
+  .dl-failure > div { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid rgba(255, 255, 255, 0.1); }
+  .dl-failure section { padding: 1.1rem 1.2rem 1.3rem; border-right: 1px solid rgba(255, 255, 255, 0.1); } .dl-failure section:last-child { border-right: 0; }
+  .dl-failure b, .dl-failure strong { display: block; } .dl-failure b { color: #ee9c8e; font-size: 0.65rem; } .dl-failure strong { margin-top: 0.55rem; font-size: 0.9rem; } .dl-failure p { margin: 0.4rem 0 0; color: #cdbfc5; font-size: 0.73rem; line-height: 1.6; }
 
-  .layer-card p {
-    margin: 0.45rem 0 0.8rem;
-  }
+  .dl-sheet { margin: 1.5rem 0 2rem; overflow: hidden; border: 1px solid var(--dl-line); border-radius: 22px; background: var(--dl-panel); box-shadow: 0 14px 36px rgba(37, 62, 82, 0.07); }
+  .dl-sheet > header, .dl-sheet > section { display: grid; grid-template-columns: minmax(120px, 0.65fr) minmax(150px, 0.9fr) minmax(230px, 1.45fr) minmax(180px, 1fr); }
+  .dl-sheet > header { background: var(--dl-ink); color: white; } .dl-sheet > header span { padding: 0.72rem 1rem; font-size: 0.66rem; font-weight: 800; }
+  .dl-sheet > section { border-bottom: 1px solid var(--dl-line); } .dl-sheet > section:last-child { border-bottom: 0; }
+  .dl-sheet > section > * { margin: 0; padding: 1rem; border-right: 1px solid var(--dl-line); } .dl-sheet > section > *:last-child { border-right: 0; }
+  .dl-sheet > section > strong { border-left: 5px solid currentColor; color: var(--dl-ink); font-size: 0.88rem; }
+  .dl-sheet > section.is-fact > strong { border-left-color: var(--dl-fact); } .dl-sheet > section.is-calc > strong { border-left-color: var(--dl-calc); } .dl-sheet > section.is-view > strong { border-left-color: var(--dl-view); }
+  .dl-sheet strong small { display: block; margin-bottom: 0.3rem; color: var(--dl-muted); font-size: 0.6rem; } .dl-sheet p { color: var(--dl-muted); font-size: 0.73rem; line-height: 1.6; }
 
-  .layer-card small {
-    font-variant-numeric: tabular-nums;
-    opacity: 0.8;
-  }
+  .dl-final { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr); gap: 2rem; align-items: center; margin: 1.5rem 0 2rem; padding: 1.8rem; border-radius: 26px; background: radial-gradient(circle at 92% 0%, rgba(111, 86, 199, 0.28), transparent 32%), #102232; color: white; box-shadow: 0 22px 54px rgba(20, 45, 65, 0.16); }
+  .dl-final > div > strong { display: block; margin-top: 0.65rem; font-size: clamp(1.15rem, 2.4vw, 1.65rem); line-height: 1.45; }
+  .dl-final ul { margin: 0; padding: 0; list-style: none; } .dl-final li { display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 0.7rem; padding: 0.65rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.12); } .dl-final li:last-child { border-bottom: 0; }
+  .dl-final li b { color: #6fd5c2; font-size: 0.75rem; } .dl-final li span { color: #bdcad4; font-size: 0.72rem; }
 
-  .layer-arrow {
-    font-size: 1.5rem;
-    opacity: 0.45;
+  html[data-theme='dark'] .dl-layer-map, html[data-theme='dark'] .dl-rule, html[data-theme='dark'] .dl-casebook, html[data-theme='dark'] .dl-sheet {
+    --dl-ink: #eef5f9; --dl-muted: #a8bac7; --dl-line: #2b4658; --dl-paper: #102433; --dl-panel: #162d3d;
+    --dl-fact-soft: #163a34; --dl-calc-soft: #2d2948; --dl-view-soft: #3a3021;
   }
-
-  .layer-rule,
-  .final-check {
-    margin: 2rem 0;
-    padding: 1.4rem 1.5rem;
-  }
-
-  .layer-rule strong,
-  .final-check strong {
-    display: block;
-    margin-top: 0.45rem;
-    font-size: 1.18rem;
-  }
-
-  .layer-rule p,
-  .final-check p {
-    margin: 0.5rem 0 0;
-  }
-
-  .case-flow {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr 1fr;
-    gap: 0.7rem;
-    align-items: stretch;
-    margin: 1.5rem 0;
-  }
-
-  .case-input,
-  .case-output,
-  .case-wrong {
-    border: 1px solid color-mix(in srgb, var(--sl-color-gray-5, #64748b) 30%, transparent);
-    border-radius: 14px;
-    padding: 1rem;
-  }
-
-  .case-input strong,
-  .case-output strong,
-  .case-wrong strong {
-    display: block;
-    margin-top: 0.35rem;
-  }
-
-  .case-op {
-    align-self: center;
-    font-weight: 800;
-    white-space: nowrap;
-    opacity: 0.7;
-  }
-
-  .case-wrong {
-    border-style: dashed;
-  }
-
-  .case-breakdown {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr auto 1fr auto 1.15fr;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 1.5rem 0;
-  }
-
-  .case-breakdown > div {
-    padding: 1rem 0.8rem;
-    border-radius: 14px;
-    background: color-mix(in srgb, var(--sl-color-bg, #fff) 88%, var(--sl-color-gray-6, #e2e8f0));
-    text-align: center;
-  }
-
-  .case-breakdown span,
-  .case-breakdown strong,
-  .case-breakdown small {
-    display: block;
-  }
-
-  .case-breakdown strong {
-    margin: 0.25rem 0;
-    font-size: 1.25rem;
-  }
-
-  .case-breakdown i {
-    font-style: normal;
-    font-weight: 800;
-    opacity: 0.5;
-  }
-
-  .risk-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.8rem;
-    margin: 1.5rem 0 2rem;
-  }
-
-  .risk-grid section {
-    padding: 1rem;
-  }
-
-  .risk-grid b {
-    display: block;
-    margin-bottom: 0.8rem;
-    font-size: 0.8rem;
-    opacity: 0.5;
-  }
-
-  .risk-grid strong {
-    display: block;
-    min-height: 2.8em;
-  }
-
-  .risk-grid p {
-    margin: 0.55rem 0 0;
-    font-size: 0.9rem;
-    line-height: 1.65;
-  }
-
-  .structure-board section {
-    padding: 1.25rem;
-  }
-
-  .structure-board strong {
-    display: block;
-    margin: 0.35rem 0 0.8rem;
-  }
-
-  .structure-board ul {
-    margin: 0;
-    padding-left: 1.1rem;
-  }
-
-  .structure-board li + li {
-    margin-top: 0.35rem;
-  }
+  html[data-theme='dark'] .dl-rule { border-color: #4a4268; }
+  html[data-theme='dark'] .dl-run section.is-wrong { border-color: #8a554d; background: #3d2827; }
+  html[data-theme='dark'] .dl-sheet > header { background: #0b1e2b; }
 
   @media (max-width: 900px) {
-    .risk-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+    .dl-layer-map section { grid-template-columns: 130px minmax(0, 1fr); } .dl-layer-map section > p { grid-column: 2; }
+    .dl-failure > div { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dl-failure section:nth-child(2) { border-right: 0; } .dl-failure section:nth-child(-n + 2) { border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+    .dl-sheet { overflow-x: auto; } .dl-sheet > header, .dl-sheet > section { min-width: 800px; }
   }
 
-  @media (max-width: 680px) {
-    .layer-hero,
-    .case-flow,
-    .case-breakdown,
-    .structure-board,
-    .risk-grid {
-      grid-template-columns: 1fr;
-    }
+  @media (max-width: 720px) {
+    .dl-hero__intro { align-items: flex-start; flex-direction: column; padding: 1.5rem; } .dl-hero__intro p { text-align: left; }
+    .dl-hero__pipeline { grid-template-columns: 1fr; } .dl-hero__pipeline section { border-right: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.12); } .dl-hero__pipeline section:last-child { border-bottom: 0; }
+    .dl-hero footer { align-items: flex-start; flex-direction: column; padding: 1rem 1.5rem 1.3rem; }
+    .dl-layer-map section { grid-template-columns: 1fr; gap: 0.6rem; } .dl-layer-map section > p { grid-column: auto; }
+    .dl-rule { grid-template-columns: 1fr; } .dl-rule span { width: fit-content; }
+    .dl-run { grid-template-columns: 1fr; padding: 1rem; } .dl-run section { min-height: 0; } .dl-run i.is-arrow { transform: rotate(90deg); }
+    .dl-case > footer { grid-template-columns: 1fr; gap: 0.35rem; }
+    .dl-sheet { overflow: visible; } .dl-sheet > header { display: none; } .dl-sheet > section { display: grid; min-width: 0; grid-template-columns: 1fr; padding: 0.9rem 1rem; }
+    .dl-sheet > section > * { padding: 0.45rem 0; border-right: 0; } .dl-sheet > section > strong { padding-left: 0.75rem; }
+    .dl-final { grid-template-columns: 1fr; gap: 1.1rem; padding: 1.45rem; }
+  }
 
-    .layer-arrow {
-      transform: rotate(90deg);
-      justify-self: center;
-    }
-
-    .case-op,
-    .case-breakdown i {
-      justify-self: center;
-    }
-
-    .case-breakdown i {
-      transform: rotate(90deg);
-    }
-
-    .layer-card,
-    .risk-grid strong {
-      min-height: auto;
-    }
+  @media (max-width: 480px) {
+    .dl-hero__intro strong { font-size: 1.65rem; }
+    .dl-failure > div { grid-template-columns: 1fr; } .dl-failure section { border-right: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1); } .dl-failure section:last-child { border-bottom: 0; }
   }
 `}</style>
