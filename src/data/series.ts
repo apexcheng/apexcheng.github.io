@@ -36,8 +36,30 @@ export const seriesMetaList = [
   {
     id: 'python-basics',
     title: 'Python 零基础到简单脚本',
-    description: '从变量和常用数据结构开始，逐步掌握判断、循环、函数、文件、JSON、异常和基础面向对象，面向数据处理、RPA、API 与简单脚本场景。',
+    description: '用订单、SKU、文件和 JSON 贯穿 8 篇练习，从看懂一份数据开始，逐步写出能判断、循环、整理和输出结果的简单脚本。',
     order: 5,
+    learningStages: [
+      {
+        range: '01–03',
+        title: '先看懂数据',
+        description: '建立运行直觉，认清变量、类型和常用容器。',
+      },
+      {
+        range: '04–05',
+        title: '让代码开始工作',
+        description: '用判断、循环和函数组织可重复的处理步骤。',
+      },
+      {
+        range: '06–07',
+        title: '接入真实任务',
+        description: '处理文件、JSON、异常，并理解够用的对象组织方式。',
+      },
+      {
+        range: '08',
+        title: '完成一次自测',
+        description: '用 20 道题检查是否已经能独立读写基础脚本。',
+      },
+    ],
   },
 ] as const satisfies readonly {
   id: SeriesId;
@@ -50,6 +72,11 @@ export const seriesMetaList = [
     href: string;
     meta: string;
   };
+  learningStages?: readonly {
+    range: string;
+    title: string;
+    description: string;
+  }[];
 }[];
 
 export function getSeriesMeta(seriesId: SeriesId) {

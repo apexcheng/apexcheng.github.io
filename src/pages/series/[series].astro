@@ -23,43 +23,73 @@ export async function getStaticPaths() {
 
 const { series, posts } = Astro.props;
 const totalMinutes = posts.reduce((sum, post) => sum + post.data.minutes, 0);
+const learningStages = 'learningStages' in series ? series.learningStages : undefined;
 ---
 
 <SiteLayout title={series.title} active="series" description={series.description}>
-  <main class="page-content series-detail-page">
+  <main class="page-content series-detail-page" data-series-id={series.id}>
     <header class="series-detail-hero">
       <a class="series-back-link" href={withBase('/series/')}>← 全部系列</a>
       <p class="eyebrow">系列阅读</p>
       <h1 class="page-title">{series.title}</h1>
       <p class="page-lead">{series.description}</p>
-      <div class="series-summary" aria-label="系列信息">
-        <span>{posts.length} 篇文章</span>
-        <span>阅读约 {totalMinutes} 分钟</span>
+      <div class="series-hero-footer">
+        <div class="series-summary" aria-label="系列信息">
+          <span>{posts.length} 篇文章</span>
+          <span>阅读约 {totalMinutes} 分钟</span>
+        </div>
+        <a class="series-start-link" href={withBase(`/articles/${posts[0].slug}/`)}>
+          从第 1 篇开始 <span aria-hidden="true">→</span>
+        </a>
       </div>
     </header>
 
     <aside class="series-detail-sidebar" aria-label="系列导览">
-      <section class="series-overview-card">
-        <div class="series-overview-heading">
-          <div>
-            <p class="eyebrow">系列导览</p>
-            <h2>学习进度一览</h2>
+      {learningStages ? (
+        <section class="series-overview-card series-learning-card">
+          <div class="series-overview-heading">
+            <div>
+              <p class="eyebrow">系列导览</p>
+              <h2>四段学习路径</h2>
+            </div>
+            <span>{posts.length} 篇</span>
           </div>
-          <span>{posts.length} 篇</span>
-        </div>
-        <p class="series-overview-tip">建议按顺序阅读，也可以从当前最需要的主题开始。</p>
-        <ol class="series-overview-list">
-          {posts.map((post, index) => (
-            <li>
-              <a href={withBase(`/articles/${post.slug}/`)}>
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <strong>{post.data.title}</strong>
-                <span aria-hidden="true">→</span>
-              </a>
-            </li>
-          ))}
-        </ol>
-      </section>
+          <p class="series-overview-tip">按顺序走一遍，也可以直接进入当前最需要的一段。</p>
+          <ol class="series-learning-list">
+            {learningStages.map((stage) => (
+              <li>
+                <span>{stage.range}</span>
+                <div>
+                  <strong>{stage.title}</strong>
+                  <p>{stage.description}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : (
+        <section class="series-overview-card">
+          <div class="series-overview-heading">
+            <div>
+              <p class="eyebrow">系列导览</p>
+              <h2>学习进度一览</h2>
+            </div>
+            <span>{posts.length} 篇</span>
+          </div>
+          <p class="series-overview-tip">建议按顺序阅读，也可以从当前最需要的主题开始。</p>
+          <ol class="series-overview-list">
+            {posts.map((post, index) => (
+              <li>
+                <a href={withBase(`/articles/${post.slug}/`)}>
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <strong>{post.data.title}</strong>
+                  <span aria-hidden="true">→</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       {series.resource && (
         <section class="series-resource-card" aria-label="系列配套下载">
