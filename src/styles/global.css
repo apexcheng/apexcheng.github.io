@@ -1511,6 +1511,22 @@ h3 {
   margin: 8px 0;
 }
 
+.article-list-kicker {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.article-pin-badge {
+  background: color-mix(in srgb, var(--blue) 10%, var(--paper));
+  border: 1px solid color-mix(in srgb, var(--blue) 28%, var(--line));
+  border-radius: 999px;
+  color: var(--blue);
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 7px;
+}
+
 .article-list-item h2 a {
   display: inline-block;
   transition: color 0.18s ease, transform 0.18s ease;

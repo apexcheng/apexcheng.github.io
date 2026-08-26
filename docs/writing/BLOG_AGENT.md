@@ -35,6 +35,7 @@
 | `tags` | 使用具体主题词 |
 | `minutes` | 使用合理的阅读时间整数 |
 | `featured` | 默认 `false` |
+| `pinned` | 默认 `false`；设为 `true` 时在文章列表页置顶 |
 | `series`、`seriesOrder` | 可选；进入系列时两个字段同时填写，顺序使用正整数 |
 | `draft` | 默认 `false` |
 | `private` | 默认 `false` |

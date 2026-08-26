@@ -23,7 +23,7 @@ describe('articles page category filter', () => {
     expect(articlesSource).toContain("itemCategory !== '视觉实验室'");
     expect(articlesSource).toContain('!post.data.series');
     expect(articlesSource).toContain('!itemSeries');
-    expect(articlesSource).toContain('<ArticleList posts={posts} hideVisualLab hideSeries />');
+    expect(articlesSource).toContain('<ArticleList posts={posts} hideVisualLab hideSeries showPinned />');
     expect(articleListSource).toContain("data-series={post.data.series ?? ''}");
     expect(articleListSource).toContain('(hideSeries && post.data.series)');
   });
@@ -39,6 +39,14 @@ describe('articles page category filter', () => {
     expect(articleListSource).toContain('data-published-at={post.data.date.valueOf()}');
     expect(articleListSource).toContain('data-updated-at={(post.data.updated ?? post.data.date).valueOf()}');
     expect(contentConfigSource).toContain('updated: z.coerce.date().optional()');
+  });
+
+  it('keeps pinned articles ahead of the selected time sort', () => {
+    expect(contentConfigSource).toContain('pinned: z.boolean().default(false)');
+    expect(articleListSource).toContain("data-pinned={post.data.pinned ? 'true' : 'false'}");
+    expect(articleListSource).toContain('showPinned && post.data.pinned');
+    expect(articlesSource).toContain('Number(b.data.pinned) - Number(a.data.pinned)');
+    expect(articlesSource).toContain("b.getAttribute('data-pinned') === 'true'");
   });
 
   it('keeps timestamp precision for sorting while rendering date-only values', () => {

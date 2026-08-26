@@ -13,6 +13,7 @@ const posts = defineCollection({
     tags: z.array(z.string()),
     minutes: z.number(),
     featured: z.boolean().default(false),
+    pinned: z.boolean().default(false),
     series: z.enum(seriesIds).optional(),
     seriesOrder: z.number().int().positive().optional(),
     draft: z.boolean().default(false),

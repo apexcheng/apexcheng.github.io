@@ -3,7 +3,7 @@ import { withBase } from '../utils/paths';
 import { getSeriesMeta } from '../data/series';
 import { formatPostDate } from '../utils/dates';
 
-const { posts, hideVisualLab = false, hideSeries = false } = Astro.props;
+const { posts, hideVisualLab = false, hideSeries = false, showPinned = false } = Astro.props;
 ---
 
 <div class="article-list" data-article-list>
@@ -13,12 +13,16 @@ const { posts, hideVisualLab = false, hideSeries = false } = Astro.props;
       data-article-item
       data-category={post.data.category}
       data-series={post.data.series ?? ''}
+      data-pinned={post.data.pinned ? 'true' : 'false'}
       data-published-at={post.data.date.valueOf()}
       data-updated-at={(post.data.updated ?? post.data.date).valueOf()}
       hidden={(hideVisualLab && post.data.category === '视觉实验室') || (hideSeries && post.data.series)}
     >
       <div>
-        <small><a href={withBase(`/articles/category/${encodeURIComponent(post.data.category)}/`)}>{post.data.category}</a></small>
+        <small class="article-list-kicker">
+          <a href={withBase(`/articles/category/${encodeURIComponent(post.data.category)}/`)}>{post.data.category}</a>
+          {showPinned && post.data.pinned && <span class="article-pin-badge">置顶</span>}
+        </small>
         <h2><a href={withBase(`/articles/${post.slug}/`)}>{post.data.title}</a></h2>
         <p>{post.data.description}</p>
         {post.data.series && (

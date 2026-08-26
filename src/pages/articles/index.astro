@@ -7,7 +7,7 @@ import { withBase } from '../../utils/paths';
 
 const posts = (await getCollection('posts'))
   .filter((post) => !post.data.draft && !post.data.private)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  .sort((a, b) => Number(b.data.pinned) - Number(a.data.pinned) || b.data.date.valueOf() - a.data.date.valueOf());
 const defaultPosts = posts.filter((post) => post.data.category !== '视觉实验室' && !post.data.series);
 const articlesPageUrl = withBase('/articles/');
 const categoryCounts = Object.fromEntries(
@@ -68,7 +68,7 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
         <button type="button" data-sort-option data-sort-value="updated" aria-pressed="false">修改时间</button>
       </div>
       <div class="search-placeholder">当前共有 {defaultPosts.length} 篇文章、{categoryMetaList.length} 个分类、{tags.length} 个标签；也可以使用顶部导航里的搜索查找内容。</div>
-      <ArticleList posts={posts} hideVisualLab hideSeries />
+      <ArticleList posts={posts} hideVisualLab hideSeries showPinned />
       <p class="article-filter-empty" data-empty-state hidden>当前分类暂无公开文章，请切换到其他分类或查看全部文章。</p>
     </section>
   </main>
@@ -148,6 +148,9 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
         items
           .slice()
           .sort(function (a, b) {
+            var pinnedDiff = Number(b.getAttribute('data-pinned') === 'true') - Number(a.getAttribute('data-pinned') === 'true');
+            if (pinnedDiff) return pinnedDiff;
+
             var field = sortValue === 'updated' ? 'data-updated-at' : 'data-published-at';
             return Number(b.getAttribute(field) || 0) - Number(a.getAttribute(field) || 0);
           })
