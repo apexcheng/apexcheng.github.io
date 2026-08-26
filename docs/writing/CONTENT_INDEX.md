@@ -39,6 +39,7 @@
 | `src/content/posts/excel-functions-visual-handbook.mdx` | `教程` | 可持续扩展的 Excel 函数图解手册，当前用六张独立信息图讲清 VALUE 文本转数值、NUMBERVALUE 分隔符解析、TEXT 格式化输出、XLOOKUP 行位置映射、IF 条件分支和 FILTER 动态筛选 | 写 Excel 单函数原理图解、文本与数值转换、格式代码、条件判断、查找映射、动态数组筛选或需要“一章一张信息图”的函数教程时参考 |
 | `src/content/posts/excel-wps-weird-issues.mdx` | `教程` | 持续记录 Excel、WPS 和影刀表格自动化中的少见问题；当前收录 WPS `set_range()` 写入以等号开头文本时触发 COM 异常的原因与修复方式 | 写 Excel/WPS 踩坑记录、影刀表格自动化异常、`set_range()` COM 错误和文本公式识别问题时参考 |
 | `src/content/posts/excel-groupby-xlookup-high-performance-summary.mdx` | `教程` | 从大量 SUMIFS 重复汇总同一源表的性能问题出发，讲清 GROUPBY 一次汇总、XLOOKUP 批量查回、组合 Key、TAKE 拆列和 FILTER 日期范围汇总 | 写 Excel 大数据公式优化、GROUPBY、XLOOKUP、组合 Key、SUMIFS 重构和动态数组性能文章时参考 |
+| `src/content/posts/spreadsheet-fact-calculation-presentation-layers.mdx` | `实践` | 用预测销量、综合成本和可售库存三个例子讲清事实层、计算层、展示层，重点解释为什么固化的计算结果仍然不是事实，以及混层后如何造成重复计算、无法重算和对账困难 | 写 Excel 报表分层、数据建模、事实与计算边界、指标口径和报表维护文章时参考 |
 | `src/content/posts/qianniu-ecommerce-operation-learning-map.mdx` | `教程` | 从一条商品链接出发，把 SKU、价格体系、营销推广、订单 ERP、物流售后、评价与运营优化串成完整电商经营链路，并补充面对陌生后台功能的学习方法 | 写千牛工作台、电商运营入门、新人培训、商品从上架到售后的全链路教学文章时参考 |
 | `src/content/posts/ecommerce-price-hierarchy-target-price-planning.mdx` | `教程` | 先解释单品宝、活动和营销工具让利（非活动让利），再讲当前标价如何生效、活动如何校验、覆盖叠加与活动优先级、消费端到手价检查、价盘补差，以及平时价与活动价一致时的标价反推方法 | 写电商价格体系、优惠叠加优先级、营销工具让利、活动卡控价、普惠卷后价、活动标价反推和价盘目标到手价教程时参考 |
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |

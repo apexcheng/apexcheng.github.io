@@ -1,0 +1,461 @@
+---
+title: "为什么表格要分事实层、计算层、展示层：别把计算结果当事实"
+description: "用预测销量、综合成本和可售库存三个例子，讲清事实层、计算层、展示层的边界，以及把计算结果固化成事实后为什么会让报表越来越难维护。"
+date: 2026-08-26T16:43:00+08:00
+category: "实践"
+tags:
+  - "Excel"
+  - "数据处理"
+minutes: 6
+featured: false
+draft: false
+private: false
+---
+
+很多表格一开始并不复杂：导入几张源表，加几列公式，再做一个汇总页。
+
+真正让表格逐渐失控的，往往不是公式多，而是**事实和计算结果混在了一起**。
+
+一个很典型的例子是：某个链接原始销量是 `100`，根据历史退款率 `18%`，预测最终真实销量：
+
+```text
+100 × (1 - 18%) = 82
+```
+
+`82` 可以是一个合理的预测结果，但它不是原始销量。即使把 `82` 复制、粘贴成值，永久固化下来，它也不会因此变成“事实”。
+
+问题就在这里。
+
+<div class="layer-hero" role="group" aria-label="事实层、计算层、展示层的数据流">
+  <section class="layer-card layer-card--fact">
+    <span>FACT</span>
+    <strong>事实层</strong>
+    <p>客观发生了什么</p>
+    <small>原始销量 100</small>
+  </section>
+  <div class="layer-arrow" aria-hidden="true">→</div>
+  <section class="layer-card layer-card--calc">
+    <span>LOGIC</span>
+    <strong>计算层</strong>
+    <p>根据事实和规则怎么算</p>
+    <small>100 × (1 - 18%) = 82</small>
+  </section>
+  <div class="layer-arrow" aria-hidden="true">→</div>
+  <section class="layer-card layer-card--view">
+    <span>VIEW</span>
+    <strong>展示层</strong>
+    <p>最终希望业务看到什么</p>
+    <small>预测真实销量 82</small>
+  </section>
+</div>
+
+一套比较清楚的表格结构，通常可以简单分成：**事实层 → 计算层 → 展示层**。
+
+## 三层到底分别放什么
+
+事实层回答的是：**业务真实发生了什么？**
+
+例如订单号、原始销量、销售额、采购价、退款金额、当前库存。这些数字应该尽可能接近源系统，能和 ERP、平台后台、仓库数据直接对账。
+
+计算层回答的是：**基于这些事实和业务规则，推导出了什么？**
+
+例如退款率、预测真实销量、广告费分摊、综合成本、预测利润、安全库存、可售库存。这些值依赖公式、参数、时间窗口或者业务假设。
+
+展示层回答的是：**最终想让使用者看到什么？**
+
+例如链接利润表、经营看板、库存预警、负责人日报。展示层可以隐藏很多中间过程，但不能反过来污染事实层。
+
+<div class="layer-rule" role="note">
+  <span>判断边界的一个简单问题</span>
+  <strong>这个数字，是源业务直接发生的，还是“原始数据 + 规则”算出来的？</strong>
+  <p>只要中间经过了退款率、分摊规则、安全库存、预测系数、时间窗口等业务逻辑，它通常就属于计算层。</p>
+</div>
+
+## 最容易犯的错：把计算结果重新命名成事实
+
+这类错误危险的地方，不是某一次算错，而是**计算血缘被隐藏了**。
+
+下面三个例子很常见。
+
+### 例子一：预测销量被当成原始销量
+
+<div class="case-flow" role="group" aria-label="预测销量错误进入事实层的过程">
+  <div class="case-input">
+    <span>事实</span>
+    <strong>原始销量 100</strong>
+  </div>
+  <div class="case-op">× (1 - 18%)</div>
+  <div class="case-output">
+    <span>计算结果</span>
+    <strong>预测真实销量 82</strong>
+  </div>
+  <div class="case-wrong">
+    <span>错误固化</span>
+    <strong>销量 = 82</strong>
+  </div>
+</div>
+
+这里的 `100` 是事实，`18%` 是模型参数，`82` 是模型输出。
+
+如果把 `82` 写回“销量”字段，后续的人就很难知道它已经扣过退款率。最典型的问题是再次计算：
+
+```text
+82 × (1 - 18%) = 67.24
+```
+
+同一个逻辑被重复扣了一次，但从表面上看公式完全“合理”。
+
+### 例子二：综合成本被当成采购成本
+
+假设一件商品的真实采购价是 `50 元`，物流费 `3 元`，广告费按规则分摊后是 `8 元/件`：
+
+```text
+综合成本 = 50 + 3 + 8 = 61 元
+```
+
+`61 元` 可以用于利润计算，但不能因此把事实层里的“采购成本”改成 `61 元`。
+
+<div class="case-breakdown" role="group" aria-label="综合成本的构成">
+  <div><span>采购成本</span><strong>50</strong><small>事实</small></div>
+  <i>+</i>
+  <div><span>物流费</span><strong>3</strong><small>事实 / 费用</small></div>
+  <i>+</i>
+  <div><span>广告分摊</span><strong>8</strong><small>计算规则</small></div>
+  <i>=</i>
+  <div class="case-breakdown__result"><span>综合成本</span><strong>61</strong><small>计算结果</small></div>
+</div>
+
+否则以后采购价从 50 元调整到 52 元时，就会遇到一个很麻烦的问题：`61` 里面到底有多少采购成本、多少物流费、多少广告费？
+
+当组成部分被压成一个值，重新计算和对账都会变困难。
+
+### 例子三：可售库存被当成实际库存
+
+仓库真实有 `100 件`，业务要求保留 `30 件` 安全库存，于是：
+
+```text
+可售库存 = 100 - 30 = 70 件
+```
+
+`100` 是库存事实，`30` 是业务规则，`70` 是面向销售的计算结果。
+
+如果直接把 `70` 存成“库存”，仓库盘点会看到 100，销售表却只有 70。两边看起来像数据不一致，实际上只是字段含义被混淆了。
+
+更麻烦的是，安全库存以后从 30 改成 20，正确结果应该自动变成 80；固化下来的 70 却不会自己更新。
+
+## 混在一起以后，会发生什么
+
+<div class="risk-grid" role="group" aria-label="事实和计算混淆后的五类风险">
+  <section>
+    <b>01</b>
+    <strong>原始事实丢失</strong>
+    <p>只剩结果，不知道业务最初实际发生了多少。</p>
+  </section>
+  <section>
+    <b>02</b>
+    <strong>参数变化无法重算</strong>
+    <p>退款率、分摊规则或安全库存一变，历史固化值立刻过期。</p>
+  </section>
+  <section>
+    <b>03</b>
+    <strong>重复计算</strong>
+    <p>后续使用者不知道这个值已经加工过，很容易再套一次同样规则。</p>
+  </section>
+  <section>
+    <b>04</b>
+    <strong>无法对账</strong>
+    <p>ERP、仓库和平台都对，但报表就是对不上，因为报表保存的已经不是同一口径。</p>
+  </section>
+  <section>
+    <b>05</b>
+    <strong>数据血缘断掉</strong>
+    <p>没人说得清一个结果由哪些原始字段、参数和公式得到。</p>
+  </section>
+</div>
+
+其中最严重的往往不是“数字不准”，而是**没人知道它为什么不准**。
+
+当一张表里同时存在原始数据、加工结果、手工覆盖值，而且字段名还都叫“销量”“库存”“成本”，再复杂的公式都救不了这套结构。
+
+## 一个更稳妥的表格结构
+
+以链接经营分析为例，可以把数据明确拆开：
+
+<div class="structure-board" role="group" aria-label="链接经营分析的三层表格结构">
+  <section>
+    <span>事实层</span>
+    <strong>保存可追溯的原始业务数据</strong>
+    <ul>
+      <li>日期、链接、SKU、订单号</li>
+      <li>原始销量、原始销售额</li>
+      <li>退款金额、采购价、广告实际花费</li>
+      <li>实际库存</li>
+    </ul>
+  </section>
+  <section>
+    <span>计算层</span>
+    <strong>统一维护规则和中间结果</strong>
+    <ul>
+      <li>金额退款率</li>
+      <li>预测真实销量、预测净销售额</li>
+      <li>广告分摊、综合成本</li>
+      <li>预测利润、可售库存</li>
+    </ul>
+  </section>
+  <section>
+    <span>展示层</span>
+    <strong>只呈现最终需要决策的信息</strong>
+    <ul>
+      <li>链接销量与利润</li>
+      <li>利润率与异常预警</li>
+      <li>库存风险</li>
+      <li>负责人经营看板</li>
+    </ul>
+  </section>
+</div>
+
+这样做并不意味着每个 Excel 都必须真的拆成三个工作簿，甚至不一定要拆成三个 Sheet。
+
+关键是**逻辑上必须分层**：原始事实不要被覆盖，计算规则有明确来源，最终展示知道自己引用的是事实还是模型结果。
+
+## 最后只记住一条
+
+判断一个字段属于事实层还是计算层，不要看它是不是“已经固化成值”，而要看它是怎么来的。
+
+<div class="final-check" role="note">
+  <span>FACT ≠ STATIC VALUE</span>
+  <strong>固化的计算结果，仍然是计算结果。</strong>
+  <p>事实是业务真实发生的数据；计算是事实经过规则后的推导；展示只是选择最终给人看什么。</p>
+</div>
+
+一旦这三个概念分清楚，很多复杂报表的问题都会变简单：源数据能对账，规则能重算，结果能解释，表格也更容易长期维护。
+
+<style>{`
+  .layer-hero,
+  .structure-board {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+
+  .layer-hero {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .layer-card,
+  .structure-board section,
+  .risk-grid section,
+  .layer-rule,
+  .final-check {
+    border: 1px solid color-mix(in srgb, var(--sl-color-gray-5, #64748b) 32%, transparent);
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--sl-color-bg, #fff) 92%, var(--sl-color-gray-6, #e2e8f0));
+  }
+
+  .layer-card {
+    min-height: 180px;
+    padding: 1.3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .layer-card span,
+  .structure-board span,
+  .layer-rule span,
+  .final-check span,
+  .case-flow span {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.72;
+  }
+
+  .layer-card strong {
+    margin-top: 0.35rem;
+    font-size: 1.35rem;
+  }
+
+  .layer-card p {
+    margin: 0.45rem 0 0.8rem;
+  }
+
+  .layer-card small {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
+  }
+
+  .layer-arrow {
+    font-size: 1.5rem;
+    opacity: 0.45;
+  }
+
+  .layer-rule,
+  .final-check {
+    margin: 2rem 0;
+    padding: 1.4rem 1.5rem;
+  }
+
+  .layer-rule strong,
+  .final-check strong {
+    display: block;
+    margin-top: 0.45rem;
+    font-size: 1.18rem;
+  }
+
+  .layer-rule p,
+  .final-check p {
+    margin: 0.5rem 0 0;
+  }
+
+  .case-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr 1fr;
+    gap: 0.7rem;
+    align-items: stretch;
+    margin: 1.5rem 0;
+  }
+
+  .case-input,
+  .case-output,
+  .case-wrong {
+    border: 1px solid color-mix(in srgb, var(--sl-color-gray-5, #64748b) 30%, transparent);
+    border-radius: 14px;
+    padding: 1rem;
+  }
+
+  .case-input strong,
+  .case-output strong,
+  .case-wrong strong {
+    display: block;
+    margin-top: 0.35rem;
+  }
+
+  .case-op {
+    align-self: center;
+    font-weight: 800;
+    white-space: nowrap;
+    opacity: 0.7;
+  }
+
+  .case-wrong {
+    border-style: dashed;
+  }
+
+  .case-breakdown {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr auto 1.15fr;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+  }
+
+  .case-breakdown > div {
+    padding: 1rem 0.8rem;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--sl-color-bg, #fff) 88%, var(--sl-color-gray-6, #e2e8f0));
+    text-align: center;
+  }
+
+  .case-breakdown span,
+  .case-breakdown strong,
+  .case-breakdown small {
+    display: block;
+  }
+
+  .case-breakdown strong {
+    margin: 0.25rem 0;
+    font-size: 1.25rem;
+  }
+
+  .case-breakdown i {
+    font-style: normal;
+    font-weight: 800;
+    opacity: 0.5;
+  }
+
+  .risk-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .risk-grid section {
+    padding: 1rem;
+  }
+
+  .risk-grid b {
+    display: block;
+    margin-bottom: 0.8rem;
+    font-size: 0.8rem;
+    opacity: 0.5;
+  }
+
+  .risk-grid strong {
+    display: block;
+    min-height: 2.8em;
+  }
+
+  .risk-grid p {
+    margin: 0.55rem 0 0;
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
+
+  .structure-board section {
+    padding: 1.25rem;
+  }
+
+  .structure-board strong {
+    display: block;
+    margin: 0.35rem 0 0.8rem;
+  }
+
+  .structure-board ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+
+  .structure-board li + li {
+    margin-top: 0.35rem;
+  }
+
+  @media (max-width: 900px) {
+    .risk-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 680px) {
+    .layer-hero,
+    .case-flow,
+    .case-breakdown,
+    .structure-board,
+    .risk-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .layer-arrow {
+      transform: rotate(90deg);
+      justify-self: center;
+    }
+
+    .case-op,
+    .case-breakdown i {
+      justify-self: center;
+    }
+
+    .case-breakdown i {
+      transform: rotate(90deg);
+    }
+
+    .layer-card,
+    .risk-grid strong {
+      min-height: auto;
+    }
+  }
+`}</style>
