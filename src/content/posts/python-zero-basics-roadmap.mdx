@@ -2,11 +2,11 @@
 title: "Python 零基础学习路线：从看懂一行代码到写出简单脚本"
 description: "一套面向数据处理、RPA、API 和简单脚本场景的 Python 零基础学习路线，先建立代码运行直觉，再逐步进入真实数据与自动化任务。"
 date: 2026-08-22T22:30:00+08:00
-updated: 2026-08-26T12:00:00+08:00
+updated: 2026-08-27T00:10:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 8
+minutes: 7
 featured: false
 series: "python-basics"
 seriesOrder: 1
@@ -15,43 +15,34 @@ private: false
 ---
 
 import HighlightBox from '../../components/HighlightBox.astro';
+import Callout from '../../components/Callout.astro';
+import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
 如果你学 Python 的目标不是参加算法竞赛，而是想处理 Excel 导出的数据、写 RPA 辅助脚本、调用 API，或者把重复操作变成一段自动执行的代码，那么入门顺序应该围绕一个问题展开：**数据进来以后，Python 到底怎么一步一步把它变成结果？**
 
-这个系列不会把 Python 写成一门计算机专业课程。我们只先学习以后真正会反复用到的部分，并且每篇都尽量让代码落在订单号、SKU、状态判断、JSON、文件这些真实场景里。
+这个系列不会把 Python 写成一门计算机专业课程。八篇内容都围绕订单、SKU、状态、JSON 和文件展开，目标是让一批数据经过判断、循环、清洗或文件处理后，得到可以继续使用的结果。
 
-<HighlightBox eyebrow="系列目标" title="读完后，你应该能独立看懂并写出一个小型 Python 脚本">
-  这里的“小型脚本”不是完整系统，而是能接收一批数据，做判断、循环、清洗、统计或文件处理，最后得到可继续使用的结果。
-</HighlightBox>
+<PythonLessonBrief
+  goal="建立从数据输入到结果输出的代码运行直觉"
+  data="两条包含订单号、金额和状态的订单"
+  outcome="独立看懂并运行一个小型 Python 脚本"
+/>
 
 ## 先看完整路线
 
-<div class="py-roadmap" aria-label="从数据到脚本的八步学习路径">
-  <div class="py-roadmap-stage">
-    <div class="py-roadmap-stage-title">
-      <span>前半段</span>
-      <strong>先建立代码运行直觉</strong>
-    </div>
-    <div class="py-roadmap-steps">
-      <div><b>01</b><strong>学习路线</strong><span>知道先学什么</span></div>
-      <div><b>02</b><strong>基础类型</strong><span>一份数据是什么</span></div>
-      <div><b>03</b><strong>常用容器</strong><span>一批数据怎么装</span></div>
-      <div><b>04</b><strong>判断与循环</strong><span>怎么决定和重复</span></div>
-    </div>
-  </div>
-  <div class="py-roadmap-stage">
-    <div class="py-roadmap-stage-title">
-      <span>后半段</span>
-      <strong>开始接真实任务</strong>
-    </div>
-    <div class="py-roadmap-steps">
-      <div><b>05</b><strong>函数</strong><span>把步骤整理成工具</span></div>
-      <div><b>06</b><strong>文件 / JSON / 异常</strong><span>接入真实数据</span></div>
-      <div><b>07</b><strong>类与对象</strong><span>只学够用的组织方式</span></div>
-      <div><b>08</b><strong>综合考核</strong><span>确认能独立动手</span></div>
-    </div>
-  </div>
-</div>
+<figure class="py-roadmap" aria-labelledby="roadmap-caption">
+  <figcaption id="roadmap-caption"><span>脚本装配地图</span><strong>八篇内容逐步拼成一条完整处理链</strong></figcaption>
+  <ol>
+    <li><span>01 · 起点</span><strong>学习路线</strong><small>知道代码怎样流动</small></li>
+    <li><span>02 · 输入</span><strong>基础类型</strong><small>认清每个值是什么</small></li>
+    <li><span>03 · 组织</span><strong>常用容器</strong><small>把多条数据装起来</small></li>
+    <li><span>04 · 处理</span><strong>判断与循环</strong><small>决定、筛选和重复</small></li>
+    <li><span>05 · 封装</span><strong>函数</strong><small>把步骤整理成工具</small></li>
+    <li><span>06 · 接入</span><strong>文件 / JSON / 异常</strong><small>处理外部真实数据</small></li>
+    <li><span>07 · 组织</span><strong>类与对象</strong><small>管理状态与行为</small></li>
+    <li><span>08 · 验收</span><strong>综合考核</strong><small>确认能够独立动手</small></li>
+  </ol>
+</figure>
 
 这条路线有一个刻意的取舍：**类和对象放得比较后。** 对零基础读者来说，先会处理数据、写判断、写循环、写函数，比一开始理解面向对象更重要。很多几十行以内的自动化脚本，甚至完全不需要自己写类。
 
@@ -70,17 +61,14 @@ for order in orders:
         print(order["order_no"], order["amount"])
 ```
 
-零基础读者暂时不需要把每个符号都解释出来。先抓住数据流：
+零基础读者暂时不需要解释每个符号，先沿着运行顺序观察：
 
-```text
-两条订单数据
-    ↓
-一条一条取出来
-    ↓
-判断状态是不是“已支付”
-    ↓
-符合条件才输出订单号和金额
-```
+<ol class="py-runtime-trace" aria-label="订单脚本运行顺序">
+  <li><span>输入</span><strong>读取两条订单</strong><small>列表保存整批数据</small></li>
+  <li><span>逐条处理</span><strong>每次拿出一条订单</strong><small><code>for</code> 控制处理节奏</small></li>
+  <li><span>判断</span><strong>状态是否为“已支付”</strong><small><code>if</code> 决定是否继续</small></li>
+  <li><span>输出</span><strong>打印订单号和金额</strong><small>未通过的订单不会输出</small></li>
+</ol>
 
 后面的几篇文章，本质上就是把这 8 行代码拆开：
 
@@ -95,29 +83,11 @@ for order in orders:
 
 这也是学习 Python 最重要的习惯：**不要把代码看成一大段符号，要看它每一步拿到了什么数据，又把数据变成了什么。**
 
-## 这套系列为什么不按“语法大全”来学
+## 按任务学习，而不是背语法目录
 
-传统入门资料很容易按语法目录展开：变量、运算符、列表、元组、集合、函数、类……每一项都解释一遍。这样当然完整，但新手常常出现一种情况：每个词都见过，真正给一份订单列表却不知道从哪里开始。
+这个系列先问“任务需要什么”，再引出语法：一条数据用变量，多条数据用列表，一条订单的多个字段用字典；`if` 决定是否处理，`for` 负责逐条处理，函数收纳重复逻辑，文件、JSON 和异常负责接入外部数据。
 
-这个系列会反过来组织内容。
-
-先问任务需要什么：
-
-```text
-我有一条数据 → 用变量保存
-我有很多条数据 → 用列表
-一条订单有很多字段 → 用字典
-只处理部分订单 → 用 if
-每条都要处理 → 用 for
-同一套逻辑会反复用 → 写成函数
-数据来自文件或接口 → 处理文件 / JSON / 异常
-```
-
-语法仍然会学，但每个语法都要知道“什么时候用”。
-
-## 学习时不要只看代码
-
-每遇到一段新代码，可以固定做四件事：
+每遇到一段新代码，固定做四件事：
 
 1. 先不运行，猜它会输出什么。
 2. 再运行，看看和自己的判断是否一致。
@@ -133,7 +103,7 @@ if stock < 5:
     print("需要补货")
 ```
 
-不要只记住“`if` 是判断”。可以把 `stock` 改成 `8`，观察为什么什么都不输出；再加一个 `else`，看两条分支如何只执行其中一条。
+把 `stock` 改成 `8`，观察为什么没有输出；再加一个 `else`，确认两条分支只会执行其中一条。这样的修改比只记住“`if` 是判断”更有效。
 
 ## 第一次把 Python 真正跑起来
 
@@ -159,13 +129,11 @@ py --version
 
 如果三个命令都不可用，先安装 Python 3，再重新打开终端确认版本。这里不展开 IDE、虚拟环境和包管理，零基础第一步只需要完成一个最小闭环：
 
-<div class="py-first-run" aria-label="第一次运行 Python 脚本的三个步骤">
-  <div><b>01</b><strong>创建文件</strong><code>demo.py</code><span>放在自己找得到的文件夹里</span></div>
-  <i>→</i>
-  <div><b>02</b><strong>写一行代码</strong><code>print("Hello Python")</code><span>保存文件</span></div>
-  <i>→</i>
-  <div><b>03</b><strong>在终端运行</strong><code>python demo.py</code><span>或使用 python3 / py</span></div>
-</div>
+<ol class="py-first-run" aria-label="第一次运行 Python 脚本的三个步骤">
+  <li><span>01</span><strong>创建文件</strong><code>demo.py</code><small>放在自己找得到的文件夹</small></li>
+  <li><span>02</span><strong>写入并保存</strong><code>print("Hello Python")</code><small>确认扩展名是 .py</small></li>
+  <li><span>03</span><strong>在终端运行</strong><code>python demo.py</code><small>也可以使用 python3 / py</small></li>
+</ol>
 
 例如 `demo.py`：
 
@@ -200,138 +168,163 @@ Hello Python
 | API 调用 | HTTP 请求、鉴权、接口字段 | JSON、字典、异常、函数 |
 | 简单脚本 | 批量重命名、整理文件、定时任务 | 文件、循环、函数 |
 
+<Callout title="本章检查">
+  你应该能说清楚示例脚本的输入、逐条处理、判断和输出，并能在本地创建、保存和运行一个 `.py` 文件。
+</Callout>
+
 <HighlightBox eyebrow="下一篇" title="先把“一份数据”看懂">
   下一篇从变量、字符串、数字、布尔值和类型转换开始。目标不是背 `str`、`int` 这些名字，而是看懂一个值为什么能这样用、为什么有时会报类型错误。
 </HighlightBox>
 
 <style>{`
-  .py-roadmap {
-    display: grid;
-    gap: 1rem;
+  .py-roadmap,
+  .py-runtime-trace,
+  .py-first-run {
     margin: 1.5rem 0 2rem;
   }
 
-  .py-roadmap-stage {
-    padding: 1rem;
-    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
-    border-radius: 18px;
-    background: rgba(148, 163, 184, 0.05);
+  .py-roadmap {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
   }
 
-  .py-roadmap-stage-title {
+  .py-roadmap figcaption {
+    background: color-mix(in srgb, var(--blue) 9%, var(--paper));
+    border-bottom: 1px solid var(--line);
     display: flex;
-    align-items: baseline;
-    gap: 0.65rem;
-    margin-bottom: 0.9rem;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem 1.1rem;
   }
 
-  .py-roadmap-stage-title span {
-    color: var(--text-muted, #64748b);
+  .py-roadmap figcaption span,
+  .py-roadmap li span,
+  .py-roadmap li small,
+  .py-runtime-trace li span,
+  .py-runtime-trace li small,
+  .py-first-run li span,
+  .py-first-run li small {
+    color: var(--soft);
     font-size: 0.8rem;
   }
 
-  .py-roadmap-steps {
+  .py-roadmap ol {
+    counter-reset: lesson;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.7rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
   }
 
-  .py-roadmap-steps > div {
-    position: relative;
-    min-height: 7.6rem;
-    padding: 0.85rem;
-    border-radius: 14px;
-    background: var(--paper, rgba(255, 255, 255, 0.76));
+  .py-roadmap li {
+    min-height: 7.7rem;
+    padding: 1rem;
   }
 
-  .py-roadmap-steps b,
-  .py-roadmap-steps strong,
-  .py-roadmap-steps span {
+  .py-roadmap li:nth-child(n + 5) {
+    border-top: 1px solid var(--line);
+  }
+
+  .py-roadmap li:not(:nth-child(4n + 1)) {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-roadmap li strong,
+  .py-roadmap li small,
+  .py-runtime-trace li strong,
+  .py-runtime-trace li small,
+  .py-first-run li strong,
+  .py-first-run li code,
+  .py-first-run li small {
     display: block;
+  }
+
+  .py-roadmap li strong,
+  .py-runtime-trace li strong,
+  .py-first-run li strong {
+    margin: 0.75rem 0 0.25rem;
+  }
+
+  .py-runtime-trace,
+  .py-first-run {
+    display: grid;
+    gap: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    list-style: none;
+    padding: 0;
   }
 
   .py-first-run {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr auto 1fr;
-    gap: 0.7rem;
-    align-items: stretch;
-    margin: 1.5rem 0 2rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .py-first-run > div {
-    padding: 0.95rem;
-    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
-    border-radius: 15px;
-    background: rgba(148, 163, 184, 0.06);
+  .py-runtime-trace li,
+  .py-first-run li {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    padding: 1rem;
   }
 
-  .py-first-run b,
-  .py-first-run strong,
-  .py-first-run code,
-  .py-first-run span {
-    display: block;
+  .py-runtime-trace li:first-child,
+  .py-first-run li:first-child {
+    border-radius: var(--radius) 0 0 var(--radius);
   }
 
-  .py-first-run b,
-  .py-first-run span {
-    color: var(--text-muted, #64748b);
-    font-size: 0.82rem;
+  .py-runtime-trace li:last-child,
+  .py-first-run li:last-child {
+    border-radius: 0 var(--radius) var(--radius) 0;
   }
 
-  .py-first-run strong,
+  .py-runtime-trace li + li,
+  .py-first-run li + li {
+    border-left: 0;
+  }
+
   .py-first-run code {
-    margin-top: 0.4rem;
-  }
-
-  .py-first-run > i {
-    align-self: center;
-    color: var(--text-muted, #64748b);
-    font-style: normal;
-  }
-
-  .py-roadmap-steps b {
-    margin-bottom: 1.25rem;
-    color: var(--text-muted, #64748b);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.78rem;
-  }
-
-  .py-roadmap-steps span {
-    margin-top: 0.25rem;
-    color: var(--text-muted, #64748b);
-    font-size: 0.82rem;
+    margin: 0.45rem 0;
+    overflow-wrap: anywhere;
   }
 
   @media (max-width: 760px) {
-    .py-roadmap-stage-title {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 0.15rem;
-    }
-
-    .py-roadmap-steps {
-      grid-template-columns: 1fr;
-    }
-
-    .py-roadmap-steps > div {
-      min-height: auto;
-      padding-left: 3.6rem;
-    }
-
-    .py-roadmap-steps b {
-      position: absolute;
-      left: 0.9rem;
-      top: 0.85rem;
-      margin: 0;
-    }
-
+    .py-roadmap ol,
+    .py-runtime-trace,
     .py-first-run {
       grid-template-columns: 1fr;
     }
 
-    .py-first-run > i {
-      justify-self: center;
-      transform: rotate(90deg);
+    .py-roadmap li {
+      min-height: 0;
+    }
+
+    .py-roadmap li:nth-child(n),
+    .py-runtime-trace li + li,
+    .py-first-run li + li {
+      border: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .py-roadmap li:first-child,
+    .py-runtime-trace li:first-child,
+    .py-first-run li:first-child {
+      border-top: 0;
+    }
+
+    .py-runtime-trace li,
+    .py-first-run li,
+    .py-runtime-trace li:first-child,
+    .py-runtime-trace li:last-child,
+    .py-first-run li:first-child,
+    .py-first-run li:last-child {
+      border-radius: 0;
+    }
+
+    .py-runtime-trace,
+    .py-first-run {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
     }
   }
 `}</style>

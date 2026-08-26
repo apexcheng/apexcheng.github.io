@@ -2,11 +2,11 @@
 title: "Python 变量与基础数据类型：先看懂一份数据是什么"
 description: "从订单号、价格、库存和状态出发，讲清 Python 变量、字符串、整数、小数、布尔值、None、比较、类型转换和常见类型错误。"
 date: 2026-08-22T22:32:00+08:00
-updated: 2026-08-23T00:35:00+08:00
+updated: 2026-08-27T00:10:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 13
+minutes: 11
 featured: false
 series: "python-basics"
 seriesOrder: 2
@@ -15,10 +15,18 @@ private: false
 ---
 
 import HighlightBox from '../../components/HighlightBox.astro';
+import Callout from '../../components/Callout.astro';
+import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
 写 Python 时，最先遇到的不是循环，也不是函数，而是**数据本身**。
 
 订单号是文字，库存是整数，单价可能有小数，“是否缺货”是一个真假判断。只要先能分清这些数据，后面的判断、循环和函数才不会变成一堆符号。
+
+<PythonLessonBrief
+  goal="识别变量中的值，并在计算前把外部数据转换成正确类型"
+  data="SKU、单价、库存、可售状态和备注组成的商品记录"
+  outcome="完成一次文本库存到补货判断的完整转换"
+/>
 
 ## 先看一条商品数据
 
@@ -30,13 +38,16 @@ is_available = stock > 0
 remark = None
 ```
 
-<div class="py-types-board" aria-label="变量和数据类型对应关系">
-  <div><code>sku</code><strong>"K161"</strong><span>str · 文字</span></div>
-  <div><code>price</code><strong>129.9</strong><span>float · 小数</span></div>
-  <div><code>stock</code><strong>8</strong><span>int · 整数</span></div>
-  <div><code>is_available</code><strong>True</strong><span>bool · 真 / 假</span></div>
-  <div><code>remark</code><strong>None</strong><span>None · 暂时没有值</span></div>
-</div>
+<figure class="py-types-board" aria-labelledby="types-caption">
+  <figcaption id="types-caption"><span>数据检查台</span><strong>同一条商品记录里，每个字段都有自己的类型</strong></figcaption>
+  <dl>
+    <div><dt><code>sku</code></dt><dd><strong>"K161"</strong><span>str · 文字</span></dd></div>
+    <div><dt><code>price</code></dt><dd><strong>129.9</strong><span>float · 小数</span></dd></div>
+    <div><dt><code>stock</code></dt><dd><strong>8</strong><span>int · 整数</span></dd></div>
+    <div><dt><code>is_available</code></dt><dd><strong>True</strong><span>bool · 真 / 假</span></dd></div>
+    <div><dt><code>remark</code></dt><dd><strong>None</strong><span>None · 暂时没有值</span></dd></div>
+  </dl>
+</figure>
 
 这五行已经覆盖了自动化脚本里最常见的几类基础值。
 
@@ -48,7 +59,7 @@ stock = 8
 
 入门时可以把它理解成：“给数字 `8` 起了一个名字叫 `stock`。”
 
-更准确一点说，Python 创建了一个整数对象 `8`，变量名 `stock` 指向它。现在不需要深入对象模型，只要先记住一个重要事实：**变量名和变量里保存的值不是一回事。**
+更准确一点说，Python 创建了整数对象 `8`，变量名 `stock` 指向它。现在只要记住：**变量名和变量保存的值不是一回事。**
 
 ```python
 sku = "K161"
@@ -87,21 +98,12 @@ order_no = "1008611"
 
 不要因为看起来像数字，就急着转成 `int`。订单号、手机号、SKU 这类字段通常是**标识**，不是拿来做加减乘除的数字。
 
-字符串可以拼接：
-
-```python
-sku = "K161"
-print("当前 SKU：" + sku)
-```
-
-但更推荐新代码使用 f-string：
+输出字符串时推荐使用 f-string：
 
 ```python
 stock = 8
 print(f"当前库存：{stock}")
 ```
-
-它的好处是数字不需要先手动 `str()`：
 
 ```python
 sku = "K161"
@@ -166,9 +168,7 @@ print(is_low_stock)
 True
 ```
 
-这里不是手工把 `True` 写进去，而是比较表达式 `stock < 5` 计算出了一个布尔值。
-
-常见比较：
+这里不是手工写入 `True`，而是 `stock < 5` 计算出了布尔值。常见比较有：
 
 ```python
 stock == 0      # 是否等于 0
@@ -196,9 +196,7 @@ status == "已支付"         # 判断，结果是 True 或 False
 tracking_no = None
 ```
 
-`None` 表示没有具体值。
-
-它和下面这些都不一样：
+`None` 表示没有具体值，和下面这些值都不同：
 
 ```python
 ""      # 空字符串
@@ -218,7 +216,7 @@ if tracking_no is None:
 
 `if` 会在后面的条件判断文章里完整展开，这里只需要认识写法。
 
-## `type()`：不确定时直接看类型
+## 看类型并诊断转换错误
 
 ```python
 sku = "K161"
@@ -238,9 +236,7 @@ print(type(price))
 <class 'float'>
 ```
 
-调试脚本时，如果一个字段“看起来像数字却算不了”，`type()` 是非常直接的排查方法。
-
-## 最常见的类型错误：看起来一样，实际上不是一类数据
+如果一个字段“看起来像数字却算不了”，先用 `type()` 确认它的真实类型。最常见的错误就是把文本形式的数字直接拿去计算：
 
 ```python
 price = "119.9"
@@ -267,15 +263,13 @@ print(amount)
 239.8
 ```
 
-常见转换函数：
+常见转换函数只有三种需要先记住：
 
 ```python
 int("20")       # 20
 float("19.9")   # 19.9
 str(20)          # "20"
 ```
-
-`bool()` 也可以把值转换成布尔值，但它有一套自己的真假规则。比如非空字符串通常会得到 `True`，所以不要先把 `bool()` 当成普通的“文字转真假”工具；等真正需要判断空值时再学会更自然。
 
 但转换不是“强制成功”：
 
@@ -300,28 +294,23 @@ message = f"库存：{stock}，需要补货：{is_low_stock}"
 print(message)
 ```
 
-<div class="py-state-flow" aria-label="变量状态变化">
-  <div><span>输入</span><code>raw_stock = "3"</code><small>str</small></div>
-  <i>→</i>
-  <div><span>转换</span><code>stock = 3</code><small>int</small></div>
-  <i>→</i>
-  <div><span>比较</span><code>3 &lt; 5</code><small>True</small></div>
-  <i>→</i>
-  <div><span>输出</span><code>"库存：3…"</code><small>str</small></div>
-</div>
+<ol class="py-state-flow" aria-label="库存数据状态变化">
+  <li><span>01 · 输入</span><code>raw_stock = "3"</code><small>来源是文本，所以类型为 str</small></li>
+  <li><span>02 · 转换</span><code>stock = int(raw_stock)</code><small>得到可以比较的整数 3</small></li>
+  <li><span>03 · 比较</span><code>stock &lt; 5</code><small>表达式得到布尔值 True</small></li>
+  <li><span>04 · 输出</span><code>{'f"库存：{stock}…"'}</code><small>把结果组织成可读文本</small></li>
+</ol>
 
 这就是以后很多数据脚本的基本形态：**外部数据先进入 Python → 转成合适类型 → 做计算或判断 → 生成结果。**
 
-## 这一篇先不要学太多运算符
-
-你目前只需要熟悉：
+## 目前只需要这些运算符
 
 ```text
 +  -  *  /          # 基础算术
 == != > >= < <=     # 基础比较
 ```
 
-`//`、`%`、`**` 等运算符当然也有用，但不需要为了“完整”现在全部背完。以后遇到具体场景再补更容易记住。
+`//`、`%`、`**` 等运算符等遇到具体场景再补，不需要现在全部背完。
 
 ## 动手练习：一条订单的基础字段
 
@@ -348,27 +337,51 @@ print(f"是否退款：{is_refunded}")
 
 如果你能解释每一个变量当前是什么类型、为什么这样转换，这一篇就已经达标。
 
+<Callout title="本章检查">
+  给定一个外部字段 `"3"`，你应该能用 `type()` 识别它、转换成整数、完成比较，并解释 `=`、`==`、`None` 和布尔值分别解决什么问题。
+</Callout>
+
 <HighlightBox eyebrow="下一篇" title="从“一份值”进入“一批真实数据”">
   下一篇会重点学习字符串、列表和字典，并补充元组、集合、变量引用与浅拷贝。你会开始处理“多条订单”和“一条订单的多个字段”。
 </HighlightBox>
 
 <style>{`
   .py-types-board {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin: 1.5rem 0 2rem;
+    overflow: hidden;
+  }
+
+  .py-types-board figcaption {
+    background: color-mix(in srgb, var(--cyan) 9%, var(--paper));
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 1rem;
+  }
+
+  .py-types-board dl {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 0.75rem;
-    margin: 1.5rem 0 2rem;
+    margin: 0;
   }
 
-  .py-types-board > div,
-  .py-state-flow > div {
-    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
-    border-radius: 16px;
+  .py-types-board dl > div {
+    min-width: 0;
     padding: 1rem;
-    background: rgba(148, 163, 184, 0.06);
   }
 
-  .py-types-board code,
+  .py-types-board dl > div + div {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-types-board dt,
+  .py-types-board dd {
+    margin: 0;
+  }
+
   .py-types-board strong,
   .py-types-board span,
   .py-state-flow span,
@@ -382,24 +395,38 @@ print(f"是否退款：{is_refunded}")
     font-size: 1.08rem;
   }
 
-  .py-types-board span,
+  .py-types-board figcaption span,
+  .py-types-board dd span,
   .py-state-flow small {
-    color: var(--text-muted, #64748b);
+    color: var(--soft);
     font-size: 0.82rem;
   }
 
   .py-state-flow {
     display: grid;
-    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
-    align-items: stretch;
-    gap: 0.65rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    list-style: none;
     margin: 1.5rem 0 2rem;
+    padding: 0;
   }
 
-  .py-state-flow i {
-    align-self: center;
-    font-style: normal;
-    color: var(--text-muted, #64748b);
+  .py-state-flow li {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .py-state-flow li:first-child {
+    border-radius: var(--radius) 0 0 var(--radius);
+  }
+
+  .py-state-flow li:last-child {
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+
+  .py-state-flow li + li {
+    border-left: 0;
   }
 
   .py-state-flow code {
@@ -408,20 +435,50 @@ print(f"是否退款：{is_refunded}")
 
   @media (max-width: 760px) {
     .py-types-board {
+      overflow: hidden;
+    }
+
+    .py-types-board dl {
       grid-template-columns: 1fr 1fr;
     }
 
-    .py-types-board > div:last-child {
+    .py-types-board dl > div + div {
+      border-left: 0;
+    }
+
+    .py-types-board dl > div {
+      border-top: 1px solid var(--line);
+    }
+
+    .py-types-board dl > div:nth-child(2n) {
+      border-left: 1px solid var(--line);
+    }
+
+    .py-types-board dl > div:first-child,
+    .py-types-board dl > div:nth-child(2) {
+      border-top: 0;
+    }
+
+    .py-types-board dl > div:last-child {
       grid-column: 1 / -1;
     }
 
     .py-state-flow {
       grid-template-columns: 1fr;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
     }
 
-    .py-state-flow i {
-      text-align: center;
-      transform: rotate(90deg);
+    .py-state-flow li,
+    .py-state-flow li:first-child,
+    .py-state-flow li:last-child {
+      border: 0;
+      border-radius: 0;
+    }
+
+    .py-state-flow li + li {
+      border-top: 1px solid var(--line);
     }
   }
 `}</style>

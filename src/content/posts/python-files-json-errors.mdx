@@ -2,11 +2,11 @@
 title: "Python 文件、JSON 与异常处理：从练习代码走向真实脚本"
 description: "从 TXT、JSON 文件和接口返回结构出发，讲清 Python 文件读取与写入、json 模块、嵌套数据提取，以及 ValueError、FileNotFoundError 等常见异常如何处理。"
 date: 2026-08-22T22:40:00+08:00
-updated: 2026-08-22T23:22:00+08:00
+updated: 2026-08-27T00:10:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 17
+minutes: 13
 featured: false
 series: "python-basics"
 seriesOrder: 6
@@ -15,6 +15,8 @@ private: false
 ---
 
 import HighlightBox from '../../components/HighlightBox.astro';
+import Callout from '../../components/Callout.astro';
+import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
 前面的例子里，订单和商品数据都直接写在代码里：
 
@@ -29,19 +31,21 @@ orders = [
 
 这一篇就是从“我会写代码”跨到“我能接真实数据”的那一步。
 
-<div class="py-real-data-flow" aria-label="真实脚本最常见的数据流">
-  <div class="data-sources">
-    <span>数据从外部进入</span>
-    <strong>TXT / JSON 文件</strong>
-    <strong>API 返回 JSON</strong>
-  </div>
-  <i>→</i>
-  <div><span>读取 / 解析</span><strong>变成 Python 数据</strong><code>str / list / dict</code></div>
-  <i>→</i>
-  <div><span>处理</span><strong>清洗 / 判断 / 循环 / 函数</strong></div>
-  <i>→</i>
-  <div><span>结果</span><strong>打印 / 写文件 / 交给下一步</strong></div>
-</div>
+<PythonLessonBrief
+  goal="把 TXT、JSON 或 API 数据安全地读入、处理并输出"
+  data="包含正常、退款和金额异常记录的 orders.json"
+  outcome="完成一个能跳过坏数据并写出结果的真实小脚本"
+/>
+
+<figure class="py-real-data-flow" aria-labelledby="data-flow-caption">
+  <figcaption id="data-flow-caption"><span>I/O 处理管道</span><strong>外部数据先变成 Python 对象，再进入已经学过的处理逻辑</strong></figcaption>
+  <ol>
+    <li><span>01 · 输入</span><strong>TXT / JSON 文件或 API</strong><small>数据还在 Python 之外</small></li>
+    <li><span>02 · 读取解析</span><strong><code>str / list / dict</code></strong><small>转换成 Python 能处理的对象</small></li>
+    <li><span>03 · 业务处理</span><strong>清洗、判断、循环、函数</strong><small>异常记录进入单独分支</small></li>
+    <li><span>04 · 输出</span><strong>打印、写文件或交给下一步</strong><small>形成可以继续使用的结果</small></li>
+  </ol>
+</figure>
 
 不同来源的数据进入 Python 后，最终都会先变成字符串、列表、字典等基础对象，再进入前面已经学过的判断、循环和函数。
 
@@ -64,16 +68,7 @@ with open("order_no.txt", "r", encoding="utf-8") as file:
 print(content)
 ```
 
-先只看这几个部分：
-
-```text
-open(...)            打开文件
-"order_no.txt"       文件路径
-"r"                  读取模式 read
-encoding="utf-8"     指定文本编码
-with ... as file      用完后自动关闭文件
-file.read()           把全部内容读成字符串
-```
+先看关键部分：`open(...)` 打开文件，`"r"` 表示读取，`encoding="utf-8"` 指定文本编码，`file.read()` 把全部内容读成字符串。
 
 `with` 是推荐写法，因为无论后面代码正常结束还是发生异常，文件资源都能被正确关闭。
 
@@ -88,19 +83,7 @@ with open("order_no.txt", "r", encoding="utf-8") as file:
         print(order_no)
 ```
 
-这里已经把前面几篇串起来了：
-
-```text
-文件对象
-  ↓ for
-每次拿到一行字符串
-  ↓ strip()
-去掉换行和两端空白
-  ↓
-得到干净订单号
-```
-
-很多简单数据清洗脚本就是这种结构。
+这段代码把前面的知识串了起来：`for` 每次取得一行字符串，`strip()` 去掉换行和两端空白，最后得到干净订单号。很多数据清洗脚本就是这种结构。
 
 ## 写入一个结果文件
 
@@ -114,15 +97,12 @@ with open("result.txt", "w", encoding="utf-8") as file:
 
 `"w"` 表示写入。如果文件已经存在，会覆盖原内容。
 
-如果你明确希望追加到文件末尾，可以用：
+如果希望追加到文件末尾，使用模式 `"a"`。写文件前要先确定是覆盖还是追加。
 
-```python
-"a"
-```
+<details class="py-file-notes">
+  <summary><span>文件环境补充</span><strong>相对路径、当前目录和标准库导入</strong><small>文件找不到时再展开检查</small></summary>
 
-所以写文件前一定先想清楚：**我要覆盖，还是追加？**
-
-## 文件路径：先理解相对路径
+### 文件路径：先理解相对路径
 
 ```python
 open("data/orders.txt", "r", encoding="utf-8")
@@ -151,7 +131,21 @@ file_path = Path("data") / "orders.txt"
 print(file_path)
 ```
 
-这里只先认识这种写法，不需要现在深入各种路径 API。
+这里只先认识这种写法，不需要深入其他路径 API。
+
+### `import`：使用 Python 自带模块
+
+本文使用了 `import json` 和 `from pathlib import Path`。它们来自 Python 标准库，不需要额外安装：
+
+```python
+import json
+json.loads(...)
+
+from pathlib import Path
+Path.cwd()
+```
+
+</details>
 
 ## JSON：接口和配置里最常见的数据格式之一
 
@@ -184,7 +178,18 @@ JSON 与 Python 常见类型的对应关系：
 
 注意大小写：JSON 是 `true`，Python 是 `True`。
 
-## `json.loads()`：把 JSON 字符串变成 Python 数据
+## JSON 的四个常用入口
+
+先用一张表锁定输入和输出，避免只靠多一个字母 `s` 来死记：
+
+| 函数 | 输入 | 输出或动作 |
+| --- | --- | --- |
+| `json.loads(text)` | JSON 字符串 | Python 对象 |
+| `json.load(file)` | JSON 文件对象 | Python 对象 |
+| `json.dumps(data)` | Python 对象 | JSON 字符串 |
+| `json.dump(data, file)` | Python 对象和文件对象 | 直接写入 JSON 文件 |
+
+### `json.loads()`：把 JSON 字符串变成 Python 数据
 
 ```python
 import json
@@ -225,7 +230,7 @@ for order in orders:
     print(order["order_no"], order["amount"])
 ```
 
-## `json.dumps()`：把 Python 数据变成 JSON 字符串
+### `json.dumps()`：把 Python 数据变成 JSON 字符串
 
 ```python
 import json
@@ -253,7 +258,7 @@ print(text)
 - `ensure_ascii=False` 让中文直接显示，而不是变成 `\uXXXX`。
 - `indent=2` 让 JSON 更容易阅读。
 
-## JSON 文件：`load()` 和 `dump()`
+### JSON 文件：`load()` 和 `dump()`
 
 如果 `orders.json` 本身就是一个 JSON 文件，可以直接：
 
@@ -262,13 +267,6 @@ import json
 
 with open("orders.json", "r", encoding="utf-8") as file:
     orders = json.load(file)
-```
-
-和前面的区别：
-
-```text
-json.loads(text)   解析字符串
-json.load(file)    从文件对象读取并解析
 ```
 
 写入 JSON 文件：
@@ -280,34 +278,9 @@ with open("result.json", "w", encoding="utf-8") as file:
     json.dump(orders, file, ensure_ascii=False, indent=2)
 ```
 
-对应地：
-
-```text
-json.dumps(data)   得到 JSON 字符串
-json.dump(data, file)  直接写入文件
-```
-
 ## API 返回结果和 JSON 文件，本质上可以进入同一套处理逻辑
 
-以后你用某个 HTTP 库请求接口，常见流程会像这样：
-
-```text
-发送请求
-  ↓
-收到 JSON
-  ↓
-解析成 dict / list
-  ↓
-取字段
-  ↓
-for 遍历
-  ↓
-if 筛选
-  ↓
-函数处理
-```
-
-这个系列暂时不引入第三方 HTTP 库。等你把本篇的 JSON 和异常处理掌握以后，再学 `requests`、`httpx` 或自动化平台自己的 HTTP API，会自然很多。
+接口收到 JSON 后，同样会先解析成字典或列表，再取字段、遍历、筛选和调用函数。本系列暂时不引入第三方 HTTP 库，先把 JSON 与异常处理掌握即可。
 
 ## 为什么需要异常处理
 
@@ -344,17 +317,15 @@ except ValueError:
 
 执行逻辑：
 
-<div class="py-error-branch" aria-label="try except 的成功和失败分支">
-  <div class="error-entry"><span>尝试执行</span><strong>int(raw_quantity)</strong></div>
-  <div class="error-options">
-    <div><b>转换成功</b><code>quantity 得到数字</code><span>继续正常处理</span></div>
-    <div><b>发生 ValueError</b><code>进入 except ValueError</code><span>明确记录异常；在循环中也可以跳过当前数据</span></div>
-  </div>
-</div>
+<figure class="py-error-branch" aria-labelledby="error-caption">
+  <figcaption id="error-caption"><span>异常分支</span><strong><code>int(raw_quantity)</code> 只有两种明确结果</strong></figcaption>
+  <dl>
+    <div><dt>转换成功</dt><dd><strong><code>quantity</code> 得到数字</strong><span>回到正常处理路径</span></dd></div>
+    <div><dt>发生 ValueError</dt><dd><strong>进入 <code>except ValueError</code></strong><span>记录问题，并在循环中跳过当前数据</span></dd></div>
+  </dl>
+</figure>
 
-这里有一个重要边界：不要为了“程序永远不报错”把所有代码都塞进巨大的 `try`。
-
-异常本来就是告诉你哪里出了问题。只有你**知道某类失败可以合理处理**时，才应该接住它。
+不要为了“程序永远不报错”把所有代码都塞进巨大的 `try`。只有明确知道某类失败可以怎样处理时，才接住它。
 
 例如除数为 0 会抛出 `ZeroDivisionError`：
 
@@ -365,7 +336,7 @@ except ZeroDivisionError:
     print("除数不能为 0")
 ```
 
-这和 `ValueError` 一样，重点不是背完所有异常名称，而是遇到明确失败时，捕获对应的具体异常。
+重点不是背完异常名称，而是捕获当前操作对应的具体异常。
 
 ## 文件不存在：`FileNotFoundError`
 
@@ -377,14 +348,7 @@ except FileNotFoundError:
     print("没有找到 orders.txt")
 ```
 
-这比：
-
-```text
-except Exception:
-    print("失败")
-```
-
-更清楚，因为你知道自己处理的是“文件不存在”，不是把编码错误、权限错误、代码 bug 全部吞掉。
+它明确处理“文件不存在”，不会把编码错误、权限错误和代码 bug 全部吞掉。
 
 ## JSON 格式错误：`JSONDecodeError`
 
@@ -438,57 +402,12 @@ for order in orders:
 print("有效已支付金额：", total)
 ```
 
-这段代码已经具备一个真正小脚本的完整形状：
-
-```text
-读取文件
-  ↓
-解析 JSON
-  ↓
-遍历多条订单
-  ↓
-条件筛选
-  ↓
-类型转换
-  ↓ 失败
-记录异常并跳过
-  ↓ 成功
-累计结果
-  ↓
-输出最终结果
-```
-
-## `import`：把标准库模块拿进来使用
-
-这一篇已经出现：
-
-```python
-import json
-```
-
-以及：
-
-```python
-from pathlib import Path
-```
-
-可以先这样理解：Python 自己带了很多现成模块，你不需要把 JSON 解析、路径处理这些功能重新写一遍。
-
-模块调用常见两种写法：
-
-```python
-import json
-json.loads(...)
-```
-
-或者：
-
-```python
-from pathlib import Path
-Path.cwd()
-```
-
-现在只要能看懂这两种形式即可。包管理、虚拟环境和第三方依赖放到真正需要使用外部库时再学。
+<ol class="py-script-run" aria-label="真实订单脚本执行过程">
+  <li><span>读取解析</span><strong>打开并解析 <code>orders.json</code></strong></li>
+  <li><span>业务筛选</span><strong>跳过非已支付订单</strong></li>
+  <li><span>数据校验</span><strong>金额转换失败时记录并跳过</strong></li>
+  <li><span>结果汇总</span><strong>累计有效金额并输出</strong></li>
+</ol>
 
 ## 本篇最容易混淆的四组概念
 
@@ -529,97 +448,132 @@ Path.cwd()
 
 如果能独立完成，这时你已经不是只会写课堂示例，而是在完成一个很小但完整的数据处理任务。
 
+<Callout title="本章检查">
+  你应该能区分文本读取与 JSON 解析、业务分支与异常分支，并能让一条坏记录失败而不让整批订单停止处理。
+</Callout>
+
 <HighlightBox eyebrow="下一篇" title="最后补上够用的类与对象">
   很多数据处理和自动化脚本用“列表 + 字典 + 函数”就足够了。下一篇会讲清什么时候类能让代码更自然，以及 `class`、`__init__`、`self`、属性和方法到底在做什么，不会把入门课程带进复杂 OOP。
 </HighlightBox>
 
 <style>{`
-  .py-real-data-flow {
-    display: grid;
-    grid-template-columns: 1.2fr auto 1fr auto 1fr auto 1fr;
-    gap: 0.65rem;
-    align-items: stretch;
+  .py-real-data-flow,
+  .py-error-branch,
+  .py-file-notes {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
     margin: 1.5rem 0 1rem;
+    overflow: hidden;
   }
 
-  .py-real-data-flow > div,
-  .error-entry,
-  .error-options > div {
-    padding: 0.9rem;
-    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
-    border-radius: 15px;
-    background: rgba(148, 163, 184, 0.06);
+  .py-real-data-flow figcaption,
+  .py-error-branch figcaption,
+  .py-file-notes > summary {
+    background: color-mix(in srgb, var(--cyan) 8%, var(--paper));
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem 1.1rem;
   }
 
-  .py-real-data-flow span,
-  .py-real-data-flow strong,
-  .py-real-data-flow code,
-  .error-entry span,
-  .error-entry strong,
-  .error-options b,
-  .error-options code,
-  .error-options span {
+  .py-real-data-flow figcaption span,
+  .py-real-data-flow li span,
+  .py-real-data-flow li small,
+  .py-error-branch figcaption span,
+  .py-error-branch dd span,
+  .py-file-notes summary span,
+  .py-file-notes summary small,
+  .py-script-run span {
+    color: var(--soft);
+    font-size: 0.8rem;
+  }
+
+  .py-real-data-flow ol,
+  .py-script-run {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .py-real-data-flow li,
+  .py-script-run li {
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .py-real-data-flow li + li,
+  .py-script-run li + li {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-real-data-flow li strong,
+  .py-real-data-flow li small,
+  .py-script-run strong {
     display: block;
-  }
-
-  .py-real-data-flow span,
-  .error-entry span,
-  .error-options span {
-    color: var(--text-muted, #64748b);
-    font-size: 0.82rem;
-  }
-
-  .py-real-data-flow strong,
-  .py-real-data-flow code,
-  .error-entry strong,
-  .error-options code {
     margin-top: 0.45rem;
   }
 
-  .py-real-data-flow > i {
-    align-self: center;
-    color: var(--text-muted, #64748b);
-    font-style: normal;
+  .py-file-notes > summary {
+    border-bottom: 0;
+    cursor: pointer;
   }
 
-  .data-sources strong + strong {
-    margin-top: 0.3rem;
+  .py-file-notes[open] > summary {
+    border-bottom: 1px solid var(--line);
   }
 
-  .py-error-branch {
+  .py-file-notes > :not(summary) {
+    margin-left: 1.1rem;
+    margin-right: 1.1rem;
+  }
+
+  .py-error-branch dl {
     display: grid;
-    grid-template-columns: minmax(10rem, 0.7fr) minmax(0, 1.5fr);
-    gap: 0.8rem;
-    align-items: stretch;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+  }
+
+  .py-error-branch dl > div {
+    padding: 1rem;
+  }
+
+  .py-error-branch dl > div + div {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-error-branch dt,
+  .py-error-branch dd {
+    margin: 0;
+  }
+
+  .py-error-branch dd strong,
+  .py-error-branch dd span {
+    display: block;
+    margin-top: 0.45rem;
+  }
+
+  .py-script-run {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
     margin: 1.5rem 0 2rem;
-  }
-
-  .error-entry {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-  .error-options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.7rem;
-  }
-
-  .error-options b {
-    margin-bottom: 0.45rem;
+    overflow: hidden;
   }
 
   @media (max-width: 760px) {
-    .py-real-data-flow,
-    .py-error-branch,
-    .error-options {
+    .py-real-data-flow ol,
+    .py-error-branch dl,
+    .py-script-run {
       grid-template-columns: 1fr;
     }
 
-    .py-real-data-flow > i {
-      justify-self: center;
-      transform: rotate(90deg);
+    .py-real-data-flow li + li,
+    .py-error-branch dl > div + div,
+    .py-script-run li + li {
+      border-left: 0;
+      border-top: 1px solid var(--line);
     }
   }
 `}</style>

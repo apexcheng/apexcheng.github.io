@@ -2,11 +2,11 @@
 title: "Python 基础考核：20 道覆盖不同知识点的入门题"
 description: "一套可直接使用的 Python 基础考核题，覆盖类型转换、循环、字典、函数、文件、JSON、类、浅拷贝和默认参数，并提供完整附件下载。"
 date: 2026-07-24T15:48:25+08:00
-updated: 2026-08-23T00:35:00+08:00
+updated: 2026-08-27T00:10:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 18
+minutes: 16
 featured: false
 series: "python-basics"
 seriesOrder: 8
@@ -14,21 +14,29 @@ draft: false
 private: false
 ---
 
-import MetricCard from '../../components/MetricCard.astro';
-import VisualGrid from '../../components/VisualGrid.astro';
 import HighlightBox from '../../components/HighlightBox.astro';
-import DecisionFlow from '../../components/DecisionFlow.astro';
+import Callout from '../../components/Callout.astro';
+import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
 这套题用于检查一个人是否真正掌握了 Python 基础，而不是只记住几个零散语法。题目不追求算法难度，重点覆盖日常编程中最常见的数据处理、函数、文件和对象知识。
 
 如果你是按「Python 零基础到简单脚本」系列一路读到这里，这篇就是最后的综合考核。建议先独立完成，再根据暴露出来的问题回到前面的对应章节补漏。
 
-<VisualGrid columns={4}>
-  <MetricCard label="题目数量" value="20 题" detail="每道题尽量覆盖不同的 Python 基础知识点。" />
-  <MetricCard label="基础题" value="17 题" detail="补全代码、完成数据处理或解释明确错误。" tone="cyan" />
-  <MetricCard label="基础理解" value="3 题" detail="判断运行结果，并解释引用、拷贝和默认参数。" tone="violet" />
-  <MetricCard label="外部依赖" value="0 个" detail="全部使用 Python 自带语法和标准库。" tone="green" />
-</VisualGrid>
+<PythonLessonBrief
+  goal="独立完成一轮覆盖数据、控制流、函数、文件和对象的综合自测"
+  data="20 道由基础操作逐步进入运行机制理解的题目"
+  outcome="定位薄弱章节，并确认自己能写出完整的小型数据脚本"
+/>
+
+<figure class="assessment-console" aria-labelledby="console-caption">
+  <figcaption id="console-caption"><span>考核控制台</span><strong>先确认范围，再开始计时作答</strong></figcaption>
+  <dl>
+    <div><dt>题目数量</dt><dd><strong>20 题</strong><span>知识点尽量不重复</span></dd></div>
+    <div><dt>动手题</dt><dd><strong>17 题</strong><span>补全代码或完成数据处理</span></dd></div>
+    <div><dt>机制理解</dt><dd><strong>3 题</strong><span>解释引用、拷贝和默认参数</span></dd></div>
+    <div><dt>外部依赖</dt><dd><strong>0 个</strong><span>只使用 Python 语法与标准库</span></dd></div>
+  </dl>
+</figure>
 
 <HighlightBox eyebrow="两种作答方式" title="网页直接看题，或下载文件到本地完成">
   <p><a href="/files/python-basic-assessment/python-basic-assessment.py" download>下载完整 Python 考核题（PY）</a></p>
@@ -38,31 +46,12 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 ## 这套题怎么安排
 
-<DecisionFlow
-  title="从会写语法，到理解运行机制"
-  items={[
-    {
-      label: '第 1～4 题',
-      title: '先检查基础数据处理',
-      description: '类型转换、列表筛选、字典统计和字符串清洗，是最常见的入门操作。',
-    },
-    {
-      label: '第 5～12 题',
-      title: '再检查代码组织能力',
-      description: '函数、去重、循环、推导式、集合、可变参数和异常处理，能看出是否可以独立完成小任务。',
-    },
-    {
-      label: '第 13～17 题',
-      title: '接着检查实际使用能力',
-      description: '文件、JSON、类、模块和订单数据处理，更接近日常工作场景。',
-    },
-    {
-      label: '第 18～20 题',
-      title: '最后检查基础理解',
-      description: '不运行代码，判断引用、浅拷贝和默认参数的真实行为。',
-    },
-  ]}
-/>
+<ol class="assessment-route" aria-label="四阶段考核路线">
+  <li><span>01–04 · 数据基础</span><strong><a href="#assessment-01-04">类型、列表、字典与字符串</a></strong><small>需要补漏：<a href="/articles/python-variables-basic-types/">变量与类型</a>、<a href="/articles/python-containers-practical/">容器实战</a></small></li>
+  <li><span>05–12 · 代码组织</span><strong><a href="#assessment-05-12">循环、函数与常用容器</a></strong><small>需要补漏：<a href="/articles/python-conditions-loops/">判断与循环</a>、<a href="/articles/python-functions-practical/">函数入门</a></small></li>
+  <li><span>13–17 · 真实任务</span><strong><a href="#assessment-13-17">文件、JSON、类与综合处理</a></strong><small>需要补漏：<a href="/articles/python-files-json-errors/">文件与异常</a>、<a href="/articles/python-classes-objects-basics/">类与对象</a></small></li>
+  <li><span>18–20 · 运行机制</span><strong><a href="#assessment-18-20">引用、浅拷贝与默认参数</a></strong><small>需要补漏：<a href="/articles/python-containers-practical/">容器进阶</a>、<a href="/articles/python-functions-practical/">函数边界</a></small></li>
+</ol>
 
 ## 考核说明
 
@@ -72,36 +61,11 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 - 第 18～20 题先写出运行结果，再解释原因。
 - 题目文件不包含答案，避免考核者直接查看。
 
-## 题目目录
-
-| 题号 | 知识点 | 主要任务 |
-| --- | --- | --- |
-| 1 | 类型转换 | 把字符串单价和数量转换后计算总金额 |
-| 2 | 列表、循环、条件 | 筛选及格成绩并计算平均分 |
-| 3 | 字典 | 统计不同商品出现次数 |
-| 4 | 字符串 | 去空格、转小写并判断内容 |
-| 5 | 函数与返回值 | 根据金额判断是否打折 |
-| 6 | 去重与排序 | 整理重复用户 ID |
-| 7 | 循环与条件 | 统计符合条件的数据数量 |
-| 8 | 列表推导式 | 生成数字平方列表 |
-| 9 | 元组 | 解释为什么不能修改元素 |
-| 10 | 集合 | 使用集合完成去重 |
-| 11 | `*args` | 接收任意数量参数并求和 |
-| 12 | 异常处理 | 处理除数为零的情况 |
-| 13 | 文件读取 | 读取并打印 `test.txt` |
-| 14 | JSON | 把字典转换为 JSON 字符串 |
-| 15 | 类与对象 | 创建带属性和方法的 `User` 类 |
-| 16 | 模块导入 | 使用 `pathlib` 输出当前工作目录 |
-| 17 | 综合数据处理 | 根据订单列表计算销售总金额 |
-| 18 | 变量引用 | 判断两个变量指向同一列表后的结果 |
-| 19 | 浅拷贝 | 判断嵌套列表为什么会共同变化 |
-| 20 | 默认参数 | 判断可变默认参数跨调用保留状态的结果 |
-
 ## 20 道完整题目
 
 不需要先下载附件。下面四组可以直接展开做题；下载版只是方便你把答案写进一个 `.py` 文件里。
 
-<details class="assessment-group" open>
+<details class="assessment-group" id="assessment-01-04" open>
   <summary><span>01–04</span><strong>基础数据处理</strong><small>类型、列表、字典、字符串</small></summary>
 
 <div class="assessment-title"><b>01</b><strong>类型转换</strong></div>
@@ -138,7 +102,7 @@ username = "  Admin  "
 ```
 </details>
 
-<details class="assessment-group">
+<details class="assessment-group" id="assessment-05-12">
   <summary><span>05–12</span><strong>循环、函数与容器</strong><small>把基础语法组合成任务</small></summary>
 
 <div class="assessment-title"><b>05</b><strong>函数与返回值</strong></div>
@@ -215,7 +179,7 @@ b = 0
 ```
 </details>
 
-<details class="assessment-group">
+<details class="assessment-group" id="assessment-13-17">
   <summary><span>13–17</span><strong>文件与真实数据</strong><small>文件、JSON、类、模块、综合处理</small></summary>
 
 <div class="assessment-title"><b>13</b><strong>文件读取</strong></div>
@@ -250,7 +214,7 @@ orders = [
 ```
 </details>
 
-<details class="assessment-group">
+<details class="assessment-group" id="assessment-18-20">
   <summary><span>18–20</span><strong>运行机制理解</strong><small>先判断结果，再解释原因</small></summary>
 
 <div class="assessment-title"><b>18</b><strong>变量引用</strong></div>
@@ -300,24 +264,124 @@ print(add_item("B"))
 
 ## 怎么判断完成质量
 
-不需要强行要求所有人写出完全相同的代码。更值得观察的是下面四点：
+不需要强行要求所有人写出完全相同的代码。按下面四项评估：
 
-1. **结果是否正确**：输出值和题目要求一致。
-2. **思路是否直接**：没有为了简单问题写大量无关代码。
-3. **基础是否完整**：会使用常见容器、函数、文件和标准库。
-4. **解释是否准确**：最后三题能说明对象引用和状态变化原因，而不是只猜输出。
+<ol class="assessment-rubric">
+  <li><span>结果正确</span><strong>输出值和题目要求一致</strong></li>
+  <li><span>思路直接</span><strong>没有为简单问题增加无关代码</strong></li>
+  <li><span>基础完整</span><strong>能组合容器、函数、文件和标准库</strong></li>
+  <li><span>解释准确</span><strong>能说明引用和状态变化，而不是只猜输出</strong></li>
+</ol>
 
 <HighlightBox eyebrow="完成标准" title="会写基础代码，也能解释代码为什么这样运行">
   这 20 题不用于筛选算法能力。它更适合判断一个人是否已经越过“只看过语法”的阶段，能够独立完成小型数据处理任务，并理解几个最容易出错的 Python 基础机制。
 </HighlightBox>
 
+<Callout title="本章检查">
+  完成后记录错题对应的章节，先修正不能解释的题，再重做代码题。能独立完成大部分题目并解释最后三题，就完成了本系列的学习闭环。
+</Callout>
+
 <style>{`
+  .assessment-console {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin: 1.5rem 0 2rem;
+    overflow: hidden;
+  }
+
+  .assessment-console figcaption {
+    background: color-mix(in srgb, var(--blue) 8%, var(--paper));
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem 1.1rem;
+  }
+
+  .assessment-console figcaption span,
+  .assessment-console dt,
+  .assessment-console dd span,
+  .assessment-route li > span,
+  .assessment-route small,
+  .assessment-rubric span {
+    color: var(--soft);
+    font-size: 0.8rem;
+  }
+
+  .assessment-console dl {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 0;
+  }
+
+  .assessment-console dl > div {
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .assessment-console dl > div + div {
+    border-left: 1px solid var(--line);
+  }
+
+  .assessment-console dt,
+  .assessment-console dd {
+    margin: 0;
+  }
+
+  .assessment-console dd strong,
+  .assessment-console dd span {
+    display: block;
+    margin-top: 0.45rem;
+  }
+
+  .assessment-console dd strong {
+    font-size: 1.35rem;
+  }
+
+  .assessment-route,
+  .assessment-rubric {
+    display: grid;
+    gap: 0.8rem;
+    list-style: none;
+    margin: 1.5rem 0 2rem;
+    padding: 0;
+  }
+
+  .assessment-route {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .assessment-route li,
+  .assessment-rubric li {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .assessment-route strong,
+  .assessment-route small,
+  .assessment-rubric strong {
+    display: block;
+    margin-top: 0.45rem;
+  }
+
+  .assessment-route small {
+    line-height: 1.65;
+  }
+
+  .assessment-rubric {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .assessment-group {
     margin: 1rem 0;
-    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
-    border-radius: 18px;
-    background: rgba(148, 163, 184, 0.04);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
     overflow: clip;
+    scroll-margin-top: 6rem;
   }
 
   .assessment-group > summary {
@@ -331,7 +395,7 @@ print(add_item("B"))
 
   .assessment-group > summary span,
   .assessment-group > summary small {
-    color: var(--text-muted, #64748b);
+    color: var(--soft);
   }
 
   .assessment-group > summary span {
@@ -344,7 +408,13 @@ print(add_item("B"))
   }
 
   .assessment-group[open] > summary {
-    border-bottom: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+    background: color-mix(in srgb, var(--cyan) 5%, var(--paper));
+    border-bottom: 1px solid var(--line);
+  }
+
+  .assessment-group > summary:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--blue) 26%, transparent);
+    outline-offset: -3px;
   }
 
   .assessment-group > :not(summary) {
@@ -365,7 +435,7 @@ print(add_item("B"))
   }
 
   .assessment-title b {
-    color: var(--text-muted, #64748b);
+    color: var(--soft);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.82rem;
   }
@@ -374,13 +444,34 @@ print(add_item("B"))
     font-size: 1rem;
   }
 
+  .assessment-group pre {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
   @media (max-width: 680px) {
+    .assessment-console dl,
+    .assessment-route,
+    .assessment-rubric {
+      grid-template-columns: 1fr;
+    }
+
+    .assessment-console dl > div + div {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
     .assessment-group > summary {
       grid-template-columns: auto 1fr;
     }
 
     .assessment-group > summary small {
       grid-column: 1 / -1;
+    }
+
+    .assessment-group > :not(summary) {
+      margin-left: 0.9rem;
+      margin-right: 0.9rem;
     }
   }
 `}</style>

@@ -1,0 +1,95 @@
+---
+interface Props {
+  goal: string;
+  data: string;
+  outcome: string;
+}
+
+const { goal, data, outcome } = Astro.props;
+---
+
+<aside class="python-lesson-brief" aria-label="本章学习说明">
+  <p>本章学习台</p>
+  <dl>
+    <div>
+      <dt>本章目标</dt>
+      <dd>{goal}</dd>
+    </div>
+    <div>
+      <dt>贯穿数据</dt>
+      <dd>{data}</dd>
+    </div>
+    <div>
+      <dt>最终产出</dt>
+      <dd>{outcome}</dd>
+    </div>
+  </dl>
+</aside>
+
+<style>
+  .python-lesson-brief {
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--blue) 10%, transparent), color-mix(in srgb, var(--cyan) 6%, transparent)),
+      var(--paper);
+    border: 1px solid color-mix(in srgb, var(--blue) 24%, var(--line));
+    border-radius: var(--radius);
+    margin: 28px 0 34px;
+    overflow: hidden;
+  }
+
+  .python-lesson-brief > p {
+    border-bottom: 1px solid color-mix(in srgb, var(--blue) 18%, var(--line));
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin: 0;
+    padding: 13px 18px;
+  }
+
+  .python-lesson-brief dl {
+    display: grid;
+    gap: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+  }
+
+  .python-lesson-brief dl > div {
+    min-width: 0;
+    padding: 20px 18px 22px;
+  }
+
+  .python-lesson-brief dl > div + div {
+    border-left: 1px solid color-mix(in srgb, var(--blue) 14%, var(--line));
+  }
+
+  .python-lesson-brief dt {
+    color: var(--soft);
+    font-size: 12px;
+    font-weight: 760;
+    margin-bottom: 8px;
+  }
+
+  .python-lesson-brief dd {
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 720;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  @media (max-width: 680px) {
+    .python-lesson-brief dl {
+      grid-template-columns: 1fr;
+    }
+
+    .python-lesson-brief dl > div {
+      padding: 16px 18px;
+    }
+
+    .python-lesson-brief dl > div + div {
+      border-left: 0;
+      border-top: 1px solid color-mix(in srgb, var(--blue) 14%, var(--line));
+    }
+  }
+</style>

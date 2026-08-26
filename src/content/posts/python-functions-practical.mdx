@@ -2,11 +2,11 @@
 title: "Python 函数入门：把一段处理逻辑变成可以重复使用的小工具"
 description: "从订单金额和状态判断出发，讲清 Python 函数定义、参数、return、默认参数、关键字参数、可变参数、局部变量和可变默认参数陷阱。"
 date: 2026-08-22T22:38:00+08:00
-updated: 2026-08-22T23:22:00+08:00
+updated: 2026-08-27T00:10:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 15
+minutes: 12
 featured: false
 series: "python-basics"
 seriesOrder: 5
@@ -15,6 +15,8 @@ private: false
 ---
 
 import HighlightBox from '../../components/HighlightBox.astro';
+import Callout from '../../components/Callout.astro';
+import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
 前面已经能写出这样的代码：
 
@@ -28,6 +30,12 @@ else:
 ```
 
 如果只判断一次，这样完全没问题。如果很多订单都需要做同一个判断，就可以把它变成一个函数。
+
+<PythonLessonBrief
+  goal="把已经会写的判断与循环整理成有明确输入和输出的函数"
+  data="订单金额、状态以及由三条订单组成的列表"
+  outcome="完成两个函数协作的有效订单金额统计"
+/>
 
 ## 函数先理解成“有名字的一段处理逻辑”
 
@@ -46,19 +54,15 @@ level = get_amount_level(129.0)
 print(level)
 ```
 
-<div class="py-function-machine" aria-label="函数输入处理输出过程">
-  <div class="machine-input"><span>输入</span><strong>129.0</strong><small>传给 amount</small></div>
-  <div class="machine-arrow">→</div>
-  <div class="machine-core"><span>函数</span><strong>get_amount_level</strong><small>判断 amount 是否 ≥ 100</small></div>
-  <div class="machine-arrow">→</div>
-  <div class="machine-output"><span>返回</span><strong>"高金额"</strong><small>交给调用位置</small></div>
-</div>
-
-函数最重要的三个部分就是：
-
-```text
-输入 → 处理 → 输出
-```
+<figure class="py-function-machine" aria-labelledby="function-caption">
+  <figcaption id="function-caption"><span>函数工作台</span><strong>调用方交入数据，函数按契约处理，再把结果交回调用方</strong></figcaption>
+  <ol>
+    <li><span>01 · 调用</span><strong><code>get_amount_level(129.0)</code></strong><small>调用方提出一次处理请求</small></li>
+    <li><span>02 · 参数</span><strong><code>amount = 129.0</code></strong><small>实参进入函数的参数名</small></li>
+    <li><span>03 · 处理</span><strong><code>amount &gt;= 100</code></strong><small>函数内部执行判断</small></li>
+    <li><span>04 · 返回</span><strong><code>"高金额"</code></strong><small>结果回到原来的调用位置</small></li>
+  </ol>
+</figure>
 
 ## `def` 只是定义，调用时才真正执行
 
@@ -67,9 +71,7 @@ def say_hello():
     print("你好")
 ```
 
-只运行这三行，不会看到输出。
-
-因为这里只是告诉 Python：“以后有一个叫 `say_hello` 的函数，它里面要做这些事。”
+只运行这三行不会输出，它只是告诉 Python 以后有一个叫 `say_hello` 的函数。
 
 真正执行：
 
@@ -92,33 +94,12 @@ def show_order(order_no, amount):
 show_order("A001", 129.0)
 ```
 
-定义函数时：
+定义时的 `order_no`、`amount` 是参数；调用时的 `"A001"`、`129.0` 是具体实参。函数需要哪些数据，就把哪些数据作为参数交进去。
 
-```python
-order_no
-amount
-```
-
-叫参数。
-
-调用函数时传进去的：
-
-```python
-"A001"
-129.0
-```
-
-是具体的实参值。
-
-入门时不用纠结术语，只要理解：**函数需要哪些数据，就把这些数据作为参数交进去。**
-
-<div class="py-parameter-map" aria-label="函数调用值进入参数的对应关系">
-  <div><span>调用时给出的值</span><code>"A001"</code><code>129.0</code></div>
-  <i>→</i>
-  <div><span>进入函数参数</span><code>order_no</code><code>amount</code></div>
-  <i>→</i>
-  <div><span>函数内部使用</span><code>print(...)</code><small>参数名代表本次调用传进来的值</small></div>
-</div>
+| 调用时的实参 | 进入的参数 | 函数内部用途 |
+| --- | --- | --- |
+| `"A001"` | `order_no` | 组成订单提示文本 |
+| `129.0` | `amount` | 组成订单提示文本 |
 
 ## `return`：把结果交回给后面的代码
 
@@ -155,8 +136,6 @@ def check_stock(stock):
 
 ## `print()` 和 `return` 完全不是一回事
 
-错误理解最常见于这里。
-
 函数 A：
 
 ```python
@@ -180,17 +159,10 @@ result = add(3, 5)
 taxed_result = result * 1.13
 ```
 
-可以这样记：
-
-```text
-print  → 给人看
-return → 给后面的代码用
-```
-
-<div class="py-return-compare" aria-label="print 和 return 的区别">
-  <div><span>print()</span><strong>结果停在屏幕上</strong><code>add(3, 5) → 显示 8</code><small>适合调试、提示和最终展示</small></div>
-  <div><span>return</span><strong>结果回到调用位置</strong><code>result = add(3, 5)</code><small>result 得到 8，还能继续参与计算</small></div>
-</div>
+<dl class="py-return-compare" aria-label="print 和 return 的区别">
+  <div><dt><code>print()</code></dt><dd><strong>结果显示在屏幕上</strong><span>适合调试、提示和最终展示，外部代码拿不到显示值</span></dd></div>
+  <div><dt><code>return</code></dt><dd><strong>结果回到调用位置</strong><span><code>result</code> 得到 8，还能继续参与计算</span></dd></div>
+</dl>
 
 真实数据处理函数通常更需要 `return`。
 
@@ -219,7 +191,7 @@ def calculate_amount(price, quantity):
     return price * quantity
 ```
 
-到底传字典还是传具体字段，优先看哪个更直观。
+传字典还是具体字段，优先看哪个能让函数的输入更明确。
 
 ## 位置参数和关键字参数
 
@@ -232,12 +204,7 @@ def show_order(order_no, status):
 show_order("A001", "已支付")
 ```
 
-Python 按位置对应：
-
-```text
-"A001"   → order_no
-"已支付" → status
-```
+普通调用会按位置把 `"A001"` 交给 `order_no`，把 `"已支付"` 交给 `status`。
 
 也可以明确写参数名：
 
@@ -307,15 +274,21 @@ def add_order(order_no, orders=None):
 
 这样每次没有传 `orders` 时，都会在函数内部创建一个新列表。
 
-<div class="py-default-memory" aria-label="可变默认参数跨调用保留状态">
-  <div><b>第一次调用</b><code>add_order("A001")</code><span>默认列表变成</span><strong>["A001"]</strong></div>
-  <p>同一个默认列表继续被使用 ↓</p>
-  <div><b>第二次调用</b><code>add_order("A002")</code><span>继续追加后变成</span><strong>["A001", "A002"]</strong></div>
-</div>
+<table class="py-default-memory">
+  <caption>两次调用共享了函数定义时创建的默认列表</caption>
+  <thead><tr><th>调用</th><th>传入订单</th><th>共享列表调用后的状态</th></tr></thead>
+  <tbody>
+    <tr><td>第一次</td><td><code>"A001"</code></td><td><code>["A001"]</code></td></tr>
+    <tr><td>第二次</td><td><code>"A002"</code></td><td><code>["A001", "A002"]</code></td></tr>
+  </tbody>
+</table>
 
 这个问题在综合考核里会再次出现，因为它非常能检验你是否真正理解“变量和对象的关系”。
 
-## `*args`：参数数量确实不固定时再用
+<details class="py-function-boundaries">
+  <summary><span>边界与补充</span><strong><code>*args</code>、局部变量、可变对象和方法</strong><small>主线函数掌握后再展开</small></summary>
+
+### `*args`：参数数量确实不固定时再用
 
 ```python
 def total_amount(*amounts):
@@ -343,7 +316,7 @@ print(total_amount(10, 20, 30))
 
 不要因为看到 `*args` 很灵活就到处使用。参数数量固定时，普通参数更清楚。
 
-## 局部变量：函数里面创建的名字通常只在函数里使用
+### 局部变量：函数里面创建的名字通常只在函数里使用
 
 ```python
 def calculate_amount(price, quantity):
@@ -364,7 +337,7 @@ print(result)
 
 这种边界其实是好事：函数内部的临时变量不会到处污染外部代码。
 
-## 列表和字典传进函数后，可能会被直接修改
+### 列表和字典传进函数后，可能会被直接修改
 
 ```python
 def mark_processed(order):
@@ -395,7 +368,7 @@ def mark_processed(order):
 
 但别忘了上一篇讲过：`.copy()` 是浅拷贝，如果里面还有嵌套列表，仍然要理解共享引用问题。
 
-## 函数和方法：看到点号时要区分
+### 函数和方法：看到点号时要区分
 
 ```python
 text = "  K161  "
@@ -416,12 +389,9 @@ orders.append(order)
 
 `append()` 是列表的方法。
 
-入门阶段不需要研究它们底层怎么绑定，只要能看懂：
+入门阶段只要能区分 `名字(...)` 通常是函数调用，`数据.名字(...)` 通常是方法调用。
 
-```text
-名字(...)       → 常见函数调用
-数据.名字(...)  → 常见方法调用
-```
+</details>
 
 ## 什么时候值得写成函数
 
@@ -474,29 +444,14 @@ print(result)
 
 执行关系：
 
-<div class="py-function-chain" aria-label="两个函数协作处理订单的执行链">
-  <div><span>输入</span><strong>orders</strong><small>3 条订单</small></div>
-  <i>→</i>
-  <div><span>主函数</span><strong>get_valid_amount()</strong><small>逐条遍历</small></div>
-  <i>→</i>
-  <div><span>判断函数</span><strong>is_valid_order()</strong><small>每条返回 True / False</small></div>
-  <i>→</i>
-  <div><span>累计并返回</span><strong>328.0</strong><small>只有有效订单进入金额累计</small></div>
-</div>
+<ol class="py-function-chain" aria-label="两个函数协作处理订单的执行链">
+  <li><span>输入</span><strong><code>orders</code></strong><small>3 条订单进入主函数</small></li>
+  <li><span>主函数</span><strong><code>get_valid_amount()</code></strong><small>负责遍历与累计</small></li>
+  <li><span>判断函数</span><strong><code>is_valid_order()</code></strong><small>每条返回 True / False</small></li>
+  <li><span>返回</span><strong><code>328.0</code></strong><small>只有有效订单进入金额累计</small></li>
+</ol>
 
 这里没有类，没有设计模式，也没有复杂抽象。对于一个小脚本来说，这种函数拆分已经足够清楚。
-
-## 这一阶段先不把 `lambda` 当重点
-
-你以后会看到：
-
-```python
-lambda x: x * 2
-```
-
-它是一种简短函数表达式。但对于零基础学习，先把 `def`、参数和 `return` 用稳更重要。
-
-看到 `lambda` 时知道它“创建了一个小函数”即可，不需要现在主动用它改写普通函数。
 
 ## 动手练习：把库存判断拆成函数
 
@@ -529,166 +484,143 @@ def get_restock_skus(products):
     return restock_skus
 ```
 
-重点不是代码短，而是能说清：
+重点不是代码短，而是能说清函数契约：`need_restock` 输入一个库存并返回判断结果；`get_restock_skus` 输入一批商品并返回需要补货的 SKU。
 
-```text
-need_restock      输入一个库存，返回一个判断结果
-get_restock_skus  输入一批商品，返回一批需要补货的 SKU
-```
+<Callout title="本章检查">
+  你应该能写出参数和返回值都明确的函数，解释 `print()` 与 `return` 的区别，并知道可变默认参数为什么会在多次调用之间保留状态。
+</Callout>
 
 <HighlightBox eyebrow="下一篇" title="函数已经能组织逻辑，下一步接真实数据">
   下一篇会从 TXT 和 JSON 文件开始，再把同一套结构映射到 API 返回结果，并用 `try / except` 处理真正会失败的输入。
 </HighlightBox>
 
 <style>{`
-  .py-function-machine {
-    display: grid;
-    grid-template-columns: 1fr auto 1.5fr auto 1fr;
-    gap: 0.75rem;
-    align-items: stretch;
+  .py-function-machine,
+  .py-function-boundaries {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
     margin: 1.5rem 0 2rem;
+    overflow: hidden;
   }
 
-  .py-function-machine > div:not(.machine-arrow) {
+  .py-function-machine figcaption,
+  .py-function-boundaries > summary {
+    background: color-mix(in srgb, var(--violet) 8%, var(--paper));
+    border-bottom: 1px solid var(--line);
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    min-height: 8.5rem;
-    padding: 1rem;
-    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
-    border-radius: 18px;
-    background: rgba(148, 163, 184, 0.06);
+    gap: 0.25rem;
+    padding: 1rem 1.1rem;
   }
 
-  .py-function-machine span,
-  .py-function-machine small {
-    color: var(--text-muted, #64748b);
+  .py-function-machine figcaption span,
+  .py-function-machine li span,
+  .py-function-machine li small,
+  .py-return-compare span,
+  .py-function-chain span,
+  .py-function-chain small,
+  .py-function-boundaries summary span,
+  .py-function-boundaries summary small {
+    color: var(--soft);
+    font-size: 0.8rem;
   }
 
-  .py-function-machine strong {
-    margin: 0.45rem 0;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
-
-  .machine-arrow {
-    align-self: center;
-    font-size: 1.35rem;
-    color: var(--text-muted, #64748b);
-  }
-
-  .py-parameter-map,
+  .py-function-machine ol,
   .py-function-chain {
     display: grid;
-    grid-template-columns: 1fr auto 1fr auto 1fr;
-    gap: 0.7rem;
-    align-items: stretch;
-    margin: 1.5rem 0 2rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    list-style: none;
+    margin: 0;
+    padding: 0;
   }
 
-  .py-function-chain {
-    grid-template-columns: 1fr auto 1.15fr auto 1.15fr auto 1fr;
+  .py-function-machine li,
+  .py-function-chain li {
+    min-width: 0;
+    padding: 1rem;
   }
 
-  .py-parameter-map > div,
-  .py-function-chain > div,
-  .py-return-compare > div,
-  .py-default-memory > div {
-    padding: 0.9rem;
-    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
-    border-radius: 15px;
-    background: rgba(148, 163, 184, 0.06);
+  .py-function-machine li + li,
+  .py-function-chain li + li {
+    border-left: 1px solid var(--line);
   }
 
-  .py-parameter-map span,
-  .py-parameter-map code,
-  .py-parameter-map small,
-  .py-function-chain span,
-  .py-function-chain strong,
-  .py-function-chain small,
-  .py-return-compare span,
-  .py-return-compare strong,
-  .py-return-compare code,
-  .py-return-compare small,
-  .py-default-memory b,
-  .py-default-memory code,
-  .py-default-memory span,
-  .py-default-memory strong {
+  .py-function-machine li strong,
+  .py-function-machine li small,
+  .py-function-chain li strong,
+  .py-function-chain li small {
     display: block;
-  }
-
-  .py-parameter-map span,
-  .py-parameter-map small,
-  .py-function-chain span,
-  .py-function-chain small,
-  .py-return-compare span,
-  .py-return-compare small,
-  .py-default-memory span,
-  .py-default-memory p {
-    color: var(--text-muted, #64748b);
-    font-size: 0.82rem;
-  }
-
-  .py-parameter-map code + code,
-  .py-return-compare strong,
-  .py-return-compare code {
-    margin-top: 0.4rem;
-  }
-
-  .py-parameter-map > i,
-  .py-function-chain > i {
-    align-self: center;
-    color: var(--text-muted, #64748b);
-    font-style: normal;
-    text-align: center;
+    margin-top: 0.45rem;
   }
 
   .py-return-compare {
     display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 0.8rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     margin: 1.5rem 0 2rem;
   }
 
-  .py-default-memory {
-    display: grid;
-    gap: 0.55rem;
-    margin: 1.5rem 0 2rem;
+  .py-return-compare > div {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1rem;
   }
 
-  .py-default-memory > div {
-    display: grid;
-    grid-template-columns: 7rem minmax(0, 1fr) auto minmax(8rem, 1fr);
-    gap: 0.75rem;
-    align-items: center;
-  }
-
-  .py-default-memory p {
+  .py-return-compare dt,
+  .py-return-compare dd {
     margin: 0;
-    text-align: center;
+  }
+
+  .py-return-compare dd strong,
+  .py-return-compare dd span {
+    display: block;
+    margin-top: 0.45rem;
+  }
+
+  .py-default-memory caption {
+    color: var(--ink);
+    font-weight: 760;
+    padding-bottom: 0.75rem;
+    text-align: left;
+  }
+
+  .py-default-memory,
+  .py-function-chain {
+    margin: 1.5rem 0 2rem;
+  }
+
+  .py-function-chain {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .py-function-boundaries > summary {
+    border-bottom: 0;
+    cursor: pointer;
+  }
+
+  .py-function-boundaries[open] > summary {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .py-function-boundaries > :not(summary) {
+    margin-left: 1.1rem;
+    margin-right: 1.1rem;
   }
 
   @media (max-width: 700px) {
-    .py-function-machine,
-    .py-parameter-map,
+    .py-function-machine ol,
     .py-function-chain,
     .py-return-compare {
       grid-template-columns: 1fr;
     }
 
-    .py-function-machine > div:not(.machine-arrow) {
-      min-height: auto;
-    }
-
-    .machine-arrow,
-    .py-parameter-map > i,
-    .py-function-chain > i {
-      justify-self: center;
-      transform: rotate(90deg);
-    }
-
-    .py-default-memory > div {
-      grid-template-columns: 1fr;
-      gap: 0.35rem;
+    .py-function-machine li + li,
+    .py-function-chain li + li {
+      border-left: 0;
+      border-top: 1px solid var(--line);
     }
   }
 `}</style>

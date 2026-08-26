@@ -2,11 +2,11 @@
 title: "Python 字符串、列表与字典实战：把真实数据组织起来"
 description: "用 SKU、订单和接口字段讲清 Python 字符串、列表、字典的常用操作，并补充元组、集合、变量引用和浅拷贝这些入门后很快会遇到的知识。"
 date: 2026-08-22T22:34:00+08:00
-updated: 2026-08-22T23:22:00+08:00
+updated: 2026-08-27T00:10:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 16
+minutes: 13
 featured: false
 series: "python-basics"
 seriesOrder: 3
@@ -15,10 +15,18 @@ private: false
 ---
 
 import HighlightBox from '../../components/HighlightBox.astro';
+import Callout from '../../components/Callout.astro';
+import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
 上一篇解决的是“一份值是什么”。真正开始处理业务数据以后，很快会遇到另一个问题：**一条订单有多个字段，很多条订单又应该怎么放？**
 
 这一篇重点只抓三种最常用的结构：字符串、列表、字典。元组和集合会讲，但只讲够用的部分。
+
+<PythonLessonBrief
+  goal="看懂字符串、列表和字典怎样组合成一批真实订单"
+  data="两条包含订单号、SKU、金额和状态的订单"
+  outcome="能够逐层读取、清理、修改并复制订单字段"
+/>
 
 ## 先看一个最常见的数据形状
 
@@ -41,32 +49,29 @@ orders = [
 
 不要急着看符号，先看结构：
 
-<div class="py-data-shape" aria-label="订单数据的层级结构">
-  <div class="shape-list">
-    <span>orders · list</span>
-    <strong>多条订单放在一个列表里</strong>
-    <div class="shape-row">
-      <span>第 1 项</span>
-      <div class="shape-dict">
-        <b>order · dict</b>
-        <code>order_no → "A001"</code>
-        <code>sku → "K161"</code>
-        <code>amount → 129.0</code>
-        <code>status → "已支付"</code>
-      </div>
-    </div>
-    <div class="shape-row">
-      <span>第 2 项</span>
-      <div class="shape-dict muted">
-        <b>order · dict</b>
-        <code>order_no → "A002"</code>
-        <code>sku → "K162"</code>
-        <code>amount → 88.0</code>
-        <code>status → "已退款"</code>
-      </div>
-    </div>
-  </div>
-</div>
+<figure class="py-data-shape" aria-labelledby="shape-caption">
+  <figcaption id="shape-caption"><span>数据嵌套地图</span><strong><code>orders</code> 是列表，每一项都是描述一条订单的字典</strong></figcaption>
+  <ol>
+    <li>
+      <span>列表第 1 项 · dict</span>
+      <dl>
+        <div><dt>order_no</dt><dd>"A001"</dd></div>
+        <div><dt>sku</dt><dd>"K161"</dd></div>
+        <div><dt>amount</dt><dd>129.0</dd></div>
+        <div><dt>status</dt><dd>"已支付"</dd></div>
+      </dl>
+    </li>
+    <li>
+      <span>列表第 2 项 · dict</span>
+      <dl>
+        <div><dt>order_no</dt><dd>"A002"</dd></div>
+        <div><dt>sku</dt><dd>"K162"</dd></div>
+        <div><dt>amount</dt><dd>88.0</dd></div>
+        <div><dt>status</dt><dd>"已退款"</dd></div>
+      </dl>
+    </li>
+  </ol>
+</figure>
 
 一句话记住：**列表负责“有很多条”，字典负责“一条里有很多字段”。**
 
@@ -108,7 +113,7 @@ K161
 PH
 ```
 
-`sku[:4]` 可以读成：“从开头取到下标 4 之前”。右边界不包含在结果里。
+`sku[:4]` 表示从开头取到下标 4 之前，右边界不包含在结果里。
 
 ### 清理字符串
 
@@ -210,7 +215,7 @@ print(sorted_ids)
 [101, 101, 102, 103]
 ```
 
-`sorted()` 会得到一个排序后的新列表，原来的 `user_ids` 不会被修改。后面如果先用集合去重，再排序，也可以把两个操作组合起来。
+`sorted()` 返回新列表，不修改原来的 `user_ids`。需要时还可以先用集合去重，再排序。
 
 ### 判断一个值在不在列表里
 
@@ -282,7 +287,7 @@ None
 tracking_no = order.get("tracking_no", "暂无物流")
 ```
 
-以后处理 API 返回结果时，`.get()` 会非常常见。但不要把它当成所有字段都应该无脑使用的写法：**如果一个字段按业务规则必须存在，直接暴露缺失错误有时反而更容易发现数据问题。**
+处理 API 返回结果时，`.get()` 很常见。但业务上必须存在的字段不应无脑使用它，否则可能掩盖数据问题。
 
 ## 列表里放字典：真实数据最常见的组合
 
@@ -307,9 +312,7 @@ second_order = orders[1]
 amount = second_order["amount"]
 ```
 
-先从列表取出第二个字典，再从字典里按 key 取金额。
-
-如果一长串取值让你看不懂，**就先拆成中间变量**。入门阶段可读性比“写成一行”更重要。
+这两步先从列表取出第二个字典，再按 key 取金额。长串取值看不懂时就拆成中间变量，入门阶段可读性比写成一行更重要。
 
 ## 嵌套数据：先一层一层取
 
@@ -343,7 +346,10 @@ order_no = first_order["order_no"]
 
 它们结果一样，但第二种更容易看见每一步的数据类型。
 
-## 元组：知道“不能修改”就先够了
+<details class="py-advanced">
+  <summary><span>可选进阶</span><strong>元组、集合、变量引用与浅拷贝</strong><small>不影响下一篇学习，需要时再展开</small></summary>
+
+### 元组：知道“不能修改”就先够了
 
 ```python
 point = (120, 30)
@@ -363,9 +369,9 @@ point[0] = 100
 
 会报错。
 
-入门阶段，不需要主动把大量数据都改成元组。先知道当你看到 `(a, b)` 这种结构时，它可能是一个固定组合即可。
+看到 `(a, b)` 时，先知道它可能是一个不希望修改的固定组合即可。
 
-## 集合：去重和成员判断
+### 集合：去重和成员判断
 
 ```python
 skus = ["K161", "K162", "K161", "K163"]
@@ -376,7 +382,7 @@ print(unique_skus)
 
 集合会去掉重复值。
 
-集合不保证像列表那样按原顺序取“第几个”，所以它适合：
+集合不适合按位置取“第几个”，主要用于：
 
 - 去重。
 - 判断某个值是否存在。
@@ -384,11 +390,7 @@ print(unique_skus)
 
 如果你后面还需要稳定顺序，就不要把集合当成列表替代品。
 
-## 一个很重要的坑：两个变量可能指向同一个列表
-
-<HighlightBox eyebrow="进阶补充" title="第一次阅读可以先跳过下面两节">
-  变量引用和浅拷贝不是你开始写循环的前置条件。先把字符串、列表和字典用熟更重要；等后面遇到“为什么我改了副本，原数据也变了”时，再回来理解这两节。
-</HighlightBox>
+### 两个变量可能指向同一个列表
 
 ```python
 original = ["K161", "K162"]
@@ -407,13 +409,14 @@ print(original)
 
 因为 `copy_data = original` 并没有创建新列表，只是让两个变量名指向同一个列表。
 
-<div class="py-reference-map" aria-label="两个变量引用同一个列表">
-  <div><code>original</code></div>
-  <span>↘</span>
-  <strong>["K161", "K162"]</strong>
-  <span>↗</span>
-  <div><code>copy_data</code></div>
-</div>
+<figure class="py-reference-map" aria-labelledby="reference-caption">
+  <figcaption id="reference-caption">两个变量名，共享同一个列表对象</figcaption>
+  <dl>
+    <div><dt>变量名</dt><dd><code>original</code></dd></div>
+    <div class="shared-object"><dt>共同引用的列表</dt><dd><code>["K161", "K162"]</code></dd></div>
+    <div><dt>变量名</dt><dd><code>copy_data</code></dd></div>
+  </dl>
+</figure>
 
 如果只想复制外层列表：
 
@@ -423,7 +426,7 @@ copy_data = original.copy()
 
 现在 `copy_data.append(...)` 不会修改 `original` 的外层结构。
 
-## 为什么“浅拷贝”还会让嵌套数据一起变化
+### 为什么浅拷贝仍会共享嵌套数据
 
 看一个稍微进阶但非常值得提前知道的例子：
 
@@ -445,7 +448,9 @@ copy_data["skills"].append("Linux")
 
 这就是“浅拷贝”：**只复制最外层，里面嵌套的可变对象仍然可能共用。**
 
-现在不要求你掌握所有深拷贝规则，但一定不要把 `.copy()` 理解成“里面所有东西都彻底复制了一份”。综合考核会专门检查这个理解。
+不要求现在掌握深拷贝规则，但不要把 `.copy()` 理解成“里面所有对象都彻底复制了一份”。综合考核会再次检查这个概念。
+
+</details>
 
 ## 什么时候用哪一种结构
 
@@ -457,17 +462,7 @@ copy_data["skills"].append("Linux")
 | 固定组合，不希望修改 | `tuple` | 坐标、固定二元组 |
 | 去重或快速判断成员 | `set` | 已处理订单号集合 |
 
-真实脚本里最常见的通常不是单独某一种，而是：
-
-```text
-list
- ├─ dict
- │   ├─ str
- │   ├─ int / float
- │   └─ list
- └─ dict
-     └─ ...
-```
+真实脚本最常见的组合就是本文开头的结构：列表保存多条字典，每个字典里再保存字符串、数字或更小的列表。
 
 ## 动手练习：整理订单字段
 
@@ -502,114 +497,164 @@ print(first_order.get("tracking_no", "暂无物流"))
 3. 复制第一条订单，再修改复制结果的 `order_no`。
 4. 解释为什么如果你修改复制结果里的 `tags` 列表，原数据仍可能变化。
 
+<Callout title="本章检查">
+  你应该能判断什么时候用字符串、列表或字典，能把嵌套取值拆成中间变量，并知道 `.copy()` 只复制最外层结构。
+</Callout>
+
 <HighlightBox eyebrow="下一篇" title="现在让 Python 一条一条处理这些数据">
   有了字符串、列表和字典，下一步就是 `if` 和 `for`：一条订单是否处理，由条件决定；一批订单如何逐条处理，由循环负责。
 </HighlightBox>
 
 <style>{`
   .py-data-shape {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
     margin: 1.5rem 0 2rem;
+    overflow: hidden;
   }
 
-  .shape-list {
-    border-left: 4px solid currentColor;
-    padding: 1.1rem 1.1rem 1.1rem 1.4rem;
-    background: rgba(148, 163, 184, 0.06);
-    border-radius: 0 18px 18px 0;
+  .py-data-shape figcaption {
+    background: color-mix(in srgb, var(--violet) 8%, var(--paper));
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 1rem 1.1rem;
   }
 
-  .shape-list > span,
-  .shape-list > strong {
-    display: block;
-  }
-
-  .shape-list > span {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  .py-data-shape figcaption span,
+  .py-data-shape li > span,
+  .py-reference-map dt,
+  .py-advanced summary span,
+  .py-advanced summary small {
+    color: var(--soft);
     font-size: 0.8rem;
-    color: var(--text-muted, #64748b);
   }
 
-  .shape-list > strong {
-    margin: 0.3rem 0 1rem;
-  }
-
-  .shape-row {
-    display: grid;
-    grid-template-columns: 5rem minmax(0, 1fr);
-    gap: 0.8rem;
-    align-items: start;
-    margin-top: 0.8rem;
-  }
-
-  .shape-row > span {
-    padding-top: 0.75rem;
-    color: var(--text-muted, #64748b);
-    font-size: 0.86rem;
-  }
-
-  .shape-dict {
+  .py-data-shape > ol {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.55rem;
-    padding: 0.8rem;
-    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
-    border-radius: 14px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
   }
 
-  .shape-dict b {
+  .py-data-shape > ol > li {
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .py-data-shape > ol > li + li {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-data-shape dl {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0.8rem 0 0;
+  }
+
+  .py-data-shape dl > div {
+    background: var(--paper-soft);
+    border-radius: calc(var(--radius) - 2px);
+    min-width: 0;
+    padding: 0.65rem;
+  }
+
+  .py-data-shape dt,
+  .py-data-shape dd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.82rem;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .py-data-shape dt {
+    color: var(--soft);
+  }
+
+  .py-advanced {
+    background: color-mix(in srgb, var(--violet) 5%, var(--paper));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin: 2rem 0;
+    overflow: clip;
+  }
+
+  .py-advanced > summary {
+    cursor: pointer;
+    display: grid;
+    gap: 0.2rem 0.7rem;
+    grid-template-columns: auto 1fr;
+    padding: 1rem 1.1rem;
+  }
+
+  .py-advanced > summary small {
     grid-column: 1 / -1;
   }
 
-  .shape-dict code {
-    padding: 0.5rem 0.6rem;
-    border-radius: 9px;
-    background: rgba(148, 163, 184, 0.08);
+  .py-advanced[open] > summary {
+    border-bottom: 1px solid var(--line);
   }
 
-  .shape-dict.muted {
-    opacity: 0.78;
+  .py-advanced > :not(summary) {
+    margin-left: 1.1rem;
+    margin-right: 1.1rem;
   }
 
   .py-reference-map {
+    margin: 1.4rem 0;
+  }
+
+  .py-reference-map figcaption {
+    font-weight: 760;
+    margin-bottom: 0.7rem;
+  }
+
+  .py-reference-map dl {
     display: grid;
-    grid-template-columns: 1fr auto minmax(12rem, 2fr) auto 1fr;
-    gap: 0.7rem;
-    align-items: center;
-    margin: 1.5rem 0 2rem;
+    grid-template-columns: 1fr 1.4fr 1fr;
+    margin: 0;
+  }
+
+  .py-reference-map dl > div {
+    border: 1px solid var(--line);
+    padding: 0.9rem;
     text-align: center;
   }
 
-  .py-reference-map > div,
-  .py-reference-map > strong {
-    padding: 0.9rem;
-    border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
-    border-radius: 14px;
-    background: rgba(148, 163, 184, 0.06);
+  .py-reference-map dl > div + div {
+    border-left: 0;
+  }
+
+  .py-reference-map .shared-object {
+    background: color-mix(in srgb, var(--cyan) 8%, var(--paper-soft));
+  }
+
+  .py-reference-map dd {
+    margin: 0.45rem 0 0;
   }
 
   @media (max-width: 680px) {
-    .shape-row {
+    .py-data-shape > ol,
+    .py-data-shape dl,
+    .py-reference-map dl {
       grid-template-columns: 1fr;
     }
 
-    .shape-row > span {
-      padding-top: 0;
+    .py-data-shape > ol > li + li {
+      border-left: 0;
+      border-top: 1px solid var(--line);
     }
 
-    .shape-dict {
+    .py-reference-map dl > div + div {
+      border-left: 1px solid var(--line);
+      border-top: 0;
+    }
+
+    .py-advanced > summary {
       grid-template-columns: 1fr;
-    }
-
-    .shape-dict b {
-      grid-column: auto;
-    }
-
-    .py-reference-map {
-      grid-template-columns: 1fr;
-    }
-
-    .py-reference-map > span {
-      transform: rotate(90deg);
     }
   }
 `}</style>

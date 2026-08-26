@@ -2,11 +2,11 @@
 title: "Python 条件判断与循环：让代码自己决定、重复和筛选"
 description: "用库存判断和订单筛选讲清 if、elif、else、and、or、in、for、while、break、continue、range，以及循环中的变量如何一步步变化。"
 date: 2026-08-22T22:36:00+08:00
-updated: 2026-08-22T23:22:00+08:00
+updated: 2026-08-27T00:10:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 15
+minutes: 12
 featured: false
 series: "python-basics"
 seriesOrder: 4
@@ -15,11 +15,19 @@ private: false
 ---
 
 import HighlightBox from '../../components/HighlightBox.astro';
+import Callout from '../../components/Callout.astro';
 import Mermaid from '../../components/Mermaid.astro';
+import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
 前面已经能把订单放进列表、把一条订单放进字典。接下来要让代码真正开始工作：**什么情况执行，什么情况跳过，一批数据怎么逐条处理。**
 
 条件判断负责“决定”，循环负责“重复”。真实脚本经常把两者放在一起。
+
+<PythonLessonBrief
+  goal="让代码逐条读取订单，并根据状态决定处理、跳过或停止"
+  data="三条状态不同的订单，以及处理中的计数和金额"
+  outcome="完成一段可以筛选并汇总已支付订单的循环"
+/>
 
 ## `if`：条件成立才执行
 
@@ -86,9 +94,7 @@ else:
 print(level)
 ```
 
-这里的顺序非常重要。
-
-如果写成：
+分支会从上往下检查，顺序非常重要。如果写成：
 
 ```python
 if stock < 5:
@@ -99,11 +105,11 @@ elif stock == 0:
 
 当 `stock = 0` 时，第一个条件已经成立，第二个分支永远不会执行。
 
-所以多条件判断时，不只是看“条件对不对”，还要看**哪个条件应该先判断**。
+`stock = 0` 时第一个条件已经成立，第二个分支不会执行。多条件判断既要看条件对不对，也要看哪个条件应该先判断。
 
 ## 多个条件：`and`、`or`、`not`
 
-### `and`：两个条件都要成立
+### `and`：两个条件都成立
 
 ```python
 status = "已支付"
@@ -131,7 +137,7 @@ if not is_refunded:
     print("订单未退款")
 ```
 
-复杂条件不要为了省行数全部挤在一起。先拆成有名字的布尔变量，通常更容易检查：
+复杂条件不要全部挤在一起。拆成有名字的布尔变量更容易检查：
 
 ```python
 is_paid = status == "已支付"
@@ -197,15 +203,16 @@ for order in orders:
         print(order["order_no"], order["amount"])
 ```
 
-把执行过程展开：
+<figure class="py-order-conveyor" aria-labelledby="conveyor-caption">
+  <figcaption id="conveyor-caption"><span>订单处理传送带</span><strong>循环负责送入订单，条件负责决定当前订单的动作</strong></figcaption>
+  <ol>
+    <li><span>第 1 轮 · A001</span><strong>状态：已支付</strong><small>判断通过，输出 A001 / 129.0</small></li>
+    <li class="is-skipped"><span>第 2 轮 · A002</span><strong>状态：已退款</strong><small>判断未通过，本轮不输出</small></li>
+    <li><span>第 3 轮 · A003</span><strong>状态：已支付</strong><small>判断通过，输出 A003 / 199.0</small></li>
+  </ol>
+</figure>
 
-| 循环 | 当前 `order` | 判断结果 | 输出 |
-| ---: | --- | --- | --- |
-| 1 | A001 / 已支付 | `True` | A001 129.0 |
-| 2 | A002 / 已退款 | `False` | 不输出 |
-| 3 | A003 / 已支付 | `True` | A003 199.0 |
-
-循环本身没有“筛选”能力。真正决定是否输出的是循环里面的 `if`。
+循环本身没有筛选能力，真正决定是否输出的是循环里面的 `if`。
 
 ## 在循环里累计数量
 
@@ -225,9 +232,9 @@ for order in orders:
 print(paid_count)
 ```
 
-变量变化：
+计数器的状态台账：
 
-| 循环前 / 第几轮 | 状态 | `paid_count` |
+| 阶段 | 当前订单状态 | 判断后 `paid_count` |
 | --- | --- | ---: |
 | 循环前 | — | 0 |
 | 第 1 轮 | 已支付 | 1 |
@@ -265,12 +272,6 @@ for order in orders:
 
 遇到 A002 时，执行 `continue`，本轮下面的代码不再执行，但循环会继续处理 A003。
 
-可以记成：
-
-```text
-continue = 这条跳过，下一条继续
-```
-
 ## `break`：整个循环直接结束
 
 ```python
@@ -284,13 +285,15 @@ for order in orders:
 
 如果目标已经找到，后面的订单不需要继续检查，就可以 `break`。
 
-```text
-break = 到此为止，整个循环结束
-```
+<dl class="py-loop-control" aria-label="continue 和 break 的区别">
+  <div><dt><code>continue</code></dt><dd><strong>跳过当前订单</strong><span>循环继续处理下一条</span></dd></div>
+  <div><dt><code>break</code></dt><dd><strong>停止整个循环</strong><span>后续订单都不再检查</span></dd></div>
+</dl>
 
-和 `continue` 的区别一定要分清。
+<details class="py-loop-tools">
+  <summary><span>补充工具</span><strong><code>range()</code>、列表推导式和 <code>while</code></strong><small>先掌握订单循环，再按需展开</small></summary>
 
-## `range()`：需要重复固定次数时
+### `range()`：需要重复固定次数时
 
 ```python
 for i in range(3):
@@ -321,7 +324,7 @@ for index, order in enumerate(orders, start=1):
     print(index, order["order_no"])
 ```
 
-## 列表推导式：先把普通 `for` 看懂，再认识简写
+### 列表推导式：先看懂普通 `for`，再认识简写
 
 现在已经理解了 `for`，再看列表推导式就不会只是背符号。
 
@@ -350,7 +353,7 @@ squares = [number * number for number in numbers]
 
 入门阶段不需要强行把循环改成推导式。**一旦条件或处理步骤开始变复杂，普通 `for` 往往更容易读。**
 
-## `while`：不知道要循环多少次，但知道什么时候停
+### `while`：不知道循环次数，但知道什么时候停
 
 `for` 适合处理一个已有集合；`while` 更像“只要条件还成立，就继续”。
 
@@ -362,13 +365,7 @@ while retry_count < 3:
     retry_count = retry_count + 1
 ```
 
-看 `while` 时固定检查三件事：
-
-```text
-初始值       retry_count = 0
-继续条件     retry_count < 3
-状态变化     retry_count = retry_count + 1
-```
+看 `while` 时固定检查三件事：初始值 `retry_count = 0`、继续条件 `retry_count < 3`、状态变化 `retry_count = retry_count + 1`。
 
 如果没有第三步：
 
@@ -379,7 +376,7 @@ while retry_count < 3:
 
 条件永远不会变化，就会形成死循环。
 
-## `for` 还是 `while`
+### `for` 还是 `while`
 
 | 场景 | 更自然的选择 |
 | --- | --- |
@@ -390,6 +387,8 @@ while retry_count < 3:
 | 等待某个状态发生变化 | `while`（真实自动化还要配合等待与超时） |
 
 入门时优先把 `for` 用熟。很多新手为了“高级”而滥用 `while`，反而更容易写出停不下来的循环。
+
+</details>
 
 ## 一个完整小案例：筛选并统计订单
 
@@ -415,18 +414,12 @@ print(f"已支付订单：{paid_count} 单")
 print(f"已支付金额：{paid_amount}")
 ```
 
-数据流是：
-
-```text
-orders
-  ↓ for 一条一条取
-order
-  ↓ if 检查状态
-非已支付 → continue 跳过
-已支付   → 计数 +1，金额累加
-  ↓
-最终统计结果
-```
+<ol class="py-processing-chain" aria-label="订单筛选与汇总过程">
+  <li><span>读取</span><strong><code>for</code> 逐条取得订单</strong></li>
+  <li><span>判断</span><strong>非已支付订单执行 <code>continue</code></strong></li>
+  <li><span>累计</span><strong>已支付订单更新数量与金额</strong></li>
+  <li><span>结果</span><strong>循环结束后统一输出统计</strong></li>
+</ol>
 
 如果你能跟着表格说清每一轮 `order`、`paid_count` 和 `paid_amount` 分别是什么值，循环就不是“背语法”，而是真的看懂了。
 
@@ -464,6 +457,146 @@ for product in products:
 print("需要补货 SKU 数：", restock_count)
 ```
 
+<Callout title="本章检查">
+  你应该能逐轮说出当前订单、判断结果和计数器状态，并准确区分 `continue` 跳过当前轮与 `break` 停止整个循环。
+</Callout>
+
 <HighlightBox eyebrow="下一篇" title="代码能跑之后，再开始拆函数">
   下一篇不会一上来追求“工程化”。我们只做一件事：把已经看懂的输入、处理和输出整理成函数，让一段逻辑可以清楚地重复使用。
 </HighlightBox>
+
+<style>{`
+  .py-order-conveyor,
+  .py-loop-tools {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin: 1.5rem 0 2rem;
+    overflow: hidden;
+  }
+
+  .py-order-conveyor figcaption,
+  .py-loop-tools > summary {
+    background: color-mix(in srgb, var(--blue) 8%, var(--paper));
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem 1.1rem;
+  }
+
+  .py-order-conveyor figcaption span,
+  .py-order-conveyor li span,
+  .py-order-conveyor li small,
+  .py-loop-tools summary span,
+  .py-loop-tools summary small,
+  .py-loop-control span,
+  .py-processing-chain span {
+    color: var(--soft);
+    font-size: 0.8rem;
+  }
+
+  .py-order-conveyor ol,
+  .py-processing-chain {
+    display: grid;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .py-order-conveyor ol {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .py-order-conveyor li {
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .py-order-conveyor li + li {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-order-conveyor li strong,
+  .py-order-conveyor li small {
+    display: block;
+    margin-top: 0.45rem;
+  }
+
+  .py-order-conveyor .is-skipped {
+    background: color-mix(in srgb, var(--soft) 7%, var(--paper));
+  }
+
+  .py-loop-control {
+    display: grid;
+    gap: 0.8rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 1.5rem 0 2rem;
+  }
+
+  .py-loop-control > div {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1rem;
+  }
+
+  .py-loop-control dt,
+  .py-loop-control dd {
+    margin: 0;
+  }
+
+  .py-loop-control dd strong,
+  .py-loop-control dd span {
+    display: block;
+    margin-top: 0.45rem;
+  }
+
+  .py-loop-tools > summary {
+    border-bottom: 0;
+    cursor: pointer;
+  }
+
+  .py-loop-tools[open] > summary {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .py-loop-tools > :not(summary) {
+    margin-left: 1.1rem;
+    margin-right: 1.1rem;
+  }
+
+  .py-processing-chain {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 1.5rem 0 2rem;
+    overflow: hidden;
+  }
+
+  .py-processing-chain li {
+    padding: 1rem;
+  }
+
+  .py-processing-chain li + li {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-processing-chain strong {
+    display: block;
+    margin-top: 0.45rem;
+  }
+
+  @media (max-width: 680px) {
+    .py-order-conveyor ol,
+    .py-loop-control,
+    .py-processing-chain {
+      grid-template-columns: 1fr;
+    }
+
+    .py-order-conveyor li + li,
+    .py-processing-chain li + li {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+  }
+`}</style>
