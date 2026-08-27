@@ -1,12 +1,12 @@
 ---
-title: "Python 变量与基础数据类型：先看懂一份数据是什么"
-description: "从订单号、价格、库存和状态出发，讲清 Python 变量、字符串、整数、小数、布尔值、None、比较、类型转换和常见类型错误。"
+title: "Python 变量、基础类型与转换：看见数据怎样变化"
+description: "用库存数据的运行轨迹，图解变量名与值、重新绑定、str、int、float、bool、None，以及文本转整数和转换失败发生在哪一步。"
 date: 2026-08-22T22:32:00+08:00
 updated: 2026-08-27T00:10:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 11
+minutes: 13
 featured: false
 series: "python-basics"
 seriesOrder: 2
@@ -18,17 +18,90 @@ import HighlightBox from '../../components/HighlightBox.astro';
 import Callout from '../../components/Callout.astro';
 import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
-写 Python 时，最先遇到的不是循环，也不是函数，而是**数据本身**。
+从 Excel、CSV 或网页表单读到库存时，眼前的 `"3"` 和真正能参与比较的数字 `3` 看起来很像，Python 却会把它们当成两种数据。
 
-订单号是文字，库存是整数，单价可能有小数，“是否缺货”是一个真假判断。只要先能分清这些数据，后面的判断、循环和函数才不会变成一堆符号。
+这一篇先不急着写复杂程序。我们只跟着一条 SKU 为 `K161` 的库存数据，亲眼看见它怎样被命名、转换、比较，以及错误会在哪一步拦住后续代码。
 
 <PythonLessonBrief
-  goal="识别变量中的值，并在计算前把外部数据转换成正确类型"
-  data="SKU、单价、库存、可售状态和备注组成的商品记录"
-  outcome="完成一次文本库存到补货判断的完整转换"
+  goal="看见变量名与值的关系，并能追踪一条数据转换前后的状态"
+  data={'SKU K161 的文本库存 raw_stock = "3"'}
+  outcome={'把 "3" 转成整数 3，再由 stock < 5 得到 True'}
 />
 
-## 先看一条商品数据
+## 变量：一个名字怎样指向一个值
+
+先运行一行最简单的代码：
+
+```python
+stock = 8
+```
+
+Python 会先读右边的 `8`，再让左边的名字 `stock` 指向这个整数值。`=` 在这里表示“绑定”，不是数学题里的“左右相等”。
+
+<figure class="pyv-binding" aria-labelledby="pyv-binding-caption">
+  <figcaption id="pyv-binding-caption">
+    <span class="pyv-kicker">当前行</span>
+    <strong><code>stock = 8</code> 怎样进入变量状态</strong>
+  </figcaption>
+  <div class="pyv-binding__track">
+    <div class="pyv-node pyv-node--name">
+      <span>01 · 名字</span>
+      <code>stock</code>
+      <small>以后用这个名字找到数据</small>
+    </div>
+    <div class="pyv-link" aria-label="绑定到">
+      <span>02 · 绑定</span>
+      <strong>指向 →</strong>
+    </div>
+    <div class="pyv-node pyv-node--value">
+      <span>03 · 值</span>
+      <code>8</code>
+      <small><b>int</b> · 可以参与数值运算</small>
+    </div>
+  </div>
+  <p class="pyv-figure-note"><b>执行后状态：</b>名字是 <code>stock</code>，值是 <code>8</code>。两者有关联，但不是同一件事。</p>
+</figure>
+
+这一区分很重要：变量名负责让代码容易阅读，值才是实际参与计算的数据。名字可以换，名字指向的值也可以换。
+
+### 再赋值不是把 8 改成 5
+
+```python
+stock = 8
+stock = 5
+```
+
+第二行执行时，名字 `stock` 会改为指向新的整数值 `5`。从这时起，再读取 `stock` 得到的是 `5`。
+
+<figure class="pyv-rebind" aria-labelledby="pyv-rebind-caption">
+  <figcaption id="pyv-rebind-caption">
+    <span class="pyv-kicker">之前 → 当前行 → 之后</span>
+    <strong>重新绑定改变的是名字与值的关系</strong>
+  </figcaption>
+  <div class="pyv-rebind__track">
+    <section>
+      <span class="pyv-step-label">01 · 之前</span>
+      <div class="pyv-mini-binding"><code>stock</code><span>→</span><code>8</code></div>
+      <p>读取 <code>stock</code> 会得到整数 8。</p>
+    </section>
+    <section class="pyv-rebind__current">
+      <span class="pyv-step-label">02 · 当前行</span>
+      <code>stock = 5</code>
+      <p>先得到右边的 5，再更新名字的指向。</p>
+    </section>
+    <section>
+      <span class="pyv-step-label">03 · 之后</span>
+      <div class="pyv-mini-binding"><code>stock</code><span>→</span><code>5</code></div>
+      <p>名字没有变；之后读取到的值变成了 5。</p>
+    </section>
+  </div>
+</figure>
+
+你不需要把变量想成一个会被涂改的盒子。对入门阶段来说，记住一句话就够：**再次赋值，会让同一个名字代表新的值。**
+
+## 一条商品记录里有五种基础值
+
+真实脚本通常会同时处理文字、整数、小数、真假和缺失值：
 
 ```python
 sku = "K161"
@@ -36,254 +109,84 @@ price = 129.9
 stock = 8
 is_available = stock > 0
 remark = None
+
+print(sku, price, stock, is_available, remark)
 ```
 
-<figure class="py-types-board" aria-labelledby="types-caption">
-  <figcaption id="types-caption"><span>数据检查台</span><strong>同一条商品记录里，每个字段都有自己的类型</strong></figcaption>
+<figure class="pyv-types-board" aria-labelledby="pyv-types-caption">
+  <figcaption id="pyv-types-caption">
+    <span class="pyv-kicker">数据类型地图</span>
+    <strong>值的类型决定它适合参加什么操作</strong>
+  </figcaption>
   <dl>
-    <div><dt><code>sku</code></dt><dd><strong>"K161"</strong><span>str · 文字</span></dd></div>
-    <div><dt><code>price</code></dt><dd><strong>129.9</strong><span>float · 小数</span></dd></div>
-    <div><dt><code>stock</code></dt><dd><strong>8</strong><span>int · 整数</span></dd></div>
-    <div><dt><code>is_available</code></dt><dd><strong>True</strong><span>bool · 真 / 假</span></dd></div>
-    <div><dt><code>remark</code></dt><dd><strong>None</strong><span>None · 暂时没有值</span></dd></div>
+    <div>
+      <dt><code>sku</code></dt>
+      <dd><strong>"K161"</strong><span><b>str</b> · 标识与文字</span><small>要保留字母，不做加减</small></dd>
+    </div>
+    <div>
+      <dt><code>price</code></dt>
+      <dd><strong>129.9</strong><span><b>float</b> · 带小数的数值</span><small>可参与金额计算</small></dd>
+    </div>
+    <div>
+      <dt><code>stock</code></dt>
+      <dd><strong>8</strong><span><b>int</b> · 整数</span><small>适合库存、件数、次数</small></dd>
+    </div>
+    <div>
+      <dt><code>is_available</code></dt>
+      <dd><strong>True</strong><span><b>bool</b> · 真或假</span><small>来自 <code>stock &gt; 0</code> 的结果</small></dd>
+    </div>
+    <div>
+      <dt><code>remark</code></dt>
+      <dd><strong>None</strong><span><b>None</b> · 暂无值</span><small>不是空文字、0 或 False</small></dd>
+    </div>
   </dl>
 </figure>
 
-这五行已经覆盖了自动化脚本里最常见的几类基础值。
+这里最容易混淆的是“长得像数字的文字”。例如订单号 `"1008611"` 虽然全是数字，通常仍应保留为 `str`，因为它是标识，不拿来做算术。库存 `"3"` 则需要先转成 `int`，才能与补货线比较。
 
-## 变量不是“一个盒子”，更像一个名字
-
-```python
-stock = 8
-```
-
-入门时可以把它理解成：“给数字 `8` 起了一个名字叫 `stock`。”
-
-更准确一点说，Python 创建了整数对象 `8`，变量名 `stock` 指向它。现在只要记住：**变量名和变量保存的值不是一回事。**
+如果不确定一个值的真实类型，可以让 Python 直接告诉你：
 
 ```python
-sku = "K161"
-```
-
-这里：
-
-- `sku` 是变量名。
-- `"K161"` 是字符串值。
-- `=` 不是数学里的“等于”，而是把右边的值绑定给左边的变量名。
-
-所以：
-
-```python
-stock = 8
-stock = 5
-```
-
-第二行执行以后，`stock` 现在代表的是 `5`。
-
-## `str`：订单号、SKU、状态都通常是字符串
-
-字符串就是文本数据，用引号包起来：
-
-```python
-order_no = "JD20260822001"
-sku = "K161"
-status = "已支付"
-```
-
-即使内容全是数字，只要加了引号，它仍然是字符串：
-
-```python
-order_no = "1008611"
-```
-
-不要因为看起来像数字，就急着转成 `int`。订单号、手机号、SKU 这类字段通常是**标识**，不是拿来做加减乘除的数字。
-
-输出字符串时推荐使用 f-string：
-
-```python
-stock = 8
-print(f"当前库存：{stock}")
-```
-
-```python
-sku = "K161"
-stock = 8
-print(f"{sku} 当前库存 {stock} 件")
-```
-
-输出：
-
-```text
-K161 当前库存 8 件
-```
-
-## `int` 和 `float`：真正参与计算的数字
-
-```python
-quantity = 2
+raw_stock = "3"
 price = 129.9
-amount = quantity * price
+remark = None
 
-print(amount)
+print(type(raw_stock))  # <class 'str'>
+print(type(price))      # <class 'float'>
+print(type(remark))     # <class 'NoneType'>
 ```
 
-输出：
-
-```text
-259.8
-```
-
-`int` 是整数，`float` 是浮点数，也就是日常说的小数。
-
-| 值 | 类型 | 适合表示 |
-| --- | --- | --- |
-| `2` | `int` | 件数、次数、库存 |
-| `129.9` | `float` | 单价、金额、比例 |
-| `"2"` | `str` | 文本形式的数字，还不能直接参与数值运算 |
-
-除法 `/` 即使两个数都是整数，结果也会是浮点数：
-
-```python
-print(10 / 2)
-```
-
-结果是：
-
-```text
-5.0
-```
-
-## `bool`：很多判断最后都会变成 True 或 False
+### `bool` 通常是比较出来的结果
 
 ```python
 stock = 3
 is_low_stock = stock < 5
 
-print(is_low_stock)
+print(is_low_stock)  # True
 ```
 
-输出：
+Python 先计算表达式 `stock < 5`，得到布尔值 `True`，再把名字 `is_low_stock` 绑定到它。这里的 `True` 不是一段说明文字，也不是手工填写的状态。
 
-```text
-True
-```
+本章只需要两组运算符：
 
-这里不是手工写入 `True`，而是 `stock < 5` 计算出了布尔值。常见比较有：
+| 用途 | 运算符 | 例子与结果 |
+| --- | --- | --- |
+| 基础算术 | `+` `-` `*` `/` | `2 * 129.9` 得到 `259.8` |
+| 基础比较 | `==` `!=` `>` `>=` `<` `<=` | `3 < 5` 得到 `True` |
+
+尤其要分清：`stock = 3` 是赋值，`stock == 3` 才是判断是否相等。
+
+`None` 则表示“目前没有具体值”。它和 `""`、`0`、`False` 都不同：
 
 ```python
-stock == 0      # 是否等于 0
-stock != 0      # 是否不等于 0
-stock > 5       # 是否大于 5
-stock >= 5      # 是否大于等于 5
-stock < 5       # 是否小于 5
-stock <= 5      # 是否小于等于 5
+remark = None
+
+print(remark is None)  # True
 ```
 
-注意：判断相等用 `==`，赋值用 `=`。
+## 从文本到判断：看见每一步的状态
 
-```python
-status = "已支付"          # 赋值
-status == "已支付"         # 判断，结果是 True 或 False
-```
-
-这两个符号是新手非常常见的混淆点。
-
-## `None`：不是空字符串，也不是 0
-
-真实数据里经常会遇到“暂时没有值”：
-
-```python
-tracking_no = None
-```
-
-`None` 表示没有具体值，和下面这些值都不同：
-
-```python
-""      # 空字符串
-0       # 数字零
-False   # 布尔假值
-None    # 没有值
-```
-
-以后处理 JSON、API 或缺失字段时，会经常遇到它。
-
-判断是否为 `None`，通常写：
-
-```python
-if tracking_no is None:
-    print("还没有物流单号")
-```
-
-`if` 会在后面的条件判断文章里完整展开，这里只需要认识写法。
-
-## 看类型并诊断转换错误
-
-```python
-sku = "K161"
-stock = 8
-price = 129.9
-
-print(type(sku))
-print(type(stock))
-print(type(price))
-```
-
-你会看到类似：
-
-```text
-<class 'str'>
-<class 'int'>
-<class 'float'>
-```
-
-如果一个字段“看起来像数字却算不了”，先用 `type()` 确认它的真实类型。最常见的错误就是把文本形式的数字直接拿去计算：
-
-```python
-price = "119.9"
-quantity = "2"
-
-print(price * quantity)
-```
-
-这会报错。原因不是 Python 不会乘法，而是两个变量都是字符串。
-
-把它们转成真正的数字：
-
-```python
-price = float("119.9")
-quantity = int("2")
-
-amount = price * quantity
-print(amount)
-```
-
-输出：
-
-```text
-239.8
-```
-
-常见转换函数只有三种需要先记住：
-
-```python
-int("20")       # 20
-float("19.9")   # 19.9
-str(20)          # "20"
-```
-
-但转换不是“强制成功”：
-
-```python
-int("K161")
-```
-
-这会报 `ValueError`，因为 `K161` 不是一个合法整数。
-
-以后处理外部文件或接口数据时，我们会用异常处理来接住这类情况。
-
-## 一次看懂数据状态怎么变化
-
-下面这段代码模拟一个从文本读到库存数字，再计算库存状态的过程：
+库存从外部进入 Python 时常常是文本。下面这段代码可以独立运行，它完成了一条完整路径：输入文本、转换整数、比较补货线、输出结果。
 
 ```python
 raw_stock = "3"
@@ -294,191 +197,491 @@ message = f"库存：{stock}，需要补货：{is_low_stock}"
 print(message)
 ```
 
-<ol class="py-state-flow" aria-label="库存数据状态变化">
-  <li><span>01 · 输入</span><code>raw_stock = "3"</code><small>来源是文本，所以类型为 str</small></li>
-  <li><span>02 · 转换</span><code>stock = int(raw_stock)</code><small>得到可以比较的整数 3</small></li>
-  <li><span>03 · 比较</span><code>stock &lt; 5</code><small>表达式得到布尔值 True</small></li>
-  <li><span>04 · 输出</span><code>{'f"库存：{stock}…"'}</code><small>把结果组织成可读文本</small></li>
-</ol>
-
-这就是以后很多数据脚本的基本形态：**外部数据先进入 Python → 转成合适类型 → 做计算或判断 → 生成结果。**
-
-## 目前只需要这些运算符
+输出：
 
 ```text
-+  -  *  /          # 基础算术
-== != > >= < <=     # 基础比较
+库存：3，需要补货：True
 ```
 
-`//`、`%`、`**` 等运算符等遇到具体场景再补，不需要现在全部背完。
+<figure class="pyv-runtime" aria-labelledby="pyv-runtime-caption">
+  <figcaption id="pyv-runtime-caption">
+    <span class="pyv-kicker">输入 → 转换 → 判断 → 输出</span>
+    <strong><code>"3"</code> 怎样一步步变成 <code>True</code></strong>
+  </figcaption>
+  <ol>
+    <li>
+      <span class="pyv-step-label">01 · 输入</span>
+      <code>raw_stock = "3"</code>
+      <dl><div><dt>之后</dt><dd><code>raw_stock → "3"</code></dd></div><div><dt>类型</dt><dd><code>str</code></dd></div></dl>
+      <p>引号说明它仍是文本，不能直接和整数 5 比较。</p>
+    </li>
+    <li class="pyv-runtime__active">
+      <span class="pyv-step-label">02 · 当前行</span>
+      <code>stock = int(raw_stock)</code>
+      <dl><div><dt>之前</dt><dd><code>raw_stock → "3" · str</code></dd></div><div><dt>之后</dt><dd><code>stock → 3 · int</code></dd></div></dl>
+      <p><code>int()</code> 创建整数 3；原来的 <code>raw_stock</code> 仍是文本。</p>
+    </li>
+    <li>
+      <span class="pyv-step-label">03 · 条件</span>
+      <code>stock &lt; 5</code>
+      <dl><div><dt>代入</dt><dd><code>3 &lt; 5</code></dd></div><div><dt>结果</dt><dd><code>True · bool</code></dd></div></dl>
+      <p>比较不会改变 stock，而是产生一个新的布尔值。</p>
+    </li>
+    <li>
+      <span class="pyv-step-label">04 · 输出</span>
+      <code>print(message)</code>
+      <dl><div><dt>库存</dt><dd><code>3</code></dd></div><div><dt>需补货</dt><dd><code>True</code></dd></div></dl>
+      <p>前面产生的状态被组织成一行可读结果。</p>
+    </li>
+  </ol>
+</figure>
 
-## 动手练习：一条订单的基础字段
+这条轨迹里产生了三个不同的值：文本 `"3"`、整数 `3`、布尔值 `True`。转换并不是给原文本换一个标签，而是得到一个类型不同的新值。
 
-先写：
+常用转换先记住这三个就够：
 
 ```python
-order_no = "A1001"
-price = "129.9"
-quantity = "2"
-is_refunded = False
-
-amount = float(price) * int(quantity)
-
-print(f"订单号：{order_no}")
-print(f"订单金额：{amount}")
-print(f"是否退款：{is_refunded}")
+stock = int("20")       # 20
+price = float("19.9")  # 19.9
+label = str(20)          # "20"
 ```
 
-然后自己完成三次修改：
+## 转换失败：错误发生在 `int()`，不是比较时
 
-1. 把数量改成 `"3"`，确认金额如何变化。
-2. 把 `price` 直接改成数字 `129.9`，再调整计算代码。
-3. 把 `is_refunded` 改成 `True`，观察输出。
+`int()` 会尝试把文本解释成整数，但它不会保证任何文字都能转换。把中文数字“三”交给它时，代码会停在第二行：
 
-如果你能解释每一个变量当前是什么类型、为什么这样转换，这一篇就已经达标。
+```python
+raw_stock = "三"
+stock = int(raw_stock)
+is_low_stock = stock < 5
+```
 
-<Callout title="本章检查">
-  给定一个外部字段 `"3"`，你应该能用 `type()` 识别它、转换成整数、完成比较，并解释 `=`、`==`、`None` 和布尔值分别解决什么问题。
+<figure class="pyv-error" aria-labelledby="pyv-error-caption">
+  <figcaption id="pyv-error-caption">
+    <span class="pyv-kicker">错误路径</span>
+    <strong>沿着执行顺序找真正失败的步骤</strong>
+  </figcaption>
+  <ol>
+    <li>
+      <span class="pyv-step-label">01 · 输入成功</span>
+      <code>raw_stock = "三"</code>
+      <p>状态中已有 <code>raw_stock → "三"</code>，类型是 <code>str</code>。</p>
+    </li>
+    <li class="pyv-error__stop">
+      <span class="pyv-step-label">02 · 出错行</span>
+      <code>stock = int(raw_stock)</code>
+      <p><b>ValueError</b>：<code>"三"</code> 不是 <code>int()</code> 能识别的整数写法。</p>
+      <small>结果：转换没有产出整数，变量 <code>stock</code> 也没有在这一行成功建立。</small>
+    </li>
+    <li class="pyv-error__skipped">
+      <span class="pyv-step-label">03 · 未执行</span>
+      <code>is_low_stock = stock &lt; 5</code>
+      <p>程序已经在上一步停止，因此比较没有发生，也不会得到 True 或 False。</p>
+    </li>
+  </ol>
+</figure>
+
+看到这类报错时，不要只盯着最后想要的“补货判断”。先沿轨迹向前找：输入是什么类型，转换函数收到了什么，在哪一行没有产生预期的新值。后续的错误处理篇会继续讲怎样接住坏数据；本章先学会准确指出失败位置。
+
+<Callout title="读代码时问四个问题">
+  当前执行哪一行？这一行之前有哪些名字和值？右边先产生了什么结果？这一行之后新增或改变了哪一个绑定？用这四个问题，变量和类型就不再是一串抽象名词。
 </Callout>
 
-<HighlightBox eyebrow="下一篇" title="从“一份值”进入“一批真实数据”">
-  下一篇会重点学习字符串、列表和字典，并补充元组、集合、变量引用与浅拷贝。你会开始处理“多条订单”和“一条订单的多个字段”。
+## 动手练习：追踪 K161 的库存状态
+
+先复制并运行完整代码：
+
+```python
+sku = "K161"
+raw_stock = "3"
+reorder_level = 5
+
+stock = int(raw_stock)
+is_low_stock = stock < reorder_level
+
+print(f"{sku} 当前库存 {stock}")
+print(f"需要补货：{is_low_stock}")
+```
+
+然后按执行顺序写出答案：
+
+1. `raw_stock` 的值和类型分别是什么？
+2. 执行 `stock = int(raw_stock)` 后，新产生了什么值？
+3. `stock < reorder_level` 代入数字后是什么表达式，结果是什么类型？
+4. 把 `raw_stock` 改成 `"8"`，从哪一步开始与原轨迹不同？
+5. 把 `raw_stock` 改成 `"三"`，具体哪一行失败，后面哪一行不会执行？
+
+如果你能不运行代码就说出每一步的前后状态，再运行确认答案，这一章就已经达标。
+
+<HighlightBox eyebrow="下一篇" title="从一个值，进入一批真实订单">
+  下一篇会把字符串、列表和字典组合起来。你会沿着 <code>orders → 第 1 条订单 → status</code> 的访问路径，看见一批订单在 Python 里是什么形状。
 </HighlightBox>
 
 <style>{`
-  .py-types-board {
+  .pyv-binding,
+  .pyv-rebind,
+  .pyv-types-board,
+  .pyv-runtime,
+  .pyv-error {
     border: 1px solid var(--line);
     border-radius: var(--radius);
     margin: 1.5rem 0 2rem;
     overflow: hidden;
   }
 
-  .py-types-board figcaption {
+  .pyv-binding figcaption,
+  .pyv-rebind figcaption,
+  .pyv-types-board figcaption,
+  .pyv-runtime figcaption,
+  .pyv-error figcaption {
     background: color-mix(in srgb, var(--cyan) 9%, var(--paper));
     border-bottom: 1px solid var(--line);
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
-    padding: 1rem;
+    gap: 0.25rem;
+    padding: 1rem 1.1rem;
   }
 
-  .py-types-board dl {
+  .pyv-kicker,
+  .pyv-step-label {
+    color: var(--soft);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .pyv-binding__track {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    padding: 1.2rem;
+  }
+
+  .pyv-node {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding: 1.15rem;
+  }
+
+  .pyv-node > span {
+    color: var(--soft);
+    font-size: 0.8rem;
+  }
+
+  .pyv-node > code {
+    font-size: 1.35rem;
+    margin: 0.45rem 0;
+  }
+
+  .pyv-node small,
+  .pyv-figure-note,
+  .pyv-rebind p,
+  .pyv-runtime p,
+  .pyv-error p,
+  .pyv-error small {
+    color: var(--soft);
+    font-size: 0.86rem;
+    line-height: 1.55;
+  }
+
+  .pyv-link {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 7rem;
+    padding: 0.75rem;
+    text-align: center;
+  }
+
+  .pyv-link span {
+    color: var(--soft);
+    font-size: 0.75rem;
+  }
+
+  .pyv-link strong {
+    margin-top: 0.25rem;
+  }
+
+  .pyv-figure-note {
+    border-top: 1px solid var(--line);
+    margin: 0;
+    padding: 0.85rem 1.1rem;
+  }
+
+  .pyv-rebind__track {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pyv-rebind__track section {
+    min-width: 0;
+    padding: 1.1rem;
+  }
+
+  .pyv-rebind__track section + section {
+    border-left: 1px solid var(--line);
+  }
+
+  .pyv-rebind__current {
+    background: color-mix(in srgb, var(--cyan) 7%, var(--paper));
+  }
+
+  .pyv-rebind__current > code {
+    display: block;
+    font-size: 1.05rem;
+    margin-top: 0.75rem;
+  }
+
+  .pyv-mini-binding {
+    align-items: center;
+    display: flex;
+    gap: 0.7rem;
+    margin-top: 0.75rem;
+  }
+
+  .pyv-mini-binding code {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    border-radius: 0.45rem;
+    padding: 0.55rem 0.7rem;
+  }
+
+  .pyv-types-board dl {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     margin: 0;
   }
 
-  .py-types-board dl > div {
+  .pyv-types-board dl > div {
     min-width: 0;
     padding: 1rem;
   }
 
-  .py-types-board dl > div + div {
+  .pyv-types-board dl > div + div {
     border-left: 1px solid var(--line);
   }
 
-  .py-types-board dt,
-  .py-types-board dd {
+  .pyv-types-board dt,
+  .pyv-types-board dd {
     margin: 0;
   }
 
-  .py-types-board strong,
-  .py-types-board span,
-  .py-state-flow span,
-  .py-state-flow code,
-  .py-state-flow small {
+  .pyv-types-board dd strong,
+  .pyv-types-board dd span,
+  .pyv-types-board dd small {
     display: block;
   }
 
-  .py-types-board strong {
-    margin: 0.7rem 0 0.25rem;
+  .pyv-types-board dd strong {
     font-size: 1.08rem;
+    margin: 0.7rem 0 0.35rem;
   }
 
-  .py-types-board figcaption span,
-  .py-types-board dd span,
-  .py-state-flow small {
+  .pyv-types-board dd span {
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
+  .pyv-types-board dd small {
     color: var(--soft);
-    font-size: 0.82rem;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    margin-top: 0.4rem;
   }
 
-  .py-state-flow {
+  .pyv-runtime ol,
+  .pyv-error ol {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     list-style: none;
-    margin: 1.5rem 0 2rem;
+    margin: 0;
     padding: 0;
   }
 
-  .py-state-flow li {
-    background: var(--paper-soft);
-    border: 1px solid var(--line);
+  .pyv-runtime li,
+  .pyv-error li {
     min-width: 0;
     padding: 1rem;
+    position: relative;
   }
 
-  .py-state-flow li:first-child {
-    border-radius: var(--radius) 0 0 var(--radius);
+  .pyv-runtime li + li,
+  .pyv-error li + li {
+    border-left: 1px solid var(--line);
   }
 
-  .py-state-flow li:last-child {
-    border-radius: 0 var(--radius) var(--radius) 0;
+  .pyv-runtime li > code,
+  .pyv-error li > code {
+    display: block;
+    margin: 0.65rem 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
-  .py-state-flow li + li {
-    border-left: 0;
+  .pyv-runtime__active {
+    background: color-mix(in srgb, var(--cyan) 7%, var(--paper));
+    box-shadow: inset 0 3px 0 var(--cyan);
   }
 
-  .py-state-flow code {
-    margin: 0.55rem 0 0.2rem;
+  .pyv-runtime dl {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0.75rem 0;
   }
 
-  @media (max-width: 760px) {
-    .py-types-board {
-      overflow: hidden;
+  .pyv-runtime dl > div {
+    align-items: start;
+    display: grid;
+    gap: 0.45rem;
+    grid-template-columns: 3.2rem minmax(0, 1fr);
+  }
+
+  .pyv-runtime dt,
+  .pyv-runtime dd {
+    font-size: 0.78rem;
+    margin: 0;
+    min-width: 0;
+  }
+
+  .pyv-runtime dt {
+    color: var(--soft);
+  }
+
+  .pyv-runtime dd code {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .pyv-error ol {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pyv-error__stop {
+    background: color-mix(in srgb, #d84b4b 10%, var(--paper));
+    box-shadow: inset 0 3px 0 #d84b4b;
+  }
+
+  .pyv-error__skipped {
+    background: color-mix(in srgb, var(--soft) 6%, var(--paper));
+    opacity: 0.78;
+  }
+
+  .pyv-error small {
+    border-top: 1px dashed var(--line);
+    display: block;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+  }
+
+  @media (max-width: 900px) {
+    .pyv-types-board dl {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .py-types-board dl {
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .py-types-board dl > div + div {
+    .pyv-types-board dl > div,
+    .pyv-types-board dl > div + div {
       border-left: 0;
-    }
-
-    .py-types-board dl > div {
       border-top: 1px solid var(--line);
     }
 
-    .py-types-board dl > div:nth-child(2n) {
+    .pyv-types-board dl > div:nth-child(2n) {
       border-left: 1px solid var(--line);
     }
 
-    .py-types-board dl > div:first-child,
-    .py-types-board dl > div:nth-child(2) {
+    .pyv-types-board dl > div:first-child,
+    .pyv-types-board dl > div:nth-child(2) {
       border-top: 0;
     }
 
-    .py-types-board dl > div:last-child {
+    .pyv-types-board dl > div:last-child {
       grid-column: 1 / -1;
     }
 
-    .py-state-flow {
-      grid-template-columns: 1fr;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      overflow: hidden;
+    .pyv-runtime ol {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .py-state-flow li,
-    .py-state-flow li:first-child,
-    .py-state-flow li:last-child {
-      border: 0;
-      border-radius: 0;
+    .pyv-runtime li + li {
+      border-left: 0;
     }
 
-    .py-state-flow li + li {
+    .pyv-runtime li:nth-child(2n) {
+      border-left: 1px solid var(--line);
+    }
+
+    .pyv-runtime li:nth-child(n + 3) {
       border-top: 1px solid var(--line);
+    }
+  }
+
+  @media (max-width: 760px) {
+    .pyv-binding__track,
+    .pyv-rebind__track,
+    .pyv-types-board dl,
+    .pyv-runtime ol,
+    .pyv-error ol {
+      grid-template-columns: 1fr;
+    }
+
+    .pyv-link {
+      min-width: 0;
+      padding: 0.6rem;
+    }
+
+    .pyv-link strong {
+      font-size: 0;
+    }
+
+    .pyv-link strong::after {
+      content: "向下绑定 ↓";
+      font-size: 0.9rem;
+    }
+
+    .pyv-rebind__track section + section,
+    .pyv-types-board dl > div + div,
+    .pyv-types-board dl > div:nth-child(2n),
+    .pyv-runtime li + li,
+    .pyv-runtime li:nth-child(2n),
+    .pyv-error li + li {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .pyv-types-board dl > div:first-child {
+      border-top: 0;
+    }
+
+    .pyv-types-board dl > div:nth-child(2) {
+      border-top: 1px solid var(--line);
+    }
+
+    .pyv-types-board dl > div:last-child {
+      grid-column: auto;
+    }
+
+    .pyv-runtime li:nth-child(n + 3) {
+      border-top: 1px solid var(--line);
+    }
+
+    .pyv-runtime li:first-child,
+    .pyv-error li:first-child {
+      border-top: 0;
+    }
+
+    .pyv-runtime__active,
+    .pyv-error__stop {
+      box-shadow: inset 3px 0 0 var(--cyan);
+    }
+
+    .pyv-error__stop {
+      box-shadow: inset 3px 0 0 #d84b4b;
     }
   }
 `}</style>

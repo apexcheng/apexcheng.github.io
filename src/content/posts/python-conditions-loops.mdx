@@ -1,12 +1,12 @@
 ---
-title: "Python 条件判断与循环：让代码自己决定、重复和筛选"
-description: "用库存判断和订单筛选讲清 if、elif、else、and、or、in、for、while、break、continue、range，以及循环中的变量如何一步步变化。"
+title: "Python 条件分支图解：为什么代码只走一条路"
+description: "用库存判断逐步看清条件怎样得到 True 或 False，if、elif、else 怎样从上到下检查，以及错误顺序为什么会让结果失真。"
 date: 2026-08-22T22:36:00+08:00
 updated: 2026-08-27T00:10:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 12
+minutes: 10
 featured: false
 series: "python-basics"
 seriesOrder: 4
@@ -16,20 +16,21 @@ private: false
 
 import HighlightBox from '../../components/HighlightBox.astro';
 import Callout from '../../components/Callout.astro';
-import Mermaid from '../../components/Mermaid.astro';
 import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
-前面已经能把订单放进列表、把一条订单放进字典。接下来要让代码真正开始工作：**什么情况执行，什么情况跳过，一批数据怎么逐条处理。**
+代码读到一条库存记录后，往往需要自己决定下一步：库存不足就提醒补货，已经缺货就立刻标记，其他情况继续销售。条件分支就是这道“决策门”。
 
-条件判断负责“决定”，循环负责“重复”。真实脚本经常把两者放在一起。
+它不是同时试走所有路线，而是按顺序完成三件事：**先把条件算成 `True` 或 `False`，再选择一条路线，最后只执行被选中的代码。**
 
 <PythonLessonBrief
-  goal="让代码逐条读取订单，并根据状态决定处理、跳过或停止"
-  data="三条状态不同的订单，以及处理中的计数和金额"
-  outcome="完成一段可以筛选并汇总已支付订单的循环"
+  goal="看见条件求值、顺序检查和唯一命中的完整过程"
+  data="商品 K161 的库存、启用状态和补货条件"
+  outcome="能预测分支结果，并发现条件顺序造成的逻辑错误"
 />
 
-## `if`：条件成立才执行
+## 条件会先得到一个布尔值
+
+先看最小库存判断：
 
 ```python
 stock = 3
@@ -38,29 +39,47 @@ if stock < 5:
     print("需要补货")
 ```
 
-`stock < 5` 会先计算出 `True` 或 `False`。
+Python 到达第 3 行时，不会直接猜应该做什么。它先取出 `stock` 当前保存的 `3`，代入 `stock < 5`，计算出 `True`，然后才进入缩进的第 4 行。
 
-<Mermaid
-  title="一条 if 判断的执行过程"
-  chart={`flowchart LR
-    A[stock = 3] --> B{stock < 5 ?}
-    B -- True --> C[输出 需要补货]
-    B -- False --> D[跳过 if 内代码]`}
-/>
+<figure class="py-conditions-board py-conditions-gate" aria-labelledby="condition-gate-caption">
+  <figcaption id="condition-gate-caption">
+    <span class="py-conditions-kicker">条件求值观察台</span>
+    <strong><code>stock &lt; 5</code> 先得到真假，再决定去向</strong>
+  </figcaption>
+  <div class="py-conditions-evaluation">
+    <section>
+      <span class="py-conditions-label">输入 · 01</span>
+      <b>当前库存</b>
+      <code>stock → 3</code>
+    </section>
+    <i aria-hidden="true">→</i>
+    <section class="is-current">
+      <span class="py-conditions-label">当前行 · 02</span>
+      <b>代入条件</b>
+      <code>3 &lt; 5 → True</code>
+    </section>
+    <i aria-hidden="true">→</i>
+    <section>
+      <span class="py-conditions-label">结果 · 03</span>
+      <b>选择 True 路线</b>
+      <code>进入 if</code>
+    </section>
+  </div>
+  <div class="py-conditions-two-ways" aria-label="条件为真和为假的两条去向">
+    <div class="is-true">
+      <span>True 路线 · 本次命中</span>
+      <strong>执行缩进代码</strong>
+      <output>输出：需要补货</output>
+    </div>
+    <div class="is-false">
+      <span>False 路线 · 本次未走</span>
+      <strong>跳过缩进代码</strong>
+      <output>没有这行输出</output>
+    </div>
+  </div>
+</figure>
 
-注意两个语法点：
-
-```python
-if stock < 5:
-    print("需要补货")
-```
-
-- 条件后面有冒号 `:`。
-- 属于 `if` 的代码要缩进。
-
-缩进不是为了好看，而是在告诉 Python 哪些代码属于这个分支。
-
-## `if / else`：两条路只走一条
+把输入改成 `stock = 8`，条件会变成 `8 < 5 → False`。Python 跳过缩进代码，因此终端不会显示“需要补货”。如果两种结果都要明确处理，可以补上 `else`：
 
 ```python
 stock = 8
@@ -71,15 +90,223 @@ else:
     print("库存正常")
 ```
 
-结果：
+输出是：
 
 ```text
 库存正常
 ```
 
-一次判断里，`if` 和 `else` 不会同时执行。
+这里有两个不能省略的结构信号：条件后面有冒号 `:`，属于这个分支的代码需要缩进。缩进不是排版，它划出了“这条路线里要执行的代码”。
 
-## `if / elif / else`：多个状态从上往下检查
+## 多条分支怎样从上到下检查
+
+库存不只有“不足”和“正常”两种状态。下面这段代码把 `0` 单独标成“缺货”：
+
+```python
+stock = 3
+
+if stock == 0:
+    level = "缺货"
+elif stock < 5:
+    level = "库存偏低"
+else:
+    level = "库存正常"
+
+print(level)
+```
+
+`if / elif / else` 可以读成一列从上到下的检查站：
+
+1. 先检查 `if`。
+2. 如果结果为 `False`，才检查下一个 `elif`。
+3. 前面都没有命中，才进入 `else`。
+4. 一旦某个条件得到 `True`，本次判断立即选定路线，后面不再检查。
+
+<figure class="py-conditions-board py-conditions-sequence" aria-labelledby="condition-sequence-caption">
+  <figcaption id="condition-sequence-caption">
+    <span class="py-conditions-kicker">顺序命中轨迹</span>
+    <strong>同一段代码输入不同库存，仍然只会选中一个结果</strong>
+  </figcaption>
+  <div class="py-conditions-run" aria-label="库存为 3 时的判断轨迹">
+    <header>
+      <span>运行 A</span>
+      <strong><code>stock = 3</code></strong>
+    </header>
+    <ol>
+      <li>
+        <span class="py-conditions-step">检查 01</span>
+        <code>3 == 0</code>
+        <b>False</b>
+        <small>继续向下</small>
+      </li>
+      <li class="is-hit">
+        <span class="py-conditions-step">检查 02 · 命中</span>
+        <code>3 &lt; 5</code>
+        <b>True</b>
+        <small>level = “库存偏低”</small>
+      </li>
+      <li class="is-closed">
+        <span class="py-conditions-step">检查 03 · 关闭</span>
+        <code>else</code>
+        <b>不再检查</b>
+        <small>前面已经命中</small>
+      </li>
+    </ol>
+    <output>最终输出：库存偏低</output>
+  </div>
+  <div class="py-conditions-run" aria-label="库存为 8 时的判断轨迹">
+    <header>
+      <span>运行 B</span>
+      <strong><code>stock = 8</code></strong>
+    </header>
+    <ol>
+      <li>
+        <span class="py-conditions-step">检查 01</span>
+        <code>8 == 0</code>
+        <b>False</b>
+        <small>继续向下</small>
+      </li>
+      <li>
+        <span class="py-conditions-step">检查 02</span>
+        <code>8 &lt; 5</code>
+        <b>False</b>
+        <small>继续向下</small>
+      </li>
+      <li class="is-hit">
+        <span class="py-conditions-step">检查 03 · 命中</span>
+        <code>else</code>
+        <b>兜底路线</b>
+        <small>level = “库存正常”</small>
+      </li>
+    </ol>
+    <output>最终输出：库存正常</output>
+  </div>
+</figure>
+
+`else` 没有自己的条件。它的含义是“前面的条件都不成立时走这里”，所以必须放在最后。
+
+## `and`、`or`、`not` 怎样组合真假
+
+真实业务判断常常需要同时看多个字段。不要只背“并且、或者、取反”，把真实值代进去就会清楚很多：
+
+```python
+status = "已支付"
+amount = 129.0
+is_refunded = False
+
+is_priority = status == "已支付" and amount > 100
+is_closed = status == "已退款" or status == "已关闭"
+can_ship = not is_refunded
+
+print(is_priority)
+print(is_closed)
+print(can_ship)
+```
+
+完整输出：
+
+```text
+True
+False
+True
+```
+
+<figure class="py-conditions-board py-conditions-logic" aria-labelledby="condition-logic-caption">
+  <figcaption id="condition-logic-caption">
+    <span class="py-conditions-kicker">真假组合台</span>
+    <strong>先分别求值，再让逻辑词组合结果</strong>
+  </figcaption>
+  <div class="py-conditions-logic-row">
+    <span class="py-conditions-operator">and · 两边都要 True</span>
+    <div><code>status == "已支付"</code><b>True</b></div>
+    <i>and</i>
+    <div><code>amount &gt; 100</code><b>True</b></div>
+    <output>True → 优先处理</output>
+  </div>
+  <div class="py-conditions-logic-row">
+    <span class="py-conditions-operator">or · 至少一边 True</span>
+    <div><code>status == "已退款"</code><b>False</b></div>
+    <i>or</i>
+    <div><code>status == "已关闭"</code><b>False</b></div>
+    <output>False → 订单未关闭</output>
+  </div>
+  <div class="py-conditions-logic-row is-not">
+    <span class="py-conditions-operator">not · 把结果反过来</span>
+    <div><code>is_refunded</code><b>False</b></div>
+    <i>not</i>
+    <div><code>not False</code><b>True</b></div>
+    <output>True → 可以发货</output>
+  </div>
+</figure>
+
+条件变长时，先给中间结果起名字，比把所有判断塞进一行更容易检查：
+
+```python
+is_paid = status == "已支付"
+is_large_order = amount > 100
+
+if is_paid and is_large_order:
+    print("进入高金额已支付订单")
+```
+
+另外，检查一个值是否属于某组状态时，可以使用 `in`：
+
+```python
+status = "已退款"
+closed_statuses = ["已退款", "已关闭", "已取消"]
+
+if status in closed_statuses:
+    print("订单已结束")
+```
+
+这里的条件是 `status in closed_statuses`，它同样先得到 `True`，然后代码才进入缩进部分。
+
+## 条件都写对了，顺序仍可能让结果错
+
+下面两条条件单独看都没有语法错误，但排列顺序有问题：
+
+```python
+stock = 0
+
+if stock < 5:
+    level = "库存偏低"
+elif stock == 0:
+    level = "缺货"
+else:
+    level = "库存正常"
+
+print(level)
+```
+
+人可能注意到 `stock == 0`，期望结果是“缺货”；Python 却严格从上到下。`0 < 5` 已经是 `True`，第一条路线立即命中，专门处理缺货的第二条条件根本没有机会运行。
+
+<figure class="py-conditions-board py-conditions-order-bug" aria-labelledby="condition-order-caption">
+  <figcaption id="condition-order-caption">
+    <span class="py-conditions-kicker">错误顺序定位板</span>
+    <strong>问题发生在第一个条件过早命中</strong>
+  </figcaption>
+  <div class="py-conditions-order-compare">
+    <section class="is-wrong">
+      <span class="py-conditions-label">错误顺序</span>
+      <ol>
+        <li class="is-hit"><code>0 &lt; 5</code><b>True · 立即命中</b></li>
+        <li class="is-blocked"><code>0 == 0</code><b>不再检查</b></li>
+      </ol>
+      <output>实际结果：库存偏低</output>
+    </section>
+    <section class="is-correct">
+      <span class="py-conditions-label">正确顺序</span>
+      <ol>
+        <li class="is-hit"><code>0 == 0</code><b>True · 立即命中</b></li>
+        <li class="is-blocked"><code>0 &lt; 5</code><b>不再检查</b></li>
+      </ol>
+      <output>期望结果：缺货</output>
+    </section>
+  </div>
+  <p><b>排序原则：</b>先放范围更窄、更特殊的条件，再放范围更宽的一般条件，最后用 <code>else</code> 兜底。</p>
+</figure>
+
+正确代码是：
 
 ```python
 stock = 0
@@ -94,388 +321,55 @@ else:
 print(level)
 ```
 
-分支会从上往下检查，顺序非常重要。如果写成：
+这类问题通常不会报错，因为每一行语法都合法；它属于**逻辑错误**。定位时不要只看最终输出，要沿着顺序找到“第一条得到 `True` 的条件”。
+
+## 动手验证三组库存
+
+复制下面代码，依次把 `stock` 改成 `0`、`3`、`8`。运行前先预测每次会检查到哪一行、后面的哪些分支不会再检查。
 
 ```python
-if stock < 5:
-    level = "库存偏低"
-elif stock == 0:
+stock = 0
+
+if stock == 0:
     level = "缺货"
+elif stock < 5:
+    level = "库存偏低"
+else:
+    level = "库存正常"
+
+print("库存：", stock)
+print("结果：", level)
 ```
 
-当 `stock = 0` 时，第一个条件已经成立，第二个分支永远不会执行。
+预期对应关系：
 
-`stock = 0` 时第一个条件已经成立，第二个分支不会执行。多条件判断既要看条件对不对，也要看哪个条件应该先判断。
-
-## 多个条件：`and`、`or`、`not`
-
-### `and`：两个条件都成立
-
-```python
-status = "已支付"
-amount = 129.0
-
-if status == "已支付" and amount > 100:
-    print("进入高金额已支付订单")
-```
-
-### `or`：任意一个成立即可
-
-```python
-status = "已退款"
-
-if status == "已退款" or status == "已关闭":
-    print("订单不再继续处理")
-```
-
-### `not`：把真假反过来
-
-```python
-is_refunded = False
-
-if not is_refunded:
-    print("订单未退款")
-```
-
-复杂条件不要全部挤在一起。拆成有名字的布尔变量更容易检查：
-
-```python
-is_paid = status == "已支付"
-is_large_order = amount > 100
-
-if is_paid and is_large_order:
-    print("需要处理")
-```
-
-## `in`：判断一个值是否在一组数据里
-
-```python
-status = "已退款"
-closed_statuses = ["已退款", "已关闭", "已取消"]
-
-if status in closed_statuses:
-    print("订单已结束")
-```
-
-这通常比连续写很多个 `or` 更直观。
-
-字符串也可以用 `in`：
-
-```python
-title = "K161 无线键盘"
-
-if "键盘" in title:
-    print("这是键盘类商品")
-```
-
-## `for`：把列表里的数据一条一条拿出来
-
-```python
-skus = ["K161", "K162", "K163"]
-
-for sku in skus:
-    print(sku)
-```
-
-执行时可以想成：
-
-| 第几次 | `sku` 当前值 | 执行 `print(sku)` |
+| 输入 | 第一个命中的分支 | 输出结果 |
 | ---: | --- | --- |
-| 1 | `"K161"` | 输出 K161 |
-| 2 | `"K162"` | 输出 K162 |
-| 3 | `"K163"` | 输出 K163 |
-
-`sku` 不是整个列表，它只是**当前这一轮取出来的一个元素**。
-
-这是理解循环最关键的一点。
-
-## 真实场景：逐条检查订单
-
-```python
-orders = [
-    {"order_no": "A001", "amount": 129.0, "status": "已支付"},
-    {"order_no": "A002", "amount": 88.0, "status": "已退款"},
-    {"order_no": "A003", "amount": 199.0, "status": "已支付"},
-]
-
-for order in orders:
-    if order["status"] == "已支付":
-        print(order["order_no"], order["amount"])
-```
-
-<figure class="py-order-conveyor" aria-labelledby="conveyor-caption">
-  <figcaption id="conveyor-caption"><span>订单处理传送带</span><strong>循环负责送入订单，条件负责决定当前订单的动作</strong></figcaption>
-  <ol>
-    <li><span>第 1 轮 · A001</span><strong>状态：已支付</strong><small>判断通过，输出 A001 / 129.0</small></li>
-    <li class="is-skipped"><span>第 2 轮 · A002</span><strong>状态：已退款</strong><small>判断未通过，本轮不输出</small></li>
-    <li><span>第 3 轮 · A003</span><strong>状态：已支付</strong><small>判断通过，输出 A003 / 199.0</small></li>
-  </ol>
-</figure>
-
-循环本身没有筛选能力，真正决定是否输出的是循环里面的 `if`。
-
-## 在循环里累计数量
-
-```python
-orders = [
-    {"status": "已支付", "amount": 129.0},
-    {"status": "已退款", "amount": 88.0},
-    {"status": "已支付", "amount": 199.0},
-]
-
-paid_count = 0
-
-for order in orders:
-    if order["status"] == "已支付":
-        paid_count = paid_count + 1
-
-print(paid_count)
-```
-
-计数器的状态台账：
-
-| 阶段 | 当前订单状态 | 判断后 `paid_count` |
-| --- | --- | ---: |
-| 循环前 | — | 0 |
-| 第 1 轮 | 已支付 | 1 |
-| 第 2 轮 | 已退款 | 1 |
-| 第 3 轮 | 已支付 | 2 |
-
-这就是最基础的“计数器”。
-
-也可以累加金额：
-
-```python
-total_amount = 0
-
-for order in orders:
-    total_amount = total_amount + order["amount"]
-```
-
-很多数据统计的底层思路都来自这种“循环 + 状态变量”。
-
-## `continue`：当前这一条不处理，继续下一条
-
-```python
-orders = [
-    {"order_no": "A001", "status": "已支付"},
-    {"order_no": "A002", "status": "已退款"},
-    {"order_no": "A003", "status": "已支付"},
-]
-
-for order in orders:
-    if order["status"] == "已退款":
-        continue
-
-    print("处理订单", order["order_no"])
-```
-
-遇到 A002 时，执行 `continue`，本轮下面的代码不再执行，但循环会继续处理 A003。
-
-## `break`：整个循环直接结束
-
-```python
-target_order_no = "A002"
-
-for order in orders:
-    if order["order_no"] == target_order_no:
-        print("找到了", order)
-        break
-```
-
-如果目标已经找到，后面的订单不需要继续检查，就可以 `break`。
-
-<dl class="py-loop-control" aria-label="continue 和 break 的区别">
-  <div><dt><code>continue</code></dt><dd><strong>跳过当前订单</strong><span>循环继续处理下一条</span></dd></div>
-  <div><dt><code>break</code></dt><dd><strong>停止整个循环</strong><span>后续订单都不再检查</span></dd></div>
-</dl>
-
-<details class="py-loop-tools">
-  <summary><span>补充工具</span><strong><code>range()</code>、列表推导式和 <code>while</code></strong><small>先掌握订单循环，再按需展开</small></summary>
-
-### `range()`：需要重复固定次数时
-
-```python
-for i in range(3):
-    print(i)
-```
-
-输出：
-
-```text
-0
-1
-2
-```
-
-`range(3)` 产生的是从 `0` 到 `3` 之前的整数序列。
-
-如果只是“对列表里的每一项做事”，不要为了拿下标硬写 `range(len(...))`。直接遍历元素通常更清楚：
-
-```python
-for order in orders:
-    print(order)
-```
-
-如果确实同时需要序号，可以认识 `enumerate()`：
-
-```python
-for index, order in enumerate(orders, start=1):
-    print(index, order["order_no"])
-```
-
-### 列表推导式：先看懂普通 `for`，再认识简写
-
-现在已经理解了 `for`，再看列表推导式就不会只是背符号。
-
-普通写法：
-
-```python
-numbers = [1, 2, 3, 4]
-squares = []
-
-for number in numbers:
-    squares.append(number * number)
-```
-
-列表推导式把同一件事压成一行：
-
-```python
-numbers = [1, 2, 3, 4]
-squares = [number * number for number in numbers]
-```
-
-两种写法都会得到：
-
-```text
-[1, 4, 9, 16]
-```
-
-入门阶段不需要强行把循环改成推导式。**一旦条件或处理步骤开始变复杂，普通 `for` 往往更容易读。**
-
-### `while`：不知道循环次数，但知道什么时候停
-
-`for` 适合处理一个已有集合；`while` 更像“只要条件还成立，就继续”。
-
-```python
-retry_count = 0
-
-while retry_count < 3:
-    print("执行第", retry_count + 1, "次")
-    retry_count = retry_count + 1
-```
-
-看 `while` 时固定检查三件事：初始值 `retry_count = 0`、继续条件 `retry_count < 3`、状态变化 `retry_count = retry_count + 1`。
-
-如果没有第三步：
-
-```python
-while retry_count < 3:
-    print("一直执行")
-```
-
-条件永远不会变化，就会形成死循环。
-
-### `for` 还是 `while`
-
-| 场景 | 更自然的选择 |
-| --- | --- |
-| 遍历订单列表 | `for` |
-| 遍历文件里的每一行 | `for` |
-| 固定执行 3 次 | `for range(3)` |
-| 失败后重试，直到成功或达到上限 | `while` |
-| 等待某个状态发生变化 | `while`（真实自动化还要配合等待与超时） |
-
-入门时优先把 `for` 用熟。很多新手为了“高级”而滥用 `while`，反而更容易写出停不下来的循环。
-
-</details>
-
-## 一个完整小案例：筛选并统计订单
-
-```python
-orders = [
-    {"order_no": "A001", "amount": 129.0, "status": "已支付"},
-    {"order_no": "A002", "amount": 88.0, "status": "已退款"},
-    {"order_no": "A003", "amount": 199.0, "status": "已支付"},
-    {"order_no": "A004", "amount": 59.0, "status": "已支付"},
-]
-
-paid_count = 0
-paid_amount = 0
-
-for order in orders:
-    if order["status"] != "已支付":
-        continue
-
-    paid_count = paid_count + 1
-    paid_amount = paid_amount + order["amount"]
-
-print(f"已支付订单：{paid_count} 单")
-print(f"已支付金额：{paid_amount}")
-```
-
-<ol class="py-processing-chain" aria-label="订单筛选与汇总过程">
-  <li><span>读取</span><strong><code>for</code> 逐条取得订单</strong></li>
-  <li><span>判断</span><strong>非已支付订单执行 <code>continue</code></strong></li>
-  <li><span>累计</span><strong>已支付订单更新数量与金额</strong></li>
-  <li><span>结果</span><strong>循环结束后统一输出统计</strong></li>
-</ol>
-
-如果你能跟着表格说清每一轮 `order`、`paid_count` 和 `paid_amount` 分别是什么值，循环就不是“背语法”，而是真的看懂了。
-
-## 动手练习：库存补货清单
-
-```python
-products = [
-    {"sku": "K161", "stock": 3, "enabled": True},
-    {"sku": "K162", "stock": 8, "enabled": True},
-    {"sku": "K163", "stock": 0, "enabled": False},
-    {"sku": "K164", "stock": 2, "enabled": True},
-]
-```
-
-目标：
-
-1. 逐条遍历商品。
-2. `enabled` 为 `False` 的商品直接跳过。
-3. 库存小于 5 时输出 SKU 和库存。
-4. 统计最终有几个 SKU 需要补货。
-
-先自己写，再参考思路：
-
-```python
-restock_count = 0
-
-for product in products:
-    if not product["enabled"]:
-        continue
-
-    if product["stock"] < 5:
-        print(product["sku"], product["stock"])
-        restock_count = restock_count + 1
-
-print("需要补货 SKU 数：", restock_count)
-```
+| `0` | `stock == 0` | 缺货 |
+| `3` | `stock < 5` | 库存偏低 |
+| `8` | `else` | 库存正常 |
 
 <Callout title="本章检查">
-  你应该能逐轮说出当前订单、判断结果和计数器状态，并准确区分 `continue` 跳过当前轮与 `break` 停止整个循环。
+  你应该能把一个条件拆成“读取输入 → 求值得到 True / False → 选择路线”，并能解释为什么多个分支从上到下只命中一次。看到结果不符合业务预期时，先找第一条为 True 的条件，再检查顺序是否合理。
 </Callout>
 
-<HighlightBox eyebrow="下一篇" title="代码能跑之后，再开始拆函数">
-  下一篇不会一上来追求“工程化”。我们只做一件事：把已经看懂的输入、处理和输出整理成函数，让一段逻辑可以清楚地重复使用。
+<HighlightBox eyebrow="下一篇" title="看见每一轮发生了什么">
+  下一篇会让三条订单依次经过同一段代码，并追踪当前订单、判断结果和金额状态怎样逐步变化。
 </HighlightBox>
 
 <style>{`
-  .py-order-conveyor,
-  .py-loop-tools {
+  .py-conditions-board {
+    --condition-blue: #2563eb;
+    --condition-amber: #b45309;
+    --condition-green: #15803d;
+    --condition-red: #b42318;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     margin: 1.5rem 0 2rem;
     overflow: hidden;
   }
 
-  .py-order-conveyor figcaption,
-  .py-loop-tools > summary {
+  .py-conditions-board figcaption {
     background: color-mix(in srgb, var(--blue) 8%, var(--paper));
     border-bottom: 1px solid var(--line);
     display: flex;
@@ -484,119 +378,280 @@ print("需要补货 SKU 数：", restock_count)
     padding: 1rem 1.1rem;
   }
 
-  .py-order-conveyor figcaption span,
-  .py-order-conveyor li span,
-  .py-order-conveyor li small,
-  .py-loop-tools summary span,
-  .py-loop-tools summary small,
-  .py-loop-control span,
-  .py-processing-chain span {
+  .py-conditions-kicker,
+  .py-conditions-label,
+  .py-conditions-step,
+  .py-conditions-operator {
     color: var(--soft);
-    font-size: 0.8rem;
+    font-size: 0.76rem;
+    font-weight: 750;
+    letter-spacing: 0.035em;
   }
 
-  .py-order-conveyor ol,
-  .py-processing-chain {
+  .py-conditions-evaluation {
+    align-items: stretch;
     display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .py-conditions-evaluation section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .py-conditions-evaluation section.is-current {
+    background: color-mix(in srgb, var(--condition-amber) 8%, var(--paper));
+    box-shadow: inset 0 3px 0 var(--condition-amber);
+  }
+
+  .py-conditions-evaluation > i {
+    align-self: center;
+    color: var(--soft);
+    font-style: normal;
+  }
+
+  .py-conditions-two-ways {
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .py-conditions-two-ways > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 1rem;
+  }
+
+  .py-conditions-two-ways > div + div {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-conditions-two-ways .is-true {
+    background: color-mix(in srgb, var(--condition-green) 7%, var(--paper));
+    border-top: 3px solid var(--condition-green);
+  }
+
+  .py-conditions-two-ways .is-false {
+    background: var(--paper-soft);
+    border-top: 3px dashed var(--line);
+    color: var(--soft);
+  }
+
+  .py-conditions-two-ways span {
+    font-size: 0.76rem;
+    font-weight: 750;
+  }
+
+  .py-conditions-sequence {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .py-conditions-sequence figcaption {
+    grid-column: 1 / -1;
+  }
+
+  .py-conditions-run + .py-conditions-run {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-conditions-run header {
+    align-items: center;
+    background: var(--paper-soft);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    padding: 0.8rem 1rem;
+  }
+
+  .py-conditions-run header span {
+    color: var(--soft);
+    font-size: 0.76rem;
+    font-weight: 750;
+  }
+
+  .py-conditions-run ol {
     list-style: none;
     margin: 0;
     padding: 0;
   }
 
-  .py-order-conveyor ol {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .py-conditions-run li {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: minmax(6.5rem, 0.9fr) minmax(5rem, 0.75fr) minmax(6rem, 0.8fr);
+    padding: 0.8rem 1rem;
   }
 
-  .py-order-conveyor li {
-    min-width: 0;
+  .py-conditions-run li + li {
+    border-top: 1px solid var(--line);
+  }
+
+  .py-conditions-run li.is-hit {
+    background: color-mix(in srgb, var(--condition-green) 8%, var(--paper));
+    box-shadow: inset 3px 0 0 var(--condition-green);
+  }
+
+  .py-conditions-run li.is-closed {
+    color: var(--soft);
+  }
+
+  .py-conditions-run li small {
+    grid-column: 1 / -1;
+  }
+
+  .py-conditions-run > output {
+    border-top: 1px solid var(--line);
+    color: var(--condition-green);
+    display: block;
+    font-weight: 750;
+    padding: 0.85rem 1rem;
+  }
+
+  .py-conditions-logic-row {
+    align-items: center;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 9rem minmax(8rem, 1fr) auto minmax(8rem, 1fr) minmax(9rem, 0.9fr);
     padding: 1rem;
   }
 
-  .py-order-conveyor li + li {
-    border-left: 1px solid var(--line);
+  .py-conditions-logic-row + .py-conditions-logic-row {
+    border-top: 1px solid var(--line);
   }
 
-  .py-order-conveyor li strong,
-  .py-order-conveyor li small {
-    display: block;
-    margin-top: 0.45rem;
-  }
-
-  .py-order-conveyor .is-skipped {
-    background: color-mix(in srgb, var(--soft) 7%, var(--paper));
-  }
-
-  .py-loop-control {
-    display: grid;
-    gap: 0.8rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin: 1.5rem 0 2rem;
-  }
-
-  .py-loop-control > div {
+  .py-conditions-logic-row > div {
     background: var(--paper-soft);
     border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border-radius: 0.65rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+    padding: 0.7rem;
+  }
+
+  .py-conditions-logic-row code {
+    overflow-wrap: anywhere;
+  }
+
+  .py-conditions-logic-row i {
+    color: var(--condition-amber);
+    font-style: normal;
+    font-weight: 800;
+  }
+
+  .py-conditions-logic-row output {
+    color: var(--condition-green);
+    font-weight: 750;
+  }
+
+  .py-conditions-logic-row:nth-child(3) output {
+    color: var(--soft);
+  }
+
+  .py-conditions-order-compare {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .py-conditions-order-compare section {
     padding: 1rem;
   }
 
-  .py-loop-control dt,
-  .py-loop-control dd {
-    margin: 0;
-  }
-
-  .py-loop-control dd strong,
-  .py-loop-control dd span {
-    display: block;
-    margin-top: 0.45rem;
-  }
-
-  .py-loop-tools > summary {
-    border-bottom: 0;
-    cursor: pointer;
-  }
-
-  .py-loop-tools[open] > summary {
-    border-bottom: 1px solid var(--line);
-  }
-
-  .py-loop-tools > :not(summary) {
-    margin-left: 1.1rem;
-    margin-right: 1.1rem;
-  }
-
-  .py-processing-chain {
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin: 1.5rem 0 2rem;
-    overflow: hidden;
-  }
-
-  .py-processing-chain li {
-    padding: 1rem;
-  }
-
-  .py-processing-chain li + li {
+  .py-conditions-order-compare section + section {
     border-left: 1px solid var(--line);
   }
 
-  .py-processing-chain strong {
-    display: block;
-    margin-top: 0.45rem;
+  .py-conditions-order-compare .is-wrong {
+    background: color-mix(in srgb, var(--condition-red) 6%, var(--paper));
   }
 
-  @media (max-width: 680px) {
-    .py-order-conveyor ol,
-    .py-loop-control,
-    .py-processing-chain {
+  .py-conditions-order-compare .is-correct {
+    background: color-mix(in srgb, var(--condition-green) 6%, var(--paper));
+  }
+
+  .py-conditions-order-compare ol {
+    list-style: none;
+    margin: 0.8rem 0;
+    padding: 0;
+  }
+
+  .py-conditions-order-compare li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.65rem 0;
+  }
+
+  .py-conditions-order-compare li + li {
+    border-top: 1px dashed var(--line);
+  }
+
+  .py-conditions-order-compare .is-blocked {
+    color: var(--soft);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+
+  .py-conditions-order-compare output {
+    display: block;
+    font-weight: 750;
+  }
+
+  .py-conditions-order-bug > p {
+    border-top: 1px solid var(--line);
+    margin: 0;
+    padding: 0.9rem 1rem;
+  }
+
+  @media (max-width: 720px) {
+    .py-conditions-evaluation,
+    .py-conditions-two-ways,
+    .py-conditions-sequence,
+    .py-conditions-order-compare {
       grid-template-columns: 1fr;
     }
 
-    .py-order-conveyor li + li,
-    .py-processing-chain li + li {
+    .py-conditions-evaluation > i {
+      transform: rotate(90deg);
+    }
+
+    .py-conditions-two-ways > div + div,
+    .py-conditions-run + .py-conditions-run,
+    .py-conditions-order-compare section + section {
       border-left: 0;
       border-top: 1px solid var(--line);
+    }
+
+    .py-conditions-sequence figcaption {
+      grid-column: auto;
+    }
+
+    .py-conditions-run li {
+      grid-template-columns: 1fr;
+    }
+
+    .py-conditions-run li small {
+      grid-column: auto;
+    }
+
+    .py-conditions-logic-row {
+      align-items: stretch;
+      grid-template-columns: 1fr;
+    }
+
+    .py-conditions-logic-row i {
+      justify-self: center;
+    }
+
+    .py-conditions-logic-row output {
+      border-top: 1px dashed var(--line);
+      padding-top: 0.65rem;
     }
   }
 `}</style>

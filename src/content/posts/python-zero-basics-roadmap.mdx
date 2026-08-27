@@ -1,12 +1,12 @@
 ---
-title: "Python 零基础学习路线：从看懂一行代码到写出简单脚本"
-description: "一套面向数据处理、RPA、API 和简单脚本场景的 Python 零基础学习路线，先建立代码运行直觉，再逐步进入真实数据与自动化任务。"
+title: "一行 Python 代码是怎么运行的：从表达式到输出的图解"
+description: "用变量状态、当前行和输出区，逐步看懂 Python 如何从上到下运行一段订单脚本，以及修改输入后执行轨迹为什么会改变。"
 date: 2026-08-22T22:30:00+08:00
 updated: 2026-08-27T00:10:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 7
+minutes: 10
 featured: false
 series: "python-basics"
 seriesOrder: 1
@@ -18,37 +18,83 @@ import HighlightBox from '../../components/HighlightBox.astro';
 import Callout from '../../components/Callout.astro';
 import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
-如果你学 Python 的目标不是参加算法竞赛，而是想处理 Excel 导出的数据、写 RPA 辅助脚本、调用 API，或者把重复操作变成一段自动执行的代码，那么入门顺序应该围绕一个问题展开：**数据进来以后，Python 到底怎么一步一步把它变成结果？**
+Python 代码不是一次性把整页“算完”。默认情况下，它从上到下走到一行、完成这一行，再去下一行。运行时有些变化能在终端里看到，更多变化却藏在程序内部：表达式先得到结果、变量记住结果、条件得到 `True` 或 `False`，最后才可能产生输出。
 
-这个系列不会把 Python 写成一门计算机专业课程。八篇内容都围绕订单、SKU、状态、JSON 和文件展开，目标是让一批数据经过判断、循环、清洗或文件处理后，得到可以继续使用的结果。
+这一章不要求先记语法。先把代码当成一条可以逐站观察的轨道，学会回答四个问题：**现在运行哪一行？这一行拿到什么？内部状态怎样改变？有没有产生输出？**
 
 <PythonLessonBrief
-  goal="建立从数据输入到结果输出的代码运行直觉"
+  goal="看见一行代码从读取、求值到输出的完整过程"
   data="两条包含订单号、金额和状态的订单"
-  outcome="独立看懂并运行一个小型 Python 脚本"
+  outcome="能沿着 8 行订单脚本说出每一步发生了什么"
 />
 
-## 先看完整路线
+## 一行赋值，不是把等号两边同时连起来
 
-<figure class="py-roadmap" aria-labelledby="roadmap-caption">
-  <figcaption id="roadmap-caption"><span>脚本装配地图</span><strong>八篇内容逐步拼成一条完整处理链</strong></figcaption>
-  <ol>
-    <li><span>01 · 起点</span><strong>学习路线</strong><small>知道代码怎样流动</small></li>
-    <li><span>02 · 输入</span><strong>基础类型</strong><small>认清每个值是什么</small></li>
-    <li><span>03 · 组织</span><strong>常用容器</strong><small>把多条数据装起来</small></li>
-    <li><span>04 · 处理</span><strong>判断与循环</strong><small>决定、筛选和重复</small></li>
-    <li><span>05 · 封装</span><strong>函数</strong><small>把步骤整理成工具</small></li>
-    <li><span>06 · 接入</span><strong>文件 / JSON / 异常</strong><small>处理外部真实数据</small></li>
-    <li><span>07 · 组织</span><strong>类与对象</strong><small>管理状态与行为</small></li>
-    <li><span>08 · 验收</span><strong>综合考核</strong><small>确认能够独立动手</small></li>
+先看一行可以直接运行的代码：
+
+```python
+paid_total = 129.0 + 199.0
+```
+
+这里的 `=` 不是数学题里的“左右相等”。Python 会先处理右侧，再让左侧的名字记住结果。
+
+<figure class="py-runtime-lesson py-runtime-assignment" aria-labelledby="assignment-caption">
+  <figcaption id="assignment-caption">
+    <span class="py-runtime-kicker">单行赋值观察台</span>
+    <strong><code>paid_total = 129.0 + 199.0</code></strong>
+  </figcaption>
+  <ol class="py-runtime-flow">
+    <li>
+      <span class="py-runtime-label">输入 · 01</span>
+      <strong>读取右侧表达式</strong>
+      <code>129.0 + 199.0</code>
+      <small>此时还没有名为 paid_total 的变量。</small>
+    </li>
+    <li>
+      <span class="py-runtime-label">当前行 · 02</span>
+      <strong>先计算右侧</strong>
+      <code>129.0 + 199.0 → 328.0</code>
+      <small>表达式先产生一个值。</small>
+    </li>
+    <li>
+      <span class="py-runtime-label">之后 · 03</span>
+      <strong>名字绑定到结果</strong>
+      <div class="py-runtime-binding"><code>paid_total</code><span aria-hidden="true">→</span><b>328.0</b></div>
+      <small>后面的代码可以通过名字取回这个值。</small>
+    </li>
   </ol>
+  <div class="py-runtime-state-strip">
+    <span><b>之前</b> paid_total 不存在</span>
+    <span><b>之后</b> paid_total 记住 328.0</span>
+    <span><b>输出</b> 暂无</span>
+  </div>
 </figure>
 
-这条路线有一个刻意的取舍：**类和对象放得比较后。** 对零基础读者来说，先会处理数据、写判断、写循环、写函数，比一开始理解面向对象更重要。很多几十行以内的自动化脚本，甚至完全不需要自己写类。
+最后一格特意写着“输出暂无”：**变量状态改变，不等于屏幕会出现文字。** 只有代码明确调用 `print()` 等输出动作时，终端才会显示内容。
 
-## Python 代码到底在做什么
+```python
+paid_total = 129.0 + 199.0
+print(paid_total)
+```
 
-先不要记语法。看下面这段只有 8 行的代码：
+这两行运行后，变量仍然保存 `328.0`，终端另外显示：
+
+```text
+328.0
+```
+
+到这里，可以先把几个词对应起来：
+
+| 看到的东西 | 在这段代码里是什么 | 它负责什么 |
+| --- | --- | --- |
+| 代码行 | `paid_total = 129.0 + 199.0` | 告诉 Python 当前要做的事 |
+| 表达式 | `129.0 + 199.0` | 计算并产生值 `328.0` |
+| 变量状态 | `paid_total → 328.0` | 让后续代码能通过名字取得值 |
+| 输出 | 终端里的 `328.0` | 把结果显示给运行代码的人 |
+
+## 8 行订单脚本怎样从上到下运行
+
+现在看一段完整但很短的订单脚本。先复制运行，不用急着解释每个符号：
 
 ```python
 orders = [
@@ -61,136 +107,232 @@ for order in orders:
         print(order["order_no"], order["amount"])
 ```
 
-零基础读者暂时不需要解释每个符号，先沿着运行顺序观察：
+算上空行，这正好是 8 行。空行方便人阅读，不会产生运行步骤。第 1～4 行先准备数据；第 6～8 行再逐条查看订单、判断状态，并决定是否输出。
 
-<ol class="py-runtime-trace" aria-label="订单脚本运行顺序">
-  <li><span>输入</span><strong>读取两条订单</strong><small>列表保存整批数据</small></li>
-  <li><span>逐条处理</span><strong>每次拿出一条订单</strong><small><code>for</code> 控制处理节奏</small></li>
-  <li><span>判断</span><strong>状态是否为“已支付”</strong><small><code>if</code> 决定是否继续</small></li>
-  <li><span>输出</span><strong>打印订单号和金额</strong><small>未通过的订单不会输出</small></li>
-</ol>
+<figure class="py-runtime-lesson py-runtime-console" aria-labelledby="console-caption">
+  <figcaption id="console-caption">
+    <span class="py-runtime-kicker">8 行订单脚本运行轨道</span>
+    <strong>同一行可以因为下一条订单再次执行</strong>
+  </figcaption>
+  <div class="py-runtime-console-layout">
+    <div class="py-runtime-code-map" aria-label="带行号的订单脚本">
+      <div><b>1</b><code>orders = [</code></div>
+      <div><b>2</b><code>&nbsp;&nbsp;&#123;A001 · 129.0 · 已支付&#125;,</code></div>
+      <div><b>3</b><code>&nbsp;&nbsp;&#123;A002 · 88.0 · 已退款&#125;,</code></div>
+      <div><b>4</b><code>]</code></div>
+      <div class="is-muted"><b>5</b><code>空行 · 不执行</code></div>
+      <div class="is-current"><b>6</b><code>for order in orders:</code><span>会回来</span></div>
+      <div class="is-current"><b>7</b><code>&nbsp;&nbsp;if order["status"] == "已支付":</code><span>每轮判断</span></div>
+      <div class="is-current"><b>8</b><code>&nbsp;&nbsp;&nbsp;&nbsp;print(...)</code><span>True 才到达</span></div>
+    </div>
+    <div class="py-runtime-observer" aria-label="运行后的状态与输出">
+      <section>
+        <span class="py-runtime-label">状态区</span>
+        <p><b>orders</b><strong>2 条订单</strong></p>
+        <p><b>当前 order</b><strong>随每轮改变</strong></p>
+      </section>
+      <section>
+        <span class="py-runtime-label">输出区</span>
+        <code>A001 129.0</code>
+        <small>A002 没有通过判断，所以没有第二行输出。</small>
+      </section>
+    </div>
+  </div>
+  <ol class="py-runtime-timeline" aria-label="订单脚本的逐步运行过程">
+    <li>
+      <span class="py-runtime-step">步骤 01</span>
+      <div><b>当前行 1～4</b><code>orders = [...]</code></div>
+      <p><strong>之前</strong> 没有订单数据</p>
+      <p><strong>之后</strong> orders 绑定到 2 条订单</p>
+    </li>
+    <li>
+      <span class="py-runtime-step">步骤 02</span>
+      <div><b>当前行 6</b><code>for order in orders:</code></div>
+      <p><strong>输入</strong> 第 1 条 A001</p>
+      <p><strong>之后</strong> 当前 order 是 A001</p>
+    </li>
+    <li>
+      <span class="py-runtime-step">步骤 03</span>
+      <div><b>当前行 7</b><code>status == "已支付"</code></div>
+      <p><strong>条件</strong> “已支付” == “已支付”</p>
+      <p><strong>结果</strong> True，进入第 8 行</p>
+    </li>
+    <li class="is-output">
+      <span class="py-runtime-step">步骤 04</span>
+      <div><b>当前行 8</b><code>print(...)</code></div>
+      <p><strong>读取</strong> A001 和 129.0</p>
+      <p><strong>输出</strong> A001 129.0</p>
+    </li>
+    <li>
+      <span class="py-runtime-step">步骤 05</span>
+      <div><b>回到行 6</b><code>for order in orders:</code></div>
+      <p><strong>输入</strong> 第 2 条 A002</p>
+      <p><strong>之后</strong> 当前 order 改为 A002</p>
+    </li>
+    <li class="is-false">
+      <span class="py-runtime-step">步骤 06</span>
+      <div><b>当前行 7</b><code>status == "已支付"</code></div>
+      <p><strong>条件</strong> “已退款” == “已支付”</p>
+      <p><strong>结果</strong> False，跳过第 8 行</p>
+    </li>
+    <li>
+      <span class="py-runtime-step">步骤 07</span>
+      <div><b>回到行 6</b><code>没有下一条订单</code></div>
+      <p><strong>状态</strong> 逐条处理结束</p>
+      <p><strong>最终输出</strong> 只有 A001 129.0</p>
+    </li>
+  </ol>
+</figure>
 
-后面的几篇文章，本质上就是把这 8 行代码拆开：
+这里最容易忽略的是：代码虽然只写了一次第 6、7 行，运行时却会为了不同订单回到它们。第 8 行也不是“排在后面就一定执行”，它只有在第 7 行得到 `True` 时才会到达。循环和判断会在后面的章节单独拆解；现在先会沿轨道读懂它们。
 
-| 代码片段 | 后面会学什么 |
-| --- | --- |
-| `"A001"`、`129.0` | 字符串、数字和基础类型 |
-| `[...]` | 列表：保存多条同类数据 |
-| `{...}` | 字典：保存一条数据的多个字段 |
-| `for` | 循环：一条一条处理 |
-| `if` | 判断：决定当前数据要不要处理 |
-| `print()` | 函数调用：让 Python 执行动作 |
+## 只改一个输入，哪一段轨迹会改变
 
-这也是学习 Python 最重要的习惯：**不要把代码看成一大段符号，要看它每一步拿到了什么数据，又把数据变成了什么。**
+学习代码最有效的方法之一，是先预测，再只改一个值。把 A002 的状态从“已退款”改成“已支付”，其他代码一字不动：
+
+```python
+orders = [
+    {"order_no": "A001", "amount": 129.0, "status": "已支付"},
+    {"order_no": "A002", "amount": 88.0, "status": "已支付"},
+]
+
+for order in orders:
+    if order["status"] == "已支付":
+        print(order["order_no"], order["amount"])
+```
+
+前半段轨迹完全相同：准备两条订单、处理 A001、输出 A001。变化直到第二次运行第 7 行时才出现。
+
+<figure class="py-runtime-lesson py-runtime-diverge" aria-labelledby="diverge-caption">
+  <figcaption id="diverge-caption">
+    <span class="py-runtime-kicker">输入改变后的分岔点</span>
+    <strong>变化不是从头到尾发生，只从受影响的判断开始</strong>
+  </figcaption>
+  <div class="py-runtime-shared-path">
+    <span>共同轨迹</span>
+    <b>行 1～4 准备数据</b>
+    <i aria-hidden="true">→</i>
+    <b>行 6 取出 A002</b>
+    <i aria-hidden="true">→</i>
+    <b>行 7 检查 status</b>
+  </div>
+  <div class="py-runtime-branches">
+    <section class="is-before">
+      <span class="py-runtime-label">之前 · 输入“已退款”</span>
+      <code>"已退款" == "已支付"</code>
+      <strong>条件结果：False</strong>
+      <p>跳过第 8 行</p>
+      <output>输出仍只有 A001 129.0</output>
+    </section>
+    <section class="is-after">
+      <span class="py-runtime-label">之后 · 输入“已支付”</span>
+      <code>"已支付" == "已支付"</code>
+      <strong>条件结果：True</strong>
+      <p>继续执行第 8 行</p>
+      <output>新增输出 A002 88.0</output>
+    </section>
+  </div>
+</figure>
+
+修改后的完整输出是：
+
+```text
+A001 129.0
+A002 88.0
+```
+
+这就是调试代码时很重要的思路：不要只问“结果怎么变了”，而要找到**第一处产生不同结果的当前行**。这里不是第 6 行拿订单时出错，而是第 7 行的条件从 `False` 变成了 `True`，它又决定第 8 行是否执行。
+
+## 如果输入缺少字段，脚本会停在哪里
+
+运行轨道也能帮助定位错误。假设第二条订单没有 `status` 字段：
+
+```python
+orders = [
+    {"order_no": "A001", "amount": 129.0, "status": "已支付"},
+    {"order_no": "A002", "amount": 88.0},
+]
+
+for order in orders:
+    if order["status"] == "已支付":
+        print(order["order_no"], order["amount"])
+```
+
+第一条订单仍能正常输出。处理第二条订单时，第 7 行需要读取 `order["status"]`，但这条数据没有这个字段，因此脚本在这里停止，并显示 `KeyError: 'status'`。第 8 行不会为 A002 执行。
+
+<div class="py-runtime-error" role="note" aria-label="缺少状态字段时的错误位置">
+  <span>出错行 · 第 7 行</span>
+  <code>order["status"]</code>
+  <strong>输入里找不到 status → 无法完成条件求值 → 脚本停止</strong>
+</div>
+
+现在只需会找停止点，不必急着处理异常。后续“错误与调试”章节会专门解释错误怎样产生、怎样找到合适的处理方式。
 
 ## 按任务学习，而不是背语法目录
 
-这个系列先问“任务需要什么”，再引出语法：一条数据用变量，多条数据用列表，一条订单的多个字段用字典；`if` 决定是否处理，`for` 负责逐条处理，函数收纳重复逻辑，文件、JSON 和异常负责接入外部数据。
+这段 8 行脚本已经包含后续课程的大部分主线：字符串和数字表示字段值，列表保存多条订单，字典保存一条订单的多个字段，判断决定是否处理，逐条执行让每条订单经过同一段代码，输出把结果展示出来。
 
-每遇到一段新代码，固定做四件事：
+学习每段新代码时，固定做四件事：
 
-1. 先不运行，猜它会输出什么。
-2. 再运行，看看和自己的判断是否一致。
-3. 修改一个值、一个条件或一条数据，再运行一次。
-4. 用自己的话说清楚“数据从哪里来，经过了什么，最后去了哪里”。
+1. 先不运行，猜第一行输出会是什么。
+2. 再运行，沿着代码行找到预测相同或不同的位置。
+3. 只修改一个输入值，再观察第一处分岔点。
+4. 用自己的话说出“输入、当前行、状态变化、输出”。
 
-例如：
+系列后续会用订单、SKU、库存、文件和 JSON 继续这条轨道：先看见数据，接着看见条件、循环与函数怎样让代码流动，最后把外部数据接入一份完整脚本。类与对象放在主线之后作为选修，因为很多几十行以内的自动化任务，用基础数据和函数已经足够。
 
-```python
-stock = 3
+## 第一次运行，只完成最小闭环
 
-if stock < 5:
-    print("需要补货")
-```
-
-把 `stock` 改成 `8`，观察为什么没有输出；再加一个 `else`，确认两条分支只会执行其中一条。这样的修改比只记住“`if` 是判断”更有效。
-
-## 第一次把 Python 真正跑起来
-
-如果你已经能运行 Python 3，这一节可以快速跳过。先在终端里试：
+如果已经能运行 Python 3，可以跳过这一节。在终端尝试下面三个命令之一：
 
 ```bash
 python --version
 ```
 
-macOS / Linux 更常见的是：
-
 ```bash
 python3 --version
 ```
-
-Windows 也可以试：
 
 ```bash
 py --version
 ```
 
-只要其中一个命令能看到 Python 3 的版本号，就已经可以开始。
-
-如果三个命令都不可用，先安装 Python 3，再重新打开终端确认版本。这里不展开 IDE、虚拟环境和包管理，零基础第一步只需要完成一个最小闭环：
-
-<ol class="py-first-run" aria-label="第一次运行 Python 脚本的三个步骤">
-  <li><span>01</span><strong>创建文件</strong><code>demo.py</code><small>放在自己找得到的文件夹</small></li>
-  <li><span>02</span><strong>写入并保存</strong><code>print("Hello Python")</code><small>确认扩展名是 .py</small></li>
-  <li><span>03</span><strong>在终端运行</strong><code>python demo.py</code><small>也可以使用 python3 / py</small></li>
-</ol>
-
-例如 `demo.py`：
+只要其中一个显示 Python 3 的版本号，就可以创建 `demo.py`：
 
 ```python
 print("Hello Python")
 ```
 
-进入这个文件所在目录后运行：
+进入文件所在目录，用刚才可用的命令运行，例如：
 
 ```bash
 python demo.py
 ```
 
-如果你的环境使用的是 `python3` 或 `py`，把命令里的 `python` 换掉即可。
-
-看到：
-
-```text
-Hello Python
-```
-
-就说明环境已经够用了。编辑器可以使用你已经熟悉的工具，这个系列不会把重点放在 IDE 配置上。
-
-## 学完以后能做什么
-
-学完整套基础，你还不会突然变成 Python 工程师，但应该已经能进入下面这些方向，而不是重新从“什么是变量”开始：
-
-| 方向 | 下一步会接触什么 | 当前系列提供的基础 |
-| --- | --- | --- |
-| 数据处理 | CSV、Excel、pandas | 列表、字典、循环、文件 |
-| RPA / 自动化 | 页面操作、任务流程、结果处理 | 判断、循环、函数、异常 |
-| API 调用 | HTTP 请求、鉴权、接口字段 | JSON、字典、异常、函数 |
-| 简单脚本 | 批量重命名、整理文件、定时任务 | 文件、循环、函数 |
+看到 `Hello Python` 就完成了“写入代码 → 保存文件 → 运行 → 看见输出”的最小闭环。这里不展开 IDE、虚拟环境和包管理；先把注意力留给代码本身怎样运行。
 
 <Callout title="本章检查">
-  你应该能说清楚示例脚本的输入、逐条处理、判断和输出，并能在本地创建、保存和运行一个 `.py` 文件。
+  重新看 8 行订单脚本：你应该能指出当前运行行、说出第二次判断为什么是 False，并解释 A002 为什么没有进入输出区。再把它的状态改成“已支付”，找到轨迹第一次发生变化的位置。
 </Callout>
 
-<HighlightBox eyebrow="下一篇" title="先把“一份数据”看懂">
-  下一篇从变量、字符串、数字、布尔值和类型转换开始。目标不是背 `str`、`int` 这些名字，而是看懂一个值为什么能这样用、为什么有时会报类型错误。
+<HighlightBox eyebrow="下一篇" title="看见变量如何记住一个值">
+  下一篇进入变量、基础类型与转换。你会继续使用“之前—当前行—之后”的观察方式，看懂变量名与值的关系，以及文本为什么要先转换才能参与数值计算。
 </HighlightBox>
 
 <style>{`
-  .py-roadmap,
-  .py-runtime-trace,
-  .py-first-run {
-    margin: 1.5rem 0 2rem;
-  }
-
-  .py-roadmap {
+  .py-runtime-lesson {
+    --runtime-input: #2563eb;
+    --runtime-current: #d97706;
+    --runtime-output: #15803d;
+    --runtime-error: #b42318;
     border: 1px solid var(--line);
     border-radius: var(--radius);
+    margin: 1.5rem 0 2rem;
     overflow: hidden;
   }
 
-  .py-roadmap figcaption {
-    background: color-mix(in srgb, var(--blue) 9%, var(--paper));
+  .py-runtime-lesson figcaption {
+    background: color-mix(in srgb, var(--blue) 8%, var(--paper));
     border-bottom: 1px solid var(--line);
     display: flex;
     flex-direction: column;
@@ -198,133 +340,370 @@ Hello Python
     padding: 1rem 1.1rem;
   }
 
-  .py-roadmap figcaption span,
-  .py-roadmap li span,
-  .py-roadmap li small,
-  .py-runtime-trace li span,
-  .py-runtime-trace li small,
-  .py-first-run li span,
-  .py-first-run li small {
+  .py-runtime-kicker,
+  .py-runtime-label,
+  .py-runtime-step {
     color: var(--soft);
-    font-size: 0.8rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
-  .py-roadmap ol {
-    counter-reset: lesson;
+  .py-runtime-flow {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     list-style: none;
     margin: 0;
     padding: 0;
   }
 
-  .py-roadmap li {
-    min-height: 7.7rem;
+  .py-runtime-flow li {
+    min-width: 0;
     padding: 1rem;
+    position: relative;
   }
 
-  .py-roadmap li:nth-child(n + 5) {
-    border-top: 1px solid var(--line);
-  }
-
-  .py-roadmap li:not(:nth-child(4n + 1)) {
+  .py-runtime-flow li + li {
     border-left: 1px solid var(--line);
   }
 
-  .py-roadmap li strong,
-  .py-roadmap li small,
-  .py-runtime-trace li strong,
-  .py-runtime-trace li small,
-  .py-first-run li strong,
-  .py-first-run li code,
-  .py-first-run li small {
+  .py-runtime-flow li + li::before {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    content: "→";
+    left: -0.85rem;
+    line-height: 1.5rem;
+    position: absolute;
+    text-align: center;
+    top: 2.8rem;
+    width: 1.5rem;
+  }
+
+  .py-runtime-flow strong,
+  .py-runtime-flow code,
+  .py-runtime-flow small {
     display: block;
   }
 
-  .py-roadmap li strong,
-  .py-runtime-trace li strong,
-  .py-first-run li strong {
-    margin: 0.75rem 0 0.25rem;
+  .py-runtime-flow strong {
+    margin: 0.55rem 0;
   }
 
-  .py-runtime-trace,
-  .py-first-run {
-    display: grid;
-    gap: 0;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    list-style: none;
-    padding: 0;
-  }
-
-  .py-first-run {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .py-runtime-trace li,
-  .py-first-run li {
-    background: var(--paper-soft);
-    border: 1px solid var(--line);
-    padding: 1rem;
-  }
-
-  .py-runtime-trace li:first-child,
-  .py-first-run li:first-child {
-    border-radius: var(--radius) 0 0 var(--radius);
-  }
-
-  .py-runtime-trace li:last-child,
-  .py-first-run li:last-child {
-    border-radius: 0 var(--radius) var(--radius) 0;
-  }
-
-  .py-runtime-trace li + li,
-  .py-first-run li + li {
-    border-left: 0;
-  }
-
-  .py-first-run code {
-    margin: 0.45rem 0;
+  .py-runtime-flow code {
     overflow-wrap: anywhere;
   }
 
+  .py-runtime-flow small {
+    color: var(--soft);
+    margin-top: 0.65rem;
+  }
+
+  .py-runtime-binding {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  .py-runtime-binding span {
+    color: var(--runtime-current);
+    font-weight: 800;
+  }
+
+  .py-runtime-state-strip {
+    background: var(--paper-soft);
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .py-runtime-state-strip span {
+    padding: 0.8rem 1rem;
+  }
+
+  .py-runtime-state-strip span + span {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-runtime-state-strip b {
+    display: block;
+    font-size: 0.76rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .py-runtime-console-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(13rem, 0.75fr);
+  }
+
+  .py-runtime-code-map {
+    background: #172033;
+    color: #e7edf7;
+    padding: 0.9rem 0;
+  }
+
+  .py-runtime-code-map > div {
+    align-items: center;
+    border-left: 3px solid transparent;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+    min-width: 0;
+    padding: 0.38rem 0.9rem;
+  }
+
+  .py-runtime-code-map b {
+    color: #8ea0ba;
+    font-size: 0.76rem;
+    text-align: right;
+  }
+
+  .py-runtime-code-map code {
+    background: transparent;
+    color: inherit;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding: 0;
+  }
+
+  .py-runtime-code-map span {
+    color: #fcd34d;
+    font-size: 0.72rem;
+  }
+
+  .py-runtime-code-map .is-current {
+    background: rgba(217, 119, 6, 0.16);
+    border-left-color: #f59e0b;
+  }
+
+  .py-runtime-code-map .is-muted {
+    color: #8ea0ba;
+  }
+
+  .py-runtime-observer {
+    background: var(--paper-soft);
+    border-left: 1px solid var(--line);
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+  }
+
+  .py-runtime-observer section {
+    padding: 1rem;
+  }
+
+  .py-runtime-observer section + section {
+    border-top: 1px solid var(--line);
+  }
+
+  .py-runtime-observer p {
+    display: flex;
+    flex-direction: column;
+    margin: 0.7rem 0 0;
+  }
+
+  .py-runtime-observer p b {
+    color: var(--soft);
+    font-size: 0.75rem;
+  }
+
+  .py-runtime-observer code,
+  .py-runtime-observer small {
+    display: block;
+    margin-top: 0.7rem;
+  }
+
+  .py-runtime-observer small {
+    color: var(--soft);
+  }
+
+  .py-runtime-timeline {
+    border-top: 1px solid var(--line);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .py-runtime-timeline li {
+    align-items: start;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 5rem minmax(10rem, 1.1fr) repeat(2, minmax(9rem, 1fr));
+    padding: 0.85rem 1rem;
+  }
+
+  .py-runtime-timeline li + li {
+    border-top: 1px solid var(--line);
+  }
+
+  .py-runtime-timeline li.is-output {
+    background: color-mix(in srgb, var(--runtime-output) 7%, var(--paper));
+  }
+
+  .py-runtime-timeline li.is-false {
+    background: color-mix(in srgb, var(--runtime-current) 7%, var(--paper));
+  }
+
+  .py-runtime-timeline div b,
+  .py-runtime-timeline div code,
+  .py-runtime-timeline p strong {
+    display: block;
+  }
+
+  .py-runtime-timeline div code {
+    margin-top: 0.3rem;
+    overflow-wrap: anywhere;
+  }
+
+  .py-runtime-timeline p {
+    margin: 0;
+  }
+
+  .py-runtime-timeline p strong {
+    color: var(--soft);
+    font-size: 0.75rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .py-runtime-shared-path {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .py-runtime-shared-path span {
+    background: color-mix(in srgb, var(--runtime-input) 10%, var(--paper));
+    border-radius: 999px;
+    color: var(--runtime-input);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+  }
+
+  .py-runtime-shared-path i {
+    color: var(--soft);
+    font-style: normal;
+  }
+
+  .py-runtime-branches {
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .py-runtime-branches section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 1rem;
+  }
+
+  .py-runtime-branches section + section {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-runtime-branches .is-before {
+    background: var(--paper-soft);
+  }
+
+  .py-runtime-branches .is-after {
+    background: color-mix(in srgb, var(--runtime-output) 7%, var(--paper));
+  }
+
+  .py-runtime-branches code,
+  .py-runtime-branches strong,
+  .py-runtime-branches p,
+  .py-runtime-branches output {
+    margin: 0;
+  }
+
+  .py-runtime-branches output {
+    border-top: 1px dashed var(--line);
+    color: var(--runtime-output);
+    font-weight: 700;
+    padding-top: 0.65rem;
+  }
+
+  .py-runtime-error {
+    background: color-mix(in srgb, var(--runtime-error) 7%, var(--paper));
+    border: 1px solid color-mix(in srgb, var(--runtime-error) 35%, var(--line));
+    border-left: 4px solid var(--runtime-error);
+    border-radius: var(--radius);
+    display: grid;
+    gap: 0.45rem;
+    margin: 1.25rem 0;
+    padding: 1rem;
+  }
+
+  .py-runtime-error span {
+    color: var(--runtime-error);
+    font-size: 0.76rem;
+    font-weight: 800;
+  }
+
+  .py-runtime-error code {
+    justify-self: start;
+  }
+
   @media (max-width: 760px) {
-    .py-roadmap ol,
-    .py-runtime-trace,
-    .py-first-run {
+    .py-runtime-flow,
+    .py-runtime-state-strip,
+    .py-runtime-console-layout,
+    .py-runtime-branches {
       grid-template-columns: 1fr;
     }
 
-    .py-roadmap li {
-      min-height: 0;
-    }
-
-    .py-roadmap li:nth-child(n),
-    .py-runtime-trace li + li,
-    .py-first-run li + li {
-      border: 0;
+    .py-runtime-flow li + li,
+    .py-runtime-state-strip span + span,
+    .py-runtime-branches section + section {
+      border-left: 0;
       border-top: 1px solid var(--line);
     }
 
-    .py-roadmap li:first-child,
-    .py-runtime-trace li:first-child,
-    .py-first-run li:first-child {
-      border-top: 0;
+    .py-runtime-flow li + li::before {
+      left: 1rem;
+      top: -0.8rem;
+      transform: rotate(90deg);
     }
 
-    .py-runtime-trace li,
-    .py-first-run li,
-    .py-runtime-trace li:first-child,
-    .py-runtime-trace li:last-child,
-    .py-first-run li:first-child,
-    .py-first-run li:last-child {
-      border-radius: 0;
+    .py-runtime-observer {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
     }
 
-    .py-runtime-trace,
-    .py-first-run {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      overflow: hidden;
+    .py-runtime-timeline li {
+      gap: 0.55rem;
+      grid-template-columns: 1fr;
+    }
+
+    .py-runtime-timeline div,
+    .py-runtime-timeline p {
+      border-left: 2px solid var(--line);
+      padding-left: 0.75rem;
+    }
+
+    .py-runtime-shared-path {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .py-runtime-shared-path i {
+      align-self: center;
+      transform: rotate(90deg);
+    }
+
+    .py-runtime-code-map > div {
+      grid-template-columns: 1.5rem minmax(0, 1fr);
+    }
+
+    .py-runtime-code-map span {
+      grid-column: 2;
     }
   }
 `}</style>

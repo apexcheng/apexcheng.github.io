@@ -1,0 +1,587 @@
+---
+title: "Python 循环图解：看见每一轮发生了什么"
+description: "用三条订单逐轮图解 for 循环：当前项怎样变化、条件是否命中、累计值如何更新，以及 continue 与 break 分别跳过了什么。"
+date: 2026-08-27T09:00:00+08:00
+category: "教程"
+tags:
+  - "Python"
+minutes: 14
+featured: false
+series: "python-basics"
+seriesOrder: 5
+draft: false
+private: false
+---
+
+在 Excel 里，一条公式向下填充后，会依次处理每一行。Python 的 `for` 循环也在重复处理数据，但它多做了一件不容易被眼睛发现的事：**每一轮都会把变量名绑定到下一条数据，再从循环体第一行向下执行。**
+
+这一篇只跟踪三条订单。你会看见当前订单怎样从 O1001 变成 O1002、O1003，为什么取消订单没有进入累计分支，以及金额怎样从 `0.0` 走到 `328.0`。
+
+## 三条订单怎样进入循环
+
+先准备一批订单。外层的方括号表示这是一个列表，列表里有三个字典；每个字典就是一条订单：
+
+```python
+orders = [
+    {"order_no": "O1001", "status": "paid", "amount": 129.0},
+    {"order_no": "O1002", "status": "cancelled", "amount": 88.0},
+    {"order_no": "O1003", "status": "paid", "amount": 199.0},
+]
+```
+
+当 Python 执行下面这行时，变量 `order` 一次只代表列表中的一条订单：
+
+```python
+for order in orders:
+    print(order["order_no"])
+```
+
+运行顺序是：
+
+```text
+第 1 轮：order → O1001
+第 2 轮：order → O1002
+第 3 轮：order → O1003
+列表已用完：离开循环
+```
+
+`for` 不会同时处理三条数据。它先拿出一条，执行完缩进的循环体，再回到顶部拿下一条。
+
+## 完整任务：筛选 paid 并累计金额
+
+现在给循环加上判断和两个累计器。代码可以直接复制运行：
+
+```python
+orders = [
+    {"order_no": "O1001", "status": "paid", "amount": 129.0},
+    {"order_no": "O1002", "status": "cancelled", "amount": 88.0},
+    {"order_no": "O1003", "status": "paid", "amount": 199.0},
+]
+
+paid_count = 0
+total = 0.0
+
+for order in orders:
+    is_paid = order["status"] == "paid"
+
+    if is_paid:
+        paid_count += 1
+        total += order["amount"]
+
+print(f"paid_count = {paid_count}")
+print(f"total = {total}")
+```
+
+输出：
+
+```text
+paid_count = 2
+total = 328.0
+```
+
+`paid_count += 1` 等同于 `paid_count = paid_count + 1`；`total += order["amount"]` 也是先用旧值完成加法，再把名字重新绑定到新结果。关键不是背写法，而是看见每轮的旧值和新值。
+
+<figure class="pyl-runtime" aria-labelledby="pyl-runtime-caption">
+  <figcaption id="pyl-runtime-caption">
+    <span class="pyl-kicker">三次迭代 · 逐行轨迹</span>
+    <strong>每轮都从取出当前订单开始，再判断是否进入累计分支</strong>
+  </figcaption>
+  <div class="pyl-runtime__rounds">
+    <section class="pyl-round pyl-round--selected">
+      <header>
+        <span>第 1 轮</span>
+        <strong>当前项 · O1001</strong>
+        <small>status: paid · amount: 129.0</small>
+      </header>
+      <ol>
+        <li><span>01 · 当前行</span><code>for order in orders</code><p><code>order → O1001</code></p></li>
+        <li><span>02 · 当前行</span><code>is_paid = order["status"] == "paid"</code><p><code>"paid" == "paid" → True</code></p></li>
+        <li><span>03 · 条件</span><code>if is_paid</code><p><b>True</b> · 选中，进入分支</p></li>
+        <li><span>04 · 数量</span><code>paid_count += 1</code><p><code>0 → 1</code></p></li>
+        <li><span>05 · 金额</span><code>total += 129.0</code><p><code>0.0 → 129.0</code></p></li>
+      </ol>
+    </section>
+    <section class="pyl-round pyl-round--skipped">
+      <header>
+        <span>第 2 轮</span>
+        <strong>当前项 · O1002</strong>
+        <small>status: cancelled · amount: 88.0</small>
+      </header>
+      <ol>
+        <li><span>01 · 当前行</span><code>for order in orders</code><p><code>order → O1002</code></p></li>
+        <li><span>02 · 当前行</span><code>is_paid = order["status"] == "paid"</code><p><code>"cancelled" == "paid" → False</code></p></li>
+        <li><span>03 · 条件</span><code>if is_paid</code><p><b>False</b> · 未选中，跳过分支</p></li>
+        <li class="pyl-round__no-run"><span>04 · 未执行</span><code>paid_count += 1</code><p><code>1 → 1</code> · 保持不变</p></li>
+        <li class="pyl-round__no-run"><span>05 · 未执行</span><code>total += 88.0</code><p><code>129.0 → 129.0</code> · 保持不变</p></li>
+      </ol>
+    </section>
+    <section class="pyl-round pyl-round--selected">
+      <header>
+        <span>第 3 轮</span>
+        <strong>当前项 · O1003</strong>
+        <small>status: paid · amount: 199.0</small>
+      </header>
+      <ol>
+        <li><span>01 · 当前行</span><code>for order in orders</code><p><code>order → O1003</code></p></li>
+        <li><span>02 · 当前行</span><code>is_paid = order["status"] == "paid"</code><p><code>"paid" == "paid" → True</code></p></li>
+        <li><span>03 · 条件</span><code>if is_paid</code><p><b>True</b> · 选中，进入分支</p></li>
+        <li><span>04 · 数量</span><code>paid_count += 1</code><p><code>1 → 2</code></p></li>
+        <li><span>05 · 金额</span><code>total += 199.0</code><p><code>129.0 → 328.0</code></p></li>
+      </ol>
+    </section>
+  </div>
+  <div class="pyl-accumulators" aria-label="累计值的完整变化">
+    <div>
+      <span>paid_count</span>
+      <ol>
+        <li><small>开始</small><strong>0</strong></li>
+        <li><small>第 1 轮</small><strong>1</strong></li>
+        <li><small>第 2 轮</small><strong>1</strong></li>
+        <li><small>第 3 轮</small><strong>2</strong></li>
+      </ol>
+    </div>
+    <div>
+      <span>total</span>
+      <ol>
+        <li><small>开始</small><strong>0.0</strong></li>
+        <li><small>第 1 轮</small><strong>129.0</strong></li>
+        <li><small>第 2 轮</small><strong>129.0</strong></li>
+        <li><small>第 3 轮</small><strong>328.0</strong></li>
+      </ol>
+    </div>
+  </div>
+  <div class="pyl-runtime__result">
+    <span>输出</span>
+    <strong><code>paid_count = 2</code></strong>
+    <strong><code>total = 328.0</code></strong>
+  </div>
+</figure>
+
+第 2 轮仍然是一轮完整的循环：Python 取出了 O1002，也完成了状态判断。只是判断结果为 `False`，因此缩进在 `if` 下面的两行没有执行。随后循环正常进入第 3 轮。
+
+这也解释了为什么累计器必须写在循环外：
+
+```python
+total = 0.0
+
+for order in orders:
+    total += order["amount"]
+```
+
+如果把 `total = 0.0` 放进循环体，每轮都会先归零，前一轮保存的累计结果就丢失了。
+
+## `continue` 和 `break`：一个跳当前轮，一个停整个循环
+
+`continue` 与 `break` 都会改变正常的逐行顺序，但作用范围不同。下面的代码使用同一批订单，可以直接运行并对照输出：
+
+```python
+orders = [
+    {"order_no": "O1001", "status": "paid", "amount": 129.0},
+    {"order_no": "O1002", "status": "cancelled", "amount": 88.0},
+    {"order_no": "O1003", "status": "paid", "amount": 199.0},
+]
+
+print("continue 的结果：")
+for order in orders:
+    if order["status"] != "paid":
+        continue
+    print(order["order_no"])
+
+print("break 的结果：")
+for order in orders:
+    if order["status"] == "cancelled":
+        break
+    print(order["order_no"])
+```
+
+输出：
+
+```text
+continue 的结果：
+O1001
+O1003
+break 的结果：
+O1001
+```
+
+<figure class="pyl-control" aria-labelledby="pyl-control-caption">
+  <figcaption id="pyl-control-caption">
+    <span class="pyl-kicker">路径对照</span>
+    <strong>遇到 O1002 后，下一步去哪里</strong>
+  </figcaption>
+  <div class="pyl-control__lanes">
+    <section>
+      <header><code>continue</code><strong>结束当前轮，回到循环顶部</strong></header>
+      <ol>
+        <li><span>第 1 轮</span><strong>O1001</strong><small>paid · 输出 O1001</small></li>
+        <li class="pyl-path--decision"><span>第 2 轮</span><strong>O1002</strong><small>cancelled · 跳过本轮余下代码</small></li>
+        <li><span>第 3 轮</span><strong>O1003</strong><small>paid · 继续输出 O1003</small></li>
+        <li><span>结束</span><strong>列表用完</strong><small>循环正常完成</small></li>
+      </ol>
+    </section>
+    <section>
+      <header><code>break</code><strong>结束整个循环，直接离开</strong></header>
+      <ol>
+        <li><span>第 1 轮</span><strong>O1001</strong><small>paid · 输出 O1001</small></li>
+        <li class="pyl-path--stop"><span>第 2 轮</span><strong>O1002</strong><small>cancelled · 立即离开循环</small></li>
+        <li class="pyl-path--muted"><span>未访问</span><strong>O1003</strong><small>不会再开始第 3 轮</small></li>
+        <li><span>结束</span><strong>提前停止</strong><small>继续执行循环后面的代码</small></li>
+      </ol>
+    </section>
+  </div>
+</figure>
+
+可以把差异压缩成一句话：
+
+- `continue`：这条数据不再处理，但下一条数据还要处理。
+- `break`：已经找到停止条件，后面的数据全部不再处理。
+
+筛掉取消订单通常适合 `continue`；查找第一条异常记录并立即停止时，`break` 更符合意图。不要仅因为两个关键字都能“跳过代码”就互换使用。
+
+## `range` 和 `while` 只在场景需要时使用
+
+直接处理订单列表时，`for order in orders` 最容易读懂。需要明确重复固定次数时，可以使用 `range()`：
+
+```python
+for attempt in range(3):
+    print(f"第 {attempt + 1} 次尝试")
+```
+
+`range(3)` 依次给出 `0`、`1`、`2`，所以显示给人看的次数通常需要加 1。
+
+当“是否继续”取决于一个条件，而不是一批现成数据时，可以使用 `while`：
+
+```python
+attempt = 0
+
+while attempt < 3:
+    print(f"第 {attempt + 1} 次尝试")
+    attempt += 1
+```
+
+`while` 每轮开始前都会重新检查条件。若忘记更新 `attempt`，条件会一直为 `True`，循环也就无法正常结束。对订单列表的日常遍历，优先使用更直接的 `for`。
+
+## 动手练习：先预测，再运行
+
+复制“筛选 paid 并累计金额”的完整代码，按顺序完成：
+
+1. 不运行代码，先写出三轮的 `order["order_no"]`、`is_paid`、`paid_count` 和 `total`。
+2. 把 O1002 的状态改成 `"paid"`，预测最终数量和金额，再运行确认。正确结果应是 `3` 和 `416.0`。
+3. 在判断未支付后加入 `continue`，确认 O1003 仍会被处理。
+4. 把同一位置改成 `break`，说明 O1003 为什么不会被访问。
+5. 故意把 `total = 0.0` 移进循环体，逐轮写出结果，解释累计为什么失效。
+
+如果你能指出“当前是第几轮、order 指向谁、哪些行执行、累计器怎样变化”，就已经真正看懂了循环，而不只是会写 `for`。
+
+<div class="pyl-next">
+  <span>下一篇</span>
+  <strong>函数：参数、局部变量与返回值</strong>
+  <p>循环让同一段代码处理多条数据；函数会让一段处理逻辑拥有清楚的输入、内部状态和返回结果。</p>
+</div>
+
+<style>{`
+  .pyl-runtime,
+  .pyl-control {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin: 1.5rem 0 2rem;
+    overflow: hidden;
+  }
+
+  .pyl-runtime figcaption,
+  .pyl-control figcaption {
+    background: color-mix(in srgb, var(--cyan) 9%, var(--paper));
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem 1.1rem;
+  }
+
+  .pyl-kicker {
+    color: var(--soft);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  .pyl-runtime__rounds {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pyl-round { min-width: 0; }
+  .pyl-round + .pyl-round { border-left: 1px solid var(--line); }
+
+  .pyl-round > header {
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-height: 7rem;
+    padding: 1rem;
+  }
+
+  .pyl-round--selected > header { box-shadow: inset 0 3px 0 var(--cyan); }
+
+  .pyl-round--skipped > header {
+    background: color-mix(in srgb, var(--soft) 6%, var(--paper));
+    box-shadow: inset 0 3px 0 var(--soft);
+  }
+
+  .pyl-round header span,
+  .pyl-round header small,
+  .pyl-round li > span {
+    color: var(--soft);
+    font-size: 0.76rem;
+  }
+
+  .pyl-round header strong { font-size: 1rem; }
+
+  .pyl-round ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pyl-round li {
+    min-height: 7.2rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .pyl-round li + li { border-top: 1px solid var(--line); }
+
+  .pyl-round li > code {
+    display: block;
+    margin: 0.45rem 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .pyl-round li p {
+    color: var(--soft);
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  .pyl-round__no-run {
+    background: color-mix(in srgb, var(--soft) 5%, var(--paper));
+  }
+
+  .pyl-round__no-run code {
+    opacity: 0.68;
+    text-decoration: line-through;
+  }
+
+  .pyl-accumulators {
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pyl-accumulators > div {
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .pyl-accumulators > div + div { border-left: 1px solid var(--line); }
+
+  .pyl-accumulators > div > span {
+    color: var(--soft);
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 700;
+    margin-bottom: 0.65rem;
+  }
+
+  .pyl-accumulators ol {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pyl-accumulators li {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    min-width: 0;
+    padding: 0.65rem;
+    position: relative;
+  }
+
+  .pyl-accumulators li:first-child { border-radius: 0.55rem 0 0 0.55rem; }
+  .pyl-accumulators li:last-child { border-radius: 0 0.55rem 0.55rem 0; }
+  .pyl-accumulators li + li { border-left: 0; }
+
+  .pyl-accumulators li + li::before {
+    color: var(--soft);
+    content: "→";
+    left: -0.3rem;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .pyl-accumulators small,
+  .pyl-accumulators strong { display: block; }
+
+  .pyl-accumulators small {
+    color: var(--soft);
+    font-size: 0.68rem;
+  }
+
+  .pyl-accumulators strong {
+    font-size: 0.92rem;
+    margin-top: 0.2rem;
+  }
+
+  .pyl-runtime__result {
+    align-items: center;
+    background: color-mix(in srgb, var(--cyan) 8%, var(--paper));
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem 1.25rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .pyl-runtime__result > span {
+    color: var(--soft);
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .pyl-control__lanes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pyl-control__lanes > section { min-width: 0; }
+  .pyl-control__lanes > section + section { border-left: 1px solid var(--line); }
+
+  .pyl-control__lanes header {
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-height: 5.5rem;
+    padding: 1rem;
+  }
+
+  .pyl-control__lanes header code {
+    font-size: 1.05rem;
+    width: fit-content;
+  }
+
+  .pyl-control__lanes ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pyl-control__lanes li {
+    display: grid;
+    gap: 0.7rem;
+    grid-template-columns: 4.2rem 4.6rem minmax(0, 1fr);
+    min-width: 0;
+    padding: 0.85rem 1rem;
+  }
+
+  .pyl-control__lanes li + li { border-top: 1px solid var(--line); }
+
+  .pyl-control__lanes li > span,
+  .pyl-control__lanes li > small {
+    color: var(--soft);
+    font-size: 0.76rem;
+  }
+
+  .pyl-path--decision {
+    background: color-mix(in srgb, var(--cyan) 7%, var(--paper));
+  }
+
+  .pyl-path--stop {
+    background: color-mix(in srgb, #d84b4b 9%, var(--paper));
+    box-shadow: inset 3px 0 0 #d84b4b;
+  }
+
+  .pyl-path--muted {
+    background: color-mix(in srgb, var(--soft) 5%, var(--paper));
+    opacity: 0.72;
+  }
+
+  .pyl-next {
+    background: color-mix(in srgb, var(--cyan) 8%, var(--paper));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin-top: 2rem;
+    padding: 1.1rem;
+  }
+
+  .pyl-next > span {
+    color: var(--soft);
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+  }
+
+  .pyl-next p {
+    color: var(--soft);
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 900px) {
+    .pyl-runtime__rounds,
+    .pyl-control__lanes { grid-template-columns: 1fr; }
+
+    .pyl-round + .pyl-round,
+    .pyl-control__lanes > section + section {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .pyl-round > header,
+    .pyl-round li,
+    .pyl-control__lanes header { min-height: 0; }
+
+  }
+
+  @media (max-width: 760px) {
+    .pyl-round ol,
+    .pyl-accumulators,
+    .pyl-accumulators ol { grid-template-columns: 1fr; }
+
+    .pyl-round li + li,
+    .pyl-accumulators > div + div,
+    .pyl-accumulators li + li {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .pyl-accumulators li,
+    .pyl-accumulators li:first-child,
+    .pyl-accumulators li:last-child { border-radius: 0; }
+
+    .pyl-accumulators li:first-child { border-radius: 0.55rem 0.55rem 0 0; }
+    .pyl-accumulators li:last-child { border-radius: 0 0 0.55rem 0.55rem; }
+
+    .pyl-accumulators li + li::before {
+      content: "↓";
+      left: 50%;
+      top: -0.55rem;
+      transform: translateX(-50%);
+    }
+
+    .pyl-runtime__result {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .pyl-control__lanes li {
+      gap: 0.2rem;
+      grid-template-columns: 1fr;
+    }
+  }
+`}</style>
