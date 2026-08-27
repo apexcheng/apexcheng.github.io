@@ -1,13 +1,14 @@
 ---
-title: "Python 基础考核：20 道覆盖不同知识点的入门题"
-description: "一套可直接使用的 Python 基础考核题，覆盖类型转换、循环、字典、函数、文件、JSON、类、浅拷贝和默认参数，并提供完整附件下载。"
+title: "Python 综合考核：20 题检查运行轨迹、错误定位与完整脚本"
+description: "用 20 道题检查 Python 入门能力：预测输出、填写状态变化、完成基础代码、定位具体异常，并复用 A001/A002/A003 完成订单脚本任务。"
 date: 2026-07-24T15:48:25+08:00
-updated: 2026-08-27T00:10:00+08:00
+updated: 2026-08-27T16:20:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 16
+minutes: 22
 featured: false
+pinned: false
 series: "python-basics"
 seriesOrder: 11
 draft: false
@@ -18,294 +19,457 @@ import HighlightBox from '../../components/HighlightBox.astro';
 import Callout from '../../components/Callout.astro';
 import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
-这套题用于检查一个人是否真正掌握了 Python 基础，而不是只记住几个零散语法。题目不追求算法难度，重点覆盖日常编程中最常见的数据处理、函数、文件和对象知识。
-
-如果你是按「Python 零基础到简单脚本」系列一路读到这里，这篇就是最后的综合考核。建议先独立完成，再根据暴露出来的问题回到前面的对应章节补漏。
+这不是一张只检查语法记忆的试卷。20 道题会反复要求你画出或填写 **输入、当前行、状态变化、输出 / 异常**，看自己能不能沿着 Python 的运行轨迹解释结果。
 
 <PythonLessonBrief
-  goal="独立完成一轮覆盖数据、控制流、函数、文件和对象的综合自测"
-  data="20 道由基础操作逐步进入运行机制理解的题目"
-  outcome="定位薄弱章节，并确认自己能写出完整的小型数据脚本"
+  goal="独立预测状态、定位异常，并完成一条从订单输入到汇总输出的代码路径"
+  data="贯穿系列的 A001、A002、A003 三条订单，以及 raw_stock = '3'"
+  outcome="说清变量怎样变化、错误发生在哪一行，并得到已支付 2 单、总额 328.0"
 />
 
-<figure class="assessment-console" aria-labelledby="console-caption">
-  <figcaption id="console-caption"><span>考核控制台</span><strong>先确认范围，再开始计时作答</strong></figcaption>
+<figure class="assessment-console" aria-labelledby="assessment-console-caption">
+  <figcaption id="assessment-console-caption">
+    <span>综合验收面板</span>
+    <strong>先写轨迹，再运行验证</strong>
+  </figcaption>
   <dl>
-    <div><dt>题目数量</dt><dd><strong>20 题</strong><span>知识点尽量不重复</span></dd></div>
-    <div><dt>动手题</dt><dd><strong>17 题</strong><span>补全代码或完成数据处理</span></dd></div>
-    <div><dt>机制理解</dt><dd><strong>3 题</strong><span>解释引用、拷贝和默认参数</span></dd></div>
-    <div><dt>外部依赖</dt><dd><strong>0 个</strong><span>只使用 Python 语法与标准库</span></dd></div>
+    <div><dt>20</dt><dd>道正式题</dd></div>
+    <div><dt>≥ 4</dt><dd>道状态追踪</dd></div>
+    <div><dt>≥ 4</dt><dd>道错误定位</dd></div>
+    <div><dt>0</dt><dd>个第三方库</dd></div>
   </dl>
 </figure>
 
-<HighlightBox eyebrow="两种作答方式" title="网页直接看题，或下载文件到本地完成">
-  <p><a href="/files/python-basic-assessment/python-basic-assessment.py" download>下载完整 Python 考核题（PY）</a></p>
-  <p><a href="/files/python-basic-assessment/test.txt" download>下载文件读取测试素材（TXT）</a></p>
-  下面已经包含完整 20 道题，不下载也能阅读和作答。如果要直接在本地代码里完成，请把两个文件放在同一个文件夹中，第 13 题会读取 `test.txt`。
-</HighlightBox>
+## 怎么完成这套题
 
-## 这套题怎么安排
+建议先下载配套练习文件，在代码注释下作答；遇到预测题时，先不要运行。
 
-<ol class="assessment-route" aria-label="四阶段考核路线">
-  <li><span>01–04 · 数据基础</span><strong><a href="#assessment-01-04">类型、列表、字典与字符串</a></strong><small>需要补漏：<a href="/articles/python-variables-basic-types/">变量与类型</a>、<a href="/articles/python-containers-practical/">容器实战</a></small></li>
-  <li><span>05–12 · 代码组织</span><strong><a href="#assessment-05-12">循环、函数与常用容器</a></strong><small>需要补漏：<a href="/articles/python-conditions-loops/">条件分支</a>、<a href="/articles/python-loops-runtime-visual-guide/">循环轨迹</a>、<a href="/articles/python-functions-practical/">函数入门</a></small></li>
-  <li><span>13–17 · 真实任务</span><strong><a href="#assessment-13-17">文件、JSON、类与综合处理</a></strong><small>需要补漏：<a href="/articles/python-files-json-errors/">文件与异常</a>、<a href="/articles/python-classes-objects-basics/">类与对象</a></small></li>
-  <li><span>18–20 · 运行机制</span><strong><a href="#assessment-18-20">引用、浅拷贝与默认参数</a></strong><small>需要补漏：<a href="/articles/python-containers-practical/">容器进阶</a>、<a href="/articles/python-functions-practical/">函数边界</a></small></li>
-</ol>
+- [下载 Python 练习文件](/files/python-basic-assessment/python-basic-assessment.py)
+- [下载第 12 题测试文本](/files/python-basic-assessment/test.txt)
 
-## 考核说明
+<div class="assessment-route" aria-label="考核路线">
+  <a href="#第一组预测输出与状态变化">01—05<strong>预测与状态</strong></a>
+  <a href="#第二组完成基础代码">06—12<strong>完成代码</strong></a>
+  <a href="#第三组沿错误路径定位">13—16<strong>错误定位</strong></a>
+  <a href="#第四组完成订单脚本">17—20<strong>完整任务</strong></a>
+</div>
 
-- 建议用时：30～45 分钟。第一次独立完成时，不需要追求速度。
-- 不允许使用第三方库。
-- 第 1～17 题按题目要求补全代码或说明原因。
-- 第 18～20 题先写出运行结果，再解释原因。
-- 题目文件不包含答案，避免考核者直接查看。
+状态题和错误题都按下面的格式回答。只有最终输出，没有中间轨迹，不算完整作答。
 
-## 20 道完整题目
+<figure class="assessment-format" aria-labelledby="assessment-format-caption">
+  <figcaption id="assessment-format-caption">两种必须看得见的答案格式</figcaption>
+  <div>
+    <span>状态题</span>
+    <code>输入 → 当前行 → 变量变化 → 输出</code>
+  </div>
+  <div>
+    <span>错误题</span>
+    <code>输入 → 出错行 → 异常类型 → 后续去向</code>
+  </div>
+</figure>
 
-不需要先下载附件。下面四组可以直接展开做题；下载版只是方便你把答案写进一个 `.py` 文件里。
+<Callout title="评分前先遵守三条规则">
+  预测题先写答案再运行；错误题必须写出具体行号和异常类型；编程题可以有不同写法，但输出和数据流必须符合题意。
+</Callout>
 
-<details class="assessment-group" id="assessment-01-04" open>
-  <summary><span>01–04</span><strong>基础数据处理</strong><small>类型、列表、字典、字符串</small></summary>
+## 第一组：预测输出与状态变化
 
-<div class="assessment-title"><b>01</b><strong>类型转换</strong></div>
+<details class="assessment-group" open>
+  <summary><span>01—05</span>沿着每一行填写变量状态</summary>
 
-已知商品单价和购买数量都是字符串。计算订单总金额，并输出 `总金额: 239.8`。结果必须来自数值计算，不能直接拼接字符串。
+### 01｜字符串怎样变成库存数字
 
-```python
-price = "119.9"
-quantity = "2"
-```
-
-<div class="assessment-title"><b>02</b><strong>列表、循环与条件</strong></div>
-
-从 `scores` 中筛选所有大于等于 60 分的成绩，并计算这些及格成绩的平均分。期望得到 `[78, 92, 65, 88]` 和 `80.75`。
+不运行代码，填写 `raw_stock`、`stock` 的值与类型，并写出最终输出。
 
 ```python
-scores = [45, 78, 92, 58, 65, 88]
+raw_stock = "3"
+stock = int(raw_stock)
+print(stock < 5)
 ```
 
-<div class="assessment-title"><b>03</b><strong>字典统计</strong></div>
+请按轨迹填写：
 
-统计下面列表中每种商品出现的次数。期望得到 `{'键盘': 3, '鼠标': 2, '耳机': 1}`。
-
-```python
-products = ["键盘", "鼠标", "键盘", "耳机", "鼠标", "键盘"]
+```text
+"3" → int(...) → stock = ?（类型：?）→ stock < 5 → ?
 ```
 
-<div class="assessment-title"><b>04</b><strong>字符串处理</strong></div>
-
-去除 `username` 首尾空格并转成小写，然后判断处理后的用户名是否等于 `"admin"`。
-
-```python
-username = "  Admin  "
-```
-</details>
-
-<details class="assessment-group" id="assessment-05-12">
-  <summary><span>05–12</span><strong>循环、函数与容器</strong><small>把基础语法组合成任务</small></summary>
-
-<div class="assessment-title"><b>05</b><strong>函数与返回值</strong></div>
-
-补全函数：金额大于等于 500 元时打 9 折，否则不打折。函数应返回最终金额。
-
-```python
-def calculate_total(amount):
-    pass
-
-print(calculate_total(600))  # 540.0
-print(calculate_total(300))  # 300
-```
-
-<div class="assessment-title"><b>06</b><strong>去重与排序</strong></div>
-
-删除重复用户 ID，并按从小到大排序。期望得到 `[101, 102, 103, 105]`。
-
-```python
-user_ids = [103, 101, 102, 101, 105, 103]
-```
-
-<div class="assessment-title"><b>07</b><strong>循环与条件</strong></div>
-
-统计 `numbers` 中大于 10 的数字数量。
-
-```python
-numbers = [5, 12, 8, 20, 15, 3]
-```
-
-<div class="assessment-title"><b>08</b><strong>列表推导式</strong></div>
-
-使用列表推导式生成平方列表 `[1, 4, 9, 16, 25]`。
-
-```python
-numbers = [1, 2, 3, 4, 5]
-```
-
-<div class="assessment-title"><b>09</b><strong>元组不可变</strong></div>
-
-不运行代码，说明下面代码为什么会报错。
-
-```python
-data = ("Python", "SQL")
-data[0] = "Java"
-```
-
-<div class="assessment-title"><b>10</b><strong>集合去重</strong></div>
-
-使用集合去除重复数据，并输出去重后的结果。
-
-```python
-tags = ["AI", "Python", "AI", "RPA"]
-```
-
-<div class="assessment-title"><b>11</b><strong><code>*args</code></strong></div>
-
-补全函数，使它能接收任意数量参数并计算总和。
-
-```python
-def total(*args):
-    pass
-
-print(total(10, 20, 30))
-```
-
-<div class="assessment-title"><b>12</b><strong>异常处理</strong></div>
-
-使用 `try / except` 处理除数为 0 的情况。
-
-```python
-a = 10
-b = 0
-```
-</details>
-
-<details class="assessment-group" id="assessment-13-17">
-  <summary><span>13–17</span><strong>文件与真实数据</strong><small>文件、JSON、类、模块、综合处理</small></summary>
-
-<div class="assessment-title"><b>13</b><strong>文件读取</strong></div>
-
-读取并打印 `test.txt`。如果在本地做题，请先下载页面顶部提供的测试素材并和 Python 文件放在同一目录。
-
-<div class="assessment-title"><b>14</b><strong>JSON</strong></div>
-
-把下面字典转换成 JSON 字符串。
-
-```python
-user = {"name": "张三", "age": 20}
-```
-
-<div class="assessment-title"><b>15</b><strong>类与对象</strong></div>
-
-创建一个 `User` 类，包含 `name` 属性和 `say_hello` 方法。
-
-<div class="assessment-title"><b>16</b><strong>模块导入</strong></div>
-
-使用 `pathlib` 输出当前工作目录。要求写出正确的 import，并调用 `Path.cwd()`。
-
-<div class="assessment-title"><b>17</b><strong>综合数据处理</strong></div>
-
-根据下面订单数据统计销售总金额。
+### 02｜沿列表和字典找到订单状态
 
 ```python
 orders = [
-    {"name": "键盘", "price": 100, "count": 2},
-    {"name": "鼠标", "price": 50, "count": 3},
+    {"order_no": "A001", "status": "已支付"},
+    {"order_no": "A002", "status": "已退款"},
+]
+
+print(orders[0]["status"])
+```
+
+写出访问路径和输出，并说明 `[0]` 与 `["status"]` 分别在哪一种容器里寻找数据。
+
+### 03｜别名修改了哪一份数据
+
+```python
+orders = [
+    {"order_no": "A001", "status": "已支付"},
+    {"order_no": "A002", "status": "已退款"},
+]
+
+alias = orders
+alias[1]["status"] = "已支付"
+print(orders[1]["status"])
+```
+
+写出 `orders[1]["status"]` 修改前后的值、最终输出，并解释为什么改 `alias` 会影响 `orders`。
+
+### 04｜条件顺序决定走哪扇门
+
+```python
+stock = 0
+
+if stock < 5:
+    result = "需要补货"
+elif stock == 0:
+    result = "缺货"
+else:
+    result = "库存正常"
+
+print(result)
+```
+
+写出第一个为真的条件、实际输出，再调整条件顺序，让 `stock == 0` 时输出 `缺货`。
+
+### 05｜三轮循环怎样累积成 2 和 328.0
+
+```python
+orders = [
+    {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+    {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+    {"order_no": "A003", "sku": "K161", "amount": 199.0, "status": "已支付"},
+]
+
+paid_count = 0
+total_amount = 0.0
+
+for order in orders:
+    if order["status"] == "已支付":
+        paid_count += 1
+        total_amount += order["amount"]
+
+print(paid_count, total_amount)
+```
+
+逐轮填写，不要只写最终答案：
+
+| 轮次 | 当前订单 | 条件结果 | paid_count | total_amount |
+| --- | --- | --- | ---: | ---: |
+| 1 | ? | ? | ? | ? |
+| 2 | ? | ? | ? | ? |
+| 3 | ? | ? | ? | ? |
+
+</details>
+
+## 第二组：完成基础代码
+
+<details class="assessment-group" open>
+  <summary><span>06—12</span>让输入经过转换、函数、文件与 JSON</summary>
+
+### 06｜转换库存并判断是否补货
+
+补全代码，把字符串库存转换为整数，并输出：`K161 需要补货：True`。
+
+```python
+sku = "K161"
+raw_stock = "3"
+
+# 在这里补全
+```
+
+### 07｜修改嵌套订单状态
+
+只写一行代码，把 A002 的状态从 `已退款` 改成 `已支付`。
+
+```python
+orders = [
+    {"order_no": "A001", "status": "已支付"},
+    {"order_no": "A002", "status": "已退款"},
+]
+
+# 在这里补全
+print(orders[1]["status"])
+```
+
+### 08｜补全库存分类函数
+
+函数必须按顺序处理三条路径：等于 0、小于 5、其他。
+
+```python
+def classify_stock(stock):
+    # 在这里补全
+    pass
+
+
+print(classify_stock(0))   # 缺货
+print(classify_stock(3))   # 需要补货
+print(classify_stock(10))  # 库存正常
+```
+
+### 09｜筛选已支付订单并汇总
+
+从固定三条订单中得到 `paid_orders`、`paid_count` 和 `total_amount`。预期订单号是 A001、A003，数量是 2，总额是 328.0。
+
+```python
+orders = [
+    {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+    {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+    {"order_no": "A003", "sku": "K161", "amount": 199.0, "status": "已支付"},
+]
+
+# 在这里补全
+```
+
+### 10｜用 return 交出订单金额
+
+补全函数：`单价 × 数量 × (1 - 折扣率)`，并让调用结果为 `232.2`。
+
+```python
+def calculate_order_amount(price, quantity, discount_rate):
+    # 在这里补全，必须使用 return
+    pass
+
+
+amount = calculate_order_amount(129.0, 2, 0.1)
+print(amount)
+```
+
+### 11｜让汇总结果往返 JSON
+
+使用标准库 `json`，先把字典转换为 JSON 字符串，再转回 Python 字典。中文不能显示成 Unicode 转义。
+
+```python
+summary = {"paid_count": 2, "total_amount": 328.0, "status": "已完成"}
+
+# 在这里补全 json.dumps 与 json.loads
+```
+
+### 12｜读取同目录测试文件
+
+使用 `pathlib.Path` 和 UTF-8 编码，读取练习文件同目录下的 `test.txt`。无论从哪个工作目录启动，都应该能找到它。
+
+```python
+from pathlib import Path
+
+# 提示：先找到当前 .py 文件所在目录，再拼接 test.txt
+```
+
+</details>
+
+## 第三组：沿错误路径定位
+
+<details class="assessment-group" open>
+  <summary><span>13—16</span>写出具体行号、异常类型与后续去向</summary>
+
+### 13｜中文数字无法转换
+
+```python
+1  raw_stock = "三"
+2  stock = int(raw_stock)
+3  print(stock < 5)
+```
+
+写出：出错行号、异常类型、该行是否成功创建 `stock`，以及第 3 行是否执行。
+
+### 14｜文件不存在
+
+```python
+1  from pathlib import Path
+2  path = Path("missing-orders.json")
+3  text = path.read_text(encoding="utf-8")
+4  print(text)
+```
+
+写出：出错行号、异常类型，以及为什么错误发生在“读取”而不是创建 `Path` 对象时。
+
+### 15｜JSON 格式不合法
+
+```python
+1  import json
+2  text = '[{"order_no": "A001",}]'
+3  orders = json.loads(text)
+4  print(orders[0]["order_no"])
+```
+
+写出：出错行号、异常类型、第 4 行是否执行，并指出原始文本中的格式问题。
+
+### 16｜坏金额怎样被记录后跳过
+
+```python
+raw_orders = [
+    {"order_no": "A001", "amount": "129.0"},
+    {"order_no": "A002", "amount": "未知"},
+    {"order_no": "A003", "amount": "199.0"},
+]
+
+clean_orders = []
+problems = []
+total_amount = 0.0
+
+for order in raw_orders:
+    try:
+        amount = float(order["amount"])
+    except ValueError as error:
+        problems.append({"order_no": order["order_no"], "error": type(error).__name__})
+        continue
+
+    clean_orders.append(order["order_no"])
+    total_amount += amount
+```
+
+逐轮写出“转换成功 / 发生异常 / continue 后去向”，再填写最终的 `clean_orders`、`problems` 和 `total_amount`。还要指出发生异常的具体语句与类型。
+
+</details>
+
+## 第四组：完成订单脚本
+
+<details class="assessment-group" open>
+  <summary><span>17—20</span>把输入、清洗、汇总、输出连成一条路径</summary>
+
+后四题继续使用这三条固定订单：
+
+```python
+orders = [
+    {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+    {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+    {"order_no": "A003", "sku": "K161", "amount": 199.0, "status": "已支付"},
 ]
 ```
-</details>
 
-<details class="assessment-group" id="assessment-18-20">
-  <summary><span>18–20</span><strong>运行机制理解</strong><small>先判断结果，再解释原因</small></summary>
+### 17｜实现单条订单清洗函数
 
-<div class="assessment-title"><b>18</b><strong>变量引用</strong></div>
+完成 `normalize_order(raw_order)`：
 
-不运行代码，写出两个 `print` 的结果并说明原因。
+- 必须读取 `order_no`、`sku`、`amount`、`status` 四个字段；缺字段时保留 `KeyError`。
+- `order_no`、`sku` 去除首尾空格并转成大写。
+- `status` 去除首尾空格。
+- `amount` 转成 `float`。
+- 返回一条新的字典，不修改输入字典。
 
 ```python
-a = [1, 2]
-b = a
-b.append(3)
-
-print(a)
-print(b)
+def normalize_order(raw_order):
+    # 在这里补全
+    pass
 ```
 
-<div class="assessment-title"><b>19</b><strong>浅拷贝</strong></div>
+### 18｜实现已支付汇总函数
 
-不运行代码，写出两个 `print` 的结果，并解释为什么修改 `copy_data["skills"]` 会影响 `original`。
+完成 `build_summary(orders)`，返回下面形状的字典：
 
 ```python
-original = {
-    "name": "张三",
-    "skills": ["Python", "SQL"],
+{
+    "paid_order_nos": ["A001", "A003"],
+    "paid_count": 2,
+    "total_amount": 328.0,
 }
-
-copy_data = original.copy()
-copy_data["name"] = "李四"
-copy_data["skills"].append("Linux")
-
-print(original)
-print(copy_data)
 ```
 
-<div class="assessment-title"><b>20</b><strong>可变默认参数</strong></div>
+### 19｜画出四个函数之间的数据交接
 
-不运行代码，写出两次调用的输出结果并说明原因。
+下面是完整脚本的主路径：
 
 ```python
-def add_item(item, items=[]):
-    items.append(item)
-    return items
-
-print(add_item("A"))
-print(add_item("B"))
+raw_orders = load_orders(input_path)
+clean_orders = [normalize_order(order) for order in raw_orders]
+summary = build_summary(clean_orders)
+write_summary(output_path, summary)
 ```
+
+为每一行填写“输入形状 → 输出形状”，并回答：
+
+1. 哪一步第一次得到 `list[dict]`？
+2. 哪一步得到 `paid_count = 2` 和 `total_amount = 328.0`？
+3. 哪一步只负责把已有结果写入文件，不再重新计算？
+
+### 20｜让坏订单退出当前路径，而不是拖垮整批任务
+
+把 A003 的金额改成字符串 `"未知"`。设计一条处理路径，使它依次经过：
+
+```text
+normalize_order → except → problems → continue → build_summary
+```
+
+要求：
+
+- 捕获金额转换产生的具体异常，不使用空的 `except`。
+- `problems` 记录订单号和异常类型。
+- A001、A002 仍继续处理。
+- 最终已支付订单只有 A001，`paid_count = 1`、`total_amount = 129.0`、问题数为 1。
+- 画出 A003 从进入清洗到被跳过的状态轨迹。
+
 </details>
 
-## 怎么判断完成质量
+## 选修加分题：对象有没有保存各自的状态
 
-不需要强行要求所有人写出完全相同的代码。按下面四项评估：
+这道题不计入 20 题。先预测输出，再解释 `self` 为什么只修改当前实例。
 
-<ol class="assessment-rubric">
-  <li><span>结果正确</span><strong>输出值和题目要求一致</strong></li>
-  <li><span>思路直接</span><strong>没有为简单问题增加无关代码</strong></li>
-  <li><span>基础完整</span><strong>能组合容器、函数、文件和标准库</strong></li>
-  <li><span>解释准确</span><strong>能说明引用和状态变化，而不是只猜输出</strong></li>
-</ol>
+```python
+class Product:
+    def __init__(self, sku, stock):
+        self.sku = sku
+        self.stock = stock
 
-<HighlightBox eyebrow="完成标准" title="会写基础代码，也能解释代码为什么这样运行">
-  这 20 题不用于筛选算法能力。它更适合判断一个人是否已经越过“只看过语法”的阶段，能够独立完成小型数据处理任务，并理解几个最容易出错的 Python 基础机制。
-</HighlightBox>
+    def add_stock(self, quantity):
+        self.stock += quantity
 
-<Callout title="本章检查">
-  完成后记录错题对应的章节，先修正不能解释的题，再重做代码题。能独立完成大部分题目并解释最后三题，就完成了本系列的学习闭环。
+
+product1 = Product("K161", 3)
+product2 = Product("K162", 10)
+product1.add_stock(5)
+
+print(product1.stock)
+print(product2.stock)
+```
+
+## 自评：不是看做对几道，而是看哪里断线
+
+<div class="assessment-rubric">
+  <div><strong>17—20 题</strong><span>能独立解释运行路径，可以进入真实小任务。</span></div>
+  <div><strong>13—16 题</strong><span>主要路径已掌握，回看答错题对应章节。</span></div>
+  <div><strong>9—12 题</strong><span>先补状态追踪与函数、文件章节，再重做。</span></div>
+  <div><strong>0—8 题</strong><span>从第 1 章重新沿图运行代码，不急着背答案。</span></div>
+</div>
+
+<Callout title="真正合格的答案应该能被复述">
+  你不仅能写出 2 和 328.0，还应该能指出这两个值在哪几轮变化、坏数据在哪一行变成异常，以及 continue 为什么只跳过当前订单。
 </Callout>
 
+<HighlightBox eyebrow="系列完成" title="普通人也能把代码看成一条可追踪的路">
+  从变量盒子、容器路径和循环轨迹，到函数调用、文件边界、异常分叉与完整订单脚本，你已经拥有一套不依赖死记硬背的 Python 阅读方法：先找输入，再跟当前行，最后检查状态和去向。
+</HighlightBox>
+
 <style>{`
-  .assessment-console {
+  .assessment-console,
+  .assessment-format {
     border: 1px solid var(--line);
     border-radius: var(--radius);
     margin: 1.5rem 0 2rem;
     overflow: hidden;
   }
 
-  .assessment-console figcaption {
-    background: color-mix(in srgb, var(--blue) 8%, var(--paper));
+  .assessment-console figcaption,
+  .assessment-format figcaption {
+    background: color-mix(in srgb, var(--violet) 8%, var(--paper));
     border-bottom: 1px solid var(--line);
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 1rem 1.1rem;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
   }
 
   .assessment-console figcaption span,
-  .assessment-console dt,
-  .assessment-console dd span,
-  .assessment-route li > span,
-  .assessment-route small,
-  .assessment-rubric span {
-    color: var(--soft);
-    font-size: 0.8rem;
+  .assessment-format figcaption {
+    color: var(--ink-muted);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   .assessment-console dl {
@@ -314,164 +478,91 @@ print(add_item("B"))
     margin: 0;
   }
 
-  .assessment-console dl > div {
-    min-width: 0;
-    padding: 1rem;
+  .assessment-console dl div {
+    border-right: 1px solid var(--line);
+    padding: 1.25rem 1rem;
+    text-align: center;
   }
 
-  .assessment-console dl > div + div {
-    border-left: 1px solid var(--line);
-  }
-
-  .assessment-console dt,
-  .assessment-console dd {
-    margin: 0;
-  }
-
-  .assessment-console dd strong,
-  .assessment-console dd span {
-    display: block;
-    margin-top: 0.45rem;
-  }
-
-  .assessment-console dd strong {
-    font-size: 1.35rem;
-  }
+  .assessment-console dl div:last-child { border-right: 0; }
+  .assessment-console dt { color: var(--violet); font: 700 1.7rem/1 var(--font-display); }
+  .assessment-console dd { color: var(--ink-muted); font-size: 0.82rem; margin: 0.45rem 0 0; }
 
   .assessment-route,
   .assessment-rubric {
     display: grid;
-    gap: 0.8rem;
-    list-style: none;
-    margin: 1.5rem 0 2rem;
-    padding: 0;
+    gap: 0.75rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 1.2rem 0 2rem;
   }
 
-  .assessment-route {
+  .assessment-route a,
+  .assessment-rubric div {
+    background: color-mix(in srgb, var(--paper) 94%, var(--violet));
+    border: 1px solid var(--line);
+    border-radius: calc(var(--radius) * 0.75);
+    color: var(--ink-muted);
+    padding: 1rem;
+    text-decoration: none;
+  }
+
+  .assessment-route a:hover { border-color: var(--violet); transform: translateY(-2px); }
+  .assessment-route a { transition: border-color 160ms ease, transform 160ms ease; }
+  .assessment-route strong,
+  .assessment-rubric strong { color: var(--ink); display: block; margin-top: 0.3rem; }
+  .assessment-rubric span { display: block; font-size: 0.86rem; line-height: 1.65; margin-top: 0.5rem; }
+
+  .assessment-format {
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .assessment-route li,
-  .assessment-rubric li {
-    background: var(--paper-soft);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    min-width: 0;
-    padding: 1rem;
-  }
-
-  .assessment-route strong,
-  .assessment-route small,
-  .assessment-rubric strong {
-    display: block;
-    margin-top: 0.45rem;
-  }
-
-  .assessment-route small {
-    line-height: 1.65;
-  }
-
-  .assessment-rubric {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
+  .assessment-format figcaption { grid-column: 1 / -1; }
+  .assessment-format > div { display: grid; gap: 0.65rem; padding: 1.15rem; }
+  .assessment-format > div + div { border-left: 1px solid var(--line); }
+  .assessment-format span { color: var(--violet); font-weight: 700; }
+  .assessment-format code { white-space: normal; }
 
   .assessment-group {
-    margin: 1rem 0;
-    background: var(--paper);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    overflow: clip;
-    scroll-margin-top: 6rem;
+    margin: 1.2rem 0 2.4rem;
+    padding: 0 1.2rem 1.2rem;
   }
 
-  .assessment-group > summary {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 0.75rem;
+  .assessment-group summary {
     align-items: center;
-    padding: 1rem 1.1rem;
+    background: color-mix(in srgb, var(--violet) 7%, var(--paper));
     cursor: pointer;
-  }
-
-  .assessment-group > summary span,
-  .assessment-group > summary small {
-    color: var(--soft);
-  }
-
-  .assessment-group > summary span {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.82rem;
-  }
-
-  .assessment-group > summary small {
-    font-size: 0.82rem;
-  }
-
-  .assessment-group[open] > summary {
-    background: color-mix(in srgb, var(--cyan) 5%, var(--paper));
-    border-bottom: 1px solid var(--line);
-  }
-
-  .assessment-group > summary:focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--blue) 26%, transparent);
-    outline-offset: -3px;
-  }
-
-  .assessment-group > :not(summary) {
-    margin-left: 1.1rem;
-    margin-right: 1.1rem;
-  }
-
-  .assessment-group > :last-child {
-    margin-bottom: 1.2rem;
-  }
-
-  .assessment-title {
     display: flex;
-    align-items: baseline;
-    gap: 0.65rem;
-    margin-top: 1.35rem;
-    margin-bottom: 0.6rem;
+    font-weight: 700;
+    gap: 0.75rem;
+    margin: 0 -1.2rem 1rem;
+    padding: 1rem 1.2rem;
   }
 
-  .assessment-title b {
-    color: var(--soft);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.82rem;
+  .assessment-group summary span {
+    background: var(--violet);
+    border-radius: 999px;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.55rem;
   }
 
-  .assessment-title strong {
-    font-size: 1rem;
-  }
+  .assessment-group h3 { border-top: 1px dashed var(--line); margin-top: 2rem; padding-top: 1.6rem; }
+  .assessment-group h3:first-of-type { border-top: 0; margin-top: 1rem; padding-top: 0; }
 
-  .assessment-group pre {
-    max-width: 100%;
-    overflow-x: auto;
-  }
-
-  @media (max-width: 680px) {
+  @media (max-width: 760px) {
+    .assessment-console figcaption { align-items: flex-start; flex-direction: column; }
     .assessment-console dl,
     .assessment-route,
-    .assessment-rubric {
-      grid-template-columns: 1fr;
-    }
-
-    .assessment-console dl > div + div {
-      border-left: 0;
-      border-top: 1px solid var(--line);
-    }
-
-    .assessment-group > summary {
-      grid-template-columns: auto 1fr;
-    }
-
-    .assessment-group > summary small {
-      grid-column: 1 / -1;
-    }
-
-    .assessment-group > :not(summary) {
-      margin-left: 0.9rem;
-      margin-right: 0.9rem;
-    }
+    .assessment-rubric,
+    .assessment-format { grid-template-columns: 1fr; }
+    .assessment-console dl div { border-bottom: 1px solid var(--line); border-right: 0; }
+    .assessment-console dl div:last-child { border-bottom: 0; }
+    .assessment-format figcaption { grid-column: 1; }
+    .assessment-format > div + div { border-left: 0; border-top: 1px solid var(--line); }
+    .assessment-group { padding-inline: 0.9rem; }
+    .assessment-group summary { margin-inline: -0.9rem; padding-inline: 0.9rem; }
   }
 `}</style>

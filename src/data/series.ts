@@ -36,7 +36,7 @@ export const seriesMetaList = [
   {
     id: 'python-basics',
     title: 'Python 零基础到简单脚本',
-    description: '用订单、SKU、文件和 JSON 贯穿 8 篇练习，从看懂一份数据开始，逐步写出能判断、循环、整理和输出结果的简单脚本。',
+    description: '用订单、SKU、文件和 JSON 贯穿 11 篇图解，从看懂代码状态开始，逐步完成读取、校验、筛选、汇总和输出的完整脚本。',
     order: 5,
     learningStages: [
       {
@@ -45,19 +45,19 @@ export const seriesMetaList = [
         description: '建立运行直觉，认清变量、类型和常用容器。',
       },
       {
-        range: '04–05',
+        range: '04–06',
         title: '让代码开始工作',
-        description: '用判断、循环和函数组织可重复的处理步骤。',
+        description: '看懂条件分支、逐轮循环和函数调用，让处理步骤可以重复使用。',
       },
       {
-        range: '06–07',
+        range: '07–09',
         title: '接入真实任务',
-        description: '处理文件、JSON、异常，并理解够用的对象组织方式。',
+        description: '让文件和 JSON 进入代码，处理异常，并完成一份可运行订单脚本。',
       },
       {
-        range: '08',
-        title: '完成一次自测',
-        description: '用 20 道题检查是否已经能独立读写基础脚本。',
+        range: '10–11',
+        title: '选修与验收',
+        description: '按需理解类与对象，再用 20 道题检查运行追踪、错误定位和完整任务能力。',
       },
     ],
   },

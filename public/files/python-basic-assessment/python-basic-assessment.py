@@ -1,329 +1,297 @@
 """
-Python 基础考核题
+Python 综合考核：20 题
 
-建议用时：30～45 分钟
-说明：
-1. 共 20 题：基础语法、数据处理、函数、文件、对象等常用 Python 知识点。
-2. 不允许使用第三方库。
-3. 第 1～17 题为基础题，按题目要求补全代码或说明原因。
-4. 第 18～20 题为基础理解题，先写出运行结果，再简要说明原因。
+建议用时：60～90 分钟
+规则：
+1. 不使用第三方库。
+2. 预测题先在注释区写出状态轨迹，再运行验证。
+3. 错误题要写出具体行号、异常类型和后续去向。
+4. 第 17～20 题复用 A001、A002、A003 完成订单脚本。
 """
 
-
-# ============================================================
-# 第 1 题：变量类型与类型转换（基础）
-# ============================================================
-# 已知商品单价和购买数量由字符串形式传入。
-# 请计算订单总金额，并输出：
-# 总金额: 239.8
-# 要求：结果必须是数值计算，不能直接拼接字符串。
-
-price = "119.9"
-quantity = "2"
-
-# 请在下方编写代码
-
-
-
+import json
+from pathlib import Path
 
 
 # ============================================================
-# 第 2 题：列表、循环与条件判断（基础）
+# 第一组：预测输出与状态变化（01～05）
 # ============================================================
-# 请从 scores 中筛选出所有大于等于 60 分的成绩，
-# 并计算这些及格成绩的平均分。
-#
-# 期望输出：
-# 及格成绩: [78, 92, 65, 88]
-# 平均分: 80.75
-
-scores = [45, 78, 92, 58, 65, 88]
-
-# 请在下方编写代码
 
 
+# 第 01 题：字符串怎样变成库存数字
+# 写出 raw_stock、stock 的值与类型，并填写完整轨迹：
+# "3" → int(...) → stock = ?（类型：?）→ stock < 5 → ?
+def question_01():
+    raw_stock = "3"
+    stock = int(raw_stock)
+    print(stock < 5)
 
+
+# 第 02 题：沿列表和字典找到订单状态
+# 写出访问路径和输出，并说明 [0] 与 ["status"] 各自在哪种容器中查找。
+def question_02():
+    orders = [
+        {"order_no": "A001", "status": "已支付"},
+        {"order_no": "A002", "status": "已退款"},
+    ]
+    print(orders[0]["status"])
+
+
+# 第 03 题：别名修改了哪一份数据
+# 写出修改前、修改后、最终输出，并解释 alias 和 orders 的关系。
+def question_03():
+    orders = [
+        {"order_no": "A001", "status": "已支付"},
+        {"order_no": "A002", "status": "已退款"},
+    ]
+    alias = orders
+    alias[1]["status"] = "已支付"
+    print(orders[1]["status"])
+
+
+# 第 04 题：条件顺序决定走哪扇门
+# 写出第一个为真的条件和实际输出，再调整顺序，让 stock == 0 输出“缺货”。
+def question_04():
+    stock = 0
+    if stock < 5:
+        result = "需要补货"
+    elif stock == 0:
+        result = "缺货"
+    else:
+        result = "库存正常"
+    print(result)
+
+
+# 第 05 题：三轮循环怎样累积成最终结果
+# 每一轮记录：当前订单、条件结果、paid_count、total_amount。
+def question_05():
+    orders = [
+        {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+        {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+        {"order_no": "A003", "sku": "K161", "amount": 199.0, "status": "已支付"},
+    ]
+    paid_count = 0
+    total_amount = 0.0
+    for order in orders:
+        if order["status"] == "已支付":
+            paid_count += 1
+            total_amount += order["amount"]
+    print(paid_count, total_amount)
 
 
 # ============================================================
-# 第 3 题：字典统计（基础）
+# 第二组：完成基础代码（06～12）
 # ============================================================
-# 请统计 products 中每种商品出现的次数。
-#
-# 期望输出：
-# {'键盘': 3, '鼠标': 2, '耳机': 1}
-
-products = ["键盘", "鼠标", "键盘", "耳机", "鼠标", "键盘"]
-
-# 请在下方编写代码
 
 
-
-
-
-# ============================================================
-# 第 4 题：字符串处理（基础）
-# ============================================================
-# 请去除 username 首尾空格，并将其转换为小写。
-# 然后判断处理后的用户名是否等于 "admin"。
-#
-# 期望输出：
-# admin
-# True
-
-username = "  Admin  "
-
-# 请在下方编写代码
-
-
-
-
-
-# ============================================================
-# 第 5 题：函数定义与返回值（基础）
-# ============================================================
-# 请补全 calculate_total 函数：
-# 订单金额大于等于 500 元时打 9 折，否则不打折。
-# 函数应返回最终金额。
-#
-# 期望输出：
-# 540.0
-# 300
-
-def calculate_total(amount):
-    # 请在这里编写代码
+# 第 06 题：转换库存并判断是否补货
+# 期望输出：K161 需要补货：True
+def question_06():
+    sku = "K161"
+    raw_stock = "3"
+    # 在这里补全
     pass
 
 
-print(calculate_total(600))
-print(calculate_total(300))
+# 第 07 题：修改嵌套订单状态
+# 只写一行代码，把 A002 的状态从“已退款”改成“已支付”。
+def question_07():
+    orders = [
+        {"order_no": "A001", "status": "已支付"},
+        {"order_no": "A002", "status": "已退款"},
+    ]
+    # 在这里补全
+    print(orders[1]["status"])
 
 
-
-
-
-# ============================================================
-# 第 6 题：列表去重与排序（基础）
-# ============================================================
-# 请删除 user_ids 中重复的用户 ID，并按从小到大排序。
-#
-# 期望输出：
-# [101, 102, 103, 105]
-
-user_ids = [103, 101, 102, 101, 105, 103]
-
-# 请在下方编写代码
-
-
-
-
-
-# ============================================================
-# 第 7 题：循环与条件判断综合（基础）
-# ============================================================
-# 请统计 numbers 中大于 10 的数字数量。
-
-numbers = [5, 12, 8, 20, 15, 3]
-
-# 请在下方编写代码
-
-
-
-
-
-# ============================================================
-# 第 8 题：列表推导式（基础）
-# ============================================================
-# 使用列表推导式生成平方列表。
-# 期望输出：[1, 4, 9, 16, 25]
-
-numbers = [1, 2, 3, 4, 5]
-
-# 请在下方编写代码
-
-
-
-
-
-# ============================================================
-# 第 9 题：元组不可变（基础）
-# ============================================================
-# 不运行代码，说明下面代码为什么报错。
-
-data = ("Python", "SQL")
-data[0] = "Java"
-
-# 原因：
-
-
-
-
-
-# ============================================================
-# 第 10 题：集合去重（基础）
-# ============================================================
-# 请使用集合去除重复数据，并输出去重后的结果。
-
-tags = ["AI", "Python", "AI", "RPA"]
-
-# 请在下方编写代码
-
-
-
-
-
-# ============================================================
-# 第 11 题：*args 可变参数（基础）
-# ============================================================
-# 请补全函数，使其可以接收任意数量参数并计算总和。
-
-def total(*args):
-    # 请在这里编写代码
+# 第 08 题：补全库存分类函数
+# 必须按顺序处理：等于 0、小于 5、其他。
+def classify_stock(stock):
+    # 在这里补全
     pass
 
 
-print(total(10, 20, 30))
+def question_08():
+    print(classify_stock(0))
+    print(classify_stock(3))
+    print(classify_stock(10))
 
 
+# 第 09 题：筛选已支付订单并汇总
+# 得到 paid_orders、paid_count、total_amount。
+def question_09():
+    orders = [
+        {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+        {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+        {"order_no": "A003", "sku": "K161", "amount": 199.0, "status": "已支付"},
+    ]
+    # 在这里补全
+    pass
 
 
-
-# ============================================================
-# 第 12 题：异常处理（基础）
-# ============================================================
-# 请使用 try except 处理除数为 0 的情况。
-
-a = 10
-b = 0
-
-# 请在下方编写代码
+# 第 10 题：用 return 交出订单金额
+# 公式：单价 × 数量 × (1 - 折扣率)，调用结果应为 232.2。
+def calculate_order_amount(price, quantity, discount_rate):
+    # 在这里补全，必须使用 return
+    pass
 
 
+def question_10():
+    amount = calculate_order_amount(129.0, 2, 0.1)
+    print(amount)
 
 
-
-# ============================================================
-# 第 13 题：文件读取（基础）
-# ============================================================
-# 请读取 test.txt 文件内容并打印。
-
-# 请在下方编写代码
-
+# 第 11 题：让汇总结果往返 JSON
+# 中文不能显示成 Unicode 转义；把 JSON 字符串再转回 Python 字典。
+def question_11():
+    summary = {"paid_count": 2, "total_amount": 328.0, "status": "已完成"}
+    # 在这里补全 json.dumps 与 json.loads
+    pass
 
 
-
-
-# ============================================================
-# 第 14 题：JSON 数据处理（基础）
-# ============================================================
-# 将 user 字典转换为 JSON 字符串。
-
-user = {"name": "张三", "age": 20}
-
-# 请在下方编写代码
-
-
-
-
-
-# ============================================================
-# 第 15 题：类与对象基础（基础）
-# ============================================================
-# 创建 User 类，包含 name 属性和 say_hello 方法。
-
-# 请在下方编写代码
-
-
-
+# 第 12 题：读取同目录测试文件
+# 使用 pathlib.Path 和 UTF-8；从任意工作目录启动时都能找到 test.txt。
+def question_12():
+    # 提示：先找到当前 .py 文件所在目录，再拼接 test.txt
+    pass
 
 
 # ============================================================
-# 第 16 题：模块导入（基础）
+# 第三组：沿错误路径定位（13～16）
 # ============================================================
-# 使用 pathlib 输出当前工作目录。
-# 要求：写出正确的 import，并调用 Path.cwd()。
-
-# 请在下方编写代码
 
 
+# 第 13 题：中文数字无法转换
+# 对应网页编号：
+# 1  raw_stock = "三"
+# 2  stock = int(raw_stock)
+# 3  print(stock < 5)
+# 写出出错行、异常类型、stock 是否创建、第 3 行是否执行。
+def question_13():
+    raw_stock = "三"
+    stock = int(raw_stock)
+    print(stock < 5)
 
+
+# 第 14 题：文件不存在
+# 对应网页编号：
+# 1  from pathlib import Path
+# 2  path = Path("missing-orders.json")
+# 3  text = path.read_text(encoding="utf-8")
+# 4  print(text)
+# 写出出错行、异常类型，并解释为什么创建 Path 时没有报错。
+def question_14():
+    path = Path("missing-orders.json")
+    text = path.read_text(encoding="utf-8")
+    print(text)
+
+
+# 第 15 题：JSON 格式不合法
+# 对应网页编号：
+# 1  import json
+# 2  text = '[{"order_no": "A001",}]'
+# 3  orders = json.loads(text)
+# 4  print(orders[0]["order_no"])
+# 写出出错行、异常类型、第 4 行是否执行，以及格式问题。
+def question_15():
+    text = '[{"order_no": "A001",}]'
+    orders = json.loads(text)
+    print(orders[0]["order_no"])
+
+
+# 第 16 题：坏金额怎样被记录后跳过
+# 每一轮写出：转换成功 / 异常 / continue 后去向；再写最终三项状态。
+def question_16():
+    raw_orders = [
+        {"order_no": "A001", "amount": "129.0"},
+        {"order_no": "A002", "amount": "未知"},
+        {"order_no": "A003", "amount": "199.0"},
+    ]
+    clean_orders = []
+    problems = []
+    total_amount = 0.0
+    for order in raw_orders:
+        try:
+            amount = float(order["amount"])
+        except ValueError as error:
+            problems.append(
+                {"order_no": order["order_no"], "error": type(error).__name__}
+            )
+            continue
+        clean_orders.append(order["order_no"])
+        total_amount += amount
 
 
 # ============================================================
-# 第 17 题：综合数据处理（基础）
+# 第四组：完成订单脚本（17～20）
 # ============================================================
-# 根据订单数据统计销售总金额。
 
-orders = [
-    {"name": "键盘", "price": 100, "count": 2},
-    {"name": "鼠标", "price": 50, "count": 3},
+
+ORDERS = [
+    {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+    {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+    {"order_no": "A003", "sku": "K161", "amount": 199.0, "status": "已支付"},
 ]
 
-# 请在下方编写代码
+
+# 第 17 题：实现单条订单清洗函数
+# 四个必需字段；文本 strip；order_no、sku 转大写；amount 转 float；返回新字典。
+def normalize_order(raw_order):
+    # 在这里补全，缺少必需字段时保留 KeyError
+    pass
+
+
+# 第 18 题：实现已支付汇总函数
+# 返回 paid_order_nos、paid_count、total_amount 三个字段。
+def build_summary(orders):
+    # 在这里补全
+    pass
+
+
+# 第 19 题：画出四个函数之间的数据交接
+# 不必直接运行；在每行后写出“输入形状 → 输出形状”，并回答网页中的三个问题。
+def question_19(input_path, output_path):
+    raw_orders = load_orders(input_path)  # noqa: F821
+    clean_orders = [normalize_order(order) for order in raw_orders]
+    summary = build_summary(clean_orders)
+    write_summary(output_path, summary)  # noqa: F821
+
+
+# 第 20 题：让坏订单退出当前路径，而不是拖垮整批任务
+# A003 的 amount 改成“未知”，完成：normalize_order → except → problems → continue。
+# 预期：已支付只有 A001；paid_count=1；total_amount=129.0；问题数=1。
+def question_20():
+    raw_orders = [
+        {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+        {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+        {"order_no": "A003", "sku": "K161", "amount": "未知", "status": "已支付"},
+    ]
+    clean_orders = []
+    problems = []
+    # 在这里补全清洗、异常记录、continue 和汇总
+    pass
 
 
 # ============================================================
-# 第 18 题：可变对象与变量引用（基础理解）
+# 选修加分题（不计入 20 题）
 # ============================================================
-# 不运行代码，先写出下面代码的输出结果，并说明原因。
+# 先预测两行输出，再解释 self 为什么只修改 product1。
+class Product:
+    def __init__(self, sku, stock):
+        self.sku = sku
+        self.stock = stock
 
-a = [1, 2]
-b = a
-b.append(3)
-
-print(a)
-print(b)
-
-# 你的答案：
-# 输出：
-#
-# 原因：
-#
+    def add_stock(self, quantity):
+        self.stock += quantity
 
 
+def optional_bonus():
+    product1 = Product("K161", 3)
+    product2 = Product("K162", 10)
+    product1.add_stock(5)
+    print(product1.stock)
+    print(product2.stock)
 
 
-
-# ============================================================
-# 第 19 题：浅拷贝与嵌套可变对象（基础理解）
-# ============================================================
-# 不运行代码，先写出下面代码的输出结果，并说明原因。
-
-original = {
-    "name": "张三",
-    "skills": ["Python", "SQL"]
-}
-
-copy_data = original.copy()
-copy_data["name"] = "李四"
-copy_data["skills"].append("Linux")
-
-print(original)
-print(copy_data)
-
-# 你的答案：
-# 输出：
-#
-# 原因：
-#
-
-
-
-
-
-# ============================================================
-# 第 20 题：函数默认参数（基础理解）
-# ============================================================
-# 不运行代码，写出输出结果并说明原因。
-
-def add_item(item, items=[]):
-    items.append(item)
-    return items
-
-
-print(add_item("A"))
-print(add_item("B"))
-
-# 输出：
-# 原因：
-
+if __name__ == "__main__":
+    print("请打开本文件，按网页中的 20 道题逐题作答。")

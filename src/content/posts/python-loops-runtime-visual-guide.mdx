@@ -15,7 +15,7 @@ private: false
 
 在 Excel 里，一条公式向下填充后，会依次处理每一行。Python 的 `for` 循环也在重复处理数据，但它多做了一件不容易被眼睛发现的事：**每一轮都会把变量名绑定到下一条数据，再从循环体第一行向下执行。**
 
-这一篇只跟踪三条订单。你会看见当前订单怎样从 O1001 变成 O1002、O1003，为什么取消订单没有进入累计分支，以及金额怎样从 `0.0` 走到 `328.0`。
+这一篇只跟踪三条订单。你会看见当前订单怎样从 A001 变成 A002、A003，为什么退款订单没有进入累计分支，以及金额怎样从 `0.0` 走到 `328.0`。
 
 ## 三条订单怎样进入循环
 
@@ -23,9 +23,9 @@ private: false
 
 ```python
 orders = [
-    {"order_no": "O1001", "status": "paid", "amount": 129.0},
-    {"order_no": "O1002", "status": "cancelled", "amount": 88.0},
-    {"order_no": "O1003", "status": "paid", "amount": 199.0},
+    {"order_no": "A001", "status": "已支付", "amount": 129.0},
+    {"order_no": "A002", "status": "已退款", "amount": 88.0},
+    {"order_no": "A003", "status": "已支付", "amount": 199.0},
 ]
 ```
 
@@ -39,30 +39,30 @@ for order in orders:
 运行顺序是：
 
 ```text
-第 1 轮：order → O1001
-第 2 轮：order → O1002
-第 3 轮：order → O1003
+第 1 轮：order → A001
+第 2 轮：order → A002
+第 3 轮：order → A003
 列表已用完：离开循环
 ```
 
 `for` 不会同时处理三条数据。它先拿出一条，执行完缩进的循环体，再回到顶部拿下一条。
 
-## 完整任务：筛选 paid 并累计金额
+## 完整任务：筛选已支付订单并累计金额
 
 现在给循环加上判断和两个累计器。代码可以直接复制运行：
 
 ```python
 orders = [
-    {"order_no": "O1001", "status": "paid", "amount": 129.0},
-    {"order_no": "O1002", "status": "cancelled", "amount": 88.0},
-    {"order_no": "O1003", "status": "paid", "amount": 199.0},
+    {"order_no": "A001", "status": "已支付", "amount": 129.0},
+    {"order_no": "A002", "status": "已退款", "amount": 88.0},
+    {"order_no": "A003", "status": "已支付", "amount": 199.0},
 ]
 
 paid_count = 0
 total = 0.0
 
 for order in orders:
-    is_paid = order["status"] == "paid"
+    is_paid = order["status"] == "已支付"
 
     if is_paid:
         paid_count += 1
@@ -90,12 +90,12 @@ total = 328.0
     <section class="pyl-round pyl-round--selected">
       <header>
         <span>第 1 轮</span>
-        <strong>当前项 · O1001</strong>
-        <small>status: paid · amount: 129.0</small>
+        <strong>当前项 · A001</strong>
+        <small>status: 已支付 · amount: 129.0</small>
       </header>
       <ol>
-        <li><span>01 · 当前行</span><code>for order in orders</code><p><code>order → O1001</code></p></li>
-        <li><span>02 · 当前行</span><code>is_paid = order["status"] == "paid"</code><p><code>"paid" == "paid" → True</code></p></li>
+        <li><span>01 · 当前行</span><code>for order in orders</code><p><code>order → A001</code></p></li>
+        <li><span>02 · 当前行</span><code>is_paid = order["status"] == "已支付"</code><p><code>"已支付" == "已支付" → True</code></p></li>
         <li><span>03 · 条件</span><code>if is_paid</code><p><b>True</b> · 选中，进入分支</p></li>
         <li><span>04 · 数量</span><code>paid_count += 1</code><p><code>0 → 1</code></p></li>
         <li><span>05 · 金额</span><code>total += 129.0</code><p><code>0.0 → 129.0</code></p></li>
@@ -104,12 +104,12 @@ total = 328.0
     <section class="pyl-round pyl-round--skipped">
       <header>
         <span>第 2 轮</span>
-        <strong>当前项 · O1002</strong>
-        <small>status: cancelled · amount: 88.0</small>
+        <strong>当前项 · A002</strong>
+        <small>status: 已退款 · amount: 88.0</small>
       </header>
       <ol>
-        <li><span>01 · 当前行</span><code>for order in orders</code><p><code>order → O1002</code></p></li>
-        <li><span>02 · 当前行</span><code>is_paid = order["status"] == "paid"</code><p><code>"cancelled" == "paid" → False</code></p></li>
+        <li><span>01 · 当前行</span><code>for order in orders</code><p><code>order → A002</code></p></li>
+        <li><span>02 · 当前行</span><code>is_paid = order["status"] == "已支付"</code><p><code>"已退款" == "已支付" → False</code></p></li>
         <li><span>03 · 条件</span><code>if is_paid</code><p><b>False</b> · 未选中，跳过分支</p></li>
         <li class="pyl-round__no-run"><span>04 · 未执行</span><code>paid_count += 1</code><p><code>1 → 1</code> · 保持不变</p></li>
         <li class="pyl-round__no-run"><span>05 · 未执行</span><code>total += 88.0</code><p><code>129.0 → 129.0</code> · 保持不变</p></li>
@@ -118,12 +118,12 @@ total = 328.0
     <section class="pyl-round pyl-round--selected">
       <header>
         <span>第 3 轮</span>
-        <strong>当前项 · O1003</strong>
-        <small>status: paid · amount: 199.0</small>
+        <strong>当前项 · A003</strong>
+        <small>status: 已支付 · amount: 199.0</small>
       </header>
       <ol>
-        <li><span>01 · 当前行</span><code>for order in orders</code><p><code>order → O1003</code></p></li>
-        <li><span>02 · 当前行</span><code>is_paid = order["status"] == "paid"</code><p><code>"paid" == "paid" → True</code></p></li>
+        <li><span>01 · 当前行</span><code>for order in orders</code><p><code>order → A003</code></p></li>
+        <li><span>02 · 当前行</span><code>is_paid = order["status"] == "已支付"</code><p><code>"已支付" == "已支付" → True</code></p></li>
         <li><span>03 · 条件</span><code>if is_paid</code><p><b>True</b> · 选中，进入分支</p></li>
         <li><span>04 · 数量</span><code>paid_count += 1</code><p><code>1 → 2</code></p></li>
         <li><span>05 · 金额</span><code>total += 199.0</code><p><code>129.0 → 328.0</code></p></li>
@@ -157,7 +157,7 @@ total = 328.0
   </div>
 </figure>
 
-第 2 轮仍然是一轮完整的循环：Python 取出了 O1002，也完成了状态判断。只是判断结果为 `False`，因此缩进在 `if` 下面的两行没有执行。随后循环正常进入第 3 轮。
+第 2 轮仍然是一轮完整的循环：Python 取出了 A002，也完成了状态判断。只是判断结果为 `False`，因此缩进在 `if` 下面的两行没有执行。随后循环正常进入第 3 轮。
 
 这也解释了为什么累计器必须写在循环外：
 
@@ -176,20 +176,20 @@ for order in orders:
 
 ```python
 orders = [
-    {"order_no": "O1001", "status": "paid", "amount": 129.0},
-    {"order_no": "O1002", "status": "cancelled", "amount": 88.0},
-    {"order_no": "O1003", "status": "paid", "amount": 199.0},
+    {"order_no": "A001", "status": "已支付", "amount": 129.0},
+    {"order_no": "A002", "status": "已退款", "amount": 88.0},
+    {"order_no": "A003", "status": "已支付", "amount": 199.0},
 ]
 
 print("continue 的结果：")
 for order in orders:
-    if order["status"] != "paid":
+    if order["status"] != "已支付":
         continue
     print(order["order_no"])
 
 print("break 的结果：")
 for order in orders:
-    if order["status"] == "cancelled":
+    if order["status"] == "已退款":
         break
     print(order["order_no"])
 ```
@@ -198,33 +198,33 @@ for order in orders:
 
 ```text
 continue 的结果：
-O1001
-O1003
+A001
+A003
 break 的结果：
-O1001
+A001
 ```
 
 <figure class="pyl-control" aria-labelledby="pyl-control-caption">
   <figcaption id="pyl-control-caption">
     <span class="pyl-kicker">路径对照</span>
-    <strong>遇到 O1002 后，下一步去哪里</strong>
+    <strong>遇到 A002 后，下一步去哪里</strong>
   </figcaption>
   <div class="pyl-control__lanes">
     <section>
       <header><code>continue</code><strong>结束当前轮，回到循环顶部</strong></header>
       <ol>
-        <li><span>第 1 轮</span><strong>O1001</strong><small>paid · 输出 O1001</small></li>
-        <li class="pyl-path--decision"><span>第 2 轮</span><strong>O1002</strong><small>cancelled · 跳过本轮余下代码</small></li>
-        <li><span>第 3 轮</span><strong>O1003</strong><small>paid · 继续输出 O1003</small></li>
+        <li><span>第 1 轮</span><strong>A001</strong><small>已支付 · 输出 A001</small></li>
+        <li class="pyl-path--decision"><span>第 2 轮</span><strong>A002</strong><small>已退款 · 跳过本轮余下代码</small></li>
+        <li><span>第 3 轮</span><strong>A003</strong><small>已支付 · 继续输出 A003</small></li>
         <li><span>结束</span><strong>列表用完</strong><small>循环正常完成</small></li>
       </ol>
     </section>
     <section>
       <header><code>break</code><strong>结束整个循环，直接离开</strong></header>
       <ol>
-        <li><span>第 1 轮</span><strong>O1001</strong><small>paid · 输出 O1001</small></li>
-        <li class="pyl-path--stop"><span>第 2 轮</span><strong>O1002</strong><small>cancelled · 立即离开循环</small></li>
-        <li class="pyl-path--muted"><span>未访问</span><strong>O1003</strong><small>不会再开始第 3 轮</small></li>
+        <li><span>第 1 轮</span><strong>A001</strong><small>已支付 · 输出 A001</small></li>
+        <li class="pyl-path--stop"><span>第 2 轮</span><strong>A002</strong><small>已退款 · 立即离开循环</small></li>
+        <li class="pyl-path--muted"><span>未访问</span><strong>A003</strong><small>不会再开始第 3 轮</small></li>
         <li><span>结束</span><strong>提前停止</strong><small>继续执行循环后面的代码</small></li>
       </ol>
     </section>
@@ -263,12 +263,12 @@ while attempt < 3:
 
 ## 动手练习：先预测，再运行
 
-复制“筛选 paid 并累计金额”的完整代码，按顺序完成：
+复制“筛选已支付订单并累计金额”的完整代码，按顺序完成：
 
 1. 不运行代码，先写出三轮的 `order["order_no"]`、`is_paid`、`paid_count` 和 `total`。
-2. 把 O1002 的状态改成 `"paid"`，预测最终数量和金额，再运行确认。正确结果应是 `3` 和 `416.0`。
-3. 在判断未支付后加入 `continue`，确认 O1003 仍会被处理。
-4. 把同一位置改成 `break`，说明 O1003 为什么不会被访问。
+2. 把 A002 的状态改成 `"已支付"`，预测最终数量和金额，再运行确认。正确结果应是 `3` 和 `416.0`。
+3. 在判断未支付后加入 `continue`，确认 A003 仍会被处理。
+4. 把同一位置改成 `break`，说明 A003 为什么不会被访问。
 5. 故意把 `total = 0.0` 移进循环体，逐轮写出结果，解释累计为什么失效。
 
 如果你能指出“当前是第几轮、order 指向谁、哪些行执行、累计器怎样变化”，就已经真正看懂了循环，而不只是会写 `for`。

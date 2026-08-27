@@ -1,12 +1,12 @@
 ---
-title: "Python 字符串、列表与字典实战：把真实数据组织起来"
-description: "用 SKU、订单和接口字段讲清 Python 字符串、列表、字典的常用操作，并补充元组、集合、变量引用和浅拷贝这些入门后很快会遇到的知识。"
+title: "Python 字符串、列表与字典图解：沿着路径找到订单字段"
+description: "用三条真实订单看懂列表与字典怎样嵌套、索引与键怎样定位字段，以及修改、别名和浅拷贝会影响哪一层数据。"
 date: 2026-08-22T22:34:00+08:00
 updated: 2026-08-27T00:10:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 13
+minutes: 12
 featured: false
 series: "python-basics"
 seriesOrder: 3
@@ -18,571 +18,780 @@ import HighlightBox from '../../components/HighlightBox.astro';
 import Callout from '../../components/Callout.astro';
 import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
-上一篇解决的是“一份值是什么”。真正开始处理业务数据以后，很快会遇到另一个问题：**一条订单有多个字段，很多条订单又应该怎么放？**
+一条订单有订单号、SKU、金额和状态；三条订单又要保持各自完整。Python 通常用两层结构装下它们：**列表保存一批订单，字典保存一条订单的多个字段，字符串则是订单号、SKU、状态等具体值。**
 
-这一篇重点只抓三种最常用的结构：字符串、列表、字典。元组和集合会讲，但只讲够用的部分。
+这章不背容器方法清单。重点是学会看数据的形状，并沿着路径准确回答：现在进入哪一项、使用哪个字段、修改会落在哪一层。
 
 <PythonLessonBrief
-  goal="看懂字符串、列表和字典怎样组合成一批真实订单"
-  data="两条包含订单号、SKU、金额和状态的订单"
-  outcome="能够逐层读取、清理、修改并复制订单字段"
+  goal="看懂一批订单的嵌套形状和字段访问路径"
+  data="A001、A002、A003 三条订单"
+  outcome="能读取和修改目标字段，并判断复制后哪些数据仍然共享"
 />
 
-## 先看一个最常见的数据形状
+## 一批订单是列表，一条订单是字典
+
+后续章节会一直使用这三条数据：
 
 ```python
 orders = [
-    {
-        "order_no": "A001",
-        "sku": "K161",
-        "amount": 129.0,
-        "status": "已支付",
-    },
-    {
-        "order_no": "A002",
-        "sku": "K162",
-        "amount": 88.0,
-        "status": "已退款",
-    },
+    {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+    {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+    {"order_no": "A003", "sku": "K161", "amount": 199.0, "status": "已支付"},
 ]
 ```
 
-不要急着看符号，先看结构：
+先不做任何处理，只看它的形状：
 
-<figure class="py-data-shape" aria-labelledby="shape-caption">
-  <figcaption id="shape-caption"><span>数据嵌套地图</span><strong><code>orders</code> 是列表，每一项都是描述一条订单的字典</strong></figcaption>
-  <ol>
-    <li>
-      <span>列表第 1 项 · dict</span>
-      <dl>
-        <div><dt>order_no</dt><dd>"A001"</dd></div>
-        <div><dt>sku</dt><dd>"K161"</dd></div>
-        <div><dt>amount</dt><dd>129.0</dd></div>
-        <div><dt>status</dt><dd>"已支付"</dd></div>
-      </dl>
-    </li>
-    <li>
-      <span>列表第 2 项 · dict</span>
-      <dl>
-        <div><dt>order_no</dt><dd>"A002"</dd></div>
-        <div><dt>sku</dt><dd>"K162"</dd></div>
-        <div><dt>amount</dt><dd>88.0</dd></div>
-        <div><dt>status</dt><dd>"已退款"</dd></div>
-      </dl>
-    </li>
-  </ol>
+<figure class="py-containers-board py-containers-shape" aria-labelledby="containers-shape-caption">
+  <figcaption id="containers-shape-caption">
+    <span class="py-containers-kicker">订单嵌套地图</span>
+    <strong><code>orders</code> 是有顺序的列表，里面的每一项都是一条订单字典</strong>
+  </figcaption>
+  <div class="py-containers-list-shell">
+    <header><span>外层 · list</span><b>orders · 3 项</b></header>
+    <ol>
+      <li>
+        <span class="py-containers-position">索引 0 · 第 1 项</span>
+        <strong>订单字典 A001</strong>
+        <dl>
+          <div><dt>order_no</dt><dd>"A001"</dd></div>
+          <div><dt>sku</dt><dd>"K161"</dd></div>
+          <div><dt>amount</dt><dd>129.0</dd></div>
+          <div><dt>status</dt><dd>"已支付"</dd></div>
+        </dl>
+      </li>
+      <li>
+        <span class="py-containers-position">索引 1 · 第 2 项</span>
+        <strong>订单字典 A002</strong>
+        <dl>
+          <div><dt>order_no</dt><dd>"A002"</dd></div>
+          <div><dt>sku</dt><dd>"K162"</dd></div>
+          <div><dt>amount</dt><dd>88.0</dd></div>
+          <div><dt>status</dt><dd>"已退款"</dd></div>
+        </dl>
+      </li>
+      <li>
+        <span class="py-containers-position">索引 2 · 第 3 项</span>
+        <strong>订单字典 A003</strong>
+        <dl>
+          <div><dt>order_no</dt><dd>"A003"</dd></div>
+          <div><dt>sku</dt><dd>"K161"</dd></div>
+          <div><dt>amount</dt><dd>199.0</dd></div>
+          <div><dt>status</dt><dd>"已支付"</dd></div>
+        </dl>
+      </li>
+    </ol>
+  </div>
 </figure>
 
-一句话记住：**列表负责“有很多条”，字典负责“一条里有很多字段”。**
+最外面的 `[...]` 表示列表，适合保存“很多条有顺序的数据”。每一项的 `{...}` 表示字典，适合把一条订单的多个字段按名字放在一起。引号里的 `"A001"`、`"K161"`、`"已支付"` 都是字符串值。
 
-## 字符串：先学会取、改、拆
+## 沿着 `orders → 第 1 项 → status` 找值
 
-SKU、订单号、状态、文件名、接口字段，绝大多数文本都是字符串。
-
-```python
-sku = "K161-PH"
-```
-
-### 用下标取单个字符
+要读取第一条订单的状态，代码可以写成：
 
 ```python
-print(sku[0])
-print(sku[1])
+status = orders[0]["status"]
+print(status)
 ```
 
 输出：
 
 ```text
-K
-1
+已支付
 ```
 
-Python 的下标从 `0` 开始。
+这串代码应该从左往右、一层一层读。`orders[0]` 先得到第一条订单字典，接着 `["status"]` 才从这条字典取出状态。
 
-### 用切片取一段
+<figure class="py-containers-board py-containers-access" aria-labelledby="containers-access-caption">
+  <figcaption id="containers-access-caption">
+    <span class="py-containers-kicker">嵌套访问路径</span>
+    <strong>每一步只进入一层，下一步操作前一步的结果</strong>
+  </figcaption>
+  <ol class="py-containers-path">
+    <li>
+      <span class="py-containers-step">输入 · 01</span>
+      <strong>整批订单</strong>
+      <code>orders</code>
+      <small>类型：list · 3 项</small>
+    </li>
+    <li>
+      <span class="py-containers-step">当前操作 · 02</span>
+      <strong>按位置取第 1 项</strong>
+      <code>orders[0]</code>
+      <small>结果：A001 的 dict</small>
+    </li>
+    <li>
+      <span class="py-containers-step">当前操作 · 03</span>
+      <strong>按字段名取状态</strong>
+      <code>["status"]</code>
+      <small>结果：字符串“已支付”</small>
+    </li>
+    <li class="is-result">
+      <span class="py-containers-step">输出 · 04</span>
+      <strong>目标字段值</strong>
+      <output>已支付</output>
+      <small>路径完成</small>
+    </li>
+  </ol>
+  <div class="py-containers-path-summary">
+    <code>orders</code><span>→</span><code>orders[0]</code><span>→</span><code>orders[0]["status"]</code><span>→</span><b>"已支付"</b>
+  </div>
+</figure>
+
+长路径看不懂时，可以拆成中间变量，结果完全一样：
 
 ```python
-print(sku[:4])
-print(sku[5:])
-```
-
-输出：
-
-```text
-K161
-PH
-```
-
-`sku[:4]` 表示从开头取到下标 4 之前，右边界不包含在结果里。
-
-### 清理字符串
-
-外部数据经常带空格：
-
-```python
-raw_status = "  已支付  "
-status = raw_status.strip()
+first_order = orders[0]
+status = first_order["status"]
 
 print(status)
 ```
 
-`strip()` 去掉两端空白。
+拆开以后，每一步的形状更容易检查：`first_order` 是字典，`status` 是字符串。
 
-常见字符串方法：
+## 列表用索引，字典用键
 
-```python
-text.strip()                  # 去掉两端空白
-text.lower()                  # 英文字母转小写
-text.upper()                  # 英文字母转大写
-text.replace("旧", "新")     # 替换
-text.split("-")              # 按分隔符拆成列表
-```
-
-例如：
+列表和字典都写方括号，但括号里的定位方式不同：
 
 ```python
-sku = "K161-PH"
-parts = sku.split("-")
+first_order = orders[0]
+sku = first_order["sku"]
 
-print(parts)
+print(sku)
 ```
 
-结果：
+<figure class="py-containers-board py-containers-locators" aria-labelledby="containers-locators-caption">
+  <figcaption id="containers-locators-caption">
+    <span class="py-containers-kicker">两种定位方式</span>
+    <strong>索引回答“第几个”，键回答“哪个字段”</strong>
+  </figcaption>
+  <div class="py-containers-locator-grid">
+    <section>
+      <span class="py-containers-label">list · 按位置</span>
+      <div class="py-containers-index-row">
+        <span><b>0</b><code>A001</code></span>
+        <span><b>1</b><code>A002</code></span>
+        <span><b>2</b><code>A003</code></span>
+      </div>
+      <p><code>orders[0]</code> → 第一条订单字典</p>
+      <small>Python 的第一个索引是 0，不是 1。</small>
+    </section>
+    <section>
+      <span class="py-containers-label">dict · 按字段名</span>
+      <dl class="py-containers-key-list">
+        <div><dt>"order_no"</dt><dd>"A001"</dd></div>
+        <div class="is-target"><dt>"sku"</dt><dd>"K161"</dd></div>
+        <div><dt>"status"</dt><dd>"已支付"</dd></div>
+      </dl>
+      <p><code>first_order["sku"]</code> → "K161"</p>
+      <small>键不是位置，不会因为字段书写顺序改变。</small>
+    </section>
+  </div>
+</figure>
 
-```text
-['K161', 'PH']
-```
-
-注意这里发生了一个很重要的变化：**字符串经过 `split()` 后变成了列表。**
-
-## 列表：一批有顺序的数据
+越界或字段不存在时，失败位置也不同：
 
 ```python
-skus = ["K161", "K162", "K163"]
+print(orders[3])                  # IndexError：没有索引 3
+print(orders[0]["tracking_no"])   # KeyError：没有 tracking_no 键
 ```
 
-列表适合“多个同类数据”，而且有顺序。
+如果一个字段本来就允许缺省，可以使用 `.get()` 提供默认值：
 
 ```python
-print(skus[0])
-print(skus[-1])
-print(len(skus))
-```
-
-输出：
-
-```text
-K161
-K163
-3
-```
-
-`-1` 表示最后一个元素。
-
-### 添加和修改
-
-```python
-skus.append("K164")
-skus[1] = "K162-A"
-
-print(skus)
-```
-
-### 删除
-
-```python
-skus.remove("K163")
-```
-
-如果你知道位置，也可以用：
-
-```python
-del skus[0]
-```
-
-### 排序：需要有序结果时用 `sorted()`
-
-```python
-user_ids = [103, 101, 102, 101]
-sorted_ids = sorted(user_ids)
-
-print(sorted_ids)
-```
-
-输出：
-
-```text
-[101, 101, 102, 103]
-```
-
-`sorted()` 返回新列表，不修改原来的 `user_ids`。需要时还可以先用集合去重，再排序。
-
-### 判断一个值在不在列表里
-
-```python
-if "K161" in skus:
-    print("找到了")
-```
-
-这里先认识 `in`。下一篇条件分支会完整展开它怎样参与真假判断。
-
-## 字典：一条数据的多个字段
-
-```python
-order = {
-    "order_no": "A001",
-    "sku": "K161",
-    "amount": 129.0,
-    "status": "已支付",
-}
-```
-
-字典不是靠“第几个”取值，而是靠 key：
-
-```python
-print(order["sku"])
-print(order["amount"])
-```
-
-输出：
-
-```text
-K161
-129.0
-```
-
-可以直接修改或增加字段：
-
-```python
-order["status"] = "已完成"
-order["shop"] = "旗舰店"
-```
-
-## `dict.get()`：处理外部数据时非常常用
-
-如果 key 不存在：
-
-```python
-print(order["tracking_no"])
-```
-
-会抛出 `KeyError`。
-
-如果这个字段本来就可能不存在，可以用：
-
-```python
-tracking_no = order.get("tracking_no")
+tracking_no = orders[0].get("tracking_no", "暂无物流")
 print(tracking_no)
 ```
 
-得到：
+输出 `暂无物流`。但业务上必须存在的字段不应无条件改用 `.get()`，否则真实的数据问题可能被默认值遮住。
 
-```text
-None
-```
+## 字符串只保留高频读取与清理
 
-也可以给默认值：
+订单号、SKU 和状态通常是字符串。入门阶段最常见的动作是清理两端空格、统一英文大小写、按分隔符拆开：
 
 ```python
-tracking_no = order.get("tracking_no", "暂无物流")
-```
+raw_order_no = " A001 "
+raw_sku = "k161-ph"
 
-处理 API 返回结果时，`.get()` 很常见。但业务上必须存在的字段不应无脑使用它，否则可能掩盖数据问题。
-
-## 列表里放字典：真实数据最常见的组合
-
-```python
-orders = [
-    {"order_no": "A001", "amount": 129.0},
-    {"order_no": "A002", "amount": 88.0},
-    {"order_no": "A003", "amount": 199.0},
-]
-```
-
-现在取第二条订单的金额：
-
-```python
-print(orders[1]["amount"])
-```
-
-可以拆开看：
-
-```python
-second_order = orders[1]
-amount = second_order["amount"]
-```
-
-这两步先从列表取出第二个字典，再按 key 取金额。长串取值看不懂时就拆成中间变量，入门阶段可读性比写成一行更重要。
-
-## 嵌套数据：先一层一层取
-
-接口数据经常更深：
-
-```python
-response = {
-    "code": 0,
-    "data": {
-        "orders": [
-            {"order_no": "A001", "amount": 129.0}
-        ]
-    }
-}
-```
-
-一行写法是：
-
-```python
-order_no = response["data"]["orders"][0]["order_no"]
-```
-
-但新手更适合先拆：
-
-```python
-data = response["data"]
-orders = data["orders"]
-first_order = orders[0]
-order_no = first_order["order_no"]
-```
-
-它们结果一样，但第二种更容易看见每一步的数据类型。
-
-<details class="py-advanced">
-  <summary><span>可选进阶</span><strong>元组、集合、变量引用与浅拷贝</strong><small>不影响下一篇学习，需要时再展开</small></summary>
-
-### 元组：知道“不能修改”就先够了
-
-```python
-point = (120, 30)
-```
-
-元组和列表一样可以按位置取值：
-
-```python
-print(point[0])
-```
-
-但元组不能像列表这样修改：
-
-```python
-point[0] = 100
-```
-
-会报错。
-
-看到 `(a, b)` 时，先知道它可能是一个不希望修改的固定组合即可。
-
-### 集合：去重和成员判断
-
-```python
-skus = ["K161", "K162", "K161", "K163"]
-unique_skus = set(skus)
-
-print(unique_skus)
-```
-
-集合会去掉重复值。
-
-集合不适合按位置取“第几个”，主要用于：
-
-- 去重。
-- 判断某个值是否存在。
-- 比较两组值之间的交集、差集。
-
-如果你后面还需要稳定顺序，就不要把集合当成列表替代品。
-
-### 两个变量可能指向同一个列表
-
-```python
-original = ["K161", "K162"]
-copy_data = original
-
-copy_data.append("K163")
-
-print(original)
-```
-
-结果：
-
-```text
-['K161', 'K162', 'K163']
-```
-
-因为 `copy_data = original` 并没有创建新列表，只是让两个变量名指向同一个列表。
-
-<figure class="py-reference-map" aria-labelledby="reference-caption">
-  <figcaption id="reference-caption">两个变量名，共享同一个列表对象</figcaption>
-  <dl>
-    <div><dt>变量名</dt><dd><code>original</code></dd></div>
-    <div class="shared-object"><dt>共同引用的列表</dt><dd><code>["K161", "K162"]</code></dd></div>
-    <div><dt>变量名</dt><dd><code>copy_data</code></dd></div>
-  </dl>
-</figure>
-
-如果只想复制外层列表：
-
-```python
-copy_data = original.copy()
-```
-
-现在 `copy_data.append(...)` 不会修改 `original` 的外层结构。
-
-### 为什么浅拷贝仍会共享嵌套数据
-
-看一个稍微进阶但非常值得提前知道的例子：
-
-```python
-original = {
-    "name": "张三",
-    "skills": ["Python", "SQL"],
-}
-
-copy_data = original.copy()
-copy_data["name"] = "李四"
-copy_data["skills"].append("Linux")
-```
-
-这里：
-
-- 外层字典复制了，所以改 `name` 不会影响原字典的 `name`。
-- 里面的 `skills` 列表却还是同一个对象，所以追加 `Linux` 会同时出现在两边。
-
-这就是“浅拷贝”：**只复制最外层，里面嵌套的可变对象仍然可能共用。**
-
-不要求现在掌握深拷贝规则，但不要把 `.copy()` 理解成“里面所有对象都彻底复制了一份”。综合考核会再次检查这个概念。
-
-</details>
-
-## 什么时候用哪一种结构
-
-| 需求 | 优先想到 | 例子 |
-| --- | --- | --- |
-| 一段文本 | `str` | 订单号、SKU、状态 |
-| 多个有顺序的同类值 | `list` | SKU 列表、订单列表 |
-| 一条数据的多个字段 | `dict` | 一条订单、一个商品 |
-| 固定组合，不希望修改 | `tuple` | 坐标、固定二元组 |
-| 去重或快速判断成员 | `set` | 已处理订单号集合 |
-
-真实脚本最常见的组合就是本文开头的结构：列表保存多条字典，每个字典里再保存字符串、数字或更小的列表。
-
-## 动手练习：整理订单字段
-
-从这份数据开始：
-
-```python
-orders = [
-    {"order_no": " A001 ", "sku": "k161-ph", "tags": ["新品", "键盘"]},
-    {"order_no": " A002 ", "sku": "k162", "tags": ["鼠标"]},
-]
-```
-
-先不要写循环，直接操作第一条：
-
-```python
-first_order = orders[0]
-
-order_no = first_order["order_no"].strip()
-sku = first_order["sku"].upper()
+order_no = raw_order_no.strip()
+sku = raw_sku.upper()
 sku_parts = sku.split("-")
 
 print(order_no)
 print(sku)
 print(sku_parts)
-print(first_order.get("tracking_no", "暂无物流"))
 ```
 
-然后自己完成：
+输出：
 
-1. 给第一条订单新增 `status: "已支付"`。
-2. 把 `tags` 里的内容转成集合，观察类型和输出。
-3. 复制第一条订单，再修改复制结果的 `order_no`。
-4. 解释为什么如果你修改复制结果里的 `tags` 列表，原数据仍可能变化。
+```text
+A001
+K161-PH
+['K161', 'PH']
+```
+
+这里有两次形状变化值得注意：`strip()`、`upper()` 产生新的字符串；`split()` 则把一个字符串拆成了列表。原来的 `raw_order_no` 和 `raw_sku` 没有被直接改写。
+
+## 修改状态时，改变的是哪一层
+
+现在把第二条订单 A002 的状态从“已退款”改为“已支付”：
+
+```python
+orders[1]["status"] = "已支付"
+
+print(orders[1]["order_no"])
+print(orders[1]["status"])
+```
+
+输出：
+
+```text
+A002
+已支付
+```
+
+左侧路径仍然先定位：`orders[1]` 找到 A002 字典，`["status"]` 再找到这个字典里的状态位置，最后用新字符串替换原值。
+
+<figure class="py-containers-board py-containers-mutation" aria-labelledby="containers-mutation-caption">
+  <figcaption id="containers-mutation-caption">
+    <span class="py-containers-kicker">状态修改前后</span>
+    <strong>外层列表和其他字段不变，只替换 A002 字典里的 status 值</strong>
+  </figcaption>
+  <div class="py-containers-before-after">
+    <section>
+      <span class="py-containers-label">之前</span>
+      <div><b>orders[1]</b><code>A002 · K162 · 88.0</code></div>
+      <div class="is-target"><b>status</b><code>"已退款"</code></div>
+    </section>
+    <div class="py-containers-operation">
+      <span>当前行</span>
+      <code>orders[1]["status"] = "已支付"</code>
+    </div>
+    <section class="is-after">
+      <span class="py-containers-label">之后</span>
+      <div><b>orders[1]</b><code>A002 · K162 · 88.0</code></div>
+      <div class="is-target"><b>status</b><code>"已支付"</code></div>
+    </section>
+  </div>
+  <div class="py-containers-unchanged">
+    <span>未改变</span>
+    <b>列表仍有 3 项</b>
+    <b>A001、A003 不变</b>
+    <b>A002 的订单号、SKU、金额不变</b>
+  </div>
+</figure>
+
+列表和字典最常用的其他修改，也可以从“落在哪一层”来理解：
+
+```python
+# 在外层列表末尾增加一条订单
+orders.append(
+    {"order_no": "A004", "sku": "K163", "amount": 59.0, "status": "已支付"}
+)
+
+# 在第一条订单字典里增加一个字段
+orders[0]["channel"] = "官网"
+
+print(len(orders))
+print(orders[0]["channel"])
+```
+
+`append()` 改变列表包含多少项；按键赋值改变某一条字典包含哪些字段。两种修改的目标层级不同。
+
+<details class="py-containers-advanced">
+  <summary>
+    <span>进阶补充</span>
+    <strong>元组、集合、列表推导式与浅拷贝</strong>
+    <small>主线已经结束；需要理解复制关系时再展开</small>
+  </summary>
+
+### 元组：固定组合
+
+元组使用圆括号，可以按位置读取，但不能直接改写其中某一项：
+
+```python
+warehouse_location = (120, 30)
+print(warehouse_location[0])
+```
+
+看到 `(120, 30)` 时，先把它理解成“不希望单独修改的固定组合”就够了。
+
+### 集合：去重与成员判断
+
+集合适合去重，不适合按位置读取：
+
+```python
+skus = ["K161", "K162", "K161"]
+unique_skus = set(skus)
+
+print(unique_skus)
+```
+
+集合输出的顺序不应被当作业务顺序。仍需稳定先后关系时，继续使用列表。
+
+### 列表推导式：简单转换的紧凑写法
+
+已经熟悉普通读取后，可以认识一行生成新列表的写法：
+
+```python
+skus = [order["sku"] for order in orders]
+print(skus)
+```
+
+它适合短而清楚的转换。逻辑一旦包含多个步骤，拆成普通代码通常更容易追踪。
+
+### 赋值不是复制：两个名字可以指向同一列表
+
+```python
+orders = [
+    {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+    {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+    {"order_no": "A003", "sku": "K161", "amount": 199.0, "status": "已支付"},
+]
+
+alias = orders
+
+print(alias is orders)
+```
+
+输出 `True`。`alias = orders` 没有创建新列表，只是增加了一个能找到同一列表的名字。因此从 `alias` 修改任何一层，都能从 `orders` 看见。
+
+### `.copy()` 只创建新的外层列表
+
+```python
+alias = orders
+outer_copy = orders.copy()
+
+print(alias is orders)
+print(outer_copy is orders)
+print(outer_copy[0] is orders[0])
+```
+
+输出：
+
+```text
+True
+False
+True
+```
+
+<figure class="py-containers-board py-containers-reference" aria-labelledby="containers-reference-caption">
+  <figcaption id="containers-reference-caption">
+    <span class="py-containers-kicker">别名与浅拷贝关系图</span>
+    <strong>外层列表是否相同，和里面的订单字典是否相同，是两个问题</strong>
+  </figcaption>
+  <div class="py-containers-name-map">
+    <div><code>orders</code><span>→</span><b>外层列表 A</b></div>
+    <div><code>alias</code><span>→</span><b>外层列表 A · 同一个</b></div>
+    <div><code>outer_copy</code><span>→</span><b>外层列表 B · 新建</b></div>
+  </div>
+  <div class="py-containers-outer-lists">
+    <section>
+      <header><span>外层列表 A</span><b>orders / alias 共用</b></header>
+      <ol>
+        <li><code>[0]</code><span>→</span><b>订单对象 #1 · A001</b></li>
+        <li><code>[1]</code><span>→</span><b>订单对象 #2 · A002</b></li>
+        <li><code>[2]</code><span>→</span><b>订单对象 #3 · A003</b></li>
+      </ol>
+    </section>
+    <section>
+      <header><span>外层列表 B</span><b>outer_copy 独有</b></header>
+      <ol>
+        <li><code>[0]</code><span>→</span><b>订单对象 #1 · 仍是同一个</b></li>
+        <li><code>[1]</code><span>→</span><b>订单对象 #2 · 仍是同一个</b></li>
+        <li><code>[2]</code><span>→</span><b>订单对象 #3 · 仍是同一个</b></li>
+      </ol>
+    </section>
+  </div>
+  <div class="py-containers-reference-result">
+    <span><b>外层结构</b> 在 outer_copy 里添加或删除列表项，不改变 orders 的外层列表。</span>
+    <span><b>嵌套字典</b> 从 outer_copy 修改 A001 的 status，orders 看到的 A001 也会改变。</span>
+  </div>
+</figure>
+
+用两次修改验证两层关系：
+
+```python
+outer_copy.append(
+    {"order_no": "A004", "sku": "K163", "amount": 59.0, "status": "已支付"}
+)
+
+print(len(orders))      # 3
+print(len(outer_copy))  # 4
+
+outer_copy[0]["status"] = "已完成"
+
+print(orders[0]["status"])  # 已完成
+```
+
+第一次只改了新外层列表 B，所以 `orders` 仍是 3 项。第二次改的是两边共同指向的订单对象 #1，所以从 `orders` 也能看到“已完成”。这就是浅拷贝：**复制外层容器，不递归复制里面的可变对象。**
+
+</details>
+
+## 选择容器时先看数据关系
+
+| 数据关系 | 优先想到 | 本章例子 |
+| --- | --- | --- |
+| 一段文本 | `str` | 订单号、SKU、状态 |
+| 多条有顺序的数据 | `list` | `orders` 订单列表 |
+| 一条数据的多个命名字段 | `dict` | A001 订单字典 |
+| 固定组合（进阶） | `tuple` | 仓库坐标 |
+| 去重或成员判断（进阶） | `set` | 不重复 SKU |
+
+不需要为“更高级”而换容器。只要形状匹配任务，列表里放字典就是处理表格、JSON 和接口数据时非常实用的基础结构。
+
+## 动手验证访问与修改路径
+
+继续使用本章开头的三条订单，完成下面四步：
+
+```python
+orders = [
+    {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+    {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+    {"order_no": "A003", "sku": "K161", "amount": 199.0, "status": "已支付"},
+]
+
+first_status = orders[0]["status"]
+second_sku = orders[1]["sku"]
+
+orders[1]["status"] = "已支付"
+tracking_no = orders[2].get("tracking_no", "暂无物流")
+
+print(first_status)
+print(second_sku)
+print(orders[1]["status"])
+print(tracking_no)
+```
+
+运行前先沿路径预测，结果应该依次是：
+
+```text
+已支付
+K162
+已支付
+暂无物流
+```
 
 <Callout title="本章检查">
-  你应该能判断什么时候用字符串、列表或字典，能把嵌套取值拆成中间变量，并知道 `.copy()` 只复制最外层结构。
+  你应该能把 `orders[0]["status"]` 拆成“列表按索引取第 1 项 → 字典按键取 status”，并指出 `orders[1]["status"] = "已支付"` 只修改了哪一层。展开进阶补充后，还应该能解释为什么 `orders.copy()` 的外层列表不同，但 `orders[0]` 仍可能是同一个字典对象。
 </Callout>
 
-<HighlightBox eyebrow="下一篇" title="现在让 Python 一条一条处理这些数据">
-  有了字符串、列表和字典，下一步就是 `if` 和 `for`：一条订单是否处理，由条件决定；一批订单如何逐条处理，由循环负责。
+<HighlightBox eyebrow="下一篇" title="让数据经过一扇决策门">
+  下一篇会把库存值代入条件，看见表达式怎样得到 True 或 False，以及多条分支为什么从上到下只命中一次。
 </HighlightBox>
 
 <style>{`
-  .py-data-shape {
+  .py-containers-board {
+    --containers-blue: #2563eb;
+    --containers-violet: #7c3aed;
+    --containers-green: #15803d;
+    --containers-amber: #b45309;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     margin: 1.5rem 0 2rem;
     overflow: hidden;
   }
 
-  .py-data-shape figcaption {
+  .py-containers-board figcaption {
     background: color-mix(in srgb, var(--violet) 8%, var(--paper));
     border-bottom: 1px solid var(--line);
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 0.25rem;
     padding: 1rem 1.1rem;
   }
 
-  .py-data-shape figcaption span,
-  .py-data-shape li > span,
-  .py-reference-map dt,
-  .py-advanced summary span,
-  .py-advanced summary small {
+  .py-containers-kicker,
+  .py-containers-position,
+  .py-containers-step,
+  .py-containers-label {
     color: var(--soft);
-    font-size: 0.8rem;
+    font-size: 0.76rem;
+    font-weight: 750;
+    letter-spacing: 0.035em;
   }
 
-  .py-data-shape > ol {
+  .py-containers-list-shell > header {
+    align-items: center;
+    background: var(--paper-soft);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+  }
+
+  .py-containers-list-shell > header span {
+    color: var(--containers-violet);
+    font-size: 0.76rem;
+    font-weight: 750;
+  }
+
+  .py-containers-list-shell > ol {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     list-style: none;
     margin: 0;
     padding: 0;
   }
 
-  .py-data-shape > ol > li {
+  .py-containers-list-shell > ol > li {
     min-width: 0;
     padding: 1rem;
   }
 
-  .py-data-shape > ol > li + li {
+  .py-containers-list-shell > ol > li + li {
     border-left: 1px solid var(--line);
   }
 
-  .py-data-shape dl {
+  .py-containers-list-shell li > strong {
+    display: block;
+    margin: 0.45rem 0 0.75rem;
+  }
+
+  .py-containers-list-shell dl {
     display: grid;
-    gap: 0.5rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin: 0.8rem 0 0;
+    gap: 0.4rem;
+    margin: 0;
   }
 
-  .py-data-shape dl > div {
+  .py-containers-list-shell dl > div,
+  .py-containers-key-list > div {
     background: var(--paper-soft);
-    border-radius: calc(var(--radius) - 2px);
+    border-radius: 0.55rem;
+    display: flex;
+    gap: 0.65rem;
+    justify-content: space-between;
     min-width: 0;
-    padding: 0.65rem;
+    padding: 0.55rem 0.65rem;
   }
 
-  .py-data-shape dt,
-  .py-data-shape dd {
+  .py-containers-list-shell dt,
+  .py-containers-list-shell dd,
+  .py-containers-key-list dt,
+  .py-containers-key-list dd {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     margin: 0;
     overflow-wrap: anywhere;
   }
 
-  .py-data-shape dt {
+  .py-containers-list-shell dt,
+  .py-containers-key-list dt {
     color: var(--soft);
   }
 
-  .py-advanced {
-    background: color-mix(in srgb, var(--violet) 5%, var(--paper));
+  .py-containers-path {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .py-containers-path li {
+    min-width: 0;
+    padding: 1rem;
+    position: relative;
+  }
+
+  .py-containers-path li + li {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-containers-path li + li::before {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    content: "→";
+    left: -0.75rem;
+    line-height: 1.4rem;
+    position: absolute;
+    text-align: center;
+    top: 2.8rem;
+    width: 1.4rem;
+  }
+
+  .py-containers-path strong,
+  .py-containers-path code,
+  .py-containers-path output,
+  .py-containers-path small {
+    display: block;
+  }
+
+  .py-containers-path strong {
+    margin: 0.5rem 0;
+  }
+
+  .py-containers-path small {
+    color: var(--soft);
+    margin-top: 0.55rem;
+  }
+
+  .py-containers-path .is-result {
+    background: color-mix(in srgb, var(--containers-green) 7%, var(--paper));
+    box-shadow: inset 0 3px 0 var(--containers-green);
+  }
+
+  .py-containers-path .is-result output {
+    color: var(--containers-green);
+    font-weight: 800;
+  }
+
+  .py-containers-path-summary {
+    align-items: center;
+    background: #172033;
+    color: #e7edf7;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    justify-content: center;
+    padding: 0.85rem 1rem;
+  }
+
+  .py-containers-path-summary code {
+    background: transparent;
+    color: inherit;
+    overflow-wrap: anywhere;
+    padding: 0;
+  }
+
+  .py-containers-path-summary span {
+    color: #fbbf24;
+  }
+
+  .py-containers-locator-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .py-containers-locator-grid > section {
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .py-containers-locator-grid > section + section {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-containers-index-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 0.75rem;
+  }
+
+  .py-containers-index-row span {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+    padding: 0.65rem;
+  }
+
+  .py-containers-index-row span + span {
+    border-left: 0;
+  }
+
+  .py-containers-index-row b {
+    color: var(--containers-blue);
+  }
+
+  .py-containers-key-list {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0.75rem 0 0;
+  }
+
+  .py-containers-key-list .is-target {
+    background: color-mix(in srgb, var(--containers-violet) 9%, var(--paper));
+    box-shadow: inset 3px 0 0 var(--containers-violet);
+  }
+
+  .py-containers-locator-grid p {
+    margin-bottom: 0.3rem;
+  }
+
+  .py-containers-locator-grid small {
+    color: var(--soft);
+  }
+
+  .py-containers-before-after {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(11rem, 0.8fr) minmax(0, 1fr);
+  }
+
+  .py-containers-before-after > section,
+  .py-containers-operation {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .py-containers-before-after > section > div {
+    background: var(--paper-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.65rem;
+  }
+
+  .py-containers-before-after .is-target {
+    border-left: 3px solid var(--containers-amber);
+  }
+
+  .py-containers-operation {
+    align-items: center;
+    background: color-mix(in srgb, var(--containers-amber) 8%, var(--paper));
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    justify-content: center;
+    text-align: center;
+  }
+
+  .py-containers-operation span {
+    color: var(--containers-amber);
+    font-size: 0.76rem;
+    font-weight: 800;
+  }
+
+  .py-containers-operation code {
+    overflow-wrap: anywhere;
+  }
+
+  .py-containers-before-after .is-after {
+    background: color-mix(in srgb, var(--containers-green) 6%, var(--paper));
+  }
+
+  .py-containers-unchanged {
+    align-items: center;
+    background: var(--paper-soft);
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .py-containers-unchanged span {
+    color: var(--soft);
+    font-size: 0.76rem;
+    font-weight: 750;
+  }
+
+  .py-containers-advanced {
+    background: color-mix(in srgb, var(--violet) 4%, var(--paper));
     border: 1px solid var(--line);
     border-radius: var(--radius);
     margin: 2rem 0;
-    overflow: clip;
+    overflow: hidden;
   }
 
-  .py-advanced > summary {
+  .py-containers-advanced > summary {
     cursor: pointer;
     display: grid;
     gap: 0.2rem 0.7rem;
@@ -590,70 +799,163 @@ print(first_order.get("tracking_no", "暂无物流"))
     padding: 1rem 1.1rem;
   }
 
-  .py-advanced > summary small {
+  .py-containers-advanced > summary span,
+  .py-containers-advanced > summary small {
+    color: var(--soft);
+    font-size: 0.8rem;
+  }
+
+  .py-containers-advanced > summary small {
     grid-column: 1 / -1;
   }
 
-  .py-advanced[open] > summary {
+  .py-containers-advanced[open] > summary {
     border-bottom: 1px solid var(--line);
   }
 
-  .py-advanced > :not(summary) {
+  .py-containers-advanced > :not(summary) {
     margin-left: 1.1rem;
     margin-right: 1.1rem;
   }
 
-  .py-reference-map {
-    margin: 1.4rem 0;
+  .py-containers-reference {
+    background: var(--paper);
   }
 
-  .py-reference-map figcaption {
-    font-weight: 760;
-    margin-bottom: 0.7rem;
-  }
-
-  .py-reference-map dl {
+  .py-containers-name-map {
     display: grid;
-    grid-template-columns: 1fr 1.4fr 1fr;
-    margin: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .py-reference-map dl > div {
-    border: 1px solid var(--line);
-    padding: 0.9rem;
+  .py-containers-name-map > div {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    min-width: 0;
+    padding: 0.8rem;
     text-align: center;
   }
 
-  .py-reference-map dl > div + div {
-    border-left: 0;
+  .py-containers-name-map > div + div {
+    border-left: 1px solid var(--line);
   }
 
-  .py-reference-map .shared-object {
-    background: color-mix(in srgb, var(--cyan) 8%, var(--paper-soft));
+  .py-containers-name-map span,
+  .py-containers-outer-lists li span {
+    color: var(--containers-amber);
+    font-weight: 800;
   }
 
-  .py-reference-map dd {
-    margin: 0.45rem 0 0;
+  .py-containers-outer-lists {
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  @media (max-width: 680px) {
-    .py-data-shape > ol,
-    .py-data-shape dl,
-    .py-reference-map dl {
+  .py-containers-outer-lists > section + section {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-containers-outer-lists header {
+    background: var(--paper-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .py-containers-outer-lists header span {
+    color: var(--containers-violet);
+    font-size: 0.76rem;
+    font-weight: 750;
+  }
+
+  .py-containers-outer-lists ol {
+    list-style: none;
+    margin: 0;
+    padding: 0.6rem 1rem;
+  }
+
+  .py-containers-outer-lists li {
+    align-items: center;
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    padding: 0.45rem 0;
+  }
+
+  .py-containers-outer-lists li + li {
+    border-top: 1px dashed var(--line);
+  }
+
+  .py-containers-reference-result {
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .py-containers-reference-result span {
+    padding: 0.85rem 1rem;
+  }
+
+  .py-containers-reference-result span + span {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-containers-reference-result b {
+    color: var(--containers-green);
+    display: block;
+    font-size: 0.76rem;
+    margin-bottom: 0.25rem;
+  }
+
+  @media (max-width: 720px) {
+    .py-containers-list-shell > ol,
+    .py-containers-path,
+    .py-containers-locator-grid,
+    .py-containers-before-after,
+    .py-containers-name-map,
+    .py-containers-outer-lists,
+    .py-containers-reference-result {
       grid-template-columns: 1fr;
     }
 
-    .py-data-shape > ol > li + li {
+    .py-containers-list-shell > ol > li + li,
+    .py-containers-path li + li,
+    .py-containers-locator-grid > section + section,
+    .py-containers-name-map > div + div,
+    .py-containers-outer-lists > section + section,
+    .py-containers-reference-result span + span {
       border-left: 0;
       border-top: 1px solid var(--line);
     }
 
-    .py-reference-map dl > div + div {
-      border-left: 1px solid var(--line);
-      border-top: 0;
+    .py-containers-path li + li::before {
+      left: 1rem;
+      top: -0.75rem;
+      transform: rotate(90deg);
     }
 
-    .py-advanced > summary {
+    .py-containers-path-summary {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .py-containers-path-summary span {
+      align-self: center;
+      transform: rotate(90deg);
+    }
+
+    .py-containers-operation {
+      border-bottom: 1px solid var(--line);
+      border-left: 0;
+      border-right: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .py-containers-advanced > summary {
       grid-template-columns: 1fr;
     }
   }

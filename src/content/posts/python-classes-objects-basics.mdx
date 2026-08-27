@@ -1,12 +1,12 @@
 ---
-title: "Python 类与对象入门：什么时候比字典加函数更合适"
-description: "用商品库存对象讲清 Python class、对象、__init__、self、属性和方法，并比较类与字典加函数的使用边界，避免零基础阶段过度面向对象。"
+title: "Python 类与对象（选修）：看见实例怎样保存独立状态"
+description: "选修章节：用 Product 商品库存图解 class、实例、__init__、self、属性和方法，并判断什么时候字典加函数已经足够。"
 date: 2026-08-22T22:42:00+08:00
-updated: 2026-08-27T00:10:00+08:00
+updated: 2026-08-27T15:45:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 11
+minutes: 14
 featured: false
 series: "python-basics"
 seriesOrder: 10
@@ -18,19 +18,19 @@ import HighlightBox from '../../components/HighlightBox.astro';
 import Callout from '../../components/Callout.astro';
 import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
-学 Python 入门时，经常很早就会遇到 `class`、`self`、`__init__`。这些词看起来比列表、字典复杂很多，于是很容易产生两个极端：要么完全看不懂，要么觉得“正式代码就应该全部写成类”。
+**本章是选修。** 完成前面的变量、容器、判断、循环、函数、文件和异常后，你已经能写完整的数据处理脚本；不学习类，也不影响完成 Python 入门主线。
 
-都不需要。
-
-对于数据处理、RPA 和简单脚本，很多任务用**列表 + 字典 + 函数**已经足够。类真正有价值的时候，是你有一类反复出现的对象，每个对象都有自己的状态，又有一组和这些状态紧密相关的行为。
+类适合解决一种更具体的问题：脚本里反复出现同一类对象，每个对象需要长期保存自己的状态，并且有多项行为总在操作这些状态。若只是读取 JSON、筛选订单、计算一次金额，字典加函数通常更直接。
 
 <PythonLessonBrief
-  goal="理解类、对象、属性和方法，并判断一个脚本是否真的需要类"
-  data="拥有 SKU、库存以及补货行为的商品"
-  outcome="完成两个状态独立的 Product 对象并验证方法调用"
+  goal="理解类、实例、self、属性和方法，并能判断任务是否真的需要类"
+  data={'Product("K161", 3) 与 Product("K162", 10) 两个商品实例'}
+  outcome="只给 K161 增加 5 件库存，K162 的状态保持不变"
 />
 
-## 先看不用类怎么写
+## 先决定：字典加函数已经够用吗
+
+一个商品只有 SKU、库存和补货判断时，下面的写法完全正确：
 
 ```python
 product = {
@@ -43,151 +43,54 @@ def need_restock(product):
     return product["stock"] < 5
 
 
+def add_stock(product, quantity):
+    product["stock"] += quantity
+
+
 print(need_restock(product))
+add_stock(product, 5)
+print(product["stock"])
 ```
 
-这段代码完全没有问题。
+数据保存在字典里，函数从外部接收字典并操作它。对于几十行的临时脚本，这种关系一眼就能看懂。
 
-数据在 `product` 字典里，补货判断在 `need_restock()` 函数里。
-
-如果脚本只有几十行，这种写法往往已经最直接。
-
-## 用类表达同一件事
-
-```python
-class Product:
-    def __init__(self, sku, stock):
-        self.sku = sku
-        self.stock = stock
-
-    def need_restock(self):
-        return self.stock < 5
-
-
-product = Product("K161", 3)
-
-print(product.sku)
-print(product.need_restock())
-```
-
-<figure class="py-class-map" aria-labelledby="class-map-caption">
-  <figcaption id="class-map-caption"><span>对象工作台</span><strong>类定义共同结构，对象保存自己的具体状态</strong></figcaption>
-  <dl>
-    <div><dt>类 · <code>Product</code></dt><dd><strong>定义一类商品应该有什么</strong><span>属性：sku / stock</span><span>方法：need_restock()</span></dd></div>
-    <div><dt>创建实例 · <code>Product("K161", 3)</code></dt><dd><strong>根据类创建具体商品</strong><span>调用初始化方法并写入初始数据</span></dd></div>
-    <div><dt>对象 · <code>product</code></dt><dd><strong>保存这个商品自己的状态</strong><span>sku = "K161"</span><span>stock = 3</span></dd></div>
-  </dl>
+<figure class="pyc-choice" aria-labelledby="pyc-choice-caption">
+  <figcaption id="pyc-choice-caption">
+    <span class="pyc-kicker">同一任务 · 两种组织方式</span>
+    <strong>类不是升级版语法，只是另一种职责边界</strong>
+  </figcaption>
+  <div class="pyc-choice__lanes">
+    <section>
+      <header><span>字典 + 函数</span><strong>数据和操作分开放</strong></header>
+      <div class="pyc-choice__map">
+        <div><small>数据</small><code>product = &#123;"sku": ..., "stock": ...&#125;</code></div>
+        <div><small>操作</small><code>need_restock(product)</code><code>add_stock(product, 5)</code></div>
+      </div>
+      <dl>
+        <div><dt>更适合</dt><dd>数据来自 JSON，结构临时，操作数量少</dd></div>
+        <div><dt>优点</dt><dd>代码直接，和外部数据形状接近</dd></div>
+        <div><dt>信号</dt><dd>函数显式接收要处理的字典</dd></div>
+      </dl>
+    </section>
+    <section class="pyc-choice__class">
+      <header><span>类 + 实例</span><strong>状态和相关行为放在一起</strong></header>
+      <div class="pyc-choice__map">
+        <div><small>定义</small><code>class Product</code></div>
+        <div><small>实例</small><code>product = Product("K161", 3)</code><code>product.add_stock(5)</code></div>
+      </div>
+      <dl>
+        <div><dt>更适合</dt><dd>同类对象反复出现，并长期保留各自状态</dd></div>
+        <div><dt>优点</dt><dd>和状态紧密相关的多项行为有固定入口</dd></div>
+        <div><dt>信号</dt><dd>通过当前实例调用自己的方法</dd></div>
+      </dl>
+    </section>
+  </div>
+  <p class="pyc-choice__decision"><b>判断标准：</b>状态和行为需要长期一起存在，类才开始自然；只是为了让代码“看起来正式”，不要增加类。</p>
 </figure>
 
-类可以先理解成“这一类对象的定义”，对象是根据这个定义创建出来的具体实例。
+## 用一个完整 `Product` 类贯穿本章
 
-## `class Product`：定义一种新的类型
-
-最小的类甚至可以只有：
-
-```python
-class Product:
-    pass
-```
-
-然后创建对象：
-
-```python
-product1 = Product()
-product2 = Product()
-```
-
-`Product` 是类，`Product()` 创建对象，`product1` 和 `product2` 是两个不同对象。
-
-入门阶段不用把“类是模板”理解得太机械。更实用的理解是：**类定义了一组对象应该怎样保存数据、怎样处理自己的数据。**
-
-## `__init__`：创建对象时准备初始数据
-
-```python
-class Product:
-    def __init__(self, sku, stock):
-        self.sku = sku
-        self.stock = stock
-```
-
-当你写：
-
-```python
-product = Product("K161", 3)
-```
-
-Python 会创建一个新对象，并调用 `__init__` 给它准备初始状态。
-
-<ol class="py-init-flow" aria-label="创建 Product 对象时参数进入属性的过程">
-  <li><span>01 · 调用类</span><strong><code>Product("K161", 3)</code></strong><small>请求创建新对象</small></li>
-  <li><span>02 · 接收参数</span><strong><code>sku</code> 与 <code>stock</code></strong><small><code>__init__</code> 接住初始值</small></li>
-  <li><span>03 · 写入属性</span><strong><code>self.sku</code> / <code>self.stock</code></strong><small>数据保存到当前对象</small></li>
-  <li><span>04 · 得到实例</span><strong><code>product</code></strong><small>对象拥有独立的 SKU 与库存</small></li>
-</ol>
-
-## `self`：当前正在操作的这个对象
-
-最容易卡住的是：
-
-```python
-self.sku = sku
-```
-
-左右两个 `sku` 不是同一个概念。
-
-<dl class="py-self-map" aria-label="self.sku 等于 sku 的左右两边含义">
-  <div><dt>右边 · 参数 <code>sku</code></dt><dd><strong>这次调用传进来的值</strong><span>当前值是 "K161"</span></dd></div>
-  <div><dt>左边 · 属性 <code>self.sku</code></dt><dd><strong>当前对象自己的数据</strong><span>以后通过 product.sku 读取</span></dd></div>
-</dl>
-
-例如：
-
-```python
-product = Product("K161", 3)
-```
-
-执行 `__init__` 时，可以暂时把 `self` 理解成正在创建的 `product`。
-
-所以：
-
-```python
-self.sku = sku
-```
-
-最终就让：
-
-```python
-product.sku
-```
-
-得到：
-
-```text
-K161
-```
-
-## 属性：对象自己保存的数据
-
-```python
-print(product.sku)
-print(product.stock)
-```
-
-也可以修改：
-
-```python
-product.stock = 8
-```
-
-现在这个对象的库存状态已经变化。
-
-属性特别适合保存“这个对象自己的状态”：
-
-- 商品的 SKU、库存。
-- 订单的订单号、状态。
-- 任务的重试次数、执行状态。
-
-## 方法：让对象根据自己的数据做事
+下面是本章唯一的主类。代码可以直接复制运行：
 
 ```python
 class Product:
@@ -197,239 +100,203 @@ class Product:
 
     def need_restock(self):
         return self.stock < 5
-```
-
-调用：
-
-```python
-product = Product("K161", 3)
-print(product.need_restock())
-```
-
-调用 `product.need_restock()` 时不需要手工传 `self`，Python 会自动把当前 `product` 对象交给它。
-
-<ol class="py-method-call" aria-label="对象调用方法时 self 的对应关系">
-  <li><span>你写的调用</span><strong><code>product.need_restock()</code></strong></li>
-  <li><span>Python 自动完成</span><strong>当前 <code>product</code> 交给 <code>self</code></strong></li>
-  <li><span>方法内部</span><strong><code>self.stock &lt; 5</code></strong><small>读取当前对象自己的库存</small></li>
-</ol>
-
-方法于是能访问：
-
-```python
-self.stock
-```
-
-也就是当前这个商品自己的库存。
-
-## 方法也可以修改对象状态
-
-```python
-class Product:
-    def __init__(self, sku, stock):
-        self.sku = sku
-        self.stock = stock
 
     def add_stock(self, quantity):
         self.stock = self.stock + quantity
 
 
-product = Product("K161", 3)
-product.add_stock(5)
+product1 = Product("K161", 3)
+product2 = Product("K162", 10)
 
-print(product.stock)
+print(product1.sku, product1.stock, product1.need_restock())
+print(product2.sku, product2.stock, product2.need_restock())
+
+product1.add_stock(5)
+
+print(product1.sku, product1.stock, product1.need_restock())
+print(product2.sku, product2.stock, product2.need_restock())
 ```
 
 输出：
 
 ```text
-8
+K161 3 True
+K162 10 False
+K161 8 False
+K162 10 False
 ```
 
-这里的方法不是返回新值，而是直接修改这个对象保存的状态。
+这段程序只需要先认识五个词：
 
-这也是类比“单纯函数”更有意义的地方之一：**数据和操作这份数据的行为被放在了一起。**
+| 词 | 本例 | 作用 |
+| --- | --- | --- |
+| 类 | `Product` | 定义这一类对象保存什么数据、能做什么 |
+| 实例 / 对象 | `product1`、`product2` | 根据类创建出来的两个具体商品 |
+| 属性 | `self.sku`、`self.stock` | 当前实例自己保存的数据 |
+| 方法 | `need_restock()`、`add_stock()` | 当前实例可以执行的行为 |
+| `self` | 正在初始化或调用方法的那个实例 | 让方法找到“这一个对象”的属性 |
 
-## 两个对象为什么互不影响
+## `Product("K161", 3)` 怎样变成一个实例
+
+调用类时，Python 先准备一个新的 `Product` 实例，再调用 `__init__` 写入初始状态。`__init__` 的职责是初始化，不是把实例 `return` 出来。
+
+<figure class="pyc-init" aria-labelledby="pyc-init-caption">
+  <figcaption id="pyc-init-caption">
+    <span class="pyc-kicker">调用类 → 准备实例 → __init__ → 写入属性 → 绑定名字</span>
+    <strong>`Product("K161", 3)` 的初始化轨迹</strong>
+  </figcaption>
+  <ol>
+    <li>
+      <span>01 · 调用位置</span>
+      <code>product1 = Product("K161", 3)</code>
+      <p>请求创建一个新的 Product 实例。</p>
+    </li>
+    <li>
+      <span>02 · 新实例</span>
+      <code>self → 新的 Product 对象</code>
+      <p>Python 准备空实例，并把它作为 self 交给初始化方法。</p>
+    </li>
+    <li>
+      <span>03 · 参数进入</span>
+      <code>sku → "K161"</code>
+      <code>stock → 3</code>
+      <p>调用中的两个实参进入 __init__ 的参数名。</p>
+    </li>
+    <li>
+      <span>04 · 写入属性</span>
+      <code>self.sku = sku</code>
+      <code>self.stock = stock</code>
+      <p>右边读取参数值，左边把值保存到当前实例。</p>
+    </li>
+    <li>
+      <span>05 · 实例完成</span>
+      <code>product1 → Product 实例</code>
+      <code>sku: "K161" · stock: 3</code>
+      <p>初始化结束，调用表达式得到实例并绑定给 product1。</p>
+    </li>
+  </ol>
+</figure>
+
+最容易混淆的是：
 
 ```python
-product1 = Product("K161", 3)
-product2 = Product("K162", 10)
+self.stock = stock
+```
 
+- 右边的 `stock` 是这次调用传进 `__init__` 的参数，当前值为 `3`。
+- 左边的 `self.stock` 是新实例自己的属性，以后可以通过 `product1.stock` 读取。
+
+调用 `Product("K161", 3)` 时，不需要手工传 `self`。Python 自动让 `self` 指向当前正在初始化的新实例。
+
+## 两个实例为什么能保存独立状态
+
+再次调用 `Product("K162", 10)` 时，Python 会准备另一个新实例。两个对象都按照 `Product` 的定义拥有 `sku` 和 `stock`，但属性值各自保存在自己的实例中。
+
+现在只调用：
+
+```python
 product1.add_stock(5)
-
-print(product1.stock)
-print(product2.stock)
 ```
 
-结果：
+调用方法时，Python 自动让 `self` 指向点号左边的 `product1`，并让参数 `quantity` 得到 `5`。
 
-```text
-8
-10
-```
+<figure class="pyc-state" aria-labelledby="pyc-state-caption">
+  <figcaption id="pyc-state-caption">
+    <span class="pyc-kicker">之前 → 当前方法 → 之后</span>
+    <strong>product1 改变，product2 没有参与这次调用</strong>
+  </figcaption>
+  <div class="pyc-state__track">
+    <section>
+      <span>01 · 调用之前</span>
+      <div class="pyc-objects">
+        <div><code>product1</code><strong>K161</strong><small>stock = 3</small></div>
+        <div><code>product2</code><strong>K162</strong><small>stock = 10</small></div>
+      </div>
+      <p>两个名字指向两个不同实例，各自拥有 stock 属性。</p>
+    </section>
+    <section class="pyc-state__method">
+      <span>02 · 当前方法</span>
+      <code>product1.add_stock(5)</code>
+      <dl>
+        <div><dt>self</dt><dd><code>→ product1</code></dd></div>
+        <div><dt>quantity</dt><dd><code>→ 5</code></dd></div>
+      </dl>
+      <code>self.stock = self.stock + quantity</code>
+      <p>代入当前对象：`3 + 5 → 8`。</p>
+    </section>
+    <section>
+      <span>03 · 调用之后</span>
+      <div class="pyc-objects">
+        <div class="pyc-object--changed"><code>product1</code><strong>K161</strong><small>stock: 3 → 8</small></div>
+        <div class="pyc-object--same"><code>product2</code><strong>K162</strong><small>stock: 10 → 10 · 未改变</small></div>
+      </div>
+      <p>方法只通过 self 修改 product1，没有访问 product2。</p>
+    </section>
+  </div>
+</figure>
 
-`product1` 和 `product2` 是两个不同对象，各自保存自己的 `stock`。
-
-<dl class="py-object-pair" aria-label="两个对象分别保存独立状态">
-  <div><dt><code>product1</code></dt><dd><span>sku = "K161"</span><strong>stock = 8</strong></dd></div>
-  <div><dt><code>product2</code></dt><dd><span>sku = "K162"</span><strong>stock = 10</strong></dd></div>
-</dl>
-
-修改一个对象的普通实例属性，不会自动修改另一个对象。
-
-## 一个稍完整但仍然简单的订单类
+方法可以读取当前实例的属性：
 
 ```python
-class Order:
-    def __init__(self, order_no, amount, status):
-        self.order_no = order_no
-        self.amount = amount
-        self.status = status
-
-    def is_valid(self):
-        return self.status == "已支付" and self.amount > 0
-
-    def close(self):
-        self.status = "已关闭"
-
-
-order = Order("A001", 129.0, "已支付")
-
-print(order.is_valid())
-order.close()
-print(order.status)
+def need_restock(self):
+    return self.stock < 5
 ```
 
-现在一个订单对象同时拥有数据 `order_no / amount / status`，以及依赖这些状态的行为 `is_valid()` 和 `close()`。
+`product1.need_restock()` 中的 `self.stock` 读取 product1 当前的库存；`product2.need_restock()` 则读取 product2 的库存。调用者不传 `self`，但需要通过具体实例调用方法。
 
-如果后续代码里大量地方都需要操作“订单对象”，这种组织方式可能比不断传字典更自然。
-
-## 什么时候继续用字典 + 函数，什么时候考虑类
-
-| 场景 | 更简单的起点 |
-| --- | --- |
-| 读取 JSON 后筛选 100 条订单 | 列表 + 字典 + 函数 |
-| 一个 30 行的批量文件脚本 | 函数 |
-| 数据只是临时中间结果 | 字典 |
-| 同一种对象会长期保留自己的状态 | 可以考虑类 |
-| 对象有多项行为，都依赖自己的状态 | 类开始变得自然 |
-| 只是为了“代码看起来高级” | 不要加类 |
-
-不要把“用类”当成代码质量等级。只有状态和行为需要长期一起存在时，类才开始自然。
-
-下面这个函数完全没有必要变成类：
-
-```python
-def calculate_amount(price, quantity):
-    return price * quantity
-```
-
-为了一个乘法写：
-
-```python
-class AmountCalculator:
-    pass
-```
-
-只会让入门脚本更难理解。
-
-<details class="py-class-extra">
-  <summary><span>实际接入</span><strong>类和 JSON 数据怎么结合</strong><small>确定后续需要对象行为时再转换</small></summary>
-
-### 从字典创建对象
-
-假设接口解析后得到：
-
-```python
-data = {
-    "sku": "K161",
-    "stock": 3,
-}
-```
-
-可以创建对象：
-
-```python
-product = Product(data["sku"], data["stock"])
-```
-
-多个商品：
-
-```python
-raw_products = [
-    {"sku": "K161", "stock": 3},
-    {"sku": "K162", "stock": 8},
-]
-
-products = []
-
-for data in raw_products:
-    product = Product(data["sku"], data["stock"])
-    products.append(product)
-```
-
-但要先问：后面真的需要对象的方法和状态吗？如果只是筛选一次库存：
-
-```python
-for data in raw_products:
-    if data["stock"] < 5:
-        print(data["sku"])
-```
-
-就明显更简单。继承、类属性和数据类不是写简单脚本的前置条件，本系列不继续展开。
-
-</details>
-
-## 动手练习：商品库存对象
-
-自己完成：
-
-```python
-class Product:
-    def __init__(self, sku, stock):
-        self.sku = sku
-        self.stock = stock
-
-    def need_restock(self):
-        return self.stock < 5
-
-    def add_stock(self, quantity):
-        self.stock = self.stock + quantity
-```
-
-然后创建：
-
-```python
-product1 = Product("K161", 3)
-product2 = Product("K162", 8)
-```
-
-依次验证：
-
-1. `product1.need_restock()` 是不是 `True`。
-2. 给 `product1` 增加 5 件库存后，结果是否变成 `False`。
-3. `product2.stock` 是否仍然是 `8`。
-4. 用自己的话解释为什么修改 `product1` 没有影响 `product2`。
-
-<Callout title="本章检查">
-  你应该能解释类、对象、`__init__`、`self`、属性和方法的关系，并能判断一个临时数据处理任务继续使用字典与函数是否更简单。
+<Callout title="类没有让数据自动隔离">
+  本例的独立性来自 product1 和 product2 是两个不同实例，并且 stock 是各自的实例属性。不要把结论扩大成“类里的所有数据都一定互不影响”；本选修章只使用最直接的实例属性。
 </Callout>
 
-<HighlightBox eyebrow="下一篇" title="基础内容到这里结束，最后用 20 道题验收">
-  下一篇不再继续教新语法，而是综合检查类型转换、循环、字典、函数、异常、文件、JSON、类、引用、浅拷贝和默认参数。能独立完成大部分题目，就说明这套零基础学习已经形成闭环。
+## 什么时候应该停留在字典和函数
+
+继续使用字典和函数，通常更适合：
+
+- 数据直接来自 JSON，只需读取、筛选、转换后写出。
+- 脚本很短，数据只是一次性中间结果。
+- 只有一两个简单操作，函数参数已经清楚。
+- 类只会包住一个乘法或一条判断，没有长期状态。
+
+可以考虑类的信号是：
+
+- 同一种实体会创建很多个实例。
+- 每个实例需要在程序运行期间持续保存、改变自己的状态。
+- 多个方法都围绕同一组属性工作。
+- `product.add_stock(5)` 这种调用比反复传字典更符合业务阅读方式。
+
+不要为了一个乘法创建 `AmountCalculator`，也不要把每个字典都机械转换成对象。类增加了定义、初始化和方法调用三层结构，只有它们换来了更清楚的状态边界才值得。
+
+## 动手练习：沿着 self 追踪状态
+
+复制完整 `Product` 程序，先预测再运行：
+
+1. 创建 `product3 = Product("K163", 0)`，写出调用 `__init__` 时 `self`、`sku`、`stock` 分别指向什么。
+2. 调用 `product3.add_stock(2)`，写出属性变化前后的值。
+3. 确认 product1 和 product2 的库存没有被 product3 的方法调用改变。
+4. 给 Product 增加 `remove_stock(quantity)`，只修改当前实例的库存。
+5. 回到最开始的字典版本：如果脚本只执行一次补货判断，你会选哪种写法？说明理由。
+
+<Callout title="选修章检查">
+  你应该能沿着 Product("K161", 3) 说出新实例怎样进入 self、参数怎样写入属性、方法怎样找到当前对象，并能解释为什么 product1 的方法调用不会自动修改 product2。
+</Callout>
+
+<HighlightBox eyebrow="下一篇 · 综合验收" title="类是选修，运行轨迹才是共同能力">
+  最后一篇不会继续扩展面向对象语法，而是用预测状态、定位错误和完成订单任务来检查整个 Python 入门系列。
 </HighlightBox>
 
 <style>{`
-  .py-class-map {
+  .pyc-choice,
+  .pyc-init,
+  .pyc-state {
     border: 1px solid var(--line);
     border-radius: var(--radius);
     margin: 1.5rem 0 2rem;
     overflow: hidden;
   }
 
-  .py-class-map figcaption,
-  .py-class-extra > summary {
+  .pyc-choice figcaption,
+  .pyc-init figcaption,
+  .pyc-state figcaption {
     background: color-mix(in srgb, var(--violet) 8%, var(--paper));
     border-bottom: 1px solid var(--line);
     display: flex;
@@ -438,136 +305,244 @@ product2 = Product("K162", 8)
     padding: 1rem 1.1rem;
   }
 
-  .py-class-map figcaption span,
-  .py-class-map dt,
-  .py-class-map dd span,
-  .py-init-flow span,
-  .py-init-flow small,
-  .py-self-map dt,
-  .py-self-map span,
-  .py-method-call span,
-  .py-method-call small,
-  .py-object-pair span,
-  .py-class-extra summary span,
-  .py-class-extra summary small {
+  .pyc-kicker,
+  .pyc-choice header > span,
+  .pyc-init li > span,
+  .pyc-state section > span {
     color: var(--soft);
-    font-size: 0.8rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
   }
 
-  .py-class-map dl,
-  .py-init-flow,
-  .py-method-call {
+  .pyc-choice__lanes {
     display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pyc-choice__lanes > section {
+    min-width: 0;
+  }
+
+  .pyc-choice__lanes > section + section {
+    border-left: 1px solid var(--line);
+  }
+
+  .pyc-choice header {
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-height: 4.8rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .pyc-choice__class header {
+    box-shadow: inset 0 3px 0 var(--violet);
+  }
+
+  .pyc-choice__map {
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 1rem;
+  }
+
+  .pyc-choice__map > div {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    border-radius: 0.55rem;
+    min-width: 0;
+    padding: 0.75rem;
+  }
+
+  .pyc-choice__map small,
+  .pyc-choice__map code {
+    display: block;
+  }
+
+  .pyc-choice__map small {
+    color: var(--soft);
+    font-size: 0.74rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .pyc-choice__map code {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .pyc-choice dl {
+    border-top: 1px solid var(--line);
+    margin: 0;
+  }
+
+  .pyc-choice dl > div {
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    padding: 0.7rem 1rem;
+  }
+
+  .pyc-choice dl > div + div {
+    border-top: 1px solid var(--line);
+  }
+
+  .pyc-choice dt,
+  .pyc-choice dd {
+    font-size: 0.8rem;
+    margin: 0;
+  }
+
+  .pyc-choice dt {
+    color: var(--soft);
+  }
+
+  .pyc-choice__decision {
+    background: color-mix(in srgb, var(--violet) 6%, var(--paper));
+    border-top: 1px solid var(--line);
+    color: var(--soft);
+    font-size: 0.84rem;
+    margin: 0;
+    padding: 0.85rem 1rem;
+  }
+
+  .pyc-init ol {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     list-style: none;
     margin: 0;
     padding: 0;
   }
 
-  .py-class-map dl,
-  .py-method-call {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .py-init-flow {
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin: 1.5rem 0 2rem;
-    overflow: hidden;
-  }
-
-  .py-class-map dl > div,
-  .py-init-flow li,
-  .py-method-call li {
+  .pyc-init li {
     min-width: 0;
     padding: 1rem;
   }
 
-  .py-class-map dl > div + div,
-  .py-init-flow li + li,
-  .py-method-call li + li {
+  .pyc-init li + li {
     border-left: 1px solid var(--line);
   }
 
-  .py-class-map dt,
-  .py-class-map dd,
-  .py-self-map dt,
-  .py-self-map dd,
-  .py-object-pair dt,
-  .py-object-pair dd {
-    margin: 0;
-  }
-
-  .py-class-map dd strong,
-  .py-class-map dd span,
-  .py-init-flow strong,
-  .py-init-flow small,
-  .py-method-call strong,
-  .py-method-call small,
-  .py-self-map dd strong,
-  .py-self-map dd span,
-  .py-object-pair dd span,
-  .py-object-pair dd strong {
+  .pyc-init li > code {
     display: block;
-    margin-top: 0.45rem;
+    margin-top: 0.55rem;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
-  .py-self-map,
-  .py-object-pair {
+  .pyc-init li p,
+  .pyc-state p {
+    color: var(--soft);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    margin-bottom: 0;
+  }
+
+  .pyc-state__track {
     display: grid;
-    gap: 0.8rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin: 1.5rem 0 2rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 1fr);
   }
 
-  .py-self-map > div,
-  .py-object-pair > div {
-    background: var(--paper-soft);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
+  .pyc-state__track > section {
+    min-width: 0;
     padding: 1rem;
   }
 
-  .py-method-call {
+  .pyc-state__track > section + section {
+    border-left: 1px solid var(--line);
+  }
+
+  .pyc-state__method {
+    background: color-mix(in srgb, var(--violet) 5%, var(--paper));
+  }
+
+  .pyc-state__method > code {
+    display: block;
+    margin: 0.6rem 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .pyc-state__method dl {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0.8rem 0;
+  }
+
+  .pyc-state__method dl > div {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+  }
+
+  .pyc-state__method dt,
+  .pyc-state__method dd {
+    color: var(--soft);
+    font-size: 0.78rem;
+    margin: 0;
+  }
+
+  .pyc-objects {
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 0.65rem;
+  }
+
+  .pyc-objects > div {
+    background: var(--paper-soft);
     border: 1px solid var(--line);
-    border-radius: var(--radius);
-    margin: 1.5rem 0 2rem;
-    overflow: hidden;
+    border-radius: 0.55rem;
+    min-width: 0;
+    padding: 0.75rem;
   }
 
-  .py-class-extra {
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    margin: 1.5rem 0 2rem;
-    overflow: hidden;
+  .pyc-objects code,
+  .pyc-objects strong,
+  .pyc-objects small {
+    display: block;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
-  .py-class-extra > summary {
-    border-bottom: 0;
-    cursor: pointer;
+  .pyc-objects strong {
+    margin: 0.45rem 0 0.2rem;
   }
 
-  .py-class-extra[open] > summary {
-    border-bottom: 1px solid var(--line);
+  .pyc-objects small {
+    color: var(--soft);
+    font-size: 0.76rem;
   }
 
-  .py-class-extra > :not(summary) {
-    margin-left: 1.1rem;
-    margin-right: 1.1rem;
+  .pyc-object--changed {
+    box-shadow: inset 0 3px 0 var(--violet);
   }
 
-  @media (max-width: 680px) {
-    .py-class-map dl,
-    .py-object-pair,
-    .py-init-flow,
-    .py-self-map,
-    .py-method-call {
+  .pyc-object--same {
+    opacity: 0.78;
+  }
+
+  @media (max-width: 900px) {
+    .pyc-init ol,
+    .pyc-state__track {
       grid-template-columns: 1fr;
     }
 
-    .py-class-map dl > div + div,
-    .py-init-flow li + li,
-    .py-method-call li + li {
+    .pyc-init li + li,
+    .pyc-state__track > section + section {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  @media (max-width: 760px) {
+    .pyc-choice__lanes,
+    .pyc-choice__map,
+    .pyc-objects {
+      grid-template-columns: 1fr;
+    }
+
+    .pyc-choice__lanes > section + section {
       border-left: 0;
       border-top: 1px solid var(--line);
     }

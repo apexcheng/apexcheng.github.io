@@ -1,0 +1,675 @@
+---
+title: "Python 错误与调试图解：异常在哪里发生，又去了哪里"
+description: "沿文件读取、JSON 解析和金额转换的运行路径，图解异常发生位置、except 匹配与向外传播，以及批量订单怎样记录坏数据并继续。"
+date: 2026-08-27T15:30:00+08:00
+category: "教程"
+tags:
+  - "Python"
+minutes: 16
+featured: false
+pinned: false
+series: "python-basics"
+seriesOrder: 8
+draft: false
+private: false
+---
+
+import HighlightBox from '../../components/HighlightBox.astro';
+import Callout from '../../components/Callout.astro';
+import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
+
+Python 报错时，真正需要回答的不是“怎么让红字消失”，而是三个更具体的问题：
+
+1. 哪一行无法完成原本的操作？
+2. Python 创建了什么类型的异常对象？
+3. 这个异常被哪个 `except` 接住，还是继续向外传递并让程序停止？
+
+这一篇沿着订单数据进入 Python 的路径，亲眼看见正常结果和异常对象怎样在同一行分叉。
+
+<PythonLessonBrief
+  goal="找到出错行，判断异常去向，并决定跳过当前记录还是停止任务"
+  data="A001、A002、A003 三条中文状态订单，以及一条无法转换的金额"
+  outcome="记录 A002 的 ValueError，继续处理 A003，不静默吞掉未知错误"
+/>
+
+## 同一行代码有两条可能路径
+
+先看最常见的金额转换：
+
+```python
+def show_amount(raw_amount):
+    try:
+        amount = float(raw_amount)
+        print(f"转换成功：{amount}")
+    except ValueError as error:
+        print(f"转换失败：{type(error).__name__}")
+
+
+show_amount("129.0")
+show_amount("未知")
+```
+
+输出：
+
+```text
+转换成功：129.0
+转换失败：ValueError
+```
+
+两次调用都执行 `amount = float(raw_amount)`，只是输入不同。`float("129.0")` 能产生数值，`float("未知")` 无法完成转换，于是没有创建 `amount`，而是创建一个 `ValueError` 异常对象。
+
+<figure class="pye-fork" aria-labelledby="pye-fork-caption">
+  <figcaption id="pye-fork-caption">
+    <span class="pye-kicker">输入 → 当前行 → 两条去向</span>
+    <strong>转换成功时产生值，失败时产生异常对象</strong>
+  </figcaption>
+  <div class="pye-fork__current">
+    <span>当前行</span>
+    <code>amount = float(raw_amount)</code>
+    <div><code>raw_amount = "129.0"</code><code>raw_amount = "未知"</code></div>
+  </div>
+  <div class="pye-fork__paths">
+    <section class="pye-path--normal">
+      <span>正常路径</span>
+      <ol>
+        <li><small>01 · 转换</small><code>float("129.0")</code></li>
+        <li><small>02 · 产生值</small><code>amount → 129.0</code></li>
+        <li><small>03 · 下一行</small><code>print(...)</code><strong>继续执行 try 内的后续代码</strong></li>
+      </ol>
+    </section>
+    <section class="pye-path--error">
+      <span>异常路径</span>
+      <ol>
+        <li><small>01 · 转换失败</small><code>float("未知")</code></li>
+        <li><small>02 · 产生异常</small><code>ValueError 对象</code></li>
+        <li><small>03 · 改变去向</small><code>寻找匹配的 except</code><strong>try 内后续代码不再执行</strong></li>
+      </ol>
+    </section>
+  </div>
+</figure>
+
+异常不是一段模糊的“失败状态”。它是带有类型和错误信息的对象，会改变代码的正常执行顺序。发生异常后，Python 不会从失败行的下一行继续，而是开始寻找处理器。
+
+## 三种错误分别发生在数据管道的哪一步
+
+订单从文件进入脚本，通常会经过三个边界：
+
+```python
+from pathlib import Path
+import json
+
+
+def load_orders(path):
+    text = Path(path).read_text(encoding="utf-8")
+    orders = json.loads(text)
+
+    for order in orders:
+        order["amount"] = float(order["amount"])
+
+    return orders
+
+
+orders = load_orders("orders.json")
+```
+
+这段代码中，三种异常不会同时出现。程序先遇到哪一步的问题，就先在那里离开正常路径。
+
+<figure class="pye-locations" aria-labelledby="pye-locations-caption">
+  <figcaption id="pye-locations-caption">
+    <span class="pye-kicker">外部文件 → 文本 → Python 对象 → 数值字段</span>
+    <strong>异常类型直接告诉你哪一种操作没有完成</strong>
+  </figcaption>
+  <ol class="pye-locations__pipeline">
+    <li>
+      <span>01 · 读取文件</span>
+      <code>Path(path).read_text(...)</code>
+      <div class="pye-location__state"><small>输入</small><code>orders.json 路径</code></div>
+      <div class="pye-location__error"><small>出错位置</small><strong>FileNotFoundError</strong><p>路径不存在，连文件文本都没有得到。</p></div>
+    </li>
+    <li>
+      <span>02 · 解析 JSON</span>
+      <code>json.loads(text)</code>
+      <div class="pye-location__state"><small>输入</small><code>文件中的字符串</code></div>
+      <div class="pye-location__error"><small>出错位置</small><strong>JSONDecodeError</strong><p>文本不是合法 JSON，列表和字典还没有建立。</p></div>
+    </li>
+    <li>
+      <span>03 · 转换金额</span>
+      <code>float(order["amount"])</code>
+      <div class="pye-location__state"><small>输入</small><code>某条订单的 amount</code></div>
+      <div class="pye-location__error"><small>出错位置</small><strong>ValueError</strong><p>JSON 已解析，但这个字段不能解释为小数。</p></div>
+    </li>
+  </ol>
+  <div class="pye-locations__result">
+    <span>只有三步全部成功</span>
+    <code>return orders</code>
+    <strong>调用方才能拿到完整订单列表</strong>
+  </div>
+</figure>
+
+三个名字不能互换：
+
+| 异常类型 | 失败的操作 | 先检查什么 |
+| --- | --- | --- |
+| `FileNotFoundError` | 打开指定路径 | 路径、文件名、运行目录 |
+| `JSONDecodeError` | 把文本解析成 JSON | 括号、引号、逗号和文件内容 |
+| `ValueError` | 把已有字段转换成目标数值 | 原始字段值和允许的格式 |
+
+调试时先读 traceback 最后一行的异常类型和信息，再向上找到**第一处属于自己代码的文件名与行号**。不要只看到 `ValueError` 就随便包一层 `try`；先确认究竟是哪一个原始值触发了它。
+
+## 异常对象怎样寻找匹配的 `except`
+
+`try` 可以跟多个 `except`。Python 会拿着当前异常对象，从上到下检查类型：
+
+```python
+from pathlib import Path
+import json
+
+
+try:
+    text = Path("orders.json").read_text(encoding="utf-8")
+    orders = json.loads(text)
+
+    for order in orders:
+        order["amount"] = float(order["amount"])
+except FileNotFoundError as error:
+    print(f"输入文件不存在：{error.filename}")
+except json.JSONDecodeError as error:
+    print(f"JSON 格式错误：第 {error.lineno} 行")
+
+print("文件读取阶段结束")
+```
+
+<figure class="pye-match" aria-labelledby="pye-match-caption">
+  <figcaption id="pye-match-caption">
+    <span class="pye-kicker">异常对象 → 逐个检查处理器 → 命中或向外传播</span>
+    <strong>异常类型决定代码下一步去哪里</strong>
+  </figcaption>
+  <div class="pye-match__lanes">
+    <section>
+      <header><code>JSONDecodeError 对象</code><strong>存在匹配处理器</strong></header>
+      <ol>
+        <li><span>01 · 检查</span><code>except FileNotFoundError</code><small>类型不匹配，继续向下找</small></li>
+        <li class="pye-match__hit"><span>02 · 命中</span><code>except json.JSONDecodeError as error</code><small>变量 error 指向这个异常对象</small></li>
+        <li><span>03 · 处理</span><code>print("JSON 格式错误...")</code><small>执行匹配处理器中的代码</small></li>
+        <li><span>04 · 恢复位置</span><code>print("文件读取阶段结束")</code><small>从整个 try / except 之后继续</small></li>
+      </ol>
+    </section>
+    <section>
+      <header><code>ValueError 对象</code><strong>当前没有匹配处理器</strong></header>
+      <ol>
+        <li><span>01 · 检查</span><code>except FileNotFoundError</code><small>不匹配</small></li>
+        <li><span>02 · 检查</span><code>except JSONDecodeError</code><small>不匹配</small></li>
+        <li class="pye-match__propagate"><span>03 · 向外传播</span><code>离开当前 try 所在范围</code><small>交给更外层调用者继续寻找处理器</small></li>
+        <li><span>04 · 没人处理</span><code>打印 traceback 并停止</code><small>错误不会被静默隐藏</small></li>
+      </ol>
+    </section>
+  </div>
+</figure>
+
+“接住异常”不表示回到失败行重试。匹配的 `except` 执行完后，代码会从整个 `try / except` 结构之后继续。若当前层没有匹配类型，异常就离开这里，交给外层调用者；一直没人接住时，程序显示 traceback 并停止。
+
+## 批量订单：记录坏数据，继续下一条
+
+下面模拟从外部文件读到的原始订单。金额暂时是文本，A002 的 `"未知"` 是特意加入的坏数据：
+
+```python
+raw_orders = [
+    {"order_no": "A001", "amount": "129.0", "status": "已支付"},
+    {"order_no": "A002", "amount": "未知", "status": "已退款"},
+    {"order_no": "A003", "amount": "199.0", "status": "已支付"},
+]
+
+valid_orders = []
+valid_order_nos = []
+problems = []
+parsed_total = 0.0
+
+for order in raw_orders:
+    try:
+        amount = float(order["amount"])
+    except ValueError as error:
+        problems.append({
+            "order_no": order["order_no"],
+            "error_type": type(error).__name__,
+        })
+        continue
+
+    clean_order = order.copy()
+    clean_order["amount"] = amount
+    valid_orders.append(clean_order)
+    valid_order_nos.append(order["order_no"])
+    parsed_total += amount
+
+print(valid_order_nos)
+print(problems)
+print(parsed_total)
+```
+
+输出：
+
+```text
+['A001', 'A003']
+[{'order_no': 'A002', 'error_type': 'ValueError'}]
+328.0
+```
+
+这里的错误处理范围只包住“一条订单的金额转换”。因此 A002 转换失败后，可以记录订单号和异常类型，再用 `continue` 进入下一轮。A003 不会被 A002 拖住。
+
+<figure class="pye-batch" aria-labelledby="pye-batch-caption">
+  <figcaption id="pye-batch-caption">
+    <span class="pye-kicker">逐条处理 · 一条坏记录不等于整批不可用</span>
+    <strong>A002 进入问题清单，A003 继续走正常路径</strong>
+  </figcaption>
+  <div class="pye-batch__rounds">
+    <section>
+      <header><span>第 1 轮</span><strong>A001 · 已支付</strong><small>raw amount: "129.0"</small></header>
+      <ol>
+        <li><span>01 · 当前行</span><code>float("129.0")</code></li>
+        <li class="pye-batch__success"><span>02 · 转换成功</span><code>amount → 129.0</code></li>
+        <li><span>03 · 保存</span><code>valid_orders += A001</code></li>
+        <li><span>04 · 累计</span><code>0.0 → 129.0</code></li>
+      </ol>
+    </section>
+    <section class="pye-batch__bad">
+      <header><span>第 2 轮</span><strong>A002 · 已退款</strong><small>raw amount: "未知"</small></header>
+      <ol>
+        <li><span>01 · 出错行</span><code>float("未知")</code></li>
+        <li class="pye-batch__error"><span>02 · 异常对象</span><code>ValueError</code></li>
+        <li><span>03 · 记录</span><code>problems += A002</code></li>
+        <li><span>04 · continue</span><code>跳过本轮余下代码</code><small>parsed_total 保持 129.0</small></li>
+      </ol>
+    </section>
+    <section>
+      <header><span>第 3 轮</span><strong>A003 · 已支付</strong><small>raw amount: "199.0"</small></header>
+      <ol>
+        <li><span>01 · 当前行</span><code>float("199.0")</code></li>
+        <li class="pye-batch__success"><span>02 · 转换成功</span><code>amount → 199.0</code></li>
+        <li><span>03 · 保存</span><code>valid_orders += A003</code></li>
+        <li><span>04 · 累计</span><code>129.0 → 328.0</code></li>
+      </ol>
+    </section>
+  </div>
+  <div class="pye-batch__result">
+    <div><span>有效记录</span><strong>A001 · A003</strong></div>
+    <div><span>问题记录</span><strong>A002 · ValueError</strong></div>
+    <div><span>已解析金额</span><strong>328.0</strong></div>
+  </div>
+</figure>
+
+这个示例处理的是**原始数据校验**，所以每条记录都尝试解析金额，状态字段暂时不参与筛选。后续业务统计再决定“已支付”或“已退款”分别怎样处理。
+
+## 什么时候跳过，什么时候应该停止
+
+能不能继续，不取决于“异常看起来严重不严重”，而取决于剩余数据是否仍然可以被正确理解：
+
+| 情况 | 影响范围 | 推荐动作 |
+| --- | --- | --- |
+| 一条订单金额无法转换，其他订单彼此独立 | 单条记录 | 记录订单号与异常类型，跳过当前记录，继续下一条 |
+| 必需的 `orders.json` 不存在 | 整个输入 | 明确报告路径并停止本次任务 |
+| 整份 JSON 无法解析 | 整个文件结构 | 报告解析位置并停止处理这份文件 |
+| 出现没有预期过的异常类型 | 代码或假设可能有问题 | 让异常暴露并修复，不要静默当作坏记录 |
+
+错误处理的范围要尽量贴近你真正能做出决定的位置：单条字段转换可以放在循环内部；整份文件读取和解析则放在循环外部。这样不会因为一个字段坏了就停止全部订单，也不会在整份文件都不可读时假装返回空结果。
+
+### 不要用无边界的 `except Exception` 静默吞错
+
+下面的写法会把拼写错误、字段错误和程序逻辑错误一起藏起来：
+
+```python
+try:
+    amount = float("未知")
+except Exception:
+    pass
+```
+
+`pass` 以后既没有结果，也没有订单号、异常类型和失败位置。脚本可能“看起来跑完了”，输出却已经不可信。
+
+优先捕获当前操作能够预期并处理的具体类型，例如转换金额时捕获 `ValueError`。如果暂时无法恢复，保留 traceback 让问题暴露，比静默继续更安全。
+
+<Callout title="调试时沿着路径问四个问题">
+  出错行正在做什么操作？它收到的真实输入是什么？产生了哪种异常对象？这个异常是在当前层被准确处理，还是应该向外传播并停止？先回答这四个问题，再决定是否添加 except。
+</Callout>
+
+## 动手练习：改变坏数据的位置
+
+复制批量订单示例，先不运行，完成以下预测：
+
+1. 把 A002 的 `amount` 改成 `"88.0"`，三轮各走哪条路径，`problems` 和 `parsed_total` 最终是什么？
+2. 把 A003 的 `amount` 改成 `"一百九十九"`，哪一轮产生 `ValueError`，前两轮结果是否保留？
+3. 删除 `continue`，观察坏记录后面的 `clean_order` 为什么不应该继续执行。
+4. 把 `except ValueError` 错写成 `except FileNotFoundError`，说明异常为什么会向外传播。
+5. 给 `orders.json` 一个不存在的路径：这时应该跳过一条记录，还是停止整批？说明判断依据。
+
+<HighlightBox eyebrow="下一篇" title="把异常路径放进完整订单脚本">
+  下一篇会把读取、校验、筛选、累计和写出串成一个完整程序，并让正常记录与坏记录沿各自路径到达明确结果。
+</HighlightBox>
+
+<style>{`
+  .pye-fork,
+  .pye-locations,
+  .pye-match,
+  .pye-batch {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin: 1.5rem 0 2rem;
+    overflow: hidden;
+  }
+
+  .pye-fork figcaption,
+  .pye-locations figcaption,
+  .pye-match figcaption,
+  .pye-batch figcaption {
+    background: color-mix(in srgb, var(--cyan) 8%, var(--paper));
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem 1.1rem;
+  }
+
+  .pye-kicker,
+  .pye-fork section > span,
+  .pye-fork__current > span,
+  .pye-locations__pipeline > li > span,
+  .pye-match li > span,
+  .pye-batch li > span,
+  .pye-batch header > span,
+  .pye-batch__result span {
+    color: var(--soft);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .pye-fork__current {
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    gap: 0.7rem 1rem;
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.2fr);
+    padding: 0.9rem 1rem;
+  }
+
+  .pye-fork__current > code {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .pye-fork__current > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .pye-fork__paths,
+  .pye-match__lanes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pye-fork__paths > section,
+  .pye-match__lanes > section {
+    min-width: 0;
+  }
+
+  .pye-fork__paths > section + section,
+  .pye-match__lanes > section + section {
+    border-left: 1px solid var(--line);
+  }
+
+  .pye-fork__paths > section > span {
+    border-bottom: 1px solid var(--line);
+    display: block;
+    padding: 0.7rem 1rem;
+  }
+
+  .pye-path--normal > span {
+    box-shadow: inset 0 3px 0 var(--cyan);
+  }
+
+  .pye-path--error > span {
+    background: color-mix(in srgb, #d84b4b 8%, var(--paper));
+    box-shadow: inset 0 3px 0 #d84b4b;
+  }
+
+  .pye-fork ol,
+  .pye-match ol,
+  .pye-batch ol,
+  .pye-locations__pipeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pye-fork li,
+  .pye-match li,
+  .pye-batch li {
+    min-height: 5.8rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .pye-fork li + li,
+  .pye-match li + li,
+  .pye-batch li + li {
+    border-top: 1px solid var(--line);
+  }
+
+  .pye-fork li small,
+  .pye-fork li code,
+  .pye-fork li strong,
+  .pye-match li code,
+  .pye-match li small,
+  .pye-batch li code,
+  .pye-batch li small {
+    display: block;
+    margin-top: 0.4rem;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .pye-fork li small,
+  .pye-match li small,
+  .pye-batch li small {
+    color: var(--soft);
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .pye-locations__pipeline {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pye-locations__pipeline > li {
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .pye-locations__pipeline > li + li {
+    border-left: 1px solid var(--line);
+  }
+
+  .pye-locations__pipeline > li > code {
+    display: block;
+    margin: 0.6rem 0 0.85rem;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .pye-location__state,
+  .pye-location__error {
+    border: 1px solid var(--line);
+    border-radius: 0.55rem;
+    padding: 0.7rem;
+  }
+
+  .pye-location__error {
+    background: color-mix(in srgb, #d84b4b 7%, var(--paper));
+    border-color: color-mix(in srgb, #d84b4b 45%, var(--line));
+    margin-top: 0.6rem;
+  }
+
+  .pye-location__state small,
+  .pye-location__error small,
+  .pye-location__error strong,
+  .pye-location__error p {
+    display: block;
+  }
+
+  .pye-location__state small,
+  .pye-location__error small,
+  .pye-location__error p {
+    color: var(--soft);
+    font-size: 0.76rem;
+  }
+
+  .pye-location__error strong {
+    margin-top: 0.35rem;
+    overflow-wrap: anywhere;
+  }
+
+  .pye-location__error p {
+    line-height: 1.45;
+    margin-bottom: 0;
+  }
+
+  .pye-locations__result {
+    align-items: center;
+    background: color-mix(in srgb, var(--cyan) 7%, var(--paper));
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.2rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .pye-locations__result span {
+    color: var(--soft);
+    font-size: 0.76rem;
+  }
+
+  .pye-match header {
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-height: 5rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .pye-match__hit {
+    background: color-mix(in srgb, var(--cyan) 7%, var(--paper));
+    box-shadow: inset 3px 0 0 var(--cyan);
+  }
+
+  .pye-match__propagate {
+    background: color-mix(in srgb, #d84b4b 7%, var(--paper));
+    box-shadow: inset 3px 0 0 #d84b4b;
+  }
+
+  .pye-batch__rounds {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pye-batch__rounds > section {
+    min-width: 0;
+  }
+
+  .pye-batch__rounds > section + section {
+    border-left: 1px solid var(--line);
+  }
+
+  .pye-batch header {
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-height: 6.3rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .pye-batch header small {
+    color: var(--soft);
+    font-size: 0.76rem;
+  }
+
+  .pye-batch__bad header {
+    background: color-mix(in srgb, #d84b4b 7%, var(--paper));
+    box-shadow: inset 0 3px 0 #d84b4b;
+  }
+
+  .pye-batch__success {
+    background: color-mix(in srgb, var(--cyan) 5%, var(--paper));
+  }
+
+  .pye-batch__error {
+    background: color-mix(in srgb, #d84b4b 6%, var(--paper));
+  }
+
+  .pye-batch__result {
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pye-batch__result > div {
+    min-width: 0;
+    padding: 0.85rem 1rem;
+  }
+
+  .pye-batch__result > div + div {
+    border-left: 1px solid var(--line);
+  }
+
+  .pye-batch__result strong {
+    display: block;
+    margin-top: 0.35rem;
+  }
+
+  @media (max-width: 900px) {
+    .pye-batch__rounds {
+      grid-template-columns: 1fr;
+    }
+
+    .pye-batch__rounds > section + section {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .pye-batch header,
+    .pye-fork li,
+    .pye-match header,
+    .pye-match li,
+    .pye-batch li {
+      min-height: 0;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .pye-fork__current,
+    .pye-fork__paths,
+    .pye-locations__pipeline,
+    .pye-match__lanes,
+    .pye-batch__result {
+      grid-template-columns: 1fr;
+    }
+
+    .pye-fork__current > div {
+      flex-direction: column;
+    }
+
+    .pye-fork__paths > section + section,
+    .pye-locations__pipeline > li + li,
+    .pye-match__lanes > section + section,
+    .pye-batch__result > div + div {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .pye-locations__result {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+`}</style>

@@ -1,12 +1,12 @@
 ---
-title: "Python 文件、JSON 与异常处理：从练习代码走向真实脚本"
-description: "从 TXT、JSON 文件和接口返回结构出发，讲清 Python 文件读取与写入、json 模块、嵌套数据提取，以及 ValueError、FileNotFoundError 等常见异常如何处理。"
+title: "Python 文件与 JSON 图解：外部数据怎样进入代码"
+description: "用三条订单看懂 JSON 文件如何解析成 Python 列表与字典、Python 对象如何写回文件，以及 load、loads、dump、dumps 的输入输出区别。"
 date: 2026-08-22T22:40:00+08:00
 updated: 2026-08-27T00:10:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 13
+minutes: 12
 featured: false
 series: "python-basics"
 seriesOrder: 7
@@ -18,101 +18,332 @@ import HighlightBox from '../../components/HighlightBox.astro';
 import Callout from '../../components/Callout.astro';
 import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
-前面的例子里，订单和商品数据都直接写在代码里：
+前面的订单大多直接写在代码里。真实脚本里的数据却常常先存在硬盘文件、接口响应或配置文本中。Python 不能隔着文件直接操作订单字段，必须先跨过一道边界：**把外部文本读取并解析成列表、字典等 Python 对象。**
 
-```python
-orders = [
-    {"order_no": "A001", "amount": 129.0},
-    {"order_no": "A002", "amount": 88.0},
+处理完成后，方向反过来：Python 对象先变成 JSON 文本，再写回硬盘。这章要看清的就是这两个方向，以及每一步的数据形态。
+
+<PythonLessonBrief
+  goal="看见 JSON 文本、Python 对象和结果文件之间的双向转换"
+  data="A001、A002、A003 三条固定订单"
+  outcome="能读取 orders.json、复用处理函数，并写出中文 JSON 结果"
+/>
+
+## `orders.json` 还在 Python 外部
+
+先在脚本旁边创建 `orders.json`，内容使用本系列固定的三条订单：
+
+```json
+[
+  {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+  {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+  {"order_no": "A003", "sku": "K161", "amount": 199.0, "status": "已支付"}
 ]
 ```
 
-真实脚本很少永远这样工作。数据通常来自 TXT、JSON 文件，或者来自某个 API 的返回结果。
+文件看起来很像 Python 的列表和字典，但此时它仍然只是硬盘上的 UTF-8 文本。下面的代码才会打开文件并解析：
 
-这一篇就是从“我会写代码”跨到“我能接真实数据”的那一步。
+```python
+import json
 
-<PythonLessonBrief
-  goal="把 TXT、JSON 或 API 数据安全地读入、处理并输出"
-  data="包含正常、退款和金额异常记录的 orders.json"
-  outcome="完成一个能跳过坏数据并写出结果的真实小脚本"
-/>
+with open("orders.json", "r", encoding="utf-8") as file:
+    orders = json.load(file)
 
-<figure class="py-real-data-flow" aria-labelledby="data-flow-caption">
-  <figcaption id="data-flow-caption"><span>I/O 处理管道</span><strong>外部数据先变成 Python 对象，再进入已经学过的处理逻辑</strong></figcaption>
-  <ol>
-    <li><span>01 · 输入</span><strong>TXT / JSON 文件或 API</strong><small>数据还在 Python 之外</small></li>
-    <li><span>02 · 读取解析</span><strong><code>str / list / dict</code></strong><small>转换成 Python 能处理的对象</small></li>
-    <li><span>03 · 业务处理</span><strong>清洗、判断、循环、函数</strong><small>异常记录进入单独分支</small></li>
-    <li><span>04 · 输出</span><strong>打印、写文件或交给下一步</strong><small>形成可以继续使用的结果</small></li>
-  </ol>
-</figure>
-
-不同来源的数据进入 Python 后，最终都会先变成字符串、列表、字典等基础对象，再进入前面已经学过的判断、循环和函数。
-
-## 读取一个文本文件
-
-假设当前目录里有一个 `order_no.txt`：
-
-```text
-A001
-A002
-A003
+print(type(orders))
+print(type(orders[0]))
+print(orders[0]["status"])
 ```
 
-读取整个文件：
+输出：
+
+```text
+<class 'list'>
+<class 'dict'>
+已支付
+```
+
+<figure class="py-io-board py-io-load-flow" aria-labelledby="io-load-caption">
+  <figcaption id="io-load-caption">
+    <span class="py-io-kicker">读取与解析轨道</span>
+    <strong><code>orders.json</code> 文本经过 <code>json.load()</code> 后，才成为可访问字段的 <code>list[dict]</code></strong>
+  </figcaption>
+  <ol class="py-io-flow">
+    <li>
+      <span class="py-io-step">外部输入 · 01</span>
+      <strong>硬盘文件</strong>
+      <code>orders.json</code>
+      <small>形态：UTF-8 JSON 文本</small>
+    </li>
+    <li>
+      <span class="py-io-step">打开 · 02</span>
+      <strong>取得文件对象</strong>
+      <code>open(..., "r")</code>
+      <small>方向：读取</small>
+    </li>
+    <li class="is-current">
+      <span class="py-io-step">当前操作 · 03</span>
+      <strong>读取并解析 JSON</strong>
+      <code>json.load(file)</code>
+      <small>文本语法转换为 Python 类型</small>
+    </li>
+    <li class="is-result">
+      <span class="py-io-step">之后 · 04</span>
+      <strong>内存中的对象</strong>
+      <code>orders · list[dict]</code>
+      <small>可以读取 orders[0]["status"]</small>
+    </li>
+  </ol>
+  <div class="py-io-shape-change">
+    <span><b>之前</b> 文件外部的字符</span>
+    <span><b>边界</b> json.load(file)</span>
+    <span><b>之后</b> 3 条 Python 订单字典</span>
+  </div>
+</figure>
+
+`with` 会在代码离开缩进区域时关闭文件；不需要自己记住何时调用 `close()`。`encoding="utf-8"` 明确告诉 Python 怎样解释中文字符，避免依赖不同电脑的默认编码。
+
+## 打开文件时，只先记住三个模式
+
+`open()` 的第二个参数决定方向：
+
+| 模式 | 方向 | 文件已存在时 | 适合场景 |
+| --- | --- | --- | --- |
+| `"r"` | 读取 | 保留原内容 | 读取订单、配置和文本 |
+| `"w"` | 写入 | **清空后重写** | 生成一份完整结果文件 |
+| `"a"` | 追加 | 保留原内容，在末尾增加 | 追加简单记录 |
+
+读取普通文本时，`file.read()` 返回字符串：
 
 ```python
 with open("order_no.txt", "r", encoding="utf-8") as file:
     content = file.read()
 
-print(content)
+print(type(content))
 ```
 
-先看关键部分：`open(...)` 打开文件，`"r"` 表示读取，`encoding="utf-8"` 指定文本编码，`file.read()` 把全部内容读成字符串。
+JSON 文件的区别是多一步“按 JSON 语法解析”。因此不要混淆：
 
-`with` 是推荐写法，因为无论后面代码正常结束还是发生异常，文件资源都能被正确关闭。
+- `file.read()`：得到原始字符串。
+- `json.load(file)`：从文件对象读取 JSON，并得到 Python 对象。
 
-## 一行一行处理文件
+写入时尤其要确认 `"w"` 会覆盖原内容。如果目标文件需要保留历史，先判断是否应该换文件名、备份，或明确使用追加模式。
 
-如果文件很大，或者本来就想逐行处理，不需要先把所有内容读成一个大字符串。
+## Python 对象怎样写回 JSON 文件
+
+假设前面的处理已经得到固定结果：已支付订单是 A001、A003，共 2 单，总金额 328.0。先用 Python 字典保存汇总：
 
 ```python
-with open("order_no.txt", "r", encoding="utf-8") as file:
-    for line in file:
-        order_no = line.strip()
-        print(order_no)
+summary = {
+    "paid_order_nos": ["A001", "A003"],
+    "paid_count": 2,
+    "paid_amount": 328.0,
+}
 ```
 
-这段代码把前面的知识串了起来：`for` 每次取得一行字符串，`strip()` 去掉换行和两端空白，最后得到干净订单号。很多数据清洗脚本就是这种结构。
-
-## 写入一个结果文件
+接着使用 `json.dump()` 写入 `paid_orders_summary.json`：
 
 ```python
-result = ["A001", "A003"]
+import json
 
-with open("result.txt", "w", encoding="utf-8") as file:
-    for order_no in result:
-        file.write(order_no + "\n")
+summary = {
+    "paid_order_nos": ["A001", "A003"],
+    "paid_count": 2,
+    "paid_amount": 328.0,
+}
+
+with open("paid_orders_summary.json", "w", encoding="utf-8") as file:
+    json.dump(summary, file, ensure_ascii=False, indent=2)
 ```
 
-`"w"` 表示写入。如果文件已经存在，会覆盖原内容。
+<figure class="py-io-board py-io-dump-flow" aria-labelledby="io-dump-caption">
+  <figcaption id="io-dump-caption">
+    <span class="py-io-kicker">序列化与写回轨道</span>
+    <strong>Python 字典经过 <code>json.dump()</code>，成为硬盘上的 JSON 文件</strong>
+  </figcaption>
+  <ol class="py-io-flow is-reverse">
+    <li>
+      <span class="py-io-step">内部输入 · 01</span>
+      <strong>Python 对象</strong>
+      <code>summary · dict</code>
+      <small>含列表、整数和浮点数</small>
+    </li>
+    <li>
+      <span class="py-io-step">打开 · 02</span>
+      <strong>取得目标文件对象</strong>
+      <code>open(..., "w")</code>
+      <small>方向：覆盖写入</small>
+    </li>
+    <li class="is-current">
+      <span class="py-io-step">当前操作 · 03</span>
+      <strong>序列化并写入</strong>
+      <code>json.dump(summary, file)</code>
+      <small>ensure_ascii=False 保留中文</small>
+    </li>
+    <li class="is-result">
+      <span class="py-io-step">外部输出 · 04</span>
+      <strong>结果文件</strong>
+      <code>paid_orders_summary.json</code>
+      <small>可以交给下一步程序</small>
+    </li>
+  </ol>
+  <div class="py-io-shape-change">
+    <span><b>之前</b> 内存中的 dict</span>
+    <span><b>边界</b> json.dump(data, file)</span>
+    <span><b>之后</b> 硬盘上的 JSON 文本</span>
+  </div>
+</figure>
 
-如果希望追加到文件末尾，使用模式 `"a"`。写文件前要先确定是覆盖还是追加。
+生成的文件内容是：
 
-<details class="py-file-notes">
-  <summary><span>文件环境补充</span><strong>相对路径、当前目录和标准库导入</strong><small>文件找不到时再展开检查</small></summary>
+```json
+{
+  "paid_order_nos": [
+    "A001",
+    "A003"
+  ],
+  "paid_count": 2,
+  "paid_amount": 328.0
+}
+```
 
-### 文件路径：先理解相对路径
+`ensure_ascii=False` 让中文直接写入；`indent=2` 只负责排版，让文件更易读，不改变数据含义。
+
+## `load / loads / dump / dumps` 按输入形态区分
+
+四个名字只差一个 `s`，死记很容易混。先判断数据现在是在**文件对象**里，还是已经是一段**字符串**；再判断方向是进入 Python，还是离开 Python。
+
+<figure class="py-io-board py-io-four-ports" aria-labelledby="io-four-ports-caption">
+  <figcaption id="io-four-ports-caption">
+    <span class="py-io-kicker">JSON 四入口映射</span>
+    <strong>load 系列进入 Python，dump 系列离开 Python；末尾 s 表示字符串端点</strong>
+  </figcaption>
+  <div class="py-io-port-directions">
+    <section>
+      <header><span>解析方向</span><strong>JSON → Python 对象</strong></header>
+      <div class="py-io-port">
+        <code>json.load(file)</code>
+        <p><b>输入</b> JSON 文件对象</p>
+        <p><b>输出</b> list / dict 等对象</p>
+        <small>文件 → Python</small>
+      </div>
+      <div class="py-io-port">
+        <code>json.loads(text)</code>
+        <p><b>输入</b> JSON 字符串</p>
+        <p><b>输出</b> list / dict 等对象</p>
+        <small>string → Python</small>
+      </div>
+    </section>
+    <section>
+      <header><span>序列化方向</span><strong>Python 对象 → JSON</strong></header>
+      <div class="py-io-port">
+        <code>json.dump(data, file)</code>
+        <p><b>输入</b> Python 对象 + 文件对象</p>
+        <p><b>结果</b> JSON 写入文件</p>
+        <small>Python → 文件</small>
+      </div>
+      <div class="py-io-port">
+        <code>json.dumps(data)</code>
+        <p><b>输入</b> Python 对象</p>
+        <p><b>输出</b> JSON 字符串</p>
+        <small>Python → string</small>
+      </div>
+    </section>
+  </div>
+</figure>
+
+四种形式的最小代码如下：
 
 ```python
-open("data/orders.txt", "r", encoding="utf-8")
+import json
+
+# 文件 → Python 对象
+with open("orders.json", "r", encoding="utf-8") as file:
+    from_file = json.load(file)
+
+# JSON 字符串 → Python 对象
+text = '{"order_no": "A001", "status": "已支付"}'
+from_text = json.loads(text)
+
+# Python 对象 → JSON 字符串
+json_text = json.dumps(from_text, ensure_ascii=False)
+
+# Python 对象 → JSON 文件
+with open("one_order.json", "w", encoding="utf-8") as file:
+    json.dump(from_text, file, ensure_ascii=False, indent=2)
 ```
 
-这是相对路径。它不是“相对于 Python 文件本身”这么简单，而是相对于程序运行时的当前工作目录。
+记忆时不要只念函数名，而要把完整方向一起说出来：`loads` 是“JSON 字符串进入 Python”，`dumps` 是“Python 对象变成 JSON 字符串”。
 
-入门阶段最容易遇到的问题就是：文件明明在电脑上，Python 却说找不到。
+## 文件和 API 最终可以汇入同一处理函数
 
-可以先看当前工作目录：
+文件与 API 的来源不同，但只要进入业务逻辑前都得到同样的 `list[dict]`，后面的函数就不需要知道数据来自哪里。
+
+文件路线由 `json.load(file)` 得到对象。很多 API 客户端则提供类似 `response.json()` 的动作，直接给出已经解析好的列表或字典；如果接口工具只给原始 JSON 字符串，才需要先调用 `json.loads()`。
+
+<figure class="py-io-board py-io-merge" aria-labelledby="io-merge-caption">
+  <figcaption id="io-merge-caption">
+    <span class="py-io-kicker">两种来源的汇合点</span>
+    <strong>来源不同，进入处理函数前的数据形状相同</strong>
+  </figcaption>
+  <div class="py-io-sources">
+    <section>
+      <span class="py-io-label">来源 A · 文件</span>
+      <code>orders.json</code>
+      <b>json.load(file)</b>
+      <output>list[dict]</output>
+    </section>
+    <section>
+      <span class="py-io-label">来源 B · API</span>
+      <code>response</code>
+      <b>API 客户端已解析</b>
+      <output>list[dict]</output>
+    </section>
+  </div>
+  <div class="py-io-merge-point">
+    <span>共同输入契约</span>
+    <strong>orders：每一项都有 order_no、sku、amount、status</strong>
+  </div>
+  <div class="py-io-common-process">
+    <code>summarize_paid_orders(orders)</code>
+    <span aria-hidden="true">→</span>
+    <output>paid_count = 2 · paid_amount = 328.0</output>
+  </div>
+</figure>
+
+下面的处理函数可以直接接收任一路线得到的 `orders`：
+
+```python
+import json
+
+def summarize_paid_orders(orders):
+    paid_orders = [
+        order for order in orders
+        if order["status"] == "已支付"
+    ]
+    return {
+        "paid_order_nos": [order["order_no"] for order in paid_orders],
+        "paid_count": len(paid_orders),
+        "paid_amount": sum(order["amount"] for order in paid_orders),
+    }
+
+with open("orders.json", "r", encoding="utf-8") as file:
+    file_orders = json.load(file)
+
+# 模拟 API 客户端已经解析完成的返回值
+api_orders = [
+    {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+    {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+    {"order_no": "A003", "sku": "K161", "amount": 199.0, "status": "已支付"},
+]
+
+print(summarize_paid_orders(file_orders))
+print(summarize_paid_orders(api_orders))
+```
+
+两次结果相同。真正实现网络请求时可以更换 API 工具，但 `summarize_paid_orders()` 不需要跟着改；它只依赖输入形状，不依赖来源。
+
+## 用 `pathlib` 让路径意图更清楚
+
+相对路径取决于脚本运行时的当前目录，不一定等于脚本文件所在目录。先用 `Path.cwd()` 看当前目录：
 
 ```python
 from pathlib import Path
@@ -120,355 +351,79 @@ from pathlib import Path
 print(Path.cwd())
 ```
 
-`pathlib` 是 Python 标准库的一部分，不需要额外安装。
-
-如果想构造路径：
+构造 `data/orders.json` 时，可以让目录和文件名分开表达：
 
 ```python
+import json
 from pathlib import Path
 
-file_path = Path("data") / "orders.txt"
-print(file_path)
-```
+file_path = Path("data") / "orders.json"
 
-这里只先认识这种写法，不需要深入其他路径 API。
-
-### `import`：使用 Python 自带模块
-
-本文使用了 `import json` 和 `from pathlib import Path`。它们来自 Python 标准库，不需要额外安装：
-
-```python
-import json
-json.loads(...)
-
-from pathlib import Path
-Path.cwd()
-```
-
-</details>
-
-## JSON：接口和配置里最常见的数据格式之一
-
-下面是一段 JSON 文本：
-
-```json
-{
-  "code": 0,
-  "data": {
-    "orders": [
-      {"order_no": "A001", "amount": 129.0},
-      {"order_no": "A002", "amount": 88.0}
-    ]
-  }
-}
-```
-
-它看起来很像 Python 字典，但它现在只是**一种文本格式**。
-
-JSON 与 Python 常见类型的对应关系：
-
-| JSON | Python |
-| --- | --- |
-| object `{}` | `dict` |
-| array `[]` | `list` |
-| string | `str` |
-| number | `int` / `float` |
-| `true` / `false` | `True` / `False` |
-| `null` | `None` |
-
-注意大小写：JSON 是 `true`，Python 是 `True`。
-
-## JSON 的四个常用入口
-
-先用一张表锁定输入和输出，避免只靠多一个字母 `s` 来死记：
-
-| 函数 | 输入 | 输出或动作 |
-| --- | --- | --- |
-| `json.loads(text)` | JSON 字符串 | Python 对象 |
-| `json.load(file)` | JSON 文件对象 | Python 对象 |
-| `json.dumps(data)` | Python 对象 | JSON 字符串 |
-| `json.dump(data, file)` | Python 对象和文件对象 | 直接写入 JSON 文件 |
-
-### `json.loads()`：把 JSON 字符串变成 Python 数据
-
-```python
-import json
-
-api_text = '''
-{
-  "code": 0,
-  "data": {
-    "orders": [
-      {"order_no": "A001", "amount": 129.0},
-      {"order_no": "A002", "amount": 88.0}
-    ]
-  }
-}
-'''
-
-response = json.loads(api_text)
-
-print(type(response))
-print(response["code"])
-```
-
-输出：
-
-```text
-<class 'dict'>
-0
-```
-
-`loads` 可以记成：**load string**，把 JSON 字符串解析成 Python 对象。
-
-一旦解析完成，后面的操作就回到了上一篇学过的字典和列表：
-
-```python
-orders = response["data"]["orders"]
-
-for order in orders:
-    print(order["order_no"], order["amount"])
-```
-
-### `json.dumps()`：把 Python 数据变成 JSON 字符串
-
-```python
-import json
-
-order = {
-    "order_no": "A001",
-    "status": "已支付",
-}
-
-text = json.dumps(order, ensure_ascii=False, indent=2)
-print(text)
-```
-
-输出会类似：
-
-```json
-{
-  "order_no": "A001",
-  "status": "已支付"
-}
-```
-
-这里：
-
-- `ensure_ascii=False` 让中文直接显示，而不是变成 `\uXXXX`。
-- `indent=2` 让 JSON 更容易阅读。
-
-### JSON 文件：`load()` 和 `dump()`
-
-如果 `orders.json` 本身就是一个 JSON 文件，可以直接：
-
-```python
-import json
-
-with open("orders.json", "r", encoding="utf-8") as file:
-    orders = json.load(file)
-```
-
-写入 JSON 文件：
-
-```python
-import json
-
-with open("result.json", "w", encoding="utf-8") as file:
-    json.dump(orders, file, ensure_ascii=False, indent=2)
-```
-
-## API 返回结果和 JSON 文件，本质上可以进入同一套处理逻辑
-
-接口收到 JSON 后，同样会先解析成字典或列表，再取字段、遍历、筛选和调用函数。本系列暂时不引入第三方 HTTP 库，先把 JSON 与异常处理掌握即可。
-
-## 为什么需要异常处理
-
-真实数据不会永远干净。
-
-上一篇学过：
-
-```python
-quantity = int("2")
-```
-
-正常。
-
-但：
-
-```python
-quantity = int("两件")
-```
-
-会抛出 `ValueError`。
-
-如果这个异常是业务里可以预期的，就可以处理它。
-
-## `try / except`：只接住你明确知道可能失败的地方
-
-```python
-raw_quantity = "两件"
-
-try:
-    quantity = int(raw_quantity)
-except ValueError:
-    print("数量格式异常：", raw_quantity)
-```
-
-执行逻辑：
-
-<figure class="py-error-branch" aria-labelledby="error-caption">
-  <figcaption id="error-caption"><span>异常分支</span><strong><code>int(raw_quantity)</code> 只有两种明确结果</strong></figcaption>
-  <dl>
-    <div><dt>转换成功</dt><dd><strong><code>quantity</code> 得到数字</strong><span>回到正常处理路径</span></dd></div>
-    <div><dt>发生 ValueError</dt><dd><strong>进入 <code>except ValueError</code></strong><span>记录问题，并在循环中跳过当前数据</span></dd></div>
-  </dl>
-</figure>
-
-不要为了“程序永远不报错”把所有代码都塞进巨大的 `try`。只有明确知道某类失败可以怎样处理时，才接住它。
-
-例如除数为 0 会抛出 `ZeroDivisionError`：
-
-```python
-try:
-    result = 10 / 0
-except ZeroDivisionError:
-    print("除数不能为 0")
-```
-
-重点不是背完异常名称，而是捕获当前操作对应的具体异常。
-
-## 文件不存在：`FileNotFoundError`
-
-```python
-try:
-    with open("orders.txt", "r", encoding="utf-8") as file:
-        content = file.read()
-except FileNotFoundError:
-    print("没有找到 orders.txt")
-```
-
-它明确处理“文件不存在”，不会把编码错误、权限错误和代码 bug 全部吞掉。
-
-## JSON 格式错误：`JSONDecodeError`
-
-```python
-import json
-
-text = '{"order_no": "A001"'
-
-try:
-    data = json.loads(text)
-except json.JSONDecodeError:
-    print("JSON 格式不正确")
-```
-
-这里也一样：只处理自己真正理解的异常。
-
-## 一个更完整的真实小案例
-
-假设 `orders.json` 内容是：
-
-```json
-[
-  {"order_no": "A001", "amount": "129.0", "status": "已支付"},
-  {"order_no": "A002", "amount": "88.0", "status": "已退款"},
-  {"order_no": "A003", "amount": "abc", "status": "已支付"}
-]
-```
-
-目标：只统计已支付、并且金额可以正常转换的订单。
-
-```python
-import json
-
-with open("orders.json", "r", encoding="utf-8") as file:
+with file_path.open("r", encoding="utf-8") as file:
     orders = json.load(file)
 
-total = 0
-
-for order in orders:
-    if order["status"] != "已支付":
-        continue
-
-    try:
-        amount = float(order["amount"])
-    except ValueError:
-        print("金额异常：", order["order_no"])
-        continue
-
-    total = total + amount
-
-print("有效已支付金额：", total)
+print(len(orders))
 ```
 
-<ol class="py-script-run" aria-label="真实订单脚本执行过程">
-  <li><span>读取解析</span><strong>打开并解析 <code>orders.json</code></strong></li>
-  <li><span>业务筛选</span><strong>跳过非已支付订单</strong></li>
-  <li><span>数据校验</span><strong>金额转换失败时记录并跳过</strong></li>
-  <li><span>结果汇总</span><strong>累计有效金额并输出</strong></li>
-</ol>
+`pathlib` 属于 Python 标准库，不需要额外安装。入门阶段先掌握 `Path.cwd()`、`Path(...) / "name"` 和 `Path.open()` 就足够了。
 
-## 本篇最容易混淆的四组概念
+## 文件边界可能失败，但处理方式留到下一篇
 
-| 容易混淆 | 区别 |
-| --- | --- |
-| `read()` / `json.load()` | 前者读文本，后者直接读并解析 JSON |
-| `json.loads()` / `json.load()` | 字符串 vs 文件对象 |
-| `json.dumps()` / `json.dump()` | 得到字符串 vs 写到文件 |
-| 正常分支 / 异常分支 | `if` 处理业务条件，`except` 处理执行失败 |
+这条数据管道只有输入满足边界条件时才能继续：
 
-最后一条尤其重要。
+<div class="py-io-error-boundary" role="note" aria-label="读取 JSON 文件的错误边界">
+  <span>错误边界</span>
+  <strong>文件必须存在、能按 UTF-8 读取，并且内容符合 JSON 语法</strong>
+  <p>失败可能发生在“打开”“解码”或“JSON 解析”步骤。先根据报错找到具体停止点，不要用默认值悄悄掩盖问题。</p>
+</div>
 
-例如“订单状态是已退款”不是异常，它只是一个正常业务状态，应该用 `if`。
+本章不展开 `try / except`、异常匹配或跳过坏记录。下一篇会把 `FileNotFoundError`、`UnicodeDecodeError`、`JSONDecodeError` 放回各自发生的步骤，并说明脚本应该恢复还是停止。
 
-“把 `abc` 转成数字失败”才是异常。
+[继续阅读：错误与调试——异常如何发生和传递](/articles/python-errors-debugging-visual-guide/)
 
-## 动手练习：读取并筛选订单 JSON
+## 动手完成一次读取与写回
 
-创建一个 `orders.json`：
+1. 创建本章开头的 `orders.json`。
+2. 使用 `json.load()` 读取三条订单。
+3. 把 `orders[0]["status"]` 打印出来，确认已经得到 Python 对象。
+4. 调用 `summarize_paid_orders(orders)`，确认数量为 `2`、金额为 `328.0`。
+5. 使用 `json.dump()` 把汇总写到 `paid_orders_summary.json`。
+6. 打开结果文件，确认中文没有变成转义字符。
 
-```json
-[
-  {"order_no": "B001", "status": "已支付", "amount": "99.9"},
-  {"order_no": "B002", "status": "已关闭", "amount": "120"},
-  {"order_no": "B003", "status": "已支付", "amount": "bad"},
-  {"order_no": "B004", "status": "已支付", "amount": "199"}
-]
+写回步骤可以直接使用：
+
+```python
+with open("paid_orders_summary.json", "w", encoding="utf-8") as file:
+    json.dump(
+        summarize_paid_orders(orders),
+        file,
+        ensure_ascii=False,
+        indent=2,
+    )
 ```
-
-完成一个脚本：
-
-1. 读取 JSON 文件。
-2. 只处理 `已支付` 订单。
-3. 金额转成 `float`。
-4. 金额异常时打印订单号并跳过。
-5. 最终输出有效订单数量和总金额。
-6. 把两个结果写到一个 `result.json` 文件中。
-
-如果能独立完成，这时你已经不是只会写课堂示例，而是在完成一个很小但完整的数据处理任务。
 
 <Callout title="本章检查">
-  你应该能区分文本读取与 JSON 解析、业务分支与异常分支，并能让一条坏记录失败而不让整批订单停止处理。
+  你应该能指出数据在哪一步仍是外部文本、在哪一步成为 list[dict]，并能按输入形态选择 load 或 loads、按输出目标选择 dump 或 dumps。看到文件和 API 两条路线时，还应能说清它们为何可以复用同一个处理函数。
 </Callout>
 
-<HighlightBox eyebrow="下一篇" title="最后补上够用的类与对象">
-  很多数据处理和自动化脚本用“列表 + 字典 + 函数”就足够了。下一篇会讲清什么时候类能让代码更自然，以及 `class`、`__init__`、`self`、属性和方法到底在做什么，不会把入门课程带进复杂 OOP。
+<HighlightBox eyebrow="下一篇" title="看见失败从哪一行开始传递">
+  下一篇进入错误与调试：定位文件不存在、编码不匹配、JSON 格式错误和字段转换失败的具体步骤，再决定记录、跳过还是停止。
 </HighlightBox>
 
 <style>{`
-  .py-real-data-flow,
-  .py-error-branch,
-  .py-file-notes {
+  .py-io-board {
+    --io-blue: #2563eb;
+    --io-cyan: #0e7490;
+    --io-green: #15803d;
+    --io-amber: #b45309;
+    --io-red: #b42318;
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    margin: 1.5rem 0 1rem;
+    margin: 1.5rem 0 2rem;
     overflow: hidden;
   }
 
-  .py-real-data-flow figcaption,
-  .py-error-branch figcaption,
-  .py-file-notes > summary {
+  .py-io-board figcaption {
     background: color-mix(in srgb, var(--cyan) 8%, var(--paper));
     border-bottom: 1px solid var(--line);
     display: flex;
@@ -477,20 +432,16 @@ print("有效已支付金额：", total)
     padding: 1rem 1.1rem;
   }
 
-  .py-real-data-flow figcaption span,
-  .py-real-data-flow li span,
-  .py-real-data-flow li small,
-  .py-error-branch figcaption span,
-  .py-error-branch dd span,
-  .py-file-notes summary span,
-  .py-file-notes summary small,
-  .py-script-run span {
+  .py-io-kicker,
+  .py-io-step,
+  .py-io-label {
     color: var(--soft);
-    font-size: 0.8rem;
+    font-size: 0.76rem;
+    font-weight: 750;
+    letter-spacing: 0.035em;
   }
 
-  .py-real-data-flow ol,
-  .py-script-run {
+  .py-io-flow {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     list-style: none;
@@ -498,82 +449,266 @@ print("有效已支付金额：", total)
     padding: 0;
   }
 
-  .py-real-data-flow li,
-  .py-script-run li {
+  .py-io-flow li {
+    min-width: 0;
+    padding: 1rem;
+    position: relative;
+  }
+
+  .py-io-flow li + li {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-io-flow li + li::before {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    content: "→";
+    left: -0.75rem;
+    line-height: 1.4rem;
+    position: absolute;
+    text-align: center;
+    top: 2.75rem;
+    width: 1.4rem;
+  }
+
+  .py-io-flow strong,
+  .py-io-flow code,
+  .py-io-flow small {
+    display: block;
+  }
+
+  .py-io-flow strong {
+    margin: 0.5rem 0;
+  }
+
+  .py-io-flow code {
+    overflow-wrap: anywhere;
+  }
+
+  .py-io-flow small {
+    color: var(--soft);
+    margin-top: 0.55rem;
+  }
+
+  .py-io-flow .is-current {
+    background: color-mix(in srgb, var(--io-amber) 8%, var(--paper));
+    box-shadow: inset 0 3px 0 var(--io-amber);
+  }
+
+  .py-io-flow .is-result {
+    background: color-mix(in srgb, var(--io-green) 7%, var(--paper));
+    box-shadow: inset 0 3px 0 var(--io-green);
+  }
+
+  .py-io-shape-change {
+    background: #172033;
+    color: #e7edf7;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .py-io-shape-change span {
+    padding: 0.8rem 1rem;
+  }
+
+  .py-io-shape-change span + span {
+    border-left: 1px solid #334155;
+  }
+
+  .py-io-shape-change b {
+    color: #67e8f9;
+    display: block;
+    font-size: 0.76rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .py-io-port-directions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .py-io-port-directions > section + section {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-io-port-directions header {
+    background: var(--paper-soft);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .py-io-port-directions header span {
+    color: var(--io-cyan);
+    font-size: 0.76rem;
+    font-weight: 750;
+  }
+
+  .py-io-port {
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0.9rem 1rem;
+  }
+
+  .py-io-port + .py-io-port {
+    border-top: 1px solid var(--line);
+  }
+
+  .py-io-port code {
+    align-self: start;
+    grid-column: 1 / -1;
+    overflow-wrap: anywhere;
+  }
+
+  .py-io-port p {
+    margin: 0;
+  }
+
+  .py-io-port p b {
+    color: var(--soft);
+    display: block;
+    font-size: 0.72rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .py-io-port small {
+    color: var(--io-green);
+    grid-column: 1 / -1;
+    font-weight: 750;
+  }
+
+  .py-io-sources {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .py-io-sources section {
+    display: grid;
+    gap: 0.55rem;
     min-width: 0;
     padding: 1rem;
   }
 
-  .py-real-data-flow li + li,
-  .py-script-run li + li {
+  .py-io-sources section + section {
     border-left: 1px solid var(--line);
   }
 
-  .py-real-data-flow li strong,
-  .py-real-data-flow li small,
-  .py-script-run strong {
-    display: block;
-    margin-top: 0.45rem;
+  .py-io-sources code,
+  .py-io-sources b,
+  .py-io-sources output {
+    overflow-wrap: anywhere;
   }
 
-  .py-file-notes > summary {
-    border-bottom: 0;
-    cursor: pointer;
+  .py-io-sources output {
+    color: var(--io-green);
+    font-weight: 800;
   }
 
-  .py-file-notes[open] > summary {
-    border-bottom: 1px solid var(--line);
+  .py-io-merge-point {
+    background: color-mix(in srgb, var(--io-cyan) 7%, var(--paper));
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.85rem 1rem;
+    text-align: center;
   }
 
-  .py-file-notes > :not(summary) {
-    margin-left: 1.1rem;
-    margin-right: 1.1rem;
+  .py-io-merge-point span {
+    color: var(--io-cyan);
+    font-size: 0.76rem;
+    font-weight: 750;
   }
 
-  .py-error-branch dl {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin: 0;
-  }
-
-  .py-error-branch dl > div {
+  .py-io-common-process {
+    align-items: center;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    justify-content: center;
     padding: 1rem;
   }
 
-  .py-error-branch dl > div + div {
-    border-left: 1px solid var(--line);
+  .py-io-common-process span {
+    color: var(--io-amber);
+    font-weight: 800;
   }
 
-  .py-error-branch dt,
-  .py-error-branch dd {
+  .py-io-common-process output {
+    color: var(--io-green);
+    font-weight: 800;
+  }
+
+  .py-io-common-process code,
+  .py-io-common-process output {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .py-io-error-boundary {
+    background: color-mix(in srgb, #b42318 7%, var(--paper));
+    border: 1px solid color-mix(in srgb, #b42318 35%, var(--line));
+    border-left: 4px solid #b42318;
+    border-radius: var(--radius);
+    display: grid;
+    gap: 0.45rem;
+    margin: 1.25rem 0;
+    padding: 1rem;
+  }
+
+  .py-io-error-boundary span {
+    color: #b42318;
+    font-size: 0.76rem;
+    font-weight: 800;
+  }
+
+  .py-io-error-boundary p {
     margin: 0;
   }
 
-  .py-error-branch dd strong,
-  .py-error-branch dd span {
-    display: block;
-    margin-top: 0.45rem;
-  }
-
-  .py-script-run {
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    margin: 1.5rem 0 2rem;
-    overflow: hidden;
-  }
-
   @media (max-width: 760px) {
-    .py-real-data-flow ol,
-    .py-error-branch dl,
-    .py-script-run {
+    .py-io-flow,
+    .py-io-shape-change,
+    .py-io-port-directions,
+    .py-io-sources {
       grid-template-columns: 1fr;
     }
 
-    .py-real-data-flow li + li,
-    .py-error-branch dl > div + div,
-    .py-script-run li + li {
+    .py-io-flow li + li,
+    .py-io-shape-change span + span,
+    .py-io-port-directions > section + section,
+    .py-io-sources section + section {
       border-left: 0;
       border-top: 1px solid var(--line);
+    }
+
+    .py-io-flow li + li::before {
+      left: 1rem;
+      top: -0.75rem;
+      transform: rotate(90deg);
+    }
+
+    .py-io-port {
+      grid-template-columns: 1fr;
+    }
+
+    .py-io-port small {
+      grid-column: auto;
+    }
+
+    .py-io-common-process {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .py-io-common-process span {
+      align-self: center;
+      transform: rotate(90deg);
     }
   }
 `}</style>

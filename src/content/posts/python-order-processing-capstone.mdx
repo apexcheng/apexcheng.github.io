@@ -1,0 +1,794 @@
+---
+title: "Python 完整订单脚本图解：从 JSON 输入到汇总输出"
+description: "把文件、JSON、容器、判断、循环、函数和错误处理串成一份可运行订单脚本，从三条输入记录得到 2 单、328.0 的已支付汇总。"
+date: 2026-08-27T15:31:03+08:00
+category: "教程"
+tags:
+  - "Python"
+minutes: 16
+featured: false
+pinned: false
+series: "python-basics"
+seriesOrder: 9
+draft: false
+private: false
+---
+
+import HighlightBox from '../../components/HighlightBox.astro';
+import Callout from '../../components/Callout.astro';
+import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
+
+前八章分别拆开了变量、容器、条件、循环、函数、文件和错误路径。这一章不再增加新语法，而是把它们装进一份可以独立运行的订单脚本：从 `orders.json` 读取三条记录，校验并规范字段，筛选已支付订单，统计数量和金额，最后写出 `paid_orders_summary.json`。
+
+固定输入中，A001 和 A003 已支付，因此脚本的基准结果必须是：**2 单，总金额 328.0。**
+
+<PythonLessonBrief
+  goal="把前面学过的机制串成一条完整、可验证的数据管道"
+  data="A001、A002、A003 三条 JSON 订单"
+  outcome="运行脚本并写出已支付 2 单、总金额 328.0 的汇总文件"
+/>
+
+## 先看整条数据管道
+
+脚本只做五件事，每一步都有明确的输入和输出：
+
+<figure class="py-capstone-board py-capstone-pipeline" aria-labelledby="capstone-pipeline-caption">
+  <figcaption id="capstone-pipeline-caption">
+    <span class="py-capstone-kicker">完整任务总览</span>
+    <strong>外部文件经过读取、规范、筛选和统计，最终变成新的结果文件</strong>
+  </figcaption>
+  <ol>
+    <li>
+      <span class="py-capstone-step">01 · 读取</span>
+      <strong><code>orders.json</code></strong>
+      <small>json.load → list[dict]</small>
+    </li>
+    <li>
+      <span class="py-capstone-step">02 · 校验 / 规范</span>
+      <strong>字段齐全、类型可用</strong>
+      <small>去空格、SKU 大写、金额转 float</small>
+    </li>
+    <li>
+      <span class="py-capstone-step">03 · 筛选</span>
+      <strong><code>status == "已支付"</code></strong>
+      <small>A001、A003 进入统计</small>
+    </li>
+    <li>
+      <span class="py-capstone-step">04 · 汇总</span>
+      <strong>数量 2 · 金额 328.0</strong>
+      <small>同时保留问题记录</small>
+    </li>
+    <li class="is-output">
+      <span class="py-capstone-step">05 · 写出</span>
+      <strong><code>paid_orders_summary.json</code></strong>
+      <small>UTF-8 中文 JSON</small>
+    </li>
+  </ol>
+</figure>
+
+这条管道刻意保持单一：一个输入文件、一个脚本、一个输出文件。它不需要配置层、数据库或第三方数据框架。
+
+## 准备固定输入文件
+
+在脚本所在目录创建 `orders.json`：
+
+```json
+[
+  {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+  {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+  {"order_no": "A003", "sku": "K161", "amount": 199.0, "status": "已支付"}
+]
+```
+
+四个字段各有职责：
+
+| 字段 | 规范后的形态 | 在脚本中的用途 |
+| --- | --- | --- |
+| `order_no` | 去掉两端空格的字符串 | 标识订单、写入结果 |
+| `sku` | 去空格并转大写的字符串 | 保留统一商品编码 |
+| `amount` | `float` | 参与金额统计 |
+| `status` | 去掉两端空格的字符串 | 决定是否进入已支付统计 |
+
+## 完整脚本：复制后可以直接运行
+
+把下面代码保存为 `process_orders.py`，与 `orders.json` 放在同一目录：
+
+```python
+import json
+from pathlib import Path
+
+
+# A · 输入与输出位置
+INPUT_PATH = Path("orders.json")
+OUTPUT_PATH = Path("paid_orders_summary.json")
+
+
+# B · 从 JSON 文件取得一批原始订单
+def load_orders(path):
+    with path.open("r", encoding="utf-8") as file:
+        orders = json.load(file)
+
+    if not isinstance(orders, list):
+        raise TypeError("orders.json 顶层必须是列表")
+
+    return orders
+
+
+# C · 校验并规范一条订单
+def normalize_order(raw_order):
+    if not isinstance(raw_order, dict):
+        raise TypeError("每条订单必须是字典")
+
+    required_fields = {"order_no", "sku", "amount", "status"}
+    missing_fields = required_fields - raw_order.keys()
+
+    if missing_fields:
+        missing_text = ", ".join(sorted(missing_fields))
+        raise KeyError(f"缺少字段：{missing_text}")
+
+    return {
+        "order_no": str(raw_order["order_no"]).strip(),
+        "sku": str(raw_order["sku"]).strip().upper(),
+        "amount": float(raw_order["amount"]),
+        "status": str(raw_order["status"]).strip(),
+    }
+
+
+# D · 筛选已支付订单并生成汇总
+def build_summary(clean_orders, problems):
+    paid_order_nos = []
+    paid_count = 0
+    paid_amount = 0.0
+
+    for order in clean_orders:
+        if order["status"] != "已支付":
+            continue
+
+        paid_order_nos.append(order["order_no"])
+        paid_count = paid_count + 1
+        paid_amount = paid_amount + order["amount"]
+
+    return {
+        "paid_order_nos": paid_order_nos,
+        "paid_count": paid_count,
+        "paid_amount": round(paid_amount, 2),
+        "problem_count": len(problems),
+        "problems": problems,
+    }
+
+
+# E · 写出结果，并把前面四段串起来
+def write_summary(path, summary):
+    with path.open("w", encoding="utf-8") as file:
+        json.dump(summary, file, ensure_ascii=False, indent=2)
+
+
+def main():
+    raw_orders = load_orders(INPUT_PATH)
+    clean_orders = []
+    problems = []
+
+    for raw_order in raw_orders:
+        try:
+            clean_order = normalize_order(raw_order)
+        except (KeyError, TypeError, ValueError) as error:
+            order_no = (
+                raw_order.get("order_no", "未知订单")
+                if isinstance(raw_order, dict)
+                else "未知订单"
+            )
+            problems.append({
+                "order_no": order_no,
+                "error_type": type(error).__name__,
+                "message": str(error),
+            })
+            continue
+
+        clean_orders.append(clean_order)
+
+    summary = build_summary(clean_orders, problems)
+    write_summary(OUTPUT_PATH, summary)
+
+    print("已写出：", OUTPUT_PATH)
+    print("已支付订单：", summary["paid_count"])
+    print("已支付金额：", summary["paid_amount"])
+    print("问题记录：", summary["problem_count"])
+
+
+if __name__ == "__main__":
+    main()
+```
+
+在该目录运行：
+
+```bash
+python process_orders.py
+```
+
+如果环境使用 `python3` 或 `py`，替换命令里的 `python` 即可。正常输出：
+
+```text
+已写出： paid_orders_summary.json
+已支付订单： 2
+已支付金额： 328.0
+问题记录： 0
+```
+
+## 五段代码分别负责什么
+
+完整代码不应被看成一整堵符号。注释 A～E 把它分成五个职责，每段只回答一个问题：
+
+<figure class="py-capstone-board py-capstone-code-map" aria-labelledby="capstone-code-map-caption">
+  <figcaption id="capstone-code-map-caption">
+    <span class="py-capstone-kicker">完整代码分段地图</span>
+    <strong>每段都有清晰输入、动作和交给下一段的结果</strong>
+  </figcaption>
+  <ol>
+    <li>
+      <span class="py-capstone-code-id">A · 路径</span>
+      <code>INPUT_PATH / OUTPUT_PATH</code>
+      <p><b>输入</b> 两个文件名</p>
+      <p><b>交付</b> 可复用的 Path 对象</p>
+    </li>
+    <li>
+      <span class="py-capstone-code-id">B · 读取</span>
+      <code>load_orders(path)</code>
+      <p><b>输入</b> orders.json</p>
+      <p><b>交付</b> raw_orders 列表</p>
+    </li>
+    <li>
+      <span class="py-capstone-code-id">C · 规范</span>
+      <code>normalize_order(raw_order)</code>
+      <p><b>输入</b> 一条原始记录</p>
+      <p><b>交付</b> 字段可用的订单，或具体异常</p>
+    </li>
+    <li>
+      <span class="py-capstone-code-id">D · 统计</span>
+      <code>build_summary(...)</code>
+      <p><b>输入</b> clean_orders + problems</p>
+      <p><b>交付</b> 汇总字典</p>
+    </li>
+    <li>
+      <span class="py-capstone-code-id">E · 编排 / 写出</span>
+      <code>main() / write_summary()</code>
+      <p><b>输入</b> 前四段的结果</p>
+      <p><b>交付</b> JSON 文件和终端摘要</p>
+    </li>
+  </ol>
+  <div class="py-capstone-map-rule">
+    <span>阅读顺序</span>
+    <strong>先看 main() 怎样调用各段，再进入某个函数看细节</strong>
+  </div>
+</figure>
+
+`main()` 是整条管道的装配点。它没有把所有逻辑重新写一遍，只负责按顺序传递结果：`raw_orders → clean_orders / problems → summary → 输出文件`。
+
+## 三条订单逐条经过脚本
+
+`clean_orders` 和 `problems` 一开始都是空列表。每条记录先经过 `normalize_order()`；规范成功后才有资格参与状态筛选。
+
+<figure class="py-capstone-board py-capstone-ledger" aria-labelledby="capstone-ledger-caption">
+  <figcaption id="capstone-ledger-caption">
+    <span class="py-capstone-kicker">三条订单状态台账</span>
+    <strong>每一轮都显示当前记录、规范结果、筛选结果和累计状态</strong>
+  </figcaption>
+  <div class="py-capstone-rounds">
+    <section>
+      <header><span>第 1 轮</span><strong>A001 · K161</strong><small>amount 129.0 · 已支付</small></header>
+      <div><span>校验 / 规范</span><b>通过</b><small>金额保持 129.0</small></div>
+      <div><span>状态筛选</span><b>命中已支付</b><small>A001 进入已支付统计</small></div>
+      <div><span>数量变化</span><code>0 → 1</code></div>
+      <div><span>金额变化</span><code>0.0 → 129.0</code></div>
+    </section>
+    <section class="is-skipped">
+      <header><span>第 2 轮</span><strong>A002 · K162</strong><small>amount 88.0 · 已退款</small></header>
+      <div><span>校验 / 规范</span><b>通过</b><small>金额保持 88.0</small></div>
+      <div><span>状态筛选</span><b>未命中</b><small>A002 不进入已支付统计</small></div>
+      <div><span>数量变化</span><code>1 → 1</code></div>
+      <div><span>金额变化</span><code>129.0 → 129.0</code></div>
+    </section>
+    <section>
+      <header><span>第 3 轮</span><strong>A003 · K161</strong><small>amount 199.0 · 已支付</small></header>
+      <div><span>校验 / 规范</span><b>通过</b><small>金额保持 199.0</small></div>
+      <div><span>状态筛选</span><b>命中已支付</b><small>A003 进入已支付统计</small></div>
+      <div><span>数量变化</span><code>1 → 2</code></div>
+      <div><span>金额变化</span><code>129.0 → 328.0</code></div>
+    </section>
+  </div>
+  <div class="py-capstone-ledger-result">
+    <span><b>已支付订单</b>A001 · A003</span>
+    <span><b>最终数量</b>2</span>
+    <span><b>最终金额</b>328.0</span>
+    <span><b>问题记录</b>0</span>
+  </div>
+</figure>
+
+注意“校验成功”和“业务状态命中”是两回事。A002 的字段完全合法，所以它进入 `clean_orders`；只是状态为“已退款”，因此没有进入已支付统计。
+
+## 输入文件与输出文件怎样对应
+
+脚本不会把完整输入原样复制到结果文件。输入面向“逐条处理”，输出面向“继续使用汇总”：
+
+<figure class="py-capstone-board py-capstone-files" aria-labelledby="capstone-files-caption">
+  <figcaption id="capstone-files-caption">
+    <span class="py-capstone-kicker">文件前后对照</span>
+    <strong>三条明细记录经过规则，收敛成一份可交付摘要</strong>
+  </figcaption>
+  <div class="py-capstone-file-compare">
+    <section>
+      <span class="py-capstone-file-label">输入 · orders.json</span>
+      <div><b>A001</b><code>K161 · 129.0 · 已支付</code></div>
+      <div class="is-refunded"><b>A002</b><code>K162 · 88.0 · 已退款</code></div>
+      <div><b>A003</b><code>K161 · 199.0 · 已支付</code></div>
+      <small>3 条订单明细</small>
+    </section>
+    <div class="py-capstone-transform">
+      <span>筛选 + 汇总</span>
+      <strong>A002 不进入已支付统计</strong>
+      <i aria-hidden="true">→</i>
+    </div>
+    <section class="is-summary">
+      <span class="py-capstone-file-label">输出 · paid_orders_summary.json</span>
+      <div><b>paid_order_nos</b><code>["A001", "A003"]</code></div>
+      <div><b>paid_count</b><code>2</code></div>
+      <div><b>paid_amount</b><code>328.0</code></div>
+      <div><b>problem_count</b><code>0</code></div>
+      <small>1 份业务摘要</small>
+    </section>
+  </div>
+</figure>
+
+实际写出的 JSON 是：
+
+```json
+{
+  "paid_order_nos": [
+    "A001",
+    "A003"
+  ],
+  "paid_count": 2,
+  "paid_amount": 328.0,
+  "problem_count": 0,
+  "problems": []
+}
+```
+
+这个文件可以继续交给报表、通知或其他脚本；本章不再增加这些下游步骤。
+
+## 补充路径：一条金额异常怎样离开主线
+
+基准输入没有坏数据。现在只做一次补充实验：把 A003 的金额从 `199.0` 改成字符串 `"未知"`，其他字段不变。
+
+```json
+[
+  {"order_no": "A001", "sku": "K161", "amount": 129.0, "status": "已支付"},
+  {"order_no": "A002", "sku": "K162", "amount": 88.0, "status": "已退款"},
+  {"order_no": "A003", "sku": "K161", "amount": "未知", "status": "已支付"}
+]
+```
+
+同一份 `process_orders.py` 不需要修改。A003 到达 `float(raw_order["amount"])` 时产生 `ValueError`，被 `main()` 里针对单条记录的处理器接住，写入 `problems`，然后继续结束本轮。
+
+<figure class="py-capstone-board py-capstone-error-route" aria-labelledby="capstone-error-caption">
+  <figcaption id="capstone-error-caption">
+    <span class="py-capstone-kicker">坏金额补充路径</span>
+    <strong>A003 在规范阶段退出，不会带着无效金额进入筛选和累计</strong>
+  </figcaption>
+  <ol>
+    <li>
+      <span class="py-capstone-step">输入 · 01</span>
+      <strong>A003</strong>
+      <code>amount = "未知"</code>
+    </li>
+    <li class="is-error">
+      <span class="py-capstone-step">出错行 · 02</span>
+      <strong>转换金额</strong>
+      <code>float("未知")</code>
+      <small>产生 ValueError</small>
+    </li>
+    <li>
+      <span class="py-capstone-step">错误分支 · 03</span>
+      <strong>记录问题</strong>
+      <code>problems += A003</code>
+      <small>error_type = ValueError</small>
+    </li>
+    <li class="is-blocked">
+      <span class="py-capstone-step">停止本条 · 04</span>
+      <strong>不进入业务统计</strong>
+      <code>continue</code>
+      <small>没有无效 amount 参与求和</small>
+    </li>
+  </ol>
+  <div class="py-capstone-error-result">
+    <span><b>仍可用</b>A001、A002</span>
+    <span><b>问题记录</b>A003 · ValueError</span>
+    <span><b>补充案例汇总</b>已支付 1 单 · 129.0</span>
+  </div>
+</figure>
+
+这次输出文件中的核心字段会类似下面（具体错误文字可能随 Python 版本略有不同）：
+
+```json
+{
+  "paid_order_nos": ["A001"],
+  "paid_count": 1,
+  "paid_amount": 129.0,
+  "problem_count": 1,
+  "problems": [
+    {
+      "order_no": "A003",
+      "error_type": "ValueError",
+      "message": "could not convert string to float: '未知'"
+    }
+  ]
+}
+```
+
+错误路径的关键不是“程序没有停”，而是结果仍然诚实：A003 没有被算进金额，同时订单号、异常类型和原因被明确留下。把 `orders.json` 恢复成基准数据后再次运行，结果就会回到 2 单、328.0。
+
+## 用结果反查每个阶段
+
+运行完成后，不要只看“有没有生成文件”。按下面顺序验证：
+
+1. `paid_order_nos` 是否只包含 A001、A003。
+2. `paid_count` 是否等于列表长度 `2`。
+3. `paid_amount` 是否等于 `129.0 + 199.0 = 328.0`。
+4. 基准数据的 `problem_count` 是否为 `0`。
+5. 把 A003 金额改坏后，它是否出现在 `problems`，并从统计中消失。
+
+<Callout title="本章检查">
+  你应该能从 main() 沿着调用顺序说出 raw_orders、clean_orders、problems、summary 分别在哪一步产生；也能根据三轮状态台账解释为什么 A002 不计入金额、A003 在基准输入中把 129.0 累加到 328.0。
+</Callout>
+
+<HighlightBox eyebrow="下一篇 · 选修" title="什么时候值得把数据和行为放进对象">
+  完整订单脚本已经证明，列表、字典和函数足以完成很多自动化任务。下一篇把类与对象作为选修：只有当状态和行为需要长期绑定时，再判断是否值得使用。
+</HighlightBox>
+
+<style>{`
+  .py-capstone-board {
+    --cap-blue: #2563eb;
+    --cap-cyan: #0e7490;
+    --cap-green: #15803d;
+    --cap-amber: #b45309;
+    --cap-red: #b42318;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin: 1.5rem 0 2rem;
+    overflow: hidden;
+  }
+
+  .py-capstone-board figcaption {
+    background: color-mix(in srgb, var(--cyan) 8%, var(--paper));
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem 1.1rem;
+  }
+
+  .py-capstone-kicker,
+  .py-capstone-step,
+  .py-capstone-code-id,
+  .py-capstone-file-label {
+    color: var(--soft);
+    font-size: 0.76rem;
+    font-weight: 750;
+    letter-spacing: 0.035em;
+  }
+
+  .py-capstone-pipeline > ol,
+  .py-capstone-code-map > ol,
+  .py-capstone-error-route > ol {
+    display: grid;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .py-capstone-pipeline > ol {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .py-capstone-pipeline li,
+  .py-capstone-error-route li {
+    min-width: 0;
+    padding: 1rem;
+    position: relative;
+  }
+
+  .py-capstone-pipeline li + li,
+  .py-capstone-error-route li + li {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-capstone-pipeline li + li::before,
+  .py-capstone-error-route li + li::before {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    content: "→";
+    left: -0.75rem;
+    line-height: 1.4rem;
+    position: absolute;
+    text-align: center;
+    top: 2.8rem;
+    width: 1.4rem;
+  }
+
+  .py-capstone-pipeline strong,
+  .py-capstone-pipeline small,
+  .py-capstone-error-route strong,
+  .py-capstone-error-route code,
+  .py-capstone-error-route small {
+    display: block;
+  }
+
+  .py-capstone-pipeline strong,
+  .py-capstone-error-route strong {
+    margin: 0.5rem 0;
+  }
+
+  .py-capstone-pipeline small,
+  .py-capstone-error-route small {
+    color: var(--soft);
+  }
+
+  .py-capstone-pipeline .is-output {
+    background: color-mix(in srgb, var(--cap-green) 7%, var(--paper));
+    box-shadow: inset 0 3px 0 var(--cap-green);
+  }
+
+  .py-capstone-code-map > ol {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .py-capstone-code-map li {
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .py-capstone-code-map li + li {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-capstone-code-map li > code {
+    display: block;
+    margin: 0.55rem 0;
+    overflow-wrap: anywhere;
+  }
+
+  .py-capstone-code-map p {
+    margin: 0.45rem 0 0;
+  }
+
+  .py-capstone-code-map p b {
+    color: var(--soft);
+    display: block;
+    font-size: 0.72rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .py-capstone-map-rule {
+    align-items: center;
+    background: #172033;
+    color: #e7edf7;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .py-capstone-map-rule span {
+    color: #67e8f9;
+    font-size: 0.76rem;
+    font-weight: 750;
+  }
+
+  .py-capstone-rounds {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .py-capstone-rounds > section {
+    min-width: 0;
+  }
+
+  .py-capstone-rounds > section + section {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-capstone-rounds header {
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-height: 6.25rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .py-capstone-rounds header span,
+  .py-capstone-rounds header small,
+  .py-capstone-rounds > section > div > span {
+    color: var(--soft);
+    font-size: 0.76rem;
+  }
+
+  .py-capstone-rounds > section > div {
+    padding: 0.7rem 1rem;
+  }
+
+  .py-capstone-rounds > section > div + div {
+    border-top: 1px solid var(--line);
+  }
+
+  .py-capstone-rounds > section > div b,
+  .py-capstone-rounds > section > div code,
+  .py-capstone-rounds > section > div small {
+    display: block;
+    margin-top: 0.25rem;
+  }
+
+  .py-capstone-rounds .is-skipped header {
+    background: color-mix(in srgb, var(--soft) 7%, var(--paper));
+    box-shadow: inset 0 3px 0 var(--soft);
+  }
+
+  .py-capstone-ledger-result,
+  .py-capstone-error-result {
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .py-capstone-ledger-result span,
+  .py-capstone-error-result span {
+    padding: 0.8rem 1rem;
+  }
+
+  .py-capstone-ledger-result span + span,
+  .py-capstone-error-result span + span {
+    border-left: 1px solid var(--line);
+  }
+
+  .py-capstone-ledger-result b,
+  .py-capstone-error-result b {
+    color: var(--cap-green);
+    display: block;
+    font-size: 0.72rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .py-capstone-file-compare {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(11rem, 0.65fr) minmax(0, 1fr);
+  }
+
+  .py-capstone-file-compare > section {
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .py-capstone-file-compare > section > div {
+    background: var(--paper-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+    padding: 0.65rem;
+  }
+
+  .py-capstone-file-compare > section > small {
+    color: var(--soft);
+    display: block;
+    margin-top: 0.65rem;
+  }
+
+  .py-capstone-file-compare .is-refunded {
+    color: var(--soft);
+  }
+
+  .py-capstone-file-compare .is-summary {
+    background: color-mix(in srgb, var(--cap-green) 6%, var(--paper));
+  }
+
+  .py-capstone-transform {
+    align-items: center;
+    background: color-mix(in srgb, var(--cap-amber) 8%, var(--paper));
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    justify-content: center;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .py-capstone-transform span {
+    color: var(--cap-amber);
+    font-size: 0.76rem;
+    font-weight: 800;
+  }
+
+  .py-capstone-transform i {
+    font-size: 1.25rem;
+    font-style: normal;
+  }
+
+  .py-capstone-error-route > ol {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .py-capstone-error-route .is-error {
+    background: color-mix(in srgb, var(--cap-red) 7%, var(--paper));
+    box-shadow: inset 0 3px 0 var(--cap-red);
+  }
+
+  .py-capstone-error-route .is-blocked {
+    background: var(--paper-soft);
+    color: var(--soft);
+  }
+
+  .py-capstone-error-result {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (max-width: 900px) {
+    .py-capstone-pipeline > ol,
+    .py-capstone-code-map > ol {
+      grid-template-columns: 1fr;
+    }
+
+    .py-capstone-pipeline li + li,
+    .py-capstone-code-map li + li {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .py-capstone-pipeline li + li::before {
+      left: 1rem;
+      top: -0.75rem;
+      transform: rotate(90deg);
+    }
+  }
+
+  @media (max-width: 760px) {
+    .py-capstone-rounds,
+    .py-capstone-ledger-result,
+    .py-capstone-file-compare,
+    .py-capstone-error-route > ol,
+    .py-capstone-error-result {
+      grid-template-columns: 1fr;
+    }
+
+    .py-capstone-rounds > section + section,
+    .py-capstone-ledger-result span + span,
+    .py-capstone-error-route li + li,
+    .py-capstone-error-result span + span {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .py-capstone-rounds header {
+      min-height: 0;
+    }
+
+    .py-capstone-transform {
+      border-bottom: 1px solid var(--line);
+      border-left: 0;
+      border-right: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .py-capstone-transform i {
+      transform: rotate(90deg);
+    }
+
+    .py-capstone-error-route li + li::before {
+      left: 1rem;
+      top: -0.75rem;
+      transform: rotate(90deg);
+    }
+  }
+`}</style>

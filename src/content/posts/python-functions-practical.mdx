@@ -1,12 +1,12 @@
 ---
-title: "Python 函数入门：把一段处理逻辑变成可以重复使用的小工具"
-description: "从订单金额和状态判断出发，讲清 Python 函数定义、参数、return、默认参数、关键字参数、可变参数、局部变量和可变默认参数陷阱。"
+title: "Python 函数图解：参数、局部变量与 return 怎样流动"
+description: "沿一条订单金额调用轨迹，看见实参怎样进入参数名、局部变量何时存在、return 怎样回到调用位置，以及 print 和可变默认参数的真实去向。"
 date: 2026-08-22T22:38:00+08:00
-updated: 2026-08-27T00:10:00+08:00
+updated: 2026-08-27T09:50:00+08:00
 category: "教程"
 tags:
   - "Python"
-minutes: 12
+minutes: 15
 featured: false
 series: "python-basics"
 seriesOrder: 6
@@ -18,493 +18,337 @@ import HighlightBox from '../../components/HighlightBox.astro';
 import Callout from '../../components/Callout.astro';
 import PythonLessonBrief from '../../components/PythonLessonBrief.astro';
 
-前面已经能写出这样的代码：
+循环让同一段代码依次处理多条订单。函数则给一段处理逻辑起名字，并为它划出清楚的入口、内部空间和出口。
 
-```python
-amount = 129.0
-
-if amount >= 100:
-    result = "高金额"
-else:
-    result = "普通金额"
-```
-
-如果只判断一次，这样完全没问题。如果很多订单都需要做同一个判断，就可以把它变成一个函数。
+真正调用函数时，数据并不是“突然出现在函数里”。实参会先进入参数名，函数内部创建局部变量，`return` 再把结果送回原来的调用位置。这一篇就沿着一笔订单金额看完整条路径。
 
 <PythonLessonBrief
-  goal="把已经会写的条件分支与循环整理成有明确输入和输出的函数"
-  data="订单金额、状态以及由三条订单组成的列表"
-  outcome="完成两个函数协作的有效订单金额统计"
+  goal="沿一次函数调用，追踪实参、参数、局部变量和返回值"
+  data="单价 129.0、数量 2、折扣率 0.1"
+  outcome="函数返回折后金额 232.2，调用方继续使用这个结果"
 />
 
-## 函数先理解成“有名字的一段处理逻辑”
+## 定义函数，不等于已经执行函数体
+
+先定义一个订单金额函数：
 
 ```python
-def get_amount_level(amount):
-    if amount >= 100:
-        return "高金额"
-    else:
-        return "普通金额"
+def calculate_order_amount(price, quantity, discount_rate=0.0):
+    subtotal = price * quantity
+    discount = subtotal * discount_rate
+    final_amount = subtotal - discount
+    return final_amount
 ```
 
-调用：
+执行这段 `def` 时，Python 只是记住：以后可以用 `calculate_order_amount` 这个名字调用这段逻辑。函数体里的乘法、减法和 `return` 还没有运行。
+
+真正的处理从调用开始：
 
 ```python
-level = get_amount_level(129.0)
-print(level)
-```
+def calculate_order_amount(price, quantity, discount_rate=0.0):
+    subtotal = price * quantity
+    discount = subtotal * discount_rate
+    final_amount = subtotal - discount
+    return final_amount
 
-<figure class="py-function-machine" aria-labelledby="function-caption">
-  <figcaption id="function-caption"><span>函数工作台</span><strong>调用方交入数据，函数按契约处理，再把结果交回调用方</strong></figcaption>
-  <ol>
-    <li><span>01 · 调用</span><strong><code>get_amount_level(129.0)</code></strong><small>调用方提出一次处理请求</small></li>
-    <li><span>02 · 参数</span><strong><code>amount = 129.0</code></strong><small>实参进入函数的参数名</small></li>
-    <li><span>03 · 处理</span><strong><code>amount &gt;= 100</code></strong><small>函数内部执行判断</small></li>
-    <li><span>04 · 返回</span><strong><code>"高金额"</code></strong><small>结果回到原来的调用位置</small></li>
-  </ol>
-</figure>
 
-## `def` 只是定义，调用时才真正执行
+unit_price = 129.0
+order_quantity = 2
 
-```python
-def say_hello():
-    print("你好")
-```
+amount = calculate_order_amount(
+    unit_price,
+    order_quantity,
+    discount_rate=0.1,
+)
 
-只运行这三行不会输出，它只是告诉 Python 以后有一个叫 `say_hello` 的函数。
-
-真正执行：
-
-```python
-say_hello()
-```
-
-才会输出：
-
-```text
-你好
-```
-
-## 参数：函数接收外部数据的入口
-
-```python
-def show_order(order_no, amount):
-    print(f"订单 {order_no}，金额 {amount}")
-
-show_order("A001", 129.0)
-```
-
-定义时的 `order_no`、`amount` 是参数；调用时的 `"A001"`、`129.0` 是具体实参。函数需要哪些数据，就把哪些数据作为参数交进去。
-
-| 调用时的实参 | 进入的参数 | 函数内部用途 |
-| --- | --- | --- |
-| `"A001"` | `order_no` | 组成订单提示文本 |
-| `129.0` | `amount` | 组成订单提示文本 |
-
-## `return`：把结果交回给后面的代码
-
-```python
-def calculate_amount(price, quantity):
-    return price * quantity
-
-amount = calculate_amount(129.9, 2)
 print(amount)
-```
-
-结果：
-
-```text
-259.8
-```
-
-`return` 有两个关键作用：
-
-1. 把结果返回给调用位置。
-2. 函数执行到 `return` 后就结束。
-
-例如：
-
-```python
-def check_stock(stock):
-    if stock <= 0:
-        return "缺货"
-
-    return "有库存"
-```
-
-当 `stock <= 0` 成立时，第一个 `return` 执行，函数不会继续走到下面。
-
-## `print()` 和 `return` 完全不是一回事
-
-函数 A：
-
-```python
-def add(a, b):
-    print(a + b)
-```
-
-函数 B：
-
-```python
-def add(a, b):
-    return a + b
-```
-
-第一种只是把结果显示在屏幕上。
-
-第二种才是把结果交给外面的代码：
-
-```python
-result = add(3, 5)
-taxed_result = result * 1.13
-```
-
-<dl class="py-return-compare" aria-label="print 和 return 的区别">
-  <div><dt><code>print()</code></dt><dd><strong>结果显示在屏幕上</strong><span>适合调试、提示和最终展示，外部代码拿不到显示值</span></dd></div>
-  <div><dt><code>return</code></dt><dd><strong>结果回到调用位置</strong><span><code>result</code> 得到 8，还能继续参与计算</span></dd></div>
-</dl>
-
-真实数据处理函数通常更需要 `return`。
-
-## 函数可以接收字典
-
-```python
-def get_order_amount(order):
-    return order["price"] * order["quantity"]
-
-order = {
-    "order_no": "A001",
-    "price": 129.9,
-    "quantity": 2,
-}
-
-amount = get_order_amount(order)
-print(amount)
-```
-
-这种写法很常见，但不要因为方便就把一个巨大字典传给所有函数。
-
-如果函数只需要两个明确值，也可以直接写：
-
-```python
-def calculate_amount(price, quantity):
-    return price * quantity
-```
-
-传字典还是具体字段，优先看哪个能让函数的输入更明确。
-
-## 位置参数和关键字参数
-
-普通调用：
-
-```python
-def show_order(order_no, status):
-    print(order_no, status)
-
-show_order("A001", "已支付")
-```
-
-普通调用会按位置把 `"A001"` 交给 `order_no`，把 `"已支付"` 交给 `status`。
-
-也可以明确写参数名：
-
-```python
-show_order(status="已支付", order_no="A001")
-```
-
-这叫关键字参数。参数多时，它往往更容易读。
-
-## 默认参数：不传时使用默认值
-
-```python
-def build_message(order_no, prefix="订单"):
-    return f"{prefix}：{order_no}"
-
-print(build_message("A001"))
-print(build_message("A001", prefix="退款订单"))
 ```
 
 输出：
 
 ```text
-订单：A001
-退款订单：A001
+232.2
 ```
 
-默认参数适合真正存在“常用默认值”的场景。
+## 一次调用怎样进去，再带着结果出来
 
-## 一个必须提前知道的坑：不要把可变对象直接当默认值
+下面的调用轨迹分成两个空间：左右两端是函数外的调用方，中间带边框的区域是本次调用临时打开的函数空间。
 
-下面这段代码看起来很自然：
+<figure class="pyf-call" aria-labelledby="pyf-call-caption">
+  <figcaption id="pyf-call-caption">
+    <span class="pyf-kicker">调用位置 → 参数 → 局部变量 → return → 原调用位置</span>
+    <strong>折后金额 `232.2` 的完整来路</strong>
+  </figcaption>
+
+  <div class="pyf-call__track">
+    <section class="pyf-call__caller">
+      <span>01 · 调用位置</span>
+      <code>calculate_order_amount(129.0, 2, discount_rate=0.1)</code>
+      <dl>
+        <div><dt>实参</dt><dd><code>129.0</code></dd></div>
+        <div><dt>实参</dt><dd><code>2</code></dd></div>
+        <div><dt>实参</dt><dd><code>0.1</code></dd></div>
+      </dl>
+      <p>先求出三个实参的值，再打开一次函数调用。</p>
+    </section>
+
+    <div class="pyf-call__scope">
+      <div class="pyf-call__scope-label">函数内部 · 本次调用的局部空间</div>
+      <div class="pyf-call__inside">
+        <section>
+          <span>02 · 参数绑定</span>
+          <code>price → 129.0</code>
+          <code>quantity → 2</code>
+          <code>discount_rate → 0.1</code>
+          <p>外部实参进入函数定义中的参数名。</p>
+        </section>
+        <section>
+          <span>03 · 局部计算</span>
+          <code>subtotal → 258.0</code>
+          <code>discount → 25.8</code>
+          <code>final_amount → 232.2</code>
+          <p>这些名字只服务于本次调用。</p>
+        </section>
+        <section>
+          <span>04 · return</span>
+          <code>return final_amount</code>
+          <strong>送出 `232.2`</strong>
+          <p>执行到 return，函数体立即结束。</p>
+        </section>
+      </div>
+    </div>
+
+    <section class="pyf-call__caller pyf-call__caller--result">
+      <span>05 · 回到原调用位置</span>
+      <code>amount = 232.2</code>
+      <dl>
+        <div><dt>保留</dt><dd><code>unit_price · order_quantity</code></dd></div>
+        <div><dt>新增</dt><dd><code>amount</code></dd></div>
+      </dl>
+      <p>返回值替换原来的调用表达式，再绑定给 amount。</p>
+    </section>
+  </div>
+
+  <div class="pyf-call__boundary">
+    <div><span>调用结束后仍存在</span><code>unit_price · order_quantity · amount</code></div>
+    <div><span>函数空间关闭后不可从外部访问</span><code>price · quantity · subtotal · discount · final_amount</code></div>
+  </div>
+</figure>
+
+这条轨迹同时解释了三个常见词：
+
+| 名称 | 在本例中是什么 | 什么时候存在 |
+| --- | --- | --- |
+| 实参 | `unit_price`、`order_quantity`、`0.1` 的实际值 | 调用位置先求值 |
+| 参数 | `price`、`quantity`、`discount_rate` | 函数调用期间 |
+| 局部变量 | `subtotal`、`discount`、`final_amount` | 执行到对应赋值行后，直到本次调用结束 |
+
+前两个实参按位置进入 `price` 和 `quantity`。`discount_rate=0.1` 是关键字参数，它明确指定进入哪个参数。若调用时不写折扣率，就使用定义中的默认值 `0.0`：
 
 ```python
-def add_order(order_no, orders=[]):
-    orders.append(order_no)
-    return orders
-
-print(add_order("A001"))
-print(add_order("A002"))
+full_amount = calculate_order_amount(129.0, 2)
+print(full_amount)  # 258.0
 ```
 
-很多新手会猜第二次输出：
+### 局部变量不会自动跑到函数外面
 
-```text
-['A002']
+`subtotal` 在函数内部确实得到过 `258.0`，但调用结束后，外部代码不能直接用这个局部名字：
+
+```python
+amount = calculate_order_amount(129.0, 2)
+
+print(amount)    # 258.0
+print(subtotal)  # NameError: name 'subtotal' is not defined
 ```
 
-实际却是：
+需要带到外面的结果，应通过 `return` 送出，再由调用方使用自己的变量名接住。这个边界能防止函数内部的临时名字散落到整份脚本里。
+
+## `print()` 和 `return` 把结果送去了不同地方
+
+下面两个函数都算出 `258.0`，但结果的去向不同：
+
+```python
+def print_amount(price, quantity):
+    subtotal = price * quantity
+    print(subtotal)
+
+
+def return_amount(price, quantity):
+    subtotal = price * quantity
+    return subtotal
+
+
+printed_result = print_amount(129.0, 2)
+returned_result = return_amount(129.0, 2)
+
+print(printed_result)          # None
+print(returned_result * 1.1)  # 283.8
+```
+
+<figure class="pyf-destination" aria-labelledby="pyf-destination-caption">
+  <figcaption id="pyf-destination-caption">
+    <span class="pyf-kicker">结果去向对照</span>
+    <strong>屏幕上看见结果，不等于调用方拿到了结果</strong>
+  </figcaption>
+  <div class="pyf-destination__lanes">
+    <section>
+      <header><code>print(subtotal)</code><strong>显示路径</strong></header>
+      <ol>
+        <li><span>01 · 函数内部</span><code>subtotal → 258.0</code></li>
+        <li><span>02 · 终端输出</span><strong>屏幕显示 `258.0`</strong></li>
+        <li><span>03 · 调用表达式的值</span><code>None</code><small>函数没有 return</small></li>
+        <li><span>04 · 外部状态</span><code>printed_result → None</code><small>不能拿来继续算金额</small></li>
+      </ol>
+    </section>
+    <section class="pyf-destination__return">
+      <header><code>return subtotal</code><strong>返回路径</strong></header>
+      <ol>
+        <li><span>01 · 函数内部</span><code>subtotal → 258.0</code></li>
+        <li><span>02 · return</span><strong>把 `258.0` 送回调用位置</strong></li>
+        <li><span>03 · 外部状态</span><code>returned_result → 258.0</code></li>
+        <li><span>04 · 后续计算</span><code>258.0 * 1.1 → 283.8</code><small>返回值可以继续流动</small></li>
+      </ol>
+    </section>
+  </div>
+</figure>
+
+`print()` 适合调试、提示和最终展示；`return` 适合把计算结果交给后面的代码。数据处理函数通常应该返回结果，由最外层代码决定何时显示。
+
+## 可变默认参数为什么记住了上一次调用
+
+数字和文字用作默认参数通常很直观，列表则需要格外小心。下面的写法只在执行 `def` 时创建一次默认列表：
+
+```python
+def remember_order(order_no, history=[]):
+    history.append(order_no)
+    return history
+
+
+print(remember_order("A001"))
+print(remember_order("A002"))
+```
+
+很多人会以为两次调用各有一张空列表，实际输出却是：
 
 ```text
 ['A001']
 ['A001', 'A002']
 ```
 
-原因是默认列表在函数定义时就创建了，后续多次调用会继续使用同一个列表。
+<figure class="pyf-default" aria-labelledby="pyf-default-caption">
+  <figcaption id="pyf-default-caption">
+    <span class="pyf-kicker">定义时状态 → 第 1 次调用 → 第 2 次调用</span>
+    <strong>默认列表是否被两次调用共享</strong>
+  </figcaption>
+  <div class="pyf-default__lanes">
+    <section class="pyf-default__unsafe">
+      <header><span>有风险的写法</span><code>history=[]</code></header>
+      <ol>
+        <li><span>01 · 定义函数</span><strong>创建默认列表 L1</strong><code>L1 → []</code></li>
+        <li><span>02 · 调用 A001</span><strong>history 继续指向 L1</strong><code>L1 → ["A001"]</code></li>
+        <li><span>03 · 调用 A002</span><strong>再次拿到同一个 L1</strong><code>L1 → ["A001", "A002"]</code></li>
+      </ol>
+      <p>函数调用结束了，但函数定义仍保留着对默认列表 L1 的引用。</p>
+    </section>
+    <section class="pyf-default__safe">
+      <header><span>安全的写法</span><code>history=None</code></header>
+      <ol>
+        <li><span>01 · 定义函数</span><strong>默认值只是 None</strong><code>不提前创建列表</code></li>
+        <li><span>02 · 调用 A001</span><strong>本次创建列表 L1</strong><code>L1 → ["A001"]</code></li>
+        <li><span>03 · 调用 A002</span><strong>下次创建新列表 L2</strong><code>L2 → ["A002"]</code></li>
+      </ol>
+      <p>每次没有传 history 时，都在函数内部创建一张新列表。</p>
+    </section>
+  </div>
+</figure>
 
-正确的常见写法：
+安全写法是把 `None` 当作“调用方没有传列表”的信号：
 
 ```python
-def add_order(order_no, orders=None):
-    if orders is None:
-        orders = []
+def remember_order(order_no, history=None):
+    if history is None:
+        history = []
 
-    orders.append(order_no)
-    return orders
+    history.append(order_no)
+    return history
+
+
+print(remember_order("A001"))
+print(remember_order("A002"))
 ```
 
-这样每次没有传 `orders` 时，都会在函数内部创建一个新列表。
+输出：
 
-<table class="py-default-memory">
-  <caption>两次调用共享了函数定义时创建的默认列表</caption>
-  <thead><tr><th>调用</th><th>传入订单</th><th>共享列表调用后的状态</th></tr></thead>
-  <tbody>
-    <tr><td>第一次</td><td><code>"A001"</code></td><td><code>["A001"]</code></td></tr>
-    <tr><td>第二次</td><td><code>"A002"</code></td><td><code>["A001", "A002"]</code></td></tr>
-  </tbody>
-</table>
+```text
+['A001']
+['A002']
+```
 
-这个问题在综合考核里会再次出现，因为它非常能检验你是否真正理解“变量和对象的关系”。
+如果调用方明确传入一张列表，函数仍会使用那张列表。这种写法修复的是“省略参数时意外共享默认对象”，不是禁止函数接收列表。
 
-<details class="py-function-boundaries">
-  <summary><span>边界与补充</span><strong><code>*args</code>、局部变量、可变对象和方法</strong><small>主线函数掌握后再展开</small></summary>
-
-### `*args`：参数数量确实不固定时再用
+<details class="pyf-extra">
+  <summary><span>可选补充</span><strong>参数数量真的不固定时，再使用 `*args`</strong></summary>
 
 ```python
 def total_amount(*amounts):
-    total = 0
+    total = 0.0
 
     for amount in amounts:
-        total = total + amount
+        total += amount
 
     return total
 
-print(total_amount(10, 20, 30))
+
+print(total_amount(129.0, 88.0, 199.0))  # 416.0
 ```
 
-输出：
-
-```text
-60
-```
-
-函数内部的 `amounts` 可以看成一个元组：
-
-```python
-(10, 20, 30)
-```
-
-不要因为看到 `*args` 很灵活就到处使用。参数数量固定时，普通参数更清楚。
-
-### 局部变量：函数里面创建的名字通常只在函数里使用
-
-```python
-def calculate_amount(price, quantity):
-    amount = price * quantity
-    return amount
-
-print(amount)
-```
-
-最后一行会报错，因为 `amount` 是函数内部的局部变量，外面不能直接使用它。
-
-应该接住返回值：
-
-```python
-result = calculate_amount(129.9, 2)
-print(result)
-```
-
-这种边界其实是好事：函数内部的临时变量不会到处污染外部代码。
-
-### 列表和字典传进函数后，可能会被直接修改
-
-```python
-def mark_processed(order):
-    order["processed"] = True
-
-order = {"order_no": "A001"}
-mark_processed(order)
-
-print(order)
-```
-
-输出：
-
-```text
-{'order_no': 'A001', 'processed': True}
-```
-
-因为函数里的 `order` 和外面的 `order` 指向同一个字典对象。
-
-如果函数不应该修改原数据，可以先创建新字典：
-
-```python
-def mark_processed(order):
-    result = order.copy()
-    result["processed"] = True
-    return result
-```
-
-但别忘了上一篇讲过：`.copy()` 是浅拷贝，如果里面还有嵌套列表，仍然要理解共享引用问题。
-
-### 函数和方法：看到点号时要区分
-
-```python
-text = "  K161  "
-
-print(len(text))
-print(text.strip())
-```
-
-`len(text)` 是调用函数。
-
-`text.strip()` 是调用字符串对象自己的方法。
-
-再例如：
-
-```python
-orders.append(order)
-```
-
-`append()` 是列表的方法。
-
-入门阶段只要能区分 `名字(...)` 通常是函数调用，`数据.名字(...)` 通常是方法调用。
+函数内部的 `amounts` 是由所有位置实参组成的元组。订单金额函数的参数数量固定时，直接写 `price`、`quantity` 会比 `*args` 更清楚。
 
 </details>
 
 ## 什么时候值得写成函数
 
-不是“代码超过 5 行就写函数”。可以先看这几个信号：
+函数不是为了把代码切得越碎越好。出现这些信号时，再考虑提取：
 
-- 同一段逻辑需要重复使用。
-- 一段处理已经可以用一个清楚的动作命名。
-- 主流程太长，拆出一个独立步骤后更容易读。
-- 这段逻辑有明确输入和输出。
+- 同一段逻辑会被重复调用。
+- 一段处理能用清楚的动作命名。
+- 输入和返回结果可以明确说清。
+- 提取后，主流程更容易顺着读下去。
 
-例如：
+例如 `calculate_order_amount` 清楚表达了输入是价格、数量和折扣率，输出是最终金额。若某一行只出现一次，而且内联更直观，就不必为了形式增加函数。
 
-```python
-def is_valid_order(order):
-    return order["status"] == "已支付" and order["amount"] > 0
-```
+## 动手练习：先画调用轨迹，再运行
 
-这个函数名字本身就在说明业务含义。
+复制本章的 `calculate_order_amount`，完成下面四步：
 
-反过来，如果只有一行而且只使用一次，没必要为了“像工程项目”强行封装。
-
-## 一个完整小案例：计算有效订单金额
-
-```python
-def is_valid_order(order):
-    return order["status"] == "已支付" and order["amount"] > 0
-
-
-def get_valid_amount(orders):
-    total = 0
-
-    for order in orders:
-        if not is_valid_order(order):
-            continue
-
-        total = total + order["amount"]
-
-    return total
-
-
-orders = [
-    {"order_no": "A001", "amount": 129.0, "status": "已支付"},
-    {"order_no": "A002", "amount": 88.0, "status": "已退款"},
-    {"order_no": "A003", "amount": 199.0, "status": "已支付"},
-]
-
-result = get_valid_amount(orders)
-print(result)
-```
-
-执行关系：
-
-<ol class="py-function-chain" aria-label="两个函数协作处理订单的执行链">
-  <li><span>输入</span><strong><code>orders</code></strong><small>3 条订单进入主函数</small></li>
-  <li><span>主函数</span><strong><code>get_valid_amount()</code></strong><small>负责遍历与累计</small></li>
-  <li><span>判断函数</span><strong><code>is_valid_order()</code></strong><small>每条返回 True / False</small></li>
-  <li><span>返回</span><strong><code>328.0</code></strong><small>只有有效订单进入金额累计</small></li>
-</ol>
-
-这里没有类，没有设计模式，也没有复杂抽象。对于一个小脚本来说，这种函数拆分已经足够清楚。
-
-## 动手练习：把库存判断拆成函数
-
-给定：
-
-```python
-products = [
-    {"sku": "K161", "stock": 3},
-    {"sku": "K162", "stock": 8},
-    {"sku": "K163", "stock": 0},
-]
-```
-
-完成两个函数：`need_restock(stock)` 返回 `True / False`，`get_restock_skus(products)` 返回需要补货的 SKU 列表。
-
-参考实现：
-
-```python
-def need_restock(stock):
-    return stock < 5
-
-
-def get_restock_skus(products):
-    restock_skus = []
-
-    for product in products:
-        if need_restock(product["stock"]):
-            restock_skus.append(product["sku"])
-
-    return restock_skus
-```
-
-重点不是代码短，而是能说清函数契约：`need_restock` 输入一个库存并返回判断结果；`get_restock_skus` 输入一批商品并返回需要补货的 SKU。
+1. 调用 `calculate_order_amount(88.0, 3)`，写出参数绑定、三个局部变量和返回值。
+2. 改用 `discount_rate=0.2`，先预测 `subtotal`、`discount`、`final_amount`，再运行确认。
+3. 把 `return final_amount` 暂时改成 `print(final_amount)`，解释调用方变量为什么会得到 `None`。
+4. 分别运行有风险和安全的 `remember_order` 两次，指出第二次调用开始前默认列表是什么状态。
 
 <Callout title="本章检查">
-  你应该能写出参数和返回值都明确的函数，解释 `print()` 与 `return` 的区别，并知道可变默认参数为什么会在多次调用之间保留状态。
+  看到一次函数调用时，你应该能指出：调用位置交了哪些实参，它们进入哪些参数名，函数内部建立了哪些局部变量，return 送出什么值，以及这个值最终绑定到了调用方的哪个名字。
 </Callout>
 
-<HighlightBox eyebrow="下一篇" title="函数已经能组织逻辑，下一步接真实数据">
-  下一篇会从 TXT 和 JSON 文件开始，再把同一套结构映射到 API 返回结果，并用 `try / except` 处理真正会失败的输入。
+<HighlightBox eyebrow="下一篇" title="函数已经能组织逻辑，下一步接入外部数据">
+  下一篇会让 JSON 文件中的文本进入 Python，经过解析后变成列表与字典，再把处理结果写回文件。
 </HighlightBox>
 
 <style>{`
-  .py-function-machine,
-  .py-function-boundaries {
+  .pyf-call,
+  .pyf-destination,
+  .pyf-default,
+  .pyf-extra {
     border: 1px solid var(--line);
     border-radius: var(--radius);
     margin: 1.5rem 0 2rem;
     overflow: hidden;
   }
 
-  .py-function-machine figcaption,
-  .py-function-boundaries > summary {
+  .pyf-call figcaption,
+  .pyf-destination figcaption,
+  .pyf-default figcaption,
+  .pyf-extra > summary {
     background: color-mix(in srgb, var(--violet) 8%, var(--paper));
     border-bottom: 1px solid var(--line);
     display: flex;
@@ -513,114 +357,253 @@ def get_restock_skus(products):
     padding: 1rem 1.1rem;
   }
 
-  .py-function-machine figcaption span,
-  .py-function-machine li span,
-  .py-function-machine li small,
-  .py-return-compare span,
-  .py-function-chain span,
-  .py-function-chain small,
-  .py-function-boundaries summary span,
-  .py-function-boundaries summary small {
+  .pyf-kicker,
+  .pyf-call section > span,
+  .pyf-call__boundary span,
+  .pyf-destination li > span,
+  .pyf-default li > span,
+  .pyf-default header > span,
+  .pyf-extra summary > span {
     color: var(--soft);
-    font-size: 0.8rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
   }
 
-  .py-function-machine ol,
-  .py-function-chain {
+  .pyf-call__track {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 3fr) minmax(0, 0.9fr);
+  }
+
+  .pyf-call__caller {
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .pyf-call__caller > code,
+  .pyf-call__inside section > code {
+    display: block;
+    margin: 0.65rem 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .pyf-call__caller dl {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0.8rem 0;
+  }
+
+  .pyf-call__caller dl > div {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+  }
+
+  .pyf-call__caller dt,
+  .pyf-call__caller dd {
+    color: var(--soft);
+    font-size: 0.76rem;
+    margin: 0;
+    min-width: 0;
+  }
+
+  .pyf-call__scope {
+    background: color-mix(in srgb, var(--violet) 4%, var(--paper));
+    border-left: 1px solid var(--violet);
+    border-right: 1px solid var(--violet);
+    min-width: 0;
+  }
+
+  .pyf-call__scope-label {
+    border-bottom: 1px dashed var(--line);
+    color: var(--soft);
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0.55rem 0.8rem;
+    text-align: center;
+  }
+
+  .pyf-call__inside {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pyf-call__inside section {
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .pyf-call__inside section + section {
+    border-left: 1px solid var(--line);
+  }
+
+  .pyf-call p,
+  .pyf-default p,
+  .pyf-destination small {
+    color: var(--soft);
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+
+  .pyf-call__boundary {
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pyf-call__boundary > div {
+    min-width: 0;
+    padding: 0.85rem 1rem;
+  }
+
+  .pyf-call__boundary > div + div {
+    border-left: 1px solid var(--line);
+  }
+
+  .pyf-call__boundary code,
+  .pyf-call__boundary span {
+    display: block;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .pyf-call__boundary code {
+    margin-top: 0.35rem;
+  }
+
+  .pyf-destination__lanes,
+  .pyf-default__lanes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pyf-destination__lanes > section,
+  .pyf-default__lanes > section {
+    min-width: 0;
+  }
+
+  .pyf-destination__lanes > section + section,
+  .pyf-default__lanes > section + section {
+    border-left: 1px solid var(--line);
+  }
+
+  .pyf-destination header,
+  .pyf-default header {
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-height: 5.4rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .pyf-destination__return header,
+  .pyf-default__safe header {
+    box-shadow: inset 0 3px 0 var(--violet);
+  }
+
+  .pyf-destination ol,
+  .pyf-default ol {
     list-style: none;
     margin: 0;
     padding: 0;
   }
 
-  .py-function-machine li,
-  .py-function-chain li {
-    min-width: 0;
-    padding: 1rem;
+  .pyf-destination li,
+  .pyf-default li {
+    min-height: 6.5rem;
+    padding: 0.85rem 1rem;
   }
 
-  .py-function-machine li + li,
-  .py-function-chain li + li {
-    border-left: 1px solid var(--line);
+  .pyf-destination li + li,
+  .pyf-default li + li {
+    border-top: 1px solid var(--line);
   }
 
-  .py-function-machine li strong,
-  .py-function-machine li small,
-  .py-function-chain li strong,
-  .py-function-chain li small {
+  .pyf-destination li > code,
+  .pyf-destination li > strong,
+  .pyf-default li > code,
+  .pyf-default li > strong {
     display: block;
     margin-top: 0.45rem;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
-  .py-return-compare {
-    display: grid;
-    gap: 0.8rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin: 1.5rem 0 2rem;
+  .pyf-destination small {
+    display: block;
+    margin-top: 0.3rem;
   }
 
-  .py-return-compare > div {
-    background: var(--paper-soft);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 1rem;
+  .pyf-default__unsafe header {
+    background: color-mix(in srgb, #d84b4b 7%, var(--paper));
+    box-shadow: inset 0 3px 0 #d84b4b;
   }
 
-  .py-return-compare dt,
-  .py-return-compare dd {
+  .pyf-default__lanes section > p {
+    border-top: 1px solid var(--line);
     margin: 0;
+    min-height: 5.2rem;
+    padding: 0.85rem 1rem;
   }
 
-  .py-return-compare dd strong,
-  .py-return-compare dd span {
-    display: block;
-    margin-top: 0.45rem;
-  }
-
-  .py-default-memory caption {
-    color: var(--ink);
-    font-weight: 760;
-    padding-bottom: 0.75rem;
-    text-align: left;
-  }
-
-  .py-default-memory,
-  .py-function-chain {
-    margin: 1.5rem 0 2rem;
-  }
-
-  .py-function-chain {
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  .py-function-boundaries > summary {
+  .pyf-extra > summary {
     border-bottom: 0;
     cursor: pointer;
   }
 
-  .py-function-boundaries[open] > summary {
+  .pyf-extra[open] > summary {
     border-bottom: 1px solid var(--line);
   }
 
-  .py-function-boundaries > :not(summary) {
+  .pyf-extra > :not(summary) {
     margin-left: 1.1rem;
     margin-right: 1.1rem;
   }
 
-  @media (max-width: 700px) {
-    .py-function-machine ol,
-    .py-function-chain,
-    .py-return-compare {
+  @media (max-width: 900px) {
+    .pyf-call__track {
       grid-template-columns: 1fr;
     }
 
-    .py-function-machine li + li,
-    .py-function-chain li + li {
+    .pyf-call__scope {
+      border-bottom: 1px solid var(--violet);
+      border-left: 0;
+      border-right: 0;
+      border-top: 1px solid var(--violet);
+    }
+
+    .pyf-call__caller--result {
+      border-top: 0;
+    }
+
+    .pyf-destination header,
+    .pyf-default header,
+    .pyf-destination li,
+    .pyf-default li,
+    .pyf-default__lanes section > p {
+      min-height: 0;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .pyf-call__inside,
+    .pyf-call__boundary,
+    .pyf-destination__lanes,
+    .pyf-default__lanes {
+      grid-template-columns: 1fr;
+    }
+
+    .pyf-call__inside section + section,
+    .pyf-call__boundary > div + div,
+    .pyf-destination__lanes > section + section,
+    .pyf-default__lanes > section + section {
       border-left: 0;
       border-top: 1px solid var(--line);
+    }
+
+    .pyf-call__inside section {
+      padding-left: 1rem;
     }
   }
 `}</style>
