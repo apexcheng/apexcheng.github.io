@@ -1,0 +1,477 @@
+---
+title: "Excel 公式基础：字符串、数值、布尔值、引用、日期和时间"
+description: "从 Excel 公式真正处理的数据出发，讲清字符串、数值、布尔值、单元格与区域引用，以及日期和时间为什么可以直接参与计算。"
+date: 2026-08-27T17:18:00+08:00
+updated: 2026-08-27T17:18:00+08:00
+category: "教程"
+tags:
+  - "Excel"
+  - "数据处理"
+minutes: 15
+featured: false
+pinned: false
+series: "excel-functions"
+seriesOrder: 1
+draft: false
+private: false
+---
+
+import HighlightBox from '../../components/HighlightBox.astro';
+
+很多 Excel 公式看不懂，并不是因为函数太难，而是还没有分清：**公式里的每一段，到底是数值、文本、布尔值，还是一个引用。**
+
+先把这些基础概念弄清楚，后面再学 `IF`、`XLOOKUP`、`FILTER`、`LET`，公式会容易读很多。
+
+<div class="formula-basics-hero" role="group" aria-label="Excel 公式基础数据类型总览">
+  <div class="formula-basics-hero__title">
+    <span>EXCEL FORMULA BASICS</span>
+    <strong>公式不是一串字符，而是在处理不同类型的数据</strong>
+    <p>先认出“这是什么”，再判断“函数要怎么处理它”。</p>
+  </div>
+  <div class="formula-basics-hero__grid">
+    <div><code>123</code><strong>数值</strong><small>可以直接计算</small></div>
+    <div><code>"123"</code><strong>字符串</strong><small>看起来像数字，本质仍是文本</small></div>
+    <div><code>TRUE</code><strong>布尔值</strong><small>只有 TRUE / FALSE</small></div>
+    <div><code>A2</code><strong>单元格引用</strong><small>读取 A2 当前的值</small></div>
+    <div><code>A2:A10</code><strong>区域引用</strong><small>读取一整片单元格</small></div>
+    <div><code>DATE(2026,8,27)</code><strong>日期数值</strong><small>只是用日期格式显示</small></div>
+  </div>
+</div>
+
+## 一、先学会看懂公式里的“值”和“引用”
+
+以最常见的 `IF` 为例：
+
+```excel
+=IF(A2>100,"达标","未达标")
+```
+
+<div class="formula-anatomy-board" role="group" aria-label="IF 公式组成拆解">
+  <div><code>A2</code><strong>引用</strong><span>读取 A2 当前的值</span></div>
+  <i>&gt;</i>
+  <div><code>100</code><strong>数值</strong><span>直接参与大小比较</span></div>
+  <i>→</i>
+  <div><code>A2&gt;100</code><strong>布尔结果</strong><span>计算后得到 TRUE 或 FALSE</span></div>
+  <i>→</i>
+  <div><code>"达标"</code><strong>字符串</strong><span>条件成立时返回文字</span></div>
+</div>
+
+一条公式里，经常同时出现多种类型。真正要学的不是“看到引号就背规则”，而是先理解 Excel 此刻把它当成什么。
+
+| 写法 | Excel 如何理解 |
+| --- | --- |
+| `123` | 数值 123 |
+| `"123"` | 三个字符组成的文本 |
+| `TRUE` | 布尔值 |
+| `"TRUE"` | 文本 |
+| `A2` | 单元格引用 |
+| `"A2"` | 两个字符组成的文本 |
+| `A2:A10` | 区域引用 |
+| `"A2:A10"` | 文本 |
+
+<HighlightBox eyebrow="先记这一条" title="引号通常意味着：这里写的是文本，不是引用，也不是数值">
+  `"100"`、`"TRUE"`、`"A2"` 看起来分别像数字、布尔值和单元格地址，但只要被英文双引号包住，Excel 首先都会把它们当成文本。
+</HighlightBox>
+
+## 二、字符串和数值：看起来一样，不代表类型一样
+
+最典型的例子就是：
+
+```excel
+=123+1
+```
+
+结果是 `124`。
+
+而：
+
+```excel
+="123"&1
+```
+
+结果是文本 `1231`。
+
+<div class="type-conversion-board" role="group" aria-label="字符串与数值转换关系">
+  <div class="is-text"><span>文本</span><strong>"123"</strong><small>不能把“看起来像数字”当成真正数值</small></div>
+  <i>VALUE</i>
+  <div class="is-number"><span>数值</span><strong>123</strong><small>可以求和、比较、排序和计算</small></div>
+  <i>TEXT</i>
+  <div class="is-text"><span>文本</span><strong>"123"</strong><small>适合展示、拼接和固定格式输出</small></div>
+</div>
+
+这里正好对应现有的两个函数方向：
+
+- `VALUE`：把可识别的文本数字转换成真正数值。
+- `TEXT`：把数值按照指定格式输出成文本。
+
+如果需要继续看这两个函数内部怎么运行，可以接着看 [Excel 函数图解手册](/articles/excel-functions-visual-handbook/)。
+
+还有一个容易混淆的写法：
+
+```excel
+=""
+```
+
+它返回的是**空字符串**，不是一个真正从未填写过的空白单元格。很多公式里两者表现接近，但在计数、判断和数据清洗时并不完全相同。
+
+## 三、引用：A2 不是一个值，而是“去这里取值”
+
+公式里的引用可以理解成一个地址。
+
+<div class="reference-board" role="group" aria-label="Excel 单元格和区域引用区别">
+  <div><code>A2</code><strong>单个单元格</strong><span>读取 A2 的当前内容</span></div>
+  <div><code>A2:A10</code><strong>连续区域</strong><span>读取 A2 到 A10</span></div>
+  <div><code>$A$2</code><strong>绝对引用</strong><span>复制公式时保持地址不变</span></div>
+  <div class="is-text"><code>"A2:A10"</code><strong>只是文本</strong><span>Excel 不会自动去读取这个区域</span></div>
+</div>
+
+因此：
+
+```excel
+=SUM(A2:A10)
+```
+
+`SUM` 收到的是一片真实区域。
+
+而：
+
+```excel
+=SUM("A2:A10")
+```
+
+这里传进去的只是文本，不等于区域引用。
+
+`INDIRECT` 之所以特殊，就是因为它可以把类似 `"A2:A10"` 这样的文本，再解释成真正引用：
+
+```excel
+=SUM(INDIRECT("A2:A10"))
+```
+
+先理解这一点，以后看到 `LET` 里给区域命名、`XLOOKUP` 里传入查找区域，或者动态拼接引用时会更容易理解。
+
+## 四、布尔值：TRUE 和 FALSE 是公式里的判断结果
+
+布尔值只有两个：
+
+```text
+TRUE
+FALSE
+```
+
+它们不需要加引号。
+
+```excel
+=A2>100
+```
+
+如果 A2 是 129，结果就是：
+
+```text
+TRUE
+```
+
+而：
+
+```excel
+="TRUE"
+```
+
+返回的是文字 `TRUE`，不是布尔值。
+
+<div class="boolean-flow-board" role="group" aria-label="Excel 条件表达式生成布尔值">
+  <div><span>输入</span><strong>A2 = 129</strong></div>
+  <i>→</i>
+  <div><span>判断</span><strong>129 &gt; 100</strong></div>
+  <i>→</i>
+  <div class="is-true"><span>布尔结果</span><strong>TRUE</strong></div>
+  <i>→</i>
+  <div><span>IF 再处理</span><strong>返回“达标”</strong></div>
+</div>
+
+`IF`、`FILTER`、`AND`、`OR` 的核心都离不开布尔值。区别只是：有的函数自己生成 TRUE / FALSE，有的函数接收已经生成好的 TRUE / FALSE，再决定下一步做什么。
+
+## 五、日期为什么能直接加减：因为日期本质也是数值
+
+Excel 里真正的日期，并不是一段普通文字。
+
+```excel
+=DATE(2026,8,27)
+```
+
+返回的是一个**日期序列值**，只是单元格通常把它按 `2026/8/27` 这样的日期格式显示出来。
+
+<div class="date-value-board" role="group" aria-label="Excel 日期数值与显示格式关系">
+  <div><span>公式</span><code>=DATE(2026,8,27)</code></div>
+  <i>→</i>
+  <div><span>内部</span><strong>日期序列数值</strong><small>可以参与加减</small></div>
+  <i>→</i>
+  <div><span>显示格式</span><strong>2026/8/27</strong><small>格式只改变外观</small></div>
+</div>
+
+因此：
+
+```excel
+=A2+1
+```
+
+如果 A2 是一个真实日期，结果就是下一天。
+
+```excel
+=B2-A2
+```
+
+两个日期相减，得到的是相差多少天。
+
+如果把日期单元格改成“常规”格式，通常会看到它背后的序列值。具体序列号会受到工作簿日期系统影响，所以真正使用时不需要死记“某一天等于多少”，只要理解**日期可以作为数值计算**即可。
+
+日期文本则是另一回事：
+
+```excel
+="2026/8/27"
+```
+
+这仍然只是文本。需要时可以用：
+
+```excel
+=DATEVALUE("2026/8/27")
+```
+
+把可识别的日期文本转换成真正日期值。
+
+## 六、时间为什么也是数值：一天等于 1
+
+Excel 把一整天看成 `1`，那么一天中的时间就是 `0` 到 `1` 之间的小数。
+
+<div class="time-scale-board" role="group" aria-label="Excel 时间对应一天中的小数比例">
+  <div><strong>0</strong><span>00:00</span></div>
+  <div><strong>0.25</strong><span>06:00</span></div>
+  <div><strong>0.5</strong><span>12:00</span></div>
+  <div><strong>0.75</strong><span>18:00</span></div>
+  <div><strong>1</strong><span>下一天 00:00</span></div>
+</div>
+
+所以：
+
+```excel
+=TIME(12,0,0)
+```
+
+本质上得到的是 `0.5`。只是当单元格使用时间格式时，会显示成 `12:00`。
+
+同理：
+
+```excel
+=TIMEVALUE("12:00")
+```
+
+也是把可识别的时间文本转换成一天中的时间数值。
+
+## 七、日期 + 时间：整数部分是日期，小数部分是时间
+
+真正的“日期时间”，就是两部分合在一起：
+
+<div class="datetime-board" role="group" aria-label="Excel 日期时间由日期序列和时间小数组成">
+  <div><span>日期</span><strong>整数部分</strong><small>2026/8/27</small></div>
+  <b>+</b>
+  <div><span>时间</span><strong>小数部分</strong><small>12:00 = 0.5</small></div>
+  <b>=</b>
+  <div class="is-result"><span>日期时间</span><strong>2026/8/27 12:00</strong></div>
+</div>
+
+这也解释了为什么：
+
+```excel
+=TODAY()
+```
+
+只有今天的日期部分。
+
+而：
+
+```excel
+=NOW()
+```
+
+同时包含今天的日期和当前时间。
+
+如果开始时间在 A2、结束时间在 B2：
+
+```excel
+=B2-A2
+```
+
+结果单位本质上仍然是“天”。如果想得到小时，可以写：
+
+```excel
+=(B2-A2)*24
+```
+
+要得到分钟，则可以乘以 `1440`。
+
+## 八、最后把这几类写法放到一起看
+
+| 你想表达什么 | 公式里的写法 | 关键区别 |
+| --- | --- | --- |
+| 数值 | `100` | 不加引号，可以直接计算 |
+| 字符串 | `"淘宝"` | 用英文双引号包住 |
+| 空字符串 | `""` | 是文本，不等于真正空白单元格 |
+| 布尔值 | `TRUE` / `FALSE` | 不加引号 |
+| 条件判断 | `A2>100` | 计算后返回 TRUE / FALSE |
+| 单元格引用 | `A2` | 去读取这个地址当前的值 |
+| 区域引用 | `A2:A10` | 表示一整片单元格 |
+| 日期 | `DATE(2026,8,27)` | 本质是日期序列数值 |
+| 时间 | `TIME(12,0,0)` | 本质是一天中的小数 |
+| 日期时间 | `NOW()` | 日期整数部分 + 时间小数部分 |
+
+<HighlightBox eyebrow="下一步" title="现在再进入函数地图，会更容易看懂参数">
+  先理解“公式里传进去的到底是什么”，再看函数语法。下一篇 [Excel 常用函数：从基础到中级的完整清单](/articles/excel-functions-from-basic-to-intermediate/) 会把这些值和引用放进统计、条件、查找、文本、逻辑和日期等函数家族中。
+</HighlightBox>
+
+如果你想直接练习日期与时间函数，可以进入 [Excel 基础函数案例详解](/articles/excel-basic-functions-case-guide/)；其中包含 `DATE`、`DATEVALUE`、`TIME`、`TIMEVALUE`、`HOUR`、`MINUTE`、`SECOND` 等实际案例。
+
+<style>{`
+  .formula-basics-hero,
+  .formula-anatomy-board,
+  .type-conversion-board,
+  .reference-board,
+  .boolean-flow-board,
+  .date-value-board,
+  .time-scale-board,
+  .datetime-board {
+    --fb-blue: #1769d2;
+    --fb-cyan: #0794ad;
+    --fb-green: #16815f;
+    --fb-violet: #6557c8;
+    --fb-navy: #10243f;
+    --fb-text: #263a52;
+    --fb-muted: #687b90;
+    margin: 1.5rem 0 2.1rem;
+    color: var(--fb-text);
+  }
+
+  .formula-basics-hero {
+    padding: clamp(1.1rem,3vw,1.8rem);
+    border: 1px solid #c8daf1;
+    border-radius: 26px;
+    background:
+      radial-gradient(circle at 90% 8%,rgba(23,105,210,.13),transparent 26%),
+      linear-gradient(145deg,#fff,#f4f8fe 62%,#eef8fb);
+    box-shadow: 0 20px 54px rgba(43,91,145,.1);
+  }
+  .formula-basics-hero__title { max-width: 790px; margin: 0 auto 1.1rem; text-align: center; }
+  .formula-basics-hero__title span { color: var(--fb-blue); font-size: .75rem; font-weight: 900; letter-spacing: .15em; }
+  .formula-basics-hero__title strong { display: block; margin: .4rem 0 .55rem; color: var(--fb-navy); font-size: clamp(1.3rem,3vw,2rem); line-height: 1.25; }
+  .formula-basics-hero__title p { margin: 0; color: var(--fb-muted); line-height: 1.7; }
+  .formula-basics-hero__grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .7rem; }
+  .formula-basics-hero__grid div { min-width: 0; padding: .9rem; border: 1px solid #d4e1f0; border-radius: 14px; background: rgba(255,255,255,.88); }
+  .formula-basics-hero__grid code { display: block; width: fit-content; max-width: 100%; overflow-x: auto; color: var(--fb-blue); font-size: .9rem; font-weight: 850; white-space: nowrap; }
+  .formula-basics-hero__grid strong { display: block; margin: .38rem 0 .2rem; color: var(--fb-navy); font-size: .92rem; }
+  .formula-basics-hero__grid small { color: var(--fb-muted); font-size: .78rem; line-height: 1.45; }
+
+  .formula-anatomy-board,
+  .boolean-flow-board,
+  .date-value-board,
+  .datetime-board { display: grid; gap: .65rem; align-items: center; padding: 1rem; border: 1px solid #cedef0; border-radius: 18px; background: linear-gradient(145deg,#f8fbff,#fff); }
+  .formula-anatomy-board { grid-template-columns: repeat(3,minmax(0,1fr) auto) minmax(0,1fr); }
+  .formula-anatomy-board > div,
+  .boolean-flow-board > div,
+  .date-value-board > div,
+  .datetime-board > div { min-width: 0; padding: .8rem; border: 1px solid #d5e2ef; border-radius: 12px; background: #fff; text-align: center; }
+  .formula-anatomy-board code { display: block; overflow-x: auto; color: var(--fb-blue); font-size: .88rem; font-weight: 850; white-space: nowrap; }
+  .formula-anatomy-board strong,
+  .boolean-flow-board strong,
+  .date-value-board strong,
+  .datetime-board strong { display: block; margin: .3rem 0 .18rem; color: var(--fb-navy); font-size: .92rem; }
+  .formula-anatomy-board span,
+  .boolean-flow-board span,
+  .date-value-board span,
+  .datetime-board span { color: var(--fb-muted); font-size: .76rem; line-height: 1.45; }
+  .formula-anatomy-board > i,
+  .boolean-flow-board > i,
+  .date-value-board > i { color: var(--fb-blue); font-style: normal; font-weight: 900; text-align: center; }
+
+  .type-conversion-board { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr); gap: .7rem; align-items: center; padding: 1rem; border: 1px solid #d7d4ef; border-radius: 18px; background: #faf9ff; }
+  .type-conversion-board > div { padding: .9rem; border: 1px solid #dddaf2; border-radius: 12px; background: #fff; text-align: center; }
+  .type-conversion-board span { color: var(--fb-violet); font-size: .74rem; font-weight: 900; }
+  .type-conversion-board strong { display: block; margin: .3rem 0; color: var(--fb-navy); font-size: 1.05rem; }
+  .type-conversion-board small { color: var(--fb-muted); font-size: .76rem; line-height: 1.45; }
+  .type-conversion-board > i { color: var(--fb-violet); font-size: .75rem; font-style: normal; font-weight: 900; text-align: center; }
+  .type-conversion-board .is-number { border-color: #bfe0d2; background: #f1fbf7; }
+  .type-conversion-board .is-number span { color: var(--fb-green); }
+
+  .reference-board { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .7rem; }
+  .reference-board > div { padding: .9rem; border: 1px solid #d3e1ef; border-radius: 14px; background: linear-gradient(145deg,#fff,#f7fbff); }
+  .reference-board code { color: var(--fb-blue); font-size: .9rem; font-weight: 900; }
+  .reference-board strong { display: block; margin: .4rem 0 .2rem; color: var(--fb-navy); font-size: .9rem; }
+  .reference-board span { color: var(--fb-muted); font-size: .78rem; line-height: 1.5; }
+  .reference-board .is-text { border-style: dashed; }
+
+  .boolean-flow-board { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr); }
+  .boolean-flow-board .is-true { border-color: #bfe0d2; background: #eef9f4; }
+  .boolean-flow-board .is-true strong { color: var(--fb-green); }
+
+  .date-value-board { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr); }
+  .date-value-board code { color: var(--fb-blue); font-size: .86rem; font-weight: 850; }
+
+  .time-scale-board { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); overflow: hidden; border: 1px solid #cfe0ec; border-radius: 16px; background: #fff; }
+  .time-scale-board div { padding: .9rem .45rem; text-align: center; }
+  .time-scale-board div + div { border-left: 1px solid #d9e5ee; }
+  .time-scale-board strong { display: block; color: var(--fb-cyan); font-size: 1rem; }
+  .time-scale-board span { color: var(--fb-muted); font-size: .76rem; line-height: 1.45; }
+
+  .datetime-board { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1.2fr); }
+  .datetime-board > b { color: var(--fb-blue); text-align: center; }
+  .datetime-board .is-result { border-color: #bfe0d2; background: #eef9f4; }
+  .datetime-board .is-result strong { color: var(--fb-green); }
+
+  html[data-theme='dark'] .formula-basics-hero,
+  html[data-theme='dark'] .formula-anatomy-board,
+  html[data-theme='dark'] .type-conversion-board,
+  html[data-theme='dark'] .reference-board > div,
+  html[data-theme='dark'] .boolean-flow-board,
+  html[data-theme='dark'] .date-value-board,
+  html[data-theme='dark'] .time-scale-board,
+  html[data-theme='dark'] .datetime-board {
+    --fb-navy: #edf5ff;
+    --fb-text: #d9e7f4;
+    --fb-muted: #9cafc1;
+    border-color: #2b4761;
+    background: linear-gradient(145deg,#0d1928,#10243a);
+    box-shadow: none;
+  }
+  html[data-theme='dark'] .formula-basics-hero__grid div,
+  html[data-theme='dark'] .formula-anatomy-board > div,
+  html[data-theme='dark'] .type-conversion-board > div,
+  html[data-theme='dark'] .boolean-flow-board > div,
+  html[data-theme='dark'] .date-value-board > div,
+  html[data-theme='dark'] .datetime-board > div {
+    border-color: #2d4964;
+    background: #0d1c2d;
+  }
+  html[data-theme='dark'] .type-conversion-board .is-number,
+  html[data-theme='dark'] .boolean-flow-board .is-true,
+  html[data-theme='dark'] .datetime-board .is-result { background: #102b26; }
+  html[data-theme='dark'] .time-scale-board div + div { border-color: #2d4964; }
+
+  @media (max-width: 820px) {
+    .formula-basics-hero__grid,
+    .reference-board { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .formula-anatomy-board,
+    .boolean-flow-board,
+    .date-value-board,
+    .datetime-board { grid-template-columns: 1fr; }
+    .formula-anatomy-board > i,
+    .boolean-flow-board > i,
+    .date-value-board > i { transform: rotate(90deg); }
+    .type-conversion-board { grid-template-columns: 1fr; }
+    .type-conversion-board > i { transform: rotate(90deg); }
+    .datetime-board > b { transform: rotate(90deg); }
+    .time-scale-board { grid-template-columns: 1fr; }
+    .time-scale-board div + div { border-top: 1px solid #d9e5ee; border-left: 0; }
+  }
+
+  @media (max-width: 520px) {
+    .formula-basics-hero__grid,
+    .reference-board { grid-template-columns: 1fr; }
+  }
+`}</style>

@@ -1,16 +1,16 @@
 ---
-title: "Excel 基础函数案例详解：用两张示例表掌握 44 个常用函数"
-description: "用订单明细和商品资料两张示例表，逐个讲解 SUM、IF、XLOOKUP、文本与日期等 44 个 Excel 基础函数的实际写法、结果和使用场景。"
+title: "Excel 基础函数案例详解：用两张示例表掌握 49 个常用函数"
+description: "用订单明细和商品资料两张示例表，逐个讲解 SUM、IF、XLOOKUP、文本、日期与时间等 49 个 Excel 基础函数的实际写法、结果和使用场景。"
 date: 2026-07-14T22:38:28+08:00
-updated: 2026-08-26T21:27:00+08:00
+updated: 2026-08-27T17:18:00+08:00
 category: "教程"
 tags:
   - "Excel"
   - "数据处理"
-minutes: 31
+minutes: 34
 featured: false
 series: "excel-functions"
-seriesOrder: 2
+seriesOrder: 3
 draft: false
 private: false
 ---
@@ -20,7 +20,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 上一篇 [Excel 常用函数清单](/articles/excel-functions-from-basic-to-intermediate/) 解决的是“有哪些函数、分别属于哪一类”。这篇文章只展开其中的 **基础函数清单**，用同一组订单与商品数据逐个演示公式怎么写、会得到什么结果，以及实际什么时候用。
 
-不用一次记住 44 个函数。先把示例表复制到 Excel 或 WPS，再跟着案例输入公式，理解速度会比只看语法快得多。
+不用一次记住 49 个函数。先把示例表复制到 Excel 或 WPS，再跟着案例输入公式，理解速度会比只看语法快得多。
 
 <div class="basic-function-hero" role="group" aria-label="Excel 基础函数案例练习总览">
   <div class="basic-function-hero__intro">
@@ -30,7 +30,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   </div>
 
   <div class="basic-function-hero__metrics">
-    <div><b>44</b><span>基础函数</span></div>
+    <div><b>49</b><span>基础函数</span></div>
     <div><b>2</b><span>示例工作表</span></div>
     <div><b>6</b><span>任务分组</span></div>
     <div><b>3</b><span>组合练习</span></div>
@@ -47,12 +47,12 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
     <i>→</i>
     <div><span>05</span><strong>判断</strong><small>生成状态和提醒</small></div>
     <i>→</i>
-    <div><span>06</span><strong>日期</strong><small>转换、构造与计算</small></div>
+    <div><span>06</span><strong>日期时间</strong><small>转换、构造与计算</small></div>
   </div>
 </div>
 
 <HighlightBox eyebrow="配套练习" title="下载后可以直接跟着本文输入公式">
-  练习工作簿已经准备好订单明细、商品表、公式填写区、完成状态和参考答案，共 71 道题，覆盖整个 Excel 函数系列。<br />
+  练习工作簿已经准备好订单明细、商品表、公式填写区、完成状态和参考答案，共 71 道题，覆盖 Excel 函数系列的主要练习内容。<br />
   <a href="/files/excel-functions/excel-functions-practice-workbook.xlsx" download>下载 Excel 函数学习系列练习工作簿（XLSX）</a>
 </HighlightBox>
 
@@ -485,9 +485,9 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
   </article>
 </div>
 
-## 六、获取、转换和计算日期
+## 六、获取、转换和计算日期与时间
 
-Excel 中的日期不是普通文字，而是一种可以计算的数值。除了获取当前时间和拆分年月日，实际工作中还经常需要把文本转成日期、重新构造日期，以及计算上个月或月末日期。
+Excel 中的日期和时间都不是普通文字，而是可以计算的数值。日期负责表示“哪一天”，时间负责表示“一天中的哪个位置”。如果还不熟悉这个关系，可以先看 [Excel 公式基础：字符串、数值、布尔值、引用、日期和时间](/articles/excel-formula-data-types-basics/)。
 
 <div class="date-split-board" role="group" aria-label="日期拆分为年月日">
   <div class="date-split-board__source"><span>订单明细!A2</span><strong>2026/7/1</strong><small>真实日期值，可以继续计算</small></div>
@@ -567,6 +567,41 @@ Excel 中的日期不是普通文字，而是一种可以计算的数值。除�
     <div class="function-case__formula"><code>=EOMONTH(A2,0)</code></div>
     <dl><div><dt>结果</dt><dd>2026/7/31</dd></div><div><dt>关键点</dt><dd>第二个参数为 0 表示本月，-1 表示上月，1 表示下月。</dd></div></dl>
   </article>
+
+  <article class="function-case is-date">
+    <header><code>TIME</code><span>构造时间</span></header>
+    <p>问题：已知小时、分钟和秒，构造一个可以计算的时间值。</p>
+    <div class="function-case__formula"><code>=TIME(14,30,0)</code></div>
+    <dl><div><dt>结果</dt><dd>时间值，对应 14:30</dd></div><div><dt>关键点</dt><dd>返回的是一天中的时间数值，不是文本；换成常规格式时会看到对应的小数。</dd></div></dl>
+  </article>
+
+  <article class="function-case is-date">
+    <header><code>TIMEVALUE</code><span>文本转时间</span></header>
+    <p>问题：导入的数据里“14:30”是文本，先转换成可以计算的时间。</p>
+    <div class="function-case__formula"><code>=TIMEVALUE("14:30")</code></div>
+    <dl><div><dt>结果</dt><dd>时间值，对应 14:30</dd></div><div><dt>关键点</dt><dd>只能转换 Excel 或 WPS 能识别的时间文本；结果本质是一天中的小数。</dd></div></dl>
+  </article>
+
+  <article class="function-case is-date">
+    <header><code>HOUR</code><span>提取小时</span></header>
+    <p>问题：从 14:30:45 中提取小时。</p>
+    <div class="function-case__formula"><code>=HOUR(TIME(14,30,45))</code></div>
+    <dl><div><dt>结果</dt><dd>14</dd></div><div><dt>关键点</dt><dd>返回 0 到 23 的数字，适合按小时分组或判断时间段。</dd></div></dl>
+  </article>
+
+  <article class="function-case is-date">
+    <header><code>MINUTE</code><span>提取分钟</span></header>
+    <p>问题：从 14:30:45 中提取分钟。</p>
+    <div class="function-case__formula"><code>=MINUTE(TIME(14,30,45))</code></div>
+    <dl><div><dt>结果</dt><dd>30</dd></div><div><dt>关键点</dt><dd>返回 0 到 59 的数字，不包含小时信息。</dd></div></dl>
+  </article>
+
+  <article class="function-case is-date">
+    <header><code>SECOND</code><span>提取秒数</span></header>
+    <p>问题：从 14:30:45 中提取秒数。</p>
+    <div class="function-case__formula"><code>=SECOND(TIME(14,30,45))</code></div>
+    <dl><div><dt>结果</dt><dd>45</dd></div><div><dt>关键点</dt><dd>返回 0 到 59 的数字，适合处理精确到秒的时间数据。</dd></div></dl>
+  </article>
 </div>
 
 ## 三个组合练习
@@ -602,11 +637,11 @@ Excel 中的日期不是普通文字，而是一种可以计算的数值。除�
   <div><b>03</b><strong>看到“根据编码补名称或价格”</strong><span>能想到 `VLOOKUP`、`XLOOKUP` 或 `INDEX + MATCH`。</span></div>
   <div><b>04</b><strong>看到“编码拆分、标题清洗、文字拼接”</strong><span>能从 `LEFT`、`MID`、`TRIM`、`TEXTJOIN` 等函数中选择。</span></div>
   <div><b>05</b><strong>看到“达标、预警、异常”</strong><span>能用 `IF`、`IFS`、`AND`、`OR` 写出判断条件。</span></div>
-  <div><b>06</b><strong>看到“文本日期、月份、月末、今天”</strong><span>能从 `DATEVALUE`、`DATE`、`TEXT`、`EDATE`、`EOMONTH` 和年月日函数中选择。</span></div>
+  <div><b>06</b><strong>看到“日期、时间、月份、月末或时分秒”</strong><span>能从 `DATEVALUE`、`DATE`、`TIMEVALUE`、`TIME`、`EDATE`、`EOMONTH` 和年月日、时分秒函数中选择。</span></div>
 </div>
 
 <HighlightBox eyebrow="完成标准" title="不需要背语法，但要能判断函数类别">
-  真正的基础不是默写 44 个函数，而是遇到问题时先判断：这是统计、条件、查找、文本、逻辑还是日期问题。函数类别选对以后，再参考现成公式修改区域和条件即可。
+  真正的基础不是默写 49 个函数，而是遇到问题时先判断：这是统计、条件、查找、文本、逻辑还是日期时间问题。函数类别选对以后，再参考现成公式修改区域和条件即可。
 </HighlightBox>
 
 <style>{`
@@ -864,7 +899,7 @@ Excel 中的日期不是普通文字，而是一种可以计算的数值。除�
   .date-split-board small { display: block; margin-top: .18rem; color: var(--bf-muted); font-size: .74rem; }
 
   .combined-practice { display: grid; gap: .8rem; }
-  .combined-practice article { padding: 1rem; border: 1px solid #cfdff1; border-radius: 17px; background: linear-gradient(145deg,#fff,#f6faff); }
+  .combined-practice article { min-width: 0; padding: 1rem; border: 1px solid #cfdff1; border-radius: 17px; background: linear-gradient(145deg,#fff,#f6faff); }
   .combined-practice span { color: var(--bf-blue); font-size: .76rem; font-weight: 900; letter-spacing: .06em; }
   .combined-practice strong { display: block; margin: .35rem 0 .65rem; color: var(--bf-navy); font-size: 1rem; }
   .combined-practice code { display: block; overflow-x: auto; padding: .75rem; border: 1px solid #d7e5f4; border-radius: 10px; color: #145fa9; background: #fff; font-size: .86rem; white-space: nowrap; }
