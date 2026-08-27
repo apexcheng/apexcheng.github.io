@@ -2,7 +2,7 @@
 title: "Excel 基础函数案例详解：用两张示例表掌握 49 个常用函数"
 description: "用订单明细和商品资料两张示例表，逐个讲解 SUM、IF、XLOOKUP、文本、日期与时间等 49 个 Excel 基础函数的实际写法、结果和使用场景。"
 date: 2026-07-14T22:38:28+08:00
-updated: 2026-08-27T17:18:00+08:00
+updated: 2026-08-27T18:39:00+08:00
 category: "教程"
 tags:
   - "Excel"
@@ -440,12 +440,34 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 逻辑函数不会改变源数据，它们负责把数据转换成更容易处理的结果，例如“正常”“预警”“需要补货”。
 
-<div class="logic-flow-board" role="group" aria-label="库存判断生成状态的过程">
-  <div class="logic-flow-board__source"><span>订单明细第 4 行</span><strong>F4 销量 = 8</strong><strong>H4 库存 = 4</strong></div>
-  <i>→</i>
-  <div><span>IFS 第一个条件</span><strong>H4 &lt; 5 是否成立？</strong><small>4 &lt; 5，结果为 TRUE</small></div>
-  <i>→</i>
-  <div class="is-result"><span>输出</span><strong>紧急</strong></div>
+<div class="logic-table-board" role="group" aria-label="从订单明细第 4 行读取销量和库存，再用 IFS 返回紧急状态">
+  <div class="logic-table-board__sheet">
+    <span class="visual-kicker">订单明细 · 逐行读取</span>
+    <table>
+      <thead>
+        <tr class="sheet-column-letters"><th class="sheet-corner"></th><th>F</th><th>H</th><th>I</th></tr>
+        <tr class="sheet-field-row"><th class="sheet-row-number">1</th><th>销量</th><th>库存</th><th>原状态</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>2</th><td>3</td><td>12</td><td>正常</td></tr>
+        <tr><th>3</th><td>5</td><td>6</td><td>缺货</td></tr>
+        <tr class="is-current"><th>4</th><td>8</td><td class="is-focus">4</td><td>预警</td></tr>
+        <tr><th>5</th><td>2</td><td>18</td><td>正常</td></tr>
+      </tbody>
+    </table>
+    <div class="logic-table-board__legend"><span>当前计算第 4 行</span><strong>IFS 本例只读取 H4；其他列用于理解同一行</strong></div>
+  </div>
+
+  <div class="logic-table-board__explain">
+    <span class="visual-kicker">IFS 条件判断</span>
+    <code>{'=IFS(H4<5,"紧急",H4<10,"预警",TRUE,"正常")'}</code>
+    <div class="logic-steps">
+      <div><b>1</b><span>先判断 <strong>H4 &lt; 5</strong></span></div>
+      <div><b>2</b><span><strong>4 &lt; 5</strong>，结果为 TRUE</span></div>
+      <div><b>3</b><span>命中第一个条件，停止继续判断</span></div>
+    </div>
+    <div class="logic-table-board__result"><span>公式输出</span><strong>紧急</strong></div>
+  </div>
 </div>
 
 <div class="function-case-grid">
@@ -489,12 +511,32 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 Excel 中的日期和时间都不是普通文字，而是可以计算的数值。日期负责表示“哪一天”，时间负责表示“一天中的哪个位置”。如果还不熟悉这个关系，可以先看 [Excel 公式基础：字符串、数值、布尔值、引用、日期和时间](/articles/excel-formula-data-types-basics/)。
 
-<div class="date-split-board" role="group" aria-label="日期拆分为年月日">
-  <div class="date-split-board__source"><span>订单明细!A2</span><strong>2026/7/1</strong><small>真实日期值，可以继续计算</small></div>
-  <i>→</i>
-  <div><code>YEAR(A2)</code><strong>2026</strong><small>年</small></div>
-  <div><code>MONTH(A2)</code><strong>7</strong><small>月</small></div>
-  <div><code>DAY(A2)</code><strong>1</strong><small>日</small></div>
+<div class="date-table-board" role="group" aria-label="从订单明细日期列提取年、月、日">
+  <div class="date-table-board__sheet">
+    <span class="visual-kicker">订单明细 · 日期拆解</span>
+    <table>
+      <thead>
+        <tr class="sheet-column-letters"><th class="sheet-corner"></th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+        <tr class="sheet-field-row"><th class="sheet-row-number">1</th><th>日期</th><th>年</th><th>月</th><th>日</th></tr>
+      </thead>
+      <tbody>
+        <tr class="is-current"><th>2</th><td class="is-focus">2026/7/1</td><td>2026</td><td>7</td><td>1</td></tr>
+        <tr><th>3</th><td>2026/7/1</td><td>2026</td><td>7</td><td>1</td></tr>
+        <tr><th>4</th><td>2026/7/2</td><td>2026</td><td>7</td><td>2</td></tr>
+      </tbody>
+    </table>
+    <div class="date-table-board__legend"><span>当前示例：A2</span><strong>2026/7/1</strong></div>
+  </div>
+
+  <div class="date-table-board__explain">
+    <span class="visual-kicker">同一个日期，拆成三个数字</span>
+    <div class="date-formula-row">
+      <div><code>=YEAR(A2)</code><strong>2026</strong><small>年</small></div>
+      <div><code>=MONTH(A2)</code><strong>7</strong><small>月</small></div>
+      <div><code>=DAY(A2)</code><strong>1</strong><small>日</small></div>
+    </div>
+    <p>三个结果都来自 A2。日期本身没有被拆坏，A2 仍然是可以继续加减、比较和筛选的日期值。</p>
+  </div>
 </div>
 
 <div class="function-case-grid">
@@ -520,20 +562,6 @@ Excel 中的日期和时间都不是普通文字，而是可以计算的数值�
   </article>
 
   <article class="function-case is-date">
-    <header><code>DATEVALUE</code><span>文本转日期</span></header>
-    <p>问题：导入的数据里“2026/7/1”是文本，先转换成可以计算的日期。</p>
-    <div class="function-case__formula"><code>=DATEVALUE("2026/7/1")</code></div>
-    <dl><div><dt>结果</dt><dd>2026/7/1</dd></div><div><dt>关键点</dt><dd>只能转换 Excel 或 WPS 能识别的日期文本；日期格式不明确时，先统一文本格式再转换。</dd></div></dl>
-  </article>
-
-  <article class="function-case is-date">
-    <header><code>TEXT</code><span>格式化日期文本</span></header>
-    <p>问题：把 A2 的日期显示成“2026-07”，用于月份标签或文字拼接。</p>
-    <div class="function-case__formula"><code>=TEXT(A2,"yyyy-mm")</code></div>
-    <dl><div><dt>结果</dt><dd>2026-07</dd></div><div><dt>关键点</dt><dd>返回的是格式化后的文本；如果后面还要做日期计算，应继续保留原始日期值。</dd></div></dl>
-  </article>
-
-  <article class="function-case is-date">
     <header><code>YEAR</code><span>提取年份</span></header>
     <p>问题：从 A2 的日期中提取年份。</p>
     <div class="function-case__formula"><code>=YEAR(A2)</code></div>
@@ -553,19 +581,46 @@ Excel 中的日期和时间都不是普通文字，而是可以计算的数值�
     <div class="function-case__formula"><code>=DAY(A2)</code></div>
     <dl><div><dt>结果</dt><dd>1</dd></div><div><dt>关键点</dt><dd>返回日期中的“日”，不是星期几，也不是相差天数。</dd></div></dl>
   </article>
+</div>
 
+<div class="value-conversion-board" role="group" aria-label="DATEVALUE、TIMEVALUE 和 TEXT 在文本与日期时间值之间转换">
+  <div class="value-conversion-board__row">
+    <div><span>文本日期</span><strong>"2026/7/1"</strong></div>
+    <i>→</i>
+    <code>=DATEVALUE("2026/7/1")</code>
+    <i>→</i>
+    <div class="is-value"><span>日期值</span><strong>2026/7/1</strong><small>可以继续计算</small></div>
+  </div>
+  <div class="value-conversion-board__row">
+    <div><span>文本时间</span><strong>"14:30"</strong></div>
+    <i>→</i>
+    <code>=TIMEVALUE("14:30")</code>
+    <i>→</i>
+    <div class="is-value"><span>时间值</span><strong>14:30</strong><small>本质是一天中的小数</small></div>
+  </div>
+  <div class="value-conversion-board__row is-reverse">
+    <div class="is-value"><span>日期值</span><strong>2026/7/1</strong></div>
+    <i>→</i>
+    <code>=TEXT(A2,"yyyy-mm")</code>
+    <i>→</i>
+    <div><span>文本结果</span><strong>"2026-07"</strong><small>适合显示、标签和拼接</small></div>
+  </div>
+  <p><strong>DATEVALUE / TIMEVALUE</strong> 是把文本转成可计算的值；<strong>TEXT</strong> 则相反，把值转成格式化文本。</p>
+</div>
+
+<div class="function-case-grid">
   <article class="function-case is-date">
-    <header><code>EDATE</code><span>按月份移动日期</span></header>
-    <p>问题：计算 A2 的上个月同一天。</p>
-    <div class="function-case__formula"><code>=EDATE(A2,-1)</code></div>
-    <dl><div><dt>结果</dt><dd>2026/6/1</dd></div><div><dt>关键点</dt><dd>第二个参数为负数表示向前移动月份，为正数表示向后移动月份。</dd></div></dl>
+    <header><code>DATEVALUE</code><span>文本转日期</span></header>
+    <p>问题：导入的数据里“2026/7/1”是文本，先转换成可以计算的日期。</p>
+    <div class="function-case__formula"><code>=DATEVALUE("2026/7/1")</code></div>
+    <dl><div><dt>结果</dt><dd>2026/7/1</dd></div><div><dt>关键点</dt><dd>只能转换 Excel 或 WPS 能识别的日期文本；日期格式不明确时，先统一文本格式再转换。</dd></div></dl>
   </article>
 
   <article class="function-case is-date">
-    <header><code>EOMONTH</code><span>获取月末日期</span></header>
-    <p>问题：计算 A2 所在月份的最后一天。</p>
-    <div class="function-case__formula"><code>=EOMONTH(A2,0)</code></div>
-    <dl><div><dt>结果</dt><dd>2026/7/31</dd></div><div><dt>关键点</dt><dd>第二个参数为 0 表示本月，-1 表示上月，1 表示下月。</dd></div></dl>
+    <header><code>TEXT</code><span>格式化日期文本</span></header>
+    <p>问题：把 A2 的日期显示成“2026-07”，用于月份标签或文字拼接。</p>
+    <div class="function-case__formula"><code>=TEXT(A2,"yyyy-mm")</code></div>
+    <dl><div><dt>结果</dt><dd>2026-07</dd></div><div><dt>关键点</dt><dd>返回的是格式化后的文本；如果后面还要做日期计算，应继续保留原始日期值。</dd></div></dl>
   </article>
 
   <article class="function-case is-date">
@@ -581,6 +636,72 @@ Excel 中的日期和时间都不是普通文字，而是可以计算的数值�
     <div class="function-case__formula"><code>=TIMEVALUE("14:30")</code></div>
     <dl><div><dt>结果</dt><dd>时间值，对应 14:30</dd></div><div><dt>关键点</dt><dd>只能转换 Excel 或 WPS 能识别的时间文本；结果本质是一天中的小数。</dd></div></dl>
   </article>
+</div>
+
+<div class="date-shift-board" role="group" aria-label="从 2026 年 7 月 1 日出发，用 EDATE 移动月份并用 EOMONTH 获取月末">
+  <div class="date-shift-board__source"><span>原始日期</span><strong>A2 = 2026/7/1</strong></div>
+  <div class="date-shift-board__branch">
+    <span>按月平移</span>
+    <code>=EDATE(A2,-1)</code>
+    <i>↓</i>
+    <strong>2026/6/1</strong>
+    <small>向前移动 1 个月，尽量保留同一天</small>
+  </div>
+  <div class="date-shift-board__branch">
+    <span>取月末</span>
+    <code>=EOMONTH(A2,0)</code>
+    <i>↓</i>
+    <strong>2026/7/31</strong>
+    <small>返回 A2 所在月份的最后一天</small>
+  </div>
+</div>
+
+<div class="function-case-grid">
+
+  <article class="function-case is-date">
+    <header><code>EDATE</code><span>按月份移动日期</span></header>
+    <p>问题：计算 A2 的上个月同一天。</p>
+    <div class="function-case__formula"><code>=EDATE(A2,-1)</code></div>
+    <dl><div><dt>结果</dt><dd>2026/6/1</dd></div><div><dt>关键点</dt><dd>第二个参数为负数表示向前移动月份，为正数表示向后移动月份。</dd></div></dl>
+  </article>
+
+  <article class="function-case is-date">
+    <header><code>EOMONTH</code><span>获取月末日期</span></header>
+    <p>问题：计算 A2 所在月份的最后一天。</p>
+    <div class="function-case__formula"><code>=EOMONTH(A2,0)</code></div>
+    <dl><div><dt>结果</dt><dd>2026/7/31</dd></div><div><dt>关键点</dt><dd>第二个参数为 0 表示本月，-1 表示上月，1 表示下月。</dd></div></dl>
+  </article>
+</div>
+
+<div class="date-table-board time-table-board" role="group" aria-label="从时间值中提取小时、分钟和秒">
+  <div class="date-table-board__sheet">
+    <span class="visual-kicker">时间拆解 · 逐行观察</span>
+    <table>
+      <thead>
+        <tr class="sheet-column-letters"><th class="sheet-corner"></th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+        <tr class="sheet-field-row"><th class="sheet-row-number">1</th><th>时间</th><th>时</th><th>分</th><th>秒</th></tr>
+      </thead>
+      <tbody>
+        <tr class="is-current"><th>2</th><td class="is-focus">14:30:45</td><td>14</td><td>30</td><td>45</td></tr>
+        <tr><th>3</th><td>09:08:05</td><td>9</td><td>8</td><td>5</td></tr>
+        <tr><th>4</th><td>18:42:09</td><td>18</td><td>42</td><td>9</td></tr>
+      </tbody>
+    </table>
+    <div class="date-table-board__legend"><span>当前示例</span><strong>14:30:45</strong></div>
+  </div>
+
+  <div class="date-table-board__explain">
+    <span class="visual-kicker">一个时间值，拆成三个数字</span>
+    <div class="date-formula-row">
+      <div><code>=HOUR(TIME(14,30,45))</code><strong>14</strong><small>时</small></div>
+      <div><code>=MINUTE(TIME(14,30,45))</code><strong>30</strong><small>分</small></div>
+      <div><code>=SECOND(TIME(14,30,45))</code><strong>45</strong><small>秒</small></div>
+    </div>
+    <p>时间同样是数值。提取出的时、分、秒是数字，可以继续用于分组、判断时间段或计算。</p>
+  </div>
+</div>
+
+<div class="function-case-grid">
 
   <article class="function-case is-date">
     <header><code>HOUR</code><span>提取小时</span></header>
@@ -653,8 +774,10 @@ Excel 中的日期和时间都不是普通文字，而是可以计算的数值�
   .lookup-section-guide,
   .lookup-cross-sheet,
   .text-ruler-board,
-  .logic-flow-board,
-  .date-split-board,
+  .logic-table-board,
+  .date-table-board,
+  .value-conversion-board,
+  .date-shift-board,
   .combined-practice,
   .basic-function-checklist {
     --bf-blue: #146ce8;
@@ -832,12 +955,8 @@ Excel 中的日期和时间都不是普通文字，而是可以计算的数值�
   .text-sample code { min-width: 0; overflow-x: auto; padding: .48rem .65rem; border: 1px solid #d9e6f3; border-radius: 8px; color: #165e9d; background: #fff; font-size: .86rem; white-space: nowrap; }
   .text-sample small { grid-column: 2; color: #7a8998; font-size: .76rem; }
 
-  .function-visual-anchor,
-  .logic-flow-board,
-  .date-split-board { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(110px,.55fr); gap: .7rem; align-items: center; padding: 1rem; border: 1px solid #cbdff2; border-radius: 18px; background: linear-gradient(145deg,#f8fbff,#fff); }
-  .function-visual-anchor__result span,
-  .logic-flow-board span,
-  .date-split-board span { color: var(--bf-blue); font-size: .76rem; font-weight: 900; }
+  .function-visual-anchor { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(110px,.55fr); gap: .7rem; align-items: center; padding: 1rem; border: 1px solid #cbdff2; border-radius: 18px; background: linear-gradient(145deg,#f8fbff,#fff); }
+  .function-visual-anchor__result span { color: var(--bf-blue); font-size: .76rem; font-weight: 900; }
   .mini-sheet-column { min-width: 0; }
   .mini-sheet-column table { max-width: 150px; margin-inline: auto; }
   .mini-sheet-column table tbody td { color: var(--bf-navy); background: #edf5ff; box-shadow: inset 2px 0 var(--bf-blue), inset -2px 0 var(--bf-blue); font-weight: 850; }
@@ -850,9 +969,7 @@ Excel 中的日期和时间都不是普通文字，而是可以计算的数值�
   .function-visual-anchor__formula small { display: block; margin-top: .3rem; color: var(--bf-muted); font-size: .78rem; }
   .function-visual-anchor__result { padding: .75rem; border: 1px solid #bfe0d1; border-radius: 11px; background: #eef9f3; text-align: center; }
   .function-visual-anchor__result strong { display: block; margin-top: .2rem; color: var(--bf-green); font-size: 1.5rem; }
-  .function-visual-anchor > i,
-  .logic-flow-board > i,
-  .date-split-board > i { color: var(--bf-blue); font-style: normal; font-weight: 900; }
+  .function-visual-anchor > i { color: var(--bf-blue); font-style: normal; font-weight: 900; }
 
   .lookup-section-guide { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: .7rem; align-items: stretch; padding: 1rem; border: 1px solid #d4cff1; border-radius: 18px; background: #faf9ff; }
   .lookup-section-guide section { padding: .85rem; border: 1px solid #ddd8f5; border-radius: 12px; background: #fff; }
@@ -884,19 +1001,126 @@ Excel 中的日期和时间都不是普通文字，而是可以计算的数值�
   .text-ruler-board__notes { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: .8rem; }
   .text-ruler-board__notes span { padding: .5rem .65rem; border-radius: 9px; color: #295f8d; background: #eaf5ff; font-size: .82rem; }
 
-  .logic-flow-board { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr); }
-  .logic-flow-board > div,
-  .date-split-board > div { padding: .8rem; border: 1px solid #d5e2ef; border-radius: 11px; background: #fff; text-align: center; }
-  .logic-flow-board strong,
-  .date-split-board strong { display: block; margin-top: .28rem; color: var(--bf-navy); font-size: .92rem; }
-  .logic-flow-board small { display: block; margin-top: .28rem; color: var(--bf-muted); font-size: .76rem; line-height: 1.45; }
-  .logic-flow-board__source strong + strong { margin-top: .16rem; }
-  .logic-flow-board .is-result { border-color: #bfe0d1; background: #eef9f3; }
-  .logic-flow-board .is-result strong { color: var(--bf-green); font-size: 1.15rem; }
+  .logic-table-board,
+  .date-table-board {
+    display: grid;
+    grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr);
+    gap: .85rem;
+    padding: 1rem;
+    border: 1px solid #c7dfd9;
+    border-radius: 20px;
+    background: linear-gradient(145deg,#fff,#f2faf8);
+    box-shadow: 0 14px 38px rgba(24,118,87,.07);
+  }
+  .logic-table-board__sheet,
+  .logic-table-board__explain,
+  .date-table-board__sheet,
+  .date-table-board__explain {
+    min-width: 0;
+    padding: .78rem;
+    border: 1px solid #cfe4de;
+    border-radius: 14px;
+    background: rgba(255,255,255,.92);
+  }
+  .logic-table-board__sheet,
+  .date-table-board__sheet { overflow-x: auto; }
+  .visual-kicker { display: block; margin-bottom: .58rem; color: var(--bf-green); font-size: .76rem; font-weight: 900; letter-spacing: .05em; }
+  .logic-table-board table,
+  .date-table-board table {
+    width: 100%;
+    min-width: 390px;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid #cad9e6;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 9px;
+    background: #fff;
+    table-layout: fixed;
+    font-size: .82rem;
+  }
+  .logic-table-board th,
+  .logic-table-board td,
+  .date-table-board th,
+  .date-table-board td { padding: .48rem .4rem; border-right: 1px solid #dce5ed; border-bottom: 1px solid #dce5ed; text-align: center; white-space: nowrap; }
+  .logic-table-board tr > *:last-child,
+  .date-table-board tr > *:last-child { border-right: 0; }
+  .logic-table-board tbody tr:last-child > *,
+  .date-table-board tbody tr:last-child > * { border-bottom: 0; }
+  .logic-table-board .sheet-column-letters th,
+  .date-table-board .sheet-column-letters th { padding: .22rem; color: #2b3d4f; background: #f1f3f5; font-size: .75rem; }
+  .logic-table-board .sheet-corner,
+  .date-table-board .sheet-corner { background: linear-gradient(135deg,transparent 49%,#b7bec6 50%,#b7bec6 100%),#eef1f3; }
+  .logic-table-board .sheet-field-row th,
+  .date-table-board .sheet-field-row th { color: #fff; background: #157461; font-weight: 850; }
+  .logic-table-board .sheet-field-row .sheet-row-number,
+  .date-table-board .sheet-field-row .sheet-row-number,
+  .logic-table-board tbody th,
+  .date-table-board tbody th { color: #35485b; background: #f1f3f5; font-size: .75rem; }
+  .logic-table-board tr.is-current td,
+  .date-table-board tr.is-current td { color: #116b4d; background: #e9f8f1; font-weight: 850; }
+  .logic-table-board td.is-focus,
+  .date-table-board td.is-focus { box-shadow: inset 0 0 0 2px var(--bf-green); }
+  .logic-table-board__legend,
+  .date-table-board__legend { display: flex; justify-content: space-between; gap: .65rem; margin-top: .55rem; padding: .55rem .65rem; border: 1px solid #bfe0d1; border-radius: 9px; background: #eef9f3; font-size: .8rem; }
+  .logic-table-board__legend span,
+  .date-table-board__legend span { color: #4d7464; }
+  .logic-table-board__legend strong,
+  .date-table-board__legend strong { color: var(--bf-green); }
+  .logic-table-board__explain > code { display: block; overflow-x: auto; margin: .2rem 0 .7rem; padding: .72rem; border: 1px solid #cce4dd; border-radius: 10px; color: #087757; background: #fff; font-size: .88rem; white-space: nowrap; }
+  .logic-steps { display: grid; gap: .45rem; }
+  .logic-steps > div { display: grid; grid-template-columns: 30px minmax(0,1fr); gap: .55rem; align-items: center; padding: .58rem .62rem; border: 1px solid #d5e9e3; border-radius: 10px; background: #fbfefd; }
+  .logic-steps b { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; color: #fff; background: var(--bf-green); font-size: .75rem; }
+  .logic-steps span { color: #5e746e; font-size: .82rem; line-height: 1.5; }
+  .logic-steps strong { color: #0f6f54; }
+  .logic-table-board__result { display: flex; align-items: center; justify-content: space-between; gap: .8rem; margin-top: .65rem; padding: .7rem .8rem; border: 1px solid #bfe0d1; border-radius: 11px; background: #eef9f3; }
+  .logic-table-board__result span { color: #4d7464; font-size: .78rem; font-weight: 850; }
+  .logic-table-board__result strong { color: #087757; font-size: 1.25rem; }
 
-  .date-split-board { grid-template-columns: minmax(150px,1fr) auto repeat(3,minmax(110px,.75fr)); }
-  .date-split-board code { display: block; color: #1263b5; font-size: .82rem; }
-  .date-split-board small { display: block; margin-top: .18rem; color: var(--bf-muted); font-size: .74rem; }
+  .date-table-board { border-color: #c8dfe8; background: linear-gradient(145deg,#fff,#f2fafc); }
+  .date-table-board__sheet,
+  .date-table-board__explain { border-color: #cfe3e9; }
+  .date-table-board .sheet-field-row th { background: #147987; }
+  .date-table-board .visual-kicker { color: #147987; }
+  .date-table-board tr.is-current td { color: #126b78; background: #eaf7f9; }
+  .date-table-board td.is-focus { box-shadow: inset 0 0 0 2px #168698; }
+  .date-table-board__legend { border-color: #c6e0e7; background: #eff9fb; }
+  .date-table-board__legend span { color: #527981; }
+  .date-table-board__legend strong { color: #147987; }
+  .date-formula-row { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem; }
+  .date-formula-row > div { min-width: 0; padding: .72rem .55rem; border: 1px solid #cfe3e9; border-radius: 11px; background: #fff; text-align: center; }
+  .date-formula-row code { display: block; overflow-x: auto; color: #106d7b; font-size: .8rem; white-space: nowrap; }
+  .date-formula-row strong { display: block; margin-top: .45rem; color: var(--bf-navy); font-size: 1.35rem; }
+  .date-formula-row small { display: block; margin-top: .12rem; color: var(--bf-muted); font-size: .72rem; }
+  .date-table-board__explain > p { margin: .7rem 0 0; color: var(--bf-muted); font-size: .82rem; line-height: 1.6; }
+  .time-table-board .date-formula-row code { font-size: .72rem; }
+
+  .value-conversion-board { padding: 1rem; border: 1px solid #c8dfe8; border-radius: 20px; background: linear-gradient(145deg,#fff,#f3fafc); box-shadow: 0 14px 38px rgba(26,119,135,.06); }
+  .value-conversion-board__row { display: grid; grid-template-columns: minmax(135px,.8fr) auto minmax(230px,1.2fr) auto minmax(150px,.9fr); gap: .55rem; align-items: center; }
+  .value-conversion-board__row + .value-conversion-board__row { margin-top: .58rem; }
+  .value-conversion-board__row > div,
+  .value-conversion-board__row > code { min-width: 0; padding: .68rem .7rem; border: 1px solid #cfe3e9; border-radius: 11px; background: #fff; text-align: center; }
+  .value-conversion-board__row > div span { display: block; color: #557983; font-size: .74rem; font-weight: 850; }
+  .value-conversion-board__row > div strong { display: block; margin-top: .2rem; color: var(--bf-navy); font-size: .92rem; }
+  .value-conversion-board__row > div small { display: block; margin-top: .16rem; color: var(--bf-muted); font-size: .7rem; line-height: 1.4; }
+  .value-conversion-board__row > div.is-value { border-color: #bfe0d1; background: #eef9f3; }
+  .value-conversion-board__row > div.is-value span,
+  .value-conversion-board__row > div.is-value strong { color: #10765a; }
+  .value-conversion-board__row > code { overflow-x: auto; color: #126b78; font-size: .82rem; white-space: nowrap; }
+  .value-conversion-board__row > i { color: #168698; font-style: normal; font-weight: 950; text-align: center; }
+  .value-conversion-board > p { margin: .75rem 0 0; padding: .68rem .75rem; border-radius: 10px; color: #55727b; background: #edf7fa; font-size: .82rem; line-height: 1.55; }
+  .value-conversion-board > p strong { color: #126b78; }
+
+  .date-shift-board { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; padding: 1rem; border: 1px solid #c8dfe8; border-radius: 20px; background: linear-gradient(145deg,#fff,#f3fafc); box-shadow: 0 14px 38px rgba(26,119,135,.06); }
+  .date-shift-board__source { grid-column: 1 / -1; padding: .75rem; border: 1px solid #cfe3e9; border-radius: 12px; background: #fff; text-align: center; }
+  .date-shift-board__source span,
+  .date-shift-board__branch span { display: block; color: #557983; font-size: .74rem; font-weight: 900; }
+  .date-shift-board__source strong { display: block; margin-top: .2rem; color: #126b78; font-size: 1.08rem; }
+  .date-shift-board__branch { display: grid; justify-items: center; gap: .38rem; min-width: 0; padding: .8rem; border: 1px solid #cfe3e9; border-radius: 12px; background: #fff; text-align: center; }
+  .date-shift-board__branch code { max-width: 100%; overflow-x: auto; padding: .5rem .62rem; border: 1px solid #d4e8ed; border-radius: 8px; color: #126b78; background: #f7fcfd; font-size: .84rem; white-space: nowrap; }
+  .date-shift-board__branch i { color: #168698; font-style: normal; font-weight: 900; }
+  .date-shift-board__branch strong { color: #0f765a; font-size: 1.2rem; }
+  .date-shift-board__branch small { color: var(--bf-muted); font-size: .75rem; line-height: 1.5; }
 
   .combined-practice { display: grid; gap: .8rem; }
   .combined-practice article { min-width: 0; padding: 1rem; border: 1px solid #cfdff1; border-radius: 17px; background: linear-gradient(145deg,#fff,#f6faff); }
@@ -919,8 +1143,10 @@ Excel 中的日期和时间都不是普通文字，而是可以计算的数值�
   html[data-theme='dark'] .lookup-section-guide,
   html[data-theme='dark'] .lookup-cross-sheet,
   html[data-theme='dark'] .text-ruler-board,
-  html[data-theme='dark'] .logic-flow-board,
-  html[data-theme='dark'] .date-split-board,
+  html[data-theme='dark'] .logic-table-board,
+  html[data-theme='dark'] .date-table-board,
+  html[data-theme='dark'] .value-conversion-board,
+  html[data-theme='dark'] .date-shift-board,
   html[data-theme='dark'] .function-case,
   html[data-theme='dark'] .combined-practice article,
   html[data-theme='dark'] .basic-function-checklist > div {
@@ -948,14 +1174,26 @@ Excel 中的日期和时间都不是普通文字，而是可以计算的数值�
   html[data-theme='dark'] .lookup-cross-sheet section,
   html[data-theme='dark'] .text-ruler-board__chars b,
   html[data-theme='dark'] .text-ruler-board__source,
-  html[data-theme='dark'] .logic-flow-board > div,
-  html[data-theme='dark'] .date-split-board > div,
+  html[data-theme='dark'] .logic-table-board__sheet,
+  html[data-theme='dark'] .logic-table-board__explain,
+  html[data-theme='dark'] .logic-table-board__explain > code,
+  html[data-theme='dark'] .logic-steps > div,
+  html[data-theme='dark'] .date-table-board__sheet,
+  html[data-theme='dark'] .date-table-board__explain,
+  html[data-theme='dark'] .date-formula-row > div,
+  html[data-theme='dark'] .value-conversion-board__row > div,
+  html[data-theme='dark'] .value-conversion-board__row > code,
+  html[data-theme='dark'] .date-shift-board__source,
+  html[data-theme='dark'] .date-shift-board__branch,
+  html[data-theme='dark'] .date-shift-board__branch code,
   html[data-theme='dark'] .combined-practice code {
     border-color: #2b4864;
     background: #0c1a2a;
   }
   html[data-theme='dark'] .workbook-sheet td,
   html[data-theme='dark'] .condition-case-board td,
+  html[data-theme='dark'] .logic-table-board td,
+  html[data-theme='dark'] .date-table-board td,
   html[data-theme='dark'] .lookup-cross-sheet td,
   html[data-theme='dark'] .mini-sheet-column td { color: #d2dfeb; border-color: #29465e; background: #0b1927; }
   html[data-theme='dark'] .workbook-sheet .sheet-column-letters th,
@@ -963,6 +1201,12 @@ Excel 中的日期和时间都不是普通文字，而是可以计算的数值�
   html[data-theme='dark'] .condition-case-board .sheet-column-letters th,
   html[data-theme='dark'] .condition-case-board .sheet-field-row .sheet-row-number,
   html[data-theme='dark'] .condition-case-board tbody th,
+  html[data-theme='dark'] .logic-table-board .sheet-column-letters th,
+  html[data-theme='dark'] .logic-table-board .sheet-field-row .sheet-row-number,
+  html[data-theme='dark'] .logic-table-board tbody th,
+  html[data-theme='dark'] .date-table-board .sheet-column-letters th,
+  html[data-theme='dark'] .date-table-board .sheet-field-row .sheet-row-number,
+  html[data-theme='dark'] .date-table-board tbody th,
   html[data-theme='dark'] .lookup-cross-sheet .sheet-column-letters th,
   html[data-theme='dark'] .lookup-cross-sheet .sheet-field-row .sheet-row-number,
   html[data-theme='dark'] .lookup-cross-sheet tbody th,
@@ -971,9 +1215,13 @@ Excel 中的日期和时间都不是普通文字，而是可以计算的数值�
   html[data-theme='dark'] .mini-sheet-column tbody th { color: #c9d7e4; border-color: #29465e; background: #16283a; }
   html[data-theme='dark'] .workbook-sheet .sheet-column-letters .sheet-corner,
   html[data-theme='dark'] .condition-case-board .sheet-corner,
+  html[data-theme='dark'] .logic-table-board .sheet-corner,
+  html[data-theme='dark'] .date-table-board .sheet-corner,
   html[data-theme='dark'] .lookup-cross-sheet .sheet-corner,
   html[data-theme='dark'] .mini-sheet-column .sheet-corner { background: linear-gradient(135deg,transparent 49%,#617588 50%,#617588 100%),#16283a; }
   html[data-theme='dark'] .condition-case-board tr.is-hit td,
+  html[data-theme='dark'] .logic-table-board tr.is-current td,
+  html[data-theme='dark'] .date-table-board tr.is-current td,
   html[data-theme='dark'] .lookup-cross-sheet tr.is-source td,
   html[data-theme='dark'] .lookup-cross-sheet tr.is-hit td { color: #8fe0b6; background: #153c32; }
   html[data-theme='dark'] .mini-sheet-column table tbody td { background: #10283d; }
@@ -981,12 +1229,10 @@ Excel 中的日期和时间都不是普通文字，而是可以计算的数值�
   @media (max-width: 900px) {
     .basic-function-route { grid-template-columns: repeat(3,minmax(0,1fr)); }
     .condition-case-board { grid-template-columns: 1fr; }
-    .function-visual-anchor,
-    .logic-flow-board,
-    .date-split-board { grid-template-columns: 1fr; }
-    .function-visual-anchor > i,
-    .logic-flow-board > i,
-    .date-split-board > i { transform: rotate(90deg); text-align: center; }
+    .logic-table-board,
+    .date-table-board { grid-template-columns: 1fr; }
+    .function-visual-anchor { grid-template-columns: 1fr; }
+    .function-visual-anchor > i { transform: rotate(90deg); text-align: center; }
     .lookup-cross-sheet { grid-template-columns: 1fr; }
     .lookup-cross-sheet > i { transform: rotate(90deg); text-align: center; }
   }
@@ -1005,6 +1251,11 @@ Excel 中的日期和时间都不是普通文字，而是可以计算的数值�
     .lookup-section-guide > i { text-align: center; }
     .condition-case-board__path { grid-template-columns: 1fr; }
     .condition-case-board__path i { transform: rotate(90deg); text-align: center; }
+    .value-conversion-board__row { grid-template-columns: 1fr; }
+    .value-conversion-board__row > i { transform: rotate(90deg); }
+    .date-formula-row { grid-template-columns: 1fr; }
+    .date-shift-board { grid-template-columns: 1fr; }
+    .date-shift-board__source { grid-column: auto; }
     .workbook-sheet-title { align-items: flex-start; flex-wrap: wrap; }
     .workbook-sheet-title small { width: 100%; margin-left: 0; }
   }
