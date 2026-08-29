@@ -1,0 +1,544 @@
+---
+title: "京东 POP 利润模型：别再复现平台计费规则，直接以结算账单为事实"
+description: "当平台费用同时受类目、活动、地区、订单状态和退款影响时，利润模型继续自己计算收费规则只会越来越重。更可靠的做法，是让京东结算负责平台事实、ERP 负责商品与履约成本，再把推广等账单外费用单独接入。"
+date: 2026-08-29T10:52:00+08:00
+category: "实践"
+tags:
+  - "利润核算"
+  - "京东POP"
+  - "数据建模"
+minutes: 9
+featured: false
+pinned: false
+draft: false
+private: false
+---
+
+<div class="jd-profit-hero" aria-label="京东 POP 利润模型从复现计费规则改为读取真实结算">
+  <div class="jd-profit-hero__copy">
+    <span class="jd-profit-kicker">京东 POP 利润模型重构</span>
+    <div class="jd-profit-hero__title">我们要的是<br /><strong>真实利润</strong>，<br />不是另一套京东计费系统</div>
+    <p>旧模型从 ERP 销售额出发，再逐项复现平台收费规则；新模型直接把「订单结算」作为平台收入与费用的事实来源。</p>
+  </div>
+  <div class="jd-profit-hero__compare">
+    <section class="is-old">
+      <small>旧思路</small>
+      <strong>自己推算京东应该收多少</strong>
+      <span>ERP 销售额</span><i>↓</i><span>判断各种收费条件</span><i>↓</i><span>自己计算服务费 / 京豆 / 国补……</span><i>↓</i><b>得到“推测利润”</b>
+    </section>
+    <section class="is-new">
+      <small>New</small>
+      <strong>直接读取京东实际结算了多少</strong>
+      <span>订单结算账单</span><i>+</i><span>ERP 商品 / 履约成本</span><i>+</i><span>推广等独立账单</span><i>↓</i><b>得到“事实利润”</b>
+    </section>
+  </div>
+</div>
+
+利润模型真正需要解决的问题很简单：**这批订单最终带来了多少真实收入，又实际发生了多少支出。**
+
+但如果模型从订单销售额开始，自己判断每一种京东收费规则，事情很快就会变成另一件事：不是核算利润，而是在 Excel 里重新实现一套京东结算系统。
+
+这两个目标看起来接近，实际上完全不同。
+
+## 旧模型为什么会越来越不可靠
+
+很多平台费用并不是简单的 `销售额 × 费率`。
+
+比如一项活动相关费用，最终金额可能同时取决于商品是否报名、商品类型、所在地区、补贴力度、订单有没有发货、有没有完成、什么时候退款，以及退款发生在结算前还是结算后。
+
+<div class="jd-rule-network" aria-label="平台计费规则会受到多个条件共同影响">
+  <div class="jd-rule-network__center">
+    <small>平台费用</small>
+    <strong>最终扣多少？</strong>
+  </div>
+  <div class="jd-rule-network__items">
+    <span>活动报名</span>
+    <span>商品类目</span>
+    <span>地区</span>
+    <span>补贴力度</span>
+    <span>是否发货</span>
+    <span>是否完成</span>
+    <span>是否退款</span>
+    <span>退款时间</span>
+  </div>
+</div>
+
+当利润模型试图自己还原这些关系，会遇到三个结构性问题。
+
+<div class="jd-risk-grid">
+  <section>
+    <span>01</span>
+    <strong>规则复杂度持续上升</strong>
+    <p>每多一种费用，就要重新研究触发条件、计算基数、退款规则和结算时间。模型越来越像平台计费程序。</p>
+  </section>
+  <section>
+    <span>02</span>
+    <strong>规则天然会变化</strong>
+    <p>费率、活动、返佣和补贴规则都会调整。京东一改规则，利润模型就必须同步修改并重新验证。</p>
+  </section>
+  <section>
+    <span>03</span>
+    <strong>未知费用一定会漏</strong>
+    <p>订单结算里可能出现当前模型从未建过规则的费用项。我们不知道它存在，就不可能在预测公式里算出来。</p>
+  </section>
+</div>
+
+问题因此不再是“公式写得够不够完整”，而是**数据源选错了**。
+
+如果目标是得到真实利润，平台侧最可靠的问题应该是：
+
+<div class="jd-question-box">
+  <small>不要再问</small>
+  <del>按照京东规则，这个订单理论上应该扣多少钱？</del>
+  <small>应该问</small>
+  <strong>这个订单，京东最终实际结算了多少钱？</strong>
+</div>
+
+## 「订单结算」应该成为平台侧的事实
+
+订单结算天然已经包含平台真正执行后的结果。
+
+一笔订单最终可能同时出现货款、运营服务费、交易服务费、京豆、退换货服务费、返佣、补贴相关结算、退款冲销以及其它费用。我们当然可以逐项研究这些费用是怎么来的，但**研究规则应该用于解释账单，不应该再承担生成真实利润的职责。**
+
+<div class="jd-settlement-ledger" aria-label="订单结算把各种平台收入和费用汇总为实际净结算结果">
+  <div class="jd-settlement-ledger__rows">
+    <span><b>货款</b><em>平台实际结算收入</em></span>
+    <span><b>运营服务费</b><em>按实际账单扣除</em></span>
+    <span><b>交易服务费</b><em>按实际账单扣除</em></span>
+    <span><b>京豆 / 退换货 / 返佣</b><em>按实际账单进入</em></span>
+    <span><b>补贴 / 退款 / 其它结算项</b><em>正负方向直接保留</em></span>
+  </div>
+  <div class="jd-settlement-ledger__result">
+    <small>平台事实</small>
+    <strong>京东订单结算净额</strong>
+    <code>收入项 + 支出项 + 冲销项</code>
+  </div>
+</div>
+
+这样做最大的变化是：未来京东新增一个费用项，只要它进入订单结算，利润模型就能自然接住它，而不需要先知道这项费用的完整业务规则。
+
+## 但 ERP 不能删：它负责另一半事实
+
+订单结算能回答“京东最后结了多少钱”，却回答不了商品真实付出了多少成本。
+
+采购成本、发货件数、赠品、拍单、快递、后勤、退货件数和售后损耗，仍然需要 ERP 发货与退货数据。
+
+所以新模型不是“用京东账单替代 ERP”，而是把两者职责拆开。
+
+<div class="jd-source-map" aria-label="新利润模型的三个事实来源">
+  <section class="is-jd">
+    <small>事实源 01</small>
+    <strong>京东订单结算</strong>
+    <p>负责平台侧真实收入、真实收费和费用冲销。</p>
+    <span>货款</span><span>服务费</span><span>京豆</span><span>返佣 / 补贴</span><span>退款冲销</span>
+  </section>
+  <section class="is-erp">
+    <small>事实源 02</small>
+    <strong>ERP 发货 / 退货</strong>
+    <p>负责商品与履约环节真实发生的成本。</p>
+    <span>采购成本</span><span>发退货件数</span><span>赠品 / 拍单</span><span>快递 / 后勤</span><span>售后损耗</span>
+  </section>
+  <section class="is-extra">
+    <small>事实源 03</small>
+    <strong>结算之外的真实账单</strong>
+    <p>没有完整进入订单结算的费用，继续从对应账单获取。</p>
+    <span>推广费用</span><span>联盟费用</span><span>其它独立收费</span>
+  </section>
+</div>
+
+这里有一个很重要的原则：**能拿真实账单，就不要再用规则反推。**
+
+如果某项推广费用没有进入订单结算，就从推广平台拿实际花费；如果某项联盟费用存在独立结算，也优先使用对应真实账单。只有真实账单暂时不存在时，才需要用规则或历史费率做预测。
+
+## 最终利润公式反而更简单
+
+旧模型看起来只有“ERP + 推广”两层，但 ERP 实际承担了两份职责：既要负责商品成本，又要负责推测平台收入和平台收费。
+
+新模型把职责分开之后，公式反而变得直接：
+
+<div class="jd-profit-formula" aria-label="新京东 POP 真实利润公式">
+  <section>
+    <small>平台最终留下的钱</small>
+    <strong>京东订单结算净额</strong>
+  </section>
+  <i>−</i>
+  <section>
+    <small>商品真实付出的成本</small>
+    <strong>ERP 采购成本</strong>
+  </section>
+  <i>−</i>
+  <section>
+    <small>仓储与售后真实支出</small>
+    <strong>发货 / 退货 / 售后履约成本</strong>
+  </section>
+  <i>−</i>
+  <section>
+    <small>账单之外的真实支出</small>
+    <strong>推广及其它独立费用</strong>
+  </section>
+  <i>=</i>
+  <section class="is-result">
+    <small>最终结果</small>
+    <strong>真实利润</strong>
+  </section>
+</div>
+
+这时利润模型本身不再负责解释每一个收费规则，它只负责**把不同事实源对齐到同一订单、商品或经营粒度，再做汇总。**
+
+真正需要重点建设的，变成了 Key 映射、粒度一致性、时间口径和对账守恒，而不是继续添加越来越长的 `IF`、`XLOOKUP` 和费率条件。
+
+## 事实利润和预测利润也应该分开
+
+还有一个容易混淆的地方：真实利润和预测利润不是一回事。
+
+如果要用利润去预测未来销售额、利润率或经营空间，前提应该是先得到一份可靠的历史事实。否则预测模型的输入本身就是推测值，后面的预测再精细也没有意义。
+
+<div class="jd-fact-forecast" aria-label="先建立事实利润，再进入预测层">
+  <section>
+    <small>第一层 · 事实</small>
+    <strong>真实账单 + ERP 成本 + 独立费用</strong>
+    <span>回答：过去到底赚了多少？</span>
+  </section>
+  <i>→</i>
+  <section>
+    <small>第二层 · 分析</small>
+    <strong>利润率 / 成本率 / SKU 结构</strong>
+    <span>回答：利润为什么是这样？</span>
+  </section>
+  <i>→</i>
+  <section>
+    <small>第三层 · 预测</small>
+    <strong>销售额 / 利润 / 放量空间</strong>
+    <span>回答：未来可能怎样？</span>
+  </section>
+</div>
+
+这和表格建模里“事实层、计算层、展示层”的边界是一致的：先把已经发生的事实保存准确，再让计算层去解释和预测。关于这套分层思路，可以继续看《[事实层、计算层、展示层：为什么算出来的结果不能冒充原始事实](/articles/spreadsheet-fact-calculation-presentation-layers/)》。
+
+## 新模型真正减少的，不只是几个公式
+
+这次重构最重要的不是把某个 `9%` 改成几个更准确的费率，也不是多下载一张订单结算表。
+
+它改变的是利润模型的职责：
+
+<div class="jd-final-verdict">
+  <span>旧模型</span>
+  <strong>根据业务规则，推测京东“应该”怎么结算</strong>
+  <i>→</i>
+  <span>新模型</span>
+  <strong>直接读取京东“实际”怎么结算，再补上平台看不到的内部成本</strong>
+</div>
+
+平台规则当然仍然值得研究，但它的作用应该从“生成利润数字”变成“解释利润数字”。
+
+**核算系统最重要的不是把所有规则都写进公式，而是让每一笔收入和支出都能回到最可靠的事实来源。**
+
+<style>{`
+  :root {
+    --jdp-ink: #172230;
+    --jdp-text: #344454;
+    --jdp-muted: #6c7b8a;
+    --jdp-border: #dbe2e8;
+    --jdp-panel: #f7f9fb;
+    --jdp-red: #c6453c;
+    --jdp-red-soft: #fff0ee;
+    --jdp-blue: #286aa6;
+    --jdp-blue-soft: #edf5fb;
+    --jdp-green: #247a5b;
+    --jdp-green-soft: #edf8f3;
+    --jdp-gold: #946419;
+    --jdp-gold-soft: #fff7e6;
+  }
+
+  html[data-theme="dark"] {
+    --jdp-ink: #edf3f7;
+    --jdp-text: #c9d5de;
+    --jdp-muted: #93a4b2;
+    --jdp-border: #334351;
+    --jdp-panel: #131e28;
+    --jdp-red-soft: #38211f;
+    --jdp-blue-soft: #142c41;
+    --jdp-green-soft: #132f27;
+    --jdp-gold-soft: #332915;
+  }
+
+  .jd-profit-hero,
+  .jd-rule-network,
+  .jd-risk-grid,
+  .jd-question-box,
+  .jd-settlement-ledger,
+  .jd-source-map,
+  .jd-profit-formula,
+  .jd-fact-forecast,
+  .jd-final-verdict {
+    margin: 2rem 0;
+  }
+
+  .jd-profit-hero {
+    display: grid;
+    grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--jdp-border);
+    border-radius: 24px;
+    background: linear-gradient(145deg, var(--jdp-panel), transparent);
+  }
+
+  .jd-profit-hero__copy {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .jd-profit-kicker,
+  .jd-profit-hero small,
+  .jd-settlement-ledger small,
+  .jd-source-map small,
+  .jd-profit-formula small,
+  .jd-fact-forecast small,
+  .jd-question-box small {
+    color: var(--jdp-muted);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  .jd-profit-hero__title {
+    margin-top: .7rem;
+    color: var(--jdp-ink);
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -.04em;
+  }
+
+  .jd-profit-hero__title strong { color: var(--jdp-blue); }
+  .jd-profit-hero__copy p { margin: 1rem 0 0; color: var(--jdp-text); }
+
+  .jd-profit-hero__compare {
+    display: grid;
+    gap: .8rem;
+  }
+
+  .jd-profit-hero__compare section {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1.35fr auto 1fr;
+    gap: .55rem;
+    align-items: center;
+    padding: 1.15rem;
+    border-radius: 18px;
+  }
+
+  .jd-profit-hero__compare section.is-old { background: var(--jdp-red-soft); }
+  .jd-profit-hero__compare section.is-new { background: var(--jdp-green-soft); }
+  .jd-profit-hero__compare section small,
+  .jd-profit-hero__compare section strong { grid-column: 1 / -1; }
+  .jd-profit-hero__compare section strong { color: var(--jdp-ink); font-size: 1.05rem; }
+  .jd-profit-hero__compare section span,
+  .jd-profit-hero__compare section b {
+    color: var(--jdp-text);
+    font-size: .82rem;
+    text-align: center;
+  }
+  .jd-profit-hero__compare section b { color: var(--jdp-ink); }
+  .jd-profit-hero__compare section i { color: var(--jdp-muted); font-style: normal; }
+
+  .jd-rule-network {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 1rem;
+    align-items: stretch;
+    padding: 1rem;
+    border: 1px solid var(--jdp-border);
+    border-radius: 20px;
+  }
+
+  .jd-rule-network__center {
+    display: grid;
+    place-content: center;
+    text-align: center;
+    border-radius: 16px;
+    background: var(--jdp-gold-soft);
+  }
+  .jd-rule-network__center small { color: var(--jdp-muted); }
+  .jd-rule-network__center strong { color: var(--jdp-ink); font-size: 1.2rem; }
+
+  .jd-rule-network__items {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .6rem;
+  }
+  .jd-rule-network__items span {
+    padding: .8rem .6rem;
+    border: 1px solid var(--jdp-border);
+    border-radius: 12px;
+    color: var(--jdp-text);
+    text-align: center;
+    font-size: .86rem;
+  }
+
+  .jd-risk-grid,
+  .jd-source-map {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .8rem;
+  }
+
+  .jd-risk-grid section,
+  .jd-source-map section {
+    padding: 1.2rem;
+    border: 1px solid var(--jdp-border);
+    border-radius: 18px;
+    background: var(--jdp-panel);
+  }
+  .jd-risk-grid section > span { color: var(--jdp-red); font-weight: 800; }
+  .jd-risk-grid strong,
+  .jd-source-map strong { display: block; margin: .4rem 0; color: var(--jdp-ink); }
+  .jd-risk-grid p,
+  .jd-source-map p { margin: 0; color: var(--jdp-text); font-size: .9rem; }
+
+  .jd-question-box {
+    display: grid;
+    gap: .55rem;
+    padding: 1.4rem;
+    border-left: 4px solid var(--jdp-blue);
+    border-radius: 0 16px 16px 0;
+    background: var(--jdp-blue-soft);
+  }
+  .jd-question-box del { color: var(--jdp-muted); }
+  .jd-question-box strong { color: var(--jdp-ink); font-size: 1.2rem; }
+
+  .jd-settlement-ledger {
+    display: grid;
+    grid-template-columns: 1.4fr .8fr;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--jdp-border);
+    border-radius: 20px;
+  }
+  .jd-settlement-ledger__rows { display: grid; gap: .5rem; }
+  .jd-settlement-ledger__rows span {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .75rem .9rem;
+    border-radius: 10px;
+    background: var(--jdp-panel);
+  }
+  .jd-settlement-ledger__rows b { color: var(--jdp-ink); }
+  .jd-settlement-ledger__rows em { color: var(--jdp-muted); font-style: normal; font-size: .86rem; }
+  .jd-settlement-ledger__result {
+    display: grid;
+    place-content: center;
+    text-align: center;
+    border-radius: 16px;
+    background: var(--jdp-green-soft);
+  }
+  .jd-settlement-ledger__result strong { color: var(--jdp-ink); font-size: 1.25rem; }
+  .jd-settlement-ledger__result code { margin-top: .4rem; color: var(--jdp-green); }
+
+  .jd-source-map section { display: flex; flex-wrap: wrap; align-content: flex-start; gap: .45rem; }
+  .jd-source-map section small,
+  .jd-source-map section strong,
+  .jd-source-map section p { flex: 0 0 100%; }
+  .jd-source-map section > span {
+    padding: .28rem .55rem;
+    border-radius: 999px;
+    background: var(--jdp-blue-soft);
+    color: var(--jdp-text);
+    font-size: .78rem;
+  }
+  .jd-source-map .is-erp > span { background: var(--jdp-green-soft); }
+  .jd-source-map .is-extra > span { background: var(--jdp-gold-soft); }
+
+  .jd-profit-formula {
+    display: grid;
+    grid-template-columns: 1.2fr auto 1fr auto 1.25fr auto 1.15fr auto .85fr;
+    gap: .45rem;
+    align-items: stretch;
+  }
+  .jd-profit-formula section {
+    display: grid;
+    align-content: center;
+    min-height: 120px;
+    padding: 1rem;
+    border: 1px solid var(--jdp-border);
+    border-radius: 16px;
+    background: var(--jdp-panel);
+  }
+  .jd-profit-formula section strong { color: var(--jdp-ink); }
+  .jd-profit-formula section.is-result { background: var(--jdp-green-soft); border-color: transparent; }
+  .jd-profit-formula > i { align-self: center; color: var(--jdp-muted); font-size: 1.4rem; font-style: normal; font-weight: 700; }
+
+  .jd-fact-forecast {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: .65rem;
+    align-items: center;
+  }
+  .jd-fact-forecast section {
+    min-height: 130px;
+    padding: 1.1rem;
+    border: 1px solid var(--jdp-border);
+    border-radius: 16px;
+    background: var(--jdp-panel);
+  }
+  .jd-fact-forecast strong,
+  .jd-fact-forecast span { display: block; }
+  .jd-fact-forecast strong { margin: .45rem 0; color: var(--jdp-ink); }
+  .jd-fact-forecast span { color: var(--jdp-muted); font-size: .86rem; }
+  .jd-fact-forecast > i { color: var(--jdp-blue); font-style: normal; font-weight: 800; }
+
+  .jd-final-verdict {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto 1fr;
+    gap: .7rem;
+    align-items: center;
+    padding: 1.3rem;
+    border-radius: 18px;
+    background: linear-gradient(110deg, var(--jdp-red-soft), var(--jdp-blue-soft), var(--jdp-green-soft));
+  }
+  .jd-final-verdict span { color: var(--jdp-muted); font-size: .82rem; font-weight: 700; }
+  .jd-final-verdict strong { color: var(--jdp-ink); }
+  .jd-final-verdict i { color: var(--jdp-blue); font-style: normal; font-weight: 800; }
+
+  @media (max-width: 820px) {
+    .jd-profit-hero,
+    .jd-rule-network,
+    .jd-settlement-ledger,
+    .jd-risk-grid,
+    .jd-source-map {
+      grid-template-columns: 1fr;
+    }
+
+    .jd-profit-hero__copy { padding: 1rem .4rem; }
+    .jd-profit-hero__compare section {
+      grid-template-columns: 1fr;
+      text-align: left;
+    }
+    .jd-profit-hero__compare section span,
+    .jd-profit-hero__compare section b { text-align: left; }
+    .jd-profit-hero__compare section i { width: fit-content; }
+
+    .jd-rule-network__center { min-height: 110px; }
+    .jd-rule-network__items { grid-template-columns: repeat(2, 1fr); }
+    .jd-settlement-ledger__result { min-height: 140px; }
+
+    .jd-profit-formula,
+    .jd-fact-forecast,
+    .jd-final-verdict {
+      grid-template-columns: 1fr;
+    }
+    .jd-profit-formula > i { justify-self: center; }
+    .jd-fact-forecast > i,
+    .jd-final-verdict i { justify-self: start; transform: rotate(90deg); }
+    .jd-profit-formula section { min-height: 0; }
+  }
+
+  @media (max-width: 520px) {
+    .jd-rule-network__items { grid-template-columns: 1fr; }
+    .jd-settlement-ledger__rows span { flex-direction: column; gap: .2rem; }
+  }
+`}</style>
