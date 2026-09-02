@@ -56,6 +56,7 @@ const homeOptions = [
         class:list={['home-index-option', current === option.id && 'active']}
         href={option.href}
         role="menuitem"
+        data-home-index-value={option.id}
         data-style-theme={option.styleTheme || undefined}
         data-theme={option.theme || undefined}
       >
@@ -74,6 +75,33 @@ const homeOptions = [
     var toggle = menu.querySelector('[data-home-index-toggle]');
     var options = Array.from(menu.querySelectorAll('.home-index-option'));
     if (!toggle) return;
+
+    function selectedHomeOption() {
+      var savedHomeIndex = '';
+      try {
+        savedHomeIndex = localStorage.getItem('homeIndex') || '';
+        if (!savedHomeIndex && localStorage.getItem('styleTheme') === 'index-gradient') {
+          savedHomeIndex = 'home-redesign-2';
+          localStorage.setItem('homeIndex', savedHomeIndex);
+        }
+      } catch (error) {}
+
+      return options.find(function (option) {
+        return option.getAttribute('data-home-index-value') === savedHomeIndex;
+      });
+    }
+
+    function syncHomeLinks() {
+      var selectedOption = selectedHomeOption();
+      if (!selectedOption) return;
+      var homeHref = selectedOption.getAttribute('href');
+      if (!homeHref) return;
+      document.querySelectorAll('[data-home-link]').forEach(function (link) {
+        link.setAttribute('href', homeHref);
+      });
+    }
+
+    syncHomeLinks();
 
     function setOpen(isOpen, focusFirst) {
       menu.classList.toggle('open', isOpen);
@@ -106,13 +134,16 @@ const homeOptions = [
 
     options.forEach(function (option, index) {
       option.addEventListener('click', function () {
+        var homeIndex = option.getAttribute('data-home-index-value');
         var styleTheme = option.getAttribute('data-style-theme');
         var theme = option.getAttribute('data-theme');
-        if (!styleTheme || !theme) return;
 
         try {
-          localStorage.setItem('styleTheme', styleTheme);
-          localStorage.setItem('theme', theme);
+          if (homeIndex) localStorage.setItem('homeIndex', homeIndex);
+          if (styleTheme && theme) {
+            localStorage.setItem('styleTheme', styleTheme);
+            localStorage.setItem('theme', theme);
+          }
         } catch (error) {}
       });
 
