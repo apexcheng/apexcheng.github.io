@@ -35,7 +35,6 @@
 | `src/content/posts/python-classes-objects-basics.mdx` | `教程` | 作为选修章，用商品库存图解 __init__、self、属性和方法怎样作用于独立实例，并对比字典加函数的适用边界 | 写 Python 类与对象、self、实例状态和基础面向对象边界教学时参考 |
 | `src/content/posts/python-basic-assessment-20-questions.mdx` | `教程` | 用 20 道题检查预测输出、状态追踪、基础编码、具体错误定位和完整订单脚本能力，网页与可下载练习文件保持一致 | 写 Python 入门考核、运行轨迹练习、错误定位和综合脚本测验时参考 |
 | `src/content/posts/programming-terms-for-ai-coding-beginners.mdx` | `教程` | 面向 AI 编程、RPA 和数据处理新手的开发术语翻译手册，沿真实开发流程讲 Bug、异常、测试、重构、API、同步异步、数据库缓存、Git、构建部署与 CI/CD | 写非科班编程入门、AI 编程术语、Git/API/测试/部署基础和新人开发沟通指南时参考 |
-| `src/content/posts/python-uv-practical-guide.mdx` | `教程` | 面向 Python 新手、AI 编程和自动化开发者的 uv 项目工作流教程，从 Python 版本、pyproject.toml、uv.lock、.venv 到依赖添加、运行、同步和 requirements 导出 | 写 Python uv、依赖管理、虚拟环境、Python 版本管理、pip/venv 迁移和项目环境教程时参考 |
 | `src/content/posts/excel-formula-data-types-basics.mdx` | `教程` | Excel 公式基础前置教程，从数值、字符串、布尔值和单元格/区域引用出发，解释日期序列值、时间小数、日期时间组合以及这些类型在公式中的表示方式 | 写 Excel 零基础公式语法、数据类型、日期时间原理、值与引用区别时参考 |
 | `src/content/posts/excel-functions-from-basic-to-intermediate.mdx` | `教程` | Excel 函数知识地图，把 57 个常用函数整理成 9 个函数家族，并说明基础函数、中级函数、综合应用和系列阅读路线 | 写 Excel / WPS 函数学习地图、函数分类、系列入口和表格能力分层文章时参考 |
 | `src/content/posts/excel-basic-functions-case-guide.mdx` | `教程` | Excel 基础函数案例教程，使用订单明细和商品资料两张示例表，逐个演示 49 个统计、条件、查找、文本、逻辑、日期和时间函数的公式、结果与组合练习 | 写 Excel 基础函数实操、函数案例讲解、订单明细统计、日期时间处理和新手练习文章时参考 |
@@ -52,7 +51,6 @@
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
 | `src/content/posts/ecommerce-link-profit-model-rebuild.mdx` | `实践` | 从同批订单、时间、成本性质和计算粒度四类错位解释旧利润模型，并重构为 T-21～T-8 成熟金额退款率、包裹级沉没成本、拍单与售后损耗、三类推广费和 5% 保留统一汇总的近 7 天链接利润表 | 写电商链接利润、广告投放盈亏、订单级成本、退款率口径和利润模型重构时参考 |
 | `src/content/posts/jd-pop-profit-model-settlement-facts.mdx` | `实践` | 从“复现京东计费规则”的旧模型切换到事实驱动架构：订单结算负责平台收入与费用，ERP 负责采购及履约成本，推广等账单外费用独立接入，并将事实利润与预测层分开 | 写京东 POP 利润核算、平台结算账单、事实层设计、平台费用治理和利润模型重构时参考 |
-| `src/content/posts/jd-self-operated-sku-profit-model.mdx` | `实践` | 京东自营 SKU 利润模型图解，从供货金额、双退款率、订单沉没与售后损耗，到全站/非全站/联盟推广、毛保、0.6% 扣点、小额打款和 8% 保留，完整跑通预测利润与利润率 | 写京东自营利润核算、SKU 成本拆解、毛保、推广分摊和销售额成本率文章时参考 |
 | `src/content/posts/ecommerce-review-analysis-agent-workflow.mdx` | `实践` | 电商评价分析 Agent 整页视觉案例，以滚动叙事方式展示两张评价表统一、Python 事实包、日报与周期对比、钉钉交付闸门和发送成功后的分表状态回写 | 写电商评价分析、钉钉 AI 表格、事实包、Agent 报告、Webhook 交付闭环、状态回写和整页数据故事时参考 |
 | `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `实践` | 东南亚仓网与发货决策信息图，覆盖三国雅仓、同国双平台共享、跨国隔离、本地优先、深圳兜底和后台核对口径 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
 | `src/content/posts/cross-border-inventory-allocation-by-sales.mdx` | `实践` | 多平台共享海外仓库存的分配模型，覆盖站点 + SKU 库存池、店铺比例、销量权重、零销量兜底、官方仓排除和超分风险 | 写 Shopee/Lazada 库存同步、多店铺库存池、销量分配、新链接兜底和超卖风险时参考 |
