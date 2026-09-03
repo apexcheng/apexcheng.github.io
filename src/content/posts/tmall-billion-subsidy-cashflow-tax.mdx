@@ -1,0 +1,407 @@
+---
+title: "天猫百亿补贴怎么核算：垫资、划回、合作费用与税点"
+description: "用商品原价 100、消费者实付 90、百补优惠 10 的例子，把天猫百亿补贴的垫资、划回、合作费用结算和 13% / 6% 税点完整跑一遍。"
+date: 2026-09-03T15:35:00+08:00
+category: "实践"
+tags:
+  - "电商运营"
+  - "利润核算"
+  - "天猫"
+minutes: 6
+featured: false
+pinned: false
+draft: false
+private: false
+---
+
+百亿补贴最容易看乱的地方，不是 `90 + 10 = 100`，而是平台给商家的那 10 元会先以**垫资**出现，确认收货后又被划回，最后满足条件时再以**合作费用**重新结算。
+
+如果把这几笔钱全部混成“销售额”，利润模型很容易重复计算。下面只用一笔订单，把资金怎么走、税怎么拆完整跑一遍。
+
+<div class="billion-hero" aria-label="天猫百亿补贴资金流水和税务处理总览">
+  <div>
+    <span class="billion-kicker">百亿补贴 · 单笔订单演算</span>
+    <strong>先看钱怎么走，<br />再看税怎么拆</strong>
+    <p>示例只保留三个数字：商品原价 100，消费者实付 90，平台百补 10。</p>
+  </div>
+  <div class="billion-hero__numbers">
+    <section><small>商品原价</small><b>100</b></section>
+    <section><small>消费者实付</small><b>90</b></section>
+    <section><small>百补优惠</small><b>10</b></section>
+  </div>
+</div>
+
+## 先把平台规则翻译成资金流水
+
+按照百亿补贴特别加补合作协议，资金链可以拆成五件事：
+
+<div class="billion-rules" aria-label="百亿补贴合作费用资金规则">
+  <ol>
+    <li><b>01</b><span>消费者下单时，平台先替商家垫付商品直降的优惠金额。</span></li>
+    <li><b>02</b><span>订单确认收货后，平台再从商家账户划回同额垫资。</span></li>
+    <li><b>03</b><span>活动结束、通过价格力等考核后，平台形成“合作费用账单”。</span></li>
+    <li><b>04</b><span>商家向浙江天猫技术有限公司开具等额增值税发票。</span></li>
+    <li><b>05</b><span>平台再把这笔“合作费用”支付给商家。</span></li>
+  </ol>
+</div>
+
+所以，这笔订单真正发生的现金变化更接近下面这样：
+
+<div class="billion-flow" aria-label="百亿补贴从消费者付款到合作费用结算的完整资金流水">
+  <section class="is-in">
+    <small>STEP 1 · 消费者下单</small>
+    <strong>消费者 +90</strong>
+    <span>平台临时垫资 +10</span>
+    <b>商家账户暂时收到 100</b>
+  </section>
+  <i aria-hidden="true">↓</i>
+  <section class="is-out">
+    <small>STEP 2 · 确认收货</small>
+    <strong>平台收回垫资 −10</strong>
+    <span>这一步是在归还前面的临时垫资</span>
+  </section>
+  <i aria-hidden="true">↓</i>
+  <section class="is-settle">
+    <small>STEP 3 · 最终符合活动条件</small>
+    <strong>商家给天猫开 10 元发票</strong>
+    <span>平台支付合作费用 +10</span>
+  </section>
+</div>
+
+第一笔平台 `+10` 和最后一笔平台 `+10` 不能看成同一笔收入：前者只是垫资，后者才是满足结算条件后正式支付的合作费用。
+
+## 把每一步直接写进公式
+
+先不化简，完整保留资金动作和税点：
+
+<div class="billion-runtime" aria-label="百亿补贴完整流水和税点公式">
+  <div class="billion-runtime__steps">
+    <section>
+      <small>step1</small>
+      <code>(90 + 10)</code>
+      <span>消费者 90 + 平台垫资 10</span>
+    </section>
+    <b class="billion-op">−</b>
+    <section>
+      <small>step2</small>
+      <code>10</code>
+      <span>确认收货后收回垫资</span>
+    </section>
+    <b class="billion-op">+</b>
+    <section>
+      <small>step3</small>
+      <code>10</code>
+      <span>正式结算合作费用</span>
+    </section>
+  </div>
+
+  <div class="billion-runtime__tax">
+    <small>step · 结算税点</small>
+    <code>− (90 − 90/1.13) − (10 − 10/1.06)</code>
+    <div>
+      <span><b>90 元商品收入</b>按 13% 价税分离</span>
+      <span><b>10 元合作费用</b>本文按 6% 价税分离</span>
+    </div>
+  </div>
+
+  <div class="billion-runtime__full">
+    <small>完整表达</small>
+    <code>(90 + 10) − 10 + 10 − (90 − 90/1.13) − (10 − 10/1.06)</code>
+  </div>
+</div>
+
+这条长公式的价值不是方便日常计算，而是把每一笔钱为什么出现、为什么又被扣掉都保留下来。看懂之后，日常利润模型反而应该使用更短的公式。
+
+## 最终公式其实只剩两项
+
+前面的垫资 `+10` 和划回 `−10` 会相互抵消，真正需要进入不含税收入的只有两部分：消费者实付和正式结算的百补合作费用。
+
+<div class="billion-final" aria-label="百亿补贴最终不含税收入公式">
+  <span>最终公式</span>
+  <strong>消费者实付 / 1.13<br />+ 百补合作费用 / 1.06</strong>
+  <code>90/1.13 + 10/1.06</code>
+  <div>
+    <small>消费者实付未税收入</small><b>79.65</b>
+    <i>+</i>
+    <small>合作费用未税收入</small><b>9.43</b>
+    <i>=</i>
+    <small>合计不含税收入</small><b>≈ 89.08</b>
+  </div>
+</div>
+
+因此，在本文当前核算口径下：
+
+```text
+不含税收入 = 消费者实付 / 1.13 + 百补合作费用 / 1.06
+```
+
+也就是：
+
+```text
+90 / 1.13 + 10 / 1.06 ≈ 89.08
+```
+
+## 这里有一个必须保留的边界
+
+本文为了利润模型演算，暂按下面的税务口径处理：
+
+- 商品销售收入：`13%`
+- 百补合作费用：`6%`
+
+`13%` 和 `6%` 对应现行增值税法中一般货物与一般服务的税率，但百补合作费用最终应使用什么开票税目和税率，仍应以公司实际开票口径、财务确认及主管税务机关要求为准。换句话说，文章要讲清的是**资金结构和计算方法**，而不是把 `6%` 写成所有百补商家的统一税务结论。
+
+官方协议可以确认的核心事实是：平台先垫付优惠金额，确认收货后划回同额垫资，符合条件后生成合作费用账单，商家开具等额增值税发票后平台再支付合作费用。
+
+参考：
+
+- [阿里规则：百亿补贴消费券特别加补营销活动合作协议（常规版）](https://terms.alicdn.com/legal-agreement/terms/b_platform_service_agreement/20260422152219286/20260422152219286.html)
+- [中华人民共和国增值税法](https://www.npc.gov.cn/npc/c2/c30834/202412/t20241225_442038.html)
+
+<style>{`
+  .billion-hero,
+  .billion-rules,
+  .billion-flow,
+  .billion-runtime,
+  .billion-final {
+    --bb-blue: #1957b8;
+    --bb-ink: #17253a;
+    --bb-muted: #65758a;
+    --bb-line: #d9e4f1;
+    --bb-paper: #f7faff;
+    --bb-green: #157957;
+    --bb-red: #bb3e36;
+  }
+
+  .billion-hero {
+    display: grid;
+    grid-template-columns: 1.35fr 0.9fr;
+    gap: 1.5rem;
+    margin: 1.5rem 0 3rem;
+    padding: clamp(1.4rem, 4vw, 2.4rem);
+    border: 1px solid #cbdcf0;
+    border-radius: 26px;
+    background: linear-gradient(145deg, #f8fbff 0%, #edf5ff 100%);
+    box-shadow: 0 20px 54px rgba(37, 76, 124, 0.1);
+  }
+
+  .billion-kicker {
+    color: var(--bb-blue);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .billion-hero > div > strong {
+    display: block;
+    margin-top: 0.7rem;
+    color: var(--bb-ink);
+    font-size: clamp(1.9rem, 5vw, 3.3rem);
+    line-height: 1.07;
+    letter-spacing: -0.045em;
+  }
+
+  .billion-hero p {
+    margin: 1rem 0 0;
+    color: var(--bb-muted);
+  }
+
+  .billion-hero__numbers {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .billion-hero__numbers section {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--bb-line);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.82);
+  }
+
+  .billion-hero__numbers small { color: var(--bb-muted); }
+  .billion-hero__numbers b { color: var(--bb-blue); font-size: 1.65rem; }
+
+  .billion-rules {
+    margin: 1.5rem 0 2rem;
+    padding: 1rem;
+    border: 1px solid var(--bb-line);
+    border-radius: 22px;
+    background: var(--bb-paper);
+  }
+
+  .billion-rules ol {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .billion-rules li {
+    display: grid;
+    grid-template-columns: 2.8rem 1fr;
+    gap: 0.85rem;
+    align-items: start;
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+    background: #fff;
+  }
+
+  .billion-rules li b {
+    color: var(--bb-blue);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+  }
+
+  .billion-rules li span { color: var(--bb-ink); }
+
+  .billion-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 0.8rem;
+    align-items: stretch;
+    margin: 1.5rem 0 2.5rem;
+  }
+
+  .billion-flow > section {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 1.1rem;
+    border: 1px solid var(--bb-line);
+    border-radius: 18px;
+    background: #fff;
+  }
+
+  .billion-flow small,
+  .billion-runtime small {
+    color: var(--bb-blue);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .billion-flow strong { color: var(--bb-ink); }
+  .billion-flow span { color: var(--bb-muted); font-size: 0.92rem; }
+  .billion-flow section > b { color: var(--bb-green); }
+  .billion-flow > i { align-self: center; color: var(--bb-blue); font-style: normal; font-weight: 900; }
+
+  .billion-runtime {
+    margin: 1.5rem 0 2.5rem;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border: 1px solid #cbdcf0;
+    border-radius: 24px;
+    background: linear-gradient(180deg, #fbfdff 0%, #f4f8fd 100%);
+  }
+
+  .billion-runtime__steps {
+    display: grid;
+    grid-template-columns: 1fr auto 0.8fr auto 0.8fr;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .billion-runtime__steps section,
+  .billion-runtime__tax,
+  .billion-runtime__full {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 1px solid var(--bb-line);
+    border-radius: 16px;
+    background: #fff;
+  }
+
+  .billion-runtime code,
+  .billion-final code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    color: var(--bb-ink);
+    background: transparent;
+    font-size: clamp(1rem, 2.6vw, 1.32rem);
+    font-weight: 800;
+  }
+
+  .billion-runtime__steps span { color: var(--bb-muted); font-size: 0.86rem; }
+  .billion-op { color: var(--bb-blue); font-size: 1.6rem; }
+
+  .billion-runtime__tax { margin-top: 0.9rem; }
+  .billion-runtime__tax > div { display: flex; flex-wrap: wrap; gap: 0.6rem 1.25rem; color: var(--bb-muted); font-size: 0.9rem; }
+  .billion-runtime__tax b { color: var(--bb-ink); }
+  .billion-runtime__full { margin-top: 0.9rem; border-style: dashed; }
+
+  .billion-final {
+    margin: 1.5rem 0 2.5rem;
+    padding: clamp(1.3rem, 4vw, 2rem);
+    border: 1px solid #e3c984;
+    border-radius: 24px;
+    background: linear-gradient(145deg, #fffdf7 0%, #fff8df 100%);
+    text-align: center;
+  }
+
+  .billion-final > span {
+    display: inline-block;
+    color: var(--bb-red);
+    font-weight: 900;
+  }
+
+  .billion-final > strong {
+    display: block;
+    margin: 0.8rem auto;
+    color: var(--bb-ink);
+    font-size: clamp(1.3rem, 4vw, 2.1rem);
+    line-height: 1.35;
+  }
+
+  .billion-final > code {
+    display: block;
+    color: var(--bb-red);
+    font-size: clamp(1.3rem, 4vw, 2rem);
+  }
+
+  .billion-final > div {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 1.25rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid rgba(143, 112, 31, 0.22);
+  }
+
+  .billion-final > div small { color: var(--bb-muted); }
+  .billion-final > div b { color: var(--bb-ink); font-size: 1.15rem; }
+  .billion-final > div i { color: var(--bb-blue); font-style: normal; font-weight: 900; }
+
+  @media (max-width: 760px) {
+    .billion-hero { grid-template-columns: 1fr; }
+
+    .billion-flow {
+      grid-template-columns: 1fr;
+    }
+
+    .billion-flow > i {
+      transform: none;
+    }
+
+    .billion-runtime__steps {
+      grid-template-columns: 1fr;
+    }
+
+    .billion-op {
+      text-align: center;
+      line-height: 1;
+    }
+
+    .billion-final > div {
+      grid-template-columns: 1fr;
+    }
+
+    .billion-final > div i { line-height: 1; }
+  }
+`}</style>

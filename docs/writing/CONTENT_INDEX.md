@@ -48,6 +48,7 @@
 | `src/content/posts/excel-wps-large-workbook-performance-guide.mdx` | `教程` | 把 Excel/WPS 大表卡顿拆成文件负担、计算负担和结构负担，按格式清理、公式范围、重复计算、分层汇总顺序排查 | 写 Excel/WPS 卡顿、大工作簿性能、格式污染、整列引用、计算链和数据结构优化时参考 |
 | `src/content/posts/qianniu-ecommerce-operation-learning-map.mdx` | `教程` | 从一条商品链接出发，把 SKU、价格体系、营销推广、订单 ERP、物流售后、评价与运营优化串成完整电商经营链路，并补充面对陌生后台功能的学习方法 | 写千牛工作台、电商运营入门、新人培训、商品从上架到售后的全链路教学文章时参考 |
 | `src/content/posts/ecommerce-price-hierarchy-target-price-planning.mdx` | `教程` | 先解释单品宝、活动和营销工具让利（非活动让利），再讲当前标价如何生效、活动如何校验、覆盖叠加与活动优先级、消费端到手价检查、价盘补差，以及平时价与活动价一致时的标价反推方法 | 写电商价格体系、优惠叠加优先级、营销工具让利、活动卡控价、普惠卷后价、活动标价反推和价盘目标到手价教程时参考 |
+| `src/content/posts/tmall-billion-subsidy-cashflow-tax.mdx` | `实践` | 用商品原价100、消费者实付90、百补优惠10的单笔订单，拆解平台先垫资、确认收货后划回、最终结算合作费用的现金流，并按商品13%与合作费用6%的当前核算口径推导未税收入公式 | 写天猫百亿补贴、平台垫资、合作费用、价税分离和利润模型税务口径时参考 |
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
 | `src/content/posts/ecommerce-link-profit-model-rebuild.mdx` | `实践` | 从同批订单、时间、成本性质和计算粒度四类错位解释旧利润模型，并重构为 T-21～T-8 成熟金额退款率、包裹级沉没成本、拍单与售后损耗、三类推广费和 5% 保留统一汇总的近 7 天链接利润表 | 写电商链接利润、广告投放盈亏、订单级成本、退款率口径和利润模型重构时参考 |
 | `src/content/posts/jd-pop-profit-model-settlement-facts.mdx` | `实践` | 从“复现京东计费规则”的旧模型切换到事实驱动架构：订单结算负责平台收入与费用，ERP 负责采购及履约成本，推广等账单外费用独立接入，并将事实利润与预测层分开 | 写京东 POP 利润核算、平台结算账单、事实层设计、平台费用治理和利润模型重构时参考 |
