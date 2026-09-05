@@ -43,7 +43,7 @@ private: false
   <footer>
     <span>本文核验基线</span>
     <strong>Proxmox VE 9.2 · 2026-09-06</strong>
-    <small>当前官方 9.2 ISO 基于 Debian 13；界面和菜单可能随 9.2.x 小版本继续调整。</small>
+    <small>当前官方 9.2 基于 Debian 13.5；界面和菜单可能随 9.2.x 小版本继续调整。</small>
   </footer>
 </section>
 
@@ -61,7 +61,7 @@ private: false
 
 Proxmox VE（通常简称 PVE）不是装在 Windows 里面的虚拟机软件。它本身就是安装在裸机上的操作系统和虚拟化管理平台。
 
-官方当前的 Proxmox VE 9.2 基于 Debian 13，核心同时整合了两类虚拟化：
+官方当前的 Proxmox VE 9.2 基于 Debian 13.5，核心同时整合了两类虚拟化：
 
 - **KVM / QEMU**：运行完整虚拟机，也就是 VM。
 - **LXC**：运行 Linux 容器，也就是 CT。
@@ -204,7 +204,17 @@ https://192.168.21.231:8006/
 Realm：Linux PAM standard authentication
 ```
 
-进入之后还会看到“没有有效订阅”的提示。**免费版不是阉割版。** Proxmox VE 本身是开源软件，订阅主要对应企业软件源和商业支持。家庭学习完全可以使用官方提供的 `pve-no-subscription` 软件源。
+进入之后还会看到“没有有效订阅”的提示。**免费使用并不是一套被砍掉功能的“社区版”。** Proxmox VE 本身是开源软件，订阅主要对应经过更严格验证的 Enterprise Repository 和商业支持；家庭学习可以使用官方提供的 `pve-no-subscription` 软件源。
+
+严格来说，与其说“企业版 / 免费版”，不如理解成：
+
+```text
+同一套 Proxmox VE
+├─ 有订阅 → Enterprise Repository + 商业支持
+└─ 无订阅 → No-Subscription Repository
+```
+
+官方把 `pve-no-subscription` 定位为测试和非生产用途，软件包验证程度低于 Enterprise Repository。对 Homelab 很合适；真正承担生产业务时，则应该重新评估更新源和支持策略。
 
 ## 网络：理解 vmbr0，比背任何配置命令都重要
 
@@ -743,6 +753,8 @@ TPM:           Windows 11 按需要增加
 QEMU Agent:    安装系统后配置
 ```
 
+如果使用 OVMF，你还会在 Storage 或 VM Hardware 里看到一个只有几 MiB 的 **EFI Disk**。它不是 Windows 的“小硬盘”，而是用来保存 UEFI 变量状态的辅助磁盘。类似地，Windows 11 如果添加了虚拟 TPM，也会多出对应的状态存储。不要因为容量很小就随手删除。
+
 如果 Windows 安装器提示“没有磁盘”，而你又使用了 VirtIO / SCSI 虚拟控制器，第一反应应该是：**安装器可能缺少对应 VirtIO 存储驱动，而不是 PVE 没创建磁盘。**
 
 ## QEMU Guest Agent：让宿主机真正“认识” Guest
@@ -779,7 +791,17 @@ VM 100
 → Hard Disk
 ```
 
-如果 Guest 和所选虚拟控制器支持热插拔，新磁盘甚至可以在虚拟机运行时被发现；即使 Guest 没立即识别，通常也只是重启**这台 VM**，而不是重启整个 Proxmox 宿主机。
+如果 Guest、虚拟控制器和当前 VM Hotplug 配置支持，新磁盘可以在虚拟机运行时被发现；如果不能热插拔，PVE 会把修改记成 **Pending Change**，等这台 VM 重新启动后再应用。
+
+例如 Hardware 页面里如果看到类似：
+
+```text
+Hard Disk (sata1)
+当前：  undefined
+待应用：vmstore256:vm-100-disk-2,size=300G
+```
+
+这表示磁盘已经创建，但还没有真正挂进当前正在运行的 Guest。此时需要重启或关机再启动**这台 VM**，不是重启整个 Proxmox 宿主机。
 
 Windows 看到新硬盘以后，还要完成 Windows 自己的磁盘初始化：
 
