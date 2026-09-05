@@ -1,0 +1,1525 @@
+---
+title: "Proxmox VE 9.2 零基础入门：从裸机安装、网络、存储到虚拟机"
+description: "面向第一次接触 PVE 的完整入门指南：从安装、固定 IP、Web 管理、root 密码恢复，到节点、磁盘、Directory、LVM-Thin、虚拟机、LXC、快照、备份、直通和免费版更新。"
+date: 2026-09-06T00:50:00+08:00
+category: "教程"
+tags:
+  - "Proxmox VE"
+  - "虚拟化"
+  - "Homelab"
+minutes: 42
+featured: false
+pinned: false
+draft: false
+private: false
+---
+
+第一次打开 Proxmox VE，最容易产生的感觉不是“难”，而是**所有熟悉的电脑概念突然多了一层**：
+
+- 一块 SSD 不再直接等于一个盘符，而是先变成 Proxmox 的存储；
+- 一张网卡不再直接绑给 Windows，而是先进入 Linux Bridge；
+- 物理服务器上又能创建很多“电脑”；
+- 一个 256GB 的真实 SSD，甚至可以先创建出 125GB + 300GB 的两块虚拟硬盘。
+
+如果只跟着按钮一路点，很快就会遇到一堆名词：`node`、`vmbr0`、`local`、`local-lvm`、`LVM-Thin`、`CT`、`EFI Disk`、`VirtIO`……
+
+这篇文章不准备把 Proxmox 的菜单逐项翻译一遍，而是先建立一套能长期使用的心智模型，再从一台裸机一路走到可以稳定创建和管理虚拟机。
+
+<section class="pve-hero" aria-label="Proxmox VE 入门路线">
+  <div class="pve-hero__copy">
+    <span>PVE 9.2 · SINGLE NODE FIELD GUIDE</span>
+    <strong>先看懂“宿主机、网络、存储、虚拟机”四层关系，再开始点按钮。</strong>
+    <p>裸机安装 → 固定管理 IP → 认识节点 → 配置存储 → 创建 VM / CT → 快照与备份 → 日常维护。</p>
+  </div>
+  <div class="pve-route" aria-label="文章学习路径">
+    <article><b>01</b><span>HOST</span><strong>先把 PVE 装起来</strong></article>
+    <i>→</i>
+    <article><b>02</b><span>NETWORK</span><strong>让浏览器能稳定找到它</strong></article>
+    <i>→</i>
+    <article><b>03</b><span>STORAGE</span><strong>把真实磁盘变成存储池</strong></article>
+    <i>→</i>
+    <article class="is-final"><b>04</b><span>GUEST</span><strong>再创建真正的 VM / CT</strong></article>
+  </div>
+  <footer>
+    <span>本文核验基线</span>
+    <strong>Proxmox VE 9.2 · 2026-09-06</strong>
+    <small>当前官方 9.2 ISO 基于 Debian 13；界面和菜单可能随 9.2.x 小版本继续调整。</small>
+  </footer>
+</section>
+
+本文聚焦**单机、非集群、非企业订阅**场景。Ceph、HA、复杂 SDN、VLAN 深度配置、ZFS 调优和完整 GPU Passthrough 会在最后说明它们的位置，但不会把入门文章扩展成一本数据中心手册。
+
+贯穿全文的练习机器使用一个非常常见的家庭实验环境：
+
+<section class="pve-lab" aria-label="本文练习机硬件">
+  <article><span>系统盘</span><strong>120GB SSD</strong><p>安装 Proxmox VE，自身系统和基础存储。</p></article>
+  <article class="is-primary"><span>虚拟机盘</span><strong>256GB SSD</strong><p>建立 `vmstore256`，主要放 VM 虚拟磁盘。</p></article>
+  <article><span>数据盘</span><strong>500GB HDD</strong><p>用来理解新增磁盘、Directory 与 LVM-Thin 的区别。</p></article>
+</section>
+
+## 先把 Proxmox 想成一台“虚拟电脑工厂”
+
+Proxmox VE（通常简称 PVE）不是装在 Windows 里面的虚拟机软件。它本身就是安装在裸机上的操作系统和虚拟化管理平台。
+
+官方当前的 Proxmox VE 9.2 基于 Debian 13，核心同时整合了两类虚拟化：
+
+- **KVM / QEMU**：运行完整虚拟机，也就是 VM。
+- **LXC**：运行 Linux 容器，也就是 CT。
+
+最重要的结构可以压缩成下面四层：
+
+<section class="pve-board pve-stack" aria-label="Proxmox VE 四层结构">
+  <header><span>MENTAL MODEL 01</span><strong>一台真实电脑，被拆成四层管理</strong></header>
+  <div class="pve-stack__rows">
+    <article class="is-guest"><b>04 · Guest</b><strong>VM / CT</strong><p>Windows、Ubuntu、Debian、Home Assistant、各种服务真正运行的地方。</p></article>
+    <article class="is-storage"><b>03 · Storage</b><strong>LVM-Thin / Directory / ZFS …</strong><p>把真实磁盘组织成 Proxmox 能分配给虚拟机、ISO 和备份使用的存储。</p></article>
+    <article class="is-network"><b>02 · Network</b><strong>vmbr0 / 物理网卡</strong><p>决定宿主机和虚拟机如何进入你的局域网。</p></article>
+    <article class="is-host"><b>01 · Host</b><strong>Proxmox VE / Debian</strong><p>真正控制 CPU、内存、磁盘和网卡的宿主系统。</p></article>
+    <div class="pve-stack__metal"><span>PHYSICAL</span><strong>CPU · RAM · SSD / HDD · NIC</strong></div>
+  </div>
+</section>
+
+所以以后看到任何功能，都可以先问一句：**它现在是在操作宿主机、网络、存储，还是 Guest？**
+
+这一个问题能解决大部分新手时期的概念混乱。
+
+## 安装前：先确认你准备牺牲哪块盘
+
+Proxmox 官方 ISO 是裸机安装器。选择某块硬盘作为安装目标时，这块盘上的现有分区和数据会被重新处理，不能把它当成“在现有 Windows 旁边随便加一个软件”。
+
+最简单的学习配置是：
+
+```text
+一台闲置电脑
+├─ CPU：支持硬件虚拟化
+├─ RAM：至少够 PVE + 计划运行的 VM
+├─ 系统盘：单独一块 SSD 最省心
+└─ 网线：第一次安装强烈建议有线连接
+```
+
+进入 BIOS / UEFI 后，确认虚拟化能力已经打开。不同主板名字会有差异，常见名称包括：
+
+- Intel：`Intel Virtualization Technology` / `VT-x`
+- AMD：`SVM Mode` / `AMD-V`
+- 如果以后需要 PCIe / GPU 直通，还会涉及 `VT-d` / `IOMMU`
+
+入门阶段不需要为了“看起来高级”就上 ZFS、RAID、Ceph。单机学习最重要的是**先把最短链路跑通**。
+
+## 安装 Proxmox VE 9.2：真正需要做的决定只有几个
+
+从官方页面下载当前 Proxmox VE 9.2 ISO，写入 U 盘，再从 U 盘启动安装。
+
+官方当前提供 9.2-1 ISO，安装完成后仍建议通过更新器升级到最新 9.2.x 软件包。因此“ISO 是 9.2-1、后台显示 9.2.2”并不矛盾。
+
+安装向导里重点关注下面几项。
+
+### 1. Target Harddisk：系统到底装到哪块盘
+
+多盘机器最需要谨慎的是这里。
+
+例如本文练习机有：
+
+```text
+120GB SSD  ← 选择它安装 PVE
+256GB SSD  ← 暂时留空，后面作为 VM 存储
+500GB HDD  ← 暂时保留，后面练习新增存储
+```
+
+如果无法根据容量分辨硬盘，先记录磁盘型号，不要凭 `/dev/sda`、`/dev/sdb` 的顺序猜。Linux 设备名在不同启动环境下不应该被当成永久身份。
+
+### 2. 文件系统：第一次用，优先简单
+
+安装器会提供 ext4、XFS、ZFS 等选择。对一台单盘系统盘的学习机，**ext4 + 默认 LVM 布局**通常就是最容易理解的起点。
+
+它会让你很快遇到两个默认存储：
+
+```text
+local
+local-lvm
+```
+
+不要急着删。后面会专门解释两者为什么同时存在。
+
+### 3. root 密码和邮箱
+
+这里设置的是 PVE 宿主机的 `root` 管理员密码，不是某台 Windows VM 的密码。
+
+登录 Web UI 时最常见的账号是：
+
+```text
+User name: root
+Realm: Linux PAM standard authentication
+```
+
+界面里经常显示成 `root@pam`。
+
+### 4. Management Network：这里决定以后怎么找到 PVE
+
+安装阶段会要求：
+
+- Management Interface
+- Hostname
+- IP Address
+- Gateway
+- DNS Server
+
+家庭局域网最重要的是给 PVE 一个**稳定的管理 IP**。
+
+例如路由器网段是：
+
+```text
+路由器：192.168.21.1
+网段：  192.168.21.0/24
+```
+
+就可以规划：
+
+```text
+PVE：     192.168.21.231/24
+Gateway： 192.168.21.1
+DNS：     192.168.21.1 或其他可用 DNS
+```
+
+最好同时在路由器里做 DHCP 保留，或者确保这个地址不在会被 DHCP 随机分出去的范围里，避免未来 IP 冲突。
+
+## 第一次登录：为什么地址后面是 8006
+
+安装完成重启后，屏幕通常会直接显示管理地址，例如：
+
+```text
+https://192.168.21.231:8006/
+```
+
+这里的 `8006` 是 Proxmox Web 管理服务默认使用的 HTTPS 端口。
+
+浏览器第一次打开通常会提示证书“不安全”。家庭内网新装 PVE 默认使用本机生成的证书，浏览器无法把它追溯到公开受信任的 CA，所以会警告；这不等于你连接的 PVE 本身已经被攻击。
+
+确认地址就是自己刚安装的局域网主机后，可以继续进入。
+
+登录：
+
+```text
+用户名：root
+密码：安装时设置的 root 密码
+Realm：Linux PAM standard authentication
+```
+
+进入之后还会看到“没有有效订阅”的提示。**免费版不是阉割版。** Proxmox VE 本身是开源软件，订阅主要对应企业软件源和商业支持。家庭学习完全可以使用官方提供的 `pve-no-subscription` 软件源。
+
+## 网络：理解 vmbr0，比背任何配置命令都重要
+
+很多人第一次看到 PVE 的网络页面，会以为：
+
+> 我的电脑明明只有一张网卡，为什么又出来一个 `vmbr0`？
+
+因为 Proxmox 需要让宿主机和多台虚拟机共享真实网络。
+
+Linux Bridge 可以理解成一台**运行在宿主机里的虚拟交换机**。
+
+<section class="pve-board pve-network" aria-label="Proxmox 默认桥接网络">
+  <header><span>MENTAL MODEL 02</span><strong>物理网卡负责出去，vmbr0 负责把宿主机和虚拟机接在一起</strong></header>
+  <div class="pve-network__flow">
+    <article><span>家庭路由器</span><strong>192.168.21.1</strong><small>DHCP / Internet Gateway</small></article>
+    <i>↔</i>
+    <article><span>物理网卡</span><strong>eno1 / enp…</strong><small>通常不直接配置管理 IP</small></article>
+    <i>↔</i>
+    <article class="is-bridge"><span>Linux Bridge</span><strong>vmbr0</strong><small>PVE 管理 IP 通常放这里</small></article>
+  </div>
+  <div class="pve-network__guests">
+    <article><b>PVE Host</b><span>192.168.21.231</span></article>
+    <article><b>VM 100 · Windows</b><span>192.168.21.x</span></article>
+    <article><b>VM 101 · Ubuntu</b><span>192.168.21.x</span></article>
+    <article><b>CT 102 · Debian</b><span>192.168.21.x</span></article>
+  </div>
+</section>
+
+默认配置大致会长这样：
+
+```text
+物理网线
+  ↓
+eno1
+  ↓
+vmbr0  ← PVE 自己的 192.168.21.231
+  ├─ VM 100 网卡
+  ├─ VM 101 网卡
+  └─ CT 102 网卡
+```
+
+所以 `vmbr0` 不是 Wi-Fi，也不是“第二张网卡”。它更接近一个软件交换机。
+
+### `/etc/network/interfaces` 到底在写什么
+
+Proxmox 继续使用标准 Linux 网络配置。一个典型的单网卡桥接配置类似：
+
+```text
+auto lo
+iface lo inet loopback
+
+iface eno1 inet manual
+
+auto vmbr0
+iface vmbr0 inet static
+    address 192.168.21.231/24
+    gateway 192.168.21.1
+    bridge-ports eno1
+    bridge-stp off
+    bridge-fd 0
+```
+
+只要理解三件事就够了：
+
+```text
+eno1                 = 真实网卡
+bridge-ports eno1    = 把真实网卡接进 vmbr0
+address / gateway    = PVE 自己通过 vmbr0 使用的网络配置
+```
+
+### IP 改错，为什么 Web UI 会“消失”
+
+因为浏览器访问的是 PVE 宿主机的管理 IP。
+
+如果你把：
+
+```text
+192.168.21.231
+```
+
+改成了一个不属于当前局域网的地址，PVE 并没有坏，只是你的电脑找不到它了。
+
+这也是为什么第一次折腾网络时，最好让机器旁边还有显示器和键盘。Web UI 断了以后，可以直接从本地 Shell 检查：
+
+```bash
+ip addr
+ip route
+cat /etc/network/interfaces
+```
+
+GUI 里最常见的修改路径是：
+
+```text
+节点 pve
+→ 系统
+→ 网络
+→ 选中 vmbr0
+→ 编辑
+→ 修改 IPv4/CIDR、Gateway
+→ Apply Configuration
+```
+
+DNS 则可以在“节点 → 系统 → DNS”里单独检查。PVE 9 默认使用 `ifupdown2`，通过 Web UI 提交的网络修改可以直接 Apply Configuration，不必为了每一次 IP 修改都重启宿主机。
+
+如果你正在远程修改管理 IP，当前浏览器连接本身会断开，这是正常现象。用新地址重新进入即可。
+
+## 防火墙：先知道它有三层，不要第一次就把自己锁在门外
+
+Proxmox 自带防火墙，单机也可以使用。最重要的不是先背规则语法，而是知道规则可能来自不同层级：
+
+```text
+Datacenter Firewall   → 整个 PVE 环境的公共规则
+Node Firewall         → 只作用于这台 PVE 宿主机
+VM / CT Firewall      → 只作用于指定 Guest
+```
+
+比如“限制外部访问 PVE 的 SSH”属于宿主机管理面问题；“只允许某台 Ubuntu VM 的 80 / 443”则更适合放在 Guest 层理解。
+
+第一次学习防火墙时，最好保留本地显示器 / 键盘或其他可靠的管理通道。尤其不要在只剩一个远程 Web 会话时，一次性修改管理 IP、SSH 和防火墙规则，否则很容易分不清到底是哪一层把连接切断了。
+
+单机家庭环境也不建议直接把 `8006` 管理端口暴露到公网。需要远程管理时，更适合先通过 VPN / Tailscale 一类受控网络进入家里，再访问 PVE 管理地址。
+
+## 忘了 root 密码：先分清“还能不能进入宿主机”
+
+密码恢复分两个场景。
+
+### 场景 A：你已经有 root Shell
+
+如果当前已经能通过本地控制台、SSH 或其他方式进入 root Shell，修改密码就是标准 Linux 命令：
+
+```bash
+passwd
+```
+
+或者明确指定：
+
+```bash
+passwd root
+```
+
+改完以后直接用新密码登录 `root@pam`。
+
+### 场景 B：root 密码彻底忘了，Web / SSH 都进不去
+
+这时需要**物理控制台的启动级恢复**，因为你必须在系统正常登录认证之前拿到本机 root Shell。
+
+最常见的 GRUB 路径是：
+
+```text
+1. 重启 PVE
+2. 在启动菜单编辑当前 Linux 启动项
+3. 临时让系统以 root shell 启动
+4. 把根文件系统重新挂成可写
+5. passwd root
+6. 正常重启
+```
+
+在传统 GRUB 启动项里，常见做法是在 Linux 内核启动参数末尾临时追加：
+
+```text
+init=/bin/bash
+```
+
+让系统这一次直接进入 root shell。它只影响当前这次启动，不是在永久修改 PVE 的启动方式。
+
+进入临时 root Shell 后，核心动作通常是：
+
+```bash
+mount -o remount,rw /
+passwd root
+sync
+reboot -f
+```
+
+不同安装方式可能使用 GRUB 或 systemd-boot / proxmox-boot-tool，启动菜单的进入方式会不同，因此这里不建议把某一个按键序列当成所有机器都通用的“死命令”。
+
+需要记住的安全事实反而更重要：**对一台没有额外磁盘加密保护的服务器来说，拥有物理控制台和启动介质控制权的人，通常就已经非常接近拥有 root 权限。**
+
+## Web UI 到底在看什么：数据中心、节点、VM、存储不是同一级概念
+
+单机环境里，左侧树状菜单通常类似：
+
+<section class="pve-board pve-tree" aria-label="Proxmox Web UI 层级">
+  <header><span>MENTAL MODEL 03</span><strong>“数据中心”是管理层，“节点”才是一台真实 PVE 主机</strong></header>
+  <div class="pve-tree__body">
+    <div class="pve-tree__line is-root"><b>▾ 数据中心</b><span>全局管理层</span></div>
+    <div class="pve-tree__line level-1"><b>▾ 节点 pve</b><span>这台物理服务器</span></div>
+    <div class="pve-tree__line level-2 is-vm"><b>▸ VM 100 · Windows 10</b><span>一台虚拟机</span></div>
+    <div class="pve-tree__line level-2 is-vm"><b>▸ VM 101 · Ubuntu</b><span>另一台虚拟机</span></div>
+    <div class="pve-tree__line level-2 is-ct"><b>▸ CT 102 · Debian</b><span>一个 LXC 容器</span></div>
+    <div class="pve-tree__line level-1"><b>▾ 存储</b><span>已注册到 PVE 的存储资源</span></div>
+    <div class="pve-tree__line level-2"><b>local</b><span>目录型通用存储</span></div>
+    <div class="pve-tree__line level-2"><b>local-lvm / vmstore256</b><span>虚拟机硬盘池</span></div>
+  </div>
+</section>
+
+这里最容易误解的是“节点”。
+
+**节点不是硬盘节点。节点就是一台运行 Proxmox VE 的物理服务器。**
+
+如果以后做三节点集群，才会变成：
+
+```text
+数据中心
+├─ pve01
+├─ pve02
+└─ pve03
+```
+
+本文不进入集群，但理解这一层以后，很多菜单命名都会自然很多。
+
+## Tasks、System Log：操作失败以后第一眼应该看哪里
+
+PVE Web UI 底部长期有一个任务日志区域。创建 VM、移动磁盘、备份、恢复、下载模板、更新系统等操作，本质上都会产生 Task。
+
+所以看到一个红色失败状态时，不要只盯着弹窗：
+
+```text
+操作失败
+  ↓
+底部 Tasks / Task History
+  ↓
+打开具体任务日志
+  ↓
+看第一条真正的 ERROR
+```
+
+如果问题更偏宿主机本身，再进入节点的 `System Log`、`Shell` 或对应服务日志。
+
+这也是 PVE 很适合学习服务器的地方：GUI 负责操作，但底层任务和错误并没有被藏起来。
+
+## 用户、Realm、权限和 TFA：root@pam 不是唯一账号
+
+学习机只有自己使用时，`root@pam` 最方便；但它是宿主机最高权限账号，不应该因此理解成“PVE 所有人都必须共用 root”。
+
+PVE 的登录名通常写成：
+
+```text
+user@realm
+```
+
+例如 `root@pam` 中，`pam` 就是 Linux PAM Realm。PVE 还可以创建自己的用户、组、角色并通过 ACL 分配权限，也支持两步验证（TFA）。
+
+如果未来让家人或同事只管理某几台 VM，更合理的思路是：
+
+```text
+创建独立用户
+  ↓
+给用户 / 用户组分配角色
+  ↓
+通过 ACL 限定到某个 VM、CT、Storage 或 Resource Pool
+```
+
+`Resource Pool` 也不要和存储池混淆：它主要是**把 VM / CT 等资源做逻辑分组，方便授权和管理**，不是拿来保存虚拟磁盘的地方。
+
+## 磁盘和存储：这是整个 PVE 最值得花时间理解的部分
+
+在 Windows 里，很多人已经习惯：
+
+> 插一块硬盘 → 分区 → 格式化 → 出现 D 盘。
+
+Proxmox 多了一层“存储后端”。
+
+<section class="pve-board pve-storage-layers" aria-label="Proxmox 存储三层模型">
+  <header><span>MENTAL MODEL 04</span><strong>真实硬盘、PVE 存储、VM 虚拟硬盘，是三件不同的事</strong></header>
+  <div class="pve-storage-layers__flow">
+    <article><span>PHYSICAL DISK</span><strong>256GB SSD</strong><p>`/dev/sdc` 是 Linux 看到的真实块设备。</p></article>
+    <i>↓</i>
+    <article class="is-pool"><span>PVE STORAGE</span><strong>vmstore256</strong><p>把底层磁盘组织成 PVE 可以分配的存储池。</p></article>
+    <i>↓</i>
+    <div class="pve-storage-layers__guests">
+      <article><span>VM 100</span><strong>125GB</strong><p>Windows C: 对应的虚拟磁盘。</p></article>
+      <article><span>VM 100</span><strong>300GB</strong><p>额外测试创建的第二块虚拟磁盘。</p></article>
+    </div>
+  </div>
+</section>
+
+这也是为什么：
+
+> **“PVE 已经识别这块硬盘”不等于“这块硬盘已经成为 PVE 存储”。**
+
+节点 → 磁盘页面只是告诉你 Linux 看到了它；只有进一步创建 LVM-Thin、Directory、ZFS 等存储，并把它注册给 PVE，创建虚拟机时才能正常选择它。
+
+## 两个必须记住的概念：LVM-Thin 和 Directory
+
+如果只准备记两句话，就记下面两句：
+
+<section class="pve-storage-compare" aria-label="LVM-Thin 和 Directory 核心区别">
+  <article class="is-thin">
+    <span>LVM-THIN</span>
+    <strong>虚拟机硬盘池</strong>
+    <p>块级存储，重点服务 VM / CT 的虚拟磁盘。支持高效快照和克隆，也支持 Thin Provisioning。</p>
+    <small>记忆：专门“切虚拟硬盘”</small>
+  </article>
+  <article class="is-dir">
+    <span>DIRECTORY</span>
+    <strong>普通文件盘 / 通用存储</strong>
+    <p>文件级存储，可以放 VM 镜像、ISO、CT 模板、备份、Snippets 等多种内容。</p>
+    <small>记忆：像普通 Linux 文件目录</small>
+  </article>
+</section>
+
+更完整一点：
+
+| 能力 | LVM-Thin | Directory |
+| --- | --- | --- |
+| 主要定位 | VM / CT 虚拟磁盘池 | 通用文件型存储 |
+| VM 磁盘 | ✅ | ✅ |
+| CT RootFS | ✅ | ✅ |
+| ISO | ❌ | ✅ |
+| CT 模板 | ❌ | ✅ |
+| PVE Backup 文件 | ❌ | ✅ |
+| 原生高效 Snapshot | ✅ | 取决于镜像格式；qcow2 可实现 |
+| Thin Provisioning | ✅ | 可由 qcow2 等机制实现 |
+| 能否直接当普通目录浏览 | 不适合作普通文件盘使用 | ✅ |
+
+这也解释了默认安装为什么经常同时有：
+
+```text
+local      → Directory
+local-lvm  → LVM-Thin
+```
+
+它们不是重复，而是在做不同工作。
+
+## LVM-Thin 为什么能“256GB 创建出 425GB”
+
+本文练习环境里有一个非常直观的实验：
+
+```text
+真实 SSD：        256GB
+
+VM 100 disk-0：  125GB
+VM 100 disk-2：  300GB
+-----------------------
+虚拟标称容量：     425GB
+```
+
+425GB 已经大于 256GB，但 LVM-Thin 仍然允许创建。
+
+原因就是 **Thin Provisioning（精简配置）**。
+
+普通厚分配更接近：
+
+```text
+创建 100GB
+≈ 先为它保留 100GB 的真实空间
+```
+
+Thin Provisioning 更接近：
+
+```text
+告诉 VM：你有 100GB
+实际底层：写了多少数据，才逐步消耗多少真实块
+```
+
+<section class="pve-board pve-thin" aria-label="LVM-Thin 精简配置示意">
+  <header><span>STORAGE MECHANISM</span><strong>“看起来有多大”和“真实写了多少”必须分开</strong></header>
+  <div class="pve-thin__numbers">
+    <article><span>PHYSICAL</span><strong>256GB</strong><p>真实 SSD 上限</p></article>
+    <i>≠</i>
+    <article><span>VIRTUAL</span><strong>425GB</strong><p>VM 看到的标称总容量</p></article>
+  </div>
+  <div class="pve-thin__bars">
+    <div><span>125GB 虚拟盘</span><b style={{ '--usage': '32%' }}></b><small>假设实际只写 40GB</small></div>
+    <div><span>300GB 虚拟盘</span><b style={{ '--usage': '17%' }}></b><small>假设实际只写 50GB</small></div>
+    <div class="is-physical"><span>真实池使用</span><b style={{ '--usage': '35%' }}></b><small>大约 90GB + 元数据等开销</small></div>
+  </div>
+  <footer><strong>关键风险：</strong>虚拟容量可以超卖，真实容量不能。Thin Pool 真写满以后，Guest 会收到 I/O 错误，甚至可能造成文件系统损坏。</footer>
+</section>
+
+所以 LVM-Thin 的正确心智模型不是“凭空变大硬盘”，而是：
+
+> **允许先承诺容量，再按真实写入逐步兑现。**
+
+学习环境可以故意做超额分配体验机制；生产环境则必须持续监控真实池的剩余空间。
+
+## 新增一块 500GB HDD：到底做 LVM-Thin 还是 Directory
+
+假设 PVE 已经在“节点 → 磁盘”里看到一块旧的 500GB HDD，并且它还带着 EFI、NTFS 等旧分区。
+
+第一步不是“创建存储”，而是先确认：**里面的数据还要不要。**
+
+如果不要，才进入擦除 / 重建。
+
+然后有两条最常见路线：
+
+<section class="pve-board pve-disk-choice" aria-label="新增磁盘存储类型选择">
+  <header><span>DECISION</span><strong>这块盘以后主要拿来干什么？</strong></header>
+  <div class="pve-disk-choice__grid">
+    <article>
+      <span>路线 A</span>
+      <strong>500GB HDD → LVM-Thin</strong>
+      <p>主要创建 VM / CT 虚拟磁盘，需要方便快照和克隆。</p>
+      <small>适合：专用虚拟机盘</small>
+    </article>
+    <article class="is-primary">
+      <span>路线 B</span>
+      <strong>500GB HDD → ext4 → Directory</strong>
+      <p>希望同时存 ISO、备份、模板、普通文件，或者偶尔也放 VM。</p>
+      <small>适合：家庭实验室通用数据盘</small>
+    </article>
+  </div>
+</section>
+
+对本文这台练习机，我更推荐：
+
+```text
+120GB SSD → Proxmox 系统
+256GB SSD → LVM-Thin，主要跑 VM
+500GB HDD → Directory，放 ISO / Backup / 低速数据
+```
+
+这样每块盘职责最容易理解。
+
+### GUI 创建 Directory 的典型思路
+
+大致过程是：
+
+```text
+节点 → 磁盘
+  ↓
+确认目标磁盘无重要数据
+  ↓
+擦除旧分区
+  ↓
+创建 ext4 文件系统 / 挂载点
+  ↓
+数据中心 → 存储 → 添加 Directory
+  ↓
+选择允许的 Content 类型
+```
+
+不同 9.2.x 小版本菜单文字可能有细微变化，但底层关系不变：**先让 Linux 有一个可用文件系统和挂载点，再把这个目录注册成 PVE Storage。**
+
+## 为什么 ISO 能放 local，却通常不能放 local-lvm
+
+现在这个问题应该已经很好理解了。
+
+`local` 是 Directory，所以可以有：
+
+```text
+ISO Images
+CT Templates
+Backup
+Snippets
+甚至 VM Images
+```
+
+而 `local-lvm` 是 LVM-Thin，主要内容类型是：
+
+```text
+VM images
+CT rootdir
+```
+
+它不是普通文件目录，所以不能把一个 Windows `.iso` 文件像复制到 D 盘一样塞进去。
+
+上传 ISO 最常见路径：
+
+```text
+存储 local
+→ ISO Images
+→ Upload
+```
+
+然后创建 VM 时，从这个存储选择安装镜像。
+
+## 创建第一台虚拟机：不要被十几个参数吓到
+
+点击“创建虚拟机”以后，参数很多，但新手真正要理解的只有几组。
+
+<section class="pve-board pve-vm-create" aria-label="创建虚拟机的核心参数">
+  <header><span>VM CREATION</span><strong>创建 VM，本质上是在拼一台软件定义的电脑</strong></header>
+  <div class="pve-vm-create__grid">
+    <article><span>IDENTITY</span><strong>VM ID + Name</strong><p>这台虚拟机在 PVE 里的唯一编号和名称。</p></article>
+    <article><span>FIRMWARE</span><strong>BIOS / UEFI</strong><p>SeaBIOS 更传统；新 Windows 通常优先 OVMF (UEFI)。</p></article>
+    <article><span>COMPUTE</span><strong>CPU + Memory</strong><p>从宿主机资源里分配虚拟 CPU 与内存。</p></article>
+    <article><span>DISK</span><strong>Storage + Bus + Size</strong><p>决定虚拟硬盘放在哪个存储池、用什么虚拟控制器。</p></article>
+    <article><span>NETWORK</span><strong>VirtIO + vmbr0</strong><p>把虚拟网卡接到 Linux Bridge，再进入真实局域网。</p></article>
+    <article><span>MEDIA</span><strong>ISO</strong><p>相当于给一台新电脑插入系统安装 U 盘 / 光盘。</p></article>
+  </div>
+</section>
+
+### VM ID 是什么
+
+PVE 用数字标识 Guest，例如：
+
+```text
+100 → Windows 10
+101 → Ubuntu Server
+102 → Home Assistant
+```
+
+这个 ID 会进入配置文件名、磁盘卷名、备份名等地方，所以比“显示名称”更基础。
+
+### CPU：不要一开始把所有核心都塞给一台 VM
+
+虚拟 CPU 可以超分，但学习阶段更推荐从实际需求出发。
+
+例如宿主机有 12 核，不代表 Windows VM 一定要直接分 12 核。给 4～8 核跑普通桌面和测试，往往已经足够，而且能给宿主机和其他 VM 留资源。
+
+CPU Type 在单机环境里经常可以考虑 `host`，让 Guest 看到更多真实 CPU 指令集；如果未来要做跨不同 CPU 节点迁移，则需要重新考虑兼容性。本文不进入集群迁移。
+
+### 内存：分配值不等于宿主机可以无限透支
+
+PVE 可以使用 Ballooning 等机制动态管理部分 Guest 内存，但不要把它理解成“内存也可以无风险超卖”。
+
+如果宿主机实际 RAM 被吃光，Linux 仍然要面对内存压力甚至 OOM。
+
+## Windows VM：为什么 VirtIO 这么常见
+
+VirtIO 是面向虚拟化环境的高性能半虚拟化设备模型。
+
+简单理解：
+
+```text
+模拟一块老 SATA / IDE 设备
+→ Guest 很容易认识，但虚拟化开销更传统
+
+VirtIO
+→ Guest 知道自己在虚拟机里，用专门驱动直接配合 Hypervisor
+```
+
+因此 Windows 安装里经常需要准备 VirtIO Driver ISO。
+
+一个常见 Windows VM 组合是：
+
+```text
+BIOS:          OVMF (UEFI)
+Machine:       q35
+Disk Bus:      SCSI / VirtIO SCSI
+Network:       VirtIO
+EFI Disk:      有
+TPM:           Windows 11 按需要增加
+QEMU Agent:    安装系统后配置
+```
+
+如果 Windows 安装器提示“没有磁盘”，而你又使用了 VirtIO / SCSI 虚拟控制器，第一反应应该是：**安装器可能缺少对应 VirtIO 存储驱动，而不是 PVE 没创建磁盘。**
+
+## QEMU Guest Agent：让宿主机真正“认识” Guest
+
+VM 能启动，不代表 PVE 已经能深入了解 VM 内部状态。
+
+QEMU Guest Agent 是安装在 Guest 内部的服务，用来让 PVE 与 Guest 更好地协作，例如：
+
+- 更可靠地获取 Guest IP；
+- 发起 Guest 内部关机；
+- 配合备份实现更好的文件系统一致性；
+- 执行部分 Guest Agent 能力。
+
+它需要两边都准备：
+
+```text
+PVE VM 设置里启用 QEMU Guest Agent
++
+Guest 系统里安装并运行 qemu-guest-agent
+```
+
+只勾 PVE 的开关但 Guest 没装服务，不会凭空产生 Agent 能力。
+
+## 给正在用的 VM 再加一块 300GB 磁盘，需要重启整台 PVE 吗
+
+通常不需要。
+
+添加虚拟硬盘发生在：
+
+```text
+VM 100
+→ Hardware
+→ Add
+→ Hard Disk
+```
+
+如果 Guest 和所选虚拟控制器支持热插拔，新磁盘甚至可以在虚拟机运行时被发现；即使 Guest 没立即识别，通常也只是重启**这台 VM**，而不是重启整个 Proxmox 宿主机。
+
+Windows 看到新硬盘以后，还要完成 Windows 自己的磁盘初始化：
+
+```text
+PVE 创建 300GB 虚拟磁盘
+    ↓
+Windows 发现“磁盘 1”
+    ↓
+磁盘管理
+    ↓
+初始化 GPT
+    ↓
+新建简单卷
+    ↓
+格式化 NTFS
+    ↓
+出现 D: / E:
+```
+
+**PVE 创建虚拟磁盘 ≠ Windows 自动创建盘符。**
+
+这是典型的“宿主机层”和“Guest 层”边界。
+
+## 虚拟磁盘还能扩容、移动和拆下，但“删除”要特别谨慎
+
+创建完虚拟机以后，磁盘并不是固定不动的。常见操作包括：
+
+- **Resize Disk**：把虚拟磁盘扩大；
+- **Move Storage / Move Disk**：把虚拟磁盘从一个 PVE Storage 移到另一个；
+- **Detach**：从 VM 配置里拆下，通常会变成 `Unused Disk`，数据还在；
+- **Remove / Delete**：真正删除对应虚拟磁盘数据。
+
+其中扩容最值得先理解：
+
+```text
+PVE：125GB → 200GB
+       ↓
+Guest 只看到“后面多了一段未分配空间”
+       ↓
+Windows 磁盘管理 / Linux 文件系统
+       ↓
+继续扩展分区和文件系统
+```
+
+所以和“新增第二块盘”一样，PVE 只负责把虚拟硬件变大；Guest 内部怎么使用新增空间，是另一层操作。
+
+反过来缩小磁盘就复杂得多。PVE 的常规 Resize 工作流不支持直接缩小虚拟磁盘，因为还牵涉 Guest 文件系统、分区边界和底层卷。新手阶段把它理解成：**扩容容易，缩容不要靠直接改数字尝试。**
+
+## VM 和 CT 到底选哪个
+
+PVE 不只有虚拟机，还有 LXC Container。
+
+<section class="pve-vm-ct" aria-label="VM 和 LXC Container 对比">
+  <article>
+    <span>VM · KVM/QEMU</span>
+    <strong>像一台完整独立电脑</strong>
+    <p>拥有自己的虚拟硬件和 Guest Kernel，可以运行 Windows，也可以运行任意合适的 Linux。</p>
+    <small>隔离更完整 · 开销更高 · 兼容性最直观</small>
+  </article>
+  <article class="is-primary">
+    <span>CT · LXC</span>
+    <strong>像一个轻量 Linux 系统容器</strong>
+    <p>共享 PVE 宿主机的 Linux Kernel，但拥有自己的用户空间、文件系统、网络和进程空间。</p>
+    <small>启动快 · 开销低 · 只适合 Linux 容器场景</small>
+  </article>
+</section>
+
+简单判断：
+
+```text
+要 Windows？                    → VM
+要完全独立内核？                → VM
+要测试不同内核 / 驱动？          → VM
+只是跑轻量 Linux 服务？          → 可以考虑 CT
+希望最少兼容性变量、先学会 PVE？  → VM 更直观
+```
+
+新建 LXC 时还会看到 `Unprivileged Container`。对一般新容器，非特权容器是更安全、更常见的默认方向；只有明确知道自己为什么需要更高宿主权限时，才考虑 privileged container。
+
+还有一个容易混淆的点：**LXC 是系统容器，不等于 Docker。** 如果目标是学习 Docker / Compose 或运行一组应用容器，最省心、隔离边界也更清楚的起点通常是先建一台 Linux VM，再在 VM 里装 Docker。等理解 LXC 的权限、挂载和设备映射以后，再决定是否把某些服务直接放进 CT。
+
+## Snapshot、Backup、Clone：三个看起来相似，目的完全不同
+
+这组概念非常容易混。
+
+<section class="pve-board pve-protection" aria-label="Snapshot Backup Clone 区别">
+  <header><span>DATA SAFETY</span><strong>快照不是备份，克隆也不是备份</strong></header>
+  <div class="pve-protection__grid">
+    <article><span>SNAPSHOT</span><strong>给当前状态打一个“回退点”</strong><p>适合升级、改配置、测试前临时留一个状态。通常仍依赖原存储。</p></article>
+    <article class="is-backup"><span>BACKUP</span><strong>生成可独立恢复的备份数据</strong><p>目标应该是原 VM / 原盘坏了以后还能恢复。最好放到独立存储甚至独立设备。</p></article>
+    <article><span>CLONE</span><strong>复制出另一台 Guest</strong><p>适合快速创建测试机、模板实例，不解决数据安全问题。</p></article>
+  </div>
+</section>
+
+最重要的一句话：
+
+> **如果原来的 SSD 整块坏掉，和它放在同一块 SSD 上的 Snapshot 很可能一起消失，所以 Snapshot 不是 Backup。**
+
+### Full Clone 和 Linked Clone
+
+- **Full Clone**：复制出独立磁盘，占用更多空间，但后续不依赖原基础镜像。
+- **Linked Clone**：依赖基础镜像，通过差异数据节省空间和时间，对存储能力有要求。
+
+LVM-Thin 原生支持高效 Snapshot / Clone，这也是它非常适合 VM 磁盘池的原因之一。
+
+### Template 是什么
+
+当一台 VM / CT 已经装好系统、驱动、Guest Agent 和基础配置以后，可以把它转换成 Template。
+
+Template 更像“母版”，重点是以后快速克隆，而不是继续把它当普通机器日常启动。
+
+```text
+干净 Ubuntu VM
+→ 安装 qemu-guest-agent / SSH Key / 基础软件
+→ Convert to Template
+→ 以后 Clone 出开发机、测试机、临时服务机
+```
+
+如果经常重复创建相似系统，Template 比每次重新挂 ISO 安装省事很多。
+
+## 备份放哪里：不要把“有 Backup 按钮”理解成万事大吉
+
+单机学习阶段可以直接把 PVE Backup 存到 Directory 存储，例如前面的 500GB HDD。
+
+```text
+256GB SSD
+└─ VM 正在运行
+
+500GB HDD
+└─ vzdump Backup
+```
+
+这已经比“VM 和备份都在同一块 SSD”更有意义。
+
+但如果整台主机被偷、主板烧毁连带磁盘损坏、机箱进水，机内第二块盘也可能一起失效。真正重要的数据最终还是要考虑：
+
+- NAS / NFS；
+- Proxmox Backup Server；
+- 另一台独立设备；
+- 异地备份。
+
+本文只建立边界，不展开 PBS 的完整部署。
+
+### 定时 Backup：真正实用的是让它自动发生
+
+单次手动备份适合学习，但长期使用更应该建立 Backup Job。
+
+在 Web UI 的 Datacenter 级别可以配置备份任务，核心就是四个问题：
+
+```text
+备份谁        → 哪些 VM / CT
+备份到哪里    → 哪个支持 Backup 的 Storage
+什么时候执行  → 每天 / 每周的计划
+保留多少份    → Retention / Prune
+```
+
+恢复时则从保存 Backup 的存储中选择备份文件并执行 Restore。恢复不是“把快照拨回去”，而是重新根据备份数据构建出 Guest。
+
+学习阶段很值得亲手做一次：
+
+```text
+创建一个测试 VM
+→ Backup
+→ 删除测试 VM
+→ Restore 成新的 VM
+```
+
+这样会比只看“备份成功”更能确认自己的备份真的可恢复。
+
+## USB、PCIe、GPU 直通：先理解“谁拥有设备”
+
+虚拟机默认拿到的是 PVE 创建的虚拟设备。
+
+直通则是把真实硬件更直接地交给 Guest。
+
+```text
+普通虚拟设备
+物理硬件 → PVE → 虚拟设备 → VM
+
+Passthrough
+物理硬件 → 尽可能直接交给指定 VM
+```
+
+### USB Passthrough
+
+最适合入门理解。比如 USB 加密狗、串口设备、U 盘等，可以从 VM → Hardware → Add → USB Device 尝试直通。
+
+### PCIe / GPU Passthrough
+
+复杂度会明显上升，因为它牵涉：
+
+- BIOS / UEFI 的 IOMMU；
+- Intel VT-d / AMD IOMMU；
+- IOMMU Group；
+- vfio；
+- 设备是否被宿主机驱动占用；
+- Guest 驱动与显卡自身限制。
+
+所以入门阶段只需要知道它存在，不要在还没弄明白存储和网络之前，就把 GPU 直通当成 PVE 的“第一关”。
+
+## PVE 自己关机、VM 关机、浏览器关掉：不是一回事
+
+这是另外一个很基础但很容易混淆的层级问题。
+
+```text
+关闭浏览器
+→ 只是退出管理界面，PVE 和所有 VM 继续运行
+
+关闭 VM 100
+→ 只关闭这一台 Guest
+
+关闭节点 pve
+→ 整台物理宿主机关机，所有 Guest 都会受到影响
+```
+
+VM 还可以配置：
+
+- Start at boot：宿主机启动后自动启动；
+- Start / Shutdown order：控制多台 Guest 的启动和关机顺序；
+- Startup delay：避免所有虚拟机同时抢资源。
+
+例如：
+
+```text
+PVE 启动
+  ↓
+先启动软路由 / 基础服务
+  ↓ 20s
+再启动数据库
+  ↓ 20s
+最后启动业务应用
+```
+
+单机 Homelab 很快就会用到这些设置。
+
+## 单机 PVE 还会反复用到哪些功能
+
+到这里，安装、网络、存储和 Guest 的主线已经跑通。剩下很多菜单并不是“高级集群功能”，而是单机也会经常使用的日常能力。
+
+<section class="pve-board pve-ops" aria-label="Proxmox 单机常用能力地图">
+  <header><span>SINGLE NODE TOOLBOX</span><strong>这些功能不需要集群，也不需要企业订阅</strong></header>
+  <div class="pve-ops__grid">
+    <article><span>ACCESS</span><strong>用户、权限、2FA</strong><p>不必永远所有人都共用 root；可以创建用户、分配角色，并为管理账号增加双因素认证。</p></article>
+    <article><span>FIREWALL</span><strong>宿主机 / VM 防火墙</strong><p>PVE 自带防火墙，可以在数据中心、节点和 Guest 多层配置规则。学习阶段先理解层级，再逐步启用。</p></article>
+    <article><span>BACKUP JOB</span><strong>定时备份</strong><p>除了手动 Backup，还可以创建备份任务，按计划把 VM / CT 写入 Directory、NAS 或 PBS。</p></article>
+    <article><span>TEMPLATE</span><strong>模板与 Cloud-Init</strong><p>把准备好的 Linux VM 转成模板，再用 Cloud-Init 自动注入主机名、账号、SSH Key 和网络参数。</p></article>
+    <article><span>NAS</span><strong>NFS / SMB(CIFS)</strong><p>单机也能直接接 NAS，把共享目录注册成 PVE Storage，用于 ISO、Backup 或 VM 文件。</p></article>
+    <article><span>HEALTH</span><strong>S.M.A.R.T. / 磁盘状态</strong><p>节点 → 磁盘可以查看物理盘、分区和健康信息；虚拟机正常不代表底层 SSD / HDD 一定健康。</p></article>
+    <article><span>ORGANIZE</span><strong>Pool、Tags、Notes</strong><p>Guest 多起来后，可以用资源池、标签和备注整理用途，而不是只靠 VM ID 猜机器是干什么的。</p></article>
+    <article><span>CONSOLE</span><strong>Console / Shell / Task Log</strong><p>Guest Console 处理系统内部问题，Node Shell 处理宿主机问题，Task Log 则用来追安装、备份、迁盘等任务失败原因。</p></article>
+  </div>
+</section>
+
+### 用户和权限：root@pam 不是唯一登录方式
+
+学习机用 `root@pam` 最直接，但 PVE 本身有完整的用户、Realm、Role 和 ACL 权限体系。
+
+可以先建立这个概念：
+
+```text
+User   = 谁在登录
+Role   = 允许做什么
+ACL    = 在哪个对象上允许做这些事
+Realm  = 账号从哪里认证
+```
+
+例如家庭环境里，可以保留 root 作为救援账号，再给日常管理创建单独用户。即使只有一台节点，这也比长期共享 root 密码更清晰。
+
+### 防火墙：先理解层级，再打开规则
+
+PVE Firewall 可以作用在多个层级：
+
+```text
+Datacenter
+  ↓
+Node
+  ↓
+VM / CT
+```
+
+上层是统一策略，下层可以继续补充 Guest 自己的规则。第一次学习时不要在远程环境里“边猜边开”，尤其是管理端口和 SSH；一旦把自己的管理流量拦掉，最后还是要回物理控制台救援。
+
+### NAS 存储：Directory 不是唯一的文件型存储
+
+如果家里已经有 NAS，PVE 可以直接添加 NFS 或 CIFS/SMB 存储。它们在使用体验上很像远程的 Directory：可以根据后端能力配置 ISO、模板、Backup、VM Image 等 Content。
+
+典型用途是：
+
+```text
+PVE 本地 SSD
+→ 跑 VM
+
+NAS
+→ 存 Backup / ISO / Template
+```
+
+这样即使 PVE 主机里的本地 SSD 故障，备份仍然在另一台设备上。
+
+### 模板和 Cloud-Init：当你开始重复创建 Linux VM
+
+第一台 Ubuntu 手动安装完全合理。到了第三、第四台，如果每次都重复设置用户名、SSH Key、IP 和软件源，就可以开始使用：
+
+```text
+准备一台基础 VM
+→ 安装 qemu-guest-agent / cloud-init
+→ Convert to Template
+→ Clone
+→ 填写 Cloud-Init 参数
+→ 启动成为一台新 VM
+```
+
+它解决的是“重复部署 Guest”的问题，而不是 PVE 入门必须掌握的第一步。
+
+### 看磁盘健康：Storage 正常不代表物理盘健康
+
+存储页面告诉你“这个 Storage 还能不能用、容量还剩多少”；磁盘页面则更接近底层硬件。
+
+例如：
+
+```text
+节点 → 磁盘
+→ 型号 / 容量 / 分区
+→ S.M.A.R.T.
+```
+
+出现 I/O 错误、掉盘、异常慢速时，不要只盯着 VM。继续向下检查真实 SSD / HDD 的 S.M.A.R.T.、系统日志和线材连接，才是正确排查方向。
+
+## 免费版怎么更新：企业仓库报 401 不代表系统坏了
+
+Proxmox VE 软件本身免费开源，但 Enterprise Repository 需要有效订阅。
+
+无订阅学习机应该使用官方的 **No-Subscription Repository**。
+
+PVE 9 使用 Debian 13 `trixie`。当前官方文档给出的 no-subscription 配置采用 deb822 格式，例如：
+
+```text
+Types: deb
+URIs: http://download.proxmox.com/debian/pve
+Suites: trixie
+Components: pve-no-subscription
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+```
+
+文件通常放在：
+
+```text
+/etc/apt/sources.list.d/proxmox.sources
+```
+
+对普通用户，更推荐直接在 Web UI 的 Repository 页面检查：
+
+```text
+有企业订阅
+→ pve-enterprise
+
+没有企业订阅
+→ 禁用无法使用的 enterprise repository
+→ 启用 pve-no-subscription
+```
+
+然后可以通过 GUI 更新，也可以在 Shell 中：
+
+```bash
+apt update
+apt dist-upgrade
+```
+
+No-Subscription 软件源并不是“破解源”，它就是 Proxmox 官方提供给无订阅用户的公开软件源；区别在于企业仓库经过更严格的验证，并包含商业支持体系。
+
+## Shell 里最值得新手认识的 8 个命令
+
+GUI 优先并不等于完全不碰 Shell。真正排错时，下面这些命令非常高频：
+
+```bash
+# PVE 版本
+pveversion -v
+
+# 网卡 / IP
+ip addr
+
+# 默认路由
+ip route
+
+# 网络配置
+cat /etc/network/interfaces
+
+# 真实磁盘与分区
+lsblk
+
+# PVE 已注册存储及容量
+pvesm status
+
+# LVM 逻辑卷
+lvs
+
+# 当前系统磁盘空间
+df -h
+```
+
+它们正好对应四层心智模型：
+
+```text
+pveversion       → Host
+ip addr / route  → Network
+lsblk / lvs      → Physical / LVM
+pvesm status     → PVE Storage
+```
+
+## 新手最常见的 12 个误区
+
+<section class="pve-board pve-mistakes" aria-label="Proxmox 新手常见误区">
+  <header><span>TROUBLESHOOTING</span><strong>大多数问题不是“PVE 很玄学”，而是层级搞混了</strong></header>
+  <div class="pve-mistakes__grid">
+    <article><b>01</b><strong>看到磁盘 ≠ 已经有 Storage</strong><p>`/dev/sda` 被识别，只代表 Linux 看到了硬件。</p></article>
+    <article><b>02</b><strong>节点不是磁盘节点</strong><p>Node 是一台运行 PVE 的物理主机。</p></article>
+    <article><b>03</b><strong>vmbr0 不是第二张网卡</strong><p>它是 Linux Bridge，类似软件交换机。</p></article>
+    <article><b>04</b><strong>虚拟磁盘 300GB ≠ 已占 300GB</strong><p>Thin Provisioning 要看实际写入。</p></article>
+    <article><b>05</b><strong>能超卖 ≠ 可以写爆</strong><p>Thin Pool 真满会产生严重 I/O 风险。</p></article>
+    <article><b>06</b><strong>local 和 local-lvm 不是重复</strong><p>一个偏文件，一个偏 VM / CT 块存储。</p></article>
+    <article><b>07</b><strong>新虚拟盘 ≠ 自动有 D 盘</strong><p>Guest 还需要初始化、分区、格式化。</p></article>
+    <article><b>08</b><strong>Snapshot ≠ Backup</strong><p>快照通常仍依赖原存储。</p></article>
+    <article><b>09</b><strong>删除 Storage ≠ 一定擦除物理盘</strong><p>“取消 PVE 注册”和“破坏底层数据”是不同动作。</p></article>
+    <article><b>10</b><strong>IP 改错 ≠ PVE 挂了</strong><p>先去本机 Console 检查网络层。</p></article>
+    <article><b>11</b><strong>关闭浏览器 ≠ 关闭 VM</strong><p>Web UI 只是管理入口。</p></article>
+    <article><b>12</b><strong>无订阅提示 ≠ 不能免费用</strong><p>选择官方 no-subscription repository 即可更新。</p></article>
+  </div>
+</section>
+
+## 一台学习机，建议按这个顺序折腾
+
+如果目标就是理解 PVE，而不是马上承担生产业务，下面这条路线非常合适：
+
+<section class="pve-board pve-learning" aria-label="Proxmox 学习路线">
+  <header><span>LEARNING PATH</span><strong>每一步都故意制造一个“我终于理解它为什么这样设计”的瞬间</strong></header>
+  <ol>
+    <li><b>01</b><div><strong>单盘安装 PVE</strong><span>跑通 `https://IP:8006`，理解 Host。</span></div></li>
+    <li><b>02</b><div><strong>改一次静态 IP</strong><span>理解物理网卡、vmbr0、Gateway。</span></div></li>
+    <li><b>03</b><div><strong>上传 Windows ISO</strong><span>理解 Directory 为什么能放文件。</span></div></li>
+    <li><b>04</b><div><strong>创建 Windows VM</strong><span>理解 VM ID、CPU、Memory、虚拟磁盘和桥接网卡。</span></div></li>
+    <li><b>05</b><div><strong>新增 256GB LVM-Thin</strong><span>理解“真实磁盘 → 存储池 → 虚拟磁盘”。</span></div></li>
+    <li><b>06</b><div><strong>故意创建 125GB + 300GB</strong><span>理解 Thin Provisioning 和超额分配。</span></div></li>
+    <li><b>07</b><div><strong>把 500GB HDD 做 Directory</strong><span>理解通用存储和专用 VM 存储的取舍。</span></div></li>
+    <li><b>08</b><div><strong>做一次 Snapshot，再做一次 Backup</strong><span>亲手理解二者完全不是一回事。</span></div></li>
+    <li><b>09</b><div><strong>创建一个 LXC</strong><span>对比 VM 和 CT 的资源模型。</span></div></li>
+    <li><b>10</b><div><strong>最后再碰 USB / PCIe Passthrough</strong><span>这时你已经不会把 Guest、Host 和 Hardware 混在一起。</span></div></li>
+  </ol>
+</section>
+
+## 哪些东西这篇文章故意没有深入
+
+Proxmox 的功能远不止本文这些。继续往后会遇到：
+
+```text
+单机 PVE
+│
+├─ ZFS / RAID / SMART / 磁盘故障治理
+├─ VLAN / Bond / SDN / 多网桥
+├─ PCIe / GPU Passthrough
+├─ NFS / SMB / iSCSI / NAS
+├─ Proxmox Backup Server
+│
+└─ 多节点之后
+   ├─ Cluster
+   ├─ Migration
+   ├─ HA
+   └─ Ceph
+```
+
+其中 **Ceph 不是“给单机多一块硬盘用的功能”**。它是面向分布式存储集群的体系；一台学习机看到左侧有 Ceph 菜单，不代表你需要配置它。
+
+同样，HA、动态负载均衡等 Proxmox VE 9.2 新能力主要服务多节点环境。单机用户先把网络、存储、Guest 和备份理解清楚，收益远远更高。
+
+## 最后，把整套 Proxmox 再压缩成一张图
+
+<section class="pve-final-map" aria-label="Proxmox VE 单机完整结构">
+  <header><span>SINGLE NODE MAP</span><strong>如果这张图能看懂，PVE 已经入门了</strong></header>
+  <div class="pve-final-map__internet">Internet / LAN Router</div>
+  <i>↕</i>
+  <div class="pve-final-map__bridge"><span>Network</span><strong>Physical NIC → vmbr0 → Host + Guests</strong></div>
+  <div class="pve-final-map__host">
+    <div class="pve-final-map__title"><span>HOST</span><strong>Proxmox VE 9.2 / Debian 13</strong></div>
+    <div class="pve-final-map__guests">
+      <article><span>VM 100</span><strong>Windows</strong><small>KVM / QEMU</small></article>
+      <article><span>VM 101</span><strong>Ubuntu</strong><small>KVM / QEMU</small></article>
+      <article><span>CT 102</span><strong>Debian</strong><small>LXC</small></article>
+    </div>
+    <div class="pve-final-map__storage">
+      <article><span>120GB SSD</span><strong>PVE + local</strong><small>系统 / ISO 等</small></article>
+      <article class="is-thin"><span>256GB SSD</span><strong>LVM-Thin</strong><small>VM / CT 磁盘池</small></article>
+      <article><span>500GB HDD</span><strong>Directory</strong><small>Backup / ISO / 文件</small></article>
+    </div>
+  </div>
+</section>
+
+到这里，再回头看 Proxmox 左侧的“数据中心、节点、虚拟机、存储”，它们就不再是一堆菜单，而是同一套系统的不同层级。
+
+真正值得先掌握的也不是所有高级参数，而是四句话：
+
+1. **Node = 一台真实的 PVE 宿主机。**
+2. **vmbr0 = 把宿主机和 Guest 接到真实网络的软件交换机。**
+3. **LVM-Thin = 虚拟机硬盘池；Directory = 普通文件盘 / 通用存储。**
+4. **物理硬盘、PVE Storage、VM 虚拟硬盘永远分三层理解。**
+
+这四个关系稳了，后面的 ZFS、NAS、Passthrough、Cluster 和 Ceph 才是“增加能力”；否则只是在继续增加名词。
+
+### 官方资料
+
+- [Proxmox VE 9.2 下载页](https://www.proxmox.com/en/downloads/proxmox-virtual-environment)
+- [Proxmox VE 9.x Administration Guide](https://pve.proxmox.com/pve-docs/pve-admin-guide.html)
+- [Storage 官方文档](https://pve.proxmox.com/pve-docs/chapter-pvesm.html)
+- [Network Configuration](https://pve.proxmox.com/wiki/Network_Configuration)
+- [Proxmox VE Package Repositories](https://pve.proxmox.com/wiki/Package_Repositories)
+- [User Management / Access Control](https://pve.proxmox.com/pve-docs/chapter-pveum.html)
+- [Proxmox VE Firewall](https://pve.proxmox.com/pve-docs/chapter-pve-firewall.html)
+- [Cloud-Init Support](https://pve.proxmox.com/pve-docs/chapter-qm.html#qm_cloud_init)
+
+<style>{`
+  .pve-hero,
+  .pve-board,
+  .pve-final-map,
+  .pve-storage-compare,
+  .pve-vm-ct,
+  .pve-lab {
+    --pve-orange: #e57022;
+    --pve-ink: #172033;
+    --pve-muted: #627086;
+    --pve-line: color-mix(in srgb, currentColor 14%, transparent);
+    --pve-soft: color-mix(in srgb, currentColor 5%, transparent);
+  }
+
+  .pve-hero {
+    margin: 2rem 0 2.5rem;
+    border: 1px solid var(--pve-line);
+    border-radius: 28px;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 85% 0%, color-mix(in srgb, var(--pve-orange) 24%, transparent), transparent 28%),
+      linear-gradient(145deg, color-mix(in srgb, var(--pve-ink) 96%, transparent), #26334a);
+    color: #f8fafc;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .16);
+  }
+
+  .pve-hero__copy { padding: 2.25rem 2.4rem 1.8rem; max-width: 850px; }
+  .pve-hero__copy > span,
+  .pve-board > header span,
+  .pve-final-map > header span { display: block; margin-bottom: .7rem; font-size: .74rem; letter-spacing: .16em; font-weight: 800; color: #f2a568; }
+  .pve-hero__copy > strong { display: block; font-size: clamp(1.7rem, 4vw, 3rem); line-height: 1.18; letter-spacing: -.04em; }
+  .pve-hero__copy > p { margin: 1rem 0 0; max-width: 740px; color: #cbd5e1; }
+
+  .pve-route { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; gap: .6rem; align-items: center; padding: 0 2.4rem 2rem; }
+  .pve-route article { min-width: 0; padding: 1rem; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; background: rgba(255,255,255,.055); }
+  .pve-route article.is-final { border-color: rgba(242,165,104,.45); background: rgba(229,112,34,.14); }
+  .pve-route b { display: block; color: #f2a568; font-size: .78rem; }
+  .pve-route span { display: block; margin-top: .25rem; font-size: .72rem; letter-spacing: .12em; color: #94a3b8; }
+  .pve-route strong { display: block; margin-top: .45rem; font-size: .92rem; line-height: 1.35; }
+  .pve-route > i { color: #64748b; font-style: normal; }
+  .pve-hero > footer { display: grid; grid-template-columns: auto 1fr; gap: .15rem 1rem; align-items: baseline; padding: 1rem 2.4rem; border-top: 1px solid rgba(255,255,255,.1); background: rgba(0,0,0,.14); }
+  .pve-hero > footer span { color: #94a3b8; font-size: .78rem; }
+  .pve-hero > footer strong { font-size: .9rem; }
+  .pve-hero > footer small { grid-column: 2; color: #94a3b8; }
+
+  .pve-lab { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.8rem 0 2.5rem; }
+  .pve-lab article,
+  .pve-storage-compare article,
+  .pve-vm-ct article { padding: 1.25rem; border: 1px solid var(--pve-line); border-radius: 18px; background: var(--pve-soft); }
+  .pve-lab article.is-primary,
+  .pve-vm-ct article.is-primary { border-color: color-mix(in srgb, var(--pve-orange) 45%, transparent); background: color-mix(in srgb, var(--pve-orange) 7%, transparent); }
+  .pve-lab span,
+  .pve-storage-compare span,
+  .pve-vm-ct span { font-size: .78rem; font-weight: 800; letter-spacing: .08em; color: var(--pve-muted); }
+  .pve-lab strong,
+  .pve-storage-compare strong,
+  .pve-vm-ct strong { display: block; margin-top: .35rem; font-size: 1.18rem; }
+  .pve-lab p,
+  .pve-storage-compare p,
+  .pve-vm-ct p { margin: .55rem 0 0; color: var(--pve-muted); font-size: .9rem; }
+
+  .pve-board,
+  .pve-final-map { margin: 2rem 0 2.5rem; border: 1px solid var(--pve-line); border-radius: 22px; overflow: hidden; background: color-mix(in srgb, Canvas 97%, var(--pve-orange) 3%); }
+  .pve-board > header,
+  .pve-final-map > header { padding: 1.25rem 1.4rem; border-bottom: 1px solid var(--pve-line); background: color-mix(in srgb, currentColor 3%, transparent); }
+  .pve-board > header span,
+  .pve-final-map > header span { color: var(--pve-orange); margin-bottom: .3rem; }
+  .pve-board > header strong,
+  .pve-final-map > header strong { display: block; font-size: 1.1rem; }
+
+  .pve-stack__rows { padding: 1.15rem; display: grid; gap: .7rem; }
+  .pve-stack__rows article { display: grid; grid-template-columns: 110px 170px 1fr; gap: 1rem; align-items: center; padding: .9rem 1rem; border: 1px solid var(--pve-line); border-radius: 14px; background: color-mix(in srgb, Canvas 96%, currentColor 4%); }
+  .pve-stack__rows article b { font-size: .76rem; color: var(--pve-muted); }
+  .pve-stack__rows article strong { font-size: .98rem; }
+  .pve-stack__rows article p { margin: 0; font-size: .86rem; color: var(--pve-muted); }
+  .pve-stack__metal { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem; border-radius: 14px; background: #172033; color: #f8fafc; }
+  .pve-stack__metal span { color: #f2a568; font-size: .74rem; letter-spacing: .12em; }
+
+  .pve-network__flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1.2fr; gap: .75rem; align-items: center; padding: 1.25rem; }
+  .pve-network__flow article { padding: 1rem; border: 1px solid var(--pve-line); border-radius: 16px; text-align: center; }
+  .pve-network__flow article.is-bridge { border-color: color-mix(in srgb, var(--pve-orange) 46%, transparent); background: color-mix(in srgb, var(--pve-orange) 7%, transparent); }
+  .pve-network__flow span,
+  .pve-network__flow small { display: block; color: var(--pve-muted); font-size: .78rem; }
+  .pve-network__flow strong { display: block; margin: .35rem 0; }
+  .pve-network__flow > i { font-style: normal; color: var(--pve-muted); }
+  .pve-network__guests { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; padding: 0 1.25rem 1.25rem; }
+  .pve-network__guests article { padding: .8rem; border-radius: 12px; background: color-mix(in srgb, currentColor 5%, transparent); }
+  .pve-network__guests b,
+  .pve-network__guests span { display: block; font-size: .8rem; }
+  .pve-network__guests span { margin-top: .25rem; color: var(--pve-muted); }
+
+  .pve-tree__body { padding: 1rem 1.2rem 1.2rem; }
+  .pve-tree__line { display: grid; grid-template-columns: 1fr auto; gap: 1rem; padding: .65rem .8rem; border-bottom: 1px dashed var(--pve-line); }
+  .pve-tree__line:last-child { border-bottom: 0; }
+  .pve-tree__line span { color: var(--pve-muted); font-size: .82rem; }
+  .pve-tree__line.level-1 { padding-left: 2rem; }
+  .pve-tree__line.level-2 { padding-left: 3.8rem; }
+  .pve-tree__line.is-vm b { color: #2563eb; }
+  .pve-tree__line.is-ct b { color: #16846f; }
+
+  .pve-storage-layers__flow { padding: 1.25rem; display: grid; justify-items: center; gap: .55rem; }
+  .pve-storage-layers__flow > article { width: min(100%, 620px); padding: 1rem 1.2rem; border: 1px solid var(--pve-line); border-radius: 16px; text-align: center; }
+  .pve-storage-layers__flow > article.is-pool { border-color: color-mix(in srgb, var(--pve-orange) 45%, transparent); background: color-mix(in srgb, var(--pve-orange) 7%, transparent); }
+  .pve-storage-layers__flow span { font-size: .72rem; letter-spacing: .11em; color: var(--pve-muted); }
+  .pve-storage-layers__flow strong { display: block; margin-top: .25rem; font-size: 1.12rem; }
+  .pve-storage-layers__flow p { margin: .35rem 0 0; color: var(--pve-muted); font-size: .86rem; }
+  .pve-storage-layers__flow > i { font-style: normal; color: var(--pve-muted); }
+  .pve-storage-layers__guests { width: min(100%, 620px); display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+  .pve-storage-layers__guests article { padding: 1rem; border: 1px solid var(--pve-line); border-radius: 14px; text-align: center; }
+
+  .pve-storage-compare,
+  .pve-vm-ct { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.7rem 0 2rem; }
+  .pve-storage-compare article.is-thin { border-color: color-mix(in srgb, #2563eb 42%, transparent); background: color-mix(in srgb, #2563eb 6%, transparent); }
+  .pve-storage-compare article.is-dir { border-color: color-mix(in srgb, #16846f 42%, transparent); background: color-mix(in srgb, #16846f 6%, transparent); }
+  .pve-storage-compare small,
+  .pve-vm-ct small { display: block; margin-top: .75rem; color: var(--pve-muted); }
+
+  .pve-thin__numbers { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; padding: 1.25rem; }
+  .pve-thin__numbers article { padding: 1rem; border: 1px solid var(--pve-line); border-radius: 14px; text-align: center; }
+  .pve-thin__numbers span { font-size: .72rem; color: var(--pve-muted); letter-spacing: .1em; }
+  .pve-thin__numbers strong { display: block; margin-top: .25rem; font-size: 1.45rem; }
+  .pve-thin__numbers p { margin: .2rem 0 0; font-size: .8rem; color: var(--pve-muted); }
+  .pve-thin__numbers > i { font-style: normal; font-size: 1.35rem; color: var(--pve-orange); }
+  .pve-thin__bars { display: grid; gap: .8rem; padding: 0 1.25rem 1.25rem; }
+  .pve-thin__bars > div { display: grid; grid-template-columns: 135px 1fr 180px; gap: .75rem; align-items: center; }
+  .pve-thin__bars span,
+  .pve-thin__bars small { font-size: .78rem; color: var(--pve-muted); }
+  .pve-thin__bars b { display: block; height: 10px; border-radius: 999px; background: linear-gradient(90deg, var(--pve-orange) var(--usage), color-mix(in srgb, currentColor 10%, transparent) var(--usage)); }
+  .pve-thin__bars .is-physical b { background: linear-gradient(90deg, #16846f var(--usage), color-mix(in srgb, currentColor 10%, transparent) var(--usage)); }
+  .pve-thin > footer { padding: 1rem 1.25rem; border-top: 1px solid var(--pve-line); color: var(--pve-muted); font-size: .86rem; }
+
+  .pve-disk-choice__grid,
+  .pve-protection__grid,
+  .pve-vm-create__grid,
+  .pve-mistakes__grid,
+  .pve-ops__grid { display: grid; gap: .8rem; padding: 1.2rem; }
+  .pve-disk-choice__grid { grid-template-columns: 1fr 1fr; }
+  .pve-disk-choice__grid article,
+  .pve-protection__grid article,
+  .pve-vm-create__grid article,
+  .pve-mistakes__grid article,
+  .pve-ops__grid article { padding: 1rem; border: 1px solid var(--pve-line); border-radius: 14px; }
+  .pve-disk-choice__grid article.is-primary,
+  .pve-protection__grid article.is-backup { border-color: color-mix(in srgb, var(--pve-orange) 44%, transparent); background: color-mix(in srgb, var(--pve-orange) 6%, transparent); }
+  .pve-disk-choice__grid span,
+  .pve-protection__grid span,
+  .pve-vm-create__grid span,
+  .pve-ops__grid span { font-size: .74rem; letter-spacing: .08em; font-weight: 800; color: var(--pve-muted); }
+  .pve-disk-choice__grid strong,
+  .pve-protection__grid strong,
+  .pve-vm-create__grid strong,
+  .pve-ops__grid strong { display: block; margin-top: .35rem; }
+  .pve-disk-choice__grid p,
+  .pve-protection__grid p,
+  .pve-vm-create__grid p,
+  .pve-mistakes__grid p,
+  .pve-ops__grid p { margin: .5rem 0 0; color: var(--pve-muted); font-size: .85rem; }
+  .pve-disk-choice__grid small { color: var(--pve-muted); }
+  .pve-vm-create__grid { grid-template-columns: repeat(3, 1fr); }
+  .pve-protection__grid { grid-template-columns: repeat(3, 1fr); }
+  .pve-mistakes__grid { grid-template-columns: repeat(3, 1fr); }
+  .pve-ops__grid { grid-template-columns: repeat(2, 1fr); }
+  .pve-mistakes__grid b { display: block; color: var(--pve-orange); font-size: .78rem; }
+  .pve-mistakes__grid strong { display: block; margin-top: .3rem; font-size: .92rem; }
+
+  .pve-learning ol { list-style: none; margin: 0; padding: 1rem 1.25rem 1.3rem; display: grid; gap: .6rem; }
+  .pve-learning li { display: grid; grid-template-columns: 42px 1fr; gap: .85rem; align-items: center; padding: .8rem; border-bottom: 1px dashed var(--pve-line); }
+  .pve-learning li:last-child { border-bottom: 0; }
+  .pve-learning li > b { color: var(--pve-orange); font-size: .8rem; }
+  .pve-learning li strong,
+  .pve-learning li span { display: block; }
+  .pve-learning li span { margin-top: .2rem; color: var(--pve-muted); font-size: .84rem; }
+
+  .pve-final-map { padding-bottom: 1.3rem; }
+  .pve-final-map__internet,
+  .pve-final-map__bridge { width: min(90%, 700px); margin: 1rem auto 0; padding: .9rem 1rem; border-radius: 14px; text-align: center; }
+  .pve-final-map__internet { background: #172033; color: #f8fafc; font-weight: 800; }
+  .pve-final-map > i { display: block; text-align: center; margin: .5rem 0; color: var(--pve-orange); font-style: normal; }
+  .pve-final-map__bridge { margin-top: 0; border: 1px solid color-mix(in srgb, var(--pve-orange) 45%, transparent); background: color-mix(in srgb, var(--pve-orange) 7%, transparent); }
+  .pve-final-map__bridge span { display: block; color: var(--pve-muted); font-size: .75rem; }
+  .pve-final-map__bridge strong { display: block; margin-top: .25rem; }
+  .pve-final-map__host { margin: 1rem 1.25rem 0; padding: 1rem; border: 1px solid var(--pve-line); border-radius: 18px; }
+  .pve-final-map__title span { color: var(--pve-orange); font-size: .72rem; letter-spacing: .1em; }
+  .pve-final-map__title strong { display: block; margin-top: .25rem; }
+  .pve-final-map__guests,
+  .pve-final-map__storage { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; margin-top: 1rem; }
+  .pve-final-map__guests article,
+  .pve-final-map__storage article { padding: .85rem; border: 1px solid var(--pve-line); border-radius: 12px; }
+  .pve-final-map__guests span,
+  .pve-final-map__storage span { color: var(--pve-muted); font-size: .74rem; }
+  .pve-final-map__guests strong,
+  .pve-final-map__storage strong { display: block; margin-top: .25rem; }
+  .pve-final-map__guests small,
+  .pve-final-map__storage small { display: block; margin-top: .25rem; color: var(--pve-muted); }
+  .pve-final-map__storage article.is-thin { border-color: color-mix(in srgb, #2563eb 40%, transparent); }
+
+  @media (max-width: 760px) {
+    .pve-hero__copy { padding: 1.6rem 1.25rem 1.3rem; }
+    .pve-route { grid-template-columns: 1fr; padding: 0 1.25rem 1.3rem; }
+    .pve-route > i { transform: rotate(90deg); justify-self: center; }
+    .pve-hero > footer { grid-template-columns: 1fr; padding: 1rem 1.25rem; }
+    .pve-hero > footer small { grid-column: 1; }
+    .pve-lab,
+    .pve-storage-compare,
+    .pve-vm-ct,
+    .pve-disk-choice__grid,
+    .pve-protection__grid,
+    .pve-vm-create__grid,
+    .pve-mistakes__grid,
+    .pve-ops__grid,
+    .pve-final-map__guests,
+    .pve-final-map__storage { grid-template-columns: 1fr; }
+    .pve-stack__rows article { grid-template-columns: 1fr; gap: .3rem; }
+    .pve-stack__metal { align-items: flex-start; flex-direction: column; }
+    .pve-network__flow { grid-template-columns: 1fr; }
+    .pve-network__flow > i { transform: rotate(90deg); }
+    .pve-network__guests { grid-template-columns: 1fr 1fr; }
+    .pve-tree__line { grid-template-columns: 1fr; gap: .15rem; }
+    .pve-tree__line.level-1 { padding-left: 1.3rem; }
+    .pve-tree__line.level-2 { padding-left: 2.3rem; }
+    .pve-storage-layers__guests { grid-template-columns: 1fr; }
+    .pve-thin__bars > div { grid-template-columns: 1fr; gap: .3rem; }
+    .pve-thin__numbers { grid-template-columns: 1fr; }
+    .pve-thin__numbers > i { transform: rotate(90deg); justify-self: center; }
+    .pve-final-map__host { margin-inline: .8rem; }
+  }
+`}</style>

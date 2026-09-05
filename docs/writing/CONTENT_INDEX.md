@@ -35,6 +35,7 @@
 | `src/content/posts/python-classes-objects-basics.mdx` | `教程` | 作为选修章，用商品库存图解 __init__、self、属性和方法怎样作用于独立实例，并对比字典加函数的适用边界 | 写 Python 类与对象、self、实例状态和基础面向对象边界教学时参考 |
 | `src/content/posts/python-basic-assessment-20-questions.mdx` | `教程` | 用 20 道题检查预测输出、状态追踪、基础编码、具体错误定位和完整订单脚本能力，网页与可下载练习文件保持一致 | 写 Python 入门考核、运行轨迹练习、错误定位和综合脚本测验时参考 |
 | `src/content/posts/programming-terms-for-ai-coding-beginners.mdx` | `教程` | 面向 AI 编程、RPA 和数据处理新手的开发术语翻译手册，沿真实开发流程讲 Bug、异常、测试、重构、API、同步异步、数据库缓存、Git、构建部署与 CI/CD | 写非科班编程入门、AI 编程术语、Git/API/测试/部署基础和新人开发沟通指南时参考 |
+| `src/content/posts/proxmox-ve-9-beginner-guide.mdx` | `教程` | 面向单机 Homelab 的 Proxmox VE 9.2 完整入门，覆盖裸机安装、固定 IP、vmbr0、root 密码恢复、节点层级、Directory / LVM-Thin、Thin Provisioning、VM / LXC、快照备份、NAS、权限、防火墙、模板、磁盘健康、直通和无订阅更新 | 写 PVE、家庭虚拟化、虚拟机宿主机、Linux Bridge、虚拟磁盘和单机存储教学时参考 |
 | `src/content/posts/excel-formula-data-types-basics.mdx` | `教程` | Excel 公式基础前置教程，从数值、字符串、布尔值和单元格/区域引用出发，解释日期序列值、时间小数、日期时间组合以及这些类型在公式中的表示方式 | 写 Excel 零基础公式语法、数据类型、日期时间原理、值与引用区别时参考 |
 | `src/content/posts/excel-functions-from-basic-to-intermediate.mdx` | `教程` | Excel 函数知识地图，把 57 个常用函数整理成 9 个函数家族，并说明基础函数、中级函数、综合应用和系列阅读路线 | 写 Excel / WPS 函数学习地图、函数分类、系列入口和表格能力分层文章时参考 |
 | `src/content/posts/excel-basic-functions-case-guide.mdx` | `教程` | Excel 基础函数案例教程，使用订单明细和商品资料两张示例表，逐个演示 49 个统计、条件、查找、文本、逻辑、日期和时间函数的公式、结果与组合练习 | 写 Excel 基础函数实操、函数案例讲解、订单明细统计、日期时间处理和新手练习文章时参考 |
