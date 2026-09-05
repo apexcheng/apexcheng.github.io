@@ -709,7 +709,7 @@ function startCosmicOpening(root) {
       [
         { scale: 13, opacity: 0.72, color: 0xffc169, finaleColor: 0xff9b63, finaleBoost: 0.18, finaleScale: 0.08 },
         { scale: 23, opacity: 0.34, color: 0xff7a2f, finaleColor: 0xff4422, finaleBoost: 0.85, finaleScale: 0.18 },
-        { scale: 39, opacity: 0.14, color: 0xff4f1f, finaleColor: 0xd91f18, finaleBoost: 1.9, finaleScale: 0.28 },
+        { scale: 39, opacity: 0.14, color: 0xff4f1f, finaleColor: 0xd91f18, finaleBoost: 3.2, finaleScale: 0.55 },
       ].forEach((definition) => {
         const material = new THREE.SpriteMaterial({
           map: glowTexture,
@@ -745,8 +745,8 @@ function startCosmicOpening(root) {
       flare.userData.baseScale = flare.scale.clone();
       flare.userData.baseColor = new THREE.Color(0xffcf8c);
       flare.userData.finaleColor = new THREE.Color(0xff5a32);
-      flare.userData.finaleBoost = 0.55;
-      flare.userData.finaleScale = 0.12;
+      flare.userData.finaleBoost = 1.2;
+      flare.userData.finaleScale = 0.28;
       sunGlowSprites.push(flare);
       group.add(flare);
     }
@@ -1731,7 +1731,7 @@ function startCosmicOpening(root) {
     const warp = band(progress, 0.38, 0.46, 0.58, 0.68);
     const travelEnergy = band(progress, 0.32, 0.43, 0.64, 0.76);
     const finaleCalm = ease(phase(progress, 0.78, 0.98));
-    const finaleRed = cinematicEase(phase(progress, 0.88, 1));
+    const finaleRed = cinematicEase(phase(progress, 0.82, 1));
 
     const baseFov = isMobile ? 47 : 43;
     const finaleFov = isMobile ? 42 : 39;
@@ -1783,7 +1783,7 @@ function startCosmicOpening(root) {
       sunLight.color
         .copy(sunLight.userData.baseColor)
         .lerp(sunLight.userData.finaleColor, finaleRed);
-      sunLight.intensity = sunReveal * (isMobile ? 310 : 440) * (1 + finaleRed * 0.18);
+      sunLight.intensity = sunReveal * (isMobile ? 310 : 440) * (1 + finaleRed * 0.28);
     }
     if (sunLensflare) sunLensflare.visible = sunReveal > 0.08;
 
@@ -1899,8 +1899,8 @@ function startCosmicOpening(root) {
 
     renderer.toneMappingExposure = 1.03 + sunReveal * 0.09 + warp * 0.16 + finaleRed * 0.035;
     if (bloomPass) {
-      bloomPass.strength = 0.42 + sunReveal * 0.42 + warp * 0.18 + finaleRed * 0.2;
-      bloomPass.radius = 0.36 + sunReveal * 0.08 + finaleRed * 0.04;
+      bloomPass.strength = 0.42 + sunReveal * 0.42 + warp * 0.18 + finaleRed * 0.3;
+      bloomPass.radius = 0.36 + sunReveal * 0.08 + finaleRed * 0.06;
     }
     updateRipples(time);
     if (composer) {
