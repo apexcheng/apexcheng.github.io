@@ -120,6 +120,8 @@ function startCosmicOpening(root) {
   let freeCameraActive = false;
   let isPinchingScene = false;
   let pinchLastDistance = 0;
+  let pinchLastCenterX = 0;
+  let pinchLastCenterY = 0;
   let lastRenderAt = 0;
   let suppressDoubleClickUntil = 0;
   let randomSeed = 20260717;
@@ -1333,6 +1335,16 @@ function startCosmicOpening(root) {
     clampFreeCameraPosition();
   }
 
+  function moveCameraInViewPlane(deltaX, deltaY) {
+    updateFreeCameraAxes();
+    const distanceFactor = 0.0038 * (
+      1 + Math.min(targetFreeCameraPosition.distanceTo(solarCenter) / 130, 3)
+    );
+    targetFreeCameraPosition.addScaledVector(cameraRight, -deltaX * distanceFactor);
+    targetFreeCameraPosition.addScaledVector(cameraLocalUp, deltaY * distanceFactor);
+    clampFreeCameraPosition();
+  }
+
   function beginSceneDrag(event) {
     clearZoomAnchor();
     activateFreeCamera();
@@ -1379,6 +1391,8 @@ function startCosmicOpening(root) {
 
     isPinchingScene = true;
     pinchLastDistance = pinch.distance;
+    pinchLastCenterX = pinch.clientX;
+    pinchLastCenterY = pinch.clientY;
     root.classList.add('is-scene-dragging');
 
     for (const pointerId of activeTouchPointers.keys()) {
@@ -1402,12 +1416,25 @@ function startCosmicOpening(root) {
     const pinch = getPinchMetrics();
     if (!pinch) return true;
     const pinchDelta = (pinchLastDistance - pinch.distance) * touchPinchSensitivity;
+    const panDeltaX = pinch.clientX - pinchLastCenterX;
+    const panDeltaY = pinch.clientY - pinchLastCenterY;
     pinchLastDistance = pinch.distance;
-    if (Math.abs(pinchDelta) < 0.05) return true;
+    pinchLastCenterX = pinch.clientX;
+    pinchLastCenterY = pinch.clientY;
+
+    const isPanning = Math.hypot(panDeltaX, panDeltaY) >= 0.05;
+    const isZooming = Math.abs(pinchDelta) >= 0.05;
+    if (!isPanning && !isZooming) return true;
 
     const now = performance.now();
-    resolveZoomAnchor(pinch, now);
-    moveCameraTowardZoomAnchor(pinchDelta);
+    if (isPanning) {
+      clearZoomAnchor();
+      moveCameraInViewPlane(panDeltaX, panDeltaY);
+    }
+    if (isZooming) {
+      resolveZoomAnchor(pinch, now);
+      moveCameraTowardZoomAnchor(pinchDelta);
+    }
     suppressDoubleClickUntil = now + 480;
     renderScene(currentProgress, now);
     scheduleFrame();
@@ -1440,11 +1467,15 @@ function startCosmicOpening(root) {
     if (activeTouchPointers.size >= 2) {
       const pinch = getPinchMetrics();
       pinchLastDistance = pinch ? pinch.distance : 0;
+      pinchLastCenterX = pinch ? pinch.clientX : 0;
+      pinchLastCenterY = pinch ? pinch.clientY : 0;
       return true;
     }
 
     isPinchingScene = false;
     pinchLastDistance = 0;
+    pinchLastCenterX = 0;
+    pinchLastCenterY = 0;
     clearZoomAnchor();
     root.classList.remove('is-scene-dragging');
 
@@ -1462,13 +1493,7 @@ function startCosmicOpening(root) {
     const deltaY = event.clientY - sceneDragLastY;
 
     if (sceneDragMode === 'move') {
-      updateFreeCameraAxes();
-      const distanceFactor = 0.0038 * (
-        1 + Math.min(camera.position.distanceTo(solarCenter) / 130, 3)
-      );
-      targetFreeCameraPosition.addScaledVector(cameraRight, -deltaX * distanceFactor);
-      targetFreeCameraPosition.addScaledVector(cameraLocalUp, deltaY * distanceFactor);
-      clampFreeCameraPosition();
+      moveCameraInViewPlane(deltaX, deltaY);
       cameraOrbitVelocityPitch = 0;
       cameraOrbitVelocityYaw = 0;
     } else {
