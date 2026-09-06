@@ -27,6 +27,8 @@ function startCosmicOpening(root) {
   const interactionHint = root.querySelector('[data-interaction-hint]');
   const knowledgeConstellations = root.querySelector('[data-knowledge-constellations]');
   const knowledgeClusters = Array.from(root.querySelectorAll('[data-knowledge-cluster]'));
+  const topicSignals = root.querySelector('[data-topic-signals]');
+  const topicSignalItems = Array.from(root.querySelectorAll('[data-topic-signal]'));
   const prologues = {
     one: root.querySelector('[data-prologue="one"]'),
     two: root.querySelector('[data-prologue="two"]'),
@@ -50,6 +52,8 @@ function startCosmicOpening(root) {
     || !(interactionHint instanceof HTMLElement)
     || !(knowledgeConstellations instanceof HTMLElement)
     || knowledgeClusters.some((item) => !(item instanceof HTMLElement))
+    || !(topicSignals instanceof HTMLElement)
+    || topicSignalItems.some((item) => !(item instanceof HTMLElement))
     || Object.values(prologues).some((item) => !(item instanceof HTMLElement))
   ) {
     return;
@@ -100,6 +104,8 @@ function startCosmicOpening(root) {
   let warpMaterial = null;
   let satellite = null;
   const satelliteMaterials = [];
+  let asteroidFlyby = null;
+  const flybyAsteroidMaterials = [];
   let animationFrame = 0;
   let startedAt = 0;
   let finishedAt = 0;
@@ -137,6 +143,7 @@ function startCosmicOpening(root) {
   let lastRenderAt = 0;
   let suppressDoubleClickUntil = 0;
   let randomSeed = 20260717;
+  let exploreFeedbackEnergy = 0;
 
   const initialOrbitAngle = 0.36;
   const orbitMotionDelay = 1800;
@@ -429,6 +436,9 @@ function startCosmicOpening(root) {
     satellite = createSatellite();
     camera.add(satellite);
 
+    asteroidFlyby = createAsteroidFlyby();
+    camera.add(asteroidFlyby);
+
     [
       { start: 0.318, end: 0.368, from: [-12, 4.2, -36], to: [9, -1.6, -42], color: 0xd8f4ff },
       { start: 0.69, end: 0.755, from: [16, 7.5, -72], to: [-9, 1, -78], color: 0xffe2b5 },
@@ -541,6 +551,7 @@ function startCosmicOpening(root) {
     const points = new THREE.Points(geometry, material);
     points.userData.desktopPointScale = desktopPointScale;
     points.userData.mobilePointScale = mobilePointScale;
+    points.userData.baseOpacity = options.opacity ?? 0.86;
     if (options.preserveSeed) randomSeed = previousSeed;
     return points;
   }
@@ -708,6 +719,50 @@ function startCosmicOpening(root) {
     mast.position.set(0, 0.48, 0.55);
     mast.rotation.x = Math.PI / 2.7;
     group.add(mast);
+    return group;
+  }
+
+  function createAsteroidFlyby() {
+    const group = new THREE.Group();
+    const definitions = [
+      { from: [-11, 5.2, -34], to: [7, -1.2, -14], scale: 0.72, start: 0.6, end: 0.69 },
+      { from: [12, -4.4, -42], to: [-7, 2.2, -19], scale: 0.52, start: 0.625, end: 0.715 },
+      { from: [-7, -7.2, -48], to: [9, 4, -23], scale: 0.38, start: 0.65, end: 0.74 },
+      { from: [9, 7.4, -57], to: [-11, -3.2, -29], scale: 0.3, start: 0.67, end: 0.755, desktopOnly: true },
+    ];
+
+    definitions
+      .filter((definition) => !definition.desktopOnly || !isMobile)
+      .forEach((definition, index) => {
+        const material = new THREE.MeshPhongMaterial({
+          color: index % 2 === 0 ? 0x71685d : 0x575b5d,
+          specular: 0x2d2a27,
+          shininess: 4,
+          flatShading: true,
+          transparent: true,
+          opacity: 0,
+          depthWrite: true,
+        });
+        const asteroid = new THREE.Mesh(createAsteroidGeometry(index + 4), material);
+        asteroid.visible = false;
+        asteroid.scale.set(
+          definition.scale * 1.12,
+          definition.scale * 0.82,
+          definition.scale
+        );
+        asteroid.userData.from = new THREE.Vector3(...definition.from);
+        asteroid.userData.to = new THREE.Vector3(...definition.to);
+        asteroid.userData.start = definition.start;
+        asteroid.userData.end = definition.end;
+        asteroid.userData.spin = new THREE.Vector3(
+          0.00016 + index * 0.00003,
+          0.0002 + index * 0.000025,
+          0.00011 + index * 0.000018
+        );
+        flybyAsteroidMaterials.push(material);
+        group.add(asteroid);
+      });
+
     return group;
   }
 
@@ -1614,6 +1669,12 @@ function startCosmicOpening(root) {
       : 0.034) * frameDelta * distanceFactor;
     targetFreeCameraPosition.addScaledVector(cameraMove.normalize(), speed);
     clampFreeCameraPosition();
+    pulseExploreFeedback(0.72);
+  }
+
+  function pulseExploreFeedback(amount = 1) {
+    if (!isExploring) return;
+    exploreFeedbackEnergy = Math.max(exploreFeedbackEnergy, amount);
   }
 
   function moveCameraInViewPlane(deltaX, deltaY) {
@@ -1716,6 +1777,7 @@ function startCosmicOpening(root) {
       resolveZoomAnchor(pinch, now);
       moveCameraTowardZoomAnchor(pinchDelta);
     }
+    pulseExploreFeedback(0.9);
     suppressDoubleClickUntil = now + 480;
     renderScene(currentProgress, now);
     scheduleFrame();
@@ -1798,6 +1860,7 @@ function startCosmicOpening(root) {
         0.008
       );
     }
+    pulseExploreFeedback(0.82);
     sceneDragLastX = event.clientX;
     sceneDragLastY = event.clientY;
     sceneDragLastAt = now;
@@ -1882,6 +1945,7 @@ function startCosmicOpening(root) {
     activateFreeCamera();
     resolveZoomAnchor(event, performance.now());
     moveCameraTowardZoomAnchor(normalizedDelta);
+    pulseExploreFeedback(0.9);
     scheduleFrame();
   }
 
@@ -1988,6 +2052,31 @@ function startCosmicOpening(root) {
     });
   }
 
+  function updateAsteroidFlyby(progress, sceneTime) {
+    if (!asteroidFlyby) return;
+
+    asteroidFlyby.children.forEach((asteroid, index) => {
+      const start = asteroid.userData.start;
+      const end = asteroid.userData.end;
+      const localProgress = phase(progress, start, end);
+      const fade = band(progress, start - 0.012, start + 0.012, end - 0.016, end + 0.014);
+      asteroid.visible = fade > 0.002;
+      if (!asteroid.visible) return;
+
+      asteroid.position.lerpVectors(
+        asteroid.userData.from,
+        asteroid.userData.to,
+        cinematicEase(localProgress)
+      );
+      asteroid.rotation.set(
+        sceneTime * asteroid.userData.spin.x + index * 0.6,
+        sceneTime * asteroid.userData.spin.y + index * 0.9,
+        sceneTime * asteroid.userData.spin.z - index * 0.4
+      );
+      flybyAsteroidMaterials[index].opacity = fade * (isMobile ? 0.66 : 0.82);
+    });
+  }
+
   function renderScene(progress, time) {
     if (!renderer || !scene || !camera) return;
 
@@ -2087,6 +2176,13 @@ function startCosmicOpening(root) {
     const travelEnergy = band(progress, 0.32, 0.43, 0.64, 0.76);
     const finaleCalm = ease(phase(progress, 0.78, 0.98));
     const finaleRed = cinematicEase(phase(progress, 0.82, 1));
+    const solarPulse = band(progress, 0.655, 0.69, 0.735, 0.78);
+
+    if (frameDelta > 0) {
+      const feedbackDamping = Math.pow(0.78, frameDelta / 16.667);
+      exploreFeedbackEnergy *= feedbackDamping;
+      if (exploreFeedbackEnergy < 0.002) exploreFeedbackEnergy = 0;
+    }
 
     const baseFov = isMobile ? 47 : 43;
     const finaleFov = isMobile ? 42 : 39;
@@ -2116,7 +2212,7 @@ function startCosmicOpening(root) {
       sunSurface.rotation.y = sceneTime * 0.000006;
       sunSurface.rotation.z = sceneTime * 0.0000018;
       sunMaterial.uniforms.time.value = sceneTime * 0.001;
-      sunMaterial.uniforms.opacity.value = sunReveal;
+      sunMaterial.uniforms.opacity.value = sunReveal * (1 + solarPulse * 0.07);
     }
     sunGlowSprites.forEach((sprite, index) => {
       const pulse = 0.94 + Math.sin(sceneTime * 0.00055 + index * 1.3) * 0.06;
@@ -2126,10 +2222,14 @@ function startCosmicOpening(root) {
       sprite.material.opacity = sunReveal
         * sprite.userData.targetOpacity
         * pulse
-        * (1 + finaleRed * sprite.userData.finaleBoost);
+        * (1 + finaleRed * sprite.userData.finaleBoost)
+        * (1 + solarPulse * (0.22 + index * 0.09));
       sprite.scale
         .copy(sprite.userData.baseScale)
-        .multiplyScalar(1 + finaleRed * sprite.userData.finaleScale);
+        .multiplyScalar(
+          (1 + finaleRed * sprite.userData.finaleScale)
+          * (1 + solarPulse * (0.045 + index * 0.012))
+        );
       if (index === sunGlowSprites.length - 1) {
         sprite.material.rotation = Math.sin(sceneTime * 0.00008) * 0.08;
       }
@@ -2138,7 +2238,10 @@ function startCosmicOpening(root) {
       sunLight.color
         .copy(sunLight.userData.baseColor)
         .lerp(sunLight.userData.finaleColor, finaleRed);
-      sunLight.intensity = sunReveal * (isMobile ? 310 : 440) * (1 + finaleRed * 0.28);
+      sunLight.intensity = sunReveal
+        * (isMobile ? 310 : 440)
+        * (1 + finaleRed * 0.28)
+        * (1 + solarPulse * 0.2);
     }
     if (sunLensflare) sunLensflare.visible = sunReveal > 0.08;
 
@@ -2265,6 +2368,9 @@ function startCosmicOpening(root) {
       nearStars.rotation.y = 0.16 - sceneTime * 0.0000044 + pointerX * 0.04 * pointerInfluence;
       nearStars.rotation.x = -0.03 + pointerY * 0.032 * pointerInfluence;
       nearStars.material.uniforms.time.value = sceneTime * 0.001;
+      nearStars.material.uniforms.opacity.value = nearStars.userData.baseOpacity
+        + (isExploring ? 0.08 : 0)
+        + exploreFeedbackEnergy * 0.18;
     }
 
     nebulae.forEach((nebula, index) => {
@@ -2284,11 +2390,13 @@ function startCosmicOpening(root) {
       driftDust.rotation.y = sceneTime * 0.0000042;
       driftDust.rotation.z = Math.sin(sceneTime * 0.00004) * 0.018;
       driftDustMaterial.opacity = (isExploring ? 0.2 : 0.13)
-        * (1 - finaleCalm * 0.35);
+        * (1 - finaleCalm * 0.35)
+        + exploreFeedbackEnergy * 0.085;
     }
 
     updateSatellite(progress, sceneTime);
     updateMeteorEvents(progress);
+    updateAsteroidFlyby(progress, sceneTime);
 
     if (warpLines && warpMaterial) {
       warpLines.rotation.z = sceneTime * 0.000015;
@@ -2296,10 +2404,18 @@ function startCosmicOpening(root) {
       warpMaterial.opacity = warp * 0.5;
     }
 
-    renderer.toneMappingExposure = 1.03 + sunReveal * 0.09 + warp * 0.16 + finaleRed * 0.035;
+    renderer.toneMappingExposure = 1.03
+      + sunReveal * 0.09
+      + warp * 0.16
+      + finaleRed * 0.035
+      + solarPulse * 0.055;
     if (bloomPass) {
-      bloomPass.strength = 0.42 + sunReveal * 0.42 + warp * 0.18 + finaleRed * 0.3;
-      bloomPass.radius = 0.36 + sunReveal * 0.08 + finaleRed * 0.06;
+      bloomPass.strength = 0.42
+        + sunReveal * 0.42
+        + warp * 0.18
+        + finaleRed * 0.3
+        + solarPulse * 0.16;
+      bloomPass.radius = 0.36 + sunReveal * 0.08 + finaleRed * 0.06 + solarPulse * 0.035;
     }
     updateRipples(time);
     if (composer) {
@@ -2318,6 +2434,7 @@ function startCosmicOpening(root) {
     const cinemaFrame = 1 - easeOutQuint(phase(progress, 0.74, 0.96));
     const finaleShade = cinematicEase(phase(progress, 0.78, 0.95));
     const knowledgeReveal = cinematicEase(phase(progress, 0.82, 0.965));
+    const topicReveal = cinematicEase(phase(progress, 0.845, 0.985));
 
     setLayer(prologues.one, one, (1 - one) * 28, 0.992 + one * 0.008);
     setLayer(prologues.two, two, (1 - two) * 28, 0.992 + two * 0.008);
@@ -2342,6 +2459,16 @@ function startCosmicOpening(root) {
         + (0.98 + clusterReveal * 0.02).toFixed(4)
         + ')';
       cluster.style.visibility = clusterReveal > 0.002 ? 'visible' : 'hidden';
+    });
+    topicSignals.style.visibility = topicReveal > 0.002 ? 'visible' : 'hidden';
+    topicSignalItems.forEach((signal, index) => {
+      const signalReveal = cinematicEase(phase(
+        progress,
+        0.845 + index * 0.012,
+        0.94 + index * 0.008
+      ));
+      signal.style.setProperty('--signal-opacity', (signalReveal * 0.23).toFixed(3));
+      signal.style.visibility = signalReveal > 0.002 ? 'visible' : 'hidden';
     });
 
     finale.style.pointerEvents = finaleAmount > 0.96 ? 'auto' : 'none';
@@ -2445,6 +2572,7 @@ function startCosmicOpening(root) {
     finishedAt = 0;
     isIdle = false;
     isExploring = false;
+    exploreFeedbackEnergy = 0;
     cameraOrbitPitch = 0;
     cameraOrbitYaw = 0;
     cameraOrbitVelocityPitch = 0;
@@ -2506,6 +2634,7 @@ function startCosmicOpening(root) {
 
     const exploringDuringSequence = isPlaying && currentProgress < 1;
     isExploring = true;
+    exploreFeedbackEnergy = 0.38;
     isIdle = !isPlaying;
     root.classList.add('is-exploring');
     skipButton.hidden = true;
@@ -2532,6 +2661,7 @@ function startCosmicOpening(root) {
     const sequenceStillPlaying = isPlaying && currentProgress < 1;
     endSceneDrag(null, true);
     isExploring = false;
+    exploreFeedbackEnergy = 0;
     isIdle = false;
     freeCameraActive = false;
     pressedMoveKeys.clear();
@@ -2576,6 +2706,7 @@ function startCosmicOpening(root) {
     targetPointerInfluence = 0;
     clearZoomAnchor();
     freeCameraActive = false;
+    exploreFeedbackEnergy = 0.35;
     lastRenderAt = 0;
 
     const now = performance.now();

@@ -115,6 +115,15 @@ import { withBase } from '../utils/paths';
         </div>
       </div>
 
+      <div class="topic-signals" data-topic-signals aria-hidden="true">
+        <span class="topic-signal topic-signal-python" data-topic-signal><i></i>Python</span>
+        <span class="topic-signal topic-signal-agent" data-topic-signal><i></i>Agent</span>
+        <span class="topic-signal topic-signal-automation" data-topic-signal><i></i>自动化</span>
+        <span class="topic-signal topic-signal-data" data-topic-signal><i></i>数据处理</span>
+        <span class="topic-signal topic-signal-ecommerce" data-topic-signal><i></i>电商运营</span>
+        <span class="topic-signal topic-signal-visual" data-topic-signal><i></i>可视化表达</span>
+      </div>
+
       <div class="sequence-foot" aria-hidden="true">
         <span class="chapter-name" data-chapter>正在唤醒</span>
         <div class="progress-track">
@@ -581,6 +590,50 @@ import { withBase } from '../utils/paths';
       .knowledge-stars i:nth-child(3) { left: 43px; top: 3px; }
       .knowledge-stars i:nth-child(4) { left: 35px; top: 22px; }
 
+      .topic-signals {
+        inset: 0;
+        pointer-events: none;
+        position: absolute;
+        z-index: 7;
+      }
+
+      .topic-signal {
+        --signal-opacity: 0;
+        align-items: center;
+        color: rgba(172, 205, 218, 0.62);
+        display: inline-flex;
+        font-size: 8px;
+        font-weight: 500;
+        gap: 7px;
+        letter-spacing: 0.17em;
+        opacity: var(--signal-opacity);
+        position: absolute;
+        text-shadow: 0 0 14px rgba(103, 178, 200, 0.16);
+        transition: color 280ms ease, filter 280ms ease;
+        visibility: hidden;
+        white-space: nowrap;
+      }
+
+      .topic-signal i {
+        background: rgba(134, 214, 225, 0.84);
+        border-radius: 50%;
+        box-shadow: 0 0 8px rgba(97, 199, 213, 0.52);
+        height: 2px;
+        width: 2px;
+      }
+
+      .cosmic-opening.is-exploring .topic-signal {
+        color: rgba(194, 225, 231, 0.78);
+        filter: brightness(1.15);
+      }
+
+      .topic-signal-python { left: 47%; top: 18%; }
+      .topic-signal-agent { left: 60%; top: 30%; }
+      .topic-signal-automation { left: 45%; top: 43%; }
+      .topic-signal-data { left: 67%; top: 56%; }
+      .topic-signal-ecommerce { left: 53%; top: 70%; }
+      .topic-signal-visual { left: 72%; top: 80%; }
+
       .finale-kicker {
         color: rgba(137, 218, 214, 0.72);
         font-size: 11px;
@@ -954,6 +1007,21 @@ import { withBase } from '../utils/paths';
           opacity: 0.8;
           transform: scale(0.82);
           transform-origin: left bottom;
+        }
+
+        .topic-signal {
+          font-size: 7px;
+          letter-spacing: 0.12em;
+          opacity: calc(var(--signal-opacity) * 0.72);
+        }
+
+        .topic-signal-python { left: 9%; top: 14%; }
+        .topic-signal-agent { left: 31%; top: 22%; }
+        .topic-signal-automation { left: 8%; top: 31%; }
+        .topic-signal-data { left: 34%; top: 39%; }
+
+        .topic-signal:nth-child(n + 5) {
+          display: none;
         }
 
         .enter-button,
