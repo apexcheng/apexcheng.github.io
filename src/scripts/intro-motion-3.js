@@ -16,6 +16,7 @@ function startCosmicOpening(root) {
   const skipButton = root.querySelector('[data-skip]');
   const replayButton = root.querySelector('[data-replay]');
   const exploreButton = root.querySelector('[data-explore]');
+  const resetExploreButton = root.querySelector('[data-reset-explore]');
   const exitExploreButton = root.querySelector('[data-exit-explore]');
   const enterButton = root.querySelector('[data-enter]');
   const finale = root.querySelector('[data-finale]');
@@ -36,6 +37,7 @@ function startCosmicOpening(root) {
     || !(skipButton instanceof HTMLButtonElement)
     || !(replayButton instanceof HTMLButtonElement)
     || !(exploreButton instanceof HTMLButtonElement)
+    || !(resetExploreButton instanceof HTMLButtonElement)
     || !(exitExploreButton instanceof HTMLButtonElement)
     || !(enterButton instanceof HTMLAnchorElement)
     || !(finale instanceof HTMLElement)
@@ -2000,6 +2002,7 @@ function startCosmicOpening(root) {
     if (wasExploring) {
       replayButton.hidden = true;
       exploreButton.hidden = true;
+      resetExploreButton.hidden = false;
       exitExploreButton.hidden = false;
       exitExploreButton.textContent = '返回落版';
       status.textContent = '天体序章播放完成，继续自由探索太阳系';
@@ -2011,6 +2014,7 @@ function startCosmicOpening(root) {
     interactionHint.classList.remove('is-visible');
     replayButton.hidden = reducedMotion.matches;
     exploreButton.hidden = reducedMotion.matches;
+    resetExploreButton.hidden = true;
     exitExploreButton.hidden = true;
     status.textContent = '天体序章播放完成，可以进入博客或自由探索太阳系';
     scheduleFrame();
@@ -2042,6 +2046,7 @@ function startCosmicOpening(root) {
     skipButton.hidden = false;
     replayButton.hidden = true;
     exploreButton.hidden = true;
+    resetExploreButton.hidden = true;
     exitExploreButton.hidden = true;
     currentProgress = 0;
     lastChapter = '';
@@ -2096,10 +2101,7 @@ function startCosmicOpening(root) {
 
   skipButton.addEventListener('click', () => {
     skipRequested = true;
-    try {
-      sessionStorage.setItem(returnKey, returnUrl);
-    } catch (error) {}
-    window.location.assign(returnUrl);
+    finishSequence();
   });
 
   replayButton.addEventListener('click', () => {
@@ -2114,6 +2116,8 @@ function startCosmicOpening(root) {
     isExploring = true;
     isIdle = !isPlaying;
     root.classList.add('is-exploring');
+    skipButton.hidden = true;
+    resetExploreButton.hidden = false;
     exitExploreButton.hidden = false;
     exitExploreButton.textContent = exploringDuringSequence ? '返回自动镜头' : '返回落版';
     activateFreeCamera();
@@ -2146,12 +2150,14 @@ function startCosmicOpening(root) {
     targetPointerInfluence = 0;
     clearZoomAnchor();
     root.classList.remove('is-exploring');
+    resetExploreButton.hidden = true;
     exitExploreButton.hidden = true;
     exitExploreButton.textContent = '返回落版';
     interactionHint.classList.remove('is-visible');
     lastRenderAt = 0;
 
     if (sequenceStillPlaying) {
+      skipButton.hidden = false;
       renderInterface(currentProgress);
       renderScene(currentProgress, performance.now());
       status.textContent = '已返回自动镜头，天体序章继续播放';
@@ -2166,7 +2172,30 @@ function startCosmicOpening(root) {
     status.textContent = '已返回天体序章落版';
   }
 
+  function resetExploreCamera() {
+    if (!isExploring || !camera) return;
+
+    endSceneDrag(null, true);
+    pressedMoveKeys.clear();
+    cameraOrbitPitch = 0;
+    cameraOrbitYaw = 0;
+    cameraOrbitVelocityPitch = 0;
+    cameraOrbitVelocityYaw = 0;
+    targetPointerInfluence = 0;
+    clearZoomAnchor();
+    freeCameraActive = false;
+    lastRenderAt = 0;
+
+    const now = performance.now();
+    renderScene(currentProgress, now);
+    activateFreeCamera();
+    renderScene(currentProgress, now);
+    status.textContent = '自由探索视角已重置';
+    scheduleFrame();
+  }
+
   exploreButton.addEventListener('click', () => enterExploreMode(false));
+  resetExploreButton.addEventListener('click', resetExploreCamera);
   exitExploreButton.addEventListener('click', leaveExploreMode);
 
   window.addEventListener('pointermove', (event) => {

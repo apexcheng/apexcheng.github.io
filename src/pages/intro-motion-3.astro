@@ -39,6 +39,9 @@ import { withBase } from '../utils/paths';
         </div>
 
         <div class="sequence-controls">
+          <button class="reset-explore-button" type="button" data-reset-explore hidden>
+            重置视角
+          </button>
           <button class="exit-explore-button" type="button" data-exit-explore hidden>
             返回落版
           </button>
@@ -102,8 +105,10 @@ import { withBase } from '../utils/paths';
       </div>
 
       <p class="interaction-hint" data-interaction-hint aria-hidden="true">
-        <span class="hint-desktop">拖动环视 · 滚轮沿鼠标位置缩放 · WASD / QE 飞行</span>
-        <span class="hint-mobile">单指环视 · 双指移动 / 缩放</span>
+        <span class="hint-desktop">拖动即可探索</span>
+        <span class="hint-mobile">单指拖动即可探索</span>
+        <span class="hint-explore-desktop">拖动环视 · 滚轮缩放 · WASD 移动 · QE 升降</span>
+        <span class="hint-explore-mobile">单指环视 · 双指移动 / 缩放</span>
       </p>
 
       <p class="sr-only" aria-live="polite" data-status>天体序章即将开始</p>
@@ -336,6 +341,7 @@ import { withBase } from '../utils/paths';
       }
 
       .skip-button,
+      .reset-explore-button,
       .exit-explore-button,
       .explore-button,
       .replay-button {
@@ -361,6 +367,7 @@ import { withBase } from '../utils/paths';
       }
 
       .skip-button:focus-visible,
+      .reset-explore-button:focus-visible,
       .exit-explore-button:focus-visible,
       .explore-button:focus-visible,
       .replay-button:focus-visible,
@@ -614,6 +621,7 @@ import { withBase } from '../utils/paths';
         width: 5px;
       }
 
+      .reset-explore-button,
       .exit-explore-button {
         color: rgba(220, 231, 242, 0.58);
         font-size: 11px;
@@ -622,6 +630,7 @@ import { withBase } from '../utils/paths';
         transition: color 220ms ease;
       }
 
+      .reset-explore-button:hover,
       .exit-explore-button:hover {
         color: #ffffff;
       }
@@ -693,6 +702,19 @@ import { withBase } from '../utils/paths';
 
       .hint-mobile {
         display: none;
+      }
+
+      .hint-explore-desktop,
+      .hint-explore-mobile {
+        display: none;
+      }
+
+      .cosmic-opening.is-exploring .hint-desktop {
+        display: none;
+      }
+
+      .cosmic-opening.is-exploring .hint-explore-desktop {
+        display: inline;
       }
 
       .sr-only {
@@ -824,6 +846,18 @@ import { withBase } from '../utils/paths';
         }
 
         .hint-mobile {
+          display: inline;
+        }
+
+        .cosmic-opening.is-exploring .hint-mobile {
+          display: none;
+        }
+
+        .cosmic-opening.is-exploring .hint-explore-desktop {
+          display: none;
+        }
+
+        .cosmic-opening.is-exploring .hint-explore-mobile {
           display: inline;
         }
       }

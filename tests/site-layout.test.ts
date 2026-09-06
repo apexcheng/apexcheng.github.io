@@ -119,7 +119,7 @@ describe('site layout', () => {
     expect(homeIndexSource).toContain("styleTheme: ''");
   });
 
-  it('uses intro three for first visits and direct homepage entries without intercepting internal home links', () => {
+  it('uses intro three only for the first homepage visit without intercepting content or internal home links', () => {
     expect(layoutSource).toContain("import HomeIntroState from '../components/HomeIntroState.astro'");
     expect(layoutSource).toContain("<HomeIntroState pageKind={active === 'home' ? 'home' : 'content'} />");
     expect(homeIntroStateSource).toContain("data-home-url={withBase('/')}");
@@ -128,8 +128,9 @@ describe('site layout', () => {
     expect(homeIntroStateSource).toContain("var returnKey = 'site-intro-return-v1'");
     expect(homeIntroStateSource).toContain("var internalHomeKey = 'site-intro-internal-home-v1'");
     expect(homeIntroStateSource).toContain("if (pageKind === 'standalone') return");
+    expect(homeIntroStateSource).toContain('if (!isHome) return');
     expect(homeIntroStateSource).toContain('if (isInternalHomeNavigation) return');
-    expect(homeIntroStateSource).toContain("if (!isHome && hasSeenIntro) return");
+    expect(homeIntroStateSource).toContain('if (hasSeenIntro) return');
     expect(homeIntroStateSource).toContain("if (returnPath === currentPath) return");
     expect(homeIntroStateSource).toContain("introUrl.searchParams.set('return', currentPath)");
   });

@@ -59,8 +59,9 @@ const { pageKind = 'standalone' } = Astro.props;
       var isInternalHomeNavigation = isHome
         && internalHomeAt > 0
         && Date.now() - internalHomeAt < 15000;
+      if (!isHome) return;
       if (isInternalHomeNavigation) return;
-      if (!isHome && hasSeenIntro) return;
+      if (hasSeenIntro) return;
 
       var introUrl = new URL(introPath, window.location.origin);
       introUrl.searchParams.set('return', currentPath);
