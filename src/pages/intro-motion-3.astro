@@ -96,6 +96,25 @@ import { withBase } from '../utils/paths';
         </div>
       </section>
 
+      <div class="knowledge-constellations" data-knowledge-constellations aria-hidden="true">
+        <div class="knowledge-cluster knowledge-cluster-tutorial" data-knowledge-cluster>
+          <span class="knowledge-stars"><i></i><i></i><i></i></span>
+          <span class="knowledge-label">教程</span>
+        </div>
+        <div class="knowledge-cluster knowledge-cluster-practice" data-knowledge-cluster>
+          <span class="knowledge-stars"><i></i><i></i><i></i><i></i></span>
+          <span class="knowledge-label">实践</span>
+        </div>
+        <div class="knowledge-cluster knowledge-cluster-life" data-knowledge-cluster>
+          <span class="knowledge-stars"><i></i><i></i><i></i></span>
+          <span class="knowledge-label">生活</span>
+        </div>
+        <div class="knowledge-cluster knowledge-cluster-visual" data-knowledge-cluster>
+          <span class="knowledge-stars"><i></i><i></i><i></i><i></i></span>
+          <span class="knowledge-label">视觉实验室</span>
+        </div>
+      </div>
+
       <div class="sequence-foot" aria-hidden="true">
         <span class="chapter-name" data-chapter>正在唤醒</span>
         <div class="progress-track">
@@ -470,6 +489,98 @@ import { withBase } from '../utils/paths';
         visibility: hidden !important;
       }
 
+      .knowledge-constellations {
+        inset: 0;
+        pointer-events: none;
+        position: absolute;
+        z-index: 8;
+      }
+
+      .knowledge-cluster {
+        --cluster-opacity: 0;
+        color: rgba(193, 226, 234, 0.72);
+        opacity: var(--cluster-opacity);
+        position: absolute;
+        transform: translate3d(0, 10px, 0) scale(0.98);
+        transition: color 320ms ease;
+        visibility: hidden;
+      }
+
+      .cosmic-opening.is-exploring .knowledge-cluster {
+        color: rgba(205, 236, 240, 0.84);
+      }
+
+      .knowledge-cluster-tutorial {
+        right: 21%;
+        top: 21%;
+      }
+
+      .knowledge-cluster-practice {
+        right: 8%;
+        top: 43%;
+      }
+
+      .knowledge-cluster-life {
+        bottom: 24%;
+        right: 29%;
+      }
+
+      .knowledge-cluster-visual {
+        bottom: 14%;
+        right: 9%;
+      }
+
+      .knowledge-label {
+        font-size: 10px;
+        letter-spacing: 0.22em;
+        text-shadow: 0 0 18px rgba(119, 213, 220, 0.2);
+        white-space: nowrap;
+      }
+
+      .knowledge-stars {
+        display: block;
+        height: 26px;
+        margin: 0 0 5px -6px;
+        position: relative;
+        width: 54px;
+      }
+
+      .knowledge-stars::before,
+      .knowledge-stars::after {
+        background: linear-gradient(90deg, rgba(128, 219, 220, 0.08), rgba(161, 218, 233, 0.42), rgba(128, 219, 220, 0.05));
+        content: "";
+        height: 1px;
+        left: 5px;
+        position: absolute;
+        transform-origin: left center;
+        width: 42px;
+      }
+
+      .knowledge-stars::before {
+        top: 9px;
+        transform: rotate(12deg);
+      }
+
+      .knowledge-stars::after {
+        top: 18px;
+        transform: rotate(-16deg) scaleX(0.82);
+      }
+
+      .knowledge-stars i {
+        background: #a7e6e2;
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(121, 223, 218, 0.7);
+        height: 3px;
+        position: absolute;
+        width: 3px;
+        z-index: 1;
+      }
+
+      .knowledge-stars i:nth-child(1) { left: 3px; top: 7px; }
+      .knowledge-stars i:nth-child(2) { left: 23px; top: 11px; }
+      .knowledge-stars i:nth-child(3) { left: 43px; top: 3px; }
+      .knowledge-stars i:nth-child(4) { left: 35px; top: 22px; }
+
       .finale-kicker {
         color: rgba(137, 218, 214, 0.72);
         font-size: 11px;
@@ -810,6 +921,39 @@ import { withBase } from '../utils/paths';
         .finale-actions {
           gap: 14px 18px;
           margin-top: 26px;
+        }
+
+        .knowledge-cluster-tutorial {
+          right: 10%;
+          top: 16%;
+        }
+
+        .knowledge-cluster-practice {
+          right: 3%;
+          top: 25%;
+        }
+
+        .knowledge-cluster-life {
+          bottom: auto;
+          right: 18%;
+          top: 33%;
+        }
+
+        .knowledge-cluster-visual {
+          bottom: auto;
+          right: 6%;
+          top: 41%;
+        }
+
+        .knowledge-label {
+          font-size: 8px;
+          letter-spacing: 0.16em;
+        }
+
+        .knowledge-stars {
+          opacity: 0.8;
+          transform: scale(0.82);
+          transform-origin: left bottom;
         }
 
         .enter-button,
