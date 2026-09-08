@@ -5,7 +5,7 @@ description: Optional searchable UI/UX reference for external visual research or
 
 # UI/UX Reference Search
 
-Treat this skill as an optional reference tool. Project `AGENTS.md`, routed project docs, the existing stack, components, and visual language always take precedence.
+Treat this skill as an optional reference tool. Project `AGENTS.md`, routed project docs, the existing stack, components, and visual language always take precedence. Routine visual design and redesign should use the project's Taste skills first; use this skill only for focused external reference gaps.
 
 ## Boundaries
 

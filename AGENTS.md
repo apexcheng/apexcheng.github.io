@@ -50,6 +50,13 @@
 - `docs/ARTICLE_VISUAL_SYSTEM.md`
 - `docs/MDX_WRITING_GUIDE.md`
 
+视觉 Skill 只作为审美与实现辅助，不替代博客自身的文章视觉系统。高视觉文章仍先根据内容关系确定视觉概念，再按需使用：
+
+- `design-taste-frontend`：新页面、复杂视觉设计或需要提升整体审美时使用；项目现有 Astro / MDX 技术栈、组件和视觉规则优先于 Skill 的通用建议。
+- `redesign-existing-projects`：用户明确要求视觉审查、重设计，或现有结构明显阻碍当前视觉目标时使用；普通内容修改不触发。
+- `image-to-code`：仅在用户提供截图 / 设计稿 / 明确视觉参考，或明确要求 image-first 工作流时使用；不能因为文章属于高视觉文章就自动生成设计图。
+- `ui-ux-pro-max`：只在项目规则和上述 Skill 仍不足时，用于无障碍、响应式、图表、配色、字体等专项参考查询。
+
 ### 使用现有 MDX 组件
 
 仅在需要组件时读取 `docs/MDX_COMPONENTS.md`。
