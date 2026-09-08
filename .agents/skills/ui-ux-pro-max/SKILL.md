@@ -1,11 +1,11 @@
 ---
 name: ui-ux-pro-max
-description: Optional searchable UI/UX reference for external visual research or gaps not covered by the current project's rules, including accessibility, responsive layout, charts, color, typography, and interaction. Use only when the user explicitly requests outside UI/UX references or project guidance is insufficient. Do not use for routine article writing, publishing, small edits, or tasks with an established visual direction.
+description: Optional searchable UI/UX reference for focused accessibility, responsive layout, chart, color, typography, interaction, or external-reference questions. It may be used directly when the task is clearly one of those specialties. Do not use for routine visual design, article writing, publishing, small edits, or questions already covered by project rules or Taste skills.
 ---
 
 # UI/UX Reference Search
 
-Treat this skill as an optional reference tool. Project `AGENTS.md`, routed project docs, the existing stack, components, and visual language always take precedence. Routine visual design and redesign should use the project's Taste skills first; use this skill only for focused external reference gaps.
+Treat this skill as an optional specialist reference tool. Project `AGENTS.md`, routed project docs, the existing stack, components, and visual language always take precedence. When the task is explicitly about accessibility, responsive behavior, charts, color, typography, interaction, or external UI/UX references, this skill may be used directly. Routine visual design and redesign should use the project's Taste skills instead.
 
 ## Boundaries
 

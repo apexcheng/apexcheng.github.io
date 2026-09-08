@@ -1,6 +1,6 @@
 ---
 name: image-to-code
-description: Project-adapted Taste image-to-code skill. Use only when the user provides a screenshot/design/reference image or explicitly requests an image-first design-to-code workflow. Analyze the visual reference deeply, then implement it faithfully in the existing Astro/MDX project. Do not auto-trigger merely because an article is visually rich.
+description: Project-adapted Taste image-to-code skill. Use only when the user provides a screenshot/design/reference image and asks to implement or reproduce it, or explicitly requests an image-first design-to-code workflow. Analyze the visual reference deeply, then implement it faithfully in the existing Astro/MDX project. Do not auto-trigger merely because an article is visually rich or an image appears in the conversation.
 ---
 
 # Image to Code

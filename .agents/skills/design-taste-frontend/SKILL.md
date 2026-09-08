@@ -1,6 +1,6 @@
 ---
 name: design-taste-frontend
-description: Project-adapted Taste Skill for new pages and complex visual work. Use when the user asks for stronger frontend visual direction, layout, hierarchy, motion, or a new visual concept. In this blog, ARTICLE_VISUAL_SYSTEM and the existing Astro/MDX stack always take precedence; do not use for routine article edits.
+description: Project-adapted Taste Skill for new pages, new visual concepts, or explicit visual-direction exploration. For existing-page redesigns, prefer redesign-existing-projects first and use this only when a materially new visual direction is needed. ARTICLE_VISUAL_SYSTEM and the existing Astro/MDX stack always take precedence; do not use for routine article edits.
 ---
 
 # Design Taste Frontend
