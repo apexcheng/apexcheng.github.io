@@ -1,0 +1,709 @@
+---
+title: "抖音千川投流怎么理解：从计划、商品、抖音号、素材到归因和结算"
+description: "用基础层和进阶层两张知识地图，把巨量千川投流拆成“钱怎么花”和“成交怎么算”：先理解推商品、推直播与四个数据维度，再进入成交归因、GMV、ROI、达人佣金、退款和财务结算。"
+date: 2026-09-12T16:35:00+08:00
+category: "教程"
+tags:
+  - "巨量千川"
+  - "抖音电商"
+  - "广告投放"
+  - "电商运营"
+minutes: 11
+featured: false
+pinned: false
+draft: false
+private: false
+---
+
+<div class="qc-hero" aria-label="抖音千川投流两层知识地图">
+  <div class="qc-hero__copy">
+    <span class="qc-kicker">巨量千川 · 两层知识地图</span>
+    <div class="qc-hero__title">先看懂钱怎么花，<br />再看懂成交怎么算</div>
+    <p>千川后台看起来有很多页面，真正需要建立的认知只有两层：基础层解释计划、商品、抖音号和素材；进阶层解释归因、ROI、达人佣金、退款和最终结算。</p>
+  </div>
+  <div class="qc-hero__layers">
+    <section class="is-foundation">
+      <small>01 · 基础层</small>
+      <strong>投流结构</strong>
+      <span>钱从哪里花，推什么，借谁投，用什么内容投</span>
+    </section>
+    <div class="qc-hero__arrow" aria-hidden="true">↓</div>
+    <section class="is-advanced">
+      <small>02 · 进阶层</small>
+      <strong>成交与结算</strong>
+      <span>成交算给谁，ROI 怎么算，最终真正扣了多少钱</span>
+    </section>
+  </div>
+</div>
+
+> **版本说明：** 本文按 2026 年 9 月的巨量千川后台与公开资料整理。千川产品和指标更新很快，具体功能名称、可选维度和结算规则应以实际后台为准。
+
+本文聚焦**巨量千川的电商投流**。DOU+、小店随心推、品牌广告等也是抖音付费流量工具，但不属于这篇文章要解决的主线，避免把不同产品体系混在一起。
+
+理解千川最容易犯的错误，是一上来就研究 ROI、出价和投放技巧。这样很快会被“计划、商品、抖音号、素材、全域、乘方、达人、直播间”绕晕。
+
+更简单的方法是先回答两组问题：
+
+<div class="qc-question-pair">
+  <section>
+    <small>基础层只回答</small>
+    <strong>这笔广告费到底怎么花出去？</strong>
+    <span>计划是什么</span><span>推什么商品</span><span>用哪个抖音号</span><span>用了什么素材</span>
+  </section>
+  <section>
+    <small>进阶层再回答</small>
+    <strong>这笔生意最后到底怎么算？</strong>
+    <span>成交归因</span><span>GMV / ROI</span><span>达人佣金</span><span>退款与结算</span>
+  </section>
+</div>
+
+## 第一层：先把投流结构看懂
+
+抖音电商付费投流可以先从巨量千川的两个核心经营场景理解：**推商品**和**推直播**。巨量学当前的千川课程也直接把“全域推商品”和“全域推直播”作为两类基础投放场景。
+
+<div class="qc-foundation-map" aria-label="抖音电商投流基础层结构">
+  <div class="qc-foundation-map__root">
+    <small>入口</small>
+    <strong>抖音电商投流 · 巨量千川</strong>
+  </div>
+  <div class="qc-foundation-map__split" aria-hidden="true"><span></span><i></i><span></span></div>
+  <div class="qc-foundation-map__branches">
+    <section class="is-product">
+      <header><small>场景 A</small><strong>推商品</strong><span>目标是商品成交</span></header>
+      <div class="qc-mode-line"><b>全域投放</b><i>或</i><b>千川乘方</b></div>
+      <div class="qc-dimension-grid">
+        <div><small>计划</small><strong>花多少</strong><span>这笔预算属于哪个投放任务</span></div>
+        <div><small>商品</small><strong>推什么</strong><span>广告最终在推广哪些商品</span></div>
+        <div><small>抖音号</small><strong>借谁投</strong><span>使用哪个账号的内容或经营资源</span></div>
+        <div><small>素材</small><strong>拿什么投</strong><span>具体视频、图文或其他创意素材</span></div>
+      </div>
+    </section>
+    <section class="is-live">
+      <header><small>场景 B</small><strong>推直播</strong><span>目标是直播间经营与成交</span></header>
+      <div class="qc-live-stack">
+        <span>直播间</span><span>直播计划</span><span>直播素材 / 引流内容</span><span>直播货盘</span>
+      </div>
+      <p>推直播有自己的直播间、货盘和直播数据体系，不要把直播间投流硬塞进“推商品的素材明细”里理解。</p>
+    </section>
+  </div>
+</div>
+
+这里最重要的不是记产品名，而是先形成一句话：
+
+<div class="qc-thesis">计划决定<strong>在哪个投放任务里花钱</strong>，商品决定<strong>推什么</strong>，抖音号决定<strong>借谁的账号与内容能力投</strong>，素材决定<strong>具体拿什么内容投</strong>。</div>
+
+### 千川账号、店铺、抖音号、店铺号分别是什么
+
+这四个概念经常被混在一起，其实职责完全不同。
+
+<div class="qc-role-grid">
+  <section><small>广告账户</small><strong>千川账号</strong><b>谁出广告费</b><p>预算、计划、消耗和投放操作主要发生在这里。</p></section>
+  <section><small>交易主体</small><strong>抖店 / 店铺</strong><b>谁卖货、谁收订单</b><p>商品、订单、退款和货款最终回到店铺经营体系。</p></section>
+  <section><small>内容载体</small><strong>抖音号</strong><b>借谁的内容或直播能力投</b><p>可以是商家自营账号，也可以是在规则和授权范围内使用的达人账号。</p></section>
+  <section><small>绑定关系</small><strong>店铺号</strong><b>店铺绑定的抖音账号</b><p>它本质仍是抖音号，不是和“抖音号”并列的另一种广告账户。</p></section>
+</div>
+
+因此“给达人投流”并不是给达人买粉丝，而是：**商家用自己的千川预算，给达人的带货内容或相关经营场景购买商业流量，最终目标仍是卖商家的商品。** 抖音电商当前的精选联盟协议也明确，在满足条件时，商家可以使用达人账号内含有自己商品的图文、短视频、直播等内容进行商品全域投放。
+
+### 全域和乘方，不是两个销售渠道
+
+后台同时出现“全域投放数据”和“乘方数据”时，很容易误以为这是两个完全独立的渠道。
+
+其实它们更接近**两套投放计划 / 数据体系**。开放平台当前同时提供“新建全域投放计划”“新建乘方商品投放计划”，也提供“全域计划升级为乘方计划”。所以这里的“升级”更接近：
+
+<div class="qc-upgrade-flow">
+  <span>全域计划</span><i>计划模式切换</i><strong>乘方计划</strong>
+</div>
+
+不是店铺升级，也不是软件版本升级。看报表时先确认计划当前属于哪套体系，不要把“全域数据 + 乘方数据”机械理解成两个可以直接相加的销售渠道。
+
+## 四个数据维度不是一棵严格的父子树
+
+推商品页面里最常见的四个视角是：计划、商品、抖音号、素材。
+
+在部分全域投放页面还会看到“调控”维度。它更接近对投放进行干预和调整的控制任务，不是和商品、抖音号、素材同类的第五种经营对象，所以本文不把它放进基础四维模型。
+
+最容易产生的错误想象是：
+
+```text
+计划 A
+└─ 达人 A
+   └─ 视频 1
+      └─ 商品 A
+```
+
+现实里关系往往更像多个维度交叉：
+
+<div class="qc-cross-map" aria-label="计划商品抖音号素材的交叉关系">
+  <section class="qc-cross-map__plan"><small>计划</small><strong>计划 A</strong><span>统一预算与优化目标</span></section>
+  <div class="qc-cross-map__links" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="qc-cross-map__views">
+    <section><small>商品视角</small><strong>A / B / C</strong><span>看钱投到了哪些货</span></section>
+    <section><small>抖音号视角</small><strong>官方号 / 达人甲 / 达人乙</strong><span>看哪些账号参与承载</span></section>
+    <section><small>素材视角</small><strong>视频 1 / 视频 2 / 图文 / AIGC</strong><span>看哪些创意实际参与投放</span></section>
+  </div>
+</div>
+
+一个计划可以关联多个商品、多个抖音号和多份素材；具体哪些对象能组合，要看计划类型、授权关系和平台当前能力。**不要把“抖音号 → 素材 → 商品”理解成永远一对一的固定树。**
+
+这也解释了为什么切换维度后，总花费有时会不同。
+
+<div class="qc-lens-grid">
+  <section><small>计划</small><strong>投放任务视角</strong><p>最接近回答“这个任务总共花了多少钱”。</p></section>
+  <section><small>商品</small><strong>商品归属视角</strong><p>回答“能够归到哪些商品、各花了多少”。</p></section>
+  <section><small>抖音号</small><strong>账号归属视角</strong><p>回答“哪些账号资源参与了这次投放”。</p></section>
+  <section><small>素材</small><strong>创意归属视角</strong><p>回答“哪些具体内容承载了广告消耗”。</p></section>
+</div>
+
+如果它们只是同一张消费表简单 `GROUP BY` 不同字段，合计理论上应该相同；但实际后台不同报表的可归属范围、对象类型和统计口径并不一定完全一致。**所以维度合计不相等时，先查口径，不要为了“对平”强行修改数据。**
+
+对经营报表而言，可以先把两件事分开：
+
+<div class="qc-ledger-split">
+  <section class="is-fact"><small>事实金额</small><strong>账户 / 计划实际消耗</strong><p>回答：真实花了多少钱。</p></section>
+  <div aria-hidden="true">≠</div>
+  <section class="is-attribution"><small>经营归因</small><strong>商品 / 抖音号 / 素材分布</strong><p>回答：这笔钱应该怎样解释。</p></section>
+</div>
+
+## 第二层：成交以后，才进入真正复杂的部分
+
+基础层解决的是“钱怎么花”。进阶层解决的是：**钱花完以后，一笔成交到底应该算给谁，以及最终真实赚不赚钱。**
+
+<div class="qc-advanced-track" aria-label="千川投流进阶知识链路">
+  <section><small>01</small><strong>成交归因</strong><span>用户先看达人视频、再搜索、再点商品卡，最终成交算给哪次触达？</span></section>
+  <section><small>02</small><strong>GMV 口径</strong><span>页面展示的是支付成交、成交金额、净成交，还是退款后的另一套口径？</span></section>
+  <section><small>03</small><strong>ROI 口径</strong><span>分子是哪种成交金额，分母只有广告消耗，还是还包含其他营销成本？</span></section>
+  <section><small>04</small><strong>订单身份</strong><span>一笔订单是否同时属于千川广告归因订单和达人带货订单？</span></section>
+  <section><small>05</small><strong>达人佣金</strong><span>商家给达人内容投流后，这笔订单是否还会另外产生达人佣金？</span></section>
+  <section><small>06</small><strong>退款影响</strong><span>退款发生后，GMV、ROI、佣金和广告效果分别怎样回退或重新统计？</span></section>
+  <section><small>07</small><strong>最终结算</strong><span>抛开投放归因，平台最后实际扣了多少广告费、佣金和其他费用？</span></section>
+</div>
+
+这七个问题不是七张互不相关的报表，而是一条完整链路：
+
+<div class="qc-business-chain">
+  <span>用户被广告触达</span><i>→</i><span>发生订单</span><i>→</i><span>平台做归因</span><i>→</i><span>计算 GMV / ROI</span><i>→</i><span>发生佣金与退款</span><i>→</i><strong>最终财务结算</strong>
+</div>
+
+### 一笔订单，可以同时有“广告身份”和“达人身份”
+
+这是进阶层最值得先建立的认知。
+
+例如：达人甲发布一条带货视频，商家觉得转化不错，于是用千川继续给这条达人内容投流。消费者通过这次商业流量成交。
+
+<div class="qc-order-example">
+  <div class="qc-order-example__flow">
+    <span>达人甲内容</span><i>+</i><span>商家千川投流</span><i>→</i><strong>同一笔真实订单</strong>
+  </div>
+  <div class="qc-order-example__costs">
+    <section><small>广告侧</small><strong>千川广告费</strong><p>付给平台的流量成本。</p></section>
+    <section><small>达人侧</small><strong>达人佣金</strong><p>满足结算规则时产生的带货合作成本。</p></section>
+  </div>
+  <p><b>订单不能重复算两笔，成本却可能同时存在两项。</b></p>
+</div>
+
+因此，看到“达人订单”和“广告订单”时，不能直接把两边成交额相加；但做利润核算时，也不能因为已经记了千川广告费，就漏掉真实发生的达人佣金。
+
+## ROI 不是利润
+
+投放后台的 ROI 用来回答广告效率，但利润模型要回答经营结果。两者不是同一件事。
+
+<div class="qc-roi-board">
+  <section>
+    <small>投放视角</small>
+    <strong>广告 ROI</strong>
+    <code>某种成交金额 ÷ 广告消耗</code>
+    <p>适合判断流量买得值不值。</p>
+  </section>
+  <section>
+    <small>经营视角</small>
+    <strong>真实利润</strong>
+    <code>收入 − 商品成本 − 履约 − 退款损耗 − 广告 − 佣金 − 其他费用</code>
+    <p>适合判断这笔生意到底赚不赚钱。</p>
+  </section>
+</div>
+
+例如一笔业务有 `¥10,000` 广告消耗，同时还有 `¥5,000` 达人佣金。即使千川后台显示的广告 ROI 很漂亮，经营层仍然必须把两类真实成本一起看。
+
+这也是为什么做利润模型时，应该把数据分成两层：
+
+<div class="qc-truth-map">
+  <section>
+    <small>投放系统</small>
+    <strong>负责解释效果</strong>
+    <span>计划消耗</span><span>商品归因</span><span>素材归因</span><span>抖音号归因</span><span>ROI</span>
+  </section>
+  <section>
+    <small>订单 / 财务系统</small>
+    <strong>负责记录事实</strong>
+    <span>真实订单</span><span>退款</span><span>达人佣金</span><span>平台费用</span><span>最终结算</span>
+  </section>
+</div>
+
+**事实金额用来核算，归因数据用来解释。** 这两个层次一旦混在一起，就很容易出现重复计算、漏成本，或者为了匹配广告后台而修改真实订单事实。
+
+## 打开千川后台时，只问三个问题
+
+学完这两层以后，再看复杂的千川后台，可以先不管页面有多少按钮，只固定问三件事：
+
+<div class="qc-checklist">
+  <section><b>01</b><strong>我现在看的是什么层级？</strong><p>账户、计划、商品、抖音号、素材，还是直播间？</p></section>
+  <section><b>02</b><strong>这个数字是事实，还是归因？</strong><p>实际花费可以做账；商品、素材、抖音号更多是在解释花费和成交如何归属。</p></section>
+  <section><b>03</b><strong>我要回答的是投放问题，还是利润问题？</strong><p>优化广告看 ROI 和投放数据；核算利润回到订单、退款、佣金和财务结算。</p></section>
+</div>
+
+最后可以把整套知识压缩成一句话：
+
+<div class="qc-final">
+  <small>基础层</small><strong>先搞清楚钱是通过什么计划、什么商品、什么账号、什么内容花出去的。</strong>
+  <span>↓</span>
+  <small>进阶层</small><strong>再搞清楚成交为什么算给它、退款后还剩多少、佣金怎么发生，以及最后真正扣了多少钱。</strong>
+</div>
+
+前者是**投流结构**，后者是**经营核算**。把这两层分开，千川后台就不会再是一堆互相冲突的数字，而是一套分别回答不同问题的数据视图。
+
+## 资料与边界
+
+- [巨量学：抖音电商千川运营（初级）](https://school.oceanengine.com/premium/course/7336028836495435882/intro)：当前课程目录仍明确区分全域推商品、全域推直播、素材运营和投放数据分析。
+- [巨量引擎商业开放平台：巨量千川](https://open.oceanengine.com/tools/visual_debug.html?docId=1758439025795076)：可查到乘方商品计划、全域计划升级乘方、计划下素材、商品、抖音号及全域 / 乘方数据报表等能力。
+- [抖音电商学习中心：精选联盟服务协议（达人）](https://school.jinritemai.com/doudian/wap/article/103666)：说明满足条件时，商家可使用达人账号内含商家商品的图文、短视频、直播等内容进行商品全域投放。
+
+<style>{`
+  :root {
+    --qc-bg: #f7f9fc;
+    --qc-panel: #ffffff;
+    --qc-ink: #172033;
+    --qc-text: #42516a;
+    --qc-muted: #758198;
+    --qc-line: #dce4ef;
+    --qc-blue: #2f6df6;
+    --qc-blue-soft: #eef4ff;
+    --qc-cyan: #10a8b8;
+    --qc-cyan-soft: #e9fbfc;
+    --qc-violet: #7357d5;
+    --qc-violet-soft: #f2efff;
+    --qc-amber: #a76a0a;
+    --qc-amber-soft: #fff7e6;
+    --qc-green: #188b62;
+    --qc-green-soft: #eaf8f1;
+  }
+
+  html[data-theme="dark"] {
+    --qc-bg: #0f1520;
+    --qc-panel: #151e2b;
+    --qc-ink: #edf3ff;
+    --qc-text: #c7d2e4;
+    --qc-muted: #92a0b8;
+    --qc-line: #2c3a4f;
+    --qc-blue-soft: #162846;
+    --qc-cyan-soft: #113039;
+    --qc-violet-soft: #28213f;
+    --qc-amber-soft: #382a12;
+    --qc-green-soft: #17342a;
+  }
+
+  .qc-hero,
+  .qc-question-pair,
+  .qc-foundation-map,
+  .qc-thesis,
+  .qc-role-grid,
+  .qc-upgrade-flow,
+  .qc-cross-map,
+  .qc-lens-grid,
+  .qc-ledger-split,
+  .qc-advanced-track,
+  .qc-business-chain,
+  .qc-order-example,
+  .qc-roi-board,
+  .qc-truth-map,
+  .qc-checklist,
+  .qc-final {
+    color: var(--qc-ink);
+  }
+
+  .qc-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(18rem, .8fr);
+    gap: clamp(1.2rem, 4vw, 3rem);
+    margin: 1rem 0 2.2rem;
+    padding: clamp(1.4rem, 4vw, 3rem);
+    border: 1px solid var(--qc-line);
+    border-radius: 28px;
+    background:
+      radial-gradient(circle at 82% 10%, color-mix(in srgb, var(--qc-cyan) 18%, transparent), transparent 34%),
+      linear-gradient(145deg, var(--qc-panel), var(--qc-bg));
+    overflow: hidden;
+  }
+
+  .qc-kicker,
+  .qc-hero small,
+  .qc-question-pair small,
+  .qc-foundation-map small,
+  .qc-role-grid small,
+  .qc-cross-map small,
+  .qc-lens-grid small,
+  .qc-ledger-split small,
+  .qc-advanced-track small,
+  .qc-order-example small,
+  .qc-roi-board small,
+  .qc-truth-map small,
+  .qc-final small {
+    font-size: .76rem;
+    font-weight: 750;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--qc-muted);
+  }
+
+  .qc-hero__title {
+    margin: .55rem 0 .75rem;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.05;
+    font-weight: 850;
+    letter-spacing: -.045em;
+  }
+
+  .qc-hero__copy p,
+  .qc-foundation-map p,
+  .qc-role-grid p,
+  .qc-lens-grid p,
+  .qc-ledger-split p,
+  .qc-order-example p,
+  .qc-roi-board p,
+  .qc-checklist p {
+    margin: .6rem 0 0;
+    color: var(--qc-text);
+  }
+
+  .qc-hero__layers {
+    display: grid;
+    align-content: center;
+    gap: .65rem;
+  }
+
+  .qc-hero__layers section {
+    padding: 1.15rem 1.2rem;
+    border-radius: 18px;
+    border: 1px solid var(--qc-line);
+  }
+
+  .qc-hero__layers section strong { display: block; margin: .2rem 0 .35rem; font-size: 1.18rem; }
+  .qc-hero__layers section span { display: block; color: var(--qc-text); font-size: .92rem; }
+  .qc-hero__layers .is-foundation { background: var(--qc-blue-soft); }
+  .qc-hero__layers .is-advanced { background: var(--qc-violet-soft); }
+  .qc-hero__arrow { text-align: center; color: var(--qc-muted); font-weight: 800; }
+
+  .qc-question-pair,
+  .qc-role-grid,
+  .qc-lens-grid,
+  .qc-roi-board,
+  .qc-truth-map,
+  .qc-checklist {
+    display: grid;
+    gap: 1rem;
+    margin: 1.4rem 0 2rem;
+  }
+
+  .qc-question-pair,
+  .qc-roi-board,
+  .qc-truth-map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .qc-role-grid,
+  .qc-lens-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .qc-checklist { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  .qc-question-pair section,
+  .qc-role-grid section,
+  .qc-lens-grid section,
+  .qc-roi-board section,
+  .qc-truth-map section,
+  .qc-checklist section {
+    padding: 1.15rem;
+    border: 1px solid var(--qc-line);
+    border-radius: 18px;
+    background: var(--qc-panel);
+  }
+
+  .qc-question-pair strong,
+  .qc-role-grid strong,
+  .qc-lens-grid strong,
+  .qc-roi-board strong,
+  .qc-truth-map strong,
+  .qc-checklist strong { display: block; margin: .25rem 0 .55rem; }
+
+  .qc-question-pair span,
+  .qc-truth-map span {
+    display: inline-flex;
+    margin: .3rem .3rem 0 0;
+    padding: .28rem .5rem;
+    border-radius: 999px;
+    background: var(--qc-bg);
+    color: var(--qc-text);
+    font-size: .82rem;
+  }
+
+  .qc-foundation-map {
+    margin: 1.4rem 0 2rem;
+    padding: clamp(1rem, 3vw, 1.6rem);
+    border: 1px solid var(--qc-line);
+    border-radius: 22px;
+    background: var(--qc-bg);
+  }
+
+  .qc-foundation-map__root {
+    width: min(30rem, 100%);
+    margin: 0 auto;
+    padding: 1rem 1.2rem;
+    text-align: center;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--qc-blue), var(--qc-cyan));
+    color: white;
+  }
+
+  .qc-foundation-map__root small { color: rgba(255,255,255,.76); }
+  .qc-foundation-map__root strong { display: block; margin-top: .2rem; font-size: 1.2rem; }
+
+  .qc-foundation-map__split {
+    display: grid;
+    grid-template-columns: 1fr 2px 1fr;
+    height: 2.2rem;
+    width: 50%;
+    margin: 0 auto;
+  }
+  .qc-foundation-map__split span { border-bottom: 2px solid var(--qc-line); }
+  .qc-foundation-map__split span:first-child { border-right: 1px solid var(--qc-line); }
+  .qc-foundation-map__split span:last-child { border-left: 1px solid var(--qc-line); }
+  .qc-foundation-map__split i { background: var(--qc-line); }
+
+  .qc-foundation-map__branches {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(16rem, .7fr);
+    gap: 1rem;
+  }
+
+  .qc-foundation-map__branches > section {
+    padding: 1rem;
+    border: 1px solid var(--qc-line);
+    border-radius: 18px;
+    background: var(--qc-panel);
+  }
+  .qc-foundation-map header strong { display: block; font-size: 1.18rem; }
+  .qc-foundation-map header span { color: var(--qc-text); font-size: .9rem; }
+
+  .qc-mode-line {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    margin: .9rem 0;
+    padding: .65rem;
+    border-radius: 12px;
+    background: var(--qc-blue-soft);
+  }
+  .qc-mode-line i { color: var(--qc-muted); font-style: normal; font-size: .8rem; }
+
+  .qc-dimension-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .65rem;
+  }
+  .qc-dimension-grid div {
+    padding: .8rem;
+    border: 1px solid var(--qc-line);
+    border-radius: 14px;
+  }
+  .qc-dimension-grid strong,
+  .qc-dimension-grid span { display: block; }
+  .qc-dimension-grid strong { margin: .25rem 0; }
+  .qc-dimension-grid span { color: var(--qc-text); font-size: .8rem; line-height: 1.5; }
+
+  .qc-live-stack { display: grid; gap: .5rem; margin-top: .9rem; }
+  .qc-live-stack span {
+    padding: .6rem .75rem;
+    border-radius: 10px;
+    background: var(--qc-cyan-soft);
+    color: var(--qc-text);
+  }
+
+  .qc-thesis {
+    margin: 1.4rem 0 2rem;
+    padding: 1rem 1.15rem;
+    border-left: 4px solid var(--qc-blue);
+    background: var(--qc-blue-soft);
+    border-radius: 0 14px 14px 0;
+    color: var(--qc-text);
+  }
+  .qc-thesis strong { color: var(--qc-ink); }
+
+  .qc-role-grid section:nth-child(1) { background: var(--qc-blue-soft); }
+  .qc-role-grid section:nth-child(2) { background: var(--qc-green-soft); }
+  .qc-role-grid section:nth-child(3) { background: var(--qc-violet-soft); }
+  .qc-role-grid section:nth-child(4) { background: var(--qc-amber-soft); }
+  .qc-role-grid b { display: block; color: var(--qc-text); font-size: .88rem; }
+
+  .qc-upgrade-flow,
+  .qc-business-chain {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .65rem;
+    margin: 1.35rem 0 2rem;
+    padding: 1rem;
+    border: 1px solid var(--qc-line);
+    border-radius: 18px;
+    background: var(--qc-panel);
+    overflow-x: auto;
+  }
+  .qc-upgrade-flow span,
+  .qc-upgrade-flow strong,
+  .qc-business-chain span,
+  .qc-business-chain strong {
+    flex: 0 0 auto;
+    padding: .55rem .8rem;
+    border-radius: 10px;
+    background: var(--qc-blue-soft);
+  }
+  .qc-upgrade-flow strong { background: var(--qc-violet-soft); }
+  .qc-upgrade-flow i,
+  .qc-business-chain i { color: var(--qc-muted); font-style: normal; }
+
+  .qc-cross-map {
+    margin: 1.4rem 0 2rem;
+    padding: 1rem;
+    border: 1px solid var(--qc-line);
+    border-radius: 22px;
+    background: var(--qc-bg);
+  }
+  .qc-cross-map__plan {
+    width: min(22rem, 100%);
+    margin: 0 auto;
+    padding: 1rem;
+    text-align: center;
+    border-radius: 14px;
+    background: var(--qc-blue-soft);
+  }
+  .qc-cross-map__plan strong,
+  .qc-cross-map__plan span { display: block; }
+  .qc-cross-map__plan span { margin-top: .2rem; color: var(--qc-text); font-size: .84rem; }
+  .qc-cross-map__links { display: grid; grid-template-columns: repeat(3, 1fr); width: 67%; margin: 0 auto; height: 1.8rem; }
+  .qc-cross-map__links i { border-bottom: 2px solid var(--qc-line); }
+  .qc-cross-map__views { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; }
+  .qc-cross-map__views section { padding: .9rem; border: 1px solid var(--qc-line); border-radius: 14px; background: var(--qc-panel); }
+  .qc-cross-map__views strong,
+  .qc-cross-map__views span { display: block; }
+  .qc-cross-map__views span { margin-top: .3rem; color: var(--qc-text); font-size: .82rem; }
+
+  .qc-lens-grid section { position: relative; overflow: hidden; }
+  .qc-lens-grid section::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--qc-blue); }
+
+  .qc-ledger-split {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: .8rem;
+    margin: 1.4rem 0 2rem;
+  }
+  .qc-ledger-split section { padding: 1rem; border: 1px solid var(--qc-line); border-radius: 16px; }
+  .qc-ledger-split .is-fact { background: var(--qc-green-soft); }
+  .qc-ledger-split .is-attribution { background: var(--qc-violet-soft); }
+  .qc-ledger-split strong { display: block; margin: .25rem 0; }
+  .qc-ledger-split > div { color: var(--qc-muted); font-size: 1.4rem; font-weight: 850; }
+
+  .qc-advanced-track {
+    display: grid;
+    gap: .75rem;
+    margin: 1.4rem 0 2rem;
+  }
+  .qc-advanced-track section {
+    display: grid;
+    grid-template-columns: 2.2rem minmax(8rem, .28fr) 1fr;
+    align-items: center;
+    gap: .8rem;
+    padding: .9rem 1rem;
+    border: 1px solid var(--qc-line);
+    border-radius: 14px;
+    background: var(--qc-panel);
+  }
+  .qc-advanced-track section:nth-child(odd) { background: var(--qc-violet-soft); }
+  .qc-advanced-track span { color: var(--qc-text); }
+
+  .qc-order-example {
+    margin: 1.4rem 0 2rem;
+    padding: 1.1rem;
+    border: 1px solid var(--qc-line);
+    border-radius: 20px;
+    background: var(--qc-bg);
+  }
+  .qc-order-example__flow { display: flex; align-items: center; justify-content: center; gap: .55rem; flex-wrap: wrap; }
+  .qc-order-example__flow span,
+  .qc-order-example__flow strong { padding: .55rem .75rem; border-radius: 10px; background: var(--qc-blue-soft); }
+  .qc-order-example__flow strong { background: var(--qc-green-soft); }
+  .qc-order-example__costs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin-top: .9rem; }
+  .qc-order-example__costs section { padding: .9rem; border: 1px solid var(--qc-line); border-radius: 14px; background: var(--qc-panel); }
+  .qc-order-example__costs strong { display: block; margin-top: .25rem; }
+
+  .qc-roi-board code {
+    display: block;
+    margin: .7rem 0;
+    white-space: normal;
+    padding: .7rem;
+    border-radius: 10px;
+    background: var(--qc-bg);
+    color: var(--qc-ink);
+  }
+  .qc-roi-board section:first-child { background: var(--qc-blue-soft); }
+  .qc-roi-board section:last-child { background: var(--qc-green-soft); }
+
+  .qc-truth-map section:first-child { background: var(--qc-violet-soft); }
+  .qc-truth-map section:last-child { background: var(--qc-green-soft); }
+
+  .qc-checklist section b {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--qc-blue-soft);
+    color: var(--qc-blue);
+  }
+
+  .qc-final {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: .4rem .8rem;
+    margin: 1.6rem 0 2rem;
+    padding: 1.2rem;
+    border: 1px solid var(--qc-line);
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--qc-blue-soft), var(--qc-violet-soft));
+  }
+  .qc-final > span { grid-column: 1 / -1; text-align: center; color: var(--qc-muted); }
+
+  @media (max-width: 900px) {
+    .qc-hero,
+    .qc-foundation-map__branches,
+    .qc-question-pair,
+    .qc-roi-board,
+    .qc-truth-map { grid-template-columns: 1fr; }
+    .qc-role-grid,
+    .qc-lens-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .qc-dimension-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .qc-foundation-map__split { display: none; }
+  }
+
+  @media (max-width: 640px) {
+    .qc-hero { border-radius: 20px; padding: 1.15rem; }
+    .qc-hero__title { font-size: 2.15rem; }
+    .qc-role-grid,
+    .qc-lens-grid,
+    .qc-dimension-grid,
+    .qc-cross-map__views,
+    .qc-checklist,
+    .qc-order-example__costs { grid-template-columns: 1fr; }
+    .qc-cross-map__links { display: none; }
+    .qc-ledger-split { grid-template-columns: 1fr; }
+    .qc-ledger-split > div { text-align: center; }
+    .qc-advanced-track section { grid-template-columns: 2rem 1fr; }
+    .qc-advanced-track section span { grid-column: 1 / -1; padding-left: 2.8rem; }
+    .qc-final { grid-template-columns: 1fr; }
+    .qc-business-chain { justify-content: flex-start; }
+  }
+`}</style>
