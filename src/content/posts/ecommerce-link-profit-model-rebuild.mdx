@@ -1,283 +1,333 @@
 ---
-title: "抖音链接利润模型：一条商品链接到底赚不赚钱，应该怎么算"
-description: "从 T-21～T-8 成熟金额退款率、ERP 实际发货、包裹级沉没成本、拍单与售后损耗，到全域、直播和达人实际花费，完整拆解抖音链接预测利润的计算链路。"
+title: "电商利润模型重构：事实只记录，预测只留给尚未发生的退款"
+description: "旧模型用上月利润率推上周、再用上周利润率推近 7 天，最大的问题不是公式，而是拿预测覆盖已经发生的事实。本文把电商利润拆成事实、指标、预测三层：订单、成本、投流和已退款只记事实，只有尚未发生的退款风险才预测。"
 date: 2026-08-10T16:47:00+08:00
-updated: 2026-08-22T22:43:00+08:00
+updated: 2026-09-12T20:10:00+08:00
 category: "实践"
 tags:
   - "数据处理"
   - "利润核算"
   - "电商运营"
-minutes: 14
+  - "数据建模"
+minutes: 15
 featured: false
 pinned: false
 draft: false
 private: false
 ---
 
-> **更新说明：** 本文目前仍是阶段性版本。近期部分利润规则、费用归属和计算口径已经进一步完善，但这些最新调整还没有同步到文章中。阅读时请以“当时版本的模型思路”为准，后续会按最新口径重新校正和更新。
-
-<div class="profit-hero profit-hero--compact" aria-label="旧模型和当前模型的核心区别">
+<div class="profit-hero" aria-label="事实核算和预测核算的核心区别">
   <div class="profit-hero__copy">
-    <span class="profit-eyebrow">抖音链接利润模型</span>
-    <div class="profit-hero__title">同一条链接，<br />旧模型说赚，穿透后却亏</div>
-    <p>旧模型把历史利润率当成代理变量；当前模型直接用本期发货、采购、物流、售后和推广事实重新核算。</p>
+    <span class="profit-eyebrow">电商利润模型 · 数据建模</span>
+    <div class="profit-hero__title">过去负责被记录，<br />未来负责被计算</div>
+    <p>近 7 天已经发生的销售、采购、投流、物流和退款，不需要再用历史利润率去猜。事实直接核算；真正需要预测的，只剩尚未发生、但仍可能发生的退款风险。</p>
   </div>
   <div class="profit-hero__verdict">
     <section class="is-old">
-      <small>旧模型 · 用过去推现在</small>
-      <code>历史利润率 × 本期推广销售额</code>
-      <strong>用过去猜现在</strong>
-      <span>当结构变化时，利润判断容易失真</span>
+      <small>旧模型 · 预测覆盖事实</small>
+      <code>上月利润率 → 上周利润率 → 近 7 天利润</code>
+      <strong>越算越远</strong>
+      <span>明明已经发生，还在拿历史比例往前推</span>
     </section>
-    <div class="profit-hero__flip"><span>同一周</span><b>经营方向完全相反</b></div>
+    <div class="profit-hero__flip"><span>同样是利润表</span><b>数据哲学完全不同</b></div>
     <section class="is-new">
-      <small>新模型 · 穿透本期真实数据</small>
-      <code>本期事实数据 → 当前利润</code>
-      <strong>重新核算</strong>
-      <span>每一项收入和支出都能回到事实来源</span>
+      <small>新模型 · 事实 + 局部预测</small>
+      <code>本期真实发生 + 未决退款风险</code>
+      <strong>能核算就不预测</strong>
+      <span>预测只补未来的不确定性，不改写已经发生的事情</span>
     </section>
   </div>
 </div>
 
-本文记录的是一套实际用于抖音商品链接核算的利润模型。主利润颗粒度是 `商品ID / 商品链接`，利润周期取最近 7 个完整自然日 `T−7 ～ T−1`；退款风险不直接拿本期退货去除本期发货，而是单独使用 `T−21 ～ T−8` 的成熟发货样本估计。
+这篇文章最早来自一套抖音商品链接利润表的重构。做着做着才发现，真正需要解决的根本不是“抖音怎么算利润”，而是一个更基础的数据建模问题：**什么应该记录为事实，什么只是指标，什么才有资格叫预测。**
 
-旧方法并不是完全没有订单成本。它能够查到采购、快递、后勤等数据，只是先把这些明细汇总成上个自然周的链接利润，再压缩成一个“历史利润率”。到了本周，真实明细反而不再参与主计算，模型改用历史利润率去乘推广销售额。
+旧方法最让我无法接受的一点，是先用上月利润率去估上周利润，再由上周的估算结果形成一个新的利润率，继续去估最近 7 天利润。
 
-这一步压缩看起来让表格变简单了，却同时丢掉了 SKU 结构、退款批次、包裹归属、售后损耗和当期推广成本。**真实数据明明存在，却先被压成平均数，再用平均数猜回本期结果。**
+把话说直白一点：**最近 7 天已经发生了，还预测什么？**
+
+订单卖了多少、ERP 发了多少、采购成本多少、广告实际花了多少、物流实际花了多少、已经退了多少，这些都有真实数据。能拿到事实，就应该直接用事实核算。历史利润率最多用来做比较、预警和解释，不应该反过来替代本期事实。
 
 <div class="profit-thesis">
-  <span>重做模型前，先回答四个问题</span>
-  <strong>是不是同一批订单？是不是同一个周期？这笔钱会不会随退款消失？它真实发生在订单、包裹还是商品链接上？</strong>
+  <span>这次重构真正留下的原则</span>
+  <strong>数据库保存世界发生过什么，而不是保存我们当时觉得世界会变成什么。事实不可改写；预测可以每天重算。</strong>
 </div>
 
-## 先看最终怎么算
+## 先把三层数据分开：事实、指标、预测
 
-这套模型最终只需要记住两层：
+很多利润模型的问题，不是公式不会写，而是把三种完全不同的东西混到了一列里。
 
-<div class="profit-equation-stack profit-equation-stack--lead">
-  <section><small>第一层 · 总成本</small><code>净采购成本 + 店铺杂费 + 订单沉没成本 + 售后损耗 + 拍单总成本 + 未税总推广花费</code></section>
-  <section><small>第二层 · 预测利润</small><code>净销售额 − 总成本 − 5% 保留</code></section>
-  <section><small>利润率</small><code>预测利润 ÷ 退款前未税销售额</code></section>
+<div class="profit-equation-stack" aria-label="事实、指标、预测三层模型">
+  <section>
+    <small>事实层 · What happened</small>
+    <strong>已经真实发生</strong>
+    <code>销售额 / 发货件数 / 采购成本 / 广告花费 / 物流费 / 已退款金额 / 售后费用</code>
+  </section>
+  <section>
+    <small>指标层 · What it means</small>
+    <strong>对事实的解释</strong>
+    <code>利润率 / ROI / 退款率 / 转化率 / 客单价 / 费用率</code>
+  </section>
+  <section>
+    <small>预测层 · What may happen</small>
+    <strong>未来仍未确定</strong>
+    <code>当前订单未来可能继续发生的退款 / 退货，以及这些退款带来的净利润影响</code>
+  </section>
 </div>
 
-真正容易出错的不是加减法，而是每个数字该不该乘退款率、该按订单还是包裹归属、该取本期事实还是历史代理值。先用一组教学数字把整条链跑完，再拆这些细节。
+事实和指标也不是一回事。比如“这周广告实际花了 10 万”是事实，“广告费用率 12%”是指标；“这批订单最终可能再退 3 万”才是预测。
 
-<div class="profit-runtime" aria-label="链接利润公式完整演算">
-  <header>
-    <span><small>含税销售额</small><strong>¥22,600</strong></span>
-    <span><small>金额退款率 R</small><strong>10%</strong></span>
-    <span><small>含税推广花费</small><strong>¥5,300</strong></span>
-  </header>
-  <div class="profit-runtime__stages">
-    <section><small>01 · 价税分离</small><code>¥22,600 ÷ 1.13</code><strong>未税销售额 ¥20,000</strong></section>
-    <section><small>02 · 同批退款风险</small><code>¥20,000 × 90%</code><strong>净销售额 ¥18,000</strong></section>
-    <section><small>03 · 店铺杂费</small><code>¥20,000 × 4% × 90%</code><strong>进入总成本 ¥720</strong></section>
-    <section><small>04 · 推广转未税</small><code>¥5,300 ÷ 1.06</code><strong>未税推广 ¥5,000</strong></section>
-    <section><small>05 · 5% 保留</small><code>¥18,000 × 5%</code><strong>单独保留 ¥900</strong></section>
-  </div>
-  <div class="profit-runtime__unknowns">
-    <span>采购 ¥8,000 × 90% = 净采购 ¥7,200</span><span>订单沉没 ¥650</span><span>售后损耗 ¥130</span><span>拍单总成本 ¥200</span>
-    <b>总成本 = ¥7,200 + ¥720 + ¥650 + ¥130 + ¥200 + ¥5,000 = ¥13,900</b>
-  </div>
-  <div class="profit-runtime__formula">
-    <small>最终结果</small>
-    <code><span>预测利润 = ¥18,000 − ¥13,900 − ¥900 = ¥3,200</span><span>利润率 = ¥3,200 ÷ ¥20,000 = 16%</span><span>总费用率 = ¥13,900 ÷ ¥20,000 = 69.5%</span></code>
-  </div>
-</div>
+指标可以重算。预测更应该重算。**只有事实应该作为可追溯的历史底座稳定保存。**
 
-上面所有数字都是**纯教学示意**，不代表真实经营结果。关键在于顺序：销售额、采购成本和店铺杂费先统一承受退款风险；已经发生的物流、售后、拍单和推广支出直接全额扣除；5% 保留最后单独扣减。
+## 旧模型最大的问题：一层预测继续喂给下一层预测
 
-## 旧模型怎样把订单明细压成一个猜测
+旧模型大概是这样的：
 
-旧链路最关键的问题，不是步骤少，而是把大量明细压成一个承担过多含义的“历史利润率”，再拿它解释下一周期。
-
-<div class="profit-old-model" aria-label="旧利润模型的压缩链路和四类错位">
+<div class="profit-old-model" aria-label="旧模型从上月利润率一路预测到最近七天利润">
   <div class="profit-old-model__flow">
-    <span>上周订单明细</span><i>→</i><span>上周链接利润</span><i>→</i><strong>历史利润率</strong><i>→</i><span>× 本周推广销售</span><i>→</i><strong>估算本周利润</strong>
+    <span>上月真实 / 半真实数据</span><i>→</i><strong>上月利润率</strong><i>→</i><span>估上周利润</span><i>→</i><strong>上周利润率</strong><i>→</i><span>估最近 7 天利润</span>
   </div>
   <div class="profit-old-model__risks">
-    <section><b>01 · 人群错位</b><p>退款分子和发货分母不是同一批订单。</p></section>
-    <section><b>02 · 时间错位</b><p>售价、SKU、采购、退款和广告都可能已经变化。</p></section>
-    <section><b>03 · 成本性质错位</b><p>已经真实花掉的钱被错误地继续乘退款率。</p></section>
-    <section><b>04 · 计算粒度错位</b><p>包裹、商品行和广告归因被混在同一层计算。</p></section>
+    <section><b>01 · 事实丢失</b><p>最近 7 天明明已经发生，却不再读取本期真实销售和真实成本。</p></section>
+    <section><b>02 · 误差传递</b><p>上月利润率只要偏一点，偏差会继续进入上周，再进入最近 7 天。</p></section>
+    <section><b>03 · 无法回溯</b><p>几年后只剩一个估出来的利润，看不到当时真实发生了什么。</p></section>
+    <section><b>04 · 决策失真</b><p>SKU、价格、投流、采购和退款结构已经变化，历史平均数却还在替现在做决定。</p></section>
   </div>
 </div>
 
-如果历史利润率已经包含上周广告费，它本身就是上周广告效率、商品结构和退款情况共同产生的结果。拿它推本周时，再扣本周广告费会重复口径；不扣又无法反映本周真实花费。Excel 能顺利算出数字，并不代表数字具有经营含义。
+这不是“预测模型做得不够准”，而是预测对象本身就错了。
 
-## 退款率：先锁定一批订单，再看这批订单后来怎样
+**预测应该解决未知问题。已经发生的事情，不属于未知。**
 
-旧算法如果拿“今天收到的 10 件历史退货”去除以“今天刚发出的 5 件新货”，会得到 `200%`。问题不是 Excel 除法，而是这两批货根本不是同一批订单。当前模型先锁定成熟发货样本，再回看这批订单后来关闭了多少。
+### 一个最简单的例子：工资为什么不能只记 70 元
 
-<div class="profit-window" aria-label="利润周期与成熟退款率窗口">
-  <div class="profit-window__ticks"><span>T−21</span><span>T−8</span><span>T−7</span><span>T−1</span><span>今天</span></div>
-  <div class="profit-window__bands">
-    <section class="is-mature"><small>14 个完整自然日</small><strong>成熟退款样本</strong><span>只负责估计 R</span></section>
-    <section class="is-current"><small>最近 7 个完整自然日</small><strong>本期利润数据</strong><span>销售、成本与推广</span></section>
-    <section class="is-today"><small>排除</small><strong>今天</strong><span>数据仍在变化</span></section>
-  </div>
+假设我想预测 9 月能存多少钱。8 月存款率是 30%，9 月 1 日实际工资是 100 元。
+
+如果为了方便，直接在笔记里记：
+
+```text
+9 月 1 日：70 元
+9 月 2 日：65 元
+9 月 3 日：66 元
+```
+
+当下看，好像直接得到了“预计能存多少钱”。但一年以后回头看，我已经不知道 9 月 1 日的真实工资到底是 100、95 还是别的数字。
+
+正确的做法应该是：
+
+```text
+事实：9 月 1 日工资 = 100 元
+参数：参考存款率 = 30%
+预测：预计可存 = 70 元
+```
+
+以后存款率变成 25% 或 35%，预测随时可以重新算；事实里的 100 元永远不需要改。
+
+<div class="profit-proof-grid" aria-label="事实和预测混写的四个例子">
+  <section><span>工资</span><code>工资 100 → 预计存 70</code><p>100 是事实，70 是预测。不能为了预测存款，把真实工资覆盖成 70。</p></section>
+  <section><span>库存</span><code>现货 100 → 预计 7 天后剩 40</code><p>100 是当前库存事实，40 是未来库存预测。销量预期变了，40 可以变，100 不能被改写。</p></section>
+  <section><span>投流</span><code>实付 GMV 30 万 → 预计退款后 25 万</code><p>30 万仍然是支付事实。25 万只能叫预计最终有效销售，不能反过来当原始成交额。</p></section>
+  <section><span>利润</span><code>当前事实利润 8 万 → 预计最终利润 6.5 万</code><p>差额来自未来可能退款。要同时保留“截至现在发生了什么”和“最终可能变成什么”。</p></section>
 </div>
 
-主利润公式使用**金额退款率**，件数退款率只用于经营观察。新品或低销量链接如果没有成熟样本，当前 Excel 可以用 `0` 作为模型默认值，但它只表示“暂时没有样本”，不能被解释成已经证明退款率为 0%。如果同批金额口径仍出现 `R > 100%`，应优先检查重复、负数、商品归属和状态映射，而不是简单封顶。
+## 近 7 天利润应该怎么做：发生的按事实，没发生的才预测
 
-同样不能先把本期已经关闭的订单从经营基数里删掉，再对剩余部分套一次完整的历史 `R`。成熟金额退款率本来就在预测一批订单最终会关闭多少，先删再乘会让同一项退款风险被扣两次。
+电商利润的正确边界其实很简单。
 
-## 成本要按“会不会随退款消失”分轨
-
-退款不是一把对所有费用同时打八折的开关。新模型把经营价值、已发生支出和 5% 保留分成三条轨道。
-
-<div class="profit-cost-lanes" aria-label="三类利润计算轨道">
+<div class="profit-cost-lanes" aria-label="利润核算中的事实和预测边界">
   <section class="is-variable">
-    <small>轨道 A · 参与 (1-R)</small>
-    <strong>随最终有效销售一起变化</strong>
-    <span>未税销售额</span>
-    <span>采购成本</span>
-    <span>退款前店铺杂费</span>
-    <code>(未税销售额 − 采购成本 − 店铺杂费) × (1-R)</code>
+    <small>轨道 A · 收入事实</small>
+    <strong>已经发生多少，就记录多少</strong>
+    <span>支付 / 发货销售额</span>
+    <span>已经发生的退款</span>
+    <span>已经确认的取消 / 关闭</span>
+    <code>不使用历史利润率改写本期销售额</code>
   </section>
   <section class="is-sunk">
-    <small>轨道 B · 全额扣除</small>
-    <strong>已经真实发生，不能再乘退款率</strong>
-    <span>订单沉没成本</span>
-    <span>售后损耗</span>
-    <span>拍单总成本</span>
-    <span>未税总推广花费</span>
+    <small>轨道 B · 成本事实</small>
+    <strong>已经真实花掉的钱直接进入核算</strong>
+    <span>采购与履约</span>
+    <span>广告 / 投流</span>
+    <span>物流 / 后勤</span>
+    <span>售后与其它实际费用</span>
+    <code>已发生支出不因为预计退款而凭空消失</code>
   </section>
   <section class="is-reserve">
-    <small>轨道 C · 单独保留</small>
-    <strong>5% 保留不是总成本</strong>
-    <span>净销售额 × 5%</span>
-    <span>参与最终利润扣减</span>
-    <span>不参与销售额费用率</span>
-    <code>未税销售额 × (1-R) × 5%</code>
+    <small>轨道 C · 退款预测</small>
+    <strong>只补还没有发生的那部分</strong>
+    <span>未成熟订单未来退款</span>
+    <span>未来退货带来的成本冲回</span>
+    <span>退款关联费用的未来变化</span>
+    <code>预测的是退款净影响，不是整张利润表</code>
   </section>
 </div>
 
-### 一个包裹只能发生一份履约成本
+因此利润表最好同时给出两个结果：
 
-快递和后勤的真实发生单位是物流包裹，不是 Excel 商品行。以一个非顺丰包裹同时包含 A、B、C 三个链接为例：
+<div class="profit-equation-stack profit-equation-stack--formula">
+  <section><small>截至当前事实利润</small><code>当前已实现收入 − 当前已发生成本</code></section>
+  <section><small>未来退款净影响</small><code>预计未来退款损失 − 可冲回采购 / 费用 + 不可回收售后成本</code></section>
+  <section><small>预计最终利润</small><code>截至当前事实利润 − 未来退款净影响</code></section>
+</div>
 
-<div class="profit-package-lab" aria-label="一个包裹包含三个链接时的成本计算">
-  <section class="profit-package-lab__parcel">
-    <small>真实物流单号</small>
-    <strong>1 个包裹</strong>
-    <span>非顺丰快递 ¥3.5</span>
-    <span>后勤分摊 ¥9.5</span>
-    <b>公司实际支出：¥13</b>
-  </section>
-  <div class="profit-package-lab__links">
-    <small>包裹内 3 个归属 Key</small>
-    <span>订单号 + 链接 A</span>
-    <span>订单号 + 链接 B</span>
-    <span>订单号 + 链接 C</span>
-  </div>
-  <div class="profit-package-lab__results">
-    <section class="is-wrong"><small>按商品行重复收费</small><strong>¥13 × 3 = ¥39</strong><span>多算 ¥26</span></section>
-    <section class="is-right"><small>先定包裹，再分摊</small><strong>三条链接分摊合计 = ¥13</strong><span>总成本守恒</span></section>
+这样一来，预测参数每天变化没有任何问题。变化的是“预计最终利润”，不是昨天真实发生的销售额、广告费和采购成本。
+
+## 退款率可以预测，但它只能待在预测层
+
+退款是这个模型里真正具有时间滞后的部分。今天下的订单，未来几天仍可能退款；最近 7 天的订单还没有完全成熟，所以最终退款金额确实未知。
+
+这时候可以用更成熟的一批历史订单估计风险。例如某个业务可以用 `T−21 ～ T−8` 的订单作为成熟样本，再把得到的金额退款率用于评估最近 7 天仍未成熟订单的未来退款风险。
+
+<div class="profit-window" aria-label="成熟退款样本与最近七天事实窗口">
+  <div class="profit-window__ticks"><span>T−21</span><span>T−8</span><span>T−7</span><span>T−1</span><span>今天</span></div>
+  <div class="profit-window__bands">
+    <section class="is-mature"><small>成熟样本</small><strong>估计退款风险 R</strong><span>回答：类似订单最终通常会退多少</span></section>
+    <section class="is-current"><small>最近 7 天</small><strong>记录真实经营事实</strong><span>销售、成本、投流、已发生退款都直接取事实</span></section>
+    <section class="is-today"><small>未决部分</small><strong>只预测未来退款</strong><span>不覆盖事实</span></section>
   </div>
 </div>
 
-正式逻辑先按物流单号确认一次快递和后勤，再按该包裹下应承担成本的 `订单号 + 商品ID` Key 数平均分摊。赠品当前不单独获得分摊份额。
+这里有一个非常重要的区别：**成熟退款率是风险参数，不是最近 7 天的“真实退款率”。**
 
-### 没有正常销售收入，也可能有真实成本
+成熟窗口每天向前滚动，`R` 会变化，这是正常的；因此“预计最终利润”每天也可能变化。但是近 7 天每天的销售额、已发生退款、实际广告花费、真实采购和物流成本，不应该因为 `R` 变化而跟着被改写。
 
-拍单 / HS 的原则很简单：**假的收入拿掉，真的成本留下。** 拍单不计正常经营收入和成交件数，但拍单采购、税额和店铺杂费仍然保留；快递与后勤继续只在“订单沉没成本”中计算一次，不能重复扣除。
+如果进度表需要每天展示预测，就每天重新计算预测层；事实层不动。
 
-补发、换货同样如此：销售额可能是 `0`，但采购、快递和后勤都已经真实发生，所以不能因为“没有销售收入”就把整条 ERP 记录过滤掉。
+同样，不能把已经发生的退款和“完整退款率 × 全部销售额”再扣一遍。更合理的表达是：
 
-## 新模型的数据怎样汇到一条链接上
+```text
+预计最终退款 = 已发生退款 + 对仍未成熟 / 未决订单的未来退款估计
+```
 
-新模型不再让历史利润率充当代理变量，而是让每类数据只回答自己擅长的问题，最后统一按商品链接汇总。
+历史样本具体取多少天、退款成熟需要多久，可以根据平台和品类调整。`T−21 ～ T−8` 只是一个业务实现示例，不是电商行业的固定常数。
 
-<div class="profit-data-map" aria-label="链接利润模型的数据处理流程">
-  <div class="profit-data-map__sources profit-data-map__sources--compact">
-    <section>
-      <small>T−7 ～ T−1</small>
-      <strong>ERP 实际发货</strong>
-      <span>销售额 / 采购 / 拍单</span>
-    </section>
-    <section>
-      <small>T−21 ～ T−8</small>
-      <strong>成熟发货 + 平台状态</strong>
-      <span>同批发货 → 金额退款率 R</span>
-    </section>
-    <section>
-      <small>本期真实发生</small>
-      <strong>发货与退货物流</strong>
-      <span>沉没成本 / 售后损耗</span>
-    </section>
-    <section>
-      <small>含税实际费用</small>
-      <strong>全域 + 直播 + 达人</strong>
-      <span>实际推广支出</span>
-    </section>
+## 抖音只是一个案例，这套原则适用于所有平台
+
+抖音、天猫、京东、拼多多、小红书的字段不同，利润核算的底层原则并没有不同。
+
+<div class="profit-data-map" aria-label="通用电商利润数据模型">
+  <div class="profit-data-map__sources">
+    <section><small>订单事实</small><strong>平台订单 / ERP 发货</strong><span>成交、发货、商品、SKU、数量、金额</span></section>
+    <section><small>成本事实</small><strong>采购 / 物流 / 后勤</strong><span>实际采购成本、包裹成本、补发换货成本</span></section>
+    <section><small>售后事实</small><strong>退款 / 退货 / 售后</strong><span>已经发生多少就记录多少</span></section>
+    <section><small>推广事实</small><strong>广告 / 达人 / 直播</strong><span>平台实际扣费和真实归属</span></section>
   </div>
   <div class="profit-data-map__merge">
     <span aria-hidden="true">↓</span>
-    <section><small>统一归属</small><strong>商品ID / 商品链接</strong><code>订单与商品：订单号 + 商品ID</code></section>
+    <section><small>统一归属与核算</small><strong>订单 / 商品 / SKU / 链接 / 直播间等业务维度</strong><code>先保留底层事实，再按需要汇总</code></section>
     <span aria-hidden="true">↓</span>
   </div>
   <div class="profit-data-map__outputs">
-    <span>净销售额</span><span>总成本</span><span>5% 保留</span><strong>预测利润</strong><strong>利润率</strong>
+    <span>事实收入</span><span>事实成本</span><span>已退款</span><strong>未来退款风险</strong><strong>预计最终利润</strong>
   </div>
 </div>
 
-直播链接利润只是在同一算法上增加 `直播间名称` 维度，不另建一套利润公式。推广后台的成交金额、ROI、点击率和 PPC 继续保留，但只负责解释投放表现，不直接冒充 ERP 真实发货利润。
+平台不同，只是“事实从哪里来”和“用什么 Key 归属”不同，不应该因此每个平台再发明一套“历史利润率乘当前销售额”的代理模型。
 
-文中的 `1.13` 和 `1.06` 是当前内部核算使用的价税分离系数，不是永远固定的通用常数；财务税率或发票口径变化时，模型也必须同步调整。
+### 事实也必须按真实发生单位归属
 
-## 最终一张表，要同时看见结果、来源和异常
+“只存事实”不等于“把所有原始数据直接 SUM 一遍”。事实还需要正确的颗粒度。
 
-新版链接利润表不应该只给一个利润数字。它需要保留足够的中间结果，让使用者能从“亏了多少”继续追到“为什么亏”。
+比如一个包裹里同时有键盘、鼠标和其它商品，真实快递费只发生了一次。不能因为 ERP 里有三行商品，就把一份快递费重复算三次。正确做法是先在包裹层确认真实支出，再按照明确规则分摊到商品或链接。
 
-<div class="profit-sheet profit-sheet--compact" aria-label="新版链接利润表的字段分区">
+拍单、补发、换货也是一样。可能没有正常销售收入，但采购、物流、后勤确实发生了：**假的收入要拿掉，真的成本要留下。**
+
+这些问题看起来和“事实 / 预测”是两回事，其实本质完全一样：先尊重真实发生的业务对象，再做计算。
+
+## 历史利润率不是没用，只是别拿它代替现在
+
+历史利润率应该保留，而且很有价值。但它应该做的是“比较”，不是“代替”。
+
+<div class="profit-decision-path" aria-label="历史利润率正确用途">
+  <section><small>用途 01</small><strong>趋势比较</strong><p>本周利润率比上周、上月是改善还是恶化。</p></section>
+  <section><small>用途 02</small><strong>异常预警</strong><p>当前利润率突然偏离历史区间时，提示进一步排查。</p></section>
+  <section><small>用途 03</small><strong>原因解释</strong><p>继续拆价格、SKU、退款、广告、采购和履约，解释为什么发生变化。</p></section>
+</div>
+
+最不应该做的是：
+
+```text
+因为上个月利润率是 18%
+所以先假设上周也差不多
+再用“估出来的上周利润率”去估最近 7 天
+```
+
+这等于用过去的解释，替换现在的事实。
+
+## 利润表最好把“事实结果”和“预测结果”同时摆出来
+
+一张真正可追溯的利润表，不应该只有一个“利润”字段。
+
+<div class="profit-sheet" aria-label="利润表建议字段分区">
   <section class="is-result">
-    <small>01 · 结果</small>
-    <strong>先回答赚不赚钱</strong>
-    <span>净销售额</span><span>总成本</span><span>5% 保留</span><span>预测利润</span><span>利润率</span>
+    <small>01 · 事实区</small>
+    <strong>截至当前真实发生了什么</strong>
+    <span>销售额</span><span>已退款</span><span>采购成本</span><span>推广花费</span><span>物流售后</span><span>事实利润</span>
   </section>
   <section>
-    <small>02 · 原因</small>
-    <strong>看利润为什么变成这样</strong>
-    <span>退款率</span><span>采购</span><span>推广</span><span>履约 / 售后</span><span>拍单</span>
+    <small>02 · 预测区</small>
+    <strong>只放未来尚未确定的退款风险</strong>
+    <span>成熟退款率</span><span>未成熟订单暴露</span><span>预计未来退款</span><span>退款净影响</span>
   </section>
   <section class="is-quality">
-    <small>03 · 异常</small>
-    <strong>明确什么时候不能直接相信利润</strong>
-    <span>缺采购成本</span><span>无成熟退款样本</span><span>商品归属近似</span><span>零销售额亏损</span>
+    <small>03 · 结果与质量</small>
+    <strong>把“现在”和“最终可能怎样”明确区分</strong>
+    <span>截至当前事实利润</span><span>预计最终利润</span><span>缺失成本</span><span>无成熟退款样本</span><span>归属异常</span>
   </section>
 </div>
 
-<div class="profit-decision-path">
-  <section><small>先看商品本身</small><strong>扣推广前已经为负</strong><p>优先查售价、采购、包裹、拍单、售后和退款结构。</p></section>
-  <section><small>再看广告影响</small><strong>扣推广前为正，最终利润为负</strong><p>商品有贡献，但全域、直播或达人实际花费把利润吃掉了。</p></section>
-  <section><small>最后看放量</small><strong>最终利润仍为正</strong><p>再结合 ROI、PPC、点击率判断是否还有放量空间。</p></section>
-</div>
+这样看表的人能马上知道：哪一部分是已经发生的，哪一部分还会继续变化。
 
-## 怎么证明这张表算对了
+如果几个月后回来复盘，也可以重新计算当时的利润，而不是面对一堆已经被预测覆盖过的历史数字。
 
-利润模型不能只检查某个单元格公式。至少要同时通过四组守恒关系。
+## 如果业务真的需要保存预测，就保存“预测快照”
 
-<div class="profit-proof-grid">
-  <section><span>核心恒等式</span><code>预测利润 = 净销售额 − 总成本 − 5% 保留</code><p>5% 保留不塞进总成本。</p></section>
-  <section><span>包裹成本守恒</span><code>Σ 链接分摊 = 包裹快递费 + ¥9.5</code><p>一个物流单号只发生一次履约成本。</p></section>
-  <section><span>推广花费守恒</span><code>含税推广 = 全域 + 直播 + 达人</code><p>三类真实费用同时出现不是冲突。</p></section>
-  <section><span>销售额费用率守恒</span><code>采购% + 推广% + 沉没% + 售后% + 拍单% + 其它% = 总成本 ÷ 未税销售额</code><p>各项分母都是未税销售额；5% 保留不参与费用率。</p></section>
+“数据只存事实”并不意味着预测结果永远不能落库。
+
+如果业务要研究：
+
+> 9 月 1 日的时候，我们当时预测月底会赚多少？
+
+那么预测当然可以保存，但应该和事实彻底分开，至少带上：
+
+```text
+预测时间 forecast_at
+预测对象 target_period / target_key
+当时使用的退款率 refund_rate
+预计未来退款 expected_future_refund
+预计最终利润 expected_final_profit
+模型版本 model_version
+```
+
+第二天参数变了，就新增第二天的预测快照，而不是修改 9 月 1 日的订单事实。
+
+这时候系统同时拥有两种历史：
+
+- **真实历史**：最后到底发生了什么。
+- **认知历史**：在当时已知信息下，我们曾经怎样判断未来。
+
+两者都有价值，但绝不能混成同一个字段。
+
+## 怎么证明模型没有再次走回老路
+
+<div class="profit-proof-grid" aria-label="利润模型的验证规则">
+  <section><span>事实可重放</span><code>原始订单 + 成本 + 已退款 → 截至当前事实利润</code><p>不依赖上月或上周利润率，也能重新算出当前结果。</p></section>
+  <section><span>预测可替换</span><code>事实不变，只替换退款预测参数</code><p>变化的只能是预计未来退款和预计最终利润。</p></section>
+  <section><span>历史不改写</span><code>今天 R 变化 ≠ 昨天销售额变化</code><p>任何预测参数都不能回写覆盖订单、成本和已退款事实。</p></section>
+  <section><span>误差不递归</span><code>预测结果不能再作为下一期事实输入</code><p>下一期继续读取下一期真实数据，而不是拿上一期预测利润率继续推。</p></section>
 </div>
 
 <div class="profit-boundaries">
-  <header><span>模型边界也必须可见</span><strong>不追求表面上的 100% 精确</strong></header>
-  <div><b>订单号 + 商品ID</b><p>是当前最细稳定公共 Key，但极少数订单仍可能缺少更细 SKU / 子单归属。</p></div>
-  <div><b>缺采购成本</b><p>必须标记“不可计算”，不能把缺失当成真实 0 成本。</p></div>
-  <div><b>售后历史不足</b><p>Excel 至少保留近 60 天发货用于回查，超出窗口的损耗仍可能漏归属。</p></div>
-  <div><b>无商品证据的费用</b><p>不随机塞给某条链接；当前 Excel 也不为少量边界建立复杂概率分摊。</p></div>
-  <div><b>零销售额链接</b><p>未税销售额为 0 时单独展示亏损状态，不制造一个普通百分比利润率。</p></div>
+  <header><span>最终原则</span><strong>能拿到事实，就不要预测；只有未来的不确定性，才需要模型。</strong></header>
+  <div><b>事实</b><p>订单、发货、采购、广告、物流、已经发生的退款和售后。过去负责被记录。</p></div>
+  <div><b>指标</b><p>利润率、退款率、ROI 等，是对事实的解释，可以随口径重新计算。</p></div>
+  <div><b>预测</b><p>当前订单未来还可能发生多少退款，以及这些退款最终会让利润变化多少。未来负责被计算。</p></div>
 </div>
 
-历史利润当然仍然有用，只是用途应该变成比较：这条链接比上周期变好还是变差，而不是因为上周赚 20%，就假设本周也赚 20%。
+利润模型最重要的不是公式有多复杂，而是**不让模型篡改历史**。
 
-利润模型最重要的不是看起来完整，而是每一步都能从结果穿透回事实。**能算出数字只是开始，能解释数字为什么成立，才是核算。**
+近 7 天已经发生，就按近 7 天真实数据核算；未来还可能退款，才对那部分做预测。
+
+**事实不可改写，预测随时更新。**
 
 <style>{`
   :root {
@@ -297,7 +347,6 @@ private: false
     --pr-amber: #9d6817;
     --pr-amber-soft: #fff7df;
     --pr-violet: #7653a7;
-    --pr-violet-soft: #f3edfb;
   }
 
   html[data-theme="dark"] {
@@ -312,21 +361,18 @@ private: false
     --pr-green-soft: #102e27;
     --pr-coral-soft: #3a211f;
     --pr-amber-soft: #342a15;
-    --pr-violet-soft: #2c223d;
   }
 
   .profit-hero,
   .profit-thesis,
-  .profit-old-model,
-  .profit-window,
-  .profit-cost-lanes,
-  .profit-package-lab,
-  .profit-data-map,
-  .profit-runtime,
   .profit-equation-stack,
-  .profit-sheet,
-  .profit-decision-path,
+  .profit-old-model,
   .profit-proof-grid,
+  .profit-cost-lanes,
+  .profit-window,
+  .profit-data-map,
+  .profit-decision-path,
+  .profit-sheet,
   .profit-boundaries {
     color: var(--pr-ink);
   }
@@ -334,27 +380,16 @@ private: false
   .profit-hero {
     display: grid;
     grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
-    gap: clamp(1.25rem, 3vw, 2.5rem);
-    margin: 1rem 0 2.4rem;
-    padding: clamp(1.25rem, 3.6vw, 2.6rem);
+    gap: clamp(1rem, 3vw, 2rem);
+    margin: 1rem 0 2rem;
+    padding: clamp(1.15rem, 3vw, 2rem);
     overflow: hidden;
     border: 1px solid #b9cee0;
-    border-radius: 1.35rem;
+    border-radius: 1.3rem;
     background:
       radial-gradient(circle at 5% 8%, color-mix(in srgb, var(--pr-blue) 13%, transparent), transparent 30%),
       radial-gradient(circle at 96% 94%, color-mix(in srgb, var(--pr-green) 13%, transparent), transparent 32%),
       var(--pr-panel);
-  }
-
-  .profit-hero--compact {
-    align-items: center;
-    gap: clamp(0.9rem, 2vw, 1.4rem);
-    margin-bottom: 1.6rem;
-    padding: clamp(1rem, 2.2vw, 1.5rem);
-  }
-
-  .profit-hero--compact .profit-hero__title {
-    font-size: clamp(1.9rem, 4.2vw, 3.35rem);
   }
 
   .profit-eyebrow {
@@ -365,19 +400,17 @@ private: false
   }
 
   .profit-hero__title {
-    max-width: 13ch;
+    max-width: 14ch;
     margin: 0.65rem 0 0.85rem;
-    color: var(--pr-ink);
-    font-size: clamp(2.15rem, 5.2vw, 4.35rem);
+    font-size: clamp(2rem, 4.7vw, 3.8rem);
     font-weight: 900;
-    line-height: 1.02;
-    letter-spacing: -0.055em;
+    line-height: 1.04;
+    letter-spacing: -0.05em;
   }
 
   .profit-hero__copy > p {
     margin: 0;
     color: var(--pr-text);
-    font-size: 1rem;
     line-height: 1.75;
   }
 
@@ -394,12 +427,12 @@ private: false
     background: var(--pr-bg);
   }
 
-  .profit-hero__verdict section.is-old {
+  .profit-hero__verdict .is-old {
     border-color: #e6b7ae;
     background: var(--pr-coral-soft);
   }
 
-  .profit-hero__verdict section.is-new {
+  .profit-hero__verdict .is-new {
     border-color: #acd6c5;
     background: var(--pr-green-soft);
   }
@@ -417,14 +450,15 @@ private: false
   }
 
   .profit-hero__verdict code {
-    margin: 0.55rem 0 0.2rem;
+    margin: 0.55rem 0 0.3rem;
     overflow-wrap: anywhere;
     color: var(--pr-text);
+    white-space: normal;
   }
 
   .profit-hero__verdict strong {
-    font-size: clamp(1.65rem, 4vw, 2.5rem);
-    line-height: 1;
+    font-size: clamp(1.45rem, 3.6vw, 2.25rem);
+    line-height: 1.05;
   }
 
   .profit-hero__verdict .is-old strong,
@@ -440,7 +474,7 @@ private: false
   .profit-hero__verdict section span {
     margin-top: 0.55rem;
     font-size: 0.76rem;
-    font-weight: 850;
+    font-weight: 800;
   }
 
   .profit-hero__flip {
@@ -481,8 +515,64 @@ private: false
     line-height: 1.6;
   }
 
+  .profit-equation-stack {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+    margin: 1.25rem 0 2rem;
+  }
+
+  .profit-equation-stack section {
+    min-width: 0;
+    padding: 0.9rem;
+    border: 1px solid #b8d8ca;
+    border-radius: 0.8rem;
+    background: var(--pr-green-soft);
+  }
+
+  .profit-equation-stack section:nth-child(2) {
+    border-color: #b7d1e5;
+    background: var(--pr-blue-soft);
+  }
+
+  .profit-equation-stack section:nth-child(3) {
+    border-color: #dec88e;
+    background: var(--pr-amber-soft);
+  }
+
+  .profit-equation-stack small,
+  .profit-equation-stack strong,
+  .profit-equation-stack code {
+    display: block;
+  }
+
+  .profit-equation-stack small {
+    color: var(--pr-green);
+    font-weight: 900;
+  }
+
+  .profit-equation-stack section:nth-child(2) small {
+    color: var(--pr-blue);
+  }
+
+  .profit-equation-stack section:nth-child(3) small {
+    color: var(--pr-amber);
+  }
+
+  .profit-equation-stack strong {
+    margin: 0.3rem 0 0.6rem;
+    font-size: 0.95rem;
+  }
+
+  .profit-equation-stack code {
+    color: var(--pr-text);
+    font-size: 0.73rem;
+    line-height: 1.55;
+    white-space: normal;
+  }
+
   .profit-old-model {
-    margin: 1.35rem 0 1.6rem;
+    margin: 1.35rem 0 1.7rem;
     overflow: hidden;
     border: 1px solid #d9c2bc;
     border-radius: 0.95rem;
@@ -521,7 +611,7 @@ private: false
   }
 
   .profit-old-model__risks section {
-    padding: 0.7rem 0.8rem;
+    padding: 0.75rem 0.85rem;
     border-top: 1px solid var(--pr-border);
   }
 
@@ -541,69 +631,43 @@ private: false
     line-height: 1.55;
   }
 
-  .profit-window {
-    margin: 0 0 2rem;
-    padding: 1rem;
-    border: 1px solid #c8d8e5;
-    border-radius: 0.95rem;
-    background: var(--pr-panel);
-  }
-
-  .profit-window__ticks {
+  .profit-proof-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    color: var(--pr-muted);
-    font-size: 0.67rem;
-    text-align: center;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+    margin: 1.5rem 0 2rem;
   }
 
-  .profit-window__bands {
-    display: grid;
-    grid-template-columns: 2fr 2fr 0.72fr;
-    gap: 0.45rem;
-    margin-top: 0.42rem;
-  }
-
-  .profit-window__bands section {
-    padding: 0.7rem;
-    border: 1px solid var(--pr-border);
-    border-radius: 0.7rem;
-    text-align: center;
-  }
-
-  .profit-window__bands .is-mature {
-    border-color: #b7d6c8;
+  .profit-proof-grid section {
+    padding: 0.9rem;
+    border: 1px solid #b8d8ca;
+    border-radius: 0.82rem;
     background: var(--pr-green-soft);
   }
 
-  .profit-window__bands .is-current {
-    border-color: #b5d1e7;
-    background: var(--pr-blue-soft);
-  }
-
-  .profit-window__bands .is-today {
-    background: var(--pr-surface);
-  }
-
-  .profit-window__bands small,
-  .profit-window__bands strong,
-  .profit-window__bands span {
+  .profit-proof-grid span,
+  .profit-proof-grid code {
     display: block;
   }
 
-  .profit-window__bands small {
-    color: var(--pr-muted);
-    font-size: 0.62rem;
+  .profit-proof-grid span {
+    color: var(--pr-green);
+    font-size: 0.68rem;
+    font-weight: 900;
   }
 
-  .profit-window__bands strong {
-    margin: 0.2rem 0;
-    font-size: 0.82rem;
+  .profit-proof-grid code {
+    margin: 0.35rem 0;
+    color: var(--pr-ink);
+    font-size: 0.75rem;
+    white-space: normal;
   }
 
-  .profit-window__bands span {
+  .profit-proof-grid p {
+    margin: 0;
     color: var(--pr-text);
-    font-size: 0.66rem;
+    font-size: 0.72rem;
+    line-height: 1.55;
   }
 
   .profit-cost-lanes {
@@ -629,8 +693,8 @@ private: false
   }
 
   .profit-cost-lanes .is-sunk {
-    border-color: #dfbdb6;
-    background: var(--pr-coral-soft);
+    border-color: #b8d8ca;
+    background: var(--pr-green-soft);
   }
 
   .profit-cost-lanes .is-reserve {
@@ -652,7 +716,7 @@ private: false
   }
 
   .profit-cost-lanes .is-sunk small {
-    color: var(--pr-coral);
+    color: var(--pr-green);
   }
 
   .profit-cost-lanes .is-reserve small {
@@ -678,105 +742,75 @@ private: false
   .profit-cost-lanes code {
     margin-top: auto;
     padding-top: 0.75rem;
-    color: var(--pr-blue);
+    color: var(--pr-text);
     font-size: 0.69rem;
     white-space: normal;
   }
 
-  .profit-cost-lanes .is-reserve code {
-    color: var(--pr-amber);
-  }
-
-  .profit-package-lab {
-    display: grid;
-    grid-template-columns: minmax(10rem, 0.8fr) minmax(11rem, 0.9fr) minmax(0, 1.25fr);
-    gap: 0.75rem;
-    align-items: stretch;
-    margin: 1.3rem 0 1.8rem;
-    padding: 0.85rem;
+  .profit-window {
+    margin: 1.35rem 0 2rem;
+    padding: 1rem;
     border: 1px solid #c8d8e5;
-    border-radius: 1rem;
+    border-radius: 0.95rem;
     background: var(--pr-panel);
   }
 
-  .profit-package-lab__parcel,
-  .profit-package-lab__links,
-  .profit-package-lab__results section {
-    padding: 0.8rem;
-    border: 1px solid var(--pr-border);
-    border-radius: 0.75rem;
-    background: var(--pr-bg);
-  }
-
-  .profit-package-lab__parcel small,
-  .profit-package-lab__parcel strong,
-  .profit-package-lab__parcel span,
-  .profit-package-lab__parcel b,
-  .profit-package-lab__links small,
-  .profit-package-lab__links span,
-  .profit-package-lab__results small,
-  .profit-package-lab__results strong,
-  .profit-package-lab__results span {
-    display: block;
-  }
-
-  .profit-package-lab small {
-    color: var(--pr-muted);
-    font-size: 0.66rem;
-    font-weight: 800;
-  }
-
-  .profit-package-lab__parcel strong {
-    margin: 0.25rem 0 0.55rem;
-    font-size: 1.1rem;
-  }
-
-  .profit-package-lab__parcel span,
-  .profit-package-lab__links span {
-    margin-top: 0.3rem;
-    color: var(--pr-text);
-    font-size: 0.72rem;
-  }
-
-  .profit-package-lab__parcel b {
-    margin-top: 0.65rem;
-    color: var(--pr-blue);
-  }
-
-  .profit-package-lab__links span {
-    padding: 0.4rem;
-    border-radius: 0.45rem;
-    background: var(--pr-blue-soft);
-  }
-
-  .profit-package-lab__results {
+  .profit-window__ticks {
     display: grid;
-    gap: 0.55rem;
+    grid-template-columns: repeat(5, 1fr);
+    color: var(--pr-muted);
+    font-size: 0.67rem;
+    text-align: center;
   }
 
-  .profit-package-lab__results .is-wrong {
-    border-color: #e1bbb3;
-    background: var(--pr-coral-soft);
+  .profit-window__bands {
+    display: grid;
+    grid-template-columns: 2fr 2fr 0.9fr;
+    gap: 0.45rem;
+    margin-top: 0.42rem;
   }
 
-  .profit-package-lab__results .is-right {
-    border-color: #b8d8ca;
+  .profit-window__bands section {
+    padding: 0.75rem;
+    border: 1px solid var(--pr-border);
+    border-radius: 0.7rem;
+    text-align: center;
+  }
+
+  .profit-window__bands .is-mature {
+    border-color: #b7d6c8;
     background: var(--pr-green-soft);
   }
 
-  .profit-package-lab__results strong {
-    margin: 0.25rem 0;
-    color: var(--pr-coral);
-    font-size: 0.9rem;
+  .profit-window__bands .is-current {
+    border-color: #b5d1e7;
+    background: var(--pr-blue-soft);
   }
 
-  .profit-package-lab__results .is-right strong {
-    color: var(--pr-green);
+  .profit-window__bands .is-today {
+    border-color: #ddc88f;
+    background: var(--pr-amber-soft);
   }
 
-  .profit-package-lab__results span {
+  .profit-window__bands small,
+  .profit-window__bands strong,
+  .profit-window__bands span {
+    display: block;
+  }
+
+  .profit-window__bands small {
+    color: var(--pr-muted);
+    font-size: 0.62rem;
+  }
+
+  .profit-window__bands strong {
+    margin: 0.2rem 0;
+    font-size: 0.82rem;
+  }
+
+  .profit-window__bands span {
     color: var(--pr-text);
-    font-size: 0.68rem;
+    font-size: 0.66rem;
   }
 
   .profit-data-map {
@@ -814,24 +848,14 @@ private: false
   }
 
   .profit-data-map__sources strong {
-    min-height: 2.6rem;
     margin: 0.25rem 0 0.5rem;
     font-size: 0.8rem;
   }
 
   .profit-data-map__sources span {
-    margin-top: 0.27rem;
     color: var(--pr-text);
     font-size: 0.67rem;
-  }
-
-  .profit-data-map__sources--compact section {
-    padding: 0.65rem;
-  }
-
-  .profit-data-map__sources--compact strong {
-    min-height: 0;
-    margin-bottom: 0.3rem;
+    line-height: 1.5;
   }
 
   .profit-data-map__merge {
@@ -847,7 +871,7 @@ private: false
   }
 
   .profit-data-map__merge section {
-    width: min(100%, 22rem);
+    width: min(100%, 34rem);
     padding: 0.75rem 1rem;
     border: 1px solid #b4d2e8;
     border-radius: 999px;
@@ -874,6 +898,7 @@ private: false
     margin-top: 0.2rem;
     color: var(--pr-text);
     font-size: 0.66rem;
+    white-space: normal;
   }
 
   .profit-data-map__outputs {
@@ -893,178 +918,47 @@ private: false
     text-align: center;
   }
 
-  .profit-data-map__outputs strong {
-    font-size: 0.8rem;
+  .profit-decision-path {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+    margin: 1.2rem 0 2rem;
   }
 
-  .profit-runtime {
-    margin: 1.5rem 0 1.8rem;
+  .profit-decision-path section {
     padding: 0.9rem;
-    border: 1px solid #c5d8e7;
-    border-radius: 1rem;
+    border: 1px solid var(--pr-border);
+    border-radius: 0.82rem;
     background: var(--pr-panel);
   }
 
-  .profit-runtime > header {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.55rem;
-  }
-
-  .profit-runtime > header span {
-    padding: 0.65rem;
-    border: 1px solid #b6d2e7;
-    border-radius: 0.65rem;
-    background: var(--pr-blue-soft);
-  }
-
-  .profit-runtime > header small,
-  .profit-runtime > header strong {
+  .profit-decision-path small,
+  .profit-decision-path strong {
     display: block;
   }
 
-  .profit-runtime > header small {
-    color: var(--pr-muted);
-    font-size: 0.64rem;
-  }
-
-  .profit-runtime > header strong {
-    margin-top: 0.18rem;
-    color: var(--pr-blue);
-    font-size: 1rem;
-  }
-
-  .profit-runtime__stages {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 0.45rem;
-    margin-top: 0.65rem;
-  }
-
-  .profit-runtime__stages section {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 8.8rem;
-    padding: 0.7rem;
-    border: 1px solid var(--pr-border);
-    border-radius: 0.65rem;
-    background: var(--pr-bg);
-  }
-
-  .profit-runtime__stages small,
-  .profit-runtime__stages code,
-  .profit-runtime__stages strong {
-    display: block;
-  }
-
-  .profit-runtime__stages small {
+  .profit-decision-path small {
     color: var(--pr-violet);
-    font-size: 0.63rem;
     font-weight: 900;
   }
 
-  .profit-runtime__stages code {
-    margin: 0.55rem 0;
+  .profit-decision-path strong {
+    margin: 0.3rem 0;
+    font-size: 0.9rem;
+  }
+
+  .profit-decision-path p {
+    margin: 0;
     color: var(--pr-text);
-    font-size: 0.68rem;
-    white-space: normal;
-  }
-
-  .profit-runtime__stages strong {
-    margin-top: auto;
-    color: var(--pr-green);
-    font-size: 0.75rem;
-  }
-
-  .profit-runtime__unknowns {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.38rem;
-    margin-top: 0.65rem;
-    padding: 0.7rem;
-    border: 1px solid #dec693;
-    border-radius: 0.7rem;
-    background: var(--pr-amber-soft);
-  }
-
-  .profit-runtime__unknowns span {
-    padding: 0.34rem 0.45rem;
-    border-radius: 0.42rem;
-    color: var(--pr-amber);
-    background: var(--pr-bg);
-    font-size: 0.68rem;
-  }
-
-  .profit-runtime__unknowns b {
-    width: 100%;
-    color: var(--pr-text);
-    font-size: 0.72rem;
-  }
-
-  .profit-runtime__formula {
-    margin-top: 0.65rem;
-    overflow: hidden;
-    border: 1px solid #b9d8ca;
-    border-radius: 0.72rem;
-    background: var(--pr-bg);
-  }
-
-  .profit-runtime__formula small {
-    display: block;
-    padding: 0.5rem 0.65rem;
-    color: var(--pr-green);
-    background: var(--pr-green-soft);
-    font-weight: 900;
-  }
-
-  .profit-runtime__formula > code {
-    display: grid;
-    gap: 0.25rem;
-    padding: 0.7rem;
-    color: var(--pr-ink);
-    font-size: 0.74rem;
-    line-height: 1.55;
-    white-space: normal;
-  }
-
-  .profit-equation-stack {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.65rem;
-    margin: 1.25rem 0 2rem;
-  }
-
-  .profit-equation-stack section {
-    padding: 0.85rem;
-    border: 1px solid #b8d8ca;
-    border-radius: 0.75rem;
-    background: var(--pr-green-soft);
-  }
-
-  .profit-equation-stack small,
-  .profit-equation-stack code {
-    display: block;
-  }
-
-  .profit-equation-stack small {
-    color: var(--pr-green);
-    font-weight: 900;
-  }
-
-  .profit-equation-stack code {
-    margin-top: 0.38rem;
-    color: var(--pr-ink);
-    font-size: 0.72rem;
-    line-height: 1.55;
-    white-space: normal;
+    font-size: 0.76rem;
+    line-height: 1.6;
   }
 
   .profit-sheet {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.7rem;
-    margin: 1.5rem 0 1.2rem;
+    margin: 1.5rem 0 2rem;
   }
 
   .profit-sheet > section {
@@ -1120,83 +1014,8 @@ private: false
     font-size: 0.68rem;
   }
 
-  .profit-decision-path {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.7rem;
-    margin: 1.2rem 0 2rem;
-  }
-
-  .profit-decision-path section {
-    padding: 0.9rem;
-    border: 1px solid var(--pr-border);
-    border-radius: 0.82rem;
-    background: var(--pr-panel);
-  }
-
-  .profit-decision-path small,
-  .profit-decision-path strong {
-    display: block;
-  }
-
-  .profit-decision-path small {
-    color: var(--pr-violet);
-    font-weight: 900;
-  }
-
-  .profit-decision-path strong {
-    min-height: 2.8rem;
-    margin: 0.3rem 0;
-    font-size: 0.86rem;
-  }
-
-  .profit-decision-path p {
-    margin: 0;
-    color: var(--pr-text);
-    font-size: 0.76rem;
-    line-height: 1.6;
-  }
-
-  .profit-proof-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.7rem;
-    margin: 1.5rem 0 1rem;
-  }
-
-  .profit-proof-grid section {
-    padding: 0.9rem;
-    border: 1px solid #b8d8ca;
-    border-radius: 0.82rem;
-    background: var(--pr-green-soft);
-  }
-
-  .profit-proof-grid span,
-  .profit-proof-grid code {
-    display: block;
-  }
-
-  .profit-proof-grid span {
-    color: var(--pr-green);
-    font-size: 0.68rem;
-    font-weight: 900;
-  }
-
-  .profit-proof-grid code {
-    margin: 0.35rem 0;
-    color: var(--pr-ink);
-    font-size: 0.75rem;
-    white-space: normal;
-  }
-
-  .profit-proof-grid p {
-    margin: 0;
-    color: var(--pr-text);
-    font-size: 0.72rem;
-  }
-
   .profit-boundaries {
-    margin: 0 0 2rem;
+    margin: 1.5rem 0 2rem;
     overflow: hidden;
     border: 1px solid #dfc58f;
     border-radius: 0.9rem;
@@ -1204,7 +1023,7 @@ private: false
   }
 
   .profit-boundaries header {
-    padding: 0.75rem 0.85rem;
+    padding: 0.85rem;
     background: var(--pr-amber-soft);
   }
 
@@ -1225,7 +1044,7 @@ private: false
 
   .profit-boundaries > div {
     display: grid;
-    grid-template-columns: minmax(9rem, 0.6fr) minmax(0, 1.4fr);
+    grid-template-columns: minmax(8rem, 0.45fr) minmax(0, 1.55fr);
     gap: 0.7rem;
     padding: 0.72rem 0.85rem;
     border-top: 1px solid var(--pr-border);
@@ -1243,21 +1062,15 @@ private: false
   }
 
   @media (max-width: 980px) {
-    .profit-data-map__sources,
-    .profit-runtime__stages {
+    .profit-data-map__sources {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .profit-runtime__stages section:last-child {
-      grid-column: 1 / -1;
     }
   }
 
   @media (max-width: 800px) {
     .profit-hero,
-    .profit-cost-lanes,
-    .profit-package-lab,
     .profit-equation-stack,
+    .profit-cost-lanes,
     .profit-decision-path {
       grid-template-columns: 1fr;
     }
@@ -1268,10 +1081,6 @@ private: false
 
     .profit-window__bands {
       grid-template-columns: 1fr;
-    }
-
-    .profit-package-lab__results {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
@@ -1286,20 +1095,13 @@ private: false
 
     .profit-data-map__sources,
     .profit-data-map__outputs,
-    .profit-runtime > header,
-    .profit-runtime__stages,
     .profit-sheet,
     .profit-proof-grid {
       grid-template-columns: 1fr;
     }
 
-    .profit-runtime__stages section:last-child,
     .profit-sheet > section.is-quality {
       grid-column: auto;
-    }
-
-    .profit-boundaries > div {
-      grid-template-columns: 1fr;
     }
 
     .profit-old-model__risks {
@@ -1310,9 +1112,8 @@ private: false
       border-right: 0;
     }
 
-    .profit-package-lab__results {
+    .profit-boundaries > div {
       grid-template-columns: 1fr;
     }
-
   }
 `}</style>
