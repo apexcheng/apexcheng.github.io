@@ -2,7 +2,7 @@
 title: XPath 实战速查：从基础语法到稳定元素定位
 description: 把 XPath 当作一条穿过 DOM 的路径，直观看懂基础语法、属性与文本筛选、关系轴、表格定位和稳定性优先级。
 date: 2026-08-22T08:50:00+08:00
-updated: 2026-08-22T09:30:00+08:00
+updated: 2026-09-15T17:40:00+08:00
 category: 教程
 tags:
   - XPath
@@ -288,10 +288,10 @@ import {
 
 复杂后台页面里，目标元素不一定有好用属性，但它附近通常有稳定标签、标题或按钮。此时不要从页面根部硬写长路径，而是先找已知元素，再沿 DOM 关系移动。
 
-<div class="xpath-panel" role="group" aria-label="XPath ancestor 与 following-sibling 关系定位">
+<div class="xpath-panel" role="group" aria-label="XPath ancestor、preceding-sibling 与 following-sibling 关系定位">
   <div class="xpath-panel-head">
     <div><span>06 · RELATION AXES</span><strong>把已知元素当作锚点</strong></div>
-    <p>关系轴表达“向上找父级”或“在同一层向后找兄弟”，比依赖固定位置更容易读懂。</p>
+    <p>关系轴表达“向上找父级”或“在同一层向前、向后找兄弟”，比依赖固定位置更容易读懂。</p>
   </div>
   <div class="xpath-axis-lab">
     <div class="xpath-axis-dom">
@@ -313,6 +313,12 @@ import {
         <strong>following-sibling:: 找后续兄弟</strong>
         <code>{"//span[normalize-space(.)='价格']/following-sibling::input"}</code>
         <p>从“价格”标签移动到同一父级下后面的输入框。</p>
+      </div>
+      <div>
+        <span><GitBranch size={20} strokeWidth={1.8} aria-hidden="true" />向前</span>
+        <strong>preceding-sibling:: 找前面的兄弟</strong>
+        <code>{"//button[normalize-space(.)='购买']/preceding-sibling::input[1]"}</code>
+        <p>从“购买”按钮向前找到最近的 `input`；`[1]` 表示最近的前一个匹配兄弟节点。</p>
       </div>
     </div>
   </div>
@@ -416,11 +422,11 @@ import {
 
 如果一个定位必须依赖位置，优先回头确认页面是否存在更稳定的父容器、业务字段或可读文本。
 
-## 十、常用 XPath TOP 10
+## 十、常用 XPath 高频模板
 
 最后把高频写法按用途收拢。复制前先替换示例值，并在实际页面验证匹配数量。
 
-<div class="xpath-recipes" role="group" aria-label="常用 XPath 十个模板">
+<div class="xpath-recipes" role="group" aria-label="常用 XPath 高频模板">
   <div><b>01</b><span>稳定 id</span><code>{"//*[@id='xxx']"}</code></div>
   <div><b>02</b><span>class 片段</span><code>{"//*[contains(@class,'xxx')]"}</code></div>
   <div><b>03</b><span>精确文本</span><code>{"//*[normalize-space(.)='xxx']"}</code></div>
@@ -430,7 +436,8 @@ import {
   <div><b>07</b><span>表格目标行</span><code>{"//tr[td[normalize-space(.)='xxx']]"}</code></div>
   <div><b>08</b><span>最近父级</span><code>//xxx/ancestor::div[1]</code></div>
   <div><b>09</b><span>后续兄弟</span><code>//xxx/following-sibling::xxx</code></div>
-  <div><b>10</b><span>最后一个</span><code>(//xxx)[last()]</code></div>
+  <div><b>10</b><span>前序兄弟</span><code>//xxx/preceding-sibling::xxx[1]</code></div>
+  <div><b>11</b><span>最后一个</span><code>(//xxx)[last()]</code></div>
 </div>
 
 <div class="xpath-final-verdict">
@@ -1660,6 +1667,10 @@ import {
 
   .xpath-recipes > div:nth-last-child(-n + 2) {
     border-bottom: 0;
+  }
+
+  .xpath-recipes > div:last-child {
+    border-right: 0;
   }
 
   .xpath-recipes b {
