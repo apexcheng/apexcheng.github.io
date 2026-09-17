@@ -2,6 +2,7 @@
 title: "从死牛到 6.9 万人的血液：杜邦 C8 / PFAS 案真正可怕的是什么"
 description: "从 Tennant 农场、C8 内部文件和 6.9 万人研究出发，理解 PFOA 为什么能污染几十年才被看见，以及这起案件真正暴露出的监管盲区。"
 date: 2026-09-17T21:35:00+08:00
+updated: 2026-09-17T22:17:00+08:00
 category: "生活"
 tags:
   - "PFAS"
@@ -15,7 +16,6 @@ draft: false
 private: false
 ---
 
-import MetricCard from '../../components/MetricCard.astro';
 import FeatureCard from '../../components/FeatureCard.astro';
 import VisualGrid from '../../components/VisualGrid.astro';
 import HighlightBox from '../../components/HighlightBox.astro';
@@ -29,6 +29,17 @@ import Mermaid from '../../components/Mermaid.astro';
 而是：**一种后来被确认具有严重健康风险、能够长期存在于环境中的化学物，已经使用和排放了几十年，监管系统却长期没有真正把它看见。**
 
 故事的起点甚至不是癌症，也不是实验室，而是一群牛。
+
+<figure class="pfas-figure pfas-figure-wide">
+  <img
+    src="https://upload.wikimedia.org/wikipedia/commons/9/91/Dupont_Washington_Works.JPG"
+    alt="西弗吉尼亚州 Washington Works 工厂入口，远处可见工业设施与管线"
+    loading="eager"
+  />
+  <figcaption>
+    Washington Works 工厂入口，摄于 2014 年。这里曾由杜邦拥有，现由 Chemours 运营；照片用于说明案件发生地点，并非 1990 年代事件现场照。图片：<a href="https://commons.wikimedia.org/wiki/File:Dupont_Washington_Works.JPG">Snoopywv / Wikimedia Commons</a>，<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>。
+  </figcaption>
+</figure>
 
 ## 一切从 Tennant 农场的牛开始
 
@@ -84,6 +95,17 @@ C8 是行业里对这类八碳含氟化合物的简称。杜邦在 Washington Wo
 
 2001 年 3 月 6 日，Bilott 把诉讼中得到的一批资料提交给 EPA。EPA 后来的正式文件明确写道，其中包含杜邦早在 **1981 年**对孕妇工人及脐带血的 PFOA 检测资料，以及 **1984 年**已经检测到附近公共供水存在 PFOA 的资料。
 
+<figure class="pfas-figure">
+  <img
+    src="https://www.epa.gov/system/files/images/2023-12/picture-1.jpg"
+    alt="EPA 展示的 Washington Works 周边 PFOA 历史采样区域地图，覆盖西弗吉尼亚州和俄亥俄州部分地区"
+    loading="lazy"
+  />
+  <figcaption>
+    EPA 公布的 Washington Works 周边历史采样区域。图中的红、绿采样点用的是当时 70 ppt 的行动阈值；它反映历史治理范围，<strong>不能拿来代替今天 4 ppt 的联邦饮用水标准</strong>。来源：<a href="https://www.epa.gov/oh/chemours-washington-works-history-and-safe-drinking-water-act-swda-settlements">U.S. EPA</a>。
+  </figcaption>
+</figure>
+
 EPA 的投诉文件甚至明确记录：Bilott 是在 2001 年 3 月 6 日第一次把相关孕妇血液文件交给 EPA 的。
 
 参考：[EPA 对杜邦 PFOA 案的正式投诉文件](https://www.epa.gov/sites/default/files/2016-05/documents/dupont-pfoa-complaint.pdf)
@@ -131,25 +153,16 @@ EPA 后来正式指控杜邦没有按 TSCA 要求及时提交其掌握的 PFOA �
 
 这不是“抽一次血，然后三个科学家研究七年”。它实际上是一整套大型流行病学工程：问卷、血液检测、医疗记录核实、长期随访、历史地址、水源信息、环境扩散模型，以及几十年前的暴露重建。
 
-<VisualGrid columns={3}>
-  <MetricCard
-    label="参与者"
-    value="69,030"
-    detail="2005—2006 年完成登记，约 13 个月。"
+<figure class="pfas-figure pfas-figure-graphic">
+  <img
+    src="/pfas-assets/c8-health-project-system.svg"
+    alt="C8 Health Project 研究系统图：69,030 名参与者，结合血液检测、问卷病历和历史暴露重建"
+    loading="lazy"
   />
-  <MetricCard
-    label="血清 PFOA"
-    value="32.91 ng/mL"
-    detail="项目总体几何均值，论文称比当时代表性美国人群高约 500%。"
-    tone="cyan"
-  />
-  <MetricCard
-    label="Little Hocking"
-    value="241 ng/mL"
-    detail="2005—2006 年仍居住当地居民的血清 PFOA 中位数。"
-    tone="violet"
-  />
-</VisualGrid>
+  <figcaption>
+    这也是“为什么要研究六七年”的核心：真正耗时的是长期随访和历史暴露重建，而不是抽血本身。数据依据：<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2799461/">C8 Health Project</a> 与<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3261988/">历史暴露重建研究</a>。
+  </figcaption>
+</figure>
 
 最难的一步甚至不是验血，而是回答：
 
@@ -323,4 +336,57 @@ PFOA 很危险，但杜邦案真正留下来的警告比一种化学物更大。
 - [GAO：旧 TSCA 化学品审查制度问题](https://www.gao.gov/assets/a114643.html)
 - [EPA：PFAS 非靶向分析](https://www.epa.gov/water-research/pfas-analytical-methods-development-and-sampling-research)
 - [EPA：2026 年 PFOA / PFOS 饮用水标准实施提案](https://www.epa.gov/sdwa/proposed-pfoa-and-pfos-compliance-extension-rule)
+
+<style>{`
+  .pfas-figure {
+    margin: 2rem 0 2.35rem;
+  }
+
+  .pfas-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid color-mix(in srgb, currentColor 13%, transparent);
+    border-radius: 20px;
+    background: #f6f8fb;
+    box-shadow: 0 18px 42px rgba(25, 39, 60, 0.12);
+  }
+
+  .pfas-figure-wide img {
+    aspect-ratio: 2.285 / 1;
+    object-fit: cover;
+  }
+
+  .pfas-figure-graphic img {
+    background: #08111f;
+  }
+
+  .pfas-figure figcaption {
+    margin-top: 0.75rem;
+    color: color-mix(in srgb, currentColor 72%, transparent);
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
+
+  .pfas-figure figcaption a {
+    color: inherit;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  @media (max-width: 720px) {
+    .pfas-figure {
+      margin: 1.55rem 0 1.9rem;
+    }
+
+    .pfas-figure img {
+      border-radius: 14px;
+    }
+
+    .pfas-figure figcaption {
+      font-size: 0.84rem;
+      line-height: 1.6;
+    }
+  }
+`}</style>
 

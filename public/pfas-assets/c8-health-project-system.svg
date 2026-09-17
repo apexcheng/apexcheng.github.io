@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">C8 Health Project 研究系统示意图</title>
+  <desc id="desc">69,030 名参与者在 2005 到 2006 年完成招募，研究结合血液检测、问卷与医疗记录、历史住址和水源，以及长期暴露重建。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#08111f"/>
+      <stop offset="1" stop-color="#13233b"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" x2="1">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="0.5" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#34d399"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="720" rx="34" fill="url(#bg)"/>
+
+  <text x="72" y="86" fill="#f8fafc" font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="42" font-weight="760">6.9 万人的研究，不是“抽一次血”</text>
+  <text x="72" y="126" fill="#9fb0c8" font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="21">它是一套把“现在的血液”重新连回“几十年前暴露”的流行病学工程</text>
+
+  <line x1="170" y1="335" x2="1030" y2="335" stroke="url(#line)" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+
+  <g font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    <g transform="translate(95 225)">
+      <rect width="230" height="220" rx="26" fill="#14233a" stroke="#2a4262"/>
+      <circle cx="115" cy="110" r="20" fill="#60a5fa"/>
+      <text x="24" y="42" fill="#7dd3fc" font-size="17" font-weight="700">2005—2006</text>
+      <text x="24" y="82" fill="#f8fafc" font-size="37" font-weight="800">69,030 人</text>
+      <text x="24" y="147" fill="#c9d4e4" font-size="19">13 个月完成招募</text>
+      <text x="24" y="176" fill="#8fa2bb" font-size="16">六个受污染供水区域</text>
+    </g>
+
+    <g transform="translate(365 225)">
+      <rect width="230" height="220" rx="26" fill="#14233a" stroke="#2a4262"/>
+      <circle cx="115" cy="110" r="20" fill="#22d3ee"/>
+      <text x="24" y="42" fill="#67e8f9" font-size="17" font-weight="700">人体测量</text>
+      <text x="24" y="82" fill="#f8fafc" font-size="30" font-weight="800">血液检测</text>
+      <text x="24" y="147" fill="#c9d4e4" font-size="19">PFOA 与其他 PFC</text>
+      <text x="24" y="176" fill="#8fa2bb" font-size="16">建立个人体内浓度基线</text>
+    </g>
+
+    <g transform="translate(635 225)">
+      <rect width="230" height="220" rx="26" fill="#14233a" stroke="#2a4262"/>
+      <circle cx="115" cy="110" r="20" fill="#2dd4bf"/>
+      <text x="24" y="42" fill="#5eead4" font-size="17" font-weight="700">健康与生活史</text>
+      <text x="24" y="82" fill="#f8fafc" font-size="30" font-weight="800">问卷 + 病历</text>
+      <text x="24" y="147" fill="#c9d4e4" font-size="19">住址、工作、疾病信息</text>
+      <text x="24" y="176" fill="#8fa2bb" font-size="16">核实后来发生了什么</text>
+    </g>
+
+    <g transform="translate(905 225)">
+      <rect width="230" height="220" rx="26" fill="#14233a" stroke="#2a4262"/>
+      <circle cx="115" cy="110" r="20" fill="#34d399"/>
+      <text x="24" y="42" fill="#6ee7b7" font-size="17" font-weight="700">最耗时的一步</text>
+      <text x="24" y="82" fill="#f8fafc" font-size="30" font-weight="800">历史暴露重建</text>
+      <text x="24" y="147" fill="#c9d4e4" font-size="19">排放 + 水源 + 历年住址</text>
+      <text x="24" y="176" fill="#8fa2bb" font-size="16">逐年估算过去的 PFOA 暴露</text>
+    </g>
+  </g>
+
+  <rect x="72" y="520" width="1056" height="118" rx="24" fill="#0c1728" stroke="#29425f"/>
+  <text x="102" y="565" fill="#93c5fd" font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="17" font-weight="700">为什么会研究很多年？</text>
+  <text x="102" y="604" fill="#edf4ff" font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="24" font-weight="650">难点不是一次化验，而是把几十年前的暴露，与多年后发生的疾病重新对上。</text>
+  <text x="72" y="684" fill="#72849c" font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14">数据依据：C8 Health Project（Frisbee et al.）与后续历史暴露重建研究</text>
+</svg>
