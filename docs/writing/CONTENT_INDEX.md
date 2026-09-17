@@ -68,3 +68,4 @@
 | `src/content/posts/when-people-dismiss-complex-systems.mdx` | `生活` | 从利润模型出发讨论“学不会→看不懂→无法评价→转而否定”的职场认知路径，并区分现实复杂度、实现复杂度和真正应该删除的坏复杂度 | 写职场认知、复杂系统评价、专业判断、学习门槛和“复杂是否必要”类文章时参考 |
 | `src/content/posts/ram-resale-cashflow-profit-assets.mdx` | `生活` | 用 500 元旧内存卖 1500 元、再花 400 元买替代品的真实小案例，拆清 600 元现金余额变化、1000 元交易收益、1100 元净现金流入和最终资产的不同口径 | 写生活账本、现金流与利润区别、资产重新配置和日常财务概念解释类文章时参考 |
 | `src/content/posts/h-pylori-acid-drink-note.mdx` | `生活` | 幽门螺杆菌、胃酸过多和气泡饮料的个人判断笔记 | 写生活判断清单、风险边界提醒、个人健康记录类文章时参考 |
+| `src/content/posts/dupont-c8-pfas-case.mdx` | `生活` | 从 Tennant 农场死牛、PFOA/C8 内部文件、6.9 万人流行病学研究一路拆到旧 TSCA 监管盲区、现代 PFAS 标准与非靶向分析 | 写 PFAS、PFOA、杜邦 C8、环境污染、化学品监管和未知污染物风险类文章时参考 |
