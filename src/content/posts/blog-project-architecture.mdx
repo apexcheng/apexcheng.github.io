@@ -2,7 +2,7 @@
 title: "这个博客是怎么搭起来的：架构、内容流程与发布方式"
 description: "把仓库、内容边界、规则索引、写作流程与静态发布放进一套博客系统蓝图，说明这个个人博客如何长期维护。"
 date: 2026-06-28T21:09:06+08:00
-updated: 2026-07-26T17:26:22+08:00
+updated: 2026-09-19T00:19:26+08:00
 category: "实践"
 tags:
   - "Astro"
@@ -35,63 +35,41 @@ private: false
   </div>
 </section>
 
-## 先看全局：仓库里有四条相互咬合的主线
+## 先看全局：四条主线最后怎样咬合在一起
 
-<section class="sys-board sys-board--map" aria-label="博客仓库全局地图">
+<section class="sys-board sys-board--archify" aria-label="博客系统 Archify 架构图">
   <header class="sys-board-head">
     <div>
-      <span class="sys-index">B01 · REPOSITORY MAP</span>
-      <strong class="sys-board-title">文件不是散落的目录，而是四条职责明确的系统线</strong>
+      <span class="sys-index">B01 · ARCHIFY SYSTEM MAP</span>
+      <strong class="sys-board-title">内容、页面、规则和交付，不是四块孤立目录，而是一条完整主链</strong>
     </div>
-    <p>内容线负责写什么，页面线负责怎么呈现，规则线负责如何维护，交付线负责怎样变成公开站点。</p>
+    <p>作者或 Agent 先读取规则，再修改内容或页面；main 推送后由 Actions 触发 Astro 构建，最后把静态产物交给 Pages。</p>
   </header>
 
-  <div class="sys-map-grid">
-    <article class="sys-lane sys-lane--content">
-      <span>CONTENT · 内容线</span>
-      <strong><code>{`src/content/posts/`}</code></strong>
-      <p>正式文章和视觉实验都进入同一个 Content Collection，再由分类、标签、系列与公开状态组织。</p>
-      <ul>
-        <li><code>{`*.mdx`}</code> 保存可版本化正文</li>
-        <li><code>{`visual-lab/`}</code> 单独承载 Demo</li>
-      </ul>
-    </article>
-
-    <article class="sys-lane sys-lane--view">
-      <span>VIEW · 页面线</span>
-      <strong><code>{`src/pages/`}</code> + <code>{`src/components/`}</code></strong>
-      <p>页面文件建立路由，组件与布局建立阅读界面；文章只调用真正需要的展示能力。</p>
-      <ul>
-        <li><code>{`src/layouts/SiteLayout.astro`}</code> 提供外壳</li>
-        <li><code>{`src/styles/global.css`}</code> 维护全局视觉</li>
-      </ul>
-    </article>
-
-    <article class="sys-lane sys-lane--rule">
-      <span>RULE · 规则线</span>
-      <strong><code>{`AGENTS.md`}</code> + <code>{`docs/`}</code></strong>
-      <p>入口文件提供路由与关键硬边界，开发、写作、视觉和内容索引分别在 docs 中保持单一权威来源。</p>
-      <ul>
-        <li><code>{`llms.txt`}</code> 帮 Agent 快速判断入口</li>
-        <li><code>{`CONTENT_INDEX.md`}</code> 限定参考范围</li>
-      </ul>
-    </article>
-
-    <article class="sys-lane sys-lane--ship">
-      <span>SHIP · 交付线</span>
-      <strong><code>{`astro.config.mjs`}</code> + <code>{`.github/workflows/`}</code></strong>
-      <p>Astro 在构建期生成静态文件；Actions 在 main 推送或手动触发后构建，再交给 Pages。</p>
-      <ul>
-        <li><code>{`package.json`}</code> 暴露验证命令</li>
-        <li><code>{`dist/`}</code> 是构建产物，不是内容源</li>
-      </ul>
-    </article>
+  <div class="sys-archify-preview" role="region" aria-label="可横向浏览的博客架构图预览" tabIndex="0">
+    <a href="/diagrams/blog-project-architecture.html" target="_blank" rel="noopener noreferrer">
+      <img
+        class="sys-archify-shot sys-archify-shot--light"
+        src="/diagrams/blog-project-architecture.visual-check.1440x900.light.png"
+        alt="个人博客系统架构图：作者或 Agent 读取规则控制面后修改内容与页面，GitHub Actions 触发 Astro 静态构建并发布到 GitHub Pages，最终由读者访问。"
+        loading="lazy"
+      />
+      <img
+        class="sys-archify-shot sys-archify-shot--dark"
+        src="/diagrams/blog-project-architecture.visual-check.1440x900.dark.png"
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+      />
+    </a>
   </div>
 
-  <div class="sys-legend" aria-label="蓝图线型图例">
-    <span><i class="line-solid" aria-hidden="true"></i>实线：生产主链</span>
-    <span><i class="line-dashed" aria-hidden="true"></i>虚线：规则约束</span>
-    <strong>结论：改动先按职责找到唯一入口，再进入下一层。</strong>
+  <div class="sys-archify-foot">
+    <div>
+      <span>ARCHIFY · INTERACTIVE VIEW</span>
+      <strong>图里保留的是职责和流向，不展开函数、模板与实现细节。</strong>
+    </div>
+    <a href="/diagrams/blog-project-architecture.html" target="_blank" rel="noopener noreferrer">打开交互图 ↗</a>
   </div>
 </section>
 
@@ -442,7 +420,6 @@ private: false
 
   .sys-kicker,
   .sys-index,
-  .sys-lane > span,
   .sys-zone-title span,
   .sys-control-flow span,
   .sys-pipeline > li > span,
@@ -579,78 +556,72 @@ private: false
     color: var(--sys-muted);
   }
 
-  .sys-map-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1px;
-    background: var(--sys-line-soft);
-  }
-
-  .sys-lane {
-    min-width: 0;
-    padding: 1.2rem 1.3rem;
-    background: #fff;
-    box-shadow: inset 4px 0 0 var(--lane-color);
-  }
-
-  .sys-lane--content { --lane-color: #3d778f; }
-  .sys-lane--view { --lane-color: #4c7c72; }
-  .sys-lane--rule { --lane-color: #756c91; }
-  .sys-lane--ship { --lane-color: #8b6b45; }
-
-  .sys-lane strong,
-  .sys-lane p {
-    display: block;
-    margin-top: .55rem;
-  }
-
-  .sys-lane strong {
-    font-size: .875rem;
-    line-height: 1.55;
-  }
-
-  .sys-lane p {
-    margin-bottom: .65rem;
-    color: var(--sys-muted);
-  }
-
-  .sys-lane ul,
   .sys-handoff ul {
     margin: 0;
     padding-left: 1.15rem;
     color: var(--sys-muted);
   }
 
-  .sys-legend {
+  .sys-archify-preview {
+    overflow-x: auto;
+    background: #e9edf2;
+    scrollbar-width: thin;
+  }
+
+  .sys-archify-preview a {
+    display: block;
+    min-width: 900px;
+  }
+
+  .sys-archify-shot {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .sys-archify-shot--dark {
+    display: none;
+  }
+
+  .sys-archify-foot {
     display: flex;
-    flex-wrap: wrap;
-    gap: .75rem 1.25rem;
+    gap: 1rem;
     align-items: center;
+    justify-content: space-between;
     padding: .9rem 1.3rem;
     border-top: 1px solid var(--sys-line-soft);
     background: var(--sys-paper);
   }
 
-  .sys-legend span {
-    display: inline-flex;
-    align-items: center;
-    gap: .45rem;
-    color: var(--sys-muted);
-    font-size: .75rem;
+  .sys-archify-foot span,
+  .sys-archify-foot strong {
+    display: block;
   }
 
-  .sys-legend i {
-    width: 30px;
-    border-top: 1px solid var(--sys-blue);
+  .sys-archify-foot span {
+    color: var(--sys-blue);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: .6875rem;
+    font-weight: 800;
+    letter-spacing: .08em;
   }
 
-  .sys-legend .line-dashed {
-    border-top-style: dashed;
-  }
-
-  .sys-legend strong {
-    margin-left: auto;
+  .sys-archify-foot strong {
+    margin-top: .28rem;
     font-size: .8125rem;
+    line-height: 1.5;
+  }
+
+  .sys-archify-foot a {
+    flex: 0 0 auto;
+    padding: .48rem .68rem;
+    border: 1px solid var(--sys-line);
+    border-radius: 999px;
+    color: var(--sys-ink);
+    background: #fff;
+    font-size: .75rem;
+    font-weight: 800;
+    text-decoration: none;
   }
 
   .sys-zone-map {
@@ -1056,7 +1027,6 @@ private: false
   }
 
   html[data-theme='dark'] .sys-board,
-  html[data-theme='dark'] .sys-lane,
   html[data-theme='dark'] .sys-zone,
   html[data-theme='dark'] .sys-control-entry,
   html[data-theme='dark'] .sys-control-router,
@@ -1077,9 +1047,21 @@ private: false
   html[data-theme='dark'] .sys-gates,
   html[data-theme='dark'] .sys-release-track,
   html[data-theme='dark'] .sys-handoff,
-  html[data-theme='dark'] .sys-legend,
+  html[data-theme='dark'] .sys-archify-foot,
   html[data-theme='dark'] .sys-verdict {
     background: #142733;
+  }
+
+  html[data-theme='dark'] .sys-archify-shot--light {
+    display: none;
+  }
+
+  html[data-theme='dark'] .sys-archify-shot--dark {
+    display: block;
+  }
+
+  html[data-theme='dark'] .sys-archify-foot a {
+    background: #10212c;
   }
 
   html[data-theme='dark'] .sys-hero-route > div.is-current {
@@ -1184,7 +1166,6 @@ private: false
       padding: 1rem;
     }
 
-    .sys-map-grid,
     .sys-control-sources,
     .sys-control-rails,
     .sys-gates,
@@ -1192,14 +1173,10 @@ private: false
       grid-template-columns: 1fr;
     }
 
-    .sys-legend {
+    .sys-archify-foot {
       align-items: flex-start;
       flex-direction: column;
       padding: .9rem 1rem;
-    }
-
-    .sys-legend strong {
-      margin-left: 0;
     }
 
     .sys-zone-map,
