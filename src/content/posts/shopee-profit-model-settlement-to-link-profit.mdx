@@ -1,0 +1,859 @@
+---
+title: "Shopee 跨境链接利润模型：从平台回款到真实经营利润"
+description: "把 Shopee 利润模型从“自己预测平台怎么收费”重构为“以妙手 ERP 实际结算为锚点”：订单收入、平台费用、其它费用、退款率、物流回扣、退款损耗、采购与推广成本如何一步步进入链接利润。"
+date: 2026-09-19T22:50:00+08:00
+category: "实践"
+tags:
+  - "Shopee"
+  - "跨境电商"
+  - "利润核算"
+  - "数据建模"
+  - "妙手ERP"
+minutes: 18
+featured: false
+pinned: false
+draft: false
+private: false
+---
+
+<div class="shopee-hero" aria-label="Shopee 链接利润模型核心思路">
+  <div class="shopee-hero__copy">
+    <span class="shopee-kicker">Shopee · 跨境利润模型</span>
+    <div class="shopee-hero__title">别再猜平台<br /><strong>应该扣多少</strong></div>
+    <p>把订单、平台费用、退款、物流和推广拆开之后，整套模型真正的核心只有一句：先拿到平台实际结算了多少，再预测还会退多少，最后减掉平台之外真实发生的成本。</p>
+  </div>
+  <div class="shopee-hero__formula">
+    <small>核心结构</small>
+    <strong>实际平台回款</strong>
+    <i>×</i>
+    <strong>预计保留比例</strong>
+    <i>−</i>
+    <strong>平台外经营成本</strong>
+    <i>−</i>
+    <strong>退款不可追回损耗</strong>
+    <b>= 链接利润</b>
+  </div>
+</div>
+
+做跨境利润表时，最容易掉进去的坑不是 Excel 公式写错，而是**模型替平台做了太多它本来不应该做的事情**。
+
+旧版 Shopee 模型里，为了算清平台到底收了多少钱，需要同时处理 ERP 发货、平台订单、国家、仓库类型、SLS / FBS / 3PF、费率规则、联盟佣金、汇率和退款。每多一种费用，就多一层判断；平台一改规则，模型也要跟着改。
+
+后来把订单数据源切到妙手 ERP 后，事情突然简单了很多。因为妙手已经直接给出了订单总金额、佣金、手续费、服务费、联盟佣金、平台回款金额等实际结算结果，模型就没有必要继续复现一套 Shopee 计费引擎。
+
+这次重构的目标也因此变得很明确：
+
+<div class="shopee-thesis">
+  <span>模型职责</span>
+  <strong>平台负责结算，ERP 负责告诉我结算结果；利润模型只负责对齐、闭环、预测尚未成熟的退款，再减掉平台之外的真实成本。</strong>
+</div>
+
+## 旧模型为什么越来越重
+
+旧模型的思路，本质上是从“订单发生了什么”继续推导“平台理论上应该收多少”。
+
+<div class="shopee-compare" aria-label="旧模型与新模型对比">
+  <section class="is-old">
+    <small>旧模型 · 复现平台计费</small>
+    <strong>订单 + ERP + 仓库 + 费率 + 汇率</strong>
+    <span>判断国家</span>
+    <span>判断 SLS / FBS / 3PF</span>
+    <span>判断六类平台费用</span>
+    <span>独立下载联盟佣金</span>
+    <span>自己换算人民币</span>
+    <b>最后得到“平台大概会扣多少”</b>
+  </section>
+  <section class="is-new">
+    <small>新模型 · 读取实际结算</small>
+    <strong>妙手 ERP 实际订单结算</strong>
+    <span>订单金额直接取 RMB</span>
+    <span>佣金 / 手续费 / 服务费直接取值</span>
+    <span>联盟佣金已经内置</span>
+    <span>平台回款作为结算锚点</span>
+    <span>仓库类型退出利润公式</span>
+    <b>最后回答“平台实际留下了多少钱”</b>
+  </section>
+</div>
+
+这里最重要的变化不是“少写几个公式”，而是数据哲学变了。
+
+如果平台最终已经告诉我一笔订单回款 80 元，那么利润模型首先应该尊重这个 80 元。至于其中 6 元是什么佣金、2 元是什么手续费、5 元是不是某个新出的技术支持费，这些费用拆分仍然值得做，但作用变成了**解释利润**，而不是重新生成利润。
+
+这和我之前重构其它平台利润模型时得到的结论很接近：能拿实际结算，就不要自己再造一套平台结算系统。关于“事实与预测分开”的更通用思路，可以看《[电商利润模型重构：事实只记录，预测只留给尚未发生的退款](/articles/ecommerce-link-profit-model-rebuild/)》。
+
+## 先把模型范围定死：算什么订单、算到什么粒度
+
+利润公式之前还有一层更基础的口径。如果订单范围、时间归属和商品粒度不统一，后面的公式即使每一条都正确，最后汇总出来的利润也会错位。
+
+<div class="shopee-model-scope" aria-label="Shopee 利润模型基础口径">
+  <section><small>最终经营 KEY</small><strong>商品ID × 地区</strong><span>同一个商品在菲律宾、马来西亚、泰国分别计算，不跨地区混算。</span></section>
+  <section><small>正式经营周期</small><strong>T−7 ～ T−1</strong><span>今天不进入正式周期，避免当天数据仍在变化。</span></section>
+  <section><small>日期归属</small><strong>付款时间 + 已发货过滤</strong><span>妙手当前缺可靠发货时间，因此用付款时间归属，但订单状态必须已经发货。</span></section>
+  <section><small>订单商品粒度</small><strong>69 码级导出</strong><span>一条订单商品行对应一个 69 码，数量仍然可以大于 1。</span></section>
+  <section><small>HS 拍单</small><strong>不进入正常销售</strong><span>平台备注 HS，用于和正常销售隔离；真实发生的拍单成本仍然保留。</span></section>
+</div>
+
+这一步也决定了为什么旧版很多跨数据源 fallback 可以删掉：既然妙手订单自身已经带到 69 码级商品信息，就没有必要再通过另一张 ERP 发货表反查一次商品归属。
+
+## 第一步不是算利润，而是先确定“这笔收入到底是什么”
+
+Shopee 订单里同时会出现“订单总金额”和“用户实付”。这两个数字很容易被混在一起，但它们回答的是不同问题。
+
+用户实付可能受到很多因素影响：
+
+```text
+用户实付
+= 订单总金额
+- 商家优惠券
+- 平台优惠券
+- Shopee 币
+- 其它活动让利
++ 买家运费
++ 其它买家侧支付项
+```
+
+问题在于，妙手 ERP 并没有完整给出这些中间让利项，只给了最后“用户实际付了多少”。如果直接用用户实付作为利润收入，就会把平台补贴、商家让利和订单商品金额混在一起。
+
+所以模型直接放弃“用户实付”这条线，收入从订单商品本身开始：
+
+<div class="shopee-equation" aria-label="结算前收入公式">
+  <small>结算前收入</small>
+  <strong>订单总金额</strong><i>+</i><strong>买家运费</strong><b>= 结算前收入</b>
+  <p>买家运费是买家为这笔订单额外支付、最终进入商家结算链路的金额，因此和订单总金额一起构成结算前收入。</p>
+</div>
+
+还有一个以前很麻烦、现在可以直接删掉的东西：**汇率换算**。
+
+妙手 ERP 已经直接提供 RMB 字段，包括订单总金额、买家运费、商家运费、佣金、手续费、服务费、联盟佣金和平台回款金额。利润模型直接使用 RMB，不再把原币重新乘一次国家汇率。
+
+平台原币金额仍然有价值，但主要用于人工核对和异常排查，不再承担正式利润计算。
+
+## 用“平台回款”把整笔订单锁死
+
+妙手直接提供的费用主要有：基础佣金、支付手续费、联盟佣金、服务费，以及最终平台回款金额。
+
+真正有意思的是：平台后台还可能存在一些妙手没有单独列出来的费用。例如某个站点出现一笔“技术支持费”，妙手没有给它独立字段，但平台回款已经把这笔钱扣掉了。
+
+如果继续执着于“必须先知道每一个费用叫什么，才能算利润”，模型就会再次变回一张越来越长的费率表。
+
+所以我把这部分定义成一个残差项：
+
+<div class="shopee-residual" aria-label="其它费用反算公式">
+  <span>其它费用</span>
+  <code>结算前收入 − 基础佣金 − 支付手续费 − 联盟佣金 − 服务费 − 平台回款金额</code>
+  <p>它不是某一种固定费用，而是平台已经结算进去、但当前 ERP 没有单独解释出来的<strong>净结算差额</strong>。</p>
+</div>
+
+例如用一笔简化订单：
+
+<div class="shopee-number-table" aria-label="其它费用示例">
+  <span>结算前收入<b>100</b></span>
+  <span>基础佣金<b>−6</b></span>
+  <span>支付手续费<b>−2</b></span>
+  <span>服务费<b>−9</b></span>
+  <span>平台回款<b>78</b></span>
+  <strong>其它费用 = 100 − 6 − 2 − 9 − 78 = 5</strong>
+</div>
+
+后来去平台后台看，可能会发现这 5 元就是某个妙手没有单列的技术支持费。模型并不知道它叫什么，但它没有漏掉这笔成本。
+
+这就是“平台回款闭环”的价值：
+
+```text
+平台回款金额
+= 结算前收入
+- 基础佣金
+- 支付手续费
+- 联盟佣金
+- 服务费
+- 其它费用
+```
+
+只要这条等式能守恒，订单的平台侧结算就没有凭空少一块。
+
+实际工作中还会看到 `-0.01`、`-0.02` 这种“其它费用”。这通常不是平台倒贴了 1 分钱，而是各个 RMB 分项分别四舍五入后产生的分币残差。只要量级稳定在分币级，就应该保留，让整张账继续闭环，而不是强行 `MAX(其它费用, 0)`。
+
+## 最绕的一笔：商家运费到底是不是成本
+
+这一块是整套模型里最容易把人绕晕的地方。
+
+妙手 ERP 有“商家运费”，平台后台也会显示物流扣费。直觉上很容易写成：
+
+```text
+利润 = …… − 商家运费
+```
+
+但平台后台同时还有一个妙手没有同步出来的“物流回扣”。在当前核对到的正常订单里，两边是等额的：
+
+<div class="shopee-logistics" aria-label="正常订单物流扣费和物流回扣相互抵消">
+  <section class="is-cost"><small>平台物流扣费</small><strong>−10</strong></section>
+  <i>+</i>
+  <section class="is-rebate"><small>平台物流回扣</small><strong>+10</strong></section>
+  <i>=</i>
+  <section class="is-zero"><small>正常订单物流净影响</small><strong>0</strong></section>
+</div>
+
+如果利润模型只看到了妙手里的“商家运费 10”，再单独减一次，就相当于只记了 `−10`，却漏掉平台同时给回来的 `+10`。
+
+因此正常订单里，不再单独扣商家运费，也不单独加物流回扣。它们的净影响最终已经反映在平台回款里。
+
+这里有一个很重要的区分：
+
+<div class="shopee-quote">
+  <small>看到平台扣了钱，不等于商家最终损失了这笔钱。</small>
+  <strong>毛费用 ≠ 净成本。</strong>
+</div>
+
+## 商家运费什么时候才真正变成损耗
+
+退款以后，情况就不一样了。
+
+正常订单里，物流扣费和物流回扣可以互相抵消；但如果订单退款后，已经发生的商家运费无法追回，那么这部分钱就真的留下来了。
+
+我把它从“正常订单沉没成本”改成了一个更准确的名字：
+
+```text
+退款物流损耗
+```
+
+逻辑变成：
+
+<div class="shopee-loss-rules" aria-label="商家运费在正常订单和退款订单中的处理区别">
+  <section>
+    <small>正常成交</small>
+    <strong>商家运费不单独扣</strong>
+    <p>当前等额物流回扣下净影响为 0；如果未来发现扣费与回扣不等额，则直接进入模型边界，不自动拆分。</p>
+  </section>
+  <section>
+    <small>订单退款</small>
+    <strong>无法追回的运费才算损耗</strong>
+    <p>退款后仍然留在商家身上的真实物流成本，单独进入“退款物流损耗”。</p>
+  </section>
+</div>
+
+这一步很关键，因为它避免了一笔钱在两个地方重复出现：正常订单里扣一次商家运费，退款时又扣一次退款物流损耗。
+
+## 模型必须明确自己什么时候算不了
+
+目前核对到的订单有一个稳定前提：
+
+```text
+物流扣费金额 = 对应物流回扣金额
+```
+
+这也是当前模型的正式边界。
+
+如果未来出现：
+
+```text
+物流扣费金额 ≠ 物流回扣金额
+```
+
+仅凭妙手现有字段，就无法可靠判断平台回款里的差额到底有多少属于物流净成本、多少属于其它平台费用、多少属于补贴或其它结算调整。
+
+这时候模型不能继续“聪明地猜一个数”。正确做法是标记超出边界，补充能同时拿到物流扣费和物流回扣的数据源，再扩模型。
+
+<div class="shopee-boundary">
+  <span>模型边界</span>
+  <strong>一个可靠模型不只是知道怎么算，也要知道什么时候不能算。</strong>
+  <p>边界写清楚，比在没有数据的地方继续加 IF 更重要。</p>
+</div>
+
+## 为什么退款率不能直接看最近 7 天
+
+利润表要看最近经营情况，通常希望周期尽量靠近现在；但退款是有滞后的。
+
+今天卖出去的订单，未来几天甚至更久仍可能退款。如果直接用最近 7 天的“当前退款金额 ÷ 当前销售金额”，退款率会天然偏低，因为很多订单还没成熟。
+
+所以模型把经营周期和退款样本窗口拆开：
+
+<div class="shopee-window" aria-label="近七天经营周期与成熟退款窗口">
+  <div class="shopee-window__axis"><span>T−21</span><span>T−8</span><span>T−7</span><span>T−1</span><span>Today</span></div>
+  <div class="shopee-window__bands">
+    <section class="is-mature"><small>成熟退款窗口</small><strong>T−21 ～ T−8</strong><span>计算金额退货率 R</span></section>
+    <section class="is-current"><small>正式经营周期</small><strong>T−7 ～ T−1</strong><span>统计销售、费用、采购和推广</span></section>
+  </div>
+</div>
+
+成熟窗口回答的是：**类似订单最终通常会退掉多少金额？**
+
+然后把这个历史金额退货率 `R` 用到最近 7 天尚未完全成熟的订单：
+
+```text
+预计可保留平台结算 = 平台回款金额 × (1 - R)
+```
+
+注意，`R` 和“退款物流损耗”不是一回事。
+
+`R` 负责估计有多少订单结算最终会因为退款消失；退款物流损耗负责记录退款发生以后，仍然拿不回来的真实物流成本。
+
+## 平台外成本必须各回自己的事实源
+
+平台回款只能告诉我 Shopee 最后结了多少钱，却不知道商品本身花了多少采购成本，也不知道为了卖出这笔订单额外投了多少广告。
+
+所以平台结算闭环完成之后，剩下的成本不再继续塞进“其它费用”，而是各自回到自己的事实源。
+
+<div class="shopee-cost-sources" aria-label="Shopee 链接利润中的平台外成本来源">
+  <section><small>采购成本</small><strong>商品真实采购</strong><p>按商品 / 69 码归属到链接，属于平台之外的商品成本。</p></section>
+  <section><small>推广成本</small><strong>广告实际花费</strong><p>按日期和商品 KEY 汇总实际投放，不用推广销售额乘利润率反推。</p></section>
+  <section><small>HS 拍单</small><strong>只保留真实成本</strong><p>不进入正常销售收入，但已经发生的采购、履约等成本不能消失。</p></section>
+  <section><small>退款物流损耗</small><strong>售后不可追回成本</strong><p>只记录退款后真实留下来的物流损失，不把正常订单毛运费重复扣一次。</p></section>
+</div>
+
+这也是整套模型另一个很重要的分层：**平台里的钱由平台回款负责闭环，平台外的钱由对应事实源负责。** 不要为了公式看起来统一，把所有成本都挤进同一个“其它费用”。
+
+## 整套链路最终长这样
+
+下面这张图使用 Archify 把完整数据流压成一条链路。订单事实、平台结算、退款预测和平台外成本分别承担不同职责。
+
+<figure class="shopee-diagram">
+  <img src="/images/shopee-profit-model-workflow.svg" alt="Shopee 链接利润模型完整流程：妙手 ERP 已发货订单经过结算前收入、平台费用闭环和平台回款，再结合成熟退款率、退款物流损耗以及采购推广拍单等平台外成本，最终得到链接利润" />
+  <figcaption>完整利润链路：先闭环平台结算，再预测退款，最后扣平台外经营成本。</figcaption>
+</figure>
+
+最终利润公式可以写成完整形式：
+
+<div class="shopee-final-formula" aria-label="Shopee 链接利润完整公式">
+  <small>链接利润</small>
+  <code>(结算前收入 − 基础佣金 − 支付手续费 − 联盟佣金 − 服务费 − 其它费用) × (1 − R)</code>
+  <i>− 退款物流损耗 − 采购成本 − 推广成本 − 拍单成本 − 其它独立支出</i>
+</div>
+
+但因为括号里的东西恰好等于平台回款金额，所以从业务理解上可以进一步压缩成：
+
+<div class="shopee-simple-formula">
+  <span>更容易理解的版本</span>
+  <strong>链接利润 = 平台回款 × (1 − R) − 退款物流损耗 − 平台外经营成本</strong>
+</div>
+
+这也是我现在理解这套模型最简单的方式。
+
+## 用两组订单把整套模型跑一遍
+
+下面用两组脱敏订单：A / B 是已经成熟的历史样本，用来得到退款率；C / D 是当前经营周期里的未成熟订单，用来演示预测利润。为了方便阅读，数字都是简化值，不对应真实订单。
+
+### 订单 A：正常成交
+
+```text
+订单总金额       = 100
+买家运费         = 0
+结算前收入       = 100
+基础佣金         = 6
+支付手续费       = 2
+联盟佣金         = 0
+服务费           = 9
+平台回款金额     = 80
+妙手商家运费     = 10
+平台物流回扣     = 10
+```
+
+先反算其它费用：
+
+```text
+其它费用
+= 100 - 6 - 2 - 0 - 9 - 80
+= 3
+```
+
+所以订单 A 的平台结算链路是：
+
+```text
+100 - 6 - 2 - 9 - 3 = 80
+```
+
+同时，商家运费 `10` 和物流回扣 `10` 相互抵消，不再额外从利润里减一次。
+
+### 订单 B：后来退款
+
+假设订单 B 下单时和 A 完全一样：平台回款仍然是 80，商家运费也是 10。
+
+不同的是，订单 B 后来退款了，而且这 10 元物流费用最终无法追回。
+
+那么订单 B 会多出：
+
+```text
+退款物流损耗 = 10
+```
+
+先把 A、B 当作一组已经成熟的历史样本：A 未退款、B 全额退款。那么金额退货率：
+
+```text
+R = 100 / (100 + 100) = 50%
+```
+
+注意，这里的 A、B 只负责告诉模型“类似订单最终通常会退多少”，**不会再拿同一批成熟订单自己预测自己**。
+
+现在来到正式经营周期，假设同一个链接又产生两笔结构相同、尚未完全成熟的新订单 C、D，每笔当前平台回款都是 80：
+
+```text
+C 平台回款 80
+D 平台回款 80
+合计 = 160
+```
+
+用历史成熟样本得到的 `R=50%` 去预测 C、D 最终能保留下来的平台结算：
+
+```text
+160 × (1 - 50%) = 80
+```
+
+另外，假设本期售后事实里已经确认发生 10 元无法追回的退款物流损耗，则单独扣掉：
+
+```text
+80 - 10 = 70
+```
+
+如果本期还有：
+
+```text
+采购成本 = 40
+推广成本 = 15
+拍单成本 = 0
+其它独立支出 = 0
+```
+
+最终链接利润就是：
+
+<div class="shopee-example-result" aria-label="双订单最终利润示例">
+  <small>双订单示例</small>
+  <code>160 × (1 − 50%) − 10 − 40 − 15</code>
+  <strong>= 15</strong>
+</div>
+
+这个例子真正要说明的不是“利润一定怎么算到 15”，而是**每一种钱只能有一个入口**：
+
+```text
+平台已经结算进去的费用 → 平台回款 / 其它费用闭环
+尚未成熟的退款风险       → R
+退款后真正留下的物流成本 → 退款物流损耗
+采购 / 推广 / 拍单        → 各自独立成本入口
+```
+
+## 新模型删掉的东西，比新增的东西更重要
+
+这次改造最后删掉了不少旧逻辑：
+
+<div class="shopee-delete-grid" aria-label="新版 Shopee 利润模型删除的复杂逻辑">
+  <section><span>01</span><strong>SLS / FBS / 3PF 仓库识别</strong><p>平台费用已经来自实际结算，不再需要靠履约仓型预测收费。</p></section>
+  <section><span>02</span><strong>六类平台费率预测</strong><p>佣金、手续费、服务费等优先读取妙手实际值。</p></section>
+  <section><span>03</span><strong>独立联盟佣金数据源</strong><p>妙手已经内置联盟佣金，避免重复扣费。</p></section>
+  <section><span>04</span><strong>国家汇率换算</strong><p>妙手直接提供 RMB，模型不再做二次换汇。</p></section>
+  <section><span>05</span><strong>正常订单商家运费独立扣减</strong><p>正常物流毛扣费不等于净成本，退款不可追回部分才记损耗。</p></section>
+  <section><span>06</span><strong>跨数据源商品归属 fallback</strong><p>订单导出已经是 69 码级，商品归属直接使用订单自身信息。</p></section>
+</div>
+
+模型变简单，并不是因为业务突然不复杂了，而是因为**数据源离事实更近了**。
+
+这也是我越来越偏好的建模方向：事实源能解决的问题，不要交给公式；平台已经结算过的问题，不要再自己预测一次；真正需要预测的，只留下未来还没有发生的那部分。
+
+## 最后，用五个问题检查一张利润表
+
+做完这套 Shopee 模型以后，我现在会先问五个问题，而不是先问“利润公式够不够长”。
+
+<div class="shopee-checklist">
+  <section><b>01</b><strong>收入到底来自哪里？</strong><span>用户实付、订单金额、发货金额和平台回款不能混成一个概念。</span></section>
+  <section><b>02</b><strong>平台费用是事实还是预测？</strong><span>能拿实际账单或结算，就不要继续靠费率推测。</span></section>
+  <section><b>03</b><strong>同一笔费用有没有被扣两次？</strong><span>尤其警惕物流、联盟佣金、推广和退款后的损耗重复进入利润。</span></section>
+  <section><b>04</b><strong>退款样本成熟了吗？</strong><span>最近 7 天负责经营观察，成熟窗口负责估计最终退款风险。</span></section>
+  <section><b>05</b><strong>模型有没有明确写“什么时候不能算”？</strong><span>缺数据时承认边界，比用错误的确定性填满整张表更可靠。</span></section>
+</div>
+
+最终，这套 Shopee 链接利润模型可以被压成一条很短的逻辑：
+
+<div class="shopee-ending">
+  <strong>实际订单 → 实际平台结算 → 成熟退款率 → 平台外真实成本 → 链接利润</strong>
+  <p>模型不需要知道平台所有规则；它需要知道每一笔钱从哪里来、最终去了哪里，以及哪一部分仍然只是未来的不确定性。</p>
+</div>
+
+<style>{`
+  .shopee-hero,
+  .shopee-thesis,
+  .shopee-compare,
+  .shopee-equation,
+  .shopee-residual,
+  .shopee-number-table,
+  .shopee-logistics,
+  .shopee-quote,
+  .shopee-loss-rules,
+  .shopee-model-scope,
+  .shopee-cost-sources,
+  .shopee-boundary,
+  .shopee-window,
+  .shopee-diagram,
+  .shopee-final-formula,
+  .shopee-simple-formula,
+  .shopee-example-result,
+  .shopee-delete-grid,
+  .shopee-checklist,
+  .shopee-ending {
+    --sp-ink: #17212b;
+    --sp-text: #334456;
+    --sp-muted: #6e7f8f;
+    --sp-line: #d9e2e9;
+    --sp-panel: #f7fafb;
+    --sp-green: #14735a;
+    --sp-green-soft: #ecf8f3;
+    --sp-blue: #28698f;
+    --sp-blue-soft: #eef7fb;
+    --sp-orange: #b86623;
+    --sp-orange-soft: #fff5ea;
+    --sp-red: #b84b45;
+    --sp-red-soft: #fff0ef;
+  }
+
+  html[data-theme="dark"] .shopee-hero,
+  html[data-theme="dark"] .shopee-thesis,
+  html[data-theme="dark"] .shopee-compare,
+  html[data-theme="dark"] .shopee-equation,
+  html[data-theme="dark"] .shopee-residual,
+  html[data-theme="dark"] .shopee-number-table,
+  html[data-theme="dark"] .shopee-logistics,
+  html[data-theme="dark"] .shopee-quote,
+  html[data-theme="dark"] .shopee-loss-rules,
+  html[data-theme="dark"] .shopee-model-scope,
+  html[data-theme="dark"] .shopee-cost-sources,
+  html[data-theme="dark"] .shopee-boundary,
+  html[data-theme="dark"] .shopee-window,
+  html[data-theme="dark"] .shopee-diagram,
+  html[data-theme="dark"] .shopee-final-formula,
+  html[data-theme="dark"] .shopee-simple-formula,
+  html[data-theme="dark"] .shopee-example-result,
+  html[data-theme="dark"] .shopee-delete-grid,
+  html[data-theme="dark"] .shopee-checklist,
+  html[data-theme="dark"] .shopee-ending {
+    --sp-ink: #eef4f7;
+    --sp-text: #cad7df;
+    --sp-muted: #91a3b0;
+    --sp-line: #334652;
+    --sp-panel: #142029;
+    --sp-green-soft: #15342b;
+    --sp-blue-soft: #142e3d;
+    --sp-orange-soft: #38281c;
+    --sp-red-soft: #392321;
+  }
+
+  .shopee-hero {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 1.4rem;
+    margin: 1.5rem 0 3rem;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border: 1px solid var(--sp-line);
+    border-radius: 28px;
+    background:
+      radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--sp-green) 13%, transparent), transparent 32%),
+      linear-gradient(145deg, var(--sp-panel), color-mix(in srgb, var(--sp-blue-soft) 65%, var(--sp-panel)));
+  }
+
+  .shopee-kicker {
+    color: var(--sp-green);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .shopee-hero__title {
+    margin-top: 0.75rem;
+    color: var(--sp-ink);
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    line-height: 1.05;
+    letter-spacing: -0.045em;
+  }
+
+  .shopee-hero__title strong { color: var(--sp-green); }
+  .shopee-hero__copy p { margin: 1rem 0 0; color: var(--sp-muted); }
+
+  .shopee-hero__formula {
+    display: grid;
+    align-content: center;
+    gap: 0.55rem;
+    padding: 1.1rem;
+    border: 1px solid var(--sp-line);
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--sp-panel) 86%, transparent);
+  }
+
+  .shopee-hero__formula small { color: var(--sp-muted); font-weight: 700; }
+  .shopee-hero__formula strong { color: var(--sp-ink); }
+  .shopee-hero__formula i { color: var(--sp-muted); font-style: normal; }
+  .shopee-hero__formula b { margin-top: 0.35rem; color: var(--sp-green); font-size: 1.15rem; }
+
+  .shopee-thesis,
+  .shopee-boundary,
+  .shopee-ending {
+    margin: 1.7rem 0 2.4rem;
+    padding: 1.2rem 1.35rem;
+    border-left: 4px solid var(--sp-green);
+    border-radius: 0 18px 18px 0;
+    background: var(--sp-green-soft);
+  }
+
+  .shopee-thesis span,
+  .shopee-boundary span {
+    display: block;
+    color: var(--sp-green);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+  }
+
+  .shopee-thesis strong,
+  .shopee-boundary strong,
+  .shopee-ending strong {
+    display: block;
+    margin-top: 0.35rem;
+    color: var(--sp-ink);
+    font-size: 1.12rem;
+    line-height: 1.6;
+  }
+
+  .shopee-compare,
+  .shopee-loss-rules,
+  .shopee-model-scope,
+  .shopee-cost-sources {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0 2.4rem;
+  }
+
+  .shopee-compare section,
+  .shopee-loss-rules section,
+  .shopee-model-scope section,
+  .shopee-cost-sources section {
+    display: grid;
+    gap: 0.5rem;
+    padding: 1.15rem;
+    border: 1px solid var(--sp-line);
+    border-radius: 20px;
+  }
+
+  .shopee-compare section small,
+  .shopee-loss-rules section small,
+  .shopee-model-scope section small,
+  .shopee-cost-sources section small { color: var(--sp-muted); font-weight: 800; }
+  .shopee-compare section strong,
+  .shopee-loss-rules section strong,
+  .shopee-model-scope section strong,
+  .shopee-cost-sources section strong { color: var(--sp-ink); font-size: 1.05rem; }
+  .shopee-compare section span { color: var(--sp-text); }
+  .shopee-compare section b { margin-top: 0.45rem; color: var(--sp-ink); }
+  .shopee-compare .is-old { background: var(--sp-red-soft); }
+  .shopee-compare .is-new { background: var(--sp-green-soft); }
+  .shopee-loss-rules section:first-child { background: var(--sp-green-soft); }
+  .shopee-loss-rules section:last-child { background: var(--sp-orange-soft); }
+  .shopee-loss-rules p { margin: 0; color: var(--sp-muted); }
+  .shopee-model-scope section { background: var(--sp-panel); }
+  .shopee-model-scope section span { color: var(--sp-muted); }
+  .shopee-model-scope section:last-child { background: var(--sp-orange-soft); }
+  .shopee-cost-sources section { background: var(--sp-blue-soft); }
+  .shopee-cost-sources section p { margin: 0; color: var(--sp-muted); }
+
+  .shopee-equation,
+  .shopee-residual,
+  .shopee-final-formula,
+  .shopee-simple-formula,
+  .shopee-example-result {
+    margin: 1.4rem 0 2.2rem;
+    padding: 1.15rem 1.25rem;
+    border: 1px solid var(--sp-line);
+    border-radius: 20px;
+    background: var(--sp-panel);
+  }
+
+  .shopee-equation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.65rem;
+  }
+
+  .shopee-equation small { flex-basis: 100%; color: var(--sp-muted); font-weight: 800; }
+  .shopee-equation strong { color: var(--sp-ink); font-size: 1.2rem; }
+  .shopee-equation i { color: var(--sp-muted); font-style: normal; }
+  .shopee-equation b { color: var(--sp-green); }
+  .shopee-equation p { flex-basis: 100%; margin: 0.2rem 0 0; color: var(--sp-muted); }
+
+  .shopee-residual span,
+  .shopee-final-formula small,
+  .shopee-simple-formula span,
+  .shopee-example-result small { color: var(--sp-green); font-weight: 800; }
+  .shopee-residual code,
+  .shopee-final-formula code,
+  .shopee-example-result code {
+    display: block;
+    margin: 0.6rem 0;
+    color: var(--sp-ink);
+    white-space: normal;
+  }
+  .shopee-residual p { margin: 0; color: var(--sp-muted); }
+  .shopee-final-formula i { color: var(--sp-text); font-style: normal; }
+  .shopee-simple-formula strong { display: block; margin-top: 0.5rem; color: var(--sp-ink); font-size: 1.15rem; }
+  .shopee-example-result strong { display: block; color: var(--sp-green); font-size: 1.7rem; }
+
+  .shopee-number-table {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.6rem;
+    margin: 1.4rem 0 2.2rem;
+  }
+
+  .shopee-number-table span {
+    display: grid;
+    gap: 0.3rem;
+    padding: 0.85rem;
+    border: 1px solid var(--sp-line);
+    border-radius: 14px;
+    color: var(--sp-muted);
+    background: var(--sp-panel);
+  }
+
+  .shopee-number-table span b { color: var(--sp-ink); font-size: 1.2rem; }
+  .shopee-number-table > strong {
+    grid-column: 1 / -1;
+    padding: 0.95rem 1rem;
+    border-radius: 14px;
+    color: var(--sp-green);
+    background: var(--sp-green-soft);
+  }
+
+  .shopee-logistics {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 0.65rem;
+    align-items: center;
+    margin: 1.5rem 0 2.3rem;
+  }
+
+  .shopee-logistics section {
+    padding: 1rem;
+    border: 1px solid var(--sp-line);
+    border-radius: 16px;
+    text-align: center;
+  }
+  .shopee-logistics small { display: block; color: var(--sp-muted); }
+  .shopee-logistics strong { color: var(--sp-ink); font-size: 1.4rem; }
+  .shopee-logistics > i { color: var(--sp-muted); font-style: normal; font-size: 1.2rem; }
+  .shopee-logistics .is-cost { background: var(--sp-red-soft); }
+  .shopee-logistics .is-rebate { background: var(--sp-green-soft); }
+  .shopee-logistics .is-zero { background: var(--sp-blue-soft); }
+
+  .shopee-quote {
+    margin: 1.5rem 0 2.4rem;
+    padding: 1.3rem;
+    border: 1px dashed var(--sp-line);
+    border-radius: 18px;
+    text-align: center;
+  }
+  .shopee-quote small { display: block; color: var(--sp-muted); }
+  .shopee-quote strong { display: block; margin-top: 0.35rem; color: var(--sp-ink); font-size: 1.45rem; }
+
+  .shopee-window {
+    margin: 1.5rem 0 2.4rem;
+    padding: 1rem;
+    border: 1px solid var(--sp-line);
+    border-radius: 20px;
+    background: var(--sp-panel);
+  }
+
+  .shopee-window__axis {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    color: var(--sp-muted);
+    font-size: 0.76rem;
+    text-align: center;
+  }
+
+  .shopee-window__bands {
+    display: grid;
+    grid-template-columns: 13fr 7fr;
+    gap: 0.65rem;
+    margin-top: 0.55rem;
+  }
+
+  .shopee-window__bands section {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.9rem;
+    border-radius: 14px;
+  }
+  .shopee-window__bands small { color: var(--sp-muted); }
+  .shopee-window__bands strong { color: var(--sp-ink); }
+  .shopee-window__bands span { color: var(--sp-text); font-size: 0.88rem; }
+  .shopee-window__bands .is-mature { background: var(--sp-blue-soft); }
+  .shopee-window__bands .is-current { background: var(--sp-green-soft); }
+
+  .shopee-diagram {
+    margin: 1.6rem 0 2.5rem;
+    padding: 0.7rem;
+    border: 1px solid var(--sp-line);
+    border-radius: 20px;
+    background: #f8fafc;
+    overflow: hidden;
+  }
+  .shopee-diagram img { display: block; width: 100%; height: auto; border-radius: 14px; }
+  .shopee-diagram figcaption { padding: 0.65rem 0.45rem 0.25rem; color: #64748b; font-size: 0.82rem; text-align: center; }
+
+  .shopee-delete-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin: 1.5rem 0 2.4rem;
+  }
+
+  .shopee-delete-grid section,
+  .shopee-checklist section {
+    padding: 1rem;
+    border: 1px solid var(--sp-line);
+    border-radius: 16px;
+    background: var(--sp-panel);
+  }
+
+  .shopee-delete-grid section span,
+  .shopee-checklist section b { color: var(--sp-green); font-size: 0.78rem; letter-spacing: 0.06em; }
+  .shopee-delete-grid section strong,
+  .shopee-checklist section strong { display: block; margin-top: 0.25rem; color: var(--sp-ink); }
+  .shopee-delete-grid section p,
+  .shopee-checklist section span { display: block; margin: 0.35rem 0 0; color: var(--sp-muted); }
+
+  .shopee-checklist {
+    display: grid;
+    gap: 0.65rem;
+    margin: 1.5rem 0 2.5rem;
+  }
+
+  .shopee-checklist section {
+    display: grid;
+    grid-template-columns: 2.3rem minmax(10rem, 0.8fr) minmax(0, 1.5fr);
+    gap: 0.65rem;
+    align-items: start;
+  }
+  .shopee-checklist section strong,
+  .shopee-checklist section span { margin: 0; }
+  .shopee-ending p { margin: 0.55rem 0 0; color: var(--sp-muted); }
+
+  @media (max-width: 760px) {
+    .shopee-hero,
+    .shopee-compare,
+    .shopee-loss-rules,
+    .shopee-model-scope,
+    .shopee-cost-sources,
+    .shopee-delete-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .shopee-number-table { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .shopee-logistics {
+      grid-template-columns: 1fr;
+    }
+    .shopee-logistics > i { transform: rotate(90deg); justify-self: center; }
+
+    .shopee-window__bands { grid-template-columns: 1fr; }
+
+    .shopee-checklist section {
+      grid-template-columns: 2.2rem 1fr;
+    }
+    .shopee-checklist section span { grid-column: 2; }
+  }
+`}</style>

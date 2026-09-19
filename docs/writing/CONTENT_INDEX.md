@@ -54,6 +54,7 @@
 | `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
 | `src/content/posts/ecommerce-link-profit-model-rebuild.mdx` | `实践` | 从同批订单、时间、成本性质和计算粒度四类错位解释旧利润模型，并重构为 T-21～T-8 成熟金额退款率、包裹级沉没成本、拍单与售后损耗、三类推广费和 5% 保留统一汇总的近 7 天链接利润表 | 写电商链接利润、广告投放盈亏、订单级成本、退款率口径和利润模型重构时参考 |
 | `src/content/posts/jd-pop-profit-model-settlement-facts.mdx` | `实践` | 从“复现京东计费规则”的旧模型切换到事实驱动架构：订单结算负责平台收入与费用，ERP 负责采购及履约成本，推广等账单外费用独立接入，并将事实利润与预测层分开 | 写京东 POP 利润核算、平台结算账单、事实层设计、平台费用治理和利润模型重构时参考 |
+| `src/content/posts/shopee-profit-model-settlement-to-link-profit.mdx` | `实践` | Shopee 跨境链接利润模型重构：妙手 ERP 直接提供 RMB 订单与平台实际结算，以平台回款闭环承接未单列费用，再叠加成熟退款率、退款物流损耗、采购与推广成本得到链接利润，并明确物流扣费与回扣不等额时的模型边界 | 写 Shopee 利润核算、妙手 ERP、平台回款、物流回扣、退款成熟窗口、其它费用残差和跨境链接利润模型时参考 |
 | `src/content/posts/ecommerce-review-analysis-agent-workflow.mdx` | `实践` | 电商评价分析 Agent 整页视觉案例，以滚动叙事方式展示两张评价表统一、Python 事实包、日报与周期对比、钉钉交付闸门和发送成功后的分表状态回写 | 写电商评价分析、钉钉 AI 表格、事实包、Agent 报告、Webhook 交付闭环、状态回写和整页数据故事时参考 |
 | `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `实践` | 东南亚仓网与发货决策信息图，覆盖三国雅仓、同国双平台共享、跨国隔离、本地优先、深圳兜底和后台核对口径 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
 | `src/content/posts/cross-border-inventory-allocation-by-sales.mdx` | `实践` | 多平台共享海外仓库存的分配模型，覆盖站点 + SKU 库存池、店铺比例、销量权重、零销量兜底、官方仓排除和超分风险 | 写 Shopee/Lazada 库存同步、多店铺库存池、销量分配、新链接兜底和超卖风险时参考 |
