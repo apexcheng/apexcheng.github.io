@@ -1,0 +1,541 @@
+---
+title: "克隆虚拟机后 UU 远程互相下线：清除本地设备身份的处理方法"
+description: "UU 远程安装在虚拟机后，直接复制虚拟机可能继承同一套本地设备身份。本文记录已定位的 GameViewer 配置目录、关键身份字段、一键清理命令，以及清理后仍冲突时应继续检查的 VMware UUID、MAC 与 Windows system_id。"
+date: 2026-09-22T08:19:00+08:00
+category: "实践"
+tags:
+  - "UU远程"
+  - "虚拟机"
+  - "VMware"
+  - "Windows"
+minutes: 7
+featured: false
+pinned: false
+draft: false
+private: false
+---
+
+把一台已经装好 UU 远程的 Windows 虚拟机直接复制成两台，看起来像是得到了两个独立系统，但实际使用时可能遇到一个很奇怪的问题：
+
+> 一台虚拟机登录 UU 远程后，另一台会被下线。
+
+这类问题不一定是账号本身限制，更可能是**两个克隆机继承了同一套 UU 本地设备身份**。从 UU 的角度看，它们可能仍然像“同一台设备”。
+
+这篇文章记录一次实际排查后的处理方法：先清掉 UU 自己保存的设备身份，让客户端重新生成；如果仍然冲突，再继续检查 VMware 和 Windows 更底层的机器身份。
+
+<section class="uu-hero" aria-label="UU 远程克隆虚拟机身份冲突处理路线">
+  <div class="uu-hero__copy">
+    <span>UU REMOTE · VM CLONE IDENTITY RESET</span>
+    <strong>先重置应用层身份，不要一上来就改 VMware UUID。</strong>
+    <p>克隆虚拟机 → UU 设备身份重复 → 清理本地配置 → 重新登录并验证 → 仍冲突时再查系统层身份。</p>
+  </div>
+
+  <div class="uu-route" aria-label="处理步骤">
+    <article>
+      <b>01</b>
+      <span>SYMPTOM</span>
+      <strong>两台克隆机互相顶下线</strong>
+    </article>
+    <i>→</i>
+    <article>
+      <b>02</b>
+      <span>APP IDENTITY</span>
+      <strong>清除 GameViewer 本地身份</strong>
+    </article>
+    <i>→</i>
+    <article>
+      <b>03</b>
+      <span>REGENERATE</span>
+      <strong>重新启动并登录 UU</strong>
+    </article>
+    <i>→</i>
+    <article class="is-final">
+      <b>04</b>
+      <span>ESCALATE</span>
+      <strong>必要时再查 VM / Windows 身份</strong>
+    </article>
+  </div>
+</section>
+
+## 先看结论：UU 的本地身份放在哪里
+
+目前已经定位到 UU 远程使用的本地配置目录：
+
+```text
+C:\ProgramData\Netease\GameViewer
+```
+
+其中最关键的几类文件是：
+
+```text
+GameViewer
+├─ config.ini
+├─ user_info.ini
+└─ cache
+   └─ config_*.json
+```
+
+实际检查后，可以看到这些文件里保存了明显与“设备身份”和“登录状态”相关的字段：
+
+<section class="uu-identity-board" aria-label="UU 本地设备身份字段">
+  <article>
+    <span>config.ini</span>
+    <strong>uuid</strong>
+    <p>本地客户端设备标识之一。</p>
+  </article>
+  <article>
+    <span>user_info.ini</span>
+    <strong>deviceId</strong>
+    <p>直接出现设备 ID，同时还保存登录相关信息。</p>
+  </article>
+  <article class="is-sensitive">
+    <span>user_info.ini</span>
+    <strong>token</strong>
+    <p>登录凭证。内容中还能看到 device_id、client_id、system_id 等字段。</p>
+  </article>
+</section>
+
+这就解释了为什么**已经登录 UU 的虚拟机被直接复制后可能产生冲突**：
+
+```text
+原虚拟机
+  │
+  ├─ Windows
+  ├─ UU 程序
+  └─ UU 本地身份：uuid / deviceId / token
+          │
+          │ 直接复制整台虚拟机
+          ↓
+克隆虚拟机
+  ├─ Windows
+  ├─ UU 程序
+  └─ 同一套 UU 本地身份
+```
+
+因此，第一步不应该是手工编一个新的 UUID 写进去，而是让 UU **自己重新生成它认为合法的本地身份**。
+
+## 推荐做法：让 UU 自己重新生成身份
+
+处理逻辑很简单：
+
+<section class="uu-process" aria-label="UU 身份清理流程">
+  <article>
+    <b>1</b>
+    <div><strong>停止 UU / GameViewer</strong><p>避免程序运行时继续占用或重新写回旧配置。</p></div>
+  </article>
+  <article>
+    <b>2</b>
+    <div><strong>先备份配置目录</strong><p>发生异常时还能还原，不直接做不可逆删除。</p></div>
+  </article>
+  <article>
+    <b>3</b>
+    <div><strong>删除设备身份与登录配置</strong><p>重点清理 config.ini、user_info.ini 和 config_*.json。</p></div>
+  </article>
+  <article>
+    <b>4</b>
+    <div><strong>重新启动 UU 并登录</strong><p>由客户端重新创建 uuid、deviceId 和新的 token。</p></div>
+  </article>
+</section>
+
+在管理员 PowerShell 中可以直接执行：
+
+```powershell
+$base = "C:\ProgramData\Netease\GameViewer"
+$backup = "$base-backup-$(Get-Date -Format yyyyMMdd-HHmmss)"
+
+# 停止 UU / GameViewer 相关进程
+Get-Process | Where-Object {
+    $_.ProcessName -match "GameViewer|UU|Netease"
+} | Stop-Process -Force -ErrorAction SilentlyContinue
+
+# 备份原配置
+Copy-Item $base $backup -Recurse -Force
+
+# 清除本地设备身份和登录信息
+Remove-Item "$base\config.ini" -Force -ErrorAction SilentlyContinue
+Remove-Item "$base\user_info.ini" -Force -ErrorAction SilentlyContinue
+
+# 清除与原设备/账号关联的缓存配置
+Remove-Item "$base\cache\config_*.json" -Force -ErrorAction SilentlyContinue
+
+Write-Host "UU 本地设备身份已清除"
+Write-Host "备份位置: $backup"
+Write-Host "现在重新启动 UU 远程"
+```
+
+这段命令做的事情只有三类：**停进程、备份、删除身份配置**。它不会去手工伪造新的 UUID，也不会修改 VMware 配置。
+
+需要注意，进程过滤里包含 `Netease`。如果虚拟机里同时运行其他网易程序，执行前应先确认是否会一起被结束。
+
+完成后重新启动 UU 远程，并重新登录账号。
+
+## 怎么确认新的身份真的生成了
+
+重新登录后，不要只看“现在能用了”，最好确认客户端确实重新生成了身份。
+
+管理员 PowerShell：
+
+```powershell
+Get-Content "C:\ProgramData\Netease\GameViewer\config.ini"
+Get-Content "C:\ProgramData\Netease\GameViewer\user_info.ini"
+```
+
+重点确认：
+
+```text
+uuid
+deviceId
+token
+```
+
+这些字段是否已经重新出现，并且与清理前不同。
+
+如果有多台克隆虚拟机，最好逐台执行清理，再分别检查。真正需要确认的是：**每台虚拟机最终拥有自己的 UU 本地身份，而不是所有克隆机继续共用同一组值。**
+
+<section class="uu-check" aria-label="UU 身份清理验收">
+  <header>
+    <span>ACCEPTANCE CHECK</span>
+    <strong>清理完成不等于处理完成，最后要看三件事</strong>
+  </header>
+  <div>
+    <article><b>01</b><strong>配置重建</strong><p>config.ini 和 user_info.ini 已重新生成。</p></article>
+    <article><b>02</b><strong>身份变化</strong><p>uuid、deviceId、token 不再沿用旧值。</p></article>
+    <article><b>03</b><strong>实际不冲突</strong><p>两台克隆机同时使用时，不再因为登录互相下线。</p></article>
+  </div>
+</section>
+
+## 如果还是互相下线，不要继续盲删 UU 文件
+
+如果已经清理并重新生成了 UU 本地配置，但两台克隆机仍然被识别成同一台设备，那么问题很可能已经不在 UU 的应用层配置，而在更底层的机器身份。
+
+可以按下面的层级继续排查：
+
+<section class="uu-layers" aria-label="克隆虚拟机身份排查层级">
+  <article class="is-current">
+    <span>Layer 1 · Application</span>
+    <strong>UU / GameViewer 本地身份</strong>
+    <p>uuid、deviceId、token、缓存配置。</p>
+    <em>优先处理</em>
+  </article>
+  <article>
+    <span>Layer 2 · Guest OS</span>
+    <strong>Windows system_id</strong>
+    <p>如果 UU 还读取系统级机器标识，单纯删除应用配置仍可能得到相同识别结果。</p>
+  </article>
+  <article>
+    <span>Layer 3 · Virtual Machine</span>
+    <strong>VMware UUID / MAC</strong>
+    <p>直接复制虚拟机时，如果底层虚拟硬件身份也被复制，需要让每台克隆机拥有独立值。</p>
+  </article>
+</section>
+
+因此正确的排查顺序是：
+
+```text
+先清 UU 本地身份
+      ↓
+重新登录并验证
+      ↓
+问题解决？
+  ├─ 是 → 结束
+  └─ 否
+      ↓
+检查 Windows system_id
+      ↓
+检查 VMware UUID / MAC
+```
+
+这个顺序的好处是**修改范围最小**。如果应用层重置已经能解决问题，就没有必要额外改虚拟机硬件身份或 Windows 系统身份。
+
+## token 不要发到公开位置
+
+`user_info.ini` 里的 `token` 属于登录凭证，不应该粘贴到群聊、论坛、博客截图、GitHub Issue 或其他公开位置。
+
+尤其在排查时，很容易为了比较两台机器的配置而直接复制整份 `user_info.ini`。更安全的做法是只比较必要字段，公开记录时对具体值打码。
+
+清除 `user_info.ini` 并重新登录后，旧 token 会被新的登录状态替换。
+
+## 最后整理成一张排障表
+
+| 现象 | 优先处理 | 说明 |
+| --- | --- | --- |
+| 克隆机一台登录，另一台被下线 | 清理 `GameViewer` 本地身份 | 最小修改，优先让 UU 自己重新生成 |
+| 清理后 `uuid / deviceId / token` 已变化 | 直接做双机实际验证 | 不要继续改更底层身份 |
+| 清理后仍互相下线 | 检查 Windows `system_id` | UU 可能读取了系统级标识 |
+| 系统层仍无法区分 | 检查 VMware UUID / MAC | 确认每台克隆机虚拟硬件身份独立 |
+| 需要分享配置排查 | 只展示必要字段并打码 | `token` 属于登录凭证，不能公开 |
+
+这类问题本质上不是“多删几个缓存文件”，而是先判断软件到底用哪一层信息识别“这是不是同一台设备”。
+
+目前这次排查已经明确了 UU / GameViewer 的应用层身份位置，因此最合理的处理方式是：**先清应用层，让 UU 自己重建；只有确认应用层已经独立仍然冲突时，才向 Windows 和 VMware 继续下钻。**
+
+<style>{`
+  .uu-hero,
+  .uu-identity-board,
+  .uu-process,
+  .uu-check,
+  .uu-layers {
+    --uu-ink: #13231c;
+    --uu-muted: #607168;
+    --uu-line: rgba(25, 73, 50, 0.16);
+    --uu-soft: #f4f8f5;
+    --uu-green: #0d7a45;
+    --uu-green-soft: #ddf3e6;
+  }
+
+  .uu-hero {
+    margin: 2rem 0 2.6rem;
+    padding: clamp(1.35rem, 3vw, 2.1rem);
+    border: 1px solid var(--uu-line);
+    border-radius: 1.5rem;
+    background:
+      radial-gradient(circle at 90% 10%, rgba(40, 183, 111, 0.18), transparent 34%),
+      linear-gradient(145deg, #f8fbf9 0%, #edf6f0 100%);
+    overflow: hidden;
+  }
+
+  .uu-hero__copy > span,
+  .uu-check header > span {
+    display: block;
+    margin-bottom: 0.6rem;
+    color: var(--uu-green);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+  }
+
+  .uu-hero__copy > strong {
+    display: block;
+    max-width: 780px;
+    color: var(--uu-ink);
+    font-size: clamp(1.55rem, 3vw, 2.35rem);
+    line-height: 1.16;
+  }
+
+  .uu-hero__copy > p {
+    max-width: 760px;
+    margin: 0.8rem 0 0;
+    color: var(--uu-muted);
+  }
+
+  .uu-route {
+    display: grid;
+    grid-template-columns: repeat(7, auto);
+    align-items: center;
+    gap: 0.7rem;
+    margin-top: 1.7rem;
+  }
+
+  .uu-route article {
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--uu-line);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.78);
+  }
+
+  .uu-route article.is-final {
+    border-color: rgba(13, 122, 69, 0.3);
+    background: var(--uu-green-soft);
+  }
+
+  .uu-route b {
+    display: block;
+    color: var(--uu-green);
+    font-size: 0.75rem;
+  }
+
+  .uu-route span {
+    display: block;
+    margin-top: 0.4rem;
+    color: var(--uu-muted);
+    font-size: 0.67rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .uu-route strong {
+    display: block;
+    margin-top: 0.3rem;
+    color: var(--uu-ink);
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+
+  .uu-route i {
+    color: var(--uu-green);
+    font-style: normal;
+    font-weight: 800;
+  }
+
+  .uu-identity-board,
+  .uu-layers {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 1.4rem 0 2rem;
+  }
+
+  .uu-identity-board article,
+  .uu-layers article {
+    padding: 1.15rem;
+    border: 1px solid var(--uu-line);
+    border-radius: 1rem;
+    background: var(--uu-soft);
+  }
+
+  .uu-identity-board article.is-sensitive {
+    border-style: dashed;
+  }
+
+  .uu-identity-board span,
+  .uu-layers span {
+    color: var(--uu-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .uu-identity-board strong,
+  .uu-layers strong {
+    display: block;
+    margin-top: 0.35rem;
+    color: var(--uu-ink);
+    font-size: 1.08rem;
+  }
+
+  .uu-identity-board p,
+  .uu-layers p {
+    margin: 0.55rem 0 0;
+    color: var(--uu-muted);
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+
+  .uu-process {
+    margin: 1.4rem 0 2rem;
+    border: 1px solid var(--uu-line);
+    border-radius: 1.15rem;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .uu-process article {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0.95rem;
+    align-items: start;
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid var(--uu-line);
+  }
+
+  .uu-process article:last-child {
+    border-bottom: 0;
+  }
+
+  .uu-process b {
+    display: grid;
+    width: 2.2rem;
+    height: 2.2rem;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--uu-green-soft);
+    color: var(--uu-green);
+  }
+
+  .uu-process strong {
+    color: var(--uu-ink);
+  }
+
+  .uu-process p {
+    margin: 0.25rem 0 0;
+    color: var(--uu-muted);
+    font-size: 0.9rem;
+  }
+
+  .uu-check {
+    margin: 1.6rem 0 2rem;
+    padding: 1.2rem;
+    border: 1px solid var(--uu-line);
+    border-radius: 1.2rem;
+    background: #10271c;
+  }
+
+  .uu-check header > span {
+    color: #7be2a8;
+  }
+
+  .uu-check header > strong {
+    color: #f0fff6;
+    font-size: 1.15rem;
+  }
+
+  .uu-check > div {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin-top: 1rem;
+  }
+
+  .uu-check article {
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.9rem;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .uu-check article b {
+    color: #7be2a8;
+    font-size: 0.72rem;
+  }
+
+  .uu-check article strong {
+    display: block;
+    margin-top: 0.25rem;
+    color: #fff;
+  }
+
+  .uu-check article p {
+    margin: 0.35rem 0 0;
+    color: #b9d0c2;
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+
+  .uu-layers article {
+    position: relative;
+  }
+
+  .uu-layers article.is-current {
+    border-color: rgba(13, 122, 69, 0.35);
+    background: var(--uu-green-soft);
+  }
+
+  .uu-layers em {
+    display: inline-block;
+    margin-top: 0.7rem;
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    background: var(--uu-green);
+    color: white;
+    font-size: 0.72rem;
+    font-style: normal;
+    font-weight: 700;
+  }
+
+  @media (max-width: 820px) {
+    .uu-route {
+      grid-template-columns: 1fr;
+    }
+
+    .uu-route i {
+      transform: rotate(90deg);
+      justify-self: center;
+    }
+
+    .uu-identity-board,
+    .uu-layers,
+    .uu-check > div {
+      grid-template-columns: 1fr;
+    }
+  }
+`}</style>
