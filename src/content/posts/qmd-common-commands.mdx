@@ -1,0 +1,649 @@
+---
+title: "QMD 常用命令"
+description: "整理 QMD 本地 Markdown 知识库最常用的初始化、索引、检索、原文读取和 MCP 命令，并说明 lexical、vector、HyDE 和 rerank 分别什么时候用。"
+date: 2026-09-22T13:45:23+08:00
+category: "教程"
+tags:
+  - "QMD"
+  - "知识库"
+  - "Agent"
+minutes: 12
+featured: false
+pinned: false
+draft: false
+private: false
+---
+
+QMD 解决的是一个很具体的问题：**Markdown 文档越来越多以后，怎么让人和 Agent 快速找到真正需要的那几篇？**
+
+我现在仍然把 Markdown 和 Git 当成知识库本体。QMD 不负责取代原文，而是在旁边增加全文检索、向量检索、混合检索和 MCP 接口。
+
+<div class="qmd-hero" role="group" aria-label="QMD 在 Markdown 知识库中的位置">
+  <div>
+    <span>QMD · QUICK MARKDOWN SEARCH</span>
+    <strong>Markdown 继续做人能读的知识库，QMD 负责让机器更快找到它</strong>
+    <p>原文仍然可以直接编辑、Git diff 和审查；索引只是可重建的检索层。</p>
+  </div>
+  <div class="qmd-hero__flow">
+    <section><small>01 · SOURCE</small><b>Markdown</b><em>正式知识原文</em></section>
+    <i>→</i>
+    <section class="is-main"><small>02 · INDEX</small><b>QMD</b><em>BM25 · Vector · Rerank</em></section>
+    <i>→</i>
+    <section><small>03 · CONSUMER</small><b>人 / Agent</b><em>CLI · MCP</em></section>
+  </div>
+</div>
+
+这篇只整理日常最常用的命令，以及我实际使用后留下来的检索顺序。命令以 QMD 2.8.x 的 CLI 行为为基线；版本变化后，以本机 <code>qmd --help</code> 为准。
+
+## 先理解三个东西
+
+一个项目级 QMD 知识库可以长这样：
+
+~~~text
+knowledge-base/
+├── .qmd/
+│   ├── index.yml
+│   └── index.sqlite
+├── docs/
+├── api-docs/
+├── skills/
+└── reference-projects/
+~~~
+
+这里其实有三层：
+
+<div class="qmd-grid qmd-layers" role="group" aria-label="QMD 知识库的三层结构">
+  <section><span>原文层</span><strong>Markdown</strong><p>真正应该长期维护和 Git 同步的知识。QMD 可以删掉重建，原文不能丢。</p></section>
+  <section class="is-main"><span>检索层</span><strong>.qmd / index.sqlite</strong><p>全文索引、向量和检索状态。它是运行时产物，可以重新生成。</p></section>
+  <section><span>分区层</span><strong>Collection</strong><p>把 docs、API、Skill、参考项目等不同身份的资料分开索引和过滤。</p></section>
+</div>
+
+我通常把 <code>.qmd/index.yml</code> 提交进 Git，而把 <code>.qmd/index.sqlite</code> 放进 <code>.gitignore</code>。这样索引规则跟着仓库走，但不同电脑各自生成运行时数据库。
+
+## 初始化与维护
+
+第一次给项目接入 QMD：
+
+~~~bash
+qmd init
+~~~
+
+日常真正高频的是下面三条：
+
+~~~bash
+qmd update
+qmd embed
+qmd status
+~~~
+
+<div class="qmd-track" role="group" aria-label="QMD 日常维护流程">
+  <section><b>1</b><div><code>qmd update</code><strong>重新扫描文档</strong><p>Markdown 新增、删除、修改后，先更新全文索引。</p></div></section>
+  <i>→</i>
+  <section><b>2</b><div><code>qmd embed</code><strong>刷新向量</strong><p>需要语义检索时，为新增或变化内容生成 embedding。</p></div></section>
+  <i>→</i>
+  <section><b>3</b><div><code>qmd status</code><strong>检查结果</strong><p>确认 Collection、文档数量、向量数量和索引状态。</p></div></section>
+</div>
+
+知识库本身也是 Git 仓库时，可以：
+
+~~~bash
+qmd update --pull
+~~~
+
+只刷新某个 Collection：
+
+~~~bash
+qmd embed -c docs
+~~~
+
+强制重建 embedding：
+
+~~~bash
+qmd embed -f
+~~~
+
+长期增删大量文件后，可以先预览清理范围：
+
+~~~bash
+qmd cleanup --dry-run
+~~~
+
+确认后再执行：
+
+~~~bash
+qmd cleanup
+~~~
+
+## Collection：给知识标记身份
+
+Collection 可以理解成“这批文件属于哪一类知识”。
+
+~~~bash
+qmd collection add ./docs --name docs
+qmd collection add ./api-docs --name api
+qmd collection add ./reference-projects --name reference
+~~~
+
+查看和管理：
+
+~~~bash
+qmd collection list
+qmd collection show docs
+qmd collection rename docs knowledge
+qmd collection remove reference
+~~~
+
+查看已经进入索引的文件：
+
+~~~bash
+qmd ls
+qmd ls api
+~~~
+
+Collection 不只是为了目录整齐。对 Agent 来说，它还能表达资料身份：正式 API、稳定开发知识、专项 Skill、历史参考项目可以分别放在不同 Collection，并在规则中说明优先级。
+
+## 搜索有三条路
+
+QMD 日常最值得记住的是：
+
+~~~bash
+qmd search
+qmd vsearch
+qmd query
+~~~
+
+<div class="qmd-grid qmd-search" role="group" aria-label="QMD 三种搜索入口对比">
+  <section><span>已知关键词</span><strong>search</strong><code>DPAPI</code><p>BM25 全文搜索，不需要启动 LLM。函数名、文件名、错误文本特别适合。</p></section>
+  <section><span>只知道意思</span><strong>vsearch</strong><code>如何保存敏感配置</code><p>纯向量相似度。文档和提问用词不一致时更有价值。</p></section>
+  <section class="is-main"><span>需要综合召回</span><strong>query</strong><code>关键词 + 语义 + rerank</code><p>可以做查询扩展和混合检索，质量更高，但成本也更高。</p></section>
+</div>
+
+### 已知准确词：search
+
+~~~bash
+qmd search "DPAPI"
+qmd search "traceback.format_exc"
+qmd search "selectorsV2.xml"
+~~~
+
+如果手里已经有函数名、API 名、文件名、异常文本、XPath 或独特技术词，我一般先用 search。
+
+~~~bash
+qmd search "DPAPI" -n 5
+qmd search "DPAPI" -c api
+qmd search "DPAPI" -n 5 --format json
+~~~
+
+### 只知道语义：vsearch
+
+~~~bash
+qmd vsearch "怎么把完整异常现场写进日志"
+~~~
+
+即使文档真正写的是 traceback.format_exc()，只要语义接近，向量检索仍有机会找到。
+
+### 综合检索：query
+
+~~~bash
+qmd query "怎么处理 Python 异常日志"
+~~~
+
+单行普通文本会进入查询扩展流程。它适合“我知道问题，但不知道知识库里会怎么表述”的情况。
+
+不过开发知识库里很多问题其实非常精确。如果已经知道 DPAPI、find_process_window 这类词，就没有必要每次都启动完整语义链路。
+
+## query 里的 lex、vec、hyde
+
+qmd query 还可以明确指定检索类型：
+
+~~~bash
+qmd query "lex: DPAPI"
+qmd query "vec: Windows 本地敏感配置加密"
+qmd query "hyde: 使用 Windows DPAPI 对配置文件中的敏感信息进行加密保存"
+~~~
+
+<div class="qmd-grid qmd-types" role="group" aria-label="lex vec hyde 的使用场景">
+  <section><b>LEX</b><strong>词已经知道</strong><p>尽量命中准确文本。适合技术词、代码符号、文件名、报错。</p></section>
+  <section><b>VEC</b><strong>意思知道，词不知道</strong><p>按语义相似度找内容，适合自然语言问题和概念检索。</p></section>
+  <section><b>HyDE</b><strong>先描述“答案可能长什么样”</strong><p>用假设答案帮助召回与问题相关、但措辞差距更大的资料。</p></section>
+</div>
+
+Linux / macOS 下可以组合多个 typed query：
+
+~~~bash
+qmd query $'lex: DPAPI\nvec: Windows 本地敏感配置加密'
+~~~
+
+PowerShell：
+
+~~~powershell
+$query = @"
+lex: DPAPI
+vec: Windows 本地敏感配置加密
+"@
+
+qmd query $query
+~~~
+
+## 精确词检索时，我会关掉 rerank
+
+QMD 的混合查询可以继续让本地模型对候选结果重新排序，这在模糊问题上很有用。
+
+但如果只是搜一个非常准确的技术词，rerank 经常没有必要。
+
+我日常更常用：
+
+~~~bash
+qmd query "lex: DPAPI" -n 5 -C 10 --no-rerank
+~~~
+
+给 Agent：
+
+~~~bash
+qmd query "lex: DPAPI" -n 5 -C 10 --no-rerank --format json
+~~~
+
+| 参数 | 作用 |
+| --- | --- |
+| <code>-n 5</code> | 最多返回 5 条结果 |
+| <code>-C 10</code> | 最多保留 10 个候选进入后续排序 |
+| <code>--no-rerank</code> | 跳过 LLM reranker |
+| <code>--format json</code> | 用 JSON 输出 |
+
+对于精确函数名、文件名和错误字符串，这种方式通常足够，而且明显更轻。
+
+<div class="qmd-decision" role="group" aria-label="QMD 搜索方式选择">
+  <section><span>有准确技术词</span><strong>search / lex</strong><p>先走便宜、稳定的精确检索。</p></section>
+  <i>→</i>
+  <section><span>只能描述意思</span><strong>vsearch / vec</strong><p>再进入语义检索。</p></section>
+  <i>→</i>
+  <section class="is-main"><span>仍然不稳定</span><strong>query / hyde / rerank</strong><p>最后再扩大召回和排序成本。</p></section>
+</div>
+
+## 找到候选后，要继续读原文
+
+搜索最容易犯的错误，是看到 snippet 里两三行内容就直接开始实现。
+
+更稳妥的做法是：
+
+~~~text
+搜索 = 定位候选
+get / multi-get = 读取依据
+~~~
+
+读取一篇文档：
+
+~~~bash
+qmd get "docs/coding-style.md"
+~~~
+
+也可以使用搜索结果返回的 docid：
+
+~~~bash
+qmd get "#abc123"
+~~~
+
+只读某个范围：
+
+~~~bash
+qmd get "docs/coding-style.md:100:40"
+~~~
+
+表示从第 100 行开始读取 40 行。
+
+一次读取多篇：
+
+~~~bash
+qmd multi-get "docs/a.md,docs/b.md"
+qmd multi-get "docs/*.md" -l 100
+~~~
+
+对于 Agent，这一步尤其重要。搜索结果应该只是“候选定位器”，真正写代码或下结论之前，再读取完整正式原文。
+
+## 这些参数也很常用
+
+| 参数 | 作用 | 常见场景 |
+| --- | --- | --- |
+| <code>-n &lt;num&gt;</code> | 限制结果数量 | Agent 搜索避免返回太多 |
+| <code>-c &lt;name&gt;</code> | 限定 Collection | 已知资料属于 API / docs 等分区 |
+| <code>-C &lt;num&gt;</code> | 限制 rerank 候选 | 降低混合查询成本 |
+| <code>--no-rerank</code> | 跳过 LLM rerank | 精确词、本地 CPU 环境 |
+| <code>--format json</code> | JSON 输出 | 交给程序或 Agent |
+| <code>--full</code> | 返回完整文档 | 已经确认命中文档 |
+| <code>--full-path</code> | 显示磁盘路径 | 排查具体来源文件 |
+| <code>--explain</code> | 显示检索评分过程 | 调试“为什么排在这里” |
+
+## MCP：把 QMD 直接交给 Agent
+
+QMD 可以直接启动 MCP Server：
+
+~~~bash
+qmd mcp
+~~~
+
+这样 Claude Code、Codex 等支持 MCP 的 Agent 就可以直接调用 QMD 的检索和读取能力。
+
+Claude Code 项目级配置可以类似：
+
+~~~json
+{
+  "mcpServers": {
+    "qmd": {
+      "type": "stdio",
+      "command": "qmd",
+      "args": ["mcp"]
+    }
+  }
+}
+~~~
+
+Codex：
+
+~~~toml
+[mcp_servers.qmd]
+command = "qmd"
+args = ["mcp"]
+cwd = "/path/to/knowledge-base"
+~~~
+
+这里要特别注意 **工作目录**。
+
+如果 QMD 使用项目里的 <code>.qmd/index.yml</code>，Agent 却从另一个业务项目启动，直接运行 <code>qmd mcp</code> 可能找不到正确的项目级索引。解决办法就是让 MCP 启动命令固定进入知识库根目录，或者像 Codex 一样直接配置 <code>cwd</code>。
+
+## 我现在实际采用的检索顺序
+
+把 QMD 接进 Agent 后，我并没有规定“所有问题都先搜 QMD”。
+
+相反，检索顺序应该从最便宜、最贴近当前项目的信息开始。
+
+<div class="qmd-route" role="group" aria-label="Agent 使用 QMD 的实际检索路线">
+  <section><b>01</b><div><span>CURRENT PROJECT</span><strong>当前项目有没有可靠的相同用法？</strong><p>有就直接沿用，不重复查知识库。</p></div></section>
+  <i>↓</i>
+  <section><b>02</b><div><span>NAVIGATION</span><strong>知识库索引页能否直接定位？</strong><p>目录、llms.txt 或已知正式页面能定位，就直接读原文。</p></div></section>
+  <i>↓</i>
+  <section class="is-main"><b>03</b><div><span>QMD FALLBACK</span><strong>精确词先 lexical，找不到再语义</strong><p>先小范围召回，必要时再使用 vec / hyde / rerank。</p></div></section>
+  <i>↓</i>
+  <section><b>04</b><div><span>FULL SOURCE</span><strong>get / multi-get 读取正式原文</strong><p>确认上下文、限制和边界后，再开始实现。</p></div></section>
+</div>
+
+这条顺序的核心不是“少调用工具”，而是避免把非常简单的确定性问题也升级成一次昂贵的语义搜索。
+
+## 最后：真正高频的命令
+
+~~~bash
+# 初始化
+qmd init
+
+# 更新知识库
+qmd update
+qmd embed
+qmd status
+
+# 查看 Collection / 文件
+qmd collection list
+qmd ls
+
+# 精确关键词
+qmd search "DPAPI" -n 5
+
+# 精确 query，跳过 rerank
+qmd query "lex: DPAPI" -n 5 -C 10 --no-rerank
+
+# 语义搜索
+qmd vsearch "如何安全保存本地密码"
+
+# 混合查询
+qmd query "如何安全保存本地密码"
+
+# 阅读正式原文
+qmd get "docs/example.md"
+qmd multi-get "docs/a.md,docs/b.md"
+
+# 启动 MCP
+qmd mcp
+~~~
+
+如果只把 QMD 当作“向量数据库”，反而容易把事情想复杂。
+
+我更愿意把它理解成 Markdown 知识库旁边的一层检索基础设施：**原文继续由人维护和审查，QMD 负责把合适的原文送到人和 Agent 面前。**
+
+<style>{`
+  .qmd-hero,
+  .qmd-grid,
+  .qmd-track,
+  .qmd-decision,
+  .qmd-route {
+    --qmd-ink: #172033;
+    --qmd-muted: #667085;
+    --qmd-line: #d9e0ea;
+    --qmd-panel: #f7f9fc;
+    --qmd-blue: #3568d4;
+    --qmd-violet: #7357c8;
+    color: var(--qmd-ink);
+  }
+
+  .qmd-hero {
+    margin: 2rem 0 2.4rem;
+    padding: 1.5rem;
+    border: 1px solid var(--qmd-line);
+    border-radius: 1.4rem;
+    background: radial-gradient(circle at 84% 14%, rgba(115, 87, 200, 0.14), transparent 30%), linear-gradient(145deg, #fff 0%, #f5f8ff 100%);
+  }
+
+  .qmd-hero > div:first-child > span,
+  .qmd-grid section > span,
+  .qmd-route section span {
+    display: block;
+    color: var(--qmd-blue);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+  }
+
+  .qmd-hero > div:first-child > strong {
+    display: block;
+    max-width: 52rem;
+    margin-top: 0.55rem;
+    font-size: clamp(1.5rem, 4vw, 2.35rem);
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+  }
+
+  .qmd-hero > div:first-child > p,
+  .qmd-grid p,
+  .qmd-track p,
+  .qmd-decision p,
+  .qmd-route p {
+    color: var(--qmd-muted);
+  }
+
+  .qmd-hero__flow,
+  .qmd-track,
+  .qmd-decision {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 0.8rem;
+    align-items: stretch;
+    margin-top: 1.4rem;
+  }
+
+  .qmd-hero__flow section,
+  .qmd-track section,
+  .qmd-decision section,
+  .qmd-grid section,
+  .qmd-route section {
+    padding: 1rem;
+    border: 1px solid var(--qmd-line);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .qmd-hero__flow small {
+    display: block;
+    color: var(--qmd-muted);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .qmd-hero__flow b,
+  .qmd-hero__flow em {
+    display: block;
+  }
+
+  .qmd-hero__flow b {
+    margin: 0.3rem 0;
+  }
+
+  .qmd-hero__flow em {
+    color: var(--qmd-muted);
+    font-size: 0.86rem;
+    font-style: normal;
+  }
+
+  .qmd-hero__flow > i,
+  .qmd-track > i,
+  .qmd-decision > i {
+    align-self: center;
+    color: var(--qmd-blue);
+    font-style: normal;
+    font-weight: 900;
+  }
+
+  .qmd-hero__flow .is-main,
+  .qmd-grid .is-main,
+  .qmd-decision .is-main,
+  .qmd-route .is-main {
+    border-color: rgba(53, 104, 212, 0.42);
+    background: linear-gradient(145deg, #f7faff, #eef3ff);
+  }
+
+  .qmd-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.9rem;
+    margin: 1.35rem 0 1.7rem;
+  }
+
+  .qmd-grid strong,
+  .qmd-grid code {
+    display: block;
+    margin: 0.3rem 0 0.45rem;
+  }
+
+  .qmd-grid code {
+    color: var(--qmd-violet);
+    font-size: 0.8rem;
+  }
+
+  .qmd-grid p,
+  .qmd-track p,
+  .qmd-decision p,
+  .qmd-route p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+
+  .qmd-types section > b {
+    display: inline-grid;
+    place-items: center;
+    min-width: 3rem;
+    height: 2rem;
+    margin-bottom: 0.4rem;
+    border-radius: 0.55rem;
+    background: #eaf0ff;
+    color: var(--qmd-blue);
+    font-size: 0.76rem;
+    letter-spacing: 0.08em;
+  }
+
+  .qmd-track,
+  .qmd-decision {
+    margin: 1.3rem 0 1.7rem;
+  }
+
+  .qmd-track section {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .qmd-track section > b,
+  .qmd-route section > b {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: #eaf0ff;
+    color: var(--qmd-blue);
+    font-size: 0.78rem;
+  }
+
+  .qmd-track code,
+  .qmd-track strong {
+    display: block;
+  }
+
+  .qmd-track code {
+    color: var(--qmd-blue);
+    font-size: 0.8rem;
+    font-weight: 800;
+  }
+
+  .qmd-track strong {
+    margin: 0.12rem 0 0.3rem;
+  }
+
+  .qmd-decision section span {
+    display: block;
+    color: var(--qmd-muted);
+    font-size: 0.78rem;
+  }
+
+  .qmd-decision section strong {
+    display: block;
+    margin: 0.25rem 0;
+  }
+
+  .qmd-route {
+    display: grid;
+    gap: 0.65rem;
+    margin: 1.4rem 0 1.8rem;
+  }
+
+  .qmd-route section {
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+  }
+
+  .qmd-route section strong {
+    display: block;
+    margin: 0.2rem 0 0.28rem;
+  }
+
+  .qmd-route > i {
+    padding-left: 0.95rem;
+    color: var(--qmd-blue);
+    font-style: normal;
+    line-height: 1;
+  }
+
+  @media (max-width: 760px) {
+    .qmd-hero__flow,
+    .qmd-track,
+    .qmd-decision,
+    .qmd-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .qmd-hero__flow > i,
+    .qmd-track > i,
+    .qmd-decision > i {
+      justify-self: start;
+      transform: rotate(90deg);
+    }
+  }
+`}</style>
