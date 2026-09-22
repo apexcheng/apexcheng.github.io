@@ -21,10 +21,10 @@ export const seriesMetaList = [
     description: '从函数知识地图、基础案例到查找匹配、通配符和中级函数案例，用真实表格和配套练习工作簿掌握常用 Excel 函数。',
     order: 3,
     resource: {
-      title: 'Excel 函数学习系列练习工作簿',
-      description: '15 个工作表、71 道练习，覆盖 39 个基础函数、18 个中级函数、通配符和综合应用，并附参考答案。',
-      href: '/files/excel-functions/excel-functions-practice-workbook.xlsx',
-      meta: 'XLSX · 15 个工作表 · 含参考答案',
+      title: 'Excel 函数学习系列练习与考核包',
+      description: '包含练习工作簿、考核工作簿和考核参考答案，共 3 个 Excel 文件。',
+      href: '/files/excel-functions/Excel函数学习系列练习与考核包.zip',
+      meta: 'ZIP · 3 个 Excel 文件 · 练习 + 考核 + 参考答案',
     },
   },
   {
