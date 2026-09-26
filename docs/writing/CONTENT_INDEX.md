@@ -8,6 +8,7 @@
 
 | 文件 | 分类 | 主题概览 | 适合什么时候参考 |
 | --- | --- | --- | --- |
+| `src/content/posts/ai-amplifies-execution-gap.mdx` | `生活` | 用“工具 / 外骨骼 / 电子菩萨”三层模型讨论 AI 的能力边界，并用助理评分、工作日志、成熟绩效制度和电商爆品说明 AI 能提高已有标准的执行效率，却不能凭空创造事实与答案 | 写 AI 使用方式、生产力、执行力、绩效分析、信息差与行动差距、AI 能力边界类文章时参考 |
 | src/content/posts/qmd-common-commands.mdx | 教程 | QMD 本地 Markdown 知识库命令手册，覆盖项目级索引、Collection、update/embed/status、search/vsearch/query、lex/vec/hyde、rerank、get/multi-get 与 MCP 接入 | 写 QMD、Markdown 知识库检索、Agent 知识库工具、Claude/Codex MCP 和本地搜索策略文章时参考 |
 | `src/content/posts/yingdao-enterprise-rpa-flow-notes.mdx` | `实践` | 影刀企业案例、RPA业务流程、普通版与企业版决策、Mermaid流程图 | 写影刀RPA、企业自动化、普通版/企业版选型、流程图笔记时参考 |
 | `src/content/posts/ulike-customer-service-rpa-flow-detail.mdx` | `实践` | Ulike 客服售后自动化细节拆解，覆盖静默单推送、已发货仅退款、赠品发货留言三条 RPA 实操流程 | 写电商客服售后RPA、订单/物流/ERP跨系统流程、客服自动化动作拆解时参考 |
