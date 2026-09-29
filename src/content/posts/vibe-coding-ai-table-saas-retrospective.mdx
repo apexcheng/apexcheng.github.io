@@ -1,0 +1,784 @@
+---
+title: "从无脑 Vibe Coding 到完整 AI 表格：几天做 SaaS 后，我重新理解了 AI 编程"
+description: "复盘我如何从“想到什么就让 AI 写什么”，一路走到钉钉对照、成熟产品逆向、人工定点精修、多 Agent 并行开发、真实浏览器验收和 Skill 经验固化。"
+date: 2026-09-29T17:30:00+08:00
+category: "实践"
+tags:
+  - "Vibe Coding"
+  - "AI 编程"
+  - "Agent"
+  - "SaaS"
+minutes: 30
+featured: false
+pinned: false
+draft: false
+private: false
+---
+
+<section class="vibe-hero" aria-label="文章核心结论">
+  <div class="vibe-hero-copy">
+    <span class="vibe-kicker">AI TABLE · BUILD LOG · 2026</span>
+    <strong class="vibe-display-title">AI 把“写出来”变得很便宜以后，真正贵的是判断、体验和验收。</strong>
+    <p>这几天，我从一个很典型的“想到什么就叫 AI 做什么”的 Vibe Coding 状态出发，最后做出了一套已经相当完整的 AI 表格系统。系统变完整只是结果，更有意思的是：我的开发方式也在这几天里连续升级了好几次。</p>
+  </div>
+  <div class="vibe-hero-rail" aria-label="方法演进">
+    <span>无脑开发</span><i>→</i><span>产品对照</span><i>→</i><span>人工精修</span><i>→</i><span>逆向研究</span><i>→</i><span>多 Agent</span><i>→</i><span>经验固化</span>
+  </div>
+</section>
+
+前几天，我只是想把自己一直在用的钉钉 AI 表格能力搬到本地数据平台里。
+
+最开始的方法也非常直接。
+
+缺什么，就让 AI 加什么。
+
+表格不够像表格，就让 AI 再做得像一点；字段不好用，就补字段操作；详情区域不舒服，就把 Drawer 改宽；图片不好看，就加缩略图和图片墙；左侧导航不像成熟产品，就继续改导航。
+
+这基本就是最原始的 Vibe Coding：
+
+> 我负责感觉“这里好像不对”，AI 负责马上把它改出来。
+
+一开始，这种方式甚至非常爽。
+
+以前一个想法可能要先整理需求、评估实现、排期、开发，再等到真正能点的时候才知道合不合适。现在往往是想到一个方向，直接让 AI 改，过一会儿就能看到结果。
+
+但项目越往后做，我越明显地发现：
+
+**AI 可以非常快地把功能写出来，但它不会自动把产品做对。**
+
+这几天真正有价值的，不是我“用 AI 做了一个表格”，而是我从一个相对随意的 Vibe Coding 状态，一步一步摸索出了一套更接近完整软件研发的 AI 协作方式。
+
+<section class="vibe-thesis" aria-label="文章主线">
+  <div><span>最开始我关心</span><strong>AI 能不能做出来？</strong></div>
+  <div><span>做到一半我开始关心</span><strong>这个东西到底好不好用？</strong></div>
+  <div><span>后来我真正关心</span><strong>怎样让下一轮开发自动比上一轮更可靠？</strong></div>
+</section>
+
+## 一、第一阶段：真的就是“无脑叫 AI 开发”
+
+最开始没有完整路线图。
+
+我知道自己想要的最终方向：一个类似钉钉 AI 表格的数据工作台，能承载业务数据、字段配置、视图、AI 分析、附件和后续自动化。
+
+但至于一个成熟版本到底应该有哪些能力，我并没有一开始就全部想清楚。
+
+所以最早的开发逻辑非常像这样：
+
+<section class="vibe-loop" aria-label="早期 Vibe Coding 循环">
+  <article><b>01</b><strong>看到问题</strong><span>这里缺功能 / 不顺手 / 不好看</span></article><i>→</i>
+  <article><b>02</b><strong>告诉 AI</strong><span>描述我要的结果，直接改</span></article><i>→</i>
+  <article><b>03</b><strong>看到成品</strong><span>能跑起来，开始真实使用</span></article><i>→</i>
+  <article><b>04</b><strong>继续挑问题</strong><span>再进入下一轮</span></article>
+</section>
+
+现在回头看，我并不觉得这个阶段是错的。
+
+相反，它非常适合一个还在快速探索形态的产品。
+
+因为项目早期最大的风险不是“代码写得不够优雅”，而是我自己都还不知道这个东西最终应该长什么样。
+
+AI 把实现成本压低以后，我可以先把一个想法变成可以操作的东西，再通过使用去判断它值不值得保留。
+
+这和坐在那里想需求有一个本质区别：
+
+**我不是在想象产品，而是在试产品。**
+
+传统方式下，一个功能如果实现成本很高，我会天然更谨慎。因为一旦开发完才发现方向不对，返工成本很高，所以会倾向于先把需求想得更完整、更确定。
+
+AI 编码以后，一些原本需要在纸面上争论很久的问题，可以先快速实现一个版本。
+
+例如：
+
+- Drawer 到底应该多宽；
+- 字段配置是放右侧还是 Dialog；
+- Toolbar 到底保留多少东西；
+- 图片在列表里应该显示成什么密度；
+- 左侧导航要不要一直展开；
+- 行高应该偏紧凑还是偏标准；
+- 表头菜单里哪些操作应该一级出现。
+
+这些问题当然可以提前设计，但真正点起来以后，判断往往更准确。
+
+<div class="vibe-quote">
+  <span>第一次认知变化</span>
+  <strong>AI 编程最大的价值之一，不只是“写代码更快”，而是“尝试一个产品方案”变便宜了。</strong>
+</div>
+
+## 二、从 Demo 到真实业务以后，问题完全变了
+
+如果只是做 Demo，很多东西“看起来有”就够了。
+
+但这个 AI 表格后来真的开始承载业务。
+
+真实的评价数据被迁进来，历史 AI 结果被继承，附件也开始进入本地存储；缩略图、导入 Worker、AI Worker、任务状态、权限、视图等能力逐渐补齐。
+
+系统里开始出现数万条真实记录、近十万级的历史 AI 结果和大量附件。
+
+到了这个时候，项目性质发生了变化。
+
+一个按钮不好用，不再只是 Demo 有点粗糙；一个字段改名后引用断掉，也不再只是刷新一下页面的问题；一个复制粘贴逻辑出错，可能真的会污染数据；一个筛选器状态没有闭环，用户保存的 View 就可能失去意义。
+
+**“AI 能不能写出来”已经不是核心问题，“它能不能长期用”才是。**
+
+<section class="vibe-shift" aria-label="Demo 到真实系统的变化">
+  <article><span>DEMO MINDSET</span><strong>功能存在</strong><p>页面上有按钮，点一下有反应，基本就算完成。</p></article>
+  <i>→</i>
+  <article class="is-live"><span>LIVE SYSTEM</span><strong>状态闭环</strong><p>修改、保存、刷新、引用、权限、异常和后续操作都必须保持一致。</p></article>
+</section>
+
+这也是我第一次明显意识到：
+
+**Vibe Coding 做小工具很容易，做真实软件以后，软件工程里那些原本看起来“麻烦”的东西还是会回来。**
+
+只是它们出现的位置变了。
+
+以前成本主要花在写代码。
+
+现在代码生成越来越快，成本开始转移到产品判断、状态设计、验证和维护上。
+
+## 三、功能越来越多，但它还是“不像成熟产品”
+
+项目做到一定程度以后，出现了一个很微妙的问题。
+
+你很难说它缺什么。
+
+表格有了，字段有了，视图有了，AI 有了，附件有了，权限有了，详情页也有了。
+
+但和钉钉 AI 表格这种成熟产品放在一起，还是能明显感觉到差别。
+
+那种差别不是一句“UI 不够漂亮”能解释的。
+
+成熟 SaaS 的质感，往往藏在大量非常小的决定里：
+
+<section class="vibe-detail-grid" aria-label="成熟 SaaS 的细节">
+  <div><b>密度</b><span>行高、表头高度、Toolbar、导航宽度是否协调</span></div>
+  <div><b>层级</b><span>什么默认出现，什么进入菜单，什么只在选中后出现</span></div>
+  <div><b>反馈</b><span>hover、拖动、选择、编辑、保存时用户有没有明确感知</span></div>
+  <div><b>连续性</b><span>完成当前动作后，焦点、选区和下一步是否自然</span></div>
+  <div><b>边界</b><span>编辑器打开时，Grid 快捷键会不会抢走输入</span></div>
+  <div><b>闭环</b><span>重命名、删除、禁用以后，关联状态是否全部同步</span></div>
+</section>
+
+AI 很容易给你卡片、圆角、阴影、Toolbar、Drawer、Dialog、图标和表格。
+
+但“这些东西都有”并不等于成熟产品。
+
+后来我越来越觉得，所谓产品感，很多时候不是来自某一个巨大的设计，而是来自几十个很小的决定都没有明显出错。
+
+<div class="vibe-quote vibe-quote-dark">
+  <span>第二次认知变化</span>
+  <strong>“有完整 UI”不等于“有成熟体验”。真正的产品质感，往往来自大量小交互长期保持一致。</strong>
+</div>
+
+## 四、我不再让 AI“参考钉钉”，而是把钉钉真正摆在旁边
+
+早期我也会说：
+
+> 参考钉钉 AI 表格优化一下。
+
+这种 Prompt 听起来很明确，实际上非常模糊。
+
+“参考钉钉”到底参考什么？颜色？布局？按钮？还是交互？
+
+AI 最容易做的是表层相似：加一点类似的灰色、边框、按钮位置，再把几个组件尺寸调一下。
+
+但真正的差距并不会因此消失。
+
+所以后来我的方法变成了：
+
+**直接打开钉钉 AI 表格，再打开自己的系统，一个区域一个区域比较。**
+
+不是抽象地问“像不像”，而是问非常具体的问题。
+
+### 这个左侧导航为什么看起来比我的轻？
+
+是宽度问题，还是层级问题？是背景太重，还是图标、文字和 hover 的关系不对？
+
+### 为什么同样是表格，钉钉看起来更舒服？
+
+后来我甚至注意到一个很小的问题。
+
+同样在 1920 × 1080 下，系统使用浏览器 100% 缩放时，我主观上会觉得比 110% 缩放生硬一点。
+
+我当然可以直接把整个页面放大，但那会牺牲表格信息密度。
+
+所以真正的问题变成：
+
+> 能不能在 100% 下做到接近 110% 的视觉舒适度，同时不明显减少一屏能看到的信息？
+
+这就不是一句“字体调大一点”能解决的。
+
+它需要一起看字号、行高、表头高度、单元格 padding、图标尺寸、Toolbar 高度、左侧导航、空白面积和对比度。
+
+最终做的不是“整体放大”，而是局部重新分配视觉密度。
+
+这个过程让我越来越确认一件事：
+
+**AI 很适合执行精修，但最初那个“哪里不舒服”的信号，往往还是来自人真实使用产品。**
+
+## 五、截图还不够，我开始直接录交互视频
+
+静态截图能看布局，但很多体验问题只存在于时间里。
+
+例如拖动。
+
+拖动时元素跟手不跟手？拖动过程中原位置有没有合理占位？鼠标经过可放置区域时有没有反馈？放手以后布局是瞬间跳过去，还是自然完成？
+
+这些东西用一张截图很难说清楚。
+
+所以后来我直接录成熟产品里的交互视频，让 AI 看真实拖动效果，再针对自己的实现做定点调整。
+
+<section class="vibe-evidence" aria-label="参考信息的升级">
+  <div><b>LEVEL 1</b><strong>一句描述</strong><span>“参考钉钉做得更像一点”</span></div><i>→</i>
+  <div><b>LEVEL 2</b><strong>截图对照</strong><span>比较尺寸、密度、层级、状态</span></div><i>→</i>
+  <div class="is-active"><b>LEVEL 3</b><strong>真实交互</strong><span>用视频观察拖动、反馈和状态变化</span></div>
+</section>
+
+从这里开始，我给 AI 的输入已经不再只是“需求”，而越来越像证据。
+
+不是“我感觉这里不对，你优化一下”，而是“这是成熟产品的真实行为，这是我们现在的行为，差异发生在这里”。
+
+AI 在这种任务上的表现会稳定很多。
+
+## 六、再往后：不只是模仿 UI，而是研究成熟产品为什么这样做
+
+钉钉很好用，但它只能让我看到结果。
+
+我能看到它怎么表现，却看不到很多内部实现。
+
+所以后面我又继续看 Airtable、Baserow、Teable、APITable 这类表格产品。
+
+这里我逐渐把“参考产品”分成了两种。
+
+<section class="vibe-reference" aria-label="两类产品参考">
+  <article><span>PRODUCT REFERENCE</span><strong class="vibe-ref-title">看成熟产品怎么做取舍</strong><p>钉钉 AI 表格、Airtable 这类产品主要告诉我：用户最终看到什么、操作路径怎么组织、默认状态怎样更自然。</p><div><b>信息密度</b><b>操作层级</b><b>字段交互</b><b>菜单与导航</b></div></article>
+  <article class="is-code"><span>ENGINEERING REFERENCE</span><strong class="vibe-ref-title">看开源产品怎么解决问题</strong><p>Baserow、Teable、APITable 等开源项目则可以继续研究：成熟 Grid 背后的状态、组件和工程边界怎样组织。</p><div><b>Selection</b><b>Clipboard</b><b>Field / View</b><b>Filter</b></div></article>
+</section>
+
+这时候，我已经不太希望 AI“自己想一个表格软件应该怎么做”。
+
+因为很多问题，行业已经有人付过学费了。
+
+我的目标变成：
+
+> 先看已经被大量真实用户验证过的产品怎么解决，再判断哪些适合自己的系统。
+
+这不是为了照抄。
+
+相反，参照越具体，越容易知道什么应该借鉴，什么不应该借鉴。
+
+例如 Airtable 的某个交互可能非常成熟，但不一定适合内部运营系统；钉钉某个功能可能为了通用 SaaS 做得更复杂，而我这里完全可以更直接。
+
+**成熟产品应该被当作教材，而不是答案。**
+
+## 七、Prompt 不够，项目需要自己的“经验”
+
+项目做到这里以后，另一个问题出现了。
+
+每开一个新的 AI 会话，我都要重复说很多事情：
+
+- 表格信息密度不要太低；
+- 不要做成一堆大卡片；
+- 参考钉钉，但不要机械复刻；
+- 虚拟表格要考虑 DOM 生命周期；
+- 快捷键不能抢编辑器输入；
+- 浏览器验收不要重复跑已经完成的代码检查；
+- 登录失效不要关掉浏览器，要停下来让我登录；
+- selector 不要傻等几十秒。
+
+如果这些东西只存在于聊天记录里，那么每个新会话都像一个新员工。
+
+它不知道之前踩过什么坑。
+
+这时候我开始认真整理项目级 Skill 和 <code>AGENTS.md</code>。
+
+<section class="vibe-prompt-skill" aria-label="Prompt 到 Skill 的变化">
+  <article><span>PROMPT</span><strong>这一次怎么做</strong><p>解决当前任务，信息主要存在当前会话里。换一个会话，很可能又从头解释。</p></article>
+  <div><span>踩坑</span><i>→</i><span>总结</span><i>→</i><span>固化</span></div>
+  <article class="is-skill"><span>SKILL / AGENTS.MD</span><strong>以后都应该怎么做</strong><p>把重复出现的工程经验变成项目能力，让下一次新会话直接继承。</p></article>
+</section>
+
+后来项目里逐渐形成了不同层次的能力：通用开发规则、AI 表格前端工程 Skill、浏览器验收 Skill、浏览器控制 Skill、UI / UX 和视觉设计 Skill，以及项目自己的 PRD、技术文档和 ADR。
+
+这个变化对我影响很大。
+
+以前我会想：
+
+> Prompt 还要怎么写得更详细？
+
+后来我更常想：
+
+> 这次踩的坑，是不是应该变成项目的长期经验？
+
+<div class="vibe-quote">
+  <span>第三次认知变化</span>
+  <strong>Prompt 更像一次任务说明；Skill 和项目规则，才是在训练“这个项目里的 AI 应该怎么工作”。</strong>
+</div>
+
+## 八、功能不再一锅端：我开始一批一批补真正的表格能力
+
+当产品方向比较稳定以后，开发方式也变了。
+
+不再是“把表格完善一下”这种大任务，而是开始把能力拆成边界清楚的一批一批。
+
+最近这轮 AI 表格增强，大致就是沿着下面这条路径推进的：
+
+<section class="vibe-batches" aria-label="AI 表格阶段开发">
+  <article><b>01</b><strong>Clipboard / Range Mutation</strong><span>复制粘贴和范围写入先形成统一底座</span></article>
+  <article><b>02</b><strong>行操作</strong><span>补齐行级动作与批量状态</span></article>
+  <article><b>03</b><strong>高效填充</strong><span>Fill Handle、范围填充和快捷写入</span></article>
+  <article><b>04</b><strong>字段操作闭环</strong><span>编辑、重命名、删除、禁用与引用完整性</span></article>
+  <article><b>05</b><strong>编辑器与键盘</strong><span>Picker、Enter、Tab、方向键和编辑边界</span></article>
+  <article><b>06</b><strong>增强能力</strong><span>Summary、填充和更多大表操作</span></article>
+  <article><b>07</b><strong>选择与导航</strong><span>大表 Selection、键盘导航和可操作性</span></article>
+  <article><b>08</b><strong>上下文与快速录入</strong><span>右键菜单和高频录入路径</span></article>
+  <article><b>09</b><strong>高级筛选</strong><span>从条件列表走向可递归 Filter Tree</span></article>
+  <article><b>10</b><strong>字段元数据与默认值</strong><span>让字段从“列”变成真正的数据 Schema</span></article>
+</section>
+
+这十批里面，最有价值的并不是“终于有十批功能”，而是很多能力开始共用底层概念。
+
+### 批量写入不应该每个功能各写一套
+
+Fill Handle、Ctrl/Cmd + D、Ctrl/Cmd + Enter、批量粘贴，本质上都在修改一个 Range。
+
+如果每个功能自己维护 draft、save、undo、权限和错误逻辑，系统很快就会变得不可控。
+
+所以后来统一复用 Range Mutation。
+
+### Clipboard 也不只是“把文字放进剪贴板”
+
+简单表格复制当然可以只处理文本。
+
+但真正做下去以后，会遇到带表头复制、类型信息、结构化粘贴、sidecar 状态，以及上一次结构化复制会不会污染下一次纯文本粘贴。
+
+一个看起来很普通的“复制粘贴”，很快就会暴露真实软件和 Demo 的差别。
+
+### Filter 最后也不只是多个条件 AND 一下
+
+简单筛选可以：
+
+~~~text
+字段 A = X
+AND
+字段 B > 10
+~~~
+
+但继续做下去以后，会出现嵌套分组：
+
+~~~text
+(A = X AND B > 10)
+OR
+(C 包含 Y AND (D = 1 OR E = 2))
+~~~
+
+于是原来平铺的条件列表必须升级成真正的 Filter Tree。
+
+而且 Filter Tree 不是只把前端画出来就结束。
+
+它还要贯穿 Query Service、View 保存、URL 状态、Summary、Export 和后续字段变更。
+
+这也是为什么“功能出现”越来越不是我判断完成的标准。
+
+## 九、开发和验收必须分开：不能再让 AI 自己证明自己
+
+这是这几天里我觉得最重要的一次变化。
+
+早期典型流程是：
+
+~~~text
+AI 修改代码
+→ AI 跑测试
+→ AI 告诉我“已经完成”
+~~~
+
+问题是，写代码的 AI 很容易沿着自己的实现思路去验证。
+
+它知道自己改了什么，也容易验证那些最顺手的成功路径。
+
+但真实用户不关心实现思路。
+
+用户只会做动作。
+
+于是后来我把开发和验收彻底拆开。
+
+<section class="vibe-devqa" aria-label="多 Agent 开发与验收流程">
+  <div><span>需求 / 批次</span><strong>明确边界</strong></div><i>→</i>
+  <article><b>DEV AGENT</b><strong>开发线程</strong><span>独立 Worktree</span><span>代码实现</span><span>最小代码验证</span><span>Commit</span></article><i>→</i>
+  <article class="is-qa"><b>QA AGENT</b><strong>验收线程</strong><span>指定 Commit</span><span>真实浏览器操作</span><span>状态闭环检查</span><span>最小复验</span></article><i>→</i>
+  <div class="is-pass"><span>PASS</span><strong>Merge main</strong></div>
+</section>
+
+开发线程负责读取项目规则和对应 ADR / PRD，实现当前批次，做代码级最小验证，然后提交一个明确 commit。
+
+验收线程则不继续开发下一批，而是确认运行的就是目标 commit，打开真实浏览器，像用户一样操作，验证保存、刷新、引用和后续状态。如果发现明确 Bug，只修这个 Bug；修完只做对应最小复验。
+
+这套方式让我对“完成”有了完全不同的理解。
+
+代码通过检查，只能证明代码没有明显问题。
+
+**真正的完成，必须包含真实使用路径。**
+
+## 十、Git Worktree 变成了多 Agent 并行开发的基础设施
+
+当我开始同时开多个 AI 会话以后，又出现了一个非常现实的问题：
+
+大家都在改同一个项目。
+
+如果直接让多个 Agent 操作同一个 working tree，很容易发生：
+
+- 一个会话切走了另一个会话的分支；
+- 未提交文件互相混在一起；
+- 当前页面跑的不是以为的那份代码；
+- 某个修改其实在另一条分支上，所以 main 看不到；
+- 为了同步错误地覆盖本地已有内容。
+
+于是 Git Worktree 从“一个 Git 技巧”，变成了真正的并行开发基础设施。
+
+<section class="vibe-worktrees" aria-label="Worktree 并行开发">
+  <div class="vibe-main"><b>main</b><span>稳定基线</span></div>
+  <div class="vibe-branches"><i></i><i></i><i></i></div>
+  <div class="vibe-worktree-grid">
+    <article><b>worktree A</b><strong>阶段 8</strong><span>上下文菜单</span></article>
+    <article><b>worktree B</b><strong>阶段 9</strong><span>高级筛选</span></article>
+    <article><b>worktree C</b><strong>阶段 10</strong><span>字段元数据</span></article>
+  </div>
+  <p>每个会话只修改自己的工作区。开发完成后以 commit 为交接物，再进入独立验收和合并。</p>
+</section>
+
+这个模式还有一个额外好处：
+
+**AI 会话之间不再靠“你刚才改了什么”这种自然语言交接。**
+
+最可靠的交接物变成了 commit、分支、ADR、PRD、Skill 和验收标准。
+
+也就是把会话上下文，逐渐变成仓库里的正式上下文。
+
+## 十一、最意外的瓶颈：AI 写得越快，验收反而越贵
+
+有一次真实浏览器验收跑了四十多分钟。
+
+功能本身并没有复杂到需要四十分钟。
+
+时间大量花在准备测试字段、准备记录、建 View、构造大表数据、切换状态、等待 selector、处理登录态、启动临时验收服务、清理 fixture，以及在多个 Case 之间重复准备相似环境。
+
+我突然发现一个很有意思的反转。
+
+<section class="vibe-cost" aria-label="编码与验收成本变化">
+  <div class="vibe-cost-head"><span></span><span>传统开发</span><span>AI 编码</span></div>
+  <div class="vibe-cost-row"><b>Coding</b><div><span class="w88">高</span></div><div><span class="w34">快速下降</span></div></div>
+  <div class="vibe-cost-row is-verify"><b>Verification</b><div><span class="w42">中</span></div><div><span class="w82">成为主要成本</span></div></div>
+</section>
+
+这不是说 AI 时代测试会绝对变慢。
+
+而是：
+
+**当 Coding 成本被压得足够低以后，Verification 在总成本里的占比会越来越高。**
+
+以前一个功能写一天，验收半小时不显眼。
+
+现在 AI 可能十几分钟就写完，如果验收还是半小时，验收自然就变成瓶颈。
+
+于是我后来连“怎么验收”本身都开始优化。
+
+## 十二、浏览器自动化也不能傻等：失败要尽快暴露真实原因
+
+最典型的优化就是 selector 等待。
+
+以前一个元素找不到，自动化很容易等 15 秒、再等 30 秒，最后告诉你超时。
+
+但如果页面已经加载完成，普通元素一两秒都拿不到，很多时候再等二十秒也不会突然变好。
+
+真正可能发生的是 selector 已经错了、页面跳到了登录页、URL 不对、DOM 结构已经变化、页面其实报错了，或者当前根本不是预期的测试环境。
+
+所以后来浏览器控制的策略变成：
+
+<section class="vibe-fast" aria-label="浏览器快速失败策略">
+  <div><b>1–3s</b><strong>普通元素快速失败</strong><span>不给错误 selector 无意义的长等待</span></div><i>→</i>
+  <div><b>STATE</b><strong>立即检查页面真实状态</strong><span>DOM / URL / title / 登录状态 / 页面异常</span></div><i>→</i>
+  <div><b>FIX</b><strong>针对真实原因处理</strong><span>修 selector、恢复环境或让用户完成登录</span></div>
+</section>
+
+还有一个很实际的规则：
+
+**遇到登录态问题，不要自动关浏览器。**
+
+保持当前现场，停下来让我登录，然后继续。
+
+这种规则听起来很小，但如果不固化，每个新的验收会话都有可能重新踩一遍。
+
+## 十三、真正的 Browser QA，不是“页面上看到了”
+
+随着验收越来越认真，我开始不断发现：
+
+很多功能表面上已经存在，但状态并没有闭环。
+
+### 例子 1：字段编辑不能只看 Dialog 打开了
+
+如果“编辑字段”按钮存在，Dialog 也能打开，并不代表功能完成。
+
+真正应该继续看名称和 options 有没有正确回填、保存后表头有没有变化、View 里的引用还在不在、Filter 和 Summary 有没有失效，以及刷新以后状态还对不对。
+
+于是后来固化了一条：
+
+> **验收必须围绕真实状态闭环，而不是只检查 UI 出现。**
+
+### 例子 2：快捷键成功，不等于快捷键设计正确
+
+Grid 里实现 Shift + Enter、Enter、Tab 很容易。
+
+但如果用户正在 textarea 里编辑多行内容，Grid 还把 Shift + Enter 抢走，那就是错误。
+
+Picker、Dialog、input 也一样。
+
+所以快捷键验收必须覆盖 editor boundary。
+
+### 例子 3：虚拟表格里的 DOM 节点不是永久对象
+
+右键某个 Cell 打开菜单以后，如果用户滚动，原来的 Cell 可能已经离开虚拟 DOM。
+
+后续业务操作如果还依赖那个旧 DOM 节点，就可能出现非常诡异的问题。
+
+所以真正稳定的业务标识应该是：
+
+~~~text
+row key + field
+~~~
+
+而不是“刚才那个 DOM 元素”。
+
+### 例子 4：Clipboard 有历史状态
+
+结构化复制以后，如果 sidecar 没有正确失效，下一次纯文本复制粘贴可能错误地继承上一次的结构化信息。
+
+这种 Bug 如果只测一条“复制 → 粘贴”成功路径，很难发现。
+
+这让我越来越觉得：
+
+**验收的价值，不是证明功能能用，而是主动寻找“用户没有按照开发者脑内路径操作时会发生什么”。**
+
+## 十四、每次踩坑以后，我都会问：这条经验应该写到哪里？
+
+最近每做完一轮，我越来越习惯做一件事：
+
+> 这次有没有什么坑值得固化？
+
+但不是每个坑都应该写进全局规则。
+
+我后来会区分。
+
+### 只属于当前 Bug 的
+
+修掉就结束，不增加长期规则。
+
+### 属于 AI 表格前端的
+
+写进 AI 表格前端工程 Skill。
+
+例如虚拟 Grid 的上下文菜单要验证 DOM 失效、Clipboard 要验证 sidecar 污染、Grid 快捷键要覆盖编辑器边界、字段操作验收要覆盖真实引用闭环。
+
+### 属于所有浏览器验收的
+
+写进通用 Browser Acceptance / browser-control。
+
+例如普通元素快速失败、登录态保留现场、不重复已经完成的代码级验证、尽量复用 fixture 和状态，不机械为每个 Case 重建环境。
+
+### 属于整个项目协作方式的
+
+才进入 <code>AGENTS.md</code>。
+
+这一步让我感受到一个以前不明显的东西：
+
+**代码不是这个项目唯一会增长的资产。**
+
+还有一份“AI 怎么在这个项目里正确工作”的知识，也在跟着项目一起增长。
+
+<section class="vibe-learning" aria-label="项目经验闭环">
+  <article><b>01</b><strong>开发</strong><span>AI 实现功能</span></article><i>→</i>
+  <article><b>02</b><strong>使用</strong><span>人真实体验</span></article><i>→</i>
+  <article><b>03</b><strong>验收</strong><span>找状态边界</span></article><i>→</i>
+  <article><b>04</b><strong>总结</strong><span>区分偶发和通用问题</span></article><i>→</i>
+  <article class="is-write"><b>05</b><strong>固化</strong><span>Skill / ADR / AGENTS.md</span></article><i>↺</i>
+</section>
+
+下一轮新会话进来以后，它不是一个完全失忆的新 Agent。
+
+它会先读这些已经沉淀下来的项目规则。
+
+这就是我现在理解的另一种“项目复利”。
+
+## 十五、现在这套 AI 表格，到底已经变成了什么？
+
+如果只看最开始，我做的东西很简单：
+
+> 一个能展示业务数据、带几个 AI 字段的表格。
+
+现在它已经越来越像一个完整的数据工作台。
+
+我不太想用“几十个功能”来描述，因为那样看不出结构。
+
+更准确的理解是，它已经形成了几层。
+
+<section class="vibe-system" aria-label="AI 表格当前能力层级">
+  <header><span>DATA WORKBENCH</span><strong>AI 表格工作台</strong><p>统一承载业务数据、人工操作与 AI 能力</p></header>
+  <div>
+    <article><b>GRID</b><strong>表格交互层</strong><span>Selection</span><span>Clipboard</span><span>Fill</span><span>Keyboard</span><span>Context Menu</span></article>
+    <article><b>SCHEMA</b><strong>字段与视图层</strong><span>Field</span><span>Metadata</span><span>Default Value</span><span>View</span><span>Filter Tree</span></article>
+    <article><b>CONTENT</b><strong>业务数据层</strong><span>Attachment</span><span>Image</span><span>Import</span><span>Permission</span><span>History</span></article>
+    <article><b>AI</b><strong>智能分析层</strong><span>AI Field</span><span>Multi-output</span><span>Stale / Re-run</span><span>AI Job</span><span>Workbook Analysis</span></article>
+  </div>
+</section>
+
+这时候它已经不是“仿一个钉钉页面”了。
+
+钉钉仍然是非常重要的产品参照，但系统开始有自己的业务边界。
+
+例如评价分析、RPA 配置、附件迁移、AI 多输出、后续 Workbook 级 AI 分析，这些都来自自己的真实业务，而不是为了复刻某个 SaaS。
+
+## 十六、从“AI 字段”到“Workbook 级 AI 分析”
+
+做完大量表格基础能力以后，我最近又开始想另一个问题：
+
+AI 如果只是帮我填一列，还是太像“表格加了一个模型按钮”。
+
+真正更有意思的是：
+
+> AI 能不能理解整个 Workbook 的数据和视图，然后完成一次真正的业务分析？
+
+所以现在开始往 Workbook 级 AI Analysis 走。
+
+普通用户在前端点击“AI 分析”，可以使用标准化能力。
+
+而复杂场景不一定要给前端塞几十个高级配置项，更高级的配置可以直接由 Agent 在后端完成。
+
+例如评价分析：
+
+1. 读取当天新增评价；
+2. 结合情绪、责任归因、问题类型等 AI 结果；
+3. 找高频问题、异常变化和代表案例；
+4. 形成当天结论；
+5. 输出一份精美 HTML 日报；
+6. 发布到系统里的静态页面集合。
+
+这里我甚至开始刻意考虑一种以前不会写进 PRD 的东西：
+
+**AI 感知。**
+
+不是只让系统内部“用了 AI”，而是让普通同事非常直观地看到：
+
+> AI 刚刚理解了这些数据，并且给出了有组织、有视觉、有结论的结果。
+
+这也是这套系统接下来的方向：
+
+**表格是数据底座，AI Agent 是分析层，报告和业务动作是输出层。**
+
+## 十七、这几天我踩过的几个典型误区
+
+如果重新来一次，有几件事我不会再像一开始那样做。
+
+### 1. “参考某某产品优化一下”不是好需求
+
+它可以作为方向，但不能作为验收标准。最好进一步说清当前哪里有问题、参考产品对应行为是什么、两者差异在哪里、这次只改哪一层。
+
+### 2. 不要让开发 Agent 自己宣布“完整验收通过”
+
+开发 Agent 可以做代码验证，但真实浏览器体验最好独立出来，尤其是复杂 Grid、拖动、快捷键、Picker、Context Menu 这种状态型交互。
+
+### 3. 不要无限堆 Prompt
+
+如果一个规则每个会话都要重复讲，它就不应该一直留在 Prompt。该进入 Skill 的进 Skill，该进入 ADR 的进 ADR，该进入项目规则的进入项目规则。
+
+### 4. 不要让多个 AI 共用一个工作区并行写
+
+聊天窗口看起来彼此独立，Git working tree 并不会因此自动独立。多 Agent 真正并行，必须先解决工作区隔离。
+
+### 5. 不要为了“验收完整”机械重复准备环境
+
+验收本身也应该被优化。Case 之间能复用的 fixture、登录态、View、字段和服务实例应该复用。重点是覆盖状态，不是重复劳动。
+
+### 6. 不要把“写了测试”当成“用户体验没问题”
+
+代码层、API 层、浏览器层、人工体验层验证的是不同东西。AI 时代尤其容易因为代码生成得太顺，而提前产生“这功能已经完成”的错觉。
+
+## 十八、我现在怎么理解 Vibe Coding
+
+如果一定要给这几天的方法变化分版本，我大概会这样分。
+
+<section class="vibe-levels" aria-label="Vibe Coding 方法演进">
+  <article><span>VIBE CODING 1.0</span><strong>想到什么，就让 AI 写什么</strong><p>最大的价值是速度。适合早期探索，让想法快速变成可操作的东西。</p></article>
+  <article><span>VIBE CODING 2.0</span><strong>找到成熟产品，减少凭空设计</strong><p>截图、真实页面、开源实现都开始成为证据，而不是只靠 Prompt 想象。</p></article>
+  <article><span>VIBE CODING 3.0</span><strong>人负责感觉和判断，AI 负责定点实现</strong><p>不再一句“优化一下”，而是实际使用以后指出具体体验差异。</p></article>
+  <article><span>VIBE CODING 4.0</span><strong>多 Agent + Worktree + 独立验收</strong><p>开发、QA 和合并开始形成明确边界，AI 协作越来越像一支工程团队。</p></article>
+  <article class="is-final"><span>VIBE CODING 5.0</span><strong>让项目本身积累 AI 工程经验</strong><p>每轮踩坑继续写回 Skill、ADR 和项目规则，让下一轮默认站在上一轮经验之上。</p></article>
+</section>
+
+这个版本号当然只是为了方便表达，不是什么正式理论。
+
+但它确实反映了我这几天非常明显的感受。
+
+一开始我认为 AI 编程最爽的地方是：
+
+> 我不用自己写那么多代码了。
+
+现在我反而觉得，这不是最重要的变化。
+
+更大的变化是：
+
+**“写代码”从整个软件开发过程里退后了。**
+
+以前大量精力被具体实现吃掉。
+
+现在实现越来越快，人需要把更多精力放到：
+
+- 到底做什么；
+- 为什么这样做；
+- 哪个成熟产品值得参考；
+- 什么只是表面相似；
+- 当前体验到底哪里不对；
+- 哪些状态必须闭环；
+- 什么才算真正验收通过；
+- 哪些经验值得让整个项目以后都记住。
+
+<section class="vibe-ending" aria-label="结论">
+  <span>TAKEAWAY</span>
+  <strong class="vibe-ending-title">我以前以为 Vibe Coding 的终点，是“不用会写多少代码”。</strong>
+  <p>这几天做下来，我反而觉得人的工作没有变少，而是从“怎么写这一段代码”，逐渐转向“我要做什么、什么才算好、它到底有没有做好，以及怎样让下一次自动做得更好”。</p>
+  <div><b>代码会增长</b><b>产品会增长</b><b>项目里的 AI 经验也会增长</b></div>
+</section>
+
+这套 AI 表格还远没有结束。
+
+后面还有 Workbook 级 AI 分析、评价分析日报、更强的 AI 交互，以及很多表格体验细节可以继续做。
+
+但至少到现在，我已经不太把它看成“让 AI 帮我写一个 SaaS”。
+
+更像是：
+
+> **我在学习怎么组织 AI，持续把一个真实产品做下去。**
+
+这可能才是这几天最大的收获。
+
+<style>{`
+  .vibe-hero,.vibe-thesis,.vibe-loop,.vibe-shift,.vibe-detail-grid,.vibe-quote,.vibe-evidence,.vibe-reference,.vibe-prompt-skill,.vibe-batches,.vibe-devqa,.vibe-worktrees,.vibe-cost,.vibe-fast,.vibe-learning,.vibe-system,.vibe-levels,.vibe-ending{--ink:#172033;--muted:#687488;--line:#d8dee8;--blue:#2558d9;--green:#14765c;color:var(--ink)}
+  .vibe-hero{width:min(1120px,calc(100vw - 2rem));margin:1.5rem 0 2.2rem 50%;overflow:hidden;border:1px solid #cfd6e1;border-radius:22px;background:linear-gradient(90deg,rgba(37,88,217,.045) 1px,transparent 1px),linear-gradient(rgba(37,88,217,.045) 1px,transparent 1px),#fbfcfe;background-size:28px 28px;box-shadow:0 22px 52px rgba(27,38,60,.1);transform:translateX(-50%)}
+  .vibe-hero-copy{padding:clamp(1.3rem,3vw,2.35rem)}.vibe-kicker{color:var(--blue);font-size:.7rem;font-weight:900;letter-spacing:.09em}.vibe-display-title{display:block;max-width:850px;margin:.55rem 0 .7rem;color:#1a2843;font-size:clamp(1.45rem,3vw,2.35rem);line-height:1.26;letter-spacing:-.02em}.vibe-hero-copy p{max-width:900px;margin:0;color:#59677e;font-size:.95rem;line-height:1.8}
+  .vibe-hero-rail{display:flex;align-items:center;gap:.65rem;padding:.9rem 1.25rem;overflow-x:auto;border-top:1px solid var(--line);background:rgba(255,255,255,.86)}.vibe-hero-rail span{flex:0 0 auto;padding:.4rem .58rem;border:1px solid #d5dce8;border-radius:6px;color:#42516a;background:#fff;font-size:.7rem;font-weight:900}.vibe-hero-rail i{color:#94a0b2;font-style:normal;font-weight:900}
+  .vibe-thesis{display:grid;grid-template-columns:repeat(3,1fr);width:min(980px,calc(100vw - 2rem));margin:1.6rem 0 2.2rem 50%;overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#fff;transform:translateX(-50%)}.vibe-thesis div{padding:1rem}.vibe-thesis div+div{border-left:1px solid var(--line)}.vibe-thesis span{display:block;margin-bottom:.35rem;color:#7a8597;font-size:.72rem;font-weight:800}.vibe-thesis strong{display:block;color:#23314a;font-size:.95rem;line-height:1.5}
+  .vibe-loop,.vibe-learning{display:grid;align-items:center;gap:.5rem;width:min(1060px,calc(100vw - 2rem));margin:1.4rem 0 2rem 50%;padding:.9rem;border:1px solid var(--line);border-radius:14px;background:#f8f9fb;transform:translateX(-50%)}.vibe-loop{grid-template-columns:repeat(7,auto)}.vibe-learning{grid-template-columns:repeat(10,auto)}.vibe-loop article,.vibe-learning article{min-height:112px;padding:.75rem;border:1px solid #dde3eb;border-radius:8px;background:#fff}.vibe-loop b,.vibe-learning b{display:block;color:var(--blue);font-size:.68rem}.vibe-loop strong,.vibe-learning strong{display:block;margin:.3rem 0;color:#273650;font-size:.9rem}.vibe-loop span,.vibe-learning span{color:var(--muted);font-size:.76rem;line-height:1.5}.vibe-loop i,.vibe-learning i{color:#9aa5b5;font-style:normal;font-weight:900}.vibe-learning .is-write{border-color:#b8d8cd;background:#f4faf7}.vibe-learning .is-write b{color:var(--green)}
+  .vibe-quote{width:min(900px,calc(100vw - 2rem));margin:1.5rem 0 2rem 50%;padding:1rem 1.2rem;border-left:4px solid var(--blue);background:#f4f7ff;transform:translateX(-50%)}.vibe-quote span{display:block;color:var(--blue);font-size:.7rem;font-weight:900;letter-spacing:.08em}.vibe-quote strong{display:block;margin-top:.36rem;color:#263958;font-size:1rem;line-height:1.65}.vibe-quote-dark{border-left-color:#26354f;background:#202b40}.vibe-quote-dark span{color:#b7c8f4}.vibe-quote-dark strong{color:#f5f7fb}
+  .vibe-shift{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:.7rem;width:min(920px,calc(100vw - 2rem));margin:1.4rem 0 2rem 50%;transform:translateX(-50%)}.vibe-shift article,.vibe-evidence div,.vibe-fast div{padding:1rem;border:1px solid #d7dee8;border-radius:10px;background:#fff}.vibe-shift span,.vibe-evidence b,.vibe-fast b{display:block;color:#7d8797;font-size:.68rem;font-weight:900;letter-spacing:.06em}.vibe-shift strong,.vibe-evidence strong,.vibe-fast strong{display:block;margin:.3rem 0;color:#273650;font-size:.94rem}.vibe-shift p,.vibe-evidence span,.vibe-fast span{margin:0;color:var(--muted);font-size:.78rem;line-height:1.55}.vibe-shift i,.vibe-evidence i,.vibe-fast i{color:#99a5b5;font-style:normal;font-weight:900}.vibe-shift .is-live,.vibe-evidence .is-active{border-color:#b9d8ce;background:#f4faf7}.vibe-shift .is-live span,.vibe-evidence .is-active b{color:var(--green)}
+  .vibe-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;width:min(1000px,calc(100vw - 2rem));margin:1.3rem 0 2rem 50%;transform:translateX(-50%)}.vibe-detail-grid div{padding:.85rem;border:1px solid #d9dfe8;border-radius:9px;background:#fff}.vibe-detail-grid b{display:block;color:#273750;font-size:.86rem}.vibe-detail-grid span{display:block;margin-top:.25rem;color:var(--muted);font-size:.77rem;line-height:1.5}
+  .vibe-evidence,.vibe-fast{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:.65rem;width:min(1000px,calc(100vw - 2rem));margin:1.4rem 0 2rem 50%;transform:translateX(-50%)}.vibe-evidence div,.vibe-fast div{min-height:120px}
+  .vibe-reference{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;width:min(1040px,calc(100vw - 2rem));margin:1.5rem 0 2rem 50%;transform:translateX(-50%)}.vibe-reference article{padding:1.1rem;border:1px solid #d7deea;border-radius:14px;background:#fff}.vibe-reference article>span{color:var(--blue);font-size:.7rem;font-weight:900;letter-spacing:.08em}.vibe-ref-title{display:block;margin:.35rem 0 .45rem;color:#24334d;font-size:1.02rem}.vibe-reference p{color:var(--muted);font-size:.81rem;line-height:1.65}.vibe-reference article>div{display:flex;flex-wrap:wrap;gap:.35rem}.vibe-reference article>div b{padding:.25rem .45rem;border-radius:5px;background:#eef2f7;color:#5d697d;font-size:.72rem}.vibe-reference .is-code{border-color:#c1dbd2;background:#f7fbf9}.vibe-reference .is-code>span{color:var(--green)}
+  .vibe-prompt-skill{display:grid;grid-template-columns:1fr 180px 1fr;align-items:stretch;gap:.8rem;width:min(1020px,calc(100vw - 2rem));margin:1.5rem 0 2rem 50%;transform:translateX(-50%)}.vibe-prompt-skill article{padding:1.05rem;border:1px solid #d7dee8;border-radius:12px;background:#fff}.vibe-prompt-skill article>span{color:#788397;font-size:.7rem;font-weight:900}.vibe-prompt-skill article strong{display:block;margin:.4rem 0;color:#273650}.vibe-prompt-skill p{margin:0;color:var(--muted);font-size:.8rem;line-height:1.6}.vibe-prompt-skill>div{display:flex;align-items:center;justify-content:center;gap:.35rem;color:#768397;font-size:.72rem;font-weight:800}.vibe-prompt-skill>div i{color:#a2acba;font-style:normal}.vibe-prompt-skill .is-skill{border-color:#b7d8cc;background:#f4faf7}.vibe-prompt-skill .is-skill>span{color:var(--green)}
+  .vibe-batches{display:grid;grid-template-columns:repeat(2,1fr);gap:.52rem;width:min(1060px,calc(100vw - 2rem));margin:1.4rem 0 2rem 50%;padding:.9rem;border:1px solid #d5dce6;border-radius:14px;background:#f7f8fa;transform:translateX(-50%)}.vibe-batches article{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(160px,.8fr);gap:.62rem;align-items:center;padding:.68rem .78rem;border:1px solid #dfe4eb;border-radius:8px;background:#fff}.vibe-batches b{color:var(--blue);font-size:.68rem}.vibe-batches strong{color:#26354e;font-size:.83rem}.vibe-batches span{color:var(--muted);font-size:.74rem;line-height:1.4}
+  .vibe-devqa{display:grid;grid-template-columns:.7fr auto 1fr auto 1fr auto .65fr;align-items:center;gap:.55rem;width:min(1100px,calc(100vw - 2rem));margin:1.5rem 0 2rem 50%;padding:1rem;border:1px solid #d4dce7;border-radius:16px;background:#f8f9fb;transform:translateX(-50%)}.vibe-devqa>div{text-align:center}.vibe-devqa>div span,.vibe-devqa article b{display:block;color:#7d8798;font-size:.67rem;font-weight:900}.vibe-devqa>div strong{display:block;margin-top:.25rem;color:#27364f;font-size:.8rem}.vibe-devqa article{min-height:180px;padding:.9rem;border:1px solid #cbd6e7;border-radius:10px;background:#fff}.vibe-devqa article b{color:var(--blue)}.vibe-devqa article strong{display:block;margin:.3rem 0 .5rem;color:#273650}.vibe-devqa article span{display:block;padding:.2rem 0;color:var(--muted);font-size:.74rem}.vibe-devqa>i{color:#9aa5b5;font-style:normal;font-weight:900}.vibe-devqa .is-qa{border-color:#b9d9ce;background:#f5faf8}.vibe-devqa .is-qa b,.vibe-devqa .is-pass span{color:var(--green)}
+  .vibe-worktrees{width:min(980px,calc(100vw - 2rem));margin:1.5rem 0 2rem 50%;padding:1rem;border:1px solid #d6dde7;border-radius:15px;background:#fbfcfd;transform:translateX(-50%)}.vibe-main{width:150px;margin:0 auto;padding:.65rem;border:1px solid #b9d8ce;border-radius:8px;text-align:center;background:#f3faf7}.vibe-main b,.vibe-main span{display:block}.vibe-main b{color:var(--green)}.vibe-main span{color:#728075;font-size:.72rem}.vibe-branches{position:relative;width:68%;height:38px;margin:0 auto;border-top:1px solid #aeb9c8}.vibe-branches:before{position:absolute;top:-38px;left:50%;width:1px;height:38px;background:#aeb9c8;content:""}.vibe-branches i{position:absolute;top:0;width:1px;height:38px;background:#aeb9c8}.vibe-branches i:nth-child(1){left:0}.vibe-branches i:nth-child(2){left:50%}.vibe-branches i:nth-child(3){right:0}.vibe-worktree-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}.vibe-worktree-grid article{padding:.75rem;border:1px solid #d7dee7;border-radius:8px;background:#fff}.vibe-worktree-grid b,.vibe-worktree-grid strong,.vibe-worktree-grid span{display:block}.vibe-worktree-grid b{color:#788498;font-size:.68rem}.vibe-worktree-grid strong{margin:.25rem 0;color:#273650}.vibe-worktree-grid span{color:var(--muted);font-size:.75rem}.vibe-worktrees p{margin:.9rem 0 0;color:var(--muted);font-size:.78rem;line-height:1.55;text-align:center}
+  .vibe-cost{width:min(900px,calc(100vw - 2rem));margin:1.5rem 0 2rem 50%;padding:1rem;border:1px solid #d7dee8;border-radius:14px;background:#fff;transform:translateX(-50%)}.vibe-cost-head,.vibe-cost-row{display:grid;grid-template-columns:110px 1fr 1fr;gap:.7rem;align-items:center}.vibe-cost-head{padding-bottom:.5rem;color:#7d8797;font-size:.7rem;font-weight:800;text-align:center}.vibe-cost-row{padding:.45rem 0}.vibe-cost-row b{color:#33415a;font-size:.78rem}.vibe-cost-row>div{overflow:hidden;border-radius:6px;background:#edf0f4}.vibe-cost-row span{display:block;min-width:72px;padding:.42rem .5rem;border-radius:6px;color:#fff;background:#315bc4;font-size:.68rem;font-weight:800}.vibe-cost-row.is-verify span{background:#178067}.vibe-cost .w88{width:88%}.vibe-cost .w34{width:34%}.vibe-cost .w42{width:42%}.vibe-cost .w82{width:82%}
+  .vibe-system{width:min(1080px,calc(100vw - 2rem));margin:1.5rem 0 2rem 50%;overflow:hidden;border:1px solid #d4dce7;border-radius:16px;background:#fff;transform:translateX(-50%)}.vibe-system header{padding:1.1rem;border-bottom:1px solid #dbe1ea;text-align:center;background:#222d42}.vibe-system header span{color:#aebfe9;font-size:.68rem;font-weight:900;letter-spacing:.1em}.vibe-system header strong{display:block;margin:.28rem 0;color:#fff;font-size:1.1rem}.vibe-system header p{margin:0;color:#bac4d7;font-size:.78rem}.vibe-system>div{display:grid;grid-template-columns:repeat(4,1fr)}.vibe-system article{min-height:185px;padding:1rem}.vibe-system article+article{border-left:1px solid #dbe1ea}.vibe-system article b,.vibe-system article strong,.vibe-system article span{display:block}.vibe-system article b{color:var(--blue);font-size:.68rem}.vibe-system article strong{margin:.3rem 0 .55rem;color:#273650;font-size:.9rem}.vibe-system article span{padding:.2rem 0;color:var(--muted);font-size:.74rem}
+  .vibe-levels{width:min(1020px,calc(100vw - 2rem));margin:1.5rem 0 2rem 50%;overflow:hidden;border:1px solid #d5dce6;border-radius:14px;background:#fff;transform:translateX(-50%)}.vibe-levels article{display:grid;grid-template-columns:160px 1.1fr 1fr;gap:.8rem;align-items:center;padding:.85rem 1rem}.vibe-levels article+article{border-top:1px solid #e0e5ec}.vibe-levels span{color:#778297;font-size:.68rem;font-weight:900;letter-spacing:.06em}.vibe-levels strong{color:#273650;font-size:.88rem}.vibe-levels p{margin:0;color:var(--muted);font-size:.76rem;line-height:1.5}.vibe-levels .is-final{background:#f3faf7}.vibe-levels .is-final span{color:var(--green)}
+  .vibe-ending{width:min(980px,calc(100vw - 2rem));margin:1.8rem 0 2.3rem 50%;padding:clamp(1.2rem,3vw,2rem);border:1px solid #cbd3df;border-radius:18px;background:#202b40;box-shadow:0 20px 46px rgba(31,42,64,.18);transform:translateX(-50%)}.vibe-ending>span{color:#aebfe9;font-size:.7rem;font-weight:900;letter-spacing:.09em}.vibe-ending-title{display:block;margin:.4rem 0 .65rem;color:#fff;font-size:clamp(1.25rem,2.4vw,1.8rem);line-height:1.38}.vibe-ending p{margin:0;color:#c4cede;font-size:.9rem;line-height:1.75}.vibe-ending>div{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem}.vibe-ending b{padding:.4rem .55rem;border:1px solid #46536d;border-radius:6px;color:#dfe6f3;font-size:.72rem}
+  @media(max-width:1400px) and (min-width:761px){.vibe-hero,.vibe-thesis,.vibe-loop,.vibe-shift,.vibe-detail-grid,.vibe-quote,.vibe-evidence,.vibe-reference,.vibe-prompt-skill,.vibe-batches,.vibe-devqa,.vibe-worktrees,.vibe-cost,.vibe-fast,.vibe-learning,.vibe-system,.vibe-levels,.vibe-ending{width:100%;margin-left:0;transform:none}}
+  @media(max-width:760px){.vibe-hero,.vibe-thesis,.vibe-loop,.vibe-shift,.vibe-detail-grid,.vibe-quote,.vibe-evidence,.vibe-reference,.vibe-prompt-skill,.vibe-batches,.vibe-devqa,.vibe-worktrees,.vibe-cost,.vibe-fast,.vibe-learning,.vibe-system,.vibe-levels,.vibe-ending{width:auto;margin:1.2rem -.3rem 1.7rem;transform:none}.vibe-thesis,.vibe-shift,.vibe-detail-grid,.vibe-reference,.vibe-batches,.vibe-worktree-grid,.vibe-system>div{grid-template-columns:1fr}.vibe-thesis div+div,.vibe-system article+article{border-top:1px solid var(--line);border-left:0}.vibe-loop,.vibe-evidence,.vibe-fast,.vibe-learning,.vibe-devqa{grid-template-columns:1fr}.vibe-loop i,.vibe-evidence i,.vibe-fast i,.vibe-learning i,.vibe-devqa>i,.vibe-shift>i{display:none}.vibe-loop article,.vibe-learning article,.vibe-evidence div,.vibe-fast div,.vibe-devqa article{min-height:0}.vibe-prompt-skill{grid-template-columns:1fr}.vibe-prompt-skill>div{padding:.15rem 0}.vibe-batches article{grid-template-columns:32px 1fr}.vibe-batches article span{grid-column:2}.vibe-worktree-grid{grid-template-columns:1fr}.vibe-branches{display:none}.vibe-cost-head,.vibe-cost-row{grid-template-columns:82px 1fr 1fr;gap:.4rem}.vibe-levels article{grid-template-columns:1fr;gap:.28rem}.vibe-system article{min-height:0}}
+`}</style>
