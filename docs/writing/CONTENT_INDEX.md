@@ -8,6 +8,7 @@
 
 | 文件 | 分类 | 主题概览 | 适合什么时候参考 |
 | --- | --- | --- | --- |
+| `src/content/posts/java-jvm-python-bytecode-runtime.mdx` | `教程` | 从源码、字节码、运行时到 CPU 对照 Java 与 Python，讲清 JVM、.class、Python bytecode、.pyc、CPython 的层级关系，以及两者都能跨平台但 JVM 通常能让 Java 热点代码更快的原因 | 写 JVM、Java/Python 运行机制、字节码、跨平台、解释器、JIT、CPython 性能和 NumPy 底层加速时参考 |
 | `src/content/posts/vibe-coding-ai-table-saas-retrospective.mdx` | `实践` | 复盘数日 AI 表格 SaaS 开发，从无脑 Vibe Coding、钉钉与 Airtable 产品对照、开源表格逆向研究和人工定点精修，逐步升级到 Git Worktree 多 Agent 并行、独立真实浏览器验收、快速失败与 Skill / AGENTS.md 经验固化，并讨论 AI 编码后 Coding 成本下降、Verification 成为新瓶颈 | 写 Vibe Coding、AI 编程方法、多 Agent 协作、SaaS 产品打磨、浏览器验收、Skill 经验沉淀和 AI 软件工程复盘时参考 |
 | `src/content/posts/ai-amplifies-execution-gap.mdx` | `生活` | 用“工具 / 外骨骼 / 电子菩萨”三层模型讨论 AI 的能力边界，并用助理评分、工作日志、成熟绩效制度和电商爆品说明 AI 能提高已有标准的执行效率，却不能凭空创造事实与答案 | 写 AI 使用方式、生产力、执行力、绩效分析、信息差与行动差距、AI 能力边界类文章时参考 |
 | src/content/posts/qmd-common-commands.mdx | 教程 | QMD 本地 Markdown 知识库命令手册，覆盖项目级索引、Collection、update/embed/status、search/vsearch/query、lex/vec/hyde、rerank、get/multi-get 与 MCP 接入 | 写 QMD、Markdown 知识库检索、Agent 知识库工具、Claude/Codex MCP 和本地搜索策略文章时参考 |
