@@ -8,7 +8,7 @@
 
 | 文件 | 分类 | 主题概览 | 适合什么时候参考 |
 | --- | --- | --- | --- |
-| `src/content/posts/guanyi-cerp-api-practical-notes.mdx` | `实践` | 管易 C-ERP API 实战速查，覆盖请求签名、库存/商品/订单接口，以及 `deliverys.get` 与 `deliverys.history.get` 的真实数据分层、24 小时历史窗口、仓库本地过滤、作废参数边界和分页完整性保护 | 写管易 C-ERP、ERP 开放接口、近期/历史发货单、库存与订单同步、接口分页和数据完整性排查时参考 |
+| `src/content/posts/guanyi-cerp-api-practical-notes.mdx` | `教程` | 管易 C-ERP OpenAPI 标准化接入与接口参考，覆盖签名、通用错误与分页规范、店铺/商品/库存/订单/发货/出库/调拨接口，并明确近期与历史发货单的数据分层、参数差异、已验证行为和待验证边界 | 写管易 C-ERP、ERP OpenAPI、接口接入、参数与返回字段、近期/历史发货单、分页完整性和数据区边界时参考 |
 | `src/content/posts/java-jvm-python-bytecode-runtime.mdx` | `教程` | 从源码、字节码、运行时到 CPU 对照 Java 与 Python，讲清 JVM、.class、Python bytecode、.pyc、CPython 的层级关系，以及两者都能跨平台但 JVM 通常能让 Java 热点代码更快的原因 | 写 JVM、Java/Python 运行机制、字节码、跨平台、解释器、JIT、CPython 性能和 NumPy 底层加速时参考 |
 | `src/content/posts/vibe-coding-ai-table-saas-retrospective.mdx` | `实践` | 复盘数日 AI 表格 SaaS 开发，从无脑 Vibe Coding、钉钉与 Airtable 产品对照、开源表格逆向研究和人工定点精修，逐步升级到 Git Worktree 多 Agent 并行、独立真实浏览器验收、快速失败与 Skill / AGENTS.md 经验固化，并讨论 AI 编码后 Coding 成本下降、Verification 成为新瓶颈 | 写 Vibe Coding、AI 编程方法、多 Agent 协作、SaaS 产品打磨、浏览器验收、Skill 经验沉淀和 AI 软件工程复盘时参考 |
 | `src/content/posts/ai-amplifies-execution-gap.mdx` | `生活` | 用“工具 / 外骨骼 / 电子菩萨”三层模型讨论 AI 的能力边界，并用助理评分、工作日志、成熟绩效制度和电商爆品说明 AI 能提高已有标准的执行效率，却不能凭空创造事实与答案 | 写 AI 使用方式、生产力、执行力、绩效分析、信息差与行动差距、AI 能力边界类文章时参考 |
