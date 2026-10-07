@@ -1,0 +1,710 @@
+---
+title: "管易 C-ERP API 实战整理：库存、订单与历史发货单怎么查"
+description: "把一次真实 C-ERP 接入中验证过的签名、库存、商品、订单和发货接口整理成可复用手册，重点解释 deliverys.get 与 deliverys.history.get 的数据分层、24 小时窗口、仓库过滤和作废语义。"
+date: 2026-10-07T23:30:00+08:00
+category: "实践"
+tags:
+  - "管易 C-ERP"
+  - "ERP"
+  - "API"
+  - "电商系统"
+minutes: 14
+featured: false
+pinned: false
+draft: false
+private: false
+---
+
+接管一个已经运行了一段时间的 ERP 集成时，最麻烦的往往不是“不会发 HTTP 请求”，而是：**接口名看起来差不多，但数据范围、时间字段和过滤参数并不一样。**
+
+最近重新整理了一遍管易 C-ERP 的查询接口，并用真实租户做了只读验证。最值得记录的结论不是某个字段叫什么，而是下面这件事：
+
+<div class="cerp-hero" role="group" aria-label="管易 C-ERP 发货单接口最重要的结论">
+  <span>C-ERP · DELIVERY API</span>
+  <strong>近期发货单和历史发货单，不能当成一个接口使用。</strong>
+  <p><code>gy.erp.trade.deliverys.get</code> 更适合近期增量和状态变化；<code>gy.erp.trade.deliverys.history.get</code> 负责已经进入历史区的数据。两个接口的参数语义也不完全一致。</p>
+</div>
+
+这篇不是完整 OpenAPI 抄录，而是一份偏工程实践的速查：哪些接口实际有用、参数怎样理解、哪些地方最容易踩坑，以及怎样设计一条不容易漏数的同步链路。
+
+> 文中不包含任何真实 appKey、sessionKey、secret、订单号或业务敏感数据。生产验证结果也只保留对接口行为有意义的结论。
+
+## 先画一张接口地图
+
+常用查询接口可以先分成四组：
+
+<div class="cerp-grid" role="group" aria-label="管易 C-ERP 常用接口地图">
+  <section>
+    <small>MASTER DATA</small>
+    <strong>商品与店铺</strong>
+    <code>gy.erp.items.get</code>
+    <code>gy.erp.shop.get</code>
+    <p>商品、SKU、组合品、店铺编码等基础资料。</p>
+  </section>
+  <section>
+    <small>INVENTORY</small>
+    <strong>库存与出入库</strong>
+    <code>gy.erp.new.stock.get</code>
+    <code>gy.erp.stock.other.out.order.get</code>
+    <code>gy.erp.stock.transfer.get</code>
+    <p>当前库存、其他出库和调拨事实。</p>
+  </section>
+  <section>
+    <small>TRADE</small>
+    <strong>订单</strong>
+    <code>gy.erp.trade.get</code>
+    <code>gy.erp.trade.history.get</code>
+    <code>gy.erp.trade.detail.get</code>
+    <p>当前订单、历史订单和订单详情。</p>
+  </section>
+  <section class="is-main">
+    <small>DELIVERY</small>
+    <strong>发货单</strong>
+    <code>gy.erp.trade.deliverys.get</code>
+    <code>gy.erp.trade.deliverys.history.get</code>
+    <p>真正做销量、发货时间、出库商品明细时最需要关注的一组。</p>
+  </section>
+</div>
+
+订单和发货单不要混为一谈。订单回答“交易发生了什么”，发货单更接近“ERP 实际发出了什么”。如果要做真实销量、发货日统计或库存消耗，后者通常更重要。
+
+## 请求与签名：先保证底层调用稳定
+
+当前验证过的接入使用 JSON POST：
+
+```text
+POST http://api.guanyierp.com/rest/erp_open
+Content-Type: application/json
+```
+
+请求体包含公共字段：
+
+```text
+appkey
+sessionkey
+method
+...业务参数
+sign
+```
+
+签名逻辑可以抽象成：
+
+```python
+import hashlib
+import json
+
+def make_sign(payload: dict, secret: str) -> str:
+    data = {k: v for k, v in payload.items() if k != "sign"}
+    json_text = json.dumps(
+        data,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    raw = f"{secret}{json_text}{secret}"
+    return hashlib.md5(raw.encode("utf-8")).hexdigest().upper()
+```
+
+这里真正容易出错的是 **参与签名的 JSON 必须和实际发送的数据保持一致**。字段类型、空值、序列化格式如果在签名后又变化，就可能得到一个看起来“算法正确”但服务端无法通过的签名。
+
+另外，不要只判断 HTTP 200。ERP 常见情况是 HTTP 层成功、业务层失败，所以统一调用层至少要检查：
+
+```text
+success
+errorCode
+errorDesc
+subErrorCode
+subErrorDesc
+```
+
+## 库存：gy.erp.new.stock.get
+
+库存查询使用：
+
+```text
+gy.erp.new.stock.get
+```
+
+常见参数：
+
+| 参数 | 用途 |
+| --- | --- |
+| `page_no` | 页码 |
+| `page_size` | 每页数量 |
+| `warehouse_code` | 仓库编码 |
+| `item_code` | 指定商品 |
+| `item_sku_code` | 指定 SKU |
+
+返回核心是：
+
+```text
+total
+stocks[]
+```
+
+做库存同步时，不应该“拉到哪页算哪页”，而应该把整批完整性当成一个条件：
+
+<div class="cerp-rule">
+  <b>库存批次只有在完整分页收齐后，才应该覆盖本地可信库存。</b>
+  <p>提前空页、重复页、提前短页、total 漂移或超过分页保护上限，都应该视为异常批次，而不是静默写入一份残缺库存。</p>
+</div>
+
+这类保护在小数据量时看起来多余，一旦商品规模增长或者 ERP 接口偶发抖动，就会非常值钱。
+
+## 商品：gy.erp.items.get
+
+商品主数据：
+
+```text
+gy.erp.items.get
+```
+
+通常会用到：
+
+```text
+page_no
+page_size
+start_date
+end_date
+code
+```
+
+它除了商品代码和名称，还可以承担 SKU、条码、组合品 / BOM 等资料同步。
+
+一个很实际的经验是：**不要把库存接口和商品接口共用同一个最大页数保护。**
+
+库存可能只有几千条，商品主数据却可能随着历史 SKU 不断积累。分页保护应该按接口的数据规模独立配置，而不是写一个全局“最多 100 页”。
+
+## 订单：当前与历史同样要分开理解
+
+订单侧常见：
+
+```text
+gy.erp.trade.get
+gy.erp.trade.history.get
+gy.erp.trade.detail.get
+```
+
+这里有一个很基础但非常容易写错的字段关系：
+
+```text
+shop_code != shop_id
+```
+
+订单查询一般应该使用真正的店铺编码 `shop_code`。如果手上只有店铺名称，可以先通过：
+
+```text
+gy.erp.shop.get
+```
+
+取得店铺的 `code / name / nick` 再做匹配。
+
+不要因为某个系统页面里展示的是“店铺 ID”，就默认 API 里的 `shop_code` 可以传同一个值。
+
+## 发货单才是最容易踩坑的地方
+
+### 近期接口：gy.erp.trade.deliverys.get
+
+公开接口资料能看到，这个接口支持修改时间、发货时间、仓库、店铺、作废状态等多种筛选参数。
+
+做增量同步时最值得关注的是：
+
+```text
+start_modify_date
+end_modify_date
+warehouse_code
+detail_flag = true
+del = 0 / 1
+```
+
+为什么使用**修改时间**而不是只使用发货时间？
+
+因为一张已经发货的单，之后还可能发生状态变化。如果每天只查“今天发货的单”，昨天那张后来被修改的单就可能永远不会再进入同步窗口。
+
+所以近期增量更合理的模型是：
+
+<div class="cerp-flow" role="group" aria-label="近期发货单增量同步">
+  <section><span>01</span><b>修改时间窗口</b><code>start_modify_date → end_modify_date</code></section>
+  <i>→</i>
+  <section><span>02</span><b>正常 / 作废分别拉</b><code>del = 0 / 1</code></section>
+  <i>→</i>
+  <section><span>03</span><b>完整分页</b><code>total == received</code></section>
+  <i>→</i>
+  <section><span>04</span><b>幂等更新</b><code>delivery code / detail id</code></section>
+</div>
+
+商品明细最好明确要求：
+
+```text
+detail_flag = true
+```
+
+实际做销量时常用字段包括：
+
+```text
+deliverys[].code
+deliverys[].warehouse_code
+deliverys[].shop_code
+deliverys[].from_type_name
+deliverys[].platform_code
+
+deliverys[].delivery_statusInfo.delivery_date
+
+deliverys[].details[].id
+deliverys[].details[].barcode
+deliverys[].details[].item_code
+deliverys[].details[].sku_code
+deliverys[].details[].qty
+deliverys[].details[].is_gift
+deliverys[].details[].amount_after
+```
+
+其中有两个字段尤其值得单独记：
+
+```text
+from_type_name
+= 平台名称
+
+platform_code
+= 平台订单号
+≠ 平台类型枚举
+```
+
+另外，真实发货时间应该优先核对：
+
+```text
+delivery_statusInfo.delivery_date
+```
+
+不要看到顶层也有一个叫 `delivery_date` 的字段，就直接假设它一定有值。
+
+## 历史接口：gy.erp.trade.deliverys.history.get
+
+这次整理中最值得单独记录的是：
+
+```text
+gy.erp.trade.deliverys.history.get
+```
+
+公开资料明确把它定义为“历史发货单查询”，并要求：
+
+```text
+start_delivery_date
+end_delivery_date
+```
+
+时间跨度不能超过 24 小时。也可以通过 `shop_code` 或 `code` 做定向查询。
+
+### 实测 1：近期和历史确实是两块数据
+
+选一张已经比较老、但后来又发生过修改的发货单做定向查询，结果是：
+
+```text
+gy.erp.trade.deliverys.get
+→ 查不到
+
+gy.erp.trade.deliverys.history.get
+→ 可以查到
+```
+
+再选一张当天的新发货单：
+
+```text
+gy.erp.trade.deliverys.get
+→ 可以查到
+
+gy.erp.trade.deliverys.history.get
+→ 查不到
+```
+
+这说明“历史接口”不是普通接口的另一种筛选方式，而是真的存在数据归档分层。
+
+<div class="cerp-warning">
+  <b>不要只因为近期接口返回 success，就认为历史回填完整。</b>
+  <p>接口可以正常返回 0 条，但真正的旧数据已经被归档到 history 接口里。技术上“请求成功”和业务上“没有漏数据”是两件不同的事。</p>
+</div>
+
+### 实测 2：边界接近一周，但不要写死 7×24 小时
+
+按发货时间做多个小时窗口对照时，可以看到一个很清晰的分层：较早日期只有 history 有数据，较新日期只有近期接口有数据。
+
+它与一些第三方集成里“约 7 天进入历史接口”的做法一致。
+
+但不应该直接写：
+
+```python
+if age > timedelta(days=7):
+    use_history()
+```
+
+因为归档更可能是后台批处理结果，不一定严格等于当前时间减去 168 小时。
+
+更稳妥的方式是允许切换区间有少量重叠，并依靠发货单号 / 明细 ID 做幂等合并。
+
+### 实测 3：warehouse_code 不能照搬过去
+
+近期接口支持：
+
+```text
+warehouse_code
+```
+
+但历史接口的公开参数里没有这个字段。
+
+真实请求里，即使额外传入目标仓库编码，历史接口仍然返回多个仓库的数据。
+
+所以历史回填正确的思路应该是：
+
+```text
+历史接口拉完整窗口
+→ 本地按 warehouse_code 过滤
+→ 再进入业务层
+```
+
+而不是假设服务端已经替你筛好了仓库。
+
+### 实测 4：history 不能拿修改时间当增量游标
+
+只传：
+
+```text
+start_modify_date
+end_modify_date
+```
+
+历史接口会返回“发货开始时间必填”。
+
+即使同时传发货时间和修改时间，最终得到的仍然是完整发货时间窗口，没有表现出修改时间过滤效果。
+
+因此两个接口的职责应该明确分开：
+
+```text
+近期增量 / 状态变化
+→ gy.erp.trade.deliverys.get
+→ start_modify_date / end_modify_date
+
+历史回填
+→ gy.erp.trade.deliverys.history.get
+→ start_delivery_date / end_delivery_date
+```
+
+### 实测 5：del=1 也不能直接复制
+
+近期接口可以用：
+
+```text
+del = 0
+del = 1
+```
+
+分别查询正常与作废单。
+
+但 history 的公开参数里没有 `del`。真实请求里额外加入 `del=1`，结果也没有体现出作废筛选效果。
+
+这意味着：
+
+**历史订单如何补偿“归档之后又取消 / 作废”的变化，必须单独验证，不能把近期接口逻辑机械复制过去。**
+
+这是目前仍然需要持续验证的一个边界。
+
+## 一个更稳的发货同步结构
+
+更合理的设计是把它拆成两条职责不同的链路：
+
+<div class="cerp-split" role="group" aria-label="近期和历史发货单两条同步链路">
+  <section>
+    <small>RECENT</small>
+    <strong>近期增量</strong>
+    <code>gy.erp.trade.deliverys.get</code>
+    <ul>
+      <li>按修改时间扫描</li>
+      <li>服务端按仓库过滤</li>
+      <li>正常 / 作废分别查询</li>
+      <li>持续捕获后续状态变化</li>
+    </ul>
+  </section>
+  <section>
+    <small>HISTORY</small>
+    <strong>历史回填</strong>
+    <code>gy.erp.trade.deliverys.history.get</code>
+    <ul>
+      <li>按发货时间拆窗</li>
+      <li>单窗不超过 24 小时</li>
+      <li>拉取后本地过滤仓库</li>
+      <li>与近期区间允许小范围重叠</li>
+    </ul>
+  </section>
+</div>
+
+两个入口最后进入同一个标准化层：
+
+```text
+API 原始响应
+    ↓
+字段标准化
+    ↓
+仓库 / 业务过滤
+    ↓
+按 delivery code 幂等 Upsert
+    ↓
+按 detail id 幂等 Upsert
+    ↓
+销量 / 库存等下游事实
+```
+
+这样“从哪里查到”只是数据采集层的问题，不会污染后面的业务计算。
+
+## 分页为什么必须做完整性保护
+
+ERP API 做历史回填时，最危险的不是显式报错，而是“看起来成功但少了一页”。
+
+至少应该检查：
+
+```text
+1. 每页返回的 total 是否漂移
+2. 是否出现重复页 / 重复单号
+3. 是否在 total 尚未收齐前提前空页
+4. 是否异常提前出现短页
+5. 最终 received 是否等于 total
+6. 是否超过预设最大页数
+```
+
+历史接口已经用一个完整自然日做过多页验证：整日分页可以稳定收齐，分页期间 `total` 保持一致，商品明细里的核心 ID 和数量字段也能完整返回。
+
+这比“第一页有数据”重要得多。
+
+## 其他出库与调拨：不要把所有库存下降都当销量
+
+如果系统还要用“库存下降”推算销量，就必须把非销售出库扣掉。
+
+常用接口：
+
+```text
+gy.erp.stock.other.out.order.get
+gy.erp.stock.other.out.order.detail.get
+gy.erp.stock.transfer.get
+```
+
+其他出库单详情可以取得实际出库数量；调拨单也可以拿到调出仓及商品明细。
+
+因此：
+
+```text
+库存下降
+≠ 销量
+```
+
+更接近：
+
+```text
+真实销售消耗
+≈ 库存下降 - 已识别的非销售出库
+```
+
+当然，如果已经有可信的发货单事实，销量优先应该从发货事实构建，而不是长期依赖库存差值反推。
+
+## 一张速查表
+
+| 业务 | 接口 | 最重要的工程提示 |
+| --- | --- | --- |
+| 店铺 | `gy.erp.shop.get` | 区分 `shop_code` 与 `shop_id` |
+| 商品 | `gy.erp.items.get` | SKU / 组合品数据量可能很大，分页保护独立配置 |
+| 库存 | `gy.erp.new.stock.get` | 全量收齐后再覆盖本地可信库存 |
+| 当前订单 | `gy.erp.trade.get` | 适合当前区订单查询 |
+| 历史订单 | `gy.erp.trade.history.get` | 当前订单查不到时继续查历史区 |
+| 订单详情 | `gy.erp.trade.detail.get` | 定向按订单号取详情 |
+| 近期发货 | `gy.erp.trade.deliverys.get` | 修改时间增量、仓库过滤、`del` 状态 |
+| 历史发货 | `gy.erp.trade.deliverys.history.get` | 发货时间窗口 ≤ 24h，本地仓库过滤 |
+| 其他出库 | `gy.erp.stock.other.out.order.get` | 校正非销售出库 |
+| 其他出库详情 | `gy.erp.stock.other.out.order.detail.get` | 获取商品级出库数量 |
+| 调拨 | `gy.erp.stock.transfer.get` | 校正仓间调拨造成的库存下降 |
+
+## 排查一个 C-ERP 接口问题的顺序
+
+遇到“接口没数据”“数据少了”“字段不对”这类问题，可以按这个顺序：
+
+1. **先确认用的是不是正确的数据区接口。** 当前 / 历史往往比参数本身更重要。
+2. **拿一个已知单号做定向查询。** 比盲目扩大时间范围更快。
+3. **检查时间字段语义。** 创建时间、修改时间、发货时间完全不是一回事。
+4. **确认参数是否真的被这个接口支持。** 不要因为另一个同类接口有 `warehouse_code`、`del`，就默认 history 也支持。
+5. **再验证完整分页。** 第一页正确，不代表整批数据正确。
+6. **最后才把规律写进代码。** 第三方资料里的“7 天”“30 天”一类经验值，没有真实租户验证前不要硬编码。
+
+这套方法实际上不只适用于管易。很多 ERP、OMS、平台开放接口都会把“近期热数据”和“归档历史数据”拆成不同查询路径。
+
+## 资料来源
+
+公开资料里可以交叉查看：
+
+- [管易云·奇门 发货单查询 v1 镜像](https://www.qeasy.cloud/en/api/3cf95c93-bf5a-3629-ac49-725fabde2bf6)；原帮助文档编号：`1234998`
+- [管易云·奇门 历史发货单查询 v1 镜像](https://www.qeasy.cloud/en/api/1169586b-f065-372b-9176-d8d7abab8d13)；原帮助文档编号：`1234999`
+
+公开镜像主要用来确认接口名和参数定义。涉及数据保留边界、字段是否为空、过滤参数是否真正生效时，仍然应该以真实租户只读验证为准。
+
+<style>{`
+  .cerp-hero {
+    margin: 1.4rem 0 1.8rem;
+    padding: 1.35rem 1.45rem;
+    border: 1px solid color-mix(in srgb, var(--sl-color-accent) 35%, transparent);
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at top right, color-mix(in srgb, var(--sl-color-accent) 16%, transparent), transparent 38%),
+      var(--sl-color-bg-nav);
+  }
+
+  .cerp-hero > span,
+  .cerp-grid small,
+  .cerp-split small {
+    display: block;
+    margin-bottom: .45rem;
+    color: var(--sl-color-accent-high);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+  }
+
+  .cerp-hero strong {
+    display: block;
+    font-size: clamp(1.25rem, 2.2vw, 1.8rem);
+    line-height: 1.35;
+  }
+
+  .cerp-hero p {
+    margin: .7rem 0 0;
+    color: var(--sl-color-gray-2);
+  }
+
+  .cerp-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+    margin: 1.2rem 0 1.6rem;
+  }
+
+  .cerp-grid section,
+  .cerp-split section {
+    padding: 1rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 14px;
+    background: var(--sl-color-bg-nav);
+  }
+
+  .cerp-grid section.is-main {
+    border-color: color-mix(in srgb, var(--sl-color-accent) 50%, var(--sl-color-gray-5));
+    box-shadow: 0 12px 34px color-mix(in srgb, var(--sl-color-accent) 8%, transparent);
+  }
+
+  .cerp-grid strong,
+  .cerp-split strong {
+    display: block;
+    margin-bottom: .55rem;
+    font-size: 1rem;
+  }
+
+  .cerp-grid code,
+  .cerp-split code {
+    display: block;
+    width: fit-content;
+    margin: .28rem 0;
+  }
+
+  .cerp-grid p {
+    margin: .65rem 0 0;
+    color: var(--sl-color-gray-2);
+    font-size: .9rem;
+  }
+
+  .cerp-rule,
+  .cerp-warning {
+    margin: 1rem 0 1.4rem;
+    padding: 1rem 1.1rem;
+    border-left: 4px solid var(--sl-color-accent);
+    border-radius: 0 12px 12px 0;
+    background: color-mix(in srgb, var(--sl-color-accent) 9%, var(--sl-color-bg-nav));
+  }
+
+  .cerp-warning {
+    border-left-color: #d97706;
+    background: color-mix(in srgb, #d97706 9%, var(--sl-color-bg-nav));
+  }
+
+  .cerp-rule b,
+  .cerp-warning b {
+    display: block;
+    margin-bottom: .35rem;
+  }
+
+  .cerp-rule p,
+  .cerp-warning p {
+    margin: 0;
+    color: var(--sl-color-gray-2);
+  }
+
+  .cerp-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+    align-items: stretch;
+    gap: .5rem;
+    margin: 1.1rem 0 1.5rem;
+  }
+
+  .cerp-flow section {
+    min-width: 0;
+    padding: .8rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 12px;
+    background: var(--sl-color-bg-nav);
+  }
+
+  .cerp-flow section span {
+    display: block;
+    color: var(--sl-color-accent-high);
+    font-size: .7rem;
+    font-weight: 800;
+  }
+
+  .cerp-flow section b {
+    display: block;
+    margin: .25rem 0 .45rem;
+    font-size: .88rem;
+  }
+
+  .cerp-flow section code {
+    font-size: .72rem;
+    overflow-wrap: anywhere;
+  }
+
+  .cerp-flow > i {
+    align-self: center;
+    color: var(--sl-color-gray-3);
+    font-style: normal;
+  }
+
+  .cerp-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .85rem;
+    margin: 1.1rem 0 1.5rem;
+  }
+
+  .cerp-split ul {
+    margin-bottom: 0;
+    padding-left: 1.15rem;
+  }
+
+  @media (max-width: 760px) {
+    .cerp-grid,
+    .cerp-split {
+      grid-template-columns: 1fr;
+    }
+
+    .cerp-flow {
+      grid-template-columns: 1fr;
+    }
+
+    .cerp-flow > i {
+      transform: rotate(90deg);
+      justify-self: center;
+    }
+  }
+`}</style>
+
