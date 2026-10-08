@@ -8,6 +8,7 @@
 
 | 文件 | 分类 | 主题概览 | 适合什么时候参考 |
 | --- | --- | --- | --- |
+| `src/content/posts/code-tech-weird-issues.mdx` | `实践` | 长期维护的编程、API、数据同步、自动化等技术踩坑记录；首条说明动态数据下页码分页 `total` 波动与实际漏单不能画等号，区分已观察事实和潜在 OFFSET 漏读风险，并给出回查与校验建议 | 写 API 分页、动态查询结果、`total` 变化、OFFSET 漏读风险、增量同步与一致性校验时参考 |
 | `src/content/posts/guanyi-cerp-api-practical-notes.mdx` | `教程` | 管易 C-ERP OpenAPI 标准化接入与接口参考，覆盖签名、通用错误与分页规范、店铺/商品/库存/订单/发货/出库/调拨接口，并明确近期与历史发货单的数据分层、参数差异、已验证行为和待验证边界 | 写管易 C-ERP、ERP OpenAPI、接口接入、参数与返回字段、近期/历史发货单、分页完整性和数据区边界时参考 |
 | `src/content/posts/java-jvm-python-bytecode-runtime.mdx` | `教程` | 从源码、字节码、运行时到 CPU 对照 Java 与 Python，讲清 JVM、.class、Python bytecode、.pyc、CPython 的层级关系，以及两者都能跨平台但 JVM 通常能让 Java 热点代码更快的原因 | 写 JVM、Java/Python 运行机制、字节码、跨平台、解释器、JIT、CPython 性能和 NumPy 底层加速时参考 |
 | `src/content/posts/vibe-coding-ai-table-saas-retrospective.mdx` | `实践` | 复盘数日 AI 表格 SaaS 开发，从无脑 Vibe Coding、钉钉与 Airtable 产品对照、开源表格逆向研究和人工定点精修，逐步升级到 Git Worktree 多 Agent 并行、独立真实浏览器验收、快速失败与 Skill / AGENTS.md 经验固化，并讨论 AI 编码后 Coding 成本下降、Verification 成为新瓶颈 | 写 Vibe Coding、AI 编程方法、多 Agent 协作、SaaS 产品打磨、浏览器验收、Skill 经验沉淀和 AI 软件工程复盘时参考 |
