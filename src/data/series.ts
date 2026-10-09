@@ -26,6 +26,12 @@ export const seriesMetaList = [
       href: '/files/excel-functions/Excel函数学习系列练习与考核包.zip',
       meta: 'ZIP · 3 个 Excel 文件 · 练习 + 考核 + 参考答案',
     },
+    extraResource: {
+      title: 'Excel 函数实操练习与 AI 评分规则',
+      description: '三套空白函数实操题，共 156 题；附独立评分规则，支持 AI 批改，不含参考答案。',
+      href: '/files/excel-functions/Excel函数实操练习与AI评分规则.zip',
+      meta: 'ZIP · 3 份 Excel + 评分规则 · 满分 99.99 分',
+    },
   },
   {
     id: 'ecommerce-operation-learning',
@@ -67,6 +73,12 @@ export const seriesMetaList = [
   description: string;
   order: number;
   resource?: {
+    title: string;
+    description: string;
+    href: string;
+    meta: string;
+  };
+  extraResource?: {
     title: string;
     description: string;
     href: string;
