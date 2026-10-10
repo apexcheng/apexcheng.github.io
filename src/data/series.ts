@@ -22,9 +22,9 @@ export const seriesMetaList = [
     order: 3,
     resource: {
       title: 'Excel 函数学习系列练习与考核包',
-      description: '包含练习工作簿、考核工作簿和考核参考答案，共 3 个 Excel 文件。',
+      description: '正式考核：30 道计分题（满分 100 分）及 2 道选做题，包含考核工作簿、参考答案、AI 批改规则和旧版练习归档。',
       href: '/files/excel-functions/Excel函数学习系列练习与考核包.zip',
-      meta: 'ZIP · 3 个 Excel 文件 · 练习 + 考核 + 参考答案',
+      meta: 'ZIP · 正式考核 + 参考答案 + AI 评分规则 + 旧版归档',
     },
     extraResource: {
       title: 'Excel 函数实操练习与 AI 评分规则',

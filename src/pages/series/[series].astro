@@ -91,27 +91,10 @@ const learningStages = 'learningStages' in series ? series.learningStages : unde
         </section>
       )}
 
-      {series.resource && (
-        <section class="series-resource-card" aria-label="系列配套下载">
-          <div class="series-resource-content">
-            <p class="eyebrow">配套下载</p>
-            <h2>{series.resource.title}</h2>
-            <p>{series.resource.description}</p>
-            <span>{series.resource.meta}</span>
-          </div>
-          <a
-            class="series-resource-download"
-            href={withBase(series.resource.href)}
-            download
-          >
-            下载练习与考核包 <span aria-hidden="true">↓</span>
-          </a>
-        </section>
-      )}
       {'extraResource' in series && series.extraResource && (
         <section class="series-resource-card" aria-label="函数实操练习下载">
           <div class="series-resource-content">
-            <p class="eyebrow">新增练习包</p>
+            <p class="eyebrow">函数实操练习</p>
             <h2>{series.extraResource.title}</h2>
             <p>{series.extraResource.description}</p>
             <span>{series.extraResource.meta}</span>
@@ -122,6 +105,23 @@ const learningStages = 'learningStages' in series ? series.learningStages : unde
             download
           >
             下载函数实操练习包 <span aria-hidden="true">↓</span>
+          </a>
+        </section>
+      )}
+      {series.resource && (
+        <section class="series-resource-card" aria-label="正式考核下载">
+          <div class="series-resource-content">
+            <p class="eyebrow">正式考核</p>
+            <h2>{series.resource.title}</h2>
+            <p>{series.resource.description}</p>
+            <span>{series.resource.meta}</span>
+          </div>
+          <a
+            class="series-resource-download"
+            href={withBase(series.resource.href)}
+            download
+          >
+            下载考核包 <span aria-hidden="true">↓</span>
           </a>
         </section>
       )}
