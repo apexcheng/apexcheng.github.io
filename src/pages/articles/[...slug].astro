@@ -17,6 +17,15 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
 const tocHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const isCerpApiReference = post.slug === 'guanyi-cerp-api-practical-notes';
+const cerpRequestSample = `{
+  "appkey": "<APP_KEY>",
+  "sessionkey": "<SESSION_KEY>",
+  "method": "gy.erp.new.stock.get",
+  "page_no": 1,
+  "page_size": 100,
+  "sign": "<SIGN>"
+}`;
 const seriesMeta = post.data.series ? getSeriesMeta(post.data.series) : undefined;
 const seriesPosts = post.data.series
   ? (await getCollection('posts'))
@@ -29,9 +38,9 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
 ---
 
 <SiteLayout title={post.data.title} active={post.data.series ? 'series' : 'articles'} description={post.data.description}>
-  <main class="page-content article-shell" data-article-shell data-series-id={post.data.series}>
+  <main class:list={['page-content', 'article-shell', isCerpApiReference && 'cerp-doc-layout']} data-article-shell data-series-id={post.data.series}>
     <div class="article-sidebar" id="article-sidebar">
-      <aside class="article-info desktop-article-info">
+      {!isCerpApiReference && <aside class="article-info desktop-article-info">
         <h2>文章信息</h2>
         <p>{post.data.category}</p>
         <p>{formatPostDate(post.data.date)}</p>
@@ -39,10 +48,10 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
         <div class="chips">
           {post.data.tags.map((tag) => <span>{tag}</span>)}
         </div>
-      </aside>
+      </aside>}
       <aside class="toc-panel">
         <div class="toc-panel-head">
-          <h2>本文目录</h2>
+          <h2>{isCerpApiReference ? '接口与章节' : '本文目录'}</h2>
           <button
             class="toc-collapse-button"
             type="button"
@@ -130,7 +139,34 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
           </div>
         </nav>
       )}
-    </article>
+      </article>
+      {isCerpApiReference && (
+        <aside class="cerp-reference-rail" aria-label="C-ERP API 请求参考">
+          <div class="cerp-reference-rail-heading">
+            <span>OpenAPI 请求参考</span>
+            <span class="cerp-reference-method">POST</span>
+          </div>
+          <div class="cerp-reference-block">
+            <h2>统一请求地址</h2>
+            <code class="cerp-reference-url">http://api.guanyierp.com/rest/erp_open</code>
+            <p>Content-Type: application/json</p>
+          </div>
+          <div class="cerp-reference-block">
+            <div class="cerp-reference-block-heading">
+              <h2>请求示例</h2>
+              <button type="button" data-cerp-copy>复制代码</button>
+            </div>
+            <pre class="cerp-reference-code"><code data-cerp-request>{cerpRequestSample}</code></pre>
+            <p>库存分页查询示例。其他接口需替换 <code>method</code> 和对应业务参数；签名按正文算法计算。</p>
+          </div>
+          <div class="cerp-reference-block">
+            <h2>响应检查</h2>
+            <code class="cerp-reference-fields">success · errorCode · errorDesc · subErrorCode · subErrorDesc</code>
+            <p>先检查业务成功状态；返回分页数据时再核对 <code>total</code> 和实际条数。</p>
+          </div>
+          <p class="cerp-reference-copy-state" data-cerp-copy-state aria-live="polite"></p>
+        </aside>
+      )}
   </main>
   <script src="/scripts/active-toc.js" defer></script>
   <script is:inline>
@@ -159,4 +195,20 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
       });
     })();
   </script>
+  {isCerpApiReference && <script is:inline>
+    (function () {
+      var button = document.querySelector('[data-cerp-copy]');
+      var code = document.querySelector('[data-cerp-request]');
+      var state = document.querySelector('[data-cerp-copy-state]');
+      if (!button || !code || !state) return;
+      button.addEventListener('click', async function () {
+        try {
+          await navigator.clipboard.writeText(code.textContent || '');
+          state.textContent = '已复制请求示例';
+        } catch (error) {
+          state.textContent = '无法自动复制，请手动选中代码';
+        }
+      });
+    })();
+  </script>}
 </SiteLayout>

@@ -1800,6 +1800,220 @@ h3 {
   position: relative;
 }
 
+/* 单篇 C-ERP API 参考：复用文章目录，添加独立请求参考栏。 */
+.article-shell.cerp-doc-layout {
+  gap: 22px;
+  grid-template-columns: 222px minmax(0, 1fr) 302px;
+  padding-left: clamp(24px, 4vw, 76px);
+  padding-right: clamp(24px, 4vw, 76px);
+}
+
+.cerp-doc-layout .article-sidebar {
+  top: 26px;
+}
+
+.cerp-doc-layout .toc-panel {
+  background: transparent;
+  border: 0;
+  max-height: calc(100vh - 52px);
+  padding: 14px 4px 14px 0;
+}
+
+.cerp-doc-layout .toc-panel h2 {
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.cerp-doc-layout .toc-panel a {
+  border-bottom: 0;
+  border-radius: 7px;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 8px 10px;
+}
+
+.cerp-doc-layout .toc-panel .toc-link-depth-2 {
+  color: var(--ink);
+  font-weight: 740;
+  margin-top: 10px;
+}
+
+.cerp-doc-layout .toc-panel .toc-link-depth-3 {
+  padding-left: 22px;
+}
+
+.cerp-doc-layout .toc-panel a.is-active {
+  background: color-mix(in srgb, var(--blue) 10%, var(--paper));
+  border-left: 0;
+  color: var(--blue);
+  padding-left: 10px;
+}
+
+.cerp-doc-layout .toc-panel .toc-link-depth-3.is-active {
+  padding-left: 22px;
+}
+
+.cerp-doc-layout .article-content {
+  padding: clamp(24px, 3vw, 44px);
+}
+
+.cerp-doc-layout .article-content h1 {
+  font-size: clamp(30px, 2.8vw, 42px);
+}
+
+.cerp-doc-layout .article-content h2 {
+  border-top: 1px solid var(--line-soft);
+  font-size: 25px;
+  margin-top: 52px;
+  padding-top: 30px;
+}
+
+.cerp-reference-rail {
+  align-self: start;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  min-width: 0;
+  max-height: calc(100vh - 52px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: sticky;
+  top: 26px;
+}
+
+.cerp-reference-rail-heading {
+  align-items: center;
+  border-bottom: 1px solid var(--line-soft);
+  display: flex;
+  font-size: 13px;
+  font-weight: 760;
+  justify-content: space-between;
+  padding: 16px 18px;
+}
+
+.cerp-reference-method {
+  background: color-mix(in srgb, var(--green) 12%, var(--paper));
+  border-radius: 5px;
+  color: var(--green);
+  font: 740 11px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+  padding: 4px 7px;
+}
+
+.cerp-reference-block {
+  border-bottom: 1px solid var(--line-soft);
+  padding: 17px 18px 19px;
+}
+
+.cerp-reference-block h2 {
+  color: var(--ink);
+  font-size: 13px;
+  margin: 0 0 11px;
+}
+
+.cerp-reference-block-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 11px;
+}
+
+.cerp-reference-block-heading h2 {
+  margin: 0;
+}
+
+.cerp-reference-block-heading button {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  padding: 5px 8px;
+}
+
+.cerp-reference-block-heading button:hover {
+  background: var(--paper-soft);
+}
+
+.cerp-reference-block-heading button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.cerp-reference-url,
+.cerp-reference-fields {
+  color: var(--ink);
+  display: block;
+  font: 12px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.cerp-reference-rail p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 10px 0 0;
+}
+
+.cerp-reference-rail p code {
+  color: var(--ink);
+}
+
+.cerp-reference-code {
+  background: #172235;
+  border-radius: 8px;
+  color: #e5edf7;
+  font: 11px/1.8 ui-monospace, SFMono-Regular, Consolas, monospace;
+  margin: 0;
+  overflow-x: auto;
+  padding: 13px 10px;
+  tab-size: 2;
+}
+
+.cerp-reference-copy-state {
+  min-height: 0;
+  padding: 0 18px;
+}
+
+.cerp-reference-copy-state:not(:empty) {
+  padding-bottom: 12px;
+}
+
+.article-shell.cerp-doc-layout.is-focus-mode {
+  gap: 0;
+  grid-template-columns: 0 minmax(0, 1fr) 0;
+}
+
+.cerp-doc-layout.is-focus-mode .cerp-reference-rail {
+  display: none;
+}
+
+@media (max-width: 1240px) {
+  .article-shell.cerp-doc-layout {
+    grid-template-columns: 224px minmax(0, 1fr);
+  }
+
+  .cerp-reference-rail {
+    display: none;
+  }
+
+  .article-shell.cerp-doc-layout.is-focus-mode {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .article-shell.cerp-doc-layout,
+  .article-shell.cerp-doc-layout.is-focus-mode {
+    display: block;
+  }
+
+  .cerp-doc-layout .article-sidebar {
+    display: none;
+  }
+}
+
 .article-sidebar-restore {
   height: 0;
   position: sticky;
