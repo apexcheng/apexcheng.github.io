@@ -652,7 +652,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   :global(html.design-one-page) {
     --body-font: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
     --display-font: var(--body-font);
-    --mono-font: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+    --mono-font: "JetBrains Mono", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", monospace;
     --page: #f6f8fc;
     --surface: #ffffff;
     --surface-soft: #eef4ff;
@@ -1333,6 +1333,13 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     font-size: clamp(10px, 0.9vw, 12.5px);
     line-height: 1.55;
     white-space: pre-wrap;
+    font-variant-ligatures: none;
+  }
+
+  .code-window pre code {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
   }
 
   .code-comment { color: #637794; }
