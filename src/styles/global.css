@@ -1,7 +1,7 @@
 :root {
   --body-font: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   --display-font: var(--body-font);
-  --mono-font: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  --mono-font: "JetBrains Mono", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", monospace;
   --bg: #f7f8fb;
   --paper: #ffffff;
   --paper-soft: #f1f5f9;
@@ -1047,10 +1047,19 @@ h3 {
   border: 1px solid #3b4658;
   border-radius: var(--radius);
   color: #e6edf7;
-  font: 13px/1.7 var(--mono-font);
+  font: 14px/1.75 var(--mono-font);
   margin: 26px 0 0;
   overflow-x: auto;
   padding: 18px;
+  font-variant-ligatures: none;
+}
+
+/* Override the browser's default <code> font, including within highlighted blocks. */
+.article-content pre > code,
+.code-preview > code {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
 }
 
 .article-content .expressive-code {
@@ -1059,8 +1068,8 @@ h3 {
   --ec-codeBg: #18202d;
   --ec-codeFg: #e6edf7;
   --ec-codeFontFml: var(--mono-font);
-  --ec-codeFontSize: 13px;
-  --ec-codeLineHt: 1.72;
+  --ec-codeFontSize: 14px;
+  --ec-codeLineHt: 1.75;
   --ec-codePadBlk: 18px;
   --ec-codePadInl: 22px;
   --ec-frm-edBg: #18202d;
