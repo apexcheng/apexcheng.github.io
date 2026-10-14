@@ -92,6 +92,7 @@ const introReturn = encodeURIComponent(isOfficialHome ? withBase('/') : withBase
     <meta name="robots" content={isOfficialHome ? 'index, follow' : 'noindex, nofollow'} />
     <meta name="theme-color" content="#f6f8fc" />
     <link rel="icon" type="image/png" sizes="256x256" href={withBase('/favicon.png?v=5')} />
+    <link rel="stylesheet" href={withBase('/fonts/typography.css')} />
     <title>{isOfficialHome ? siteMeta.siteName : `首页重设计 01 | ${siteMeta.siteName}`}</title>
     <script is:inline>
       try {
@@ -649,6 +650,9 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   }
 
   :global(html.design-one-page) {
+    --body-font: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --display-font: var(--body-font);
+    --mono-font: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
     --page: #f6f8fc;
     --surface: #ffffff;
     --surface-soft: #eef4ff;
@@ -697,7 +701,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
       radial-gradient(circle at 12% 16%, color-mix(in srgb, var(--cyan) 8%, transparent) 0, transparent 26rem),
       var(--page);
     color: var(--ink);
-    font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-family: var(--body-font);
     font-size: 16px;
     line-height: 1.7;
     text-rendering: optimizeLegibility;
@@ -739,8 +743,8 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     gap: 12px;
     min-height: 44px;
     font-size: 18px;
-    font-weight: 760;
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    letter-spacing: 0;
   }
 
   .brand-mark {
@@ -753,7 +757,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     box-shadow: 0 10px 26px color-mix(in srgb, var(--blue) 25%, transparent);
     color: #fff;
     font-size: 18px;
-    font-weight: 760;
+    font-weight: 700;
   }
 
   .site-nav {
@@ -833,7 +837,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     background: color-mix(in srgb, var(--surface) 84%, transparent);
     cursor: pointer;
     font-size: 13px;
-    font-weight: 650;
+    font-weight: 600;
     transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
   }
 
@@ -931,7 +935,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
 
   .search-panel-head label {
     font-size: 15px;
-    font-weight: 740;
+    font-weight: 700;
   }
 
   .search-panel-head button {
@@ -1066,7 +1070,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     border-top: 1px solid var(--line);
     color: var(--blue);
     font-size: 13px;
-    font-weight: 720;
+    font-weight: 700;
   }
 
   .search-results :global(.search-all span) {
@@ -1134,7 +1138,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     margin-bottom: 20px;
     color: var(--cyan);
     font-size: 12px;
-    font-weight: 740;
+    font-weight: 700;
     letter-spacing: 0.08em;
   }
 
@@ -1163,8 +1167,8 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   h1 {
     margin-bottom: 20px;
     font-size: clamp(48px, 4.7vw, 68px);
-    font-weight: 760;
-    letter-spacing: -0.055em;
+    font-weight: 700;
+    letter-spacing: -0.015em;
     line-height: 1.09;
   }
 
@@ -1204,7 +1208,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     border: 1px solid var(--line);
     border-radius: 12px;
     font-size: 14px;
-    font-weight: 720;
+    font-weight: 700;
     transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
   }
 
@@ -1248,7 +1252,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .hero-stats strong {
     color: var(--ink);
     font-size: 17px;
-    font-weight: 780;
+    font-weight: 700;
   }
 
   .workbench {
@@ -1325,7 +1329,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     margin: 0;
     padding: 17px 19px 18px;
     overflow: hidden;
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-family: var(--mono-font);
     font-size: clamp(10px, 0.9vw, 12.5px);
     line-height: 1.55;
     white-space: pre-wrap;
@@ -1387,12 +1391,12 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .panel-title span {
     color: var(--faint);
     font-size: 10px;
-    font-weight: 650;
+    font-weight: 600;
   }
 
   .panel-title strong {
     font-size: 14px;
-    font-weight: 760;
+    font-weight: 700;
   }
 
   .data-window table {
@@ -1412,7 +1416,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .data-window th {
     background: var(--surface-soft);
     color: var(--ink);
-    font-weight: 720;
+    font-weight: 700;
   }
 
   .flow-window ol {
@@ -1458,7 +1462,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .flow-window li span {
     display: grid;
     font-size: 11px;
-    font-weight: 720;
+    font-weight: 700;
   }
 
   .flow-window li small {
@@ -1491,7 +1495,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     margin-bottom: 10px;
     color: var(--cyan);
     font-size: 12px;
-    font-weight: 760;
+    font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
@@ -1501,8 +1505,8 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     max-width: 760px;
     margin-bottom: 0;
     font-size: clamp(34px, 4vw, 58px);
-    font-weight: 760;
-    letter-spacing: -0.045em;
+    font-weight: 700;
+    letter-spacing: -0.012em;
     line-height: 1.18;
   }
 
@@ -1518,7 +1522,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     align-self: end;
     color: var(--blue);
     font-size: 13px;
-    font-weight: 720;
+    font-weight: 700;
   }
 
   .topics-section {
@@ -1548,7 +1552,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .topics-heading h2 {
     margin-bottom: 3px;
     font-size: clamp(24px, 2.2vw, 31px);
-    letter-spacing: -0.035em;
+    letter-spacing: -0.012em;
     line-height: 1.25;
   }
 
@@ -1565,7 +1569,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     gap: 5px;
     color: var(--blue);
     font-size: 12px;
-    font-weight: 720;
+    font-weight: 700;
   }
 
   .topic-grid {
@@ -1624,7 +1628,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .topic-card h3 {
     margin-bottom: 0;
     font-size: 21px;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.012em;
   }
 
   .topic-card p {
@@ -1678,14 +1682,14 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .series-number {
     color: var(--blue);
     font-size: 44px;
-    font-weight: 780;
-    letter-spacing: -0.05em;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
   .series-copy > span {
     color: var(--cyan);
     font-size: 10px;
-    font-weight: 720;
+    font-weight: 700;
   }
 
   .series-copy h3 {
@@ -1832,7 +1836,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     border-radius: 13px;
     background: #0a1220;
     font-size: 12px;
-    font-weight: 720;
+    font-weight: 700;
   }
 
   .decision-demo i {
@@ -1865,7 +1869,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .layers-demo span {
     z-index: 1;
     font-size: 24px;
-    font-weight: 760;
+    font-weight: 700;
   }
 
   .lab-copy {
@@ -1875,7 +1879,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .lab-copy > span {
     color: var(--cyan);
     font-size: 10px;
-    font-weight: 740;
+    font-weight: 700;
   }
 
   .lab-copy h3 {
@@ -1927,7 +1931,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .latest-category {
     color: var(--cyan);
     font-size: 11px;
-    font-weight: 720;
+    font-weight: 700;
   }
 
   .latest-list h3 {
@@ -1956,7 +1960,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     margin-bottom: 12px;
     color: var(--cyan);
     font-size: 11px;
-    font-weight: 740;
+    font-weight: 700;
     letter-spacing: 0.08em;
   }
 

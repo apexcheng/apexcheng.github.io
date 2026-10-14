@@ -1,7 +1,7 @@
 :root {
-  --body-font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "PingFang SC", "Microsoft YaHei", sans-serif;
+  --body-font: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   --display-font: var(--body-font);
+  --mono-font: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
   --bg: #f7f8fb;
   --paper: #ffffff;
   --paper-soft: #f1f5f9;
@@ -27,8 +27,6 @@
 }
 
 html[data-style-theme='index-gradient'] {
-  --body-font: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
-  --display-font: "Noto Serif SC", "Songti SC", Georgia, serif;
   --bg: #f6efe2;
   --paper: rgba(255, 251, 241, 0.92);
   --paper-soft: rgba(245, 238, 224, 0.82);
@@ -47,8 +45,6 @@ html[data-style-theme='index-gradient'] {
 }
 
 html[data-style-theme='visual-system'] {
-  --body-font: Inter, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
-  --display-font: Inter, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   --bg: #eef5fb;
   --paper: rgba(255, 255, 255, 0.86);
   --paper-soft: rgba(239, 246, 255, 0.82);
@@ -163,7 +159,7 @@ p {
   align-items: center;
   display: flex;
   font-size: 18px;
-  font-weight: 760;
+  font-weight: 700;
   gap: 12px;
   margin-right: auto;
   transition: color 0.16s ease;
@@ -175,7 +171,7 @@ p {
   border-radius: var(--radius);
   color: #fff;
   display: inline-flex;
-  font-weight: 800;
+  font-weight: 700;
   height: 34px;
   justify-content: center;
   transition: transform 0.18s ease;
@@ -209,7 +205,7 @@ p {
 
 .site-nav a.active {
   color: var(--ink);
-  font-weight: 720;
+  font-weight: 700;
 }
 
 .site-nav > a {
@@ -266,7 +262,7 @@ p {
 .nav-search:hover .nav-search-trigger,
 .nav-search:focus-within .nav-search-trigger {
   color: var(--ink);
-  font-weight: 720;
+  font-weight: 700;
 }
 
 .nav-search-trigger {
@@ -423,7 +419,7 @@ p {
   color: var(--blue);
   display: flex;
   font-size: 13px;
-  font-weight: 720;
+  font-weight: 700;
   justify-content: space-between;
   margin-top: 4px;
   padding: 12px 10px 4px;
@@ -446,7 +442,7 @@ p {
 .nav-search-result span {
   color: var(--cyan);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .nav-search-result b {
@@ -489,7 +485,7 @@ p {
   cursor: pointer;
   display: inline-flex;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   height: 34px;
   justify-content: center;
   transition:
@@ -627,7 +623,7 @@ p {
 
 .intro-option-title {
   font-size: 13px;
-  font-weight: 760;
+  font-weight: 700;
   line-height: 1.35;
 }
 
@@ -643,7 +639,7 @@ p {
   border-radius: 999px;
   color: var(--blue);
   font-size: 9px;
-  font-weight: 780;
+  font-weight: 700;
   letter-spacing: 0.08em;
   padding: 2px 6px;
 }
@@ -683,7 +679,7 @@ html[data-style-theme='visual-system'] .chips a {
 .eyebrow {
   color: var(--cyan);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.08em;
   margin: 0 0 18px;
   text-transform: uppercase;
@@ -725,7 +721,7 @@ h3 {
   color: var(--ink);
   display: inline-flex;
   font-size: 14px;
-  font-weight: 760;
+  font-weight: 700;
   height: 44px;
   justify-content: center;
   padding: 0 18px;
@@ -817,7 +813,7 @@ h3 {
 
 .terminal-body {
   color: #cbd5e1;
-  font: 14px/1.75 Consolas, "SFMono-Regular", "JetBrains Mono", "Fira Code", monospace;
+  font: 14px/1.75 var(--mono-font);
   padding: 24px;
 }
 
@@ -869,7 +865,7 @@ h3 {
 .section-head a {
   color: var(--blue);
   font-size: 14px;
-  font-weight: 720;
+  font-weight: 700;
   transition: color 0.18s ease, transform 0.18s ease;
 }
 
@@ -922,7 +918,7 @@ h3 {
   border-radius: var(--radius);
   color: #1d4ed8;
   display: inline-flex;
-  font-weight: 800;
+  font-weight: 700;
   height: 38px;
   justify-content: center;
   margin-bottom: 17px;
@@ -1002,7 +998,7 @@ h3 {
   color: #1d4ed8;
   display: inline-flex;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   min-height: 26px;
   padding: 5px 10px;
 }
@@ -1051,7 +1047,7 @@ h3 {
   border: 1px solid #3b4658;
   border-radius: var(--radius);
   color: #e6edf7;
-  font: 13px/1.7 "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  font: 13px/1.7 var(--mono-font);
   margin: 26px 0 0;
   overflow-x: auto;
   padding: 18px;
@@ -1062,7 +1058,7 @@ h3 {
   --ec-brdCol: #3b4658;
   --ec-codeBg: #18202d;
   --ec-codeFg: #e6edf7;
-  --ec-codeFontFml: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  --ec-codeFontFml: var(--mono-font);
   --ec-codeFontSize: 13px;
   --ec-codeLineHt: 1.72;
   --ec-codePadBlk: 18px;
@@ -1139,7 +1135,7 @@ h3 {
 .article-row-list small,
 .article-list-item small {
   color: var(--cyan);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .article-row-list h3 {
@@ -1217,7 +1213,7 @@ h3 {
   color: var(--blue);
   display: inline-flex;
   font-size: 13px;
-  font-weight: 760;
+  font-weight: 700;
   margin-top: 18px;
   transition: color 0.18s ease, transform 0.18s ease;
 }
@@ -1328,7 +1324,7 @@ h3 {
 .filter-panel > a.active {
   background: color-mix(in srgb, var(--blue) 8%, var(--paper-soft));
   color: var(--blue);
-  font-weight: 760;
+  font-weight: 700;
 }
 
 @media (hover: hover) {
@@ -1376,7 +1372,7 @@ h3 {
   display: inline-flex;
   font: inherit;
   font-size: 12px;
-  font-weight: 720;
+  font-weight: 700;
   gap: 5px;
   margin-top: 12px;
   padding: 3px 0;
@@ -1416,7 +1412,7 @@ h3 {
 
 .search-placeholder a {
   color: var(--blue);
-  font-weight: 720;
+  font-weight: 700;
 }
 
 .article-sort {
@@ -1440,7 +1436,7 @@ h3 {
   cursor: pointer;
   font: inherit;
   font-size: 13px;
-  font-weight: 720;
+  font-weight: 700;
   padding: 6px 12px;
   transition:
     background 0.16s ease,
@@ -1581,7 +1577,7 @@ h3 {
 
 .article-series-meta a {
   color: var(--blue);
-  font-weight: 720;
+  font-weight: 700;
 }
 
 .article-list-item time {
@@ -1601,7 +1597,7 @@ h3 {
 .filter-actions a {
   color: var(--blue);
   font-size: 14px;
-  font-weight: 720;
+  font-weight: 700;
 }
 
 .article-filter-empty {
@@ -1710,7 +1706,7 @@ h3 {
   display: inline-flex;
   font: inherit;
   font-size: 12px;
-  font-weight: 680;
+  font-weight: 700;
   gap: 2px;
   padding: 5px 6px;
   transition:
@@ -1823,24 +1819,38 @@ h3 {
 }
 
 .article-content h1 {
-  font-size: 48px;
+  font-size: clamp(36px, 3.1vw, 44px);
   line-height: 1.14;
   margin: 16px 0;
 }
 
 .article-description {
-  font-size: 19px;
+  font-size: 17px;
+  line-height: 1.75;
 }
 
 .article-content h2 {
   font-size: 28px;
+  font-weight: 700;
   margin: 44px 0 12px;
 }
 
 .article-content p,
 .article-content li {
-  font-size: 16px;
-  line-height: 1.75;
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+/* 保留文章中可视化图表和代码块的宽度，只收紧直接正文段落的阅读列。 */
+.article-content > p:not(.article-description),
+.article-content > ul,
+.article-content > ol,
+.article-content > blockquote {
+  max-width: 800px;
+}
+
+.article-content :not(pre) > code {
+  font-family: var(--mono-font);
 }
 
 .article-content a {
@@ -1894,7 +1904,7 @@ h3 {
 .article-content th {
   background: var(--paper-soft);
   color: var(--ink);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .article-content tr:last-child td {
@@ -1944,7 +1954,7 @@ h3 {
   color: var(--soft);
   display: block;
   font-size: 14px;
-  font-weight: 720;
+  font-weight: 700;
   margin-bottom: 12px;
 }
 
@@ -1996,7 +2006,7 @@ h3 {
   content: "↳";
   display: inline-flex;
   font-size: 26px;
-  font-weight: 900;
+  font-weight: 700;
   height: 46px;
   justify-content: center;
   left: 20px;
@@ -2040,7 +2050,7 @@ h3 {
   color: #fff;
   display: inline-flex;
   font-size: 20px;
-  font-weight: 840;
+  font-weight: 700;
   height: 52px;
   justify-content: center;
   width: 52px;
@@ -2086,7 +2096,7 @@ h3 {
   border-radius: 999px;
   color: #059669;
   font-size: 14px;
-  font-weight: 780;
+  font-weight: 700;
   justify-self: end;
   min-width: 64px;
   padding: 6px 14px;
@@ -2233,7 +2243,7 @@ html[data-theme='dark'] .report-dashboard {
 }
 
 .mermaid-title {
-  font-weight: 760;
+  font-weight: 700;
   margin-bottom: 14px;
 }
 
@@ -2392,7 +2402,7 @@ html[data-theme='dark'] .report-dashboard {
 .about-profile-list dt {
   color: var(--cyan);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.08em;
   margin-bottom: 4px;
   text-transform: uppercase;
@@ -2473,7 +2483,7 @@ html[data-theme='dark'] .report-dashboard {
 .about-card-meta {
   color: var(--cyan);
   display: inline-block;
-  font-weight: 800;
+  font-weight: 700;
   margin-bottom: 14px;
 }
 
@@ -2619,7 +2629,7 @@ html[data-theme='dark'] .report-dashboard {
 .series-card-index {
   color: var(--line);
   font-size: 42px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.06em;
   transition: color 0.2s ease, transform 0.2s ease;
 }
@@ -2637,7 +2647,7 @@ html[data-theme='dark'] .report-dashboard {
 .series-card-body .series-card-meta {
   color: var(--blue);
   font-size: 13px;
-  font-weight: 760;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -2648,7 +2658,7 @@ html[data-theme='dark'] .report-dashboard {
   border-radius: 999px;
   display: inline-flex;
   font-size: 14px;
-  font-weight: 760;
+  font-weight: 700;
   gap: 10px;
   padding: 11px 16px;
   transition:
@@ -2719,7 +2729,7 @@ html[data-theme='dark'] .report-dashboard {
   color: var(--blue);
   display: inline-block;
   font-size: 14px;
-  font-weight: 720;
+  font-weight: 700;
   margin-bottom: 30px;
 }
 
@@ -2755,7 +2765,7 @@ html[data-theme='dark'] .report-dashboard {
   color: var(--paper);
   display: inline-flex;
   font-size: 14px;
-  font-weight: 780;
+  font-weight: 700;
   gap: 9px;
   padding: 11px 16px;
   transition: box-shadow 0.18s ease, transform 0.18s ease;
@@ -2812,7 +2822,7 @@ html[data-theme='dark'] .report-dashboard {
   color: var(--blue);
   flex: 0 0 auto;
   font-size: 12px;
-  font-weight: 760;
+  font-weight: 700;
   padding: 7px 10px;
 }
 
@@ -2848,7 +2858,7 @@ html[data-theme='dark'] .report-dashboard {
 .series-learning-list li > span {
   color: var(--blue);
   font-size: 12px;
-  font-weight: 820;
+  font-weight: 700;
   letter-spacing: 0.04em;
   padding-top: 2px;
 }
@@ -2884,7 +2894,7 @@ html[data-theme='dark'] .report-dashboard {
 .series-overview-list a > span:first-child {
   color: var(--blue);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   padding-top: 2px;
 }
 
@@ -2955,7 +2965,7 @@ html[data-theme='dark'] .report-dashboard {
   color: #fff;
   display: inline-flex;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   gap: 8px;
   justify-content: center;
   padding: 13px 18px;
@@ -3091,7 +3101,7 @@ html[data-theme='dark'] .report-dashboard {
   color: var(--paper);
   display: inline-flex;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   height: 56px;
   justify-content: center;
   transition: box-shadow 0.18s ease, transform 0.18s ease;
@@ -3213,7 +3223,7 @@ html[data-theme='dark'] .report-dashboard {
 .series-pagination-head span {
   color: var(--soft);
   font-size: 13px;
-  font-weight: 720;
+  font-weight: 700;
 }
 
 .article-content .series-pagination-head a {
@@ -3468,6 +3478,12 @@ html[data-theme='dark'] .report-dashboard {
   .page-lead,
   .article-description {
     font-size: 16px;
+  }
+
+  .article-content p,
+  .article-content li {
+    font-size: 16px;
+    line-height: 1.78;
   }
 
   .hero-actions,
