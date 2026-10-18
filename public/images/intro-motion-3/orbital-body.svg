@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-240 -240 480 480" width="960" height="960">
+  <defs>
+    <radialGradient id="stone" cx="19%" cy="75%" r="92%">
+      <stop stop-color="#8d7860"/><stop offset=".18" stop-color="#434641"/><stop offset=".46" stop-color="#242a2c"/><stop offset=".78" stop-color="#12161b"/><stop offset="1" stop-color="#0b0e12"/>
+    </radialGradient>
+    <radialGradient id="night" cx="66%" cy="33%" r="77%">
+      <stop stop-color="#090c10" stop-opacity=".92"/><stop offset=".64" stop-color="#0a0d11" stop-opacity=".78"/><stop offset=".88" stop-color="#0b0d10" stop-opacity=".18"/><stop offset="1" stop-color="#12181d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="limb" x1="0" y1="1" x2=".85" y2=".12">
+      <stop stop-color="#e0a966"/><stop offset=".24" stop-color="#ffe4b0"/><stop offset=".43" stop-color="#a88559"/><stop offset=".63" stop-color="#596872"/><stop offset="1" stop-color="#262f38" stop-opacity=".2"/>
+    </linearGradient>
+    <radialGradient id="halo"><stop offset=".68" stop-color="#e5b575" stop-opacity="0"/><stop offset=".744" stop-color="#e5b575" stop-opacity=".12"/><stop offset=".79" stop-color="#c59355" stop-opacity=".04"/><stop offset="1" stop-color="#c59355" stop-opacity="0"/></radialGradient>
+    <linearGradient id="light-direction" x1="0" y1="1" x2=".8" y2="0"><stop stop-color="white"/><stop offset=".5" stop-color="#555"/><stop offset="1" stop-color="black"/></linearGradient>
+    <mask id="light"><rect x="-240" y="-240" width="480" height="480" fill="url(#light-direction)"/></mask>
+    <clipPath id="disc"><circle r="180"/></clipPath>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="4" seed="37"/>
+      <feDiffuseLighting lighting-color="#c4bda8" surfaceScale="4" diffuseConstant="1"><feDistantLight azimuth="135" elevation="28"/></feDiffuseLighting>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+    <filter id="soft"><feGaussianBlur stdDeviation="2.6"/></filter>
+  </defs>
+  <circle r="239" fill="url(#halo)" mask="url(#light)"/>
+  <circle r="180" fill="url(#stone)"/>
+  <g clip-path="url(#disc)">
+    <circle r="180" fill="#a9a18c" filter="url(#grain)" opacity=".21"/>
+    <g fill="none" stroke="#9a9b8d" stroke-width=".45" opacity=".16" transform="rotate(-24)">
+      <ellipse rx="180" ry="24"/><ellipse rx="180" ry="66"/><ellipse rx="180" ry="112"/><ellipse rx="180" ry="154"/>
+      <ellipse rx="30" ry="180"/><ellipse rx="90" ry="180"/><ellipse rx="146" ry="180"/>
+      <path d="M-180 0H180M0-180V180"/>
+    </g>
+    <circle r="180" fill="url(#night)"/>
+  </g>
+  <circle r="180" fill="none" stroke="url(#limb)" stroke-width="3" filter="url(#soft)" opacity=".65"/>
+  <circle r="179.7" fill="none" stroke="url(#limb)" stroke-width="1.1"/>
+  <path d="M-178 23 A180 180 0 0 0 -108 144" fill="none" stroke="#ffe5b8" stroke-width="1.35" opacity=".95"/>
+</svg>

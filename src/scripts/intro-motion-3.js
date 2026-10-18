@@ -1,2865 +1,391 @@
-import * as THREE from 'three';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
+const DURATION = 7600;
+const SEEN_KEY = 'celestial-prologue-seen-v2';
+const TAU = Math.PI * 2;
+const TRACE_START = -2.85;
+const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
+const smooth = (value) => { const t = clamp(value); return t * t * t * (t * (t * 6 - 15) + 10); };
+const phase = (time, from, to) => smooth((time - from) / (to - from));
 
-const opening = document.querySelector('[data-cosmic-opening]');
-
-if (opening instanceof HTMLElement) {
-  startCosmicOpening(opening);
+export function resolveReturnUrl(value, home, origin, currentPath) {
+  try {
+    const target = new URL(value || home, origin);
+    // A return link must not leave the site or loop into this opening again.
+    if (target.origin !== origin || target.pathname.replace(/\/+$/, '') === currentPath.replace(/\/+$/, '')) return home;
+    return target.pathname + target.search + target.hash;
+  } catch { return home; }
 }
 
-function startCosmicOpening(root) {
-  const canvas = root.querySelector('[data-cosmic-canvas]');
-  const skipButton = root.querySelector('[data-skip]');
-  const replayButton = root.querySelector('[data-replay]');
-  const exploreButton = root.querySelector('[data-explore]');
-  const resetExploreButton = root.querySelector('[data-reset-explore]');
-  const exitExploreButton = root.querySelector('[data-exit-explore]');
-  const enterButton = root.querySelector('[data-enter]');
-  const finale = root.querySelector('[data-finale]');
-  const progressFill = root.querySelector('[data-progress]');
-  const timeLeft = root.querySelector('[data-time]');
-  const chapterName = root.querySelector('[data-chapter]');
-  const status = root.querySelector('[data-status]');
-  const interactionHint = root.querySelector('[data-interaction-hint]');
-  const knowledgeConstellations = root.querySelector('[data-knowledge-constellations]');
-  const knowledgeClusters = Array.from(root.querySelectorAll('[data-knowledge-cluster]'));
-  const topicSignals = root.querySelector('[data-topic-signals]');
-  const topicSignalItems = Array.from(root.querySelectorAll('[data-topic-signal]'));
-  const prologues = {
-    one: root.querySelector('[data-prologue="one"]'),
-    two: root.querySelector('[data-prologue="two"]'),
-    three: root.querySelector('[data-prologue="three"]'),
-    four: root.querySelector('[data-prologue="four"]'),
+export function sequencePose(time) {
+  const pullback = phase(time, 450, 6500);
+  return {
+    scale: 1.85 - pullback * .85,
+    rotation: -9 * (1 - pullback),
+    tilt: .12 + .23 * phase(time, 1900, 6100),
+    yaw: .14 * phase(time, 2500, 6600),
+    trace: phase(time, 1000, 5600),
+    guides: phase(time, 2200, 5700),
+    first: 1 - phase(time, 2100, 2700),
+    second: phase(time, 2700, 3250) * (1 - phase(time, 4650, 5250)),
+    finale: phase(time, 5350, 7100),
   };
+}
 
-  if (
-    !(canvas instanceof HTMLCanvasElement)
-    || !(skipButton instanceof HTMLButtonElement)
-    || !(replayButton instanceof HTMLButtonElement)
-    || !(exploreButton instanceof HTMLButtonElement)
-    || !(resetExploreButton instanceof HTMLButtonElement)
-    || !(exitExploreButton instanceof HTMLButtonElement)
-    || !(enterButton instanceof HTMLAnchorElement)
-    || !(finale instanceof HTMLElement)
-    || !(progressFill instanceof HTMLElement)
-    || !(timeLeft instanceof HTMLElement)
-    || !(chapterName instanceof HTMLElement)
-    || !(status instanceof HTMLElement)
-    || !(interactionHint instanceof HTMLElement)
-    || !(knowledgeConstellations instanceof HTMLElement)
-    || knowledgeClusters.some((item) => !(item instanceof HTMLElement))
-    || !(topicSignals instanceof HTMLElement)
-    || topicSignalItems.some((item) => !(item instanceof HTMLElement))
-    || Object.values(prologues).some((item) => !(item instanceof HTMLElement))
-  ) {
-    return;
-  }
-
-  const duration = 12000;
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const params = new URLSearchParams(window.location.search);
-  const returnKey = 'site-intro-return-v1';
-  const textureRoot = (root.dataset.textureRoot || '/images/intro-motion-3').replace(/\/$/, '');
-
-  let width = Math.max(1, window.innerWidth);
-  let height = Math.max(1, window.innerHeight);
-  let isMobile = width < 720;
-  let renderer = null;
-  let composer = null;
-  let bloomPass = null;
-  let scene = null;
-  let camera = null;
-  let ambientLight = null;
-  let keyLight = null;
-  let rimLight = null;
-  let world = null;
-  let earthSpin = null;
-  let earthSurface = null;
-  let atmosphere = null;
-  let earthMaterial = null;
-  let cloudMaterial = null;
-  let cityMaterial = null;
-  let atmosphereMaterial = null;
-  let moon = null;
-  let moonMaterial = null;
-  let stars = null;
-  let farStars = null;
-  let nearStars = null;
-  let driftDust = null;
-  let driftDustMaterial = null;
-  let cosmicObjects = null;
-  let sunSurface = null;
-  let sunMaterial = null;
-  let sunLight = null;
-  let sunLensflare = null;
-  let asteroidBelt = null;
-  let asteroidBeltMaterial = null;
-  let zodiacalDust = null;
-  let zodiacalDustMaterial = null;
-  let warpLines = null;
-  let warpMaterial = null;
-  let satellite = null;
-  const satelliteMaterials = [];
-  let asteroidFlyby = null;
-  const flybyAsteroidMaterials = [];
-  let animationFrame = 0;
-  let startedAt = 0;
-  let finishedAt = 0;
-  let currentProgress = 0;
-  let isPlaying = false;
-  let isIdle = false;
-  let isExploring = false;
-  let initialized = false;
-  let skipRequested = false;
-  let lastChapter = '';
-  let pointerX = 0;
-  let pointerY = 0;
-  let targetPointerX = 0;
-  let targetPointerY = 0;
-  let pointerInfluence = 0;
-  let targetPointerInfluence = 0;
-  let sceneDragPointerId = null;
-  let isDraggingScene = false;
-  let sceneDragMoved = false;
-  let sceneDragStartX = 0;
-  let sceneDragStartY = 0;
-  let sceneDragLastX = 0;
-  let sceneDragLastY = 0;
-  let sceneDragLastAt = 0;
-  let sceneDragMode = 'look';
-  let cameraOrbitPitch = 0;
-  let cameraOrbitYaw = 0;
-  let cameraOrbitVelocityPitch = 0;
-  let cameraOrbitVelocityYaw = 0;
-  let freeCameraActive = false;
-  let isPinchingScene = false;
-  let pinchLastDistance = 0;
-  let pinchLastCenterX = 0;
-  let pinchLastCenterY = 0;
-  let lastRenderAt = 0;
-  let suppressDoubleClickUntil = 0;
-  let randomSeed = 20260717;
-  let exploreFeedbackEnergy = 0;
-
-  const initialOrbitAngle = 0.36;
-  const orbitMotionDelay = 1800;
-  const maximumFreeCameraDistance = 720;
-  const wheelTravelSensitivity = 0.024;
-  const touchPinchSensitivity = 2.2;
-  const zoomAnchorLockDuration = 220;
-  const earthOrbitDefinition = {
-    name: 'earth',
-    orbit: 18,
-    eccentricity: 0.0167,
-    inclination: 0,
-    speed: 0.000112,
+export function orbitPoint(angle, radius, tilt, yaw) {
+  const x = Math.cos(angle) * radius;
+  const y = Math.sin(angle) * Math.sin(tilt) * radius;
+  const z = Math.sin(angle) * Math.cos(tilt) * radius;
+  const turnedX = x * Math.cos(yaw) + z * Math.sin(yaw);
+  const roll = -.43;
+  return {
+    x: turnedX * Math.cos(roll) - y * Math.sin(roll),
+    y: turnedX * Math.sin(roll) + y * Math.cos(roll),
+    z: -x * Math.sin(yaw) + z * Math.cos(yaw),
   };
-
-  const ripples = [];
-  const celestialBodies = [];
-  const celestialMaterials = [];
-  const planetRingMaterials = [];
-  const orbitMaterials = [];
-  const orbitLines = [];
-  const sunGlowSprites = [];
-  const nebulae = [];
-  const meteorEvents = [];
-  const asteroids = [];
-  const asteroidMaterials = [];
-  const zoomTargets = [];
-  const activeTouchPointers = new Map();
-  const pressedMoveKeys = new Set();
-  const moveKeyCodes = new Set([
-    'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'ShiftLeft', 'ShiftRight',
-  ]);
-  const solarCenter = new THREE.Vector3(-18, 0, 0);
-  const cameraPosition = new THREE.Vector3();
-  const cameraTarget = new THREE.Vector3();
-  const cameraBasePosition = new THREE.Vector3();
-  const cameraBaseTarget = new THREE.Vector3();
-  const systemCameraPosition = new THREE.Vector3();
-  const systemCameraTarget = new THREE.Vector3();
-  const freeCameraPosition = new THREE.Vector3();
-  const targetFreeCameraPosition = new THREE.Vector3();
-  const freeCameraBaseForward = new THREE.Vector3(0, 0, -1);
-  const cameraForward = new THREE.Vector3(0, 0, -1);
-  const cameraRight = new THREE.Vector3(1, 0, 0);
-  const cameraUp = new THREE.Vector3(0, 1, 0);
-  const cameraLocalUp = new THREE.Vector3(0, 1, 0);
-  const cameraMove = new THREE.Vector3();
-  const cameraLookTarget = new THREE.Vector3();
-  const zoomPointer = new THREE.Vector2();
-  const zoomRaycaster = new THREE.Raycaster();
-  const zoomAnchorWorld = new THREE.Vector3();
-  const zoomAnchorLocal = new THREE.Vector3();
-  const zoomObjectCenter = new THREE.Vector3();
-  const zoomDirection = new THREE.Vector3();
-  const zoomProposedPosition = new THREE.Vector3();
-  const zoomWorldScale = new THREE.Vector3();
-  const sunWorldPosition = new THREE.Vector3();
-  const earthWorldPosition = new THREE.Vector3();
-  const earthToSunDirection = new THREE.Vector3();
-  let zoomAnchorObject = null;
-  let zoomAnchorRadius = 0;
-  let zoomAnchorLockedUntil = 0;
-  const cameraKeysDesktop = createKeys([
-    [0, -1.8, 0.8, 16.8],
-    [0.18, -0.8, 0.35, 11.8],
-    [0.34, 3.8, 1.6, 16.5],
-    [0.5, 8.5, 3.2, 23.5],
-    [0.66, 14.5, 6.5, 31],
-    [0.8, 13.5, 8.5, 37],
-    [1, 12, 8, 34],
-  ]);
-  const targetKeysDesktop = createKeys([
-    [0, -2.5, -0.35, 0],
-    [0.18, -0.5, -0.1, 0],
-    [0.34, -2.8, 0, 0],
-    [0.5, -5.5, 0, -0.8],
-    [0.66, -7.5, 0, -0.6],
-    [0.8, -7, 0, 0],
-    [1, -6, 0, 0],
-  ]);
-  const systemCameraKeysDesktop = createKeys([
-    [0.54, 32, 8, 46],
-    [0.68, 52, 18, 76],
-    [0.82, 88, 42, 126],
-    [1, 132, 72, 170],
-  ]);
-  const systemTargetKeysDesktop = createKeys([
-    [0.54, 10, 0.8, 0],
-    [0.72, 5, 0.3, 0],
-    [1, 0, 0, 0],
-  ]);
-  const cameraKeysMobile = createKeys([
-    [0, -0.5, 0.8, 18.5],
-    [0.18, -0.3, 0.3, 13.8],
-    [0.34, 3, 1.8, 20],
-    [0.5, 7, 4.2, 29],
-    [0.66, 11, 8.5, 39],
-    [0.8, 10, 11, 47],
-    [1, 9, 10, 43],
-  ]);
-  const targetKeysMobile = createKeys([
-    [0, -0.85, 0.5, 0],
-    [0.18, -0.35, 0.35, 0],
-    [0.34, -2.8, 0.35, 0],
-    [0.5, -5.5, 0.25, -0.8],
-    [0.66, -7.5, 0.35, -0.5],
-    [0.8, -7, 0.45, 0],
-    [1, -6, 0.8, 0],
-  ]);
-  const systemCameraKeysMobile = createKeys([
-    [0.54, 34, 18, 60],
-    [0.7, 62, 44, 112],
-    [0.84, 90, 88, 178],
-    [1, 112, 146, 248],
-  ]);
-  const systemTargetKeysMobile = createKeys([
-    [0.54, 8, 0.8, 0],
-    [0.72, 4, 0.4, 0],
-    [1, 0, 0, 0],
-  ]);
-
-  function resolveReturnUrl(value) {
-    try {
-      const target = new URL(value || root.dataset.homeUrl, window.location.origin);
-      if (target.origin !== window.location.origin) return root.dataset.homeUrl;
-      return target.pathname + target.search + target.hash;
-    } catch (error) {
-      return root.dataset.homeUrl;
-    }
-  }
-
-  const returnUrl = resolveReturnUrl(params.get('return'));
-  enterButton.href = returnUrl;
-
-  function textureUrl(name) {
-    return textureRoot + '/' + name;
-  }
-
-  function createKeys(values) {
-    return values.map((item) => ({
-      at: item[0],
-      value: new THREE.Vector3(item[1], item[2], item[3]),
-    }));
-  }
-
-  function random() {
-    randomSeed = (randomSeed * 1664525 + 1013904223) >>> 0;
-    return randomSeed / 4294967296;
-  }
-
-  function clamp(value, minimum, maximum) {
-    return Math.min(maximum, Math.max(minimum, value));
-  }
-
-  function phase(progress, start, end) {
-    return clamp((progress - start) / (end - start), 0, 1);
-  }
-
-  function ease(value) {
-    return value * value * (3 - 2 * value);
-  }
-
-  function cinematicEase(value) {
-    return value < 0.5
-      ? 4 * value * value * value
-      : 1 - Math.pow(-2 * value + 2, 3) / 2;
-  }
-
-  function easeOutQuint(value) {
-    return 1 - Math.pow(1 - value, 5);
-  }
-
-  function band(progress, enterStart, enterEnd, exitStart, exitEnd) {
-    return ease(phase(progress, enterStart, enterEnd))
-      * (1 - ease(phase(progress, exitStart, exitEnd)));
-  }
-
-  function sampleVector(keys, progress, target, easing = ease) {
-    if (progress <= keys[0].at) return target.copy(keys[0].value);
-
-    for (let index = 0; index < keys.length - 1; index += 1) {
-      const from = keys[index];
-      const to = keys[index + 1];
-      if (progress <= to.at) {
-        const localProgress = easing((progress - from.at) / (to.at - from.at));
-        return target.lerpVectors(from.value, to.value, localProgress);
-      }
-    }
-
-    return target.copy(keys[keys.length - 1].value);
-  }
-
-  function setLayer(element, opacity, y, scale) {
-    element.style.opacity = opacity.toFixed(3);
-    element.style.transform =
-      'translate3d(0,' + y.toFixed(2) + 'px,0) scale(' + scale.toFixed(4) + ')';
-    element.style.visibility = opacity > 0.002 ? 'visible' : 'hidden';
-  }
-
-  function createScene() {
-    try {
-      renderer = new THREE.WebGLRenderer({
-        canvas,
-        alpha: false,
-        antialias: !isMobile,
-        powerPreference: 'high-performance',
-      });
-    } catch (error) {
-      root.classList.add('is-webgl-fallback');
-      return false;
-    }
-
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.08;
-
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x01030a);
-    scene.fog = new THREE.FogExp2(0x01030a, 0.0018);
-
-    camera = new THREE.PerspectiveCamera(43, width / height, 0.1, 900);
-    scene.add(camera);
-
-    ambientLight = new THREE.HemisphereLight(0x29486c, 0x010207, 0.12);
-    scene.add(ambientLight);
-
-    keyLight = new THREE.DirectionalLight(0xfff4df, 0.48);
-    keyLight.position.set(-7.5, 4.5, 8);
-    scene.add(keyLight);
-
-    rimLight = new THREE.PointLight(0x5bbdd8, 3.8, 42, 2);
-    rimLight.position.set(5.5, -2.6, 5);
-    scene.add(rimLight);
-
-    stars = createStarField(isMobile ? 950 : 1850, {
-      seed: 20260717,
-      minRadius: 35,
-      maxRadius: 300,
-      opacity: 0.82,
-      sizeMin: 0.55,
-      sizeMax: 2.2,
-      twinkleSpeed: 1,
-    });
-    scene.add(stars);
-
-    farStars = createStarField(isMobile ? 700 : 1700, {
-      seed: 20260901,
-      preserveSeed: true,
-      minRadius: 210,
-      maxRadius: 620,
-      opacity: 0.42,
-      sizeMin: 0.38,
-      sizeMax: 0.95,
-      desktopPointScale: 148,
-      mobilePointScale: 96,
-      twinkleSpeed: 0.48,
-    });
-    scene.add(farStars);
-
-    nearStars = createStarField(isMobile ? 90 : 220, {
-      seed: 20260902,
-      preserveSeed: true,
-      minRadius: 18,
-      maxRadius: 112,
-      opacity: 0.3,
-      sizeMin: 0.7,
-      sizeMax: 1.8,
-      desktopPointScale: 46,
-      mobilePointScale: 34,
-      twinkleSpeed: 0.72,
-    });
-    scene.add(nearStars);
-
-    createNebulae().forEach((nebula) => {
-      nebulae.push(nebula);
-      scene.add(nebula);
-    });
-
-    cosmicObjects = createCosmicObjects();
-    scene.add(cosmicObjects);
-
-    driftDust = createDriftDust(isMobile ? 54 : 126);
-    scene.add(driftDust);
-
-    const warp = createWarpField(isMobile ? 110 : 220);
-    warpLines = warp.lines;
-    warpMaterial = warp.material;
-    camera.add(warpLines);
-
-    satellite = createSatellite();
-    camera.add(satellite);
-
-    asteroidFlyby = createAsteroidFlyby();
-    camera.add(asteroidFlyby);
-
-    [
-      { start: 0.318, end: 0.368, from: [-12, 4.2, -36], to: [9, -1.6, -42], color: 0xd8f4ff },
-      { start: 0.69, end: 0.755, from: [16, 7.5, -72], to: [-9, 1, -78], color: 0xffe2b5 },
-    ].forEach((definition) => {
-      const meteor = createMeteorEvent(definition);
-      meteorEvents.push(meteor);
-      camera.add(meteor.line);
-    });
-
-    if (!isMobile) {
-      composer = new EffectComposer(renderer);
-      composer.addPass(new RenderPass(scene, camera));
-      bloomPass = new UnrealBloomPass(
-        new THREE.Vector2(width, height),
-        0.72,
-        0.42,
-        0.82
-      );
-      composer.addPass(bloomPass);
-      composer.addPass(new OutputPass());
-    }
-
-    resizeRenderer();
-    return true;
-  }
-
-  function createStarField(count, options = {}) {
-    const previousSeed = randomSeed;
-    randomSeed = options.seed ?? 20260717;
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    const sizes = new Float32Array(count);
-    const twinkles = new Float32Array(count);
-    const color = new THREE.Color();
-
-    for (let index = 0; index < count; index += 1) {
-      const minimumRadius = options.minRadius ?? 35;
-      const maximumRadius = options.maxRadius ?? 300;
-      const radius = minimumRadius + random() * (maximumRadius - minimumRadius);
-      const theta = random() * Math.PI * 2;
-      const phi = Math.acos(2 * random() - 1);
-      const offset = index * 3;
-
-      positions[offset] = radius * Math.sin(phi) * Math.cos(theta);
-      positions[offset + 1] = radius * Math.cos(phi);
-      positions[offset + 2] = radius * Math.sin(phi) * Math.sin(theta);
-
-      const warm = random() > 0.84;
-      color.setRGB(
-        warm ? 0.96 : 0.7 + random() * 0.24,
-        warm ? 0.78 + random() * 0.16 : 0.8 + random() * 0.18,
-        warm ? 0.65 + random() * 0.2 : 0.94 + random() * 0.06
-      );
-      colors[offset] = color.r;
-      colors[offset + 1] = color.g;
-      colors[offset + 2] = color.b;
-      const minimumSize = options.sizeMin ?? 0.55;
-      const maximumSize = options.sizeMax ?? 2.2;
-      sizes[index] = minimumSize + random() * (maximumSize - minimumSize);
-      twinkles[index] = random();
-    }
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
-    geometry.setAttribute('aTwinkle', new THREE.BufferAttribute(twinkles, 1));
-
-    const desktopPointScale = options.desktopPointScale ?? options.pointScale ?? 62;
-    const mobilePointScale = options.mobilePointScale ?? options.pointScale ?? 44;
-    const material = new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      uniforms: {
-        opacity: { value: options.opacity ?? 0.86 },
-        pointScale: { value: isMobile ? mobilePointScale : desktopPointScale },
-        twinkleSpeed: { value: options.twinkleSpeed ?? 1 },
-        time: { value: 0 },
-      },
-      vertexShader: [
-        'attribute float aSize;',
-        'attribute float aTwinkle;',
-        'attribute vec3 color;',
-        'uniform float pointScale;',
-        'uniform float time;',
-        'uniform float twinkleSpeed;',
-        'varying vec3 vColor;',
-        'varying float vTwinkle;',
-        'void main() {',
-        '  vColor = color;',
-        '  vTwinkle = 0.68 + 0.32 * sin(time * twinkleSpeed * (0.8 + aTwinkle * 1.8) + aTwinkle * 19.0);',
-        '  vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);',
-        '  gl_PointSize = aSize * pointScale / max(1.0, -viewPosition.z);',
-        '  gl_Position = projectionMatrix * viewPosition;',
-        '}',
-      ].join('\n'),
-      fragmentShader: [
-        'uniform float opacity;',
-        'varying vec3 vColor;',
-        'varying float vTwinkle;',
-        'void main() {',
-        '  float distanceToCenter = length(gl_PointCoord - vec2(0.5));',
-        '  float alpha = 1.0 - smoothstep(0.12, 0.5, distanceToCenter);',
-        '  gl_FragColor = vec4(vColor * (0.82 + vTwinkle * 0.35), alpha * opacity * vTwinkle);',
-        '}',
-      ].join('\n'),
-    });
-
-    const points = new THREE.Points(geometry, material);
-    points.userData.desktopPointScale = desktopPointScale;
-    points.userData.mobilePointScale = mobilePointScale;
-    points.userData.baseOpacity = options.opacity ?? 0.86;
-    if (options.preserveSeed) randomSeed = previousSeed;
-    return points;
-  }
-
-  function createNebulaTexture(coreColor, edgeColor) {
-    const nebulaCanvas = document.createElement('canvas');
-    nebulaCanvas.width = 256;
-    nebulaCanvas.height = 256;
-    const context = nebulaCanvas.getContext('2d');
-    if (!context) return null;
-
-    const gradient = context.createRadialGradient(128, 128, 6, 128, 128, 126);
-    gradient.addColorStop(0, coreColor);
-    gradient.addColorStop(0.24, edgeColor);
-    gradient.addColorStop(0.66, edgeColor.replace(/0\.([0-9]+)\)/, '0.025)'));
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, 256, 256);
-
-    const texture = new THREE.CanvasTexture(nebulaCanvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    return texture;
-  }
-
-  function createNebulae() {
-    const definitions = [
-      {
-        position: [-118, 54, -215],
-        scale: [190, 120],
-        color: 0x6076b8,
-        core: 'rgba(87, 111, 176, 0.34)',
-        edge: 'rgba(65, 91, 154, 0.12)',
-        opacity: 0.12,
-        drift: 0.0000024,
-      },
-      {
-        position: [92, -42, -268],
-        scale: [230, 138],
-        color: 0xc17a55,
-        core: 'rgba(182, 104, 66, 0.28)',
-        edge: 'rgba(132, 73, 77, 0.1)',
-        opacity: 0.085,
-        drift: -0.0000017,
-      },
-      {
-        position: [8, 122, -330],
-        scale: [270, 132],
-        color: 0x759ca9,
-        core: 'rgba(93, 133, 148, 0.24)',
-        edge: 'rgba(73, 101, 130, 0.08)',
-        opacity: 0.075,
-        drift: 0.0000012,
-        desktopOnly: true,
-      },
-    ];
-
-    return definitions
-      .filter((definition) => !definition.desktopOnly || !isMobile)
-      .map((definition, index) => {
-        const texture = createNebulaTexture(definition.core, definition.edge);
-        const material = new THREE.SpriteMaterial({
-          map: texture,
-          color: definition.color,
-          transparent: true,
-          opacity: definition.opacity,
-          depthWrite: false,
-          depthTest: true,
-          blending: THREE.AdditiveBlending,
-        });
-        const sprite = new THREE.Sprite(material);
-        sprite.position.set(...definition.position);
-        sprite.scale.set(definition.scale[0], definition.scale[1], 1);
-        sprite.material.rotation = index * 0.72 - 0.45;
-        sprite.userData.basePosition = sprite.position.clone();
-        sprite.userData.baseOpacity = definition.opacity;
-        sprite.userData.drift = definition.drift;
-        sprite.userData.phase = index * 1.7;
-        return sprite;
-      });
-  }
-
-  function createDriftDust(count) {
-    const previousSeed = randomSeed;
-    randomSeed = 20260903;
-    const positions = new Float32Array(count * 3);
-
-    for (let index = 0; index < count; index += 1) {
-      const radius = 12 + random() * 150;
-      const theta = random() * Math.PI * 2;
-      const y = (random() * 2 - 1) * 72;
-      const offset = index * 3;
-      positions[offset] = solarCenter.x + Math.cos(theta) * radius;
-      positions[offset + 1] = y;
-      positions[offset + 2] = Math.sin(theta) * radius;
-    }
-    randomSeed = previousSeed;
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    driftDustMaterial = new THREE.PointsMaterial({
-      color: 0xb7d9df,
-      size: isMobile ? 0.055 : 0.082,
-      transparent: true,
-      opacity: 0.16,
-      depthWrite: false,
-      sizeAttenuation: true,
-      blending: THREE.AdditiveBlending,
-    });
-    return new THREE.Points(geometry, driftDustMaterial);
-  }
-
-  function createSatellite() {
-    const group = new THREE.Group();
-    group.visible = false;
-    group.scale.setScalar(isMobile ? 0.72 : 0.92);
-    group.userData.from = new THREE.Vector3(-11.5, -3.8, -22);
-    group.userData.to = new THREE.Vector3(10.5, -0.7, -29);
-
-    const bodyMaterial = new THREE.MeshPhongMaterial({
-      color: 0xaeb6bb,
-      emissive: 0x101a20,
-      shininess: 45,
-      transparent: true,
-      opacity: 0,
-    });
-    const panelMaterial = new THREE.MeshPhongMaterial({
-      color: 0x244e72,
-      emissive: 0x071522,
-      shininess: 80,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0,
-    });
-    const antennaMaterial = new THREE.MeshBasicMaterial({
-      color: 0xd6e4e8,
-      transparent: true,
-      opacity: 0,
-      wireframe: true,
-    });
-    satelliteMaterials.push(bodyMaterial, panelMaterial, antennaMaterial);
-
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.8, 0.95), bodyMaterial);
-    group.add(body);
-
-    [-1, 1].forEach((side) => {
-      const arm = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.07, 0.07), bodyMaterial);
-      arm.position.x = side * 1.18;
-      group.add(arm);
-
-      const panel = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.06, 0.78), panelMaterial);
-      panel.position.x = side * 2.35;
-      panel.rotation.z = side * 0.04;
-      group.add(panel);
-    });
-
-    const dish = new THREE.Mesh(
-      new THREE.RingGeometry(0.15, 0.52, 28),
-      antennaMaterial
-    );
-    dish.position.set(0, 0.18, 0.78);
-    dish.rotation.x = -0.42;
-    group.add(dish);
-
-    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.8, 8), bodyMaterial);
-    mast.position.set(0, 0.48, 0.55);
-    mast.rotation.x = Math.PI / 2.7;
-    group.add(mast);
-    return group;
-  }
-
-  function createAsteroidFlyby() {
-    const group = new THREE.Group();
-    const definitions = [
-      { from: [-11, 5.2, -34], to: [7, -1.2, -14], scale: 0.72, start: 0.6, end: 0.69 },
-      { from: [12, -4.4, -42], to: [-7, 2.2, -19], scale: 0.52, start: 0.625, end: 0.715 },
-      { from: [-7, -7.2, -48], to: [9, 4, -23], scale: 0.38, start: 0.65, end: 0.74 },
-      { from: [9, 7.4, -57], to: [-11, -3.2, -29], scale: 0.3, start: 0.67, end: 0.755, desktopOnly: true },
-    ];
-
-    definitions
-      .filter((definition) => !definition.desktopOnly || !isMobile)
-      .forEach((definition, index) => {
-        const material = new THREE.MeshPhongMaterial({
-          color: index % 2 === 0 ? 0x71685d : 0x575b5d,
-          specular: 0x2d2a27,
-          shininess: 4,
-          flatShading: true,
-          transparent: true,
-          opacity: 0,
-          depthWrite: true,
-        });
-        const asteroid = new THREE.Mesh(createAsteroidGeometry(index + 4), material);
-        asteroid.visible = false;
-        asteroid.scale.set(
-          definition.scale * 1.12,
-          definition.scale * 0.82,
-          definition.scale
-        );
-        asteroid.userData.from = new THREE.Vector3(...definition.from);
-        asteroid.userData.to = new THREE.Vector3(...definition.to);
-        asteroid.userData.start = definition.start;
-        asteroid.userData.end = definition.end;
-        asteroid.userData.spin = new THREE.Vector3(
-          0.00016 + index * 0.00003,
-          0.0002 + index * 0.000025,
-          0.00011 + index * 0.000018
-        );
-        flybyAsteroidMaterials.push(material);
-        group.add(asteroid);
-      });
-
-    return group;
-  }
-
-  function createMeteorEvent(definition) {
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
-    const material = new THREE.LineBasicMaterial({
-      color: definition.color,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    });
-    const line = new THREE.Line(geometry, material);
-    line.visible = false;
-    return {
-      ...definition,
-      line,
-      material,
-      from: new THREE.Vector3(...definition.from),
-      to: new THREE.Vector3(...definition.to),
-      head: new THREE.Vector3(),
-      tail: new THREE.Vector3(),
-      direction: new THREE.Vector3(),
-    };
-  }
-
-  function createWarpField(count) {
-    const positions = new Float32Array(count * 6);
-
-    for (let index = 0; index < count; index += 1) {
-      const depth = 7 + random() * 68;
-      const spread = 2 + depth * 0.2;
-      const x = (random() * 2 - 1) * spread;
-      const y = (random() * 2 - 1) * spread * 0.62;
-      const length = 0.5 + random() * 2.2;
-      const offset = index * 6;
-
-      positions[offset] = x;
-      positions[offset + 1] = y;
-      positions[offset + 2] = -depth;
-      positions[offset + 3] = x;
-      positions[offset + 4] = y;
-      positions[offset + 5] = -depth - length;
-    }
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-    const material = new THREE.LineBasicMaterial({
-      color: 0x9bdbea,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    });
-
-    return {
-      lines: new THREE.LineSegments(geometry, material),
-      material,
-    };
-  }
-
-  function createAsteroidGeometry(variant) {
-    const geometry = new THREE.IcosahedronGeometry(1, 1);
-    const positions = geometry.attributes.position;
-
-    for (let index = 0; index < positions.count; index += 1) {
-      const x = positions.getX(index);
-      const y = positions.getY(index);
-      const z = positions.getZ(index);
-      const distortion = 1
-        + Math.sin(
-          x * (3.7 + variant * 0.41)
-          + y * (5.1 + variant * 0.29)
-          + z * (4.3 + variant * 0.37)
-        ) * 0.13
-        + Math.cos(
-          x * (7.3 + variant * 0.31)
-          - y * (3.9 + variant * 0.43)
-          + z * (5.7 + variant * 0.23)
-        ) * 0.08;
-      positions.setXYZ(index, x * distortion, y * distortion, z * distortion);
-    }
-
-    positions.needsUpdate = true;
-    geometry.computeVertexNormals();
-    geometry.computeBoundingSphere();
-    return geometry;
-  }
-
-  function createGlowTexture() {
-    const glowCanvas = document.createElement('canvas');
-    glowCanvas.width = 256;
-    glowCanvas.height = 256;
-    const context = glowCanvas.getContext('2d');
-    if (!context) return null;
-
-    const gradient = context.createRadialGradient(128, 128, 0, 128, 128, 128);
-    gradient.addColorStop(0, 'rgba(255, 255, 236, 1)');
-    gradient.addColorStop(0.08, 'rgba(255, 222, 145, 0.96)');
-    gradient.addColorStop(0.28, 'rgba(255, 142, 61, 0.44)');
-    gradient.addColorStop(0.62, 'rgba(255, 92, 28, 0.12)');
-    gradient.addColorStop(1, 'rgba(255, 70, 18, 0)');
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, 256, 256);
-
-    const texture = new THREE.CanvasTexture(glowCanvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    return texture;
-  }
-
-  function createBandTexture(colors, withStorm) {
-    const textureCanvas = document.createElement('canvas');
-    textureCanvas.width = 512;
-    textureCanvas.height = 256;
-    const context = textureCanvas.getContext('2d');
-    if (!context) return null;
-
-    const gradient = context.createLinearGradient(0, 0, 0, textureCanvas.height);
-    colors.forEach((color, index) => {
-      gradient.addColorStop(index / Math.max(1, colors.length - 1), color);
-    });
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, textureCanvas.width, textureCanvas.height);
-
-    for (let index = 0; index < 18; index += 1) {
-      context.fillStyle = index % 2 === 0
-        ? 'rgba(255,255,255,0.055)'
-        : 'rgba(64,31,18,0.06)';
-      context.fillRect(0, index * 15, textureCanvas.width, 5 + index % 4);
-    }
-
-    if (withStorm) {
-      context.save();
-      context.translate(365, 157);
-      context.scale(1.9, 0.72);
-      context.fillStyle = 'rgba(132, 47, 25, 0.62)';
-      context.beginPath();
-      context.arc(0, 0, 23, 0, Math.PI * 2);
-      context.fill();
-      context.restore();
-    }
-
-    const texture = new THREE.CanvasTexture(textureCanvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.wrapS = THREE.RepeatWrapping;
-    return texture;
-  }
-
-  function getOrbitDistance(radius, eccentricity, angle) {
-    return radius * (1 - eccentricity * eccentricity)
-      / (1 + eccentricity * Math.cos(angle));
-  }
-
-  function getOrbitHeight(radius, inclination, angle) {
-    return Math.sin(angle - initialOrbitAngle)
-      * Math.sin(THREE.MathUtils.degToRad(inclination))
-      * radius;
-  }
-
-  function createOrbit(definition) {
-    const points = [];
-    const segments = isMobile ? 96 : 160;
-    for (let index = 0; index <= segments; index += 1) {
-      const angle = index / segments * Math.PI * 2;
-      const distance = getOrbitDistance(
-        definition.orbit,
-        definition.eccentricity,
-        angle
-      );
-      points.push(new THREE.Vector3(
-        Math.cos(angle) * distance,
-        getOrbitHeight(definition.orbit, definition.inclination, angle),
-        Math.sin(angle) * distance * 0.96
-      ));
-    }
-
-    const material = new THREE.LineBasicMaterial({
-      color: 0x7bacc1,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    });
-    orbitMaterials.push(material);
-    const orbit = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), material);
-    orbit.geometry.setDrawRange(0, 0);
-    orbit.userData.segmentCount = points.length;
-    orbitLines.push(orbit);
-    return orbit;
-  }
-
-  function createZodiacalDust(count) {
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    const color = new THREE.Color();
-
-    for (let index = 0; index < count; index += 1) {
-      const angle = random() * Math.PI * 2;
-      const radius = 8 + Math.pow(random(), 0.72) * 108;
-      const offset = index * 3;
-      positions[offset] = Math.cos(angle) * radius;
-      positions[offset + 1] = (random() * 2 - 1) * (0.25 + radius * 0.018);
-      positions[offset + 2] = Math.sin(angle) * radius * 0.96;
-
-      color.setHSL(0.085 + random() * 0.045, 0.42, 0.54 + random() * 0.22);
-      colors[offset] = color.r;
-      colors[offset + 1] = color.g;
-      colors[offset + 2] = color.b;
-    }
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-    zodiacalDustMaterial = new THREE.PointsMaterial({
-      vertexColors: true,
-      size: isMobile ? 0.075 : 0.1,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-      sizeAttenuation: true,
-      blending: THREE.AdditiveBlending,
-    });
-    zodiacalDust = new THREE.Points(geometry, zodiacalDustMaterial);
-    return zodiacalDust;
-  }
-
-  function createCosmicObjects() {
-    const group = new THREE.Group();
-    group.position.copy(solarCenter);
-
-    sunMaterial = new THREE.ShaderMaterial({
-      transparent: true,
-      uniforms: {
-        time: { value: 0 },
-        opacity: { value: 0 },
-      },
-      vertexShader: [
-        'varying vec3 vPosition;',
-        'varying vec3 vNormal;',
-        'void main() {',
-        '  vPosition = position;',
-        '  vNormal = normalize(normalMatrix * normal);',
-        '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
-        '}',
-      ].join('\n'),
-      fragmentShader: [
-        'uniform float time;',
-        'uniform float opacity;',
-        'varying vec3 vPosition;',
-        'varying vec3 vNormal;',
-        'void main() {',
-        '  vec3 p = normalize(vPosition);',
-        '  float flow = sin(p.x * 13.0 + time * 0.9)',
-        '    + sin(p.y * 17.0 - time * 0.7)',
-        '    + sin((p.x + p.z) * 21.0 + time * 0.52);',
-        '  flow = flow / 6.0 + 0.5;',
-        '  float limb = pow(max(dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0), 0.32);',
-        '  vec3 deep = vec3(1.0, 0.16, 0.015);',
-        '  vec3 hot = vec3(1.0, 0.94, 0.54);',
-        '  vec3 color = mix(deep, hot, clamp(flow + limb * 0.38, 0.0, 1.0));',
-        '  gl_FragColor = vec4(color * 1.35, opacity);',
-        '}',
-      ].join('\n'),
-    });
-    sunSurface = new THREE.Mesh(
-      new THREE.SphereGeometry(3.3, isMobile ? 36 : 56, isMobile ? 24 : 38),
-      sunMaterial
-    );
-    sunSurface.userData.zoomRadius = 3.3;
-    sunSurface.visible = false;
-    zoomTargets.push(sunSurface);
-    group.add(sunSurface);
-
-    const glowTexture = createGlowTexture();
-    if (glowTexture) {
-      [
-        { scale: 13, opacity: 0.72, color: 0xffc169, finaleColor: 0xff9b63, finaleBoost: 0.18, finaleScale: 0.08 },
-        { scale: 23, opacity: 0.34, color: 0xff7a2f, finaleColor: 0xff4422, finaleBoost: 0.85, finaleScale: 0.18 },
-        { scale: 39, opacity: 0.14, color: 0xff4f1f, finaleColor: 0xd91f18, finaleBoost: 3.2, finaleScale: 0.55 },
-      ].forEach((definition) => {
-        const material = new THREE.SpriteMaterial({
-          map: glowTexture,
-          color: definition.color,
-          transparent: true,
-          opacity: 0,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-        });
-        const sprite = new THREE.Sprite(material);
-        sprite.scale.set(definition.scale, definition.scale, 1);
-        sprite.userData.targetOpacity = definition.opacity;
-        sprite.userData.baseScale = sprite.scale.clone();
-        sprite.userData.baseColor = new THREE.Color(definition.color);
-        sprite.userData.finaleColor = new THREE.Color(definition.finaleColor);
-        sprite.userData.finaleBoost = definition.finaleBoost;
-        sprite.userData.finaleScale = definition.finaleScale;
-        sunGlowSprites.push(sprite);
-        group.add(sprite);
-      });
-
-      const flareMaterial = new THREE.SpriteMaterial({
-        map: glowTexture,
-        color: 0xffcf8c,
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      });
-      const flare = new THREE.Sprite(flareMaterial);
-      flare.scale.set(36, 1.4, 1);
-      flare.userData.targetOpacity = 0.2;
-      flare.userData.baseScale = flare.scale.clone();
-      flare.userData.baseColor = new THREE.Color(0xffcf8c);
-      flare.userData.finaleColor = new THREE.Color(0xff5a32);
-      flare.userData.finaleBoost = 1.2;
-      flare.userData.finaleScale = 0.28;
-      sunGlowSprites.push(flare);
-      group.add(flare);
-    }
-
-    sunLight = new THREE.PointLight(0xffbd72, 0, 280, 1.25);
-    sunLight.userData.baseColor = new THREE.Color(0xffbd72);
-    sunLight.userData.finaleColor = new THREE.Color(0xff3e24);
-    if (glowTexture) {
-      sunLensflare = new Lensflare();
-      sunLensflare.visible = false;
-      sunLensflare.addElement(new LensflareElement(
-        glowTexture,
-        isMobile ? 260 : 460,
-        0,
-        new THREE.Color(0xffe5ad)
-      ));
-      sunLensflare.addElement(new LensflareElement(
-        glowTexture,
-        isMobile ? 64 : 110,
-        0.36,
-        new THREE.Color(0xffa64f)
-      ));
-      sunLensflare.addElement(new LensflareElement(
-        glowTexture,
-        isMobile ? 42 : 74,
-        0.7,
-        new THREE.Color(0x6fa6ff)
-      ));
-      sunLight.add(sunLensflare);
-    }
-    group.add(sunLight);
-
-    const jupiterTexture = createBandTexture([
-      '#5b3827', '#c79a72', '#ead0a7', '#8b5940', '#d9b88c', '#70432f', '#caa077',
-    ], true);
-    const saturnTexture = createBandTexture([
-      '#8e7550', '#d8c38f', '#b7a16e', '#eee0ae', '#9e865b', '#d4bd86',
-    ], false);
-    const bodyDefinitions = [
-      { name: 'mercury', radius: 0.5, orbit: 6, eccentricity: 0.2056, inclination: 7, color: 0x8d8379, speed: 0.00019, tilt: 0.03, rotationSpeed: 0.000018 },
-      { name: 'venus', radius: 0.72, orbit: 11, eccentricity: 0.0068, inclination: 3.39, color: 0xc89358, speed: 0.000145, tilt: 177.3, rotationSpeed: -0.000012 },
-      { name: 'mars', radius: 0.58, orbit: 27, eccentricity: 0.0934, inclination: 1.85, color: 0xa9482c, speed: 0.00009, tilt: 25.2, rotationSpeed: 0.000036 },
-      { name: 'jupiter', radius: 2.35, orbit: 44, eccentricity: 0.0484, inclination: 1.304, color: 0xffffff, map: jupiterTexture, speed: 0.00006, tilt: 3.1, rotationSpeed: 0.000085 },
-      { name: 'saturn', radius: 2, orbit: 60, eccentricity: 0.0539, inclination: 2.49, color: 0xffffff, map: saturnTexture, speed: 0.000048, tilt: 26.7, rotationSpeed: 0.000072, ring: { inner: 2.45, outer: 4.05, color: 0xcbb982, opacity: 0.74 } },
-      { name: 'uranus', radius: 1.18, orbit: 80, eccentricity: 0.0473, inclination: 0.77, color: 0x8fd2d2, speed: 0.000038, tilt: 97.8, rotationSpeed: -0.000052, ring: { inner: 1.36, outer: 1.68, color: 0x91c9cf, opacity: 0.24 } },
-      { name: 'neptune', radius: 1.16, orbit: 102, eccentricity: 0.0086, inclination: 1.77, color: 0x315dbe, speed: 0.000032, tilt: 28.3, rotationSpeed: 0.000058 },
-    ];
-
-    [
-      bodyDefinitions[0],
-      bodyDefinitions[1],
-      earthOrbitDefinition,
-      ...bodyDefinitions.slice(2),
-    ].forEach((definition) => {
-      group.add(createOrbit(definition));
-    });
-
-    group.add(createZodiacalDust(isMobile ? 360 : 980));
-
-    bodyDefinitions.forEach((definition, index) => {
-      const material = new THREE.MeshStandardMaterial({
-        color: definition.color,
-        map: definition.map || null,
-        emissive: definition.name === 'neptune' ? 0x07122d : 0x070402,
-        roughness: definition.name === 'venus' ? 0.82 : 0.68,
-        metalness: 0,
-        transparent: true,
-        opacity: 0,
-      });
-      const body = new THREE.Mesh(
-        new THREE.SphereGeometry(
-          definition.radius,
-          isMobile ? 26 : 44,
-          isMobile ? 18 : 30
-        ),
-        material
-      );
-      body.name = definition.name;
-      body.visible = false;
-      body.userData.orbitRadius = definition.orbit;
-      body.userData.orbitPhase = initialOrbitAngle;
-      body.userData.orbitSpeed = definition.speed;
-      body.userData.orbitEccentricity = definition.eccentricity;
-      body.userData.orbitInclination = definition.inclination;
-      body.userData.rotationSpeed = definition.rotationSpeed;
-      body.userData.revealIndex = index;
-      body.userData.zoomRadius = definition.radius;
-      body.rotation.z = THREE.MathUtils.degToRad(definition.tilt);
-
-      if (definition.ring) {
-        const ringMaterial = new THREE.MeshBasicMaterial({
-          color: definition.ring.color,
-          transparent: true,
-          opacity: 0,
-          side: THREE.DoubleSide,
-          depthWrite: false,
-        });
-        const ring = new THREE.Mesh(
-          new THREE.RingGeometry(
-            definition.ring.inner,
-            definition.ring.outer,
-            isMobile ? 64 : 104
-          ),
-          ringMaterial
-        );
-        ring.rotation.x = Math.PI / 2;
-        ring.rotation.z = -0.18;
-        ringMaterial.userData.targetOpacity = definition.ring.opacity;
-        body.add(ring);
-        planetRingMaterials.push(ringMaterial);
-      }
-
-      celestialBodies.push(body);
-      celestialMaterials.push(material);
-      zoomTargets.push(body);
-      group.add(body);
-    });
-
-    const beltCount = isMobile ? 110 : 260;
-    const beltPositions = new Float32Array(beltCount * 3);
-    for (let index = 0; index < beltCount; index += 1) {
-      const angle = random() * Math.PI * 2;
-      const radius = 34 + random() * 4.4;
-      const offset = index * 3;
-      beltPositions[offset] = Math.cos(angle) * radius;
-      beltPositions[offset + 1] = (random() * 2 - 1) * 0.42;
-      beltPositions[offset + 2] = Math.sin(angle) * radius * 0.96;
-    }
-    const beltGeometry = new THREE.BufferGeometry();
-    beltGeometry.setAttribute('position', new THREE.BufferAttribute(beltPositions, 3));
-    asteroidBeltMaterial = new THREE.PointsMaterial({
-      color: 0xb6aa99,
-      size: isMobile ? 0.09 : 0.12,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-      sizeAttenuation: true,
-    });
-    asteroidBelt = new THREE.Points(beltGeometry, asteroidBeltMaterial);
-    group.add(asteroidBelt);
-
-    const geometries = [0, 1, 2].map(createAsteroidGeometry);
-    [0x57524b, 0x6b6257, 0x484b4e].forEach((color) => {
-      asteroidMaterials.push(new THREE.MeshPhongMaterial({
-        color,
-        specular: 0x262421,
-        shininess: 3,
-        flatShading: true,
-        transparent: true,
-        opacity: 0,
-        side: THREE.FrontSide,
-        depthTest: true,
-        depthWrite: true,
-      }));
-    });
-
-    const asteroidCount = isMobile ? 7 : 14;
-    for (let index = 0; index < asteroidCount; index += 1) {
-      const asteroid = new THREE.Mesh(
-        geometries[index % geometries.length],
-        asteroidMaterials[index % asteroidMaterials.length]
-      );
-      const baseScale = index < 3
-        ? 0.24 + random() * 0.32
-        : 0.1 + random() * 0.22;
-      asteroid.scale.set(
-        baseScale * (0.72 + random() * 0.56),
-        baseScale * (0.66 + random() * 0.62),
-        baseScale * (0.72 + random() * 0.58)
-      );
-      const angle = random() * Math.PI * 2;
-      const radius = index < 3 ? 10 + random() * 8 : 17 + random() * 3.2;
-      asteroid.position.set(
-        Math.cos(angle) * radius,
-        (random() * 2 - 1) * (index < 3 ? 3.4 : 1.4),
-        Math.sin(angle) * radius * 0.96
-      );
-      asteroid.rotation.set(random() * Math.PI, random() * Math.PI, random() * Math.PI);
-      asteroid.userData.basePosition = asteroid.position.clone();
-      asteroid.userData.baseRotation = asteroid.rotation.clone();
-      asteroid.userData.driftPhase = random() * Math.PI * 2;
-      asteroid.userData.driftAmount = 0.12 + random() * 0.36;
-      asteroid.userData.rotationSpeed = new THREE.Vector3(
-        0.00001 + random() * 0.000025,
-        0.000012 + random() * 0.00003,
-        0.000008 + random() * 0.00002
-      );
-      asteroid.userData.zoomRadius = baseScale * 1.25;
-      asteroids.push(asteroid);
-      zoomTargets.push(asteroid);
-      group.add(asteroid);
-    }
-
-    return group;
-  }
-
-  async function loadTexture(name, colorSpace) {
-    if (!renderer) return null;
-
-    try {
-      const texture = await new THREE.TextureLoader().loadAsync(textureUrl(name));
-      if (colorSpace) texture.colorSpace = colorSpace;
-      texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-      return texture;
-    } catch (error) {
-      return null;
-    }
-  }
-
-  async function createWorld() {
-    if (!scene || !renderer) return;
-
-    const [day, normal, specular, clouds, lights, moonTexture] = await Promise.all([
-      loadTexture('earth-day.jpg', THREE.SRGBColorSpace),
-      loadTexture('earth-normal.jpg'),
-      loadTexture('earth-specular.jpg'),
-      loadTexture('earth-clouds.png', THREE.SRGBColorSpace),
-      loadTexture('earth-lights.png', THREE.SRGBColorSpace),
-      loadTexture('moon.jpg', THREE.SRGBColorSpace),
-    ]);
-
-    world = new THREE.Group();
-    world.position.set(18, 0, 0);
-    if (cosmicObjects) {
-      cosmicObjects.add(world);
+}
+
+// Split at the viewing plane so the sphere naturally occludes the rear arc.
+export function orbitPaths(radius, tilt, yaw, reveal = 1) {
+  const paths = ['', ''];
+  const steps = Math.max(1, Math.ceil(160 * reveal));
+  let previous = null;
+  let previousSide = -1;
+  for (let i = 0; i <= steps; i++) {
+    const point = orbitPoint(TRACE_START + TAU * reveal * i / steps, radius, tilt, yaw);
+    const side = point.z >= 0 ? 1 : 0;
+    const xy = `${point.x.toFixed(2)},${point.y.toFixed(2)}`;
+    if (previous && side !== previousSide) {
+      const fraction = previous.z / (previous.z - point.z);
+      const crossing = `${(previous.x + (point.x - previous.x) * fraction).toFixed(2)},${(previous.y + (point.y - previous.y) * fraction).toFixed(2)}`;
+      paths[previousSide] += `L${crossing}`;
+      paths[side] += `M${crossing}L${xy}`;
     } else {
-      scene.add(world);
+      paths[side] += `${previous ? 'L' : 'M'}${xy}`;
     }
+    previous = point;
+    previousSide = side;
+  }
+  return paths;
+}
 
-    earthSpin = new THREE.Group();
-    earthSpin.rotation.x = 0.08;
-    earthSpin.rotation.z = THREE.MathUtils.degToRad(23.4393);
-    world.add(earthSpin);
+export function startCosmicOpening(root) {
+  const find = (selector) => root.querySelector(selector);
+  const findAll = (selector) => [...root.querySelectorAll(selector)];
+  const camera = find('[data-orbit-camera]');
+  const observatory = find('[data-observatory]');
+  const finale = find('[data-finale]');
+  const narrative = find('[data-narrative]');
+  const verses = findAll('[data-verse]');
+  const chapters = findAll('[data-chapter]');
+  const pause = find('[data-pause]');
+  const replay = find('[data-replay]');
+  const explore = find('[data-explore]');
+  const exitExplore = find('[data-exit-explore]');
+  const panel = find('[data-explore-panel]');
+  const afterActions = find('[data-after-actions]');
+  const timeline = find('[data-timeline]');
+  const progress = find('[data-progress]');
+  const timeLabel = find('[data-time]');
+  const status = find('[data-status]');
+  const enter = find('[data-primary-enter]');
+  const skipLabel = find('[data-skip] span');
+  if (!camera || !observatory || !finale || !pause || !enter) return;
 
-    const widthSegments = isMobile ? 72 : 112;
-    const heightSegments = isMobile ? 48 : 72;
-    const earthGeometry = new THREE.SphereGeometry(2, widthSegments, heightSegments);
+  const preference = matchMedia('(prefers-reduced-motion: reduce)');
+  const controller = new AbortController();
+  const listen = (target, type, handler, options = {}) => target.addEventListener(type, handler, { ...options, signal: controller.signal });
+  const links = findAll('[data-enter]');
+  const returnUrl = resolveReturnUrl(new URLSearchParams(location.search).get('return'), root.dataset.homeUrl, location.origin, location.pathname);
+  links.forEach((link) => { link.href = returnUrl; });
 
-    earthMaterial = new THREE.MeshPhongMaterial({
-      color: day ? 0xffffff : 0x2d6682,
-      map: day,
-      normalMap: normal,
-      normalScale: new THREE.Vector2(0.62, 0.62),
-      specularMap: specular,
-      specular: new THREE.Color(0x6f9fb4),
-      shininess: 22,
-      transparent: true,
-      opacity: 0,
+  const rings = findAll('[data-ring]').map((node) => ({ node, radius: Number(node.dataset.ring), side: Number(node.dataset.side) }));
+  const traces = findAll('[data-trace]');
+  const beacons = findAll('[data-beacon]');
+  const guideLayers = findAll('[data-guides]');
+  let state = 'still';
+  let elapsed = DURATION;
+  let previousTime = null;
+  let frame = 0;
+  let lastChapter = -1;
+  let lastSecond = -1;
+  let navigationTimer = 0;
+  let pointer = null;
+  let view = { yaw: .14, tilt: .35, zoom: 1 };
+  let rendered = { ...view };
+
+  function markSeen() {
+    try { sessionStorage.setItem(SEEN_KEY, '1'); } catch { /* Private mode is still navigable. */ }
+    try { localStorage.setItem('site-intro-seen-v1', '1'); } catch { /* Optional visit memory. */ }
+  }
+
+  function layer(node, amount, distance = 18) {
+    node.style.opacity = amount.toFixed(4);
+    node.style.visibility = amount > .001 ? 'visible' : 'hidden';
+    node.style.transform = `translateY(${((1 - amount) * distance).toFixed(2)}px)`;
+  }
+
+  function paintOrbit(tilt, yaw, reveal, guides) {
+    const paths = new Map();
+    rings.forEach(({ node, radius, side }) => {
+      if (!paths.has(radius)) paths.set(radius, orbitPaths(radius, tilt, yaw));
+      node.setAttribute('d', paths.get(radius)[side]);
     });
-
-    earthSurface = new THREE.Mesh(earthGeometry, earthMaterial);
-    earthSurface.userData.zoomRadius = 2;
-    zoomTargets.push(earthSurface);
-    earthSpin.add(earthSurface);
-
-    if (lights) {
-      cityMaterial = new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        uniforms: {
-          lightsMap: { value: lights },
-          sunDirection: { value: new THREE.Vector3(-1, 0, 0) },
-          opacity: { value: 0 },
-        },
-        vertexShader: [
-          'varying vec2 vUv;',
-          'varying vec3 vWorldNormal;',
-          'void main() {',
-          '  vUv = uv;',
-          '  vWorldNormal = normalize(mat3(modelMatrix) * normal);',
-          '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
-          '}',
-        ].join('\n'),
-        fragmentShader: [
-          'uniform sampler2D lightsMap;',
-          'uniform vec3 sunDirection;',
-          'uniform float opacity;',
-          'varying vec2 vUv;',
-          'varying vec3 vWorldNormal;',
-          'void main() {',
-          '  vec3 lights = texture2D(lightsMap, vUv).rgb;',
-          '  float facingSun = dot(normalize(vWorldNormal), normalize(sunDirection));',
-          '  float night = 1.0 - smoothstep(-0.22, 0.18, facingSun);',
-          '  float strength = max(max(lights.r, lights.g), lights.b);',
-          '  vec3 warmLights = lights * vec3(1.34, 1.02, 0.72) * 2.15;',
-          '  gl_FragColor = vec4(warmLights, strength * night * opacity);',
-          '}',
-        ].join('\n'),
-      });
-
-      const cityLights = new THREE.Mesh(
-        new THREE.SphereGeometry(2.006, widthSegments, heightSegments),
-        cityMaterial
-      );
-      cityLights.renderOrder = 2;
-      earthSpin.add(cityLights);
-    }
-
-    if (clouds) {
-      cloudMaterial = new THREE.MeshPhongMaterial({
-        map: clouds,
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-        alphaTest: 0.012,
-        color: 0xdcebf3,
-      });
-      const cloudLayer = new THREE.Mesh(
-        new THREE.SphereGeometry(2.025, widthSegments, heightSegments),
-        cloudMaterial
-      );
-      cloudLayer.name = 'cloud-layer';
-      cloudLayer.renderOrder = 3;
-      earthSpin.add(cloudLayer);
-    }
-
-    atmosphereMaterial = new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.FrontSide,
-      uniforms: {
-        opacity: { value: 0 },
-        sunDirection: { value: new THREE.Vector3(-1, 0, 0) },
-      },
-      vertexShader: [
-        'varying vec3 vNormal;',
-        'varying vec3 vWorldNormal;',
-        'varying vec3 vViewDirection;',
-        'void main() {',
-        '  vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);',
-        '  vNormal = normalize(normalMatrix * normal);',
-        '  vWorldNormal = normalize(mat3(modelMatrix) * normal);',
-        '  vViewDirection = normalize(-viewPosition.xyz);',
-        '  gl_Position = projectionMatrix * viewPosition;',
-        '}',
-      ].join('\n'),
-      fragmentShader: [
-        'uniform float opacity;',
-        'uniform vec3 sunDirection;',
-        'varying vec3 vNormal;',
-        'varying vec3 vWorldNormal;',
-        'varying vec3 vViewDirection;',
-        'void main() {',
-        '  float fresnel = pow(1.0 - max(dot(vNormal, vViewDirection), 0.0), 2.7);',
-        '  float daylight = smoothstep(-0.38, 0.42, dot(normalize(vWorldNormal), normalize(sunDirection)));',
-        '  float horizon = mix(0.18, 1.0, daylight);',
-        '  vec3 nightBlue = vec3(0.035, 0.18, 0.46);',
-        '  vec3 dayBlue = vec3(0.18, 0.67, 1.0);',
-        '  vec3 atmosphere = mix(nightBlue, dayBlue, daylight) * fresnel * 1.55;',
-        '  gl_FragColor = vec4(atmosphere, fresnel * horizon * opacity);',
-        '}',
-      ].join('\n'),
+    const traceRadius = 195 + 155 * smooth(reveal / .55);
+    const tracePaths = orbitPaths(traceRadius, tilt, yaw, reveal);
+    traces.forEach((node) => node.setAttribute('d', tracePaths[Number(node.dataset.side)]));
+    const point = orbitPoint(TRACE_START + TAU * reveal, traceRadius, tilt, yaw);
+    beacons.forEach((node) => {
+      node.setAttribute('transform', `translate(${point.x.toFixed(2)} ${point.y.toFixed(2)})`);
+      node.style.opacity = (point.z >= 0 ? '1' : '0') === node.dataset.beacon ? '1' : '0';
     });
-
-    atmosphere = new THREE.Mesh(
-      new THREE.SphereGeometry(2.095, widthSegments, heightSegments),
-      atmosphereMaterial
-    );
-    atmosphere.renderOrder = 4;
-    world.add(atmosphere);
-
-    if (moonTexture) {
-      moonMaterial = new THREE.MeshPhongMaterial({
-        map: moonTexture,
-        color: 0xd8d4ca,
-        transparent: true,
-        opacity: 0,
-        shininess: 2,
-      });
-      moon = new THREE.Mesh(
-        new THREE.SphereGeometry(0.42, isMobile ? 36 : 52, isMobile ? 24 : 36),
-        moonMaterial
-      );
-      moon.userData.zoomRadius = 0.42;
-      moon.position.set(5.6, 1.4, -4.3);
-      zoomTargets.push(moon);
-      world.add(moon);
-    }
+    guideLayers.forEach((node) => { node.style.opacity = guides.toFixed(4); });
   }
 
-  function resizeRenderer() {
-    width = Math.max(1, window.innerWidth);
-    height = Math.max(1, window.innerHeight);
-    isMobile = width < 720;
-
-    if (!renderer || !camera) return;
-
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.7));
-    renderer.setSize(width, height, false);
-    if (composer) composer.setSize(width, height);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-
-    [stars, farStars, nearStars].forEach((layer) => {
-      if (!layer || !layer.material || !layer.material.uniforms) return;
-      layer.material.uniforms.pointScale.value = isMobile
-        ? layer.userData.mobilePointScale
-        : layer.userData.desktopPointScale;
-    });
-  }
-
-  function activateFreeCamera() {
-    if (freeCameraActive || !camera) return;
-
-    freeCameraActive = true;
-    freeCameraPosition.copy(camera.position);
-    targetFreeCameraPosition.copy(camera.position);
-    camera.getWorldDirection(freeCameraBaseForward).normalize();
-    cameraOrbitPitch = 0;
-    cameraOrbitYaw = 0;
-    cameraOrbitVelocityPitch = 0;
-    cameraOrbitVelocityYaw = 0;
-    targetPointerInfluence = 0;
-  }
-
-  function updateFreeCameraAxes() {
-    cameraForward
-      .copy(freeCameraBaseForward)
-      .applyAxisAngle(cameraUp, cameraOrbitYaw)
-      .normalize();
-    cameraRight.crossVectors(cameraForward, cameraUp).normalize();
-    cameraForward.applyAxisAngle(cameraRight, cameraOrbitPitch).normalize();
-    cameraRight.crossVectors(cameraForward, cameraUp).normalize();
-    cameraLocalUp.crossVectors(cameraRight, cameraForward).normalize();
-  }
-
-  function clampFreeCameraPosition() {
-    cameraMove.copy(targetFreeCameraPosition).sub(solarCenter);
-    if (cameraMove.lengthSq() <= maximumFreeCameraDistance * maximumFreeCameraDistance) return;
-    cameraMove.setLength(maximumFreeCameraDistance);
-    targetFreeCameraPosition.copy(solarCenter).add(cameraMove);
-  }
-
-  function clearZoomAnchor() {
-    zoomAnchorObject = null;
-    zoomAnchorRadius = 0;
-    zoomAnchorLockedUntil = 0;
-  }
-
-  function isZoomTargetVisible(object) {
-    let current = object;
-    while (current) {
-      if (!current.visible) return false;
-      current = current.parent;
+  function paintSequence() {
+    const pose = sequencePose(elapsed);
+    camera.setAttribute('transform', `scale(${pose.scale.toFixed(5)}) rotate(${pose.rotation.toFixed(4)})`);
+    paintOrbit(pose.tilt, pose.yaw, pose.trace, pose.guides);
+    layer(verses[0], pose.first);
+    layer(verses[1], pose.second);
+    layer(finale, pose.finale, 24);
+    // The visual reveal never exposes a hidden keyboard target.
+    finale.inert = pose.finale < .98;
+    finale.setAttribute('aria-hidden', String(pose.finale < .98));
+    progress.style.transform = `scaleX(${clamp(elapsed / DURATION).toFixed(4)})`;
+    const second = Math.ceil((DURATION - elapsed) / 100) / 10;
+    if (second !== lastSecond) {
+      lastSecond = second;
+      timeLabel.textContent = `${second.toFixed(1)} 秒`;
     }
-
-    const materials = Array.isArray(object.material)
-      ? object.material
-      : [object.material];
-    return materials.some((material) => (
-      material
-      && (!material.transparent || typeof material.opacity !== 'number' || material.opacity > 0.04)
-    ));
-  }
-
-  function getZoomTargetRadius(object) {
-    object.getWorldScale(zoomWorldScale);
-    const scale = Math.max(
-      Math.abs(zoomWorldScale.x),
-      Math.abs(zoomWorldScale.y),
-      Math.abs(zoomWorldScale.z)
-    );
-    return Math.max(0.08, (object.userData.zoomRadius || 0.5) * scale);
-  }
-
-  function updateLockedZoomAnchor() {
-    if (!zoomAnchorObject) return;
-    zoomAnchorWorld.copy(zoomAnchorLocal);
-    zoomAnchorObject.localToWorld(zoomAnchorWorld);
-    zoomAnchorRadius = getZoomTargetRadius(zoomAnchorObject);
-  }
-
-  function resolveZoomAnchor(event, time) {
-    if (time < zoomAnchorLockedUntil) {
-      updateLockedZoomAnchor();
-      zoomAnchorLockedUntil = time + zoomAnchorLockDuration;
-      return;
-    }
-
-    const bounds = canvas.getBoundingClientRect();
-    zoomPointer.set(
-      ((event.clientX - bounds.left) / Math.max(1, bounds.width)) * 2 - 1,
-      -((event.clientY - bounds.top) / Math.max(1, bounds.height)) * 2 + 1
-    );
-    zoomRaycaster.setFromCamera(zoomPointer, camera);
-
-    const hit = zoomRaycaster
-      .intersectObjects(zoomTargets, false)
-      .find((intersection) => isZoomTargetVisible(intersection.object));
-
-    if (hit) {
-      zoomAnchorObject = hit.object;
-      zoomAnchorWorld.copy(hit.point);
-      zoomAnchorLocal.copy(hit.point);
-      zoomAnchorObject.worldToLocal(zoomAnchorLocal);
-      zoomAnchorRadius = getZoomTargetRadius(zoomAnchorObject);
-    } else {
-      zoomAnchorObject = null;
-      zoomAnchorRadius = 0;
-      camera.getWorldDirection(cameraForward).normalize();
-      const focusDistance = clamp(
-        camera.position.distanceTo(solarCenter) * 0.48,
-        12,
-        128
-      );
-      const rayAlignment = Math.max(
-        0.24,
-        zoomRaycaster.ray.direction.dot(cameraForward)
-      );
-      zoomAnchorWorld
-        .copy(zoomRaycaster.ray.origin)
-        .addScaledVector(zoomRaycaster.ray.direction, focusDistance / rayAlignment);
-    }
-
-    zoomAnchorLockedUntil = time + zoomAnchorLockDuration;
-  }
-
-  function moveCameraTowardZoomAnchor(normalizedDelta) {
-    updateLockedZoomAnchor();
-    zoomDirection.copy(zoomAnchorWorld).sub(targetFreeCameraPosition);
-    const distanceToAnchor = zoomDirection.length();
-    if (distanceToAnchor < 0.001) return;
-
-    const zoomingIn = normalizedDelta < 0;
-    const distanceFactor = clamp(distanceToAnchor / 32, 0.22, 2.8);
-    let travel = clamp(
-      Math.abs(normalizedDelta) * wheelTravelSensitivity * distanceFactor,
-      0.018,
-      22
-    );
-    if (zoomingIn) {
-      travel = Math.min(travel, distanceToAnchor * 0.82);
-    } else {
-      travel *= 0.88;
-    }
-
-    zoomDirection.multiplyScalar((zoomingIn ? 1 : -1) / distanceToAnchor);
-
-    if (zoomingIn && zoomAnchorObject) {
-      zoomAnchorObject.getWorldPosition(zoomObjectCenter);
-      const safeDistance = zoomAnchorRadius * 1.42 + 0.28;
-      cameraMove.copy(targetFreeCameraPosition).sub(zoomObjectCenter);
-      const currentDistanceSquared = cameraMove.lengthSq();
-      if (currentDistanceSquared <= safeDistance * safeDistance) return;
-
-      const projection = cameraMove.dot(zoomDirection);
-      const discriminant = projection * projection
-        - (currentDistanceSquared - safeDistance * safeDistance);
-      if (discriminant >= 0) {
-        const distanceToSafetyBoundary = -projection - Math.sqrt(discriminant);
-        if (distanceToSafetyBoundary <= 0) return;
-        travel = Math.min(travel, distanceToSafetyBoundary * 0.985);
-      }
-    }
-
-    zoomProposedPosition
-      .copy(targetFreeCameraPosition)
-      .addScaledVector(zoomDirection, travel);
-
-    targetFreeCameraPosition.copy(zoomProposedPosition);
-    clampFreeCameraPosition();
-  }
-
-  function updateKeyboardCameraMovement(frameDelta) {
-    if (!isExploring || !freeCameraActive || frameDelta <= 0 || pressedMoveKeys.size === 0) return;
-
-    updateFreeCameraAxes();
-    cameraMove.set(0, 0, 0);
-    if (pressedMoveKeys.has('KeyW')) cameraMove.add(cameraForward);
-    if (pressedMoveKeys.has('KeyS')) cameraMove.sub(cameraForward);
-    if (pressedMoveKeys.has('KeyD')) cameraMove.add(cameraRight);
-    if (pressedMoveKeys.has('KeyA')) cameraMove.sub(cameraRight);
-    if (pressedMoveKeys.has('KeyE')) cameraMove.add(cameraLocalUp);
-    if (pressedMoveKeys.has('KeyQ')) cameraMove.sub(cameraLocalUp);
-    if (cameraMove.lengthSq() === 0) return;
-
-    const distanceFactor = 1 + Math.min(
-      targetFreeCameraPosition.distanceTo(solarCenter) / 180,
-      2.2
-    );
-    const speed = (pressedMoveKeys.has('ShiftLeft') || pressedMoveKeys.has('ShiftRight')
-      ? 0.085
-      : 0.034) * frameDelta * distanceFactor;
-    targetFreeCameraPosition.addScaledVector(cameraMove.normalize(), speed);
-    clampFreeCameraPosition();
-    pulseExploreFeedback(0.72);
-  }
-
-  function pulseExploreFeedback(amount = 1) {
-    if (!isExploring) return;
-    exploreFeedbackEnergy = Math.max(exploreFeedbackEnergy, amount);
-  }
-
-  function moveCameraInViewPlane(deltaX, deltaY) {
-    updateFreeCameraAxes();
-    const distanceFactor = 0.0038 * (
-      1 + Math.min(targetFreeCameraPosition.distanceTo(solarCenter) / 130, 3)
-    );
-    targetFreeCameraPosition.addScaledVector(cameraRight, -deltaX * distanceFactor);
-    targetFreeCameraPosition.addScaledVector(cameraLocalUp, deltaY * distanceFactor);
-    clampFreeCameraPosition();
-  }
-
-  function beginSceneDrag(event) {
-    clearZoomAnchor();
-    activateFreeCamera();
-    isDraggingScene = true;
-    sceneDragPointerId = event.pointerId;
-    sceneDragMode = event.button === 2 || event.shiftKey || event.ctrlKey || event.metaKey
-      ? 'move'
-      : 'look';
-    sceneDragMoved = false;
-    sceneDragStartX = event.clientX;
-    sceneDragStartY = event.clientY;
-    sceneDragLastX = event.clientX;
-    sceneDragLastY = event.clientY;
-    sceneDragLastAt = performance.now();
-    cameraOrbitVelocityPitch = 0;
-    cameraOrbitVelocityYaw = 0;
-    targetPointerInfluence = 0;
-    root.classList.add('is-scene-dragging');
-
-    try {
-      root.setPointerCapture(event.pointerId);
-    } catch (error) {}
-  }
-
-  function getPinchMetrics() {
-    if (activeTouchPointers.size < 2) return null;
-    const [first, second] = Array.from(activeTouchPointers.values());
-    return {
-      clientX: (first.clientX + second.clientX) * 0.5,
-      clientY: (first.clientY + second.clientY) * 0.5,
-      distance: Math.hypot(
-        second.clientX - first.clientX,
-        second.clientY - first.clientY
-      ),
-    };
-  }
-
-  function beginScenePinch() {
-    endSceneDrag(null, true);
-    clearZoomAnchor();
-    activateFreeCamera();
-    const pinch = getPinchMetrics();
-    if (!pinch) return;
-
-    isPinchingScene = true;
-    pinchLastDistance = pinch.distance;
-    pinchLastCenterX = pinch.clientX;
-    pinchLastCenterY = pinch.clientY;
-    root.classList.add('is-scene-dragging');
-
-    for (const pointerId of activeTouchPointers.keys()) {
-      try {
-        root.setPointerCapture(pointerId);
-      } catch (error) {}
-    }
-  }
-
-  function moveScenePinch(event) {
-    if (event.pointerType !== 'touch' || !activeTouchPointers.has(event.pointerId)) {
-      return false;
-    }
-
-    activeTouchPointers.set(event.pointerId, {
-      clientX: event.clientX,
-      clientY: event.clientY,
-    });
-    if (!isPinchingScene) return false;
-
-    const pinch = getPinchMetrics();
-    if (!pinch) return true;
-    const pinchDelta = (pinchLastDistance - pinch.distance) * touchPinchSensitivity;
-    const panDeltaX = pinch.clientX - pinchLastCenterX;
-    const panDeltaY = pinch.clientY - pinchLastCenterY;
-    pinchLastDistance = pinch.distance;
-    pinchLastCenterX = pinch.clientX;
-    pinchLastCenterY = pinch.clientY;
-
-    const isPanning = Math.hypot(panDeltaX, panDeltaY) >= 0.05;
-    const isZooming = Math.abs(pinchDelta) >= 0.05;
-    if (!isPanning && !isZooming) return true;
-
-    const now = performance.now();
-    if (isPanning) {
-      clearZoomAnchor();
-      moveCameraInViewPlane(panDeltaX, panDeltaY);
-    }
-    if (isZooming) {
-      resolveZoomAnchor(pinch, now);
-      moveCameraTowardZoomAnchor(pinchDelta);
-    }
-    pulseExploreFeedback(0.9);
-    suppressDoubleClickUntil = now + 480;
-    renderScene(currentProgress, now);
-    scheduleFrame();
-    return true;
-  }
-
-  function resumeSingleTouchDrag() {
-    if (activeTouchPointers.size !== 1) return;
-    const [pointerId, pointer] = activeTouchPointers.entries().next().value;
-    beginSceneDrag({
-      pointerId,
-      pointerType: 'touch',
-      button: 0,
-      shiftKey: false,
-      ctrlKey: false,
-      metaKey: false,
-      clientX: pointer.clientX,
-      clientY: pointer.clientY,
-    });
-  }
-
-  function endSceneTouch(event, cancelled) {
-    if (event.pointerType !== 'touch' || !activeTouchPointers.has(event.pointerId)) {
-      return false;
-    }
-
-    activeTouchPointers.delete(event.pointerId);
-    if (!isPinchingScene) return false;
-
-    if (activeTouchPointers.size >= 2) {
-      const pinch = getPinchMetrics();
-      pinchLastDistance = pinch ? pinch.distance : 0;
-      pinchLastCenterX = pinch ? pinch.clientX : 0;
-      pinchLastCenterY = pinch ? pinch.clientY : 0;
-      return true;
-    }
-
-    isPinchingScene = false;
-    pinchLastDistance = 0;
-    pinchLastCenterX = 0;
-    pinchLastCenterY = 0;
-    clearZoomAnchor();
-    root.classList.remove('is-scene-dragging');
-
-    if (!cancelled) resumeSingleTouchDrag();
-    scheduleFrame();
-    return true;
-  }
-
-  function moveSceneDrag(event) {
-    if (!isDraggingScene || event.pointerId !== sceneDragPointerId) return false;
-
-    const now = performance.now();
-    const deltaTime = Math.max(8, now - sceneDragLastAt);
-    const deltaX = event.clientX - sceneDragLastX;
-    const deltaY = event.clientY - sceneDragLastY;
-
-    if (sceneDragMode === 'move') {
-      moveCameraInViewPlane(deltaX, deltaY);
-      cameraOrbitVelocityPitch = 0;
-      cameraOrbitVelocityYaw = 0;
-    } else {
-      const yawDelta = -deltaX * 0.0048;
-      const pitchDelta = -deltaY * 0.0042;
-
-      cameraOrbitYaw += yawDelta;
-      cameraOrbitPitch = clamp(
-        cameraOrbitPitch + pitchDelta,
-        -1.36,
-        1.36
-      );
-      cameraOrbitVelocityYaw = clamp(
-        cameraOrbitVelocityYaw * 0.35 + yawDelta / deltaTime * 0.65,
-        -0.009,
-        0.009
-      );
-      cameraOrbitVelocityPitch = clamp(
-        cameraOrbitVelocityPitch * 0.35 + pitchDelta / deltaTime * 0.65,
-        -0.008,
-        0.008
-      );
-    }
-    pulseExploreFeedback(0.82);
-    sceneDragLastX = event.clientX;
-    sceneDragLastY = event.clientY;
-    sceneDragLastAt = now;
-
-    if (Math.hypot(event.clientX - sceneDragStartX, event.clientY - sceneDragStartY) > 4) {
-      sceneDragMoved = true;
-    }
-
-    renderScene(currentProgress, now);
-    return true;
-  }
-
-  function endSceneDrag(event, cancelled) {
-    if (!isDraggingScene) return;
-    if (event && event.pointerId !== sceneDragPointerId) return;
-
-    const pointerId = sceneDragPointerId;
-    const moved = sceneDragMoved;
-    const dragMode = sceneDragMode;
-    isDraggingScene = false;
-    sceneDragPointerId = null;
-    sceneDragMode = 'look';
-
-    if (cancelled || !moved) {
-      cameraOrbitVelocityPitch = 0;
-      cameraOrbitVelocityYaw = 0;
-    }
-    if (moved) suppressDoubleClickUntil = performance.now() + 480;
-    if (!cancelled && !moved && event && dragMode === 'look') addRipple(event);
-
-    root.classList.remove('is-scene-dragging');
-    try {
-      if (pointerId !== null && root.hasPointerCapture(pointerId)) {
-        root.releasePointerCapture(pointerId);
-      }
-    } catch (error) {}
-
-    scheduleFrame();
-  }
-
-  function handleScenePointerDown(event) {
-    if (event.target instanceof Element && event.target.closest('button, a')) return;
-
-    const primaryPointer = event.pointerType !== 'mouse'
-      || event.button === 0
-      || event.button === 2;
-    if (!primaryPointer || reducedMotion.matches) return;
-
-    enterExploreMode(true);
-    if (!isExploring) return;
-    event.preventDefault();
-
-    if (event.pointerType === 'touch') {
-      activeTouchPointers.set(event.pointerId, {
-        clientX: event.clientX,
-        clientY: event.clientY,
-      });
-      if (activeTouchPointers.size === 1) {
-        beginSceneDrag(event);
-      } else {
-        beginScenePinch();
-      }
-      return;
-    }
-
-    beginSceneDrag(event);
-  }
-
-  function handleSceneWheel(event) {
-    if (reducedMotion.matches) return;
-    if (event.target instanceof Element && event.target.closest('button, a')) return;
-
-    enterExploreMode(true);
-    if (!isExploring) return;
-    event.preventDefault();
-    const deltaMultiplier = event.deltaMode === 1
-      ? 16
-      : event.deltaMode === 2
-        ? height
-        : 1;
-    const normalizedDelta = event.deltaY * deltaMultiplier;
-    activateFreeCamera();
-    resolveZoomAnchor(event, performance.now());
-    moveCameraTowardZoomAnchor(normalizedDelta);
-    pulseExploreFeedback(0.9);
-    scheduleFrame();
-  }
-
-  function addRipple(event) {
-    if (!isExploring || !scene || !camera || reducedMotion.matches) return;
-    if (event.pointerType === 'touch') return;
-    if (event.target instanceof Element && event.target.closest('button, a')) return;
-
-    const pointer = new THREE.Vector3(
-      event.clientX / Math.max(1, width) * 2 - 1,
-      -(event.clientY / Math.max(1, height)) * 2 + 1,
-      0.2
-    );
-    pointer.unproject(camera);
-    pointer.sub(camera.position).normalize();
-
-    const material = new THREE.MeshBasicMaterial({
-      color: 0x91e1e2,
-      transparent: true,
-      opacity: 0.42,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-    });
-    const ring = new THREE.Mesh(new THREE.RingGeometry(0.08, 0.105, 64), material);
-    ring.position.copy(camera.position).add(pointer.multiplyScalar(6.5));
-    ring.quaternion.copy(camera.quaternion);
-    scene.add(ring);
-    ripples.push({ ring, material, startedAt: performance.now() });
-
-    if (ripples.length > 3) disposeRipple(ripples.shift());
-  }
-
-  function disposeRipple(ripple) {
-    if (!ripple || !scene) return;
-    scene.remove(ripple.ring);
-    ripple.ring.geometry.dispose();
-    ripple.material.dispose();
-  }
-
-  function updateRipples(time) {
-    for (let index = ripples.length - 1; index >= 0; index -= 1) {
-      const ripple = ripples[index];
-      const progress = (time - ripple.startedAt) / 850;
-      if (progress >= 1) {
-        disposeRipple(ripple);
-        ripples.splice(index, 1);
-        continue;
-      }
-
-      const amount = ease(progress);
-      ripple.ring.scale.setScalar(1 + amount * 9);
-      ripple.material.opacity = (1 - amount) * 0.42;
-    }
-  }
-
-  function updateSatellite(progress, sceneTime) {
-    if (!satellite) return;
-
-    const eventProgress = phase(progress, 0.225, 0.325);
-    const eventOpacity = band(progress, 0.218, 0.238, 0.305, 0.332);
-    satellite.visible = eventOpacity > 0.002;
-    if (!satellite.visible) return;
-
-    satellite.position.lerpVectors(
-      satellite.userData.from,
-      satellite.userData.to,
-      cinematicEase(eventProgress)
-    );
-    satellite.rotation.set(
-      -0.2 + eventProgress * 0.42,
-      0.65 + eventProgress * 1.12,
-      -0.18 + Math.sin(eventProgress * Math.PI) * 0.22
-    );
-    satelliteMaterials.forEach((material, index) => {
-      material.opacity = eventOpacity * (index === 1 ? 0.86 : 0.94);
-      if (index === 1) {
-        material.emissiveIntensity = 0.46 + Math.sin(sceneTime * 0.0024) * 0.16;
-      }
-    });
-  }
-
-  function updateMeteorEvents(progress) {
-    meteorEvents.forEach((meteor) => {
-      const localProgress = phase(progress, meteor.start, meteor.end);
-      const fade = band(
-        progress,
-        meteor.start,
-        meteor.start + 0.012,
-        meteor.end - 0.014,
-        meteor.end
-      );
-      meteor.line.visible = fade > 0.002;
-      if (!meteor.line.visible) return;
-
-      meteor.head.lerpVectors(meteor.from, meteor.to, cinematicEase(localProgress));
-      meteor.direction.copy(meteor.to).sub(meteor.from).normalize();
-      meteor.tail.copy(meteor.head).addScaledVector(meteor.direction, -5.5);
-      const positions = meteor.line.geometry.attributes.position;
-      positions.setXYZ(0, meteor.tail.x, meteor.tail.y, meteor.tail.z);
-      positions.setXYZ(1, meteor.head.x, meteor.head.y, meteor.head.z);
-      positions.needsUpdate = true;
-      meteor.material.opacity = fade * (isMobile ? 0.48 : 0.68);
-    });
-  }
-
-  function updateAsteroidFlyby(progress, sceneTime) {
-    if (!asteroidFlyby) return;
-
-    asteroidFlyby.children.forEach((asteroid, index) => {
-      const start = asteroid.userData.start;
-      const end = asteroid.userData.end;
-      const localProgress = phase(progress, start, end);
-      const fade = band(progress, start - 0.012, start + 0.012, end - 0.016, end + 0.014);
-      asteroid.visible = fade > 0.002;
-      if (!asteroid.visible) return;
-
-      asteroid.position.lerpVectors(
-        asteroid.userData.from,
-        asteroid.userData.to,
-        cinematicEase(localProgress)
-      );
-      asteroid.rotation.set(
-        sceneTime * asteroid.userData.spin.x + index * 0.6,
-        sceneTime * asteroid.userData.spin.y + index * 0.9,
-        sceneTime * asteroid.userData.spin.z - index * 0.4
-      );
-      flybyAsteroidMaterials[index].opacity = fade * (isMobile ? 0.66 : 0.82);
-    });
-  }
-
-  function renderScene(progress, time) {
-    if (!renderer || !scene || !camera) return;
-
-    const frameDelta = lastRenderAt
-      ? clamp(time - lastRenderAt, 0, 34)
-      : 0;
-    lastRenderAt = time;
-
-    pointerX += (targetPointerX - pointerX) * 0.035;
-    pointerY += (targetPointerY - pointerY) * 0.035;
-    pointerInfluence += (targetPointerInfluence - pointerInfluence) * 0.05;
-
-    const idleTime = isIdle && finishedAt ? (time - finishedAt) * 0.12 : 0;
-    const sceneTime = progress * duration + idleTime;
-    const orbitMotionTime = Math.max(0, sceneTime - orbitMotionDelay);
-    const systemShotBlend = cinematicEase(phase(progress, 0.54, 0.82));
-
-    if (world) {
-      const earthOrbitAngle = initialOrbitAngle
-        + orbitMotionTime * earthOrbitDefinition.speed;
-      const earthOrbitDistance = getOrbitDistance(
-        earthOrbitDefinition.orbit,
-        earthOrbitDefinition.eccentricity,
-        earthOrbitAngle
-      );
-      world.position.set(
-        Math.cos(earthOrbitAngle) * earthOrbitDistance,
-        getOrbitHeight(
-          earthOrbitDefinition.orbit,
-          earthOrbitDefinition.inclination,
-          earthOrbitAngle
-        ),
-        Math.sin(earthOrbitAngle) * earthOrbitDistance * 0.96
-      );
-      world.getWorldPosition(earthWorldPosition);
-    } else {
-      earthWorldPosition.set(0, 0, 0);
-    }
-
-    if (!isDraggingScene && frameDelta > 0) {
-      cameraOrbitYaw += cameraOrbitVelocityYaw * frameDelta;
-      const nextOrbitPitch = cameraOrbitPitch + cameraOrbitVelocityPitch * frameDelta;
-      cameraOrbitPitch = clamp(nextOrbitPitch, -1.36, 1.36);
-      if (cameraOrbitPitch !== nextOrbitPitch) cameraOrbitVelocityPitch = 0;
-
-      const inertiaDamping = Math.pow(0.84, frameDelta / 16.667);
-      cameraOrbitVelocityPitch *= inertiaDamping;
-      cameraOrbitVelocityYaw *= inertiaDamping;
-      if (Math.abs(cameraOrbitVelocityPitch) < 0.00001) cameraOrbitVelocityPitch = 0;
-      if (Math.abs(cameraOrbitVelocityYaw) < 0.00001) cameraOrbitVelocityYaw = 0;
-    }
-
-    if (isExploring && freeCameraActive) {
-      updateKeyboardCameraMovement(frameDelta);
-      const movementEasing = frameDelta > 0
-        ? 1 - Math.pow(0.66, frameDelta / 16.667)
-        : 1;
-      freeCameraPosition.lerp(targetFreeCameraPosition, movementEasing);
-      updateFreeCameraAxes();
-      camera.position.copy(freeCameraPosition);
-      cameraLookTarget.copy(camera.position).addScaledVector(cameraForward, 120);
-      camera.lookAt(cameraLookTarget);
-    } else {
-      const cameraKeys = isMobile ? cameraKeysMobile : cameraKeysDesktop;
-      const targetKeys = isMobile ? targetKeysMobile : targetKeysDesktop;
-      const systemCameraKeys = isMobile ? systemCameraKeysMobile : systemCameraKeysDesktop;
-      const systemTargetKeys = isMobile ? systemTargetKeysMobile : systemTargetKeysDesktop;
-
-      sampleVector(cameraKeys, progress, cameraBasePosition, cinematicEase);
-      sampleVector(targetKeys, progress, cameraBaseTarget, cinematicEase);
-      cameraPosition.copy(earthWorldPosition).add(cameraBasePosition);
-      cameraTarget.copy(earthWorldPosition).add(cameraBaseTarget);
-
-      const systemFramingScale = clamp(1.33 / Math.max(camera.aspect, 0.45), 1, 2.15);
-      sampleVector(systemCameraKeys, progress, systemCameraPosition, cinematicEase)
-        .multiplyScalar(systemFramingScale)
-        .add(solarCenter);
-      sampleVector(systemTargetKeys, progress, systemCameraTarget, cinematicEase)
-        .add(solarCenter);
-      cameraPosition.lerp(systemCameraPosition, systemShotBlend);
-      cameraTarget.lerp(systemCameraTarget, systemShotBlend);
-
-      const pointerWeight = 1 - systemShotBlend * 0.78;
-      cameraPosition.x += pointerX * 0.52 * pointerInfluence * pointerWeight;
-      cameraPosition.y -= pointerY * 0.34 * pointerInfluence * pointerWeight;
-      cameraTarget.x += pointerX * 0.22 * pointerInfluence * pointerWeight;
-      cameraTarget.y -= pointerY * 0.16 * pointerInfluence * pointerWeight;
-      camera.position.copy(cameraPosition);
-      camera.lookAt(cameraTarget);
-      camera.rotation.z += band(progress, 0.34, 0.43, 0.56, 0.66) * -0.012;
-    }
-
-    const reveal = easeOutQuint(phase(progress, 0.015, 0.13));
-    const sunReveal = easeOutQuint(phase(progress, 0.14, 0.31));
-    const systemReveal = cinematicEase(phase(progress, 0.32, 0.72));
-    const warp = band(progress, 0.38, 0.46, 0.58, 0.68);
-    const travelEnergy = band(progress, 0.32, 0.43, 0.64, 0.76);
-    const finaleCalm = ease(phase(progress, 0.78, 0.98));
-    const finaleRed = cinematicEase(phase(progress, 0.82, 1));
-    const solarPulse = band(progress, 0.655, 0.69, 0.735, 0.78);
-
-    if (frameDelta > 0) {
-      const feedbackDamping = Math.pow(0.78, frameDelta / 16.667);
-      exploreFeedbackEnergy *= feedbackDamping;
-      if (exploreFeedbackEnergy < 0.002) exploreFeedbackEnergy = 0;
-    }
-
-    const baseFov = isMobile ? 47 : 43;
-    const finaleFov = isMobile ? 42 : 39;
-    const desiredFov = isExploring
-      ? baseFov
-      : baseFov + warp * (isMobile ? 5 : 7) + (finaleFov - baseFov) * finaleCalm;
-    if (Math.abs(camera.fov - desiredFov) > 0.01) {
-      camera.fov = desiredFov;
-      camera.updateProjectionMatrix();
-    }
-
-    if (earthSpin) {
-      earthSpin.rotation.y = -1.58 + sceneTime * 0.000045;
-      earthSpin.rotation.x = 0.08
-        + Math.sin(sceneTime * 0.00022) * 0.018;
-      const cloudLayer = earthSpin.getObjectByName('cloud-layer');
-      if (cloudLayer) cloudLayer.rotation.y = sceneTime * 0.000007;
-    }
-
-    if (earthMaterial) earthMaterial.opacity = reveal;
-    if (cloudMaterial) cloudMaterial.opacity = reveal * 0.58;
-    if (cityMaterial) cityMaterial.uniforms.opacity.value = reveal * 1.1;
-    if (atmosphereMaterial) atmosphereMaterial.uniforms.opacity.value = reveal * 0.72;
-
-    if (sunSurface && sunMaterial) {
-      sunSurface.visible = sunReveal > 0.002;
-      sunSurface.rotation.y = sceneTime * 0.000006;
-      sunSurface.rotation.z = sceneTime * 0.0000018;
-      sunMaterial.uniforms.time.value = sceneTime * 0.001;
-      sunMaterial.uniforms.opacity.value = sunReveal * (1 + solarPulse * 0.07);
-    }
-    sunGlowSprites.forEach((sprite, index) => {
-      const pulse = 0.94 + Math.sin(sceneTime * 0.00055 + index * 1.3) * 0.06;
-      sprite.material.color
-        .copy(sprite.userData.baseColor)
-        .lerp(sprite.userData.finaleColor, finaleRed);
-      sprite.material.opacity = sunReveal
-        * sprite.userData.targetOpacity
-        * pulse
-        * (1 + finaleRed * sprite.userData.finaleBoost)
-        * (1 + solarPulse * (0.22 + index * 0.09));
-      sprite.scale
-        .copy(sprite.userData.baseScale)
-        .multiplyScalar(
-          (1 + finaleRed * sprite.userData.finaleScale)
-          * (1 + solarPulse * (0.045 + index * 0.012))
-        );
-      if (index === sunGlowSprites.length - 1) {
-        sprite.material.rotation = Math.sin(sceneTime * 0.00008) * 0.08;
-      }
-    });
-    if (sunLight) {
-      sunLight.color
-        .copy(sunLight.userData.baseColor)
-        .lerp(sunLight.userData.finaleColor, finaleRed);
-      sunLight.intensity = sunReveal
-        * (isMobile ? 310 : 440)
-        * (1 + finaleRed * 0.28)
-        * (1 + solarPulse * 0.2);
-    }
-    if (sunLensflare) sunLensflare.visible = sunReveal > 0.08;
-
-    if (ambientLight) {
-      ambientLight.intensity = 0.06 + reveal * 0.05 + systemReveal * 0.035;
-    }
-    if (keyLight) {
-      keyLight.intensity = 0.42 * (1 - sunReveal * 0.72) + finaleCalm * 0.05;
-    }
-    if (rimLight) {
-      rimLight.intensity = 3.2 * reveal * (1 - systemReveal * 0.82);
-    }
-
-    if (cityMaterial && earthSurface && sunSurface) {
-      sunSurface.getWorldPosition(sunWorldPosition);
-      earthSurface.getWorldPosition(earthWorldPosition);
-      earthToSunDirection
-        .copy(sunWorldPosition)
-        .sub(earthWorldPosition)
-        .normalize();
-      cityMaterial.uniforms.sunDirection.value.copy(earthToSunDirection);
-      if (atmosphereMaterial) {
-        atmosphereMaterial.uniforms.sunDirection.value.copy(earthToSunDirection);
-      }
-    }
-
-    if (moon && moonMaterial) {
-      const moonAmount = band(progress, 0.16, 0.24, 0.6, 0.75);
-      const moonAngle = -0.32 + progress * 0.72;
-      moon.position.set(
-        Math.cos(moonAngle) * 6.2,
-        1.15 + Math.sin(moonAngle * 1.7) * 0.65,
-        -4.3 + Math.sin(moonAngle) * 1.8
-      );
-      moon.rotation.y = sceneTime * 0.000018;
-      moonMaterial.opacity = moonAmount * 0.76;
-    }
-
-    celestialBodies.forEach((body, index) => {
-      const revealStart = 0.34 + index * 0.027;
-      const bodyReveal = easeOutQuint(phase(progress, revealStart, revealStart + 0.09));
-      const orbitAngle = body.userData.orbitPhase
-        + orbitMotionTime * body.userData.orbitSpeed;
-      const orbitDistance = getOrbitDistance(
-        body.userData.orbitRadius,
-        body.userData.orbitEccentricity,
-        orbitAngle
-      );
-      body.position.set(
-        Math.cos(orbitAngle) * orbitDistance,
-        getOrbitHeight(
-          body.userData.orbitRadius,
-          body.userData.orbitInclination,
-          orbitAngle
-        ),
-        Math.sin(orbitAngle) * orbitDistance * 0.96
-      );
-      body.visible = bodyReveal > 0.002;
-      body.rotation.y = sceneTime * body.userData.rotationSpeed;
-      celestialMaterials[index].opacity = bodyReveal * 0.96;
-    });
-    planetRingMaterials.forEach((material) => {
-      material.opacity = systemReveal
-        * material.userData.targetOpacity;
-    });
-    const cameraSolarDistance = camera.position.distanceTo(solarCenter);
-    const zoomedSystemReveal = ease(clamp((cameraSolarDistance - 38) / 128, 0, 1));
-    orbitMaterials.forEach((material, index) => {
-      const revealStart = 0.37 + index * 0.024;
-      const orbitAwaken = easeOutQuint(phase(progress, revealStart, revealStart + 0.15));
-      material.opacity = orbitAwaken
-        * (0.24 + zoomedSystemReveal * 0.76)
-        * (index === 2 ? 0.3 : 0.18);
-      const orbit = orbitLines[index];
-      if (orbit) {
-        orbit.geometry.setDrawRange(
-          0,
-          Math.max(0, Math.floor(orbit.userData.segmentCount * orbitAwaken))
-        );
-      }
-    });
-    if (asteroidBelt && asteroidBeltMaterial) {
-      asteroidBelt.rotation.y = sceneTime * 0.0000018;
-      asteroidBeltMaterial.opacity = systemReveal * zoomedSystemReveal * 0.62;
-    }
-    if (zodiacalDust && zodiacalDustMaterial) {
-      zodiacalDust.rotation.y = sceneTime * 0.0000007;
-      zodiacalDustMaterial.opacity = (0.07 + zoomedSystemReveal * 0.11) * systemReveal;
-    }
-    asteroidMaterials.forEach((material) => {
-      material.opacity = isExploring
-        ? 0.9
-        : Math.min(0.92, travelEnergy + systemReveal * (1 - finaleCalm) * 0.22);
-    });
-    asteroids.forEach((asteroid) => {
-      const phaseOffset = asteroid.userData.driftPhase;
-      const driftAmount = asteroid.userData.driftAmount;
-      const basePosition = asteroid.userData.basePosition;
-      const baseRotation = asteroid.userData.baseRotation;
-      const rotationSpeed = asteroid.userData.rotationSpeed;
-      asteroid.position.set(
-        basePosition.x + Math.sin(sceneTime * 0.00008 + phaseOffset) * driftAmount,
-        basePosition.y + Math.cos(sceneTime * 0.000065 + phaseOffset) * driftAmount * 0.7,
-        basePosition.z + Math.sin(sceneTime * 0.000045 + phaseOffset) * driftAmount * 0.45
-      );
-      asteroid.rotation.set(
-        baseRotation.x + sceneTime * rotationSpeed.x,
-        baseRotation.y + sceneTime * rotationSpeed.y,
-        baseRotation.z + sceneTime * rotationSpeed.z
-      );
-    });
-
-    if (stars) {
-      stars.rotation.y = sceneTime * 0.0000028 + pointerX * 0.025 * pointerInfluence;
-      stars.rotation.x = -0.08 + pointerY * 0.018 * pointerInfluence;
-      stars.material.uniforms.time.value = sceneTime * 0.001;
-    }
-    if (farStars) {
-      farStars.rotation.y = -0.12 + sceneTime * 0.0000011;
-      farStars.rotation.x = 0.035 + pointerY * 0.006 * pointerInfluence;
-      farStars.material.uniforms.time.value = sceneTime * 0.001;
-    }
-    if (nearStars) {
-      nearStars.rotation.y = 0.16 - sceneTime * 0.0000044 + pointerX * 0.04 * pointerInfluence;
-      nearStars.rotation.x = -0.03 + pointerY * 0.032 * pointerInfluence;
-      nearStars.material.uniforms.time.value = sceneTime * 0.001;
-      nearStars.material.uniforms.opacity.value = nearStars.userData.baseOpacity
-        + (isExploring ? 0.08 : 0)
-        + exploreFeedbackEnergy * 0.18;
-    }
-
-    nebulae.forEach((nebula, index) => {
-      const basePosition = nebula.userData.basePosition;
-      const driftPhase = sceneTime * nebula.userData.drift + nebula.userData.phase;
-      nebula.position.set(
-        basePosition.x + Math.sin(driftPhase) * (index === 0 ? 8 : 5),
-        basePosition.y + Math.cos(driftPhase * 0.72) * 3.5,
-        basePosition.z
-      );
-      nebula.material.rotation += frameDelta * nebula.userData.drift * 0.18;
-      nebula.material.opacity = nebula.userData.baseOpacity
-        * (0.82 + Math.sin(sceneTime * 0.00013 + index * 1.9) * 0.18);
-    });
-
-    if (driftDust && driftDustMaterial) {
-      driftDust.rotation.y = sceneTime * 0.0000042;
-      driftDust.rotation.z = Math.sin(sceneTime * 0.00004) * 0.018;
-      driftDustMaterial.opacity = (isExploring ? 0.2 : 0.13)
-        * (1 - finaleCalm * 0.35)
-        + exploreFeedbackEnergy * 0.085;
-    }
-
-    updateSatellite(progress, sceneTime);
-    updateMeteorEvents(progress);
-    updateAsteroidFlyby(progress, sceneTime);
-
-    if (warpLines && warpMaterial) {
-      warpLines.rotation.z = sceneTime * 0.000015;
-      warpLines.scale.z = 1 + warp * 3.6;
-      warpMaterial.opacity = warp * 0.5;
-    }
-
-    renderer.toneMappingExposure = 1.03
-      + sunReveal * 0.09
-      + warp * 0.16
-      + finaleRed * 0.035
-      + solarPulse * 0.055;
-    if (bloomPass) {
-      bloomPass.strength = 0.42
-        + sunReveal * 0.42
-        + warp * 0.18
-        + finaleRed * 0.3
-        + solarPulse * 0.16;
-      bloomPass.radius = 0.36 + sunReveal * 0.08 + finaleRed * 0.06 + solarPulse * 0.035;
-    }
-    updateRipples(time);
-    if (composer) {
-      composer.render(frameDelta / 1000);
-    } else {
-      renderer.render(scene, camera);
-    }
-  }
-
-  function renderInterface(progress) {
-    const one = band(progress, 0.035, 0.09, 0.155, 0.205);
-    const two = band(progress, 0.19, 0.245, 0.315, 0.365);
-    const three = band(progress, 0.37, 0.43, 0.545, 0.595);
-    const four = band(progress, 0.59, 0.65, 0.755, 0.805);
-    const finaleAmount = cinematicEase(phase(progress, 0.82, 0.965));
-    const cinemaFrame = 1 - easeOutQuint(phase(progress, 0.74, 0.96));
-    const finaleShade = cinematicEase(phase(progress, 0.78, 0.95));
-    const knowledgeReveal = cinematicEase(phase(progress, 0.82, 0.965));
-    const topicReveal = cinematicEase(phase(progress, 0.845, 0.985));
-
-    setLayer(prologues.one, one, (1 - one) * 28, 0.992 + one * 0.008);
-    setLayer(prologues.two, two, (1 - two) * 28, 0.992 + two * 0.008);
-    setLayer(prologues.three, three, (1 - three) * 28, 0.992 + three * 0.008);
-    setLayer(prologues.four, four, (1 - four) * 28, 0.992 + four * 0.008);
-    setLayer(finale, finaleAmount, (1 - finaleAmount) * 34, 0.985 + finaleAmount * 0.015);
-
-    knowledgeConstellations.style.visibility = knowledgeReveal > 0.002 ? 'visible' : 'hidden';
-    knowledgeClusters.forEach((cluster, index) => {
-      const clusterReveal = cinematicEase(phase(
-        progress,
-        0.82 + index * 0.018,
-        0.92 + index * 0.012
-      ));
-      cluster.style.setProperty(
-        '--cluster-opacity',
-        (clusterReveal * (isMobile ? 0.34 : 0.46)).toFixed(3)
-      );
-      cluster.style.transform = 'translate3d(0,'
-        + ((1 - clusterReveal) * 10).toFixed(2)
-        + 'px,0) scale('
-        + (0.98 + clusterReveal * 0.02).toFixed(4)
-        + ')';
-      cluster.style.visibility = clusterReveal > 0.002 ? 'visible' : 'hidden';
-    });
-    topicSignals.style.visibility = topicReveal > 0.002 ? 'visible' : 'hidden';
-    topicSignalItems.forEach((signal, index) => {
-      const signalReveal = cinematicEase(phase(
-        progress,
-        0.845 + index * 0.012,
-        0.94 + index * 0.008
-      ));
-      signal.style.setProperty('--signal-opacity', (signalReveal * 0.23).toFixed(3));
-      signal.style.visibility = signalReveal > 0.002 ? 'visible' : 'hidden';
-    });
-
-    finale.style.pointerEvents = finaleAmount > 0.96 ? 'auto' : 'none';
-    root.style.setProperty('--cinema-frame', Math.max(0.08, cinemaFrame).toFixed(3));
-    root.style.setProperty('--finale-shade', finaleShade.toFixed(3));
-    progressFill.style.transform = 'scaleX(' + progress.toFixed(4) + ')';
-    timeLeft.textContent =
-      Math.max(0, Math.ceil((1 - progress) * duration / 1000)) + ' 秒';
-
-    let chapter = '地球微光';
-    if (progress >= 0.19) chapter = '掠过昼夜';
-    if (progress >= 0.37) chapter = '穿越内行星';
-    if (progress >= 0.59) chapter = '太阳系展开';
-    if (progress >= 0.82) chapter = '抵达知识宇宙';
-
-    chapterName.textContent = chapter;
+    const chapter = elapsed < 2700 ? 0 : elapsed < 5350 ? 1 : 2;
     if (chapter !== lastChapter) {
       lastChapter = chapter;
-      status.textContent = chapter;
+      chapters.forEach((node, index) => node.classList.toggle('is-current', index === chapter));
+      status.textContent = ['见光。每一次探索，都从一点微光开始。', '循轨。让散落的发现，连成自己的宇宙。', '微光成章。可以进入博客。'][chapter];
     }
   }
 
-  function scheduleFrame() {
-    if (!animationFrame && (isPlaying || isIdle)) {
-      animationFrame = requestAnimationFrame(tick);
+  function stopFrame() {
+    cancelAnimationFrame(frame);
+    frame = 0;
+    previousTime = null;
+  }
+
+  function requestFrame() {
+    if (!frame && !document.hidden && state !== 'leaving') frame = requestAnimationFrame(tick);
+  }
+
+  function tick(now) {
+    frame = 0;
+    if (document.hidden) return;
+    if (state === 'playing') {
+      if (previousTime !== null) elapsed = Math.min(DURATION, elapsed + Math.max(0, now - previousTime));
+      previousTime = now;
+      paintSequence();
+      if (elapsed >= DURATION) finish();
+      else requestFrame();
+    } else if (state === 'exploring') {
+      const blend = preference.matches ? 1 : 1 - Math.exp(-Math.min(64, previousTime === null ? 16 : now - previousTime) / 65);
+      previousTime = now;
+      for (const key of ['yaw', 'tilt', 'zoom']) rendered[key] += (view[key] - rendered[key]) * blend;
+      camera.setAttribute('transform', `scale(${rendered.zoom.toFixed(5)})`);
+      paintOrbit(rendered.tilt, rendered.yaw, 1, 1);
+      if (Object.keys(view).some((key) => Math.abs(view[key] - rendered[key]) > .0005)) requestFrame();
+      else previousTime = null;
     }
   }
 
-  function finishSequence(time) {
-    const now = typeof time === 'number' ? time : performance.now();
-    const wasExploring = isExploring;
-
-    isPlaying = false;
-    isIdle = initialized && !reducedMotion.matches;
-    currentProgress = 1;
-    finishedAt = now;
-
-    if (!wasExploring) {
-      endSceneDrag(null, true);
-      freeCameraActive = false;
-      pressedMoveKeys.clear();
-    }
-
-    renderInterface(1);
-    renderScene(1, now);
-    root.classList.remove('is-playing');
-    root.classList.add('is-finished');
-    skipButton.hidden = true;
-
-    if (wasExploring) {
-      replayButton.hidden = true;
-      exploreButton.hidden = true;
-      resetExploreButton.hidden = false;
-      exitExploreButton.hidden = false;
-      exitExploreButton.textContent = '返回落版';
-      status.textContent = '天体序章播放完成，继续自由探索太阳系';
-      scheduleFrame();
-      return;
-    }
-
-    root.classList.remove('is-exploring');
-    interactionHint.classList.remove('is-visible');
-    replayButton.hidden = reducedMotion.matches;
-    exploreButton.hidden = reducedMotion.matches;
-    resetExploreButton.hidden = true;
-    exitExploreButton.hidden = true;
-    status.textContent = '天体序章播放完成，可以进入博客或自由探索太阳系';
-    scheduleFrame();
+  function finish(announce = true) {
+    const moveFocus = document.activeElement === pause || panel.contains(document.activeElement) || observatory.contains(document.activeElement);
+    stopFrame();
+    releasePointer();
+    state = root.dataset.state = 'still';
+    elapsed = DURATION;
+    paintSequence();
+    narrative.inert = false;
+    finale.inert = false;
+    pause.hidden = true;
+    afterActions.hidden = false;
+    timeline.hidden = true;
+    panel.hidden = true;
+    observatory.tabIndex = -1;
+    replay.hidden = preference.matches;
+    skipLabel.textContent = '进入博客';
+    if (announce) status.textContent = '序章已落定。可以进入博客，也可以转动星环。';
+    markSeen();
+    if (moveFocus) enter.focus({ preventScroll: true });
   }
 
-  function tick(time) {
-    animationFrame = 0;
-
-    if (isPlaying) {
-      currentProgress = clamp((time - startedAt) / duration, 0, 1);
-      renderInterface(currentProgress);
-      if (currentProgress >= 1) {
-        finishSequence(time);
-        return;
-      }
-    }
-
-    renderScene(currentProgress, time);
-    scheduleFrame();
+  function play() {
+    if (preference.matches) { finish(); return; }
+    stopFrame();
+    releasePointer();
+    const moveFocus = narrative.contains(document.activeElement) || document.activeElement === replay;
+    state = root.dataset.state = 'playing';
+    elapsed = 0;
+    lastChapter = -1;
+    lastSecond = -1;
+    pause.hidden = false;
+    if (moveFocus) pause.focus({ preventScroll: true });
+    pause.textContent = '暂停';
+    pause.setAttribute('aria-label', '暂停序章');
+    afterActions.hidden = true;
+    timeline.hidden = false;
+    panel.hidden = true;
+    narrative.inert = false;
+    observatory.tabIndex = -1;
+    skipLabel.textContent = '跳过序章';
+    paintSequence();
+    requestFrame();
   }
 
-  function playSequence() {
-    cancelAnimationFrame(animationFrame);
-    animationFrame = 0;
-    endSceneDrag(null, true);
-    root.classList.add('is-playing');
-    root.classList.remove('is-finished');
-    root.classList.remove('is-exploring');
-    skipButton.hidden = false;
-    replayButton.hidden = true;
-    exploreButton.hidden = true;
-    resetExploreButton.hidden = true;
-    exitExploreButton.hidden = true;
-    currentProgress = 0;
-    lastChapter = '';
-    finishedAt = 0;
-    isIdle = false;
-    isExploring = false;
-    exploreFeedbackEnergy = 0;
-    cameraOrbitPitch = 0;
-    cameraOrbitYaw = 0;
-    cameraOrbitVelocityPitch = 0;
-    cameraOrbitVelocityYaw = 0;
-    freeCameraActive = false;
-    freeCameraPosition.set(0, 0, 0);
-    targetFreeCameraPosition.set(0, 0, 0);
-    freeCameraBaseForward.set(0, 0, -1);
-    clearZoomAnchor();
-    pressedMoveKeys.clear();
-    lastRenderAt = 0;
-    suppressDoubleClickUntil = 0;
-    enterButton.style.removeProperty('--magnet-x');
-    enterButton.style.removeProperty('--magnet-y');
-    interactionHint.classList.remove('is-visible');
-    void interactionHint.offsetWidth;
-    interactionHint.classList.add('is-visible');
-    startedAt = performance.now();
-    isPlaying = true;
-    renderInterface(0);
-    renderScene(0, startedAt);
-    status.textContent = '天体序章开始播放';
-    scheduleFrame();
-  }
-
-  async function initialize() {
-    const hasScene = createScene();
-    if (hasScene) await createWorld();
-
-    initialized = true;
-    root.classList.add('is-scene-ready');
-    resizeRenderer();
-
-    if (skipRequested || reducedMotion.matches) {
-      finishSequence();
-    } else {
-      playSequence();
+  function togglePause() {
+    if (state === 'playing') {
+      stopFrame();
+      state = root.dataset.state = 'paused';
+      pause.textContent = '继续';
+      pause.setAttribute('aria-label', '继续播放序章');
+      status.textContent = '序章已暂停。可以继续播放或直接进入博客。';
+    } else if (state === 'paused') {
+      state = root.dataset.state = 'playing';
+      pause.textContent = '暂停';
+      pause.setAttribute('aria-label', '暂停序章');
+      status.textContent = '序章继续播放。';
+      requestFrame();
     }
   }
 
-  enterButton.addEventListener('click', () => {
-    try {
-      sessionStorage.setItem(returnKey, returnUrl);
-    } catch (error) {}
+  function enterExplore() {
+    finish(false);
+    state = root.dataset.state = 'exploring';
+    view = { yaw: .14, tilt: .35, zoom: 1 };
+    rendered = { ...view };
+    narrative.inert = true;
+    afterActions.hidden = true;
+    panel.hidden = false;
+    observatory.tabIndex = 0;
+    observatory.focus({ preventScroll: true });
+    status.textContent = '已进入星环观测台。拖动或用方向键转动，使用加减键缩放，Escape 返回。';
+    requestFrame();
+  }
+
+  function releasePointer() {
+    if (pointer && observatory.hasPointerCapture(pointer.id)) observatory.releasePointerCapture(pointer.id);
+    pointer = null;
+    observatory.classList.remove('is-dragging');
+  }
+
+  function zoomBy(amount) {
+    if (state !== 'exploring') return;
+    view.zoom = clamp(view.zoom + amount, .7, 1.35);
+    requestFrame();
+  }
+
+  function resetView() {
+    view = { yaw: .14, tilt: .35, zoom: 1 };
+    status.textContent = '星环视角已复位。';
+    requestFrame();
+  }
+
+  listen(pause, 'click', togglePause);
+  listen(replay, 'click', play);
+  listen(explore, 'click', enterExplore);
+  listen(exitExplore, 'click', () => { finish(); explore.focus({ preventScroll: true }); });
+  listen(find('[data-reset]'), 'click', resetView);
+  listen(find('[data-zoom-in]'), 'click', () => zoomBy(.1));
+  listen(find('[data-zoom-out]'), 'click', () => zoomBy(-.1));
+  listen(observatory, 'pointerdown', (event) => {
+    if (state !== 'exploring' || pointer || !event.isPrimary || event.button !== 0) return;
+    pointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    observatory.setPointerCapture(event.pointerId);
+    observatory.classList.add('is-dragging');
+    observatory.focus({ preventScroll: true });
   });
-
-  skipButton.addEventListener('click', () => {
-    skipRequested = true;
-    finishSequence();
+  listen(observatory, 'pointermove', (event) => {
+    if (!pointer || pointer.id !== event.pointerId) return;
+    view.yaw += (event.clientX - pointer.x) * .006;
+    view.tilt = clamp(view.tilt + (event.clientY - pointer.y) * .004, -.9, .9);
+    pointer.x = event.clientX;
+    pointer.y = event.clientY;
+    requestFrame();
   });
-
-  replayButton.addEventListener('click', () => {
-    skipRequested = false;
-    playSequence();
-  });
-
-  function enterExploreMode(fromDirectInteraction = false) {
-    if (!initialized || reducedMotion.matches || isExploring) return;
-
-    const exploringDuringSequence = isPlaying && currentProgress < 1;
-    isExploring = true;
-    exploreFeedbackEnergy = 0.38;
-    isIdle = !isPlaying;
-    root.classList.add('is-exploring');
-    skipButton.hidden = true;
-    resetExploreButton.hidden = false;
-    exitExploreButton.hidden = false;
-    exitExploreButton.textContent = exploringDuringSequence ? '返回自动镜头' : '返回落版';
-    activateFreeCamera();
-    interactionHint.classList.remove('is-visible');
-    void interactionHint.offsetWidth;
-    interactionHint.classList.add('is-visible');
-    status.textContent = exploringDuringSequence
-      ? '已接管镜头，天体序章继续播放'
-      : '已进入太阳系自由探索模式';
-    if (fromDirectInteraction && !isPlaying) {
-      exploreButton.hidden = true;
-      replayButton.hidden = true;
-    }
-    scheduleFrame();
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    listen(observatory, type, (event) => {
+      if (pointer?.id === event.pointerId) releasePointer();
+    });
   }
-
-  function leaveExploreMode() {
-    if (!isExploring) return;
-
-    const sequenceStillPlaying = isPlaying && currentProgress < 1;
-    endSceneDrag(null, true);
-    isExploring = false;
-    exploreFeedbackEnergy = 0;
-    isIdle = false;
-    freeCameraActive = false;
-    pressedMoveKeys.clear();
-    cameraOrbitPitch = 0;
-    cameraOrbitYaw = 0;
-    cameraOrbitVelocityPitch = 0;
-    cameraOrbitVelocityYaw = 0;
-    targetPointerInfluence = 0;
-    clearZoomAnchor();
-    root.classList.remove('is-exploring');
-    resetExploreButton.hidden = true;
-    exitExploreButton.hidden = true;
-    exitExploreButton.textContent = '返回落版';
-    interactionHint.classList.remove('is-visible');
-    lastRenderAt = 0;
-
-    if (sequenceStillPlaying) {
-      skipButton.hidden = false;
-      renderInterface(currentProgress);
-      renderScene(currentProgress, performance.now());
-      status.textContent = '已返回自动镜头，天体序章继续播放';
-      scheduleFrame();
-      return;
-    }
-
-    renderInterface(1);
-    renderScene(1, performance.now());
-    replayButton.hidden = reducedMotion.matches;
-    exploreButton.hidden = reducedMotion.matches;
-    status.textContent = '已返回天体序章落版';
-  }
-
-  function resetExploreCamera() {
-    if (!isExploring || !camera) return;
-
-    endSceneDrag(null, true);
-    pressedMoveKeys.clear();
-    cameraOrbitPitch = 0;
-    cameraOrbitYaw = 0;
-    cameraOrbitVelocityPitch = 0;
-    cameraOrbitVelocityYaw = 0;
-    targetPointerInfluence = 0;
-    clearZoomAnchor();
-    freeCameraActive = false;
-    exploreFeedbackEnergy = 0.35;
-    lastRenderAt = 0;
-
-    const now = performance.now();
-    renderScene(currentProgress, now);
-    activateFreeCamera();
-    renderScene(currentProgress, now);
-    status.textContent = '自由探索视角已重置';
-    scheduleFrame();
-  }
-
-  exploreButton.addEventListener('click', () => enterExploreMode(false));
-  resetExploreButton.addEventListener('click', resetExploreCamera);
-  exitExploreButton.addEventListener('click', leaveExploreMode);
-
-  window.addEventListener('pointermove', (event) => {
-    if (moveScenePinch(event)) {
-      event.preventDefault();
-      return;
-    }
-    if (moveSceneDrag(event)) {
-      event.preventDefault();
-      return;
-    }
-    if (reducedMotion.matches || event.pointerType === 'touch') return;
-    targetPointerX = event.clientX / Math.max(1, width) - 0.5;
-    targetPointerY = event.clientY / Math.max(1, height) - 0.5;
-    targetPointerInfluence = 1;
+  listen(observatory, 'wheel', (event) => {
+    if (state !== 'exploring' || event.ctrlKey) return;
+    event.preventDefault();
+    const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 300 : 1);
+    zoomBy(clamp(-delta * .001, -.12, .12));
   }, { passive: false });
-
-  root.addEventListener('pointerleave', () => {
-    targetPointerX = 0;
-    targetPointerY = 0;
-    targetPointerInfluence = 0;
-  }, { passive: true });
-
-  root.addEventListener('pointerdown', handleScenePointerDown);
-  root.addEventListener('wheel', handleSceneWheel, { passive: false });
-  root.addEventListener('contextmenu', (event) => {
-    if (event.target instanceof Element && event.target.closest('button, a')) return;
+  listen(observatory, 'keydown', (event) => {
+    if (state !== 'exploring') return;
+    if (event.key === 'ArrowLeft') view.yaw -= .12;
+    else if (event.key === 'ArrowRight') view.yaw += .12;
+    else if (event.key === 'ArrowUp') view.tilt = clamp(view.tilt - .08, -.9, .9);
+    else if (event.key === 'ArrowDown') view.tilt = clamp(view.tilt + .08, -.9, .9);
+    else if (event.key === '+' || event.key === '=') zoomBy(.1);
+    else if (event.key === '-') zoomBy(-.1);
+    else if (event.key === 'Home') resetView();
+    else return;
     event.preventDefault();
+    requestFrame();
+  });
+  listen(window, 'keydown', (event) => {
+    if (event.key !== 'Escape' || state === 'leaving') return;
+    if (state === 'exploring') { finish(); explore.focus({ preventScroll: true }); }
+    else if (state === 'playing' || state === 'paused') finish();
+  });
+  listen(window, 'blur', releasePointer);
+  listen(document, 'visibilitychange', () => {
+    if (document.hidden) { releasePointer(); stopFrame(); }
+    else if (state === 'playing' || state === 'exploring') requestFrame();
+  });
+  listen(preference, 'change', () => {
+    if (preference.matches && state !== 'leaving') finish();
+    replay.hidden = preference.matches;
   });
 
-  window.addEventListener('pointerup', (event) => {
-    if (endSceneTouch(event, false)) {
-      event.preventDefault();
-      return;
-    }
-    if (isDraggingScene) event.preventDefault();
-    endSceneDrag(event, false);
-  }, { passive: false });
-
-  window.addEventListener('pointercancel', (event) => {
-    if (endSceneTouch(event, true)) return;
-    endSceneDrag(event, true);
-  });
-
-  root.addEventListener('dblclick', (event) => {
-    if (performance.now() < suppressDoubleClickUntil) return;
-    if (!isPlaying && initialized) return;
-    if (event.target instanceof Element && event.target.closest('button, a')) return;
+  links.forEach((link) => listen(link, 'click', (event) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    markSeen();
+    try { sessionStorage.setItem('site-intro-return-v1', returnUrl); } catch { /* Native navigation still works. */ }
+    if (preference.matches) return;
     event.preventDefault();
+    if (state === 'leaving') return;
+    stopFrame();
+    releasePointer();
+    state = root.dataset.state = 'leaving';
     try {
-      sessionStorage.setItem(returnKey, returnUrl);
-    } catch (error) {}
-    window.location.assign(returnUrl);
+      const dark = localStorage.getItem('theme') === 'dark';
+      const warm = localStorage.getItem('styleTheme') === 'index-gradient';
+      document.body.style.setProperty('--destination-color', dark ? '#0b1120' : warm ? '#f6efe2' : '#eef5fb');
+    } catch { /* Match the site's default light theme. */ }
+    document.body.classList.add('is-leaving');
+    navigationTimer = window.setTimeout(() => { window.location.assign(returnUrl); }, 220);
+  }));
+
+  listen(window, 'pagehide', (event) => {
+    stopFrame();
+    releasePointer();
+    clearTimeout(navigationTimer);
+    if (!event.persisted) controller.abort();
+  });
+  listen(window, 'pageshow', (event) => {
+    if (!event.persisted) return;
+    document.body.classList.remove('is-leaving');
+    // Back navigation returns to the entrance, never replays the entire sequence.
+    finish(false);
   });
 
-  enterButton.addEventListener('pointermove', (event) => {
-    if (reducedMotion.matches || event.pointerType === 'touch') return;
-    const bounds = enterButton.getBoundingClientRect();
-    const magnetX = (event.clientX - bounds.left) / bounds.width - 0.5;
-    const magnetY = (event.clientY - bounds.top) / bounds.height - 0.5;
-    enterButton.style.setProperty('--magnet-x', (magnetX * 7).toFixed(2) + 'px');
-    enterButton.style.setProperty('--magnet-y', (magnetY * 5).toFixed(2) + 'px');
-  });
-
-  enterButton.addEventListener('pointerleave', () => {
-    enterButton.style.removeProperty('--magnet-x');
-    enterButton.style.removeProperty('--magnet-y');
-  });
-
-  window.addEventListener('resize', () => {
-    clearZoomAnchor();
-    resizeRenderer();
-    renderInterface(currentProgress);
-    renderScene(currentProgress, performance.now());
-  }, { passive: true });
-
-  window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      if (isExploring) {
-        leaveExploreMode();
-        return;
-      }
-      if (isPlaying) {
-        finishSequence();
-        return;
-      }
-    }
-    if (!moveKeyCodes.has(event.code) || reducedMotion.matches) {
-      return;
-    }
-    if (event.target instanceof Element && event.target.closest('button, a, input, textarea')) return;
-
-    enterExploreMode(true);
-    if (!isExploring) return;
-    activateFreeCamera();
-    clearZoomAnchor();
-    pressedMoveKeys.add(event.code);
-    event.preventDefault();
-    scheduleFrame();
-  });
-
-  window.addEventListener('keyup', (event) => {
-    if (!moveKeyCodes.has(event.code)) return;
-    pressedMoveKeys.delete(event.code);
-  });
-
-  window.addEventListener('blur', () => {
-    pressedMoveKeys.clear();
-  });
-
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      endSceneDrag(null, true);
-      pressedMoveKeys.clear();
-      cancelAnimationFrame(animationFrame);
-      animationFrame = 0;
-      return;
-    }
-
-    if (isPlaying) {
-      startedAt = performance.now() - currentProgress * duration;
-    }
-    scheduleFrame();
-  });
-
-  reducedMotion.addEventListener('change', () => {
-    if (reducedMotion.matches) {
-      leaveExploreMode();
-      endSceneDrag(null, true);
-      cancelAnimationFrame(animationFrame);
-      animationFrame = 0;
-      finishSequence();
-      return;
-    }
-
-    if (root.classList.contains('is-finished')) {
-      replayButton.hidden = false;
-      exploreButton.hidden = false;
-    }
-  });
-
-  initialize();
+  const shouldPlay = document.documentElement.hasAttribute('data-intro-preparing') && !preference.matches;
+  delete document.documentElement.dataset.introPreparing;
+  if (shouldPlay) play();
+  else finish(false);
 }
 
+if (typeof document !== 'undefined') {
+  const opening = document.querySelector('[data-cosmic-opening]');
+  if (opening) startCosmicOpening(opening);
+}
