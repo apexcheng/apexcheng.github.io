@@ -16,7 +16,8 @@ describe('rss feed', () => {
     expect(rssSource).toContain('new URL(import.meta.env.BASE_URL, context.site)');
   });
 
-  it('links rss from the main navigation', () => {
+  it('advertises rss in the shared document head', () => {
+    expect(layoutSource).toContain('type="application/rss+xml"');
     expect(layoutSource).toContain('withBase(siteMeta.rssPath)');
   });
 });

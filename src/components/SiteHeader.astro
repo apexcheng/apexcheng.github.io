@@ -1,0 +1,98 @@
+---
+import { getCollection } from 'astro:content';
+import { Search, Menu, X, Sun, Moon, ArrowUpRight, Sparkles, Check } from '@lucide/astro';
+import { projects } from '../data/projects';
+import { siteMeta } from '../data/site';
+import { withBase } from '../utils/paths';
+
+interface Props { active: 'home' | 'articles' | 'series' | 'projects' | 'about' }
+const { active } = Astro.props;
+const navigation = [
+  { id: 'home', label: '首页', path: '/' },
+  { id: 'articles', label: '文章', path: '/articles/' },
+  { id: 'series', label: '系列', path: '/series/' },
+  { id: 'projects', label: '项目', path: '/projects/' },
+  { id: 'about', label: '关于', path: '/about/' },
+];
+const posts = (await getCollection('posts'))
+  .filter((post) => !post.data.draft && !post.data.private)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const searchItems = [
+  ...posts.map((post) => ({
+    type: '文章', title: post.data.title, description: post.data.description,
+    href: withBase(`/articles/${post.slug}/`), keywords: [post.data.category, ...post.data.tags],
+  })),
+  ...projects.map((project) => ({
+    type: '项目', title: project.title, description: project.description,
+    href: project.url ?? withBase('/projects/'), keywords: [project.type, ...project.tags],
+  })),
+];
+const returnPath = encodeURIComponent(Astro.url.pathname + Astro.url.search);
+---
+
+<header class="site-header" data-site-header>
+  <div class="site-header-inner">
+    <a class="brand" href={withBase('/')} aria-label={`${siteMeta.siteName} 首页`} data-home-link>
+      <svg class="brand-mark" viewBox="0 0 36 36" aria-hidden="true" fill="none">
+        <path d="M6 6h24v24H6z" stroke="currentColor" stroke-width="1.2" />
+        <path d="M12 12h12M12 18h8M12 24h12" stroke="currentColor" stroke-width="1.5" />
+        <path d="m25 4 7 7" stroke="var(--accent)" stroke-width="2.5" />
+      </svg>
+      <span>{siteMeta.siteName}<small>观察 · 实践 · 记录</small></span>
+    </a>
+
+    <details class="site-navigation" data-site-navigation open>
+      <summary class="navigation-toggle" aria-label="打开主导航" aria-controls="site-navigation-panel">
+        <Menu class="menu-open-icon" size={21} /><X class="menu-close-icon" size={21} />
+      </summary>
+      <div class="navigation-panel" id="site-navigation-panel">
+        <nav class="site-nav" aria-label="主导航">
+          {navigation.map((item) => <a href={withBase(item.path)} aria-current={active === item.id ? 'page' : undefined}>{item.label}<ArrowUpRight size={16} aria-hidden="true" /></a>)}
+        </nav>
+        <div class="header-controls">
+          <details class="utility-menu" data-utility-menu="theme">
+            <summary aria-label="选择主题"><Sun class="light-icon" size={18} /><Moon class="dark-icon" size={18} /><span>主题</span></summary>
+            <div class="utility-panel theme-panel">
+              <p class="utility-label">阅读的光线</p>
+              <button type="button" data-theme-option data-style-theme-value="visual-system" data-theme-value="light"><i class="theme-swatch swatch-paper"></i><span>素纸<small>安静、清晰的日间阅读</small></span><Check size={16} /></button>
+              <button type="button" data-theme-option data-style-theme-value="index-gradient" data-theme-value="light"><i class="theme-swatch swatch-dawn"></i><span>晨曦<small>暖一点，慢一点</small></span><Check size={16} /></button>
+              <button type="button" data-theme-option data-style-theme-value="classic" data-theme-value="dark"><i class="theme-swatch swatch-ink"></i><span>玄墨<small>留一盏夜读的灯</small></span><Check size={16} /></button>
+            </div>
+          </details>
+          <details class="utility-menu" data-utility-menu="intro">
+            <summary><Sparkles size={17} /><span>开屏</span></summary>
+            <div class="utility-panel intro-panel">
+              <p class="utility-label">换一个进入的方式</p>
+              <a href={withBase(`/intro-motion-3/?return=${returnPath}`)} data-intro-link><span>天体序章<small>从一束微光开始</small></span><ArrowUpRight size={18} /></a>
+              <a href={withBase(`/intro-motion-2/?return=${returnPath}`)} data-intro-link><span>液态字场<small>文字在流动中成形</small></span><ArrowUpRight size={18} /></a>
+            </div>
+          </details>
+          <a class="mobile-rss" href={withBase(siteMeta.rssPath)}>RSS 订阅 <ArrowUpRight size={16} /></a>
+        </div>
+      </div>
+    </details>
+
+    <script is:inline>
+      // Set the initial disclosure state before the deferred interaction bundle loads.
+      document.querySelector('[data-site-navigation]').open = window.matchMedia('(min-width: 1060px)').matches;
+    </script>
+
+    <button class="search-trigger" type="button" data-search-toggle aria-label="搜索文章和项目" aria-haspopup="dialog" aria-controls="site-search" aria-expanded="false">
+      <Search size={18} /><span>搜索</span><kbd data-search-shortcut>⌘ K</kbd>
+    </button>
+    <noscript><a class="search-fallback" href={withBase('/articles/')}>浏览文章</a></noscript>
+  </div>
+</header>
+
+<dialog class="site-search" id="site-search" aria-labelledby="search-title" data-site-search data-search-items={JSON.stringify(searchItems)}>
+  <div class="search-heading"><h2 id="search-title">寻找一篇笔记</h2><button type="button" data-search-close aria-label="关闭搜索"><X size={20} /></button></div>
+  <div class="search-field"><Search size={22} /><input data-search-input type="search" placeholder="文章、项目，或一个关键词…" autocomplete="off" aria-label="搜索文章和项目" /></div>
+  <div class="search-filters" aria-label="快捷搜索">
+    {['生活', '实践', '教程', '视觉实验室'].map((label) => <button type="button" data-search-filter={label}>{label}</button>)}
+  </div>
+  <p class="search-status" role="status" aria-live="polite" data-search-status></p>
+  <div class="search-results" data-search-results></div>
+  <div class="search-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> 移动 · <kbd>Esc</kbd> 关闭</span><a href={withBase('/articles/')}>查看全部文章 <ArrowUpRight size={15} /></a></div>
+</dialog>
+
+<script src="../scripts/site-shell.js"></script>

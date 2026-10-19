@@ -13,16 +13,17 @@ const articleDetailSource = readFileSync('src/pages/articles/[...slug].astro', '
 const categorySource = readFileSync('src/pages/articles/category/[category].astro', 'utf8');
 const tagSource = readFileSync('src/pages/articles/tag/[tag].astro', 'utf8');
 const layoutSource = readFileSync('src/layouts/SiteLayout.astro', 'utf8');
+const headerSource = readFileSync('src/components/SiteHeader.astro', 'utf8');
 const rssSource = readFileSync('src/pages/rss.xml.ts', 'utf8');
 
 describe('front page structure', () => {
   it('keeps the home hero as the first-page reading entry', () => {
     expect(indexSource).toContain("import HomeRedesignOne from './home-redesign-1.astro'");
     expect(indexSource).toContain('<HomeRedesignOne />');
-    expect(homeSource).toContain('<section class="hero" id="top">');
-    expect(homeSource).toContain('把复杂技术，');
-    expect(homeSource).toContain('记录生活判断、项目实践、系统教程和视觉实验。');
-    expect(homeSource).toContain('class="hero-actions"');
+    expect(homeSource).toContain('<section class="journal-hero" aria-labelledby="home-title">');
+    expect(homeSource).toContain('让经验成章。');
+    expect(homeSource).toContain('把复杂的事弄明白，再把有用的经验留下来。');
+    expect(homeSource).toContain('class="journal-hero-links"');
     expect(homeSource).toContain("withBase('/articles/')");
     expect(homeSource).toContain("withBase('/projects/')");
   });
@@ -35,7 +36,8 @@ describe('front page structure', () => {
   });
 
   it('keeps homepage intro returns and internal home navigation state consistent', () => {
-    expect(homeSource).toContain("<HomeIntroState pageKind={isOfficialHome ? 'home' : 'standalone'} />");
+    expect(homeSource).toContain("standalone={!isOfficialHome}");
+    expect(layoutSource).toContain("<HomeIntroState pageKind={pageKind} />");
     expect(paperHomeSource).toContain('<HomeIntroState pageKind="standalone" />');
     expect(workbenchHomeSource).toContain('<HomeIntroState pageKind="standalone" />');
     expect(exhibitionHomeSource).toContain('<HomeIntroState pageKind="standalone" />');
@@ -44,10 +46,10 @@ describe('front page structure', () => {
     expect(paperHomeSource).toContain('`/intro-motion-3/?return=${introReturn}`');
   });
 
-  it('renders current dates at runtime instead of freezing homepage dates', () => {
+  it('shows actual publication dates instead of invented current activity', () => {
     expect(homeSource).not.toContain('2026-07-18');
-    expect(homeSource).toContain('data-current-date');
-    expect(homeSource).toContain("item.setAttribute('datetime', value)");
+    expect(homeSource).toContain('formatDate(latestPost.data.date)');
+    expect(homeSource).toContain("datetime={post.data.date.toISOString()}");
     expect(workbenchHomeSource).not.toContain("new Date('2026-07-18T12:00:00+08:00')");
     expect(workbenchHomeSource).toContain('data-current-full-date');
     expect(workbenchHomeSource).toContain("currentDate.setAttribute('datetime', dateValue)");
@@ -90,10 +92,10 @@ describe('front page structure', () => {
   });
 
   it('keeps search inside the shared header without a separate search page', () => {
-    expect(layoutSource).toContain('data-site-search');
-    expect(layoutSource).toContain('搜索文章和项目');
-    expect(layoutSource).toContain("getCollection('posts')");
-    expect(layoutSource).toContain('projects.map((project)');
+    expect(headerSource).toContain('data-site-search');
+    expect(headerSource).toContain('搜索文章和项目');
+    expect(headerSource).toContain("getCollection('posts')");
+    expect(headerSource).toContain('projects.map((project)');
     expect(layoutSource).not.toContain('/guides/mdx-content/');
     expect(layoutSource).not.toContain('fetch(');
   });

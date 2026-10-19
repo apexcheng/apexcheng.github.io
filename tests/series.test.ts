@@ -7,6 +7,7 @@ const seriesIndexSource = readFileSync('src/pages/series/index.astro', 'utf8');
 const seriesDetailSource = readFileSync('src/pages/series/[series].astro', 'utf8');
 const articleDetailSource = readFileSync('src/pages/articles/[...slug].astro', 'utf8');
 const layoutSource = readFileSync('src/layouts/SiteLayout.astro', 'utf8');
+const headerSource = readFileSync('src/components/SiteHeader.astro', 'utf8');
 
 describe('series feature', () => {
   it('defines series metadata and article frontmatter fields', () => {
@@ -26,7 +27,7 @@ describe('series feature', () => {
 
   it('connects series navigation with article reading', () => {
     expect(layoutSource).toContain("active?: 'home' | 'articles' | 'series' | 'projects' | 'about'");
-    expect(layoutSource).toContain('href={withBase(\'/series/\')}>系列</a>');
+    expect(headerSource).toContain("{ id: 'series', label: '系列', path: '/series/' }");
     expect(articleDetailSource).toContain("active={post.data.series ? 'series' : 'articles'}");
     expect(articleDetailSource).toContain('previousSeriesPost');
     expect(articleDetailSource).toContain('nextSeriesPost');

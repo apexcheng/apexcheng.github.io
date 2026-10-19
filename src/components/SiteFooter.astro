@@ -1,0 +1,27 @@
+---
+import { ArrowUpRight, Rss } from '@lucide/astro';
+import { siteMeta } from '../data/site';
+import { withBase } from '../utils/paths';
+---
+<footer class="site-footer">
+  <div class="footer-main">
+    <a class="footer-brand" href={withBase('/')} data-home-link>{siteMeta.siteName}<span>把走过的路，写成下一次的起点。</span></a>
+    <nav aria-label="页脚导航">
+      <a href={withBase('/about/')}>关于黄撑 <ArrowUpRight size={15} /></a>
+      <a href={siteMeta.githubUrl}>GitHub <ArrowUpRight size={15} /></a>
+      <a href={withBase(siteMeta.rssPath)}><Rss size={15} /> RSS 订阅</a>
+    </nav>
+  </div>
+  <div class="footer-bottom">
+    <span>© {new Date().getFullYear()} {siteMeta.authorName} <span class="footer-dot">·</span> 用观察积累，用实践回答</span>
+    <details class="footer-experiments">
+      <summary>首页实验 <span aria-hidden="true">＋</span></summary>
+      <nav aria-label="历史首页实验">
+        <a href={withBase('/home-redesign/')}>数字展厅 ↗</a>
+        <a href={withBase('/home-redesign-2/')}>纸张手记 ↗</a>
+        <a href={withBase('/home-redesign-3/')}>个人工作台 ↗</a>
+      </nav>
+    </details>
+    <a href="#site-content">回到顶部 ↑</a>
+  </div>
+</footer>

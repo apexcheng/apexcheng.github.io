@@ -1,158 +1,99 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
 
-const layoutSource = readFileSync('src/layouts/SiteLayout.astro', 'utf8');
-const globalCssSource = readFileSync('src/styles/global.css', 'utf8');
-const homeIndexSource = readFileSync('src/components/HomeIndexMenu.astro', 'utf8');
-const homeIntroStateSource = readFileSync('src/components/HomeIntroState.astro', 'utf8');
+const layout = readFileSync('src/layouts/SiteLayout.astro', 'utf8');
+const header = readFileSync('src/components/SiteHeader.astro', 'utf8');
+const footer = readFileSync('src/components/SiteFooter.astro', 'utf8');
+const shellCss = readFileSync('src/styles/site-shell.css', 'utf8');
+const globalCss = readFileSync('src/styles/global.css', 'utf8');
+const intro = readFileSync('src/components/HomeIntroState.astro', 'utf8');
 
-describe('site layout', () => {
-  it('keeps shared site metadata as the personal blog brand', () => {
-    expect(layoutSource).toContain('siteMeta.siteName');
-    expect(layoutSource).toContain('${siteMeta.siteName} 首页');
+describe('shared site shell', () => {
+  it('uses the same brand, navigation, search and footer on home and content pages', () => {
+    expect(layout).toContain('<SiteHeader active={active} />');
+    expect(layout).toContain('<SiteFooter />');
+    expect(header).toContain('${siteMeta.siteName} 首页');
+    for (const path of ['/', '/articles/', '/series/', '/projects/', '/about/']) {
+      expect(header).toContain(`path: '${path}'`);
+    }
+    expect(header).toContain('href={withBase(item.path)}');
+    expect(header).toContain("aria-current={active === item.id ? 'page' : undefined}");
+    expect(footer).toContain('href={withBase(siteMeta.rssPath)}');
+    expect(footer).toContain('siteMeta.githubUrl');
   });
 
-  it('links the primary static pages from the main navigation', () => {
-    expect(layoutSource).toContain("href={withBase('/')}>首页</a>");
-    expect(layoutSource).toContain("withBase('/articles/')");
-    expect(layoutSource).toContain("withBase('/projects/')");
-    expect(layoutSource).toContain('data-search-toggle>搜索</button>');
-    expect(layoutSource).toContain('href={withBase(siteMeta.rssPath)}>RSS</a>');
-    expect(layoutSource).toContain("href={withBase('/about/')}>关于我</a>");
-    expect(layoutSource).not.toContain("withBase('/guides/mdx-content/')");
-    expect(layoutSource).not.toContain('>指南</a>');
+  it('keeps search data public and static, with a labelled modal and an explicit close control', () => {
+    expect(header).toContain("getCollection('posts')");
+    expect(header).toContain('!post.data.draft && !post.data.private');
+    expect(header).toContain('projects.map((project)');
+    expect(header).toContain('<dialog class="site-search"');
+    expect(header).toContain('aria-labelledby="search-title"');
+    expect(header).toContain('data-search-close');
+    expect(header).toContain('role="status" aria-live="polite"');
+    expect(header).not.toContain('fetch(');
+    expect(shellCss).toContain('overscroll-behavior: contain');
   });
 
-  it('renders the inline search data and controls in the header', () => {
-    expect(layoutSource).toContain("getCollection('posts')");
-    expect(layoutSource).toContain('projects.map((project)');
-    expect(layoutSource).toContain('data-site-search');
-    expect(layoutSource).toContain('data-search-input');
-    expect(layoutSource).toContain('data-search-results');
-    expect(layoutSource).toContain('data-search-filter');
-    expect(layoutSource).toContain('查看全部文章');
-    expect(layoutSource).toContain('matches.map(resultHtml)');
-    expect(layoutSource).toContain("panel.addEventListener('wheel'");
-    expect(globalCssSource).toContain('overscroll-behavior: contain');
+  it('keeps intro entrypoints and the original first-visit policy', () => {
+    expect(header).toContain('`/intro-motion-2/?return=${returnPath}`');
+    expect(header).toContain('`/intro-motion-3/?return=${returnPath}`');
+    expect(layout).toContain('<HomeIntroState pageKind={pageKind} />');
+    expect(layout).toContain("standalone ? 'standalone' : active === 'home' ? 'home' : 'content'");
+    for (const condition of ['if (pageKind === \'standalone\') return', 'if (!isHome) return', 'if (isInternalHomeNavigation) return', 'if (hasSeenIntro) return', 'if (returnPath === currentPath) return']) {
+      expect(intro).toContain(condition);
+    }
   });
 
-  it('keeps the hover path connected between the search button and panel', () => {
-    expect(globalCssSource).toMatch(/\.nav-search\s*\{[^}]*height:\s*34px;/s);
-    expect(globalCssSource).toMatch(/\.nav-search-panel\s*\{[^}]*top:\s*100%;/s);
-    expect(globalCssSource).toMatch(/\.nav-search-panel\s*\{[^}]*padding:\s*4px 0 0;/s);
-    expect(globalCssSource).toContain('.nav-search-panel::before');
-    expect(globalCssSource).toContain('scaleY(0.92)');
-    expect(layoutSource).toContain("search.addEventListener('mouseenter'");
-    expect(layoutSource).toContain("search.addEventListener('mouseleave', scheduleClose)");
-    expect(layoutSource).toContain('}, 200);');
-    expect(globalCssSource).toContain('transform 0.3s cubic-bezier');
-    expect(globalCssSource).toMatch(/\.site-header\s*\{[^}]*z-index:\s*100;/s);
+  it('keeps historical homepage experiments reachable without replacing official home links', () => {
+    for (const path of ['/home-redesign/', '/home-redesign-2/', '/home-redesign-3/']) expect(footer).toContain(`withBase('${path}')`);
+    expect(layout).not.toContain('HomeIndexMenu');
+    expect(header).toContain("href={withBase('/')} aria-label");
   });
 
-  it('keeps switchable themes with visual system as the default', () => {
-    expect(layoutSource).toContain("localStorage.getItem('styleTheme')");
-    expect(layoutSource).toContain("document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light'");
-    expect(layoutSource).toContain("if (savedTheme === 'dark') savedStyleTheme = 'classic'");
-    expect(layoutSource).toContain("['classic', 'index-gradient', 'visual-system'].includes(savedStyleTheme)");
-    expect(layoutSource).toContain("document.documentElement.dataset.styleTheme = savedStyleTheme || 'visual-system'");
-    expect(layoutSource).toContain('data-theme-menu-toggle');
-    expect(layoutSource).toContain('data-theme-option');
-    expect(layoutSource).toContain('主题');
-    expect(layoutSource.indexOf('晨曦渐变')).toBeLessThan(layoutSource.indexOf('视觉晶蓝'));
-    expect(layoutSource.indexOf('视觉晶蓝')).toBeLessThan(layoutSource.indexOf('玄墨经典'));
-    expect(layoutSource).toContain('data-style-theme-value="classic" data-theme-value="dark">玄墨经典</button>');
-    expect(layoutSource).not.toContain('晨曦手札');
-    expect(layoutSource).not.toContain('素笺经典');
-    expect(layoutSource).not.toContain('素笺渐变');
-    expect(layoutSource).not.toContain('秋夜手札');
-    expect(layoutSource).not.toContain('data-style-toggle');
-    expect(layoutSource).not.toContain('data-theme-toggle');
-    expect(globalCssSource).not.toContain("html[data-style-theme='index']");
-    expect(globalCssSource).toContain("html[data-style-theme='index-gradient']");
-    expect(globalCssSource).toContain("html[data-style-theme='index-gradient'] body");
-    expect(globalCssSource).not.toContain("html[data-style-theme='classic-gradient']");
-    expect(globalCssSource).toContain("html[data-style-theme='visual-system']");
-    expect(globalCssSource).toContain("html[data-style-theme='visual-system'] body");
-    expect(globalCssSource).toContain('--display-font');
+  it('keeps a skip link, mobile navigation and motion fallback', () => {
+    expect(layout).toContain('href="#site-content"');
+    expect(layout).toContain('id="site-content" tabindex="-1"');
+    expect(header).toContain('data-site-navigation open');
+    expect(header).toContain('aria-controls="site-navigation-panel"');
+    expect(shellCss).toContain('@media (max-width: 1059px)');
+    expect(shellCss).toContain('.site-nav a { font-size: 20px;');
+    expect(globalCss).toContain('@media (prefers-reduced-motion: reduce)');
+    expect(shellCss).toContain(':focus-visible');
   });
 
-  it('keeps navigation compatible with the GitHub Pages base path', () => {
-    expect(layoutSource).toContain("href={withBase('/')}");
-    expect(layoutSource).toContain("href={withBase('/about/')}");
-    expect(layoutSource).toContain('href={withBase(siteMeta.rssPath)}');
-    expect(layoutSource).not.toMatch(/href=["']\/(?:articles|search|projects|guides|about|rss\.xml)/);
+  it('preserves article reading sizes, rich content width and the existing focus-mode layout', () => {
+    expect(globalCss).toContain('grid-template-columns: 260px minmax(0, 1fr)');
+    expect(globalCss).toContain('.article-shell.is-focus-mode');
+    expect(globalCss).toMatch(/\.article-content p,\s*\.article-content li\s*\{[^}]*font-size:\s*17px;/s);
+    expect(globalCss).toMatch(/@media \(max-width: 760px\)[\s\S]*\.article-content p,\s*\.article-content li\s*\{[^}]*font-size:\s*16px;/);
+    expect(globalCss).toContain('max-width: 800px');
+    expect(shellCss).not.toMatch(/\.article-content\s*\{[^}]*max-width:/s);
   });
+});
 
-  it('offers the two retained intro animations beside the theme menu', () => {
-    expect(layoutSource).toContain('class="header-controls"');
-    expect(layoutSource).toContain('data-intro-menu-toggle');
-    expect(layoutSource).not.toContain("withBase('/intro-motion-1/')");
-    expect(layoutSource).toContain("withBase('/intro-motion-2/')");
-    expect(layoutSource).toContain("withBase('/intro-motion-3/')");
-    expect(layoutSource).toContain('<span aria-hidden="true">主题</span>');
-    expect(layoutSource).toContain('>开屏</button>');
-    expect(layoutSource).toContain('<span class="intro-option-title">天体序章</span>');
-    expect(layoutSource).not.toContain('方案三 · 天体序章');
-    expect(layoutSource.indexOf('data-theme-menu')).toBeLessThan(layoutSource.indexOf('data-intro-menu'));
-    expect(globalCssSource).toContain('.intro-menu-panel');
+describe('pre-paint theme preference', () => {
+  const source = layout.match(/<script is:inline>([\s\S]*?)<\/script>/)![1];
+  function initialize(values: Record<string, string>, blocked = false) {
+    const root = { dataset: {} as Record<string, string> };
+    const meta = { content: '' };
+    vm.runInNewContext(source, {
+      localStorage: { getItem: (key: string) => { if (blocked) throw new Error('Storage blocked'); return values[key] ?? null; } },
+      document: { documentElement: root, querySelector: () => meta },
+    });
+    return { ...root.dataset, color: meta.content };
+  }
+  it('uses a readable default even if storage is blocked', () => {
+    expect(initialize({})).toEqual({ theme: 'light', styleTheme: 'visual-system', color: '#f5f4ef' });
+    expect(initialize({}, true)).toEqual(initialize({}));
   });
-
-  it('offers four switchable home designs after the intro menu', () => {
-    expect(layoutSource.indexOf('data-intro-menu')).toBeLessThan(layoutSource.indexOf('<HomeIndexMenu />'));
-    expect(homeIndexSource).toContain('>index</button>');
-    expect(homeIndexSource).toContain("href: withBase('/')");
-    expect(homeIndexSource).toContain("href: withBase('/home-redesign/')");
-    expect(homeIndexSource).toContain("href: withBase('/home-redesign-2/')");
-    expect(homeIndexSource).toContain("href: withBase('/home-redesign-3/')");
-    expect(homeIndexSource).toContain("title: '轻晶蓝'");
-    expect(homeIndexSource).toContain("title: '数字展厅'");
-    expect(homeIndexSource).toContain("title: '纸张手记'");
-    expect(homeIndexSource).toContain("title: '个人工作台'");
+  it('migrates the old homepage dark preference without overriding shared preferences', () => {
+    expect(initialize({ 'home-redesign-1-theme': 'dark' }).theme).toBe('dark');
+    expect(initialize({ theme: 'light', 'home-redesign-1-theme': 'dark' }).theme).toBe('light');
   });
-
-  it('binds the three retained home designs to their matching site themes', () => {
-    expect(homeIndexSource).toContain("styleTheme: 'visual-system'");
-    expect(homeIndexSource).toContain("styleTheme: 'index-gradient'");
-    expect(homeIndexSource.match(/styleTheme: 'visual-system'/g)).toHaveLength(2);
-    expect(homeIndexSource).toContain("localStorage.setItem('styleTheme', styleTheme)");
-    expect(homeIndexSource).toContain("localStorage.setItem('theme', theme)");
-    expect(homeIndexSource).toContain("styleTheme: ''");
-  });
-
-  it('uses intro three only for the first homepage visit without intercepting content or internal home links', () => {
-    expect(layoutSource).toContain("import HomeIntroState from '../components/HomeIntroState.astro'");
-    expect(layoutSource).toContain("<HomeIntroState pageKind={active === 'home' ? 'home' : 'content'} />");
-    expect(homeIntroStateSource).toContain("data-home-url={withBase('/')}");
-    expect(homeIntroStateSource).toContain("data-default-intro-url={withBase('/intro-motion-3/')}");
-    expect(homeIntroStateSource).toContain("var seenKey = 'site-intro-seen-v1'");
-    expect(homeIntroStateSource).toContain("var returnKey = 'site-intro-return-v1'");
-    expect(homeIntroStateSource).toContain("var internalHomeKey = 'site-intro-internal-home-v1'");
-    expect(homeIntroStateSource).toContain("if (pageKind === 'standalone') return");
-    expect(homeIntroStateSource).toContain('if (!isHome) return');
-    expect(homeIntroStateSource).toContain('if (isInternalHomeNavigation) return');
-    expect(homeIntroStateSource).toContain('if (hasSeenIntro) return');
-    expect(homeIntroStateSource).toContain("if (returnPath === currentPath) return");
-    expect(homeIntroStateSource).toContain("introUrl.searchParams.set('return', currentPath)");
-  });
-
-  it('keeps mobile layout rules for the main navigation and article page', () => {
-    const pageContentBlock = globalCssSource.match(/\.page-content\s*\{[^}]*\}/s)?.[0] ?? '';
-    const articleShellBlock = globalCssSource.match(/\.article-shell\s*\{[^}]*\}/s)?.[0] ?? '';
-
-    expect(pageContentBlock).not.toContain('max-width');
-    expect(articleShellBlock).not.toContain('max-width');
-    expect(globalCssSource).not.toMatch(/\.search-page\s*\{[^}]*max-width:/s);
-    expect(globalCssSource).not.toMatch(/\.narrow-page\s*\{[^}]*max-width:/s);
-    expect(globalCssSource).not.toMatch(/\.about-page\s*\{[^}]*max-width:/s);
-    expect(globalCssSource).toMatch(/\.article-shell\s*\{[^}]*grid-template-columns:\s*260px minmax\(0,\s*1fr\);/s);
-    expect(globalCssSource).toMatch(/\.article-sidebar\s*\{[^}]*display:\s*grid;[^}]*gap:\s*18px;/s);
-    expect(globalCssSource).toContain('@media (max-width: 1100px)');
-    expect(globalCssSource).toMatch(/\.article-shell\s*\{[^}]*grid-template-columns:\s*1fr;/s);
-    expect(globalCssSource).toContain('@media (max-width: 760px)');
-    expect(globalCssSource).toMatch(/@media \(max-width: 760px\)[\s\S]*\.site-nav\s*\{[^}]*overflow-x:\s*auto;[^}]*white-space:\s*nowrap;/);
-    expect(globalCssSource).toMatch(/@media \(max-width: 1100px\)[\s\S]*\.desktop-article-info\s*\{[^}]*display:\s*none;/);
-    expect(globalCssSource).toMatch(/\.article-content\s*\{[^}]*min-width:\s*0;/s);
-    expect(globalCssSource).toMatch(/\.hero-grid h1,\s*\.page-title,\s*\.article-content h1\s*\{[^}]*font-size:\s*36px;/s);
-    expect(globalCssSource).toMatch(/\.topic-grid,\s*\.project-grid,\s*\.project-page-grid\s*\{[^}]*grid-template-columns:\s*1fr;/s);
+  it('normalizes incompatible themes and retains the warm reading mode', () => {
+    expect(initialize({ theme: 'dark', styleTheme: 'index-gradient' })).toEqual({ theme: 'dark', styleTheme: 'classic', color: '#18201e' });
+    expect(initialize({ theme: 'light', styleTheme: 'classic' }).styleTheme).toBe('visual-system');
+    expect(initialize({ theme: 'light', styleTheme: 'index-gradient' }).color).toBe('#f5eee2');
   });
 });

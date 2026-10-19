@@ -1,9 +1,9 @@
 ---
 import '../styles/global.css';
-import { getCollection } from 'astro:content';
+import '../styles/site-shell.css';
 import HomeIntroState from '../components/HomeIntroState.astro';
-import HomeIndexMenu from '../components/HomeIndexMenu.astro';
-import { projects } from '../data/projects';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
 
@@ -11,441 +11,63 @@ interface Props {
   title?: string;
   active?: 'home' | 'articles' | 'series' | 'projects' | 'about';
   description?: string;
+  standalone?: boolean;
 }
 
 const {
   title = siteMeta.siteName,
   active = 'home',
   description = siteMeta.siteDescription,
+  standalone = false,
 } = Astro.props;
-
 const pageTitle = title === siteMeta.siteName ? title : `${title} | ${siteMeta.siteName}`;
-
-const posts = (await getCollection('posts'))
-  .filter((post) => !post.data.draft && !post.data.private)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-
-const searchItems = [
-  ...posts.map((post) => ({
-    type: '文章',
-    title: post.data.title,
-    description: post.data.description,
-    href: withBase(`/articles/${post.slug}/`),
-    keywords: [post.data.category, ...post.data.tags],
-  })),
-  ...projects.map((project) => ({
-    type: '项目',
-    title: project.title,
-    description: project.description,
-    href: project.url ?? withBase('/projects/'),
-    keywords: [project.type, ...project.tags],
-  })),
-];
+const pageKind = standalone ? 'standalone' : active === 'home' ? 'home' : 'content';
+const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html
-  lang="zh-CN"
-  data-page-kind={active === 'home' ? 'home' : 'content'}
->
+<html lang="zh-CN" data-page-kind={pageKind}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    {standalone && <meta name="robots" content="noindex, nofollow" />}
+    <meta name="theme-color" content="#f5f4ef" />
+    <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/png" sizes="256x256" href={withBase('/favicon.png?v=5')} />
     <link rel="stylesheet" href={withBase('/fonts/typography.css')} />
+    <link rel="alternate" type="application/rss+xml" title={siteMeta.siteName} href={withBase(siteMeta.rssPath)} />
     <script is:inline>
       (function () {
+        var theme = 'light';
+        var style = 'visual-system';
         try {
-          var savedTheme = localStorage.getItem('theme');
-          var savedStyleTheme = localStorage.getItem('styleTheme');
-          if (savedTheme === 'dark') savedStyleTheme = 'classic';
-          if (!['classic', 'index-gradient', 'visual-system'].includes(savedStyleTheme)) savedStyleTheme = '';
-          document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';
-          document.documentElement.dataset.styleTheme = savedStyleTheme || 'visual-system';
-        } catch (error) {
-          document.documentElement.dataset.theme = 'light';
-          document.documentElement.dataset.styleTheme = 'visual-system';
-        }
+          var saved = localStorage.getItem('theme');
+          // The old homepage had its own preference. Migrate it once when no shared preference exists.
+          if (!saved) saved = localStorage.getItem('home-redesign-1-theme');
+          theme = saved === 'dark' ? 'dark' : 'light';
+          var savedStyle = localStorage.getItem('styleTheme');
+          if (['classic', 'index-gradient', 'visual-system'].includes(savedStyle)) style = savedStyle;
+          if (theme === 'dark') style = 'classic';
+          else if (style === 'classic') style = 'visual-system';
+        } catch (error) {}
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.styleTheme = style;
+        document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#18201e' : style === 'index-gradient' ? '#f5eee2' : '#f5f4ef';
       })();
     </script>
-    <HomeIntroState pageKind={active === 'home' ? 'home' : 'content'} />
+    <HomeIntroState pageKind={pageKind} />
     <title>{pageTitle}</title>
   </head>
   <body>
+    <a class="skip-link" href="#site-content">跳到正文</a>
     <div class="site-shell">
-      <header class="site-header">
-        <a class="brand" href={withBase('/')} aria-label={`${siteMeta.siteName} 首页`} data-home-link>
-          <span class="brand-mark">C</span>
-          <span>{siteMeta.siteName}</span>
-        </a>
-        <nav class="site-nav" aria-label="主导航">
-          <a class:list={[active === 'home' && 'active']} href={withBase('/')} data-home-link>首页</a>
-          <a class:list={[active === 'articles' && 'active']} href={withBase('/articles/')}>文章</a>
-          <a class:list={[active === 'series' && 'active']} href={withBase('/series/')}>系列</a>
-          <a class:list={[active === 'projects' && 'active']} href={withBase('/projects/')}>项目</a>
-          <div class="nav-search" data-site-search data-search-items={JSON.stringify(searchItems)} data-articles-url={withBase('/articles/')}>
-            <button class="nav-search-trigger" type="button" aria-label="搜索文章和项目" aria-expanded="false" data-search-toggle>搜索</button>
-            <div class="nav-search-panel">
-              <input data-search-input type="search" placeholder="搜索文章 / 项目" autocomplete="off" aria-label="搜索文章和项目" />
-              <div class="nav-search-results" data-search-results aria-live="polite"></div>
-            </div>
-          </div>
-          <a href={withBase(siteMeta.rssPath)}>RSS</a>
-          <a class:list={[active === 'about' && 'active']} href={withBase('/about/')}>关于我</a>
-        </nav>
-        <div class="header-controls">
-          <div class="theme-menu" data-theme-menu>
-            <button class="theme-button" type="button" aria-label="选择主题" title="选择主题" aria-expanded="false" data-theme-menu-toggle>
-              <span aria-hidden="true">主题</span>
-            </button>
-            <div class="theme-menu-panel" role="menu">
-              <button type="button" role="menuitem" data-theme-option data-style-theme-value="index-gradient" data-theme-value="light">晨曦渐变</button>
-              <button type="button" role="menuitem" data-theme-option data-style-theme-value="visual-system" data-theme-value="light">视觉晶蓝</button>
-              <button type="button" role="menuitem" data-theme-option data-style-theme-value="classic" data-theme-value="dark">玄墨经典</button>
-            </div>
-          </div>
-          <div class="intro-menu" data-intro-menu>
-            <button
-              class="intro-button"
-              type="button"
-              aria-label="选择开屏动画"
-              title="选择开屏动画"
-              aria-controls="intro-menu-panel"
-              aria-expanded="false"
-              data-intro-menu-toggle
-            >开屏</button>
-            <div class="intro-menu-panel" id="intro-menu-panel" role="menu" aria-label="开屏动画方案">
-              <button type="button" role="menuitem" data-intro-option data-intro-url={withBase('/intro-motion-2/')}>
-                <span class="intro-option-title">液态字场</span>
-                <span class="intro-option-note">珠光文字与柔性流场</span>
-              </button>
-              <button type="button" role="menuitem" data-intro-option data-intro-url={withBase('/intro-motion-3/')}>
-                <span class="intro-option-heading">
-                  <span class="intro-option-title">天体序章</span>
-                  <span class="intro-option-default">默认</span>
-                </span>
-                <span class="intro-option-note">星轨、日蚀与沉浸光门</span>
-              </button>
-            </div>
-          </div>
-          <HomeIndexMenu />
-        </div>
-      </header>
-      <div data-pagefind-body>
+      <SiteHeader active={active} />
+      <div id="site-content" tabindex="-1" data-pagefind-body>
         <slot />
       </div>
+      <SiteFooter />
     </div>
-    <script is:inline>
-      (function () {
-        var themeMenu = document.querySelector('[data-theme-menu]');
-        if (!themeMenu) return;
-
-        var themeButton = themeMenu.querySelector('[data-theme-menu-toggle]');
-        var themeOptions = themeMenu.querySelectorAll('[data-theme-option]');
-
-        function currentTheme() {
-          return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-        }
-
-        function currentStyleTheme() {
-          var styleTheme = document.documentElement.dataset.styleTheme;
-          return ['classic', 'index-gradient', 'visual-system'].includes(styleTheme) ? styleTheme : 'visual-system';
-        }
-
-        function setOpen(isOpen) {
-          if (!themeButton) return;
-          themeMenu.classList.toggle('open', isOpen);
-          themeButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        }
-
-        function updateThemeButton() {
-          if (!themeButton) return;
-          var themeLabels = {
-            'index-gradient': '晨曦渐变',
-            'visual-system': '视觉晶蓝',
-            dark: '玄墨经典',
-          };
-          var iconKey = currentTheme() === 'dark' ? 'dark' : currentStyleTheme();
-          var label = themeLabels[iconKey] || '视觉晶蓝';
-          var mode = currentTheme() === 'dark' ? '深色' : '浅色';
-          themeButton.setAttribute('aria-label', '当前主题：' + label + ' ' + mode + '，点击选择主题');
-          themeButton.setAttribute('title', '当前主题：' + label + ' ' + mode);
-        }
-
-        updateThemeButton();
-
-        themeButton.addEventListener('click', function () {
-          setOpen(!themeMenu.classList.contains('open'));
-        });
-
-        themeOptions.forEach(function (option) {
-          option.addEventListener('click', function () {
-            var nextStyleTheme = option.getAttribute('data-style-theme-value') || 'visual-system';
-            var nextTheme = option.getAttribute('data-theme-value') || 'light';
-            document.documentElement.dataset.styleTheme = nextStyleTheme;
-            document.documentElement.dataset.theme = nextTheme;
-            updateThemeButton();
-            setOpen(false);
-            try {
-              localStorage.setItem('styleTheme', nextStyleTheme);
-              localStorage.setItem('theme', nextTheme);
-            } catch (error) {}
-          });
-        });
-
-        document.addEventListener('keydown', function (event) {
-          if (event.key === 'Escape') setOpen(false);
-        });
-
-        document.addEventListener('click', function (event) {
-          if (!themeMenu.contains(event.target)) setOpen(false);
-        });
-      })();
-    </script>
-    <script is:inline>
-      (function () {
-        var introMenu = document.querySelector('[data-intro-menu]');
-        if (!introMenu) return;
-
-        var introButton = introMenu.querySelector('[data-intro-menu-toggle]');
-        var introOptions = Array.from(introMenu.querySelectorAll('[data-intro-option]'));
-        var themeMenu = document.querySelector('[data-theme-menu]');
-        var themeButton = document.querySelector('[data-theme-menu-toggle]');
-        var seenKey = 'site-intro-seen-v1';
-        var returnKey = 'site-intro-return-v1';
-
-        function setOpen(isOpen, moveFocus) {
-          introMenu.classList.toggle('open', isOpen);
-          introButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-          if (isOpen && moveFocus && introOptions[0]) introOptions[0].focus();
-        }
-
-        function closeThemeMenu() {
-          if (!themeMenu || !themeButton) return;
-          themeMenu.classList.remove('open');
-          themeButton.setAttribute('aria-expanded', 'false');
-        }
-
-        function openIntro(introPath) {
-          if (!introPath) return;
-          var currentPath = window.location.pathname + window.location.search + window.location.hash;
-          var introUrl = new URL(introPath, window.location.origin);
-          introUrl.searchParams.set('return', currentPath);
-
-          try {
-            localStorage.setItem(seenKey, '1');
-            sessionStorage.setItem(returnKey, currentPath);
-          } catch (error) {}
-
-          window.location.href = introUrl.href;
-        }
-
-        introButton.addEventListener('click', function () {
-          var nextOpen = !introMenu.classList.contains('open');
-          closeThemeMenu();
-          setOpen(nextOpen, false);
-        });
-
-        introButton.addEventListener('keydown', function (event) {
-          if (event.key !== 'ArrowDown') return;
-          event.preventDefault();
-          closeThemeMenu();
-          setOpen(true, true);
-        });
-
-        introOptions.forEach(function (option, index) {
-          option.addEventListener('click', function () {
-            openIntro(option.getAttribute('data-intro-url'));
-          });
-
-          option.addEventListener('keydown', function (event) {
-            if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-            event.preventDefault();
-            var direction = event.key === 'ArrowDown' ? 1 : -1;
-            var nextIndex = (index + direction + introOptions.length) % introOptions.length;
-            introOptions[nextIndex].focus();
-          });
-        });
-
-        if (themeButton) {
-          themeButton.addEventListener('click', function () {
-            setOpen(false, false);
-          });
-        }
-
-        introMenu.addEventListener('focusout', function (event) {
-          if (!introMenu.contains(event.relatedTarget)) setOpen(false, false);
-        });
-
-        document.addEventListener('keydown', function (event) {
-          if (event.key !== 'Escape' || !introMenu.classList.contains('open')) return;
-          setOpen(false, false);
-          introButton.focus();
-        });
-
-        document.addEventListener('click', function (event) {
-          if (!introMenu.contains(event.target)) setOpen(false, false);
-        });
-      })();
-    </script>
-    <script is:inline>
-      (function () {
-        var search = document.querySelector('[data-site-search]');
-        if (!search) return;
-
-        var toggle = search.querySelector('[data-search-toggle]');
-        var panel = search.querySelector('.nav-search-panel');
-        var input = search.querySelector('[data-search-input]');
-        var results = search.querySelector('[data-search-results]');
-        var articlesUrl = search.getAttribute('data-articles-url') || '#';
-        var closeTimer;
-        var items = [];
-
-        try {
-          items = JSON.parse(search.getAttribute('data-search-items') || '[]');
-        } catch (error) {}
-
-        function itemText(item) {
-          return [item.title, item.description].concat(item.keywords || []).join(' ').toLowerCase();
-        }
-
-        function escapeHtml(value) {
-          return String(value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-        }
-
-        function setOpen(isOpen) {
-          if (isOpen && closeTimer) {
-            window.clearTimeout(closeTimer);
-            closeTimer = undefined;
-          }
-          search.classList.toggle('open', isOpen);
-          toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        }
-
-        function scheduleClose() {
-          if (closeTimer) window.clearTimeout(closeTimer);
-          closeTimer = window.setTimeout(function () {
-            if (!search.matches(':hover') && !search.matches(':focus-within')) {
-              setOpen(false);
-            }
-            closeTimer = undefined;
-          }, 200);
-        }
-
-        function resultHtml(item) {
-          return [
-              '<a class="nav-search-result" href="' + escapeHtml(item.href) + '">',
-              '<span>' + escapeHtml(item.type) + '</span>',
-              '<b>' + escapeHtml(item.title) + '</b>',
-              '<small>' + escapeHtml(item.description) + '</small>',
-              '</a>',
-            ].join('');
-        }
-
-        function render(query) {
-          var normalizedQuery = query.trim().toLowerCase();
-
-          if (!normalizedQuery) {
-            var filters = ['生活', '实践', '教程', '视觉实验室'];
-            var recentItems = items.filter(function (item) {
-              return item.type === '文章';
-            }).slice(0, 6);
-
-            results.innerHTML = [
-              '<section class="nav-search-section">',
-              '<div class="nav-search-section-head"><strong>快速筛选</strong></div>',
-              '<div class="nav-search-filters">',
-              filters.map(function (filter) {
-                return '<button type="button" data-search-filter="' + escapeHtml(filter) + '">' + escapeHtml(filter) + '</button>';
-              }).join(''),
-              '</div>',
-              '</section>',
-              '<section class="nav-search-section">',
-              '<div class="nav-search-section-head"><strong>最近更新</strong><span>' + recentItems.length + ' 篇</span></div>',
-              recentItems.map(resultHtml).join(''),
-              '</section>',
-              '<a class="nav-search-all-link" href="' + escapeHtml(articlesUrl) + '">查看全部文章 <span aria-hidden="true">→</span></a>',
-            ].join('');
-            results.scrollTop = 0;
-            return;
-          }
-
-          var matches = items.filter(function (item) {
-            return itemText(item).includes(normalizedQuery);
-          });
-
-          results.innerHTML = [
-            '<div class="nav-search-section-head nav-search-match-head"><strong>搜索结果</strong><span>' + matches.length + ' 条</span></div>',
-            matches.length
-              ? matches.map(resultHtml).join('')
-              : '<p class="nav-search-empty">没有找到匹配内容</p>',
-          ].join('');
-          results.scrollTop = 0;
-        }
-
-        render('');
-
-        toggle.addEventListener('click', function () {
-          setOpen(true);
-          input.focus();
-        });
-
-        search.addEventListener('mouseenter', function () {
-          setOpen(true);
-        });
-
-        search.addEventListener('mouseleave', scheduleClose);
-
-        search.addEventListener('focusin', function () {
-          setOpen(true);
-        });
-
-        search.addEventListener('focusout', function (event) {
-          if (!search.contains(event.relatedTarget)) scheduleClose();
-        });
-
-        input.addEventListener('input', function () {
-          render(input.value);
-        });
-
-        results.addEventListener('click', function (event) {
-          var filter = event.target.closest('[data-search-filter]');
-          if (!filter) return;
-          input.value = filter.getAttribute('data-search-filter') || '';
-          render(input.value);
-          input.focus();
-        });
-
-        panel.addEventListener('wheel', function (event) {
-          if (event.ctrlKey) return;
-          event.preventDefault();
-          var distance = event.deltaY;
-          if (event.deltaMode === 1) distance *= 18;
-          if (event.deltaMode === 2) distance *= results.clientHeight;
-          results.scrollTop += distance;
-        }, { passive: false });
-
-        document.addEventListener('keydown', function (event) {
-          if (event.key === 'Escape') {
-            setOpen(false);
-            input.blur();
-          }
-        });
-
-        document.addEventListener('click', function (event) {
-          if (!search.contains(event.target)) {
-            if (closeTimer) window.clearTimeout(closeTimer);
-            setOpen(false);
-          }
-        });
-      })();
-    </script>
     <style is:inline>
       .has-copy-code {
         padding-top: 42px;
