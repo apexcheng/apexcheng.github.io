@@ -66,7 +66,7 @@ function syncTheme() {
   themeOptions.forEach((option) => option.setAttribute('aria-pressed', String(option === selected)));
   const summary = document.querySelector('[data-utility-menu="theme"] > summary');
   summary.setAttribute('aria-label', `选择主题，当前${selected?.querySelector('span')?.firstChild.textContent || '素纸'}`);
-  document.querySelector('meta[name="theme-color"]').content = style === 'classic' ? '#18201e' : style === 'index-gradient' ? '#f5eee2' : '#f5f4ef';
+  document.querySelector('meta[name="theme-color"]').content = style === 'classic' ? '#18201e' : style === 'index-gradient' ? '#f5eee2' : style === 'clarity' ? '#f6f8fc' : '#f5f4ef';
 }
 syncTheme();
 themeOptions.forEach((option) => option.addEventListener('click', () => {

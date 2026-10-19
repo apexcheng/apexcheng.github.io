@@ -47,6 +47,27 @@ html[data-style-theme='visual-system'] {
   color-scheme: light;
 }
 
+/* A cool, high-contrast reading mode inspired by the site's original clear UI. */
+html[data-style-theme='clarity'] {
+  --bg: #f6f8fc;
+  --paper: #ffffff;
+  --paper-soft: #edf3fc;
+  --ink: #18283f;
+  --muted: #52647e;
+  --soft: #61758f;
+  --line: #cbd8e9;
+  --line-soft: #e1e9f4;
+  --blue: #245fc6;
+  --cyan: #176b93;
+  --green: #1c765c;
+  --violet: #7057a8;
+  --accent: #2867cf;
+  --code: #172b47;
+  --code-line: #364f72;
+  --shadow: 0 18px 45px rgb(32 73 130 / .10);
+  color-scheme: light;
+}
+
 html[data-theme='dark'] {
   --bg: #18201e;
   --paper: #1d2823;

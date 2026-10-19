@@ -95,5 +95,6 @@ describe('pre-paint theme preference', () => {
     expect(initialize({ theme: 'dark', styleTheme: 'index-gradient' })).toEqual({ theme: 'dark', styleTheme: 'classic', color: '#18201e' });
     expect(initialize({ theme: 'light', styleTheme: 'classic' }).styleTheme).toBe('visual-system');
     expect(initialize({ theme: 'light', styleTheme: 'index-gradient' }).color).toBe('#f5eee2');
+    expect(initialize({ theme: 'light', styleTheme: 'clarity' })).toEqual({ theme: 'light', styleTheme: 'clarity', color: '#f6f8fc' });
   });
 });
