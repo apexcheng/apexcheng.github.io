@@ -393,7 +393,7 @@ import { withBase } from '../utils/paths';
   .metric-strip { border-bottom: 1px solid rgba(148,163,184,.18); border-top: 1px solid rgba(148,163,184,.18); display: grid; grid-template-columns: repeat(4, 1fr); }
   .metric-strip article { border-right: 1px solid rgba(148,163,184,.18); padding: 18px; }
   .metric-strip article:last-child { border-right: 0; }
-  .metric-strip span { color: #64748b; display: block; font-family: ui-monospace, monospace; font-size: 9px; letter-spacing: .08em; }
+  .metric-strip span { color: #94a3b8; display: block; font-family: ui-monospace, monospace; font-size: 9px; letter-spacing: .08em; }
   .metric-strip strong { color: #dbeafe; display: block; font-size: 18px; margin-top: 7px; }
   .dashboard-log { padding: 14px 18px; }
   .dashboard-log p { align-items: center; color: #64748b; display: grid; font-family: ui-monospace, monospace; font-size: 11px; grid-template-columns: 30px 1fr auto; margin: 0; padding: 6px 0; }
@@ -408,6 +408,7 @@ import { withBase } from '../utils/paths';
   .story-chapter { padding: clamp(88px, 12vw, 170px) clamp(24px, 7vw, 112px); position: relative; }
   .chapter-index { color: rgba(30,64,175,.07); font-family: ui-monospace, monospace; font-size: clamp(170px, 28vw, 420px); font-weight: 900; line-height: .8; position: absolute; right: 2vw; top: 70px; }
   .chapter-intro { max-width: 900px; position: relative; z-index: 2; }
+  .chapter-intro:not(.light-intro) .chapter-label { color: var(--story-blue); }
   .chapter-intro h2, .story-closing h2 { color: var(--story-ink); font-size: clamp(48px, 7vw, 104px); font-weight: 850; letter-spacing: -.065em; line-height: .96; margin: 18px 0 28px; }
   .chapter-intro > p:last-child { color: #475569; font-size: clamp(17px, 2vw, 22px); line-height: 1.7; max-width: 720px; }
 
@@ -421,6 +422,7 @@ import { withBase } from '../utils/paths';
   .three-layer { display: grid; gap: 1px; grid-template-columns: repeat(3, 1fr); margin-top: 92px; background: #94a3b8; border: 1px solid #94a3b8; }
   .three-layer article { background: white; min-height: 300px; padding: 34px; }
   .three-layer span, .source-card > span, .fact-guards span, .run-track b, .gate-flow span, .mode-head span, .boundary-title span { color: var(--story-blue); font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: .12em; }
+  .fact-guards span, .gate-flow span { color: #93c5fd; }
   .three-layer h3 { color: var(--story-ink); font-size: 32px; margin: 42px 0 14px; }
   .three-layer p { color: #64748b; line-height: 1.7; }
   .three-layer b { display: block; margin-top: 48px; }
