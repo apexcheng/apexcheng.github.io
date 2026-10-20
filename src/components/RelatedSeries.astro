@@ -1,0 +1,27 @@
+---
+import { seriesMetaList } from '../data/series';
+import { withBase } from '../utils/paths';
+
+const { posts, heading = '系统学习这些主题' } = Astro.props;
+const related = seriesMetaList
+  .map((series) => ({
+    ...series,
+    matchingPosts: posts.filter((post) => post.data.series === series.id).length,
+  }))
+  .filter((series) => series.matchingPosts > 0)
+  .sort((a, b) => b.matchingPosts - a.matchingPosts || a.order - b.order)
+  .slice(0, 4);
+---
+
+{related.length > 0 && (
+  <nav class="related-series" aria-label="相关学习系列" data-related-series>
+    <p class="related-series-heading">{heading}</p>
+    <div class="related-series-links">
+      {related.map((series) => (
+        <a href={withBase(`/series/${series.id}/`)} data-related-series-id={series.id}>
+          <span>{series.title}</span><span aria-hidden="true">↗</span>
+        </a>
+      ))}
+    </div>
+  </nav>
+)}

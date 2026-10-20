@@ -36,10 +36,15 @@ const { posts, hideVisualLab = false, hideSeries = false, showPinned = false } =
           {post.data.tags.map((tag) => <a href={withBase(`/articles/tag/${encodeURIComponent(tag)}/`)}>{tag}</a>)}
         </div>
       </div>
-      <time datetime={post.data.date.toISOString()}>
-        {formatPostDate(post.data.date)}
+      <div class="article-list-date">
+        <time data-date-kind="date" datetime={post.data.date.toISOString()}>
+          发布于 {formatPostDate(post.data.date)}
+        </time>
+        <time data-date-kind="updated" datetime={(post.data.updated ?? post.data.date).toISOString()} hidden>
+          {post.data.updated ? '更新于' : '发布于'} {formatPostDate(post.data.updated ?? post.data.date)}
+        </time>
         <span>阅读约 {post.data.minutes} 分钟</span>
-      </time>
+      </div>
     </article>
   ))}
 </div>

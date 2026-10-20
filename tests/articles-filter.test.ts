@@ -51,6 +51,8 @@ describe('articles page category filter', () => {
 
   it('keeps timestamp precision for sorting while rendering date-only values', () => {
     expect(articleListSource).toContain('formatPostDate(post.data.date)');
+    expect(articleListSource).toContain('formatPostDate(post.data.updated ?? post.data.date)');
+    expect(articlesSource).toContain("time.getAttribute('data-date-kind') !== sortValue");
     expect(articlePageSource).toContain('formatPostDate(post.data.date)');
     expect(articlePageSource).toContain('formatPostDate(post.data.updated ?? post.data.date)');
     expect(formatPostDate(new Date('2026-07-09T00:30:00+08:00'))).toBe('2026-07-09');

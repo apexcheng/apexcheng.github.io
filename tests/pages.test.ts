@@ -91,6 +91,10 @@ describe('front page structure', () => {
     expect(tagSource).toContain('!post.data.draft');
     expect(tagSource).toContain('!post.data.private');
     expect(articlesSource).not.toContain('暂不支持点击筛选');
+    expect(articlesSource).toContain('data-articles-summary');
+    expect(articlesSource).toContain('class="articles-page-intro"');
+    expect(categorySource).toContain('<RelatedSeries posts={posts}');
+    expect(tagSource).toContain('<RelatedSeries posts={posts}');
   });
 
   it('keeps search inside the shared header without a separate search page', () => {

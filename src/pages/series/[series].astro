@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import { seriesMetaList } from '../../data/series';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { withBase } from '../../utils/paths';
+import { parseStageRange } from '../../utils/series-learning';
 
 export async function getStaticPaths() {
   const allPosts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private);
@@ -24,6 +25,15 @@ export async function getStaticPaths() {
 const { series, posts } = Astro.props;
 const totalMinutes = posts.reduce((sum, post) => sum + post.data.minutes, 0);
 const learningStages = 'learningStages' in series ? series.learningStages : undefined;
+const stageGroups = learningStages?.map((stage, index) => {
+  const { start, end } = parseStageRange(stage.range);
+  return {
+    ...stage,
+    anchor: `series-stage-${index + 1}`,
+    posts: posts.filter((post) => (post.data.seriesOrder ?? 0) >= start && (post.data.seriesOrder ?? 0) <= end),
+  };
+});
+const hasResources = Boolean(('extraResource' in series && series.extraResource) || series.resource || series.id === 'python-basics');
 ---
 
 <SiteLayout title={series.title} active="series" description={series.description}>
@@ -42,25 +52,96 @@ const learningStages = 'learningStages' in series ? series.learningStages : unde
           从第 1 篇开始 <span aria-hidden="true">→</span>
         </a>
       </div>
+      {stageGroups && (
+        <nav class="series-quick-path" aria-label="按学习阶段阅读">
+          <p>选择学习阶段</p>
+          <div>
+            {stageGroups.map((stage) => (
+              <a href={`#${stage.anchor}`}><span>{stage.range}</span> {stage.title} <span aria-hidden="true">↘</span></a>
+            ))}
+          </div>
+        </nav>
+      )}
+      {hasResources && <a class="series-resource-shortcut" href="#series-resources">查看练习与验收资源 <span aria-hidden="true">↘</span></a>}
     </header>
 
-    <aside class="series-detail-sidebar" aria-label="系列导览">
+    <section class="series-route-section" aria-labelledby="series-route-title">
+      <div class="series-route-heading">
+        <p class="eyebrow">阅读路线</p>
+        <h2 id="series-route-title">从第一篇开始，也可以直接进入你关心的位置</h2>
+      </div>
+      {stageGroups ? (
+        <div class="series-stage-route">
+          {stageGroups.map((stage) => (
+            <section id={stage.anchor} class="series-stage-section" aria-label={stage.title}>
+              <div class="series-stage-header">
+                <div>
+                  <span class="series-stage-range">{stage.range} · {'kind' in stage ? stage.kind : '学习阶段'}</span>
+                  <h3>{stage.title}</h3>
+                  <p>{stage.description}</p>
+                </div>
+                <span class="series-stage-count">{stage.posts.length} 篇</span>
+              </div>
+              <ol class="series-route">
+                {stage.posts.map((post) => (
+                  <li class="series-route-item">
+                    <a class="series-route-link" href={withBase(`/articles/${post.slug}/`)}>
+                      <span class="series-route-index">{String(post.data.seriesOrder).padStart(2, '0')}</span>
+                      <div class="series-route-content">
+                        <div class="series-route-meta">
+                          <span>{post.data.category}</span>
+                          <span>阅读约 {post.data.minutes} 分钟</span>
+                        </div>
+                        <h4>{post.data.title}</h4>
+                        <p>{post.data.description}</p>
+                      </div>
+                      <span class="series-route-arrow" aria-hidden="true">→</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <ol class="series-route">
+          {posts.map((post, index) => (
+            <li class="series-route-item">
+              <a class="series-route-link" href={withBase(`/articles/${post.slug}/`)}>
+                <span class="series-route-index">{String(index + 1).padStart(2, '0')}</span>
+                <div class="series-route-content">
+                  <div class="series-route-meta">
+                    <span>{post.data.category}</span>
+                    <span>阅读约 {post.data.minutes} 分钟</span>
+                  </div>
+                  <h3>{post.data.title}</h3>
+                  <p>{post.data.description}</p>
+                </div>
+                <span class="series-route-arrow" aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+
+    <aside class:list={['series-detail-sidebar', !hasResources && 'series-no-resources']} aria-label="系列导览与配套资源">
       {learningStages ? (
         <section class="series-overview-card series-learning-card">
           <div class="series-overview-heading">
             <div>
               <p class="eyebrow">系列导览</p>
-              <h2>四段学习路径</h2>
+              <h2>阶段速览</h2>
             </div>
             <span>{posts.length} 篇</span>
           </div>
           <p class="series-overview-tip">按顺序走一遍，也可以直接进入当前最需要的一段。</p>
           <ol class="series-learning-list">
-            {learningStages.map((stage) => (
+            {stageGroups?.map((stage) => (
               <li>
                 <span>{stage.range}</span>
                 <div>
-                  <strong>{stage.title}</strong>
+                  <strong><a href={`#${stage.anchor}`}>{stage.title} ↘</a></strong>
                   <p>{stage.description}</p>
                 </div>
               </li>
@@ -72,7 +153,7 @@ const learningStages = 'learningStages' in series ? series.learningStages : unde
           <div class="series-overview-heading">
             <div>
               <p class="eyebrow">系列导览</p>
-              <h2>学习进度一览</h2>
+              <h2>文章快速目录</h2>
             </div>
             <span>{posts.length} 篇</span>
           </div>
@@ -92,9 +173,10 @@ const learningStages = 'learningStages' in series ? series.learningStages : unde
       )}
 
       {'extraResource' in series && series.extraResource && (
-        <section class="series-resource-card" aria-label="函数实操练习下载">
+        <section class="series-resource-card" id="series-resources" aria-label="函数实操练习下载">
           <div class="series-resource-content">
             <p class="eyebrow">函数实操练习</p>
+            <p class="series-resource-timing">适合在基础主线学习过程中动手练习，不含参考答案。</p>
             <h2>{series.extraResource.title}</h2>
             <p>{series.extraResource.description}</p>
             <span>{series.extraResource.meta}</span>
@@ -109,9 +191,10 @@ const learningStages = 'learningStages' in series ? series.learningStages : unde
         </section>
       )}
       {series.resource && (
-        <section class="series-resource-card" aria-label="正式考核下载">
+        <section class="series-resource-card" id={'extraResource' in series ? undefined : 'series-resources'} aria-label="正式考核下载">
           <div class="series-resource-content">
             <p class="eyebrow">正式考核</p>
+            <p class="series-resource-timing">完成 01–06 基础主线后，用于综合检验；包含参考答案与 AI 评分规则。</p>
             <h2>{series.resource.title}</h2>
             <p>{series.resource.description}</p>
             <span>{series.resource.meta}</span>
@@ -125,32 +208,18 @@ const learningStages = 'learningStages' in series ? series.learningStages : unde
           </a>
         </section>
       )}
+      {series.id === 'python-basics' && (
+        <section class="series-resource-card" id="series-resources" aria-label="Python 练习与验收">
+          <div class="series-resource-content">
+            <p class="eyebrow">综合验收 · 第 11 篇</p>
+            <h2>检验已经掌握的 Python 基础</h2>
+            <p>完成 01–09 主线后，可以进入综合考核；题目说明中包含练习脚本和配套测试文本的下载入口。第 10 篇类与对象为选修内容。</p>
+          </div>
+          <a class="series-resource-download" href={withBase(`/articles/${posts.find((post) => post.data.seriesOrder === 11)?.slug}/`)}>
+            前往综合考核与配套文件 <span aria-hidden="true">→</span>
+          </a>
+        </section>
+      )}
     </aside>
-
-    <section class="series-route-section">
-      <div class="series-route-heading">
-        <p class="eyebrow">阅读路线</p>
-        <h2>从第一篇开始，也可以直接进入你关心的位置</h2>
-      </div>
-
-      <ol class="series-route">
-        {posts.map((post, index) => (
-          <li class="series-route-item">
-            <a class="series-route-link" href={withBase(`/articles/${post.slug}/`)}>
-              <span class="series-route-index">{String(index + 1).padStart(2, '0')}</span>
-              <div class="series-route-content">
-                <div class="series-route-meta">
-                  <span>{post.data.category}</span>
-                  <span>阅读约 {post.data.minutes} 分钟</span>
-                </div>
-                <h3>{post.data.title}</h3>
-                <p>{post.data.description}</p>
-              </div>
-              <span class="series-route-arrow" aria-hidden="true">→</span>
-            </a>
-          </li>
-        ))}
-      </ol>
-    </section>
   </main>
 </SiteLayout>

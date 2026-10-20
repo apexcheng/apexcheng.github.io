@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import ArticleList from '../../../components/ArticleList.astro';
+import RelatedSeries from '../../../components/RelatedSeries.astro';
 import { categoryMetaList, getCategoryMeta, type CategoryName } from '../../../data/categories';
 import SiteLayout from '../../../layouts/SiteLayout.astro';
 import { withBase } from '../../../utils/paths';
@@ -38,6 +39,7 @@ const categoryDescriptionLines = categoryMeta?.description.split('\n') ?? [];
     <div class="filter-actions">
       <a href={withBase('/articles/')}>返回全部文章</a>
     </div>
+    <RelatedSeries posts={posts} heading="本分类的系统学习路线" />
     <ArticleList posts={posts} />
   </main>
 </SiteLayout>

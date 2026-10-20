@@ -32,6 +32,12 @@ export const seriesMetaList = [
       href: '/files/excel-functions/Excel函数实操练习与AI评分包.zip',
       meta: 'ZIP · 3 份 Excel + AI 评分 + 汇总模板 · 满分 99.99 分',
     },
+    learningStages: [
+      { range: '01–03', title: '基础入门', description: '从公式与数据类型入手，逐步掌握常用函数。', kind: '主线' },
+      { range: '04–06', title: '核心与专题', description: '继续学习条件、查找与中级函数的实际应用。', kind: '主线' },
+      { range: '07–08', title: '随查手册', description: '图解与问题记录，需要时再查阅，不必连续读完。', kind: '参考' },
+      { range: '09', title: '进阶应用', description: '进一步理解高性能汇总与复杂数据处理。', kind: '进阶' },
+    ],
   },
   {
     id: 'ecommerce-operation-learning',
@@ -61,9 +67,16 @@ export const seriesMetaList = [
         description: '让文件和 JSON 进入代码，处理异常，并完成一份可运行订单脚本。',
       },
       {
-        range: '10–11',
-        title: '选修与验收',
-        description: '按需理解类与对象，再用 20 道题检查运行追踪、错误定位和完整任务能力。',
+        range: '10',
+        title: '类与对象（选修）',
+        description: '按需学习类与对象，不影响先完成基础脚本。',
+        kind: '选修',
+      },
+      {
+        range: '11',
+        title: '综合验收',
+        description: '用 20 道题检查运行追踪、错误定位和完整任务能力。',
+        kind: '验收',
       },
     ],
   },
@@ -88,6 +101,7 @@ export const seriesMetaList = [
     range: string;
     title: string;
     description: string;
+    kind?: string;
   }[];
 }[];
 

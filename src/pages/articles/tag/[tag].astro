@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import ArticleList from '../../../components/ArticleList.astro';
+import RelatedSeries from '../../../components/RelatedSeries.astro';
 import SiteLayout from '../../../layouts/SiteLayout.astro';
 import { withBase } from '../../../utils/paths';
 
@@ -26,6 +27,7 @@ const { tag, posts } = Astro.props;
     <div class="filter-actions">
       <a href={withBase('/articles/')}>返回全部文章</a>
     </div>
+    <RelatedSeries posts={posts} heading="从这一主题开始系统学习" />
     <ArticleList posts={posts} />
   </main>
 </SiteLayout>

@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import ArticleList from '../../components/ArticleList.astro';
+import RelatedSeries from '../../components/RelatedSeries.astro';
 import { categoryMetaList } from '../../data/categories';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { withBase } from '../../utils/paths';
@@ -22,7 +23,12 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
 
 <SiteLayout title="文章列表" active="articles">
   <main class="page-content two-column-page" data-articles-page>
-    <aside class="filter-panel">
+    <header class="articles-page-intro">
+      <p class="eyebrow">文章</p>
+      <h1 class="page-title">文章列表</h1>
+      <p class="page-lead">按内容类型、标签和更新时间组织文章。列表页保持轻量，重点是快速扫描标题、摘要和分类。</p>
+    </header>
+    <aside class="filter-panel" id="article-filters">
       <h2>内容分类</h2>
       <a class="active" href={articlesPageUrl} data-category-filter data-category-value="" aria-current="page">
         全部文章 <span>{posts.length}</span>
@@ -57,16 +63,14 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
         </button>
       )}
     </aside>
-    <section>
-      <p class="eyebrow">文章</p>
-      <h1 class="page-title">文章列表</h1>
-      <p class="page-lead">按内容类型、标签和更新时间组织文章。列表页保持轻量，重点是快速扫描标题、摘要和分类。</p>
+    <section class="articles-main-content">
       <div class="article-sort" aria-label="文章排序">
         <span>排序</span>
         <button class="active" type="button" data-sort-option data-sort-value="date" aria-pressed="true">发布时间</button>
         <button type="button" data-sort-option data-sort-value="updated" aria-pressed="false">修改时间</button>
       </div>
-      <div class="search-placeholder">当前共有 {posts.length} 篇文章、{categoryMetaList.length} 个分类、{tags.length} 个标签；也可以使用顶部导航里的搜索查找内容。</div>
+      <div class="search-placeholder" data-articles-summary>当前显示 {posts.length} 篇文章；也可以使用顶部导航里的搜索查找内容。</div>
+      <RelatedSeries posts={posts} heading="按完整学习路线阅读" />
       <ArticleList posts={posts} showPinned />
       <p class="article-filter-empty" data-empty-state hidden>当前分类暂无公开文章，请切换到其他分类或查看全部文章。</p>
     </section>
@@ -83,6 +87,10 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
       var emptyState = page.querySelector('[data-empty-state]');
       var tagsToggle = page.querySelector('[data-tags-toggle]');
       var extraTags = Array.prototype.slice.call(page.querySelectorAll('[data-extra-tag]'));
+      var tagPanel = page.querySelector('#article-filter-tags');
+      var relatedSeriesLinks = Array.prototype.slice.call(page.querySelectorAll('[data-related-series-id]'));
+      var relatedSeriesWrap = page.querySelector('[data-related-series]');
+      var summary = page.querySelector('[data-articles-summary]');
       var currentSort = 'date';
 
       if (tagsToggle) {
@@ -92,6 +100,7 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
           extraTags.forEach(function (tag) {
             tag.hidden = isExpanded;
           });
+          if (tagPanel) tagPanel.classList.toggle('is-mobile-open', !isExpanded);
 
           tagsToggle.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
           tagsToggle.innerHTML = isExpanded
@@ -143,6 +152,11 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
         if (!list) return;
 
         setActiveSort(sortValue);
+        items.forEach(function (item) {
+          item.querySelectorAll('[data-date-kind]').forEach(function (time) {
+            time.hidden = time.getAttribute('data-date-kind') !== sortValue;
+          });
+        });
 
         items
           .slice()
@@ -175,6 +189,19 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
 
         if (list) list.hidden = visibleCount === 0;
         if (emptyState) emptyState.hidden = visibleCount !== 0;
+        if (summary) summary.textContent = '当前显示 ' + visibleCount + ' 篇文章' + (category ? ' · 分类：' + category : '') + '；可以使用顶部搜索查找内容。';
+        if (relatedSeriesWrap) {
+          var shownSeries = 0;
+          relatedSeriesLinks.forEach(function (link) {
+            var seriesId = link.getAttribute('data-related-series-id');
+            var available = items.some(function (item) {
+              return !item.hidden && item.getAttribute('data-series') === seriesId;
+            });
+            link.hidden = !available;
+            if (available) shownSeries += 1;
+          });
+          relatedSeriesWrap.hidden = shownSeries === 0;
+        }
 
         if (updateUrl && activeFilter) {
           history.replaceState(null, '', activeFilter.getAttribute('href') || window.location.pathname);
