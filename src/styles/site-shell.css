@@ -97,10 +97,10 @@ kbd { font-family: var(--body-font); font-size: 10px; font-weight: 400; color: v
 .article-content > h1 { font-size: clamp(30px, 3.3vw, 48px); font-weight: 600; line-height: 1.4; margin: 20px 0; text-wrap: pretty; }
 .article-content > .meta-row { padding-bottom: 26px; margin-bottom: 32px; border-bottom: 1px solid var(--line); }
 .article-content > .article-description { color: var(--muted); }
-.article-sidebar { top: 110px; }
+.article-sidebar { top: 110px; max-height: calc(100dvh - 126px); grid-template-rows: auto minmax(0, 1fr); }
 .article-info, .toc-panel { background: transparent; border: 0; border-radius: 0; padding-inline: 0; }
 .article-info { border-bottom: 1px solid var(--line); padding-top: 4px; padding-bottom: 24px; }
-.toc-panel { max-height: calc(100dvh - 340px); padding-top: 8px; }
+.toc-panel { max-height: none; min-height: 0; padding-top: 8px; }
 .article-sidebar-restore { top: 110px; }
 .article-content :is(h2, h3, h4)[id] { scroll-margin-top: 106px; }
 

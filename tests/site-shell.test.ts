@@ -90,9 +90,9 @@ function setup({ mobile = false, blockedStorage = false } = {}) {
   toggle.append(shortcut);
   header.append(navigation, toggle);
   const search = new Element('dialog', { siteSearch: '', searchItems: JSON.stringify([
-    { type: '文章', title: '分页查询的问题', description: 'total 变化', href: '/articles/pagination/', keywords: ['实践', 'API'] },
-    { type: '文章', title: '<img src=x onerror=alert(1)>', description: '文本应原样显示', href: '/articles/text/', keywords: ['生活'] },
-    { type: '项目', title: '订单处理', description: 'Python 自动化', href: '/projects/', keywords: ['Excel', 'RPA'] },
+    { type: '文章', title: '分页查询的问题', description: 'total 变化', href: '/articles/pagination/', category: '实践', keywords: ['实践', 'API'] },
+    { type: '文章', title: '<img src=x onerror=alert(1)>', description: '文本应原样显示', href: '/articles/text/', category: '生活', keywords: ['生活'] },
+    { type: '项目', title: '订单处理', description: 'Python 自动化', href: '/projects/', category: '', keywords: ['Excel', 'RPA'] },
   ]) });
   const input = new Element('input', { searchInput: '' });
   const results = new Element('div', { searchResults: '' });
@@ -145,10 +145,27 @@ describe('production shared-shell interactions', () => {
     s.input.value = 'nothing matches'; s.input.dispatch('input');
     expect(s.status.textContent).toBe('找到 0 条相关内容');
     expect(s.results.querySelectorAll('a')).toHaveLength(0);
+    s.input.value = ''; s.input.dispatch('input');
     s.filter.click();
-    expect(s.input.value).toBe('生活');
+    expect(s.input.value).toBe('');
     expect(s.results.children[0].href).toBe('/articles/text/');
     expect(s.filter.attributes['aria-pressed']).toBe('true');
+    s.input.value = '分页'; s.input.dispatch('input');
+    expect(s.results.querySelectorAll('a')).toHaveLength(0);
+    expect(s.input.value).toBe('分页');
+    s.filter.click();
+    expect(s.results.children[0].href).toBe('/articles/pagination/');
+    expect(s.filter.attributes['aria-pressed']).toBe('false');
+  });
+  it('matches separate words and closes a populated search with a single Escape', () => {
+    const s = setup(); s.toggle.click();
+    s.input.value = '分页 API'; s.input.dispatch('input');
+    expect(s.results.children).toHaveLength(1);
+    expect(s.results.children[0].href).toBe('/articles/pagination/');
+    const event = s.search.dispatch('keydown', { key: 'Escape', target: s.input });
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(s.search.open).toBe(false);
+    expect(s.focused()).toBe(s.toggle);
   });
   it('defers search and Enter navigation until Chinese composition finishes', () => {
     const s = setup(); s.toggle.click();

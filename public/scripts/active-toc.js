@@ -6,6 +6,13 @@ const updateTocActiveState = () => {
 
   if (!links.length || !sections.length || !('IntersectionObserver' in window)) return;
 
+  const desktopToc = document.querySelector('.article-sidebar .toc-panel');
+  const fitTocToViewport = () => {
+    if (!desktopToc || getComputedStyle(desktopToc).display === 'none') return;
+    const available = window.innerHeight - desktopToc.getBoundingClientRect().top - 16;
+    desktopToc.style.maxHeight = `${Math.max(80, Math.floor(available))}px`;
+  };
+
   const activate = (id) => {
     const activeHref = '#' + id;
 
@@ -28,6 +35,7 @@ const updateTocActiveState = () => {
   };
 
   const activateByScrollPosition = () => {
+    fitTocToViewport();
     const markerTop = Math.max(120, window.innerHeight * 0.3);
     let activeSection = sections[0];
 

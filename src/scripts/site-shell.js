@@ -110,15 +110,20 @@ const status = search.querySelector('[data-search-status]');
 const items = JSON.parse(search.dataset.searchItems || '[]');
 let previousFocus;
 let composing = false;
+let selectedCategory = '';
 const shortcut = document.querySelector('[data-search-shortcut]');
 shortcut.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
 
 function renderSearch() {
   const query = input.value.trim().toLocaleLowerCase();
-  const matches = query ? items.filter((item) => [item.title, item.description, ...item.keywords].join(' ').toLocaleLowerCase().includes(query)) : items.filter((item) => item.type === '文章').slice(0, 6);
-  status.textContent = query ? `找到 ${matches.length} 条相关内容` : '最近更新';
+  const terms = query.split(/\s+/).filter(Boolean);
+  const matches = terms.length || selectedCategory
+    ? items.filter((item) => (!selectedCategory || item.category === selectedCategory)
+      && terms.every((term) => [item.title, item.description, ...item.keywords].join(' ').toLocaleLowerCase().includes(term)))
+    : items.filter((item) => item.type === '文章').slice(0, 6);
+  status.textContent = terms.length || selectedCategory ? `找到 ${matches.length} 条相关内容` : '最近更新';
   results.replaceChildren();
-  search.querySelectorAll('[data-search-filter]').forEach((filter) => filter.setAttribute('aria-pressed', String(filter.dataset.searchFilter === input.value)));
+  search.querySelectorAll('[data-search-filter]').forEach((filter) => filter.setAttribute('aria-pressed', String(filter.dataset.searchFilter === selectedCategory)));
   if (!matches.length) {
     const empty = document.createElement('p');
     empty.className = 'search-empty';
@@ -173,12 +178,17 @@ input.addEventListener('compositionstart', () => { composing = true; });
 input.addEventListener('compositionend', () => { composing = false; renderSearch(); });
 input.addEventListener('input', () => { if (!composing) renderSearch(); });
 search.querySelectorAll('[data-search-filter]').forEach((filter) => filter.addEventListener('click', () => {
-  input.value = filter.dataset.searchFilter;
+  selectedCategory = selectedCategory === filter.dataset.searchFilter ? '' : filter.dataset.searchFilter;
   renderSearch();
   input.focus();
 }));
 search.addEventListener('keydown', (event) => {
   if (event.isComposing || composing) return;
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    search.close();
+    return;
+  }
   const links = Array.from(results.querySelectorAll('a'));
   const index = links.indexOf(document.activeElement);
   if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && (event.target === input || index >= 0)) {

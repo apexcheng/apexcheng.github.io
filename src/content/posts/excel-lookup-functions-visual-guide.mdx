@@ -626,6 +626,7 @@ MATCH 和 XMATCH 都可以完成这个案例。当前版本支持 XMATCH 时，�
     border-color: #2e4a62;
     background: #0a1826;
   }
+  html[data-theme='dark'] .lookup-case__formula { color: #e3effb; }
   html[data-theme='dark'] .lookup-case__table { border-color: #31516b; background: #0b1927; }
   html[data-theme='dark'] .lookup-case__table td { border-color: #29475f; background: #0b1927; }
   html[data-theme='dark'] .lookup-case__table .sheet-column-letters th,
@@ -648,7 +649,7 @@ MATCH 和 XMATCH 都可以完成这个案例。当前版本支持 XMATCH 时，�
     .lookup-case__header { align-items: start; flex-direction: column; }
     .lookup-case__header p { max-width: none; text-align: left; }
     .lookup-case__table-wrap { overflow-x: auto; }
-    .lookup-case__table { min-width: 620px; }
+    .lookup-case__table-wrap > .lookup-case__table { display: table; width: max-content; max-width: none; min-width: 100%; }
     .lookup-case__steps.three-steps { grid-template-columns: 1fr; }
     .lookup-case__path,
     .lookup-composition-board { grid-template-columns: 1fr; }
