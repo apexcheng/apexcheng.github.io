@@ -19,11 +19,11 @@ describe('articles page category filter', () => {
     expect(articleListSource).toContain('data-article-item');
     expect(articleListSource).toContain('data-category={post.data.category}');
     expect(categorySource).toContain('getStaticPaths');
-    expect(articlesSource).toContain("post.data.category !== '视觉实验室'");
-    expect(articlesSource).toContain("itemCategory !== '视觉实验室'");
-    expect(articlesSource).toContain('!post.data.series');
-    expect(articlesSource).toContain('!itemSeries');
-    expect(articlesSource).toContain('<ArticleList posts={posts} hideVisualLab hideSeries showPinned />');
+    expect(articlesSource).toContain('!post.data.draft && !post.data.private');
+    expect(articlesSource).toContain('var isVisible = !category || itemCategory === category;');
+    expect(articlesSource).not.toContain("post.data.category !== '视觉实验室'");
+    expect(articlesSource).not.toContain('!post.data.series');
+    expect(articlesSource).toContain('<ArticleList posts={posts} showPinned />');
     expect(articleListSource).toContain("data-series={post.data.series ?? ''}");
     expect(articleListSource).toContain('(hideSeries && post.data.series)');
   });

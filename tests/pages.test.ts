@@ -126,4 +126,35 @@ describe('front page structure', () => {
     expect(rssSource).toContain("getCollection('posts')");
     expect(rssSource).toContain('withBase(`/articles/${post.slug}/`)');
   });
+
+  it('renders grouped long mobile TOCs, flat short TOCs and native heading links', () => {
+    expect(articleDetailSource).toContain('tocHeadings.length >= 12 ? groupTocHeadings(tocHeadings) : null');
+    expect(articleDetailSource).toContain('mobileTocGroups ? mobileTocGroups.map');
+    expect(articleDetailSource).toContain('data-toc-group open={index === 0}');
+    expect(articleDetailSource).toContain('class="toc-group-title"');
+    expect(articleDetailSource).toContain('跳到本章开头 ↗');
+    expect(articleDetailSource).toContain('href={`#${group.heading.slug}`}');
+    expect(articleDetailSource).toContain('href={`#${heading.slug}`}');
+    expect(articleDetailSource).toContain(') : tocHeadings.map');
+    expect(articleDetailSource).not.toContain('<details class="mobile-toc-panel" open');
+  });
+
+  it('omits empty TOC furniture and recommendations from component-led articles', () => {
+    expect(articleDetailSource).toContain('{hasToc && <div class="article-sidebar"');
+    expect(articleDetailSource).toContain('{hasToc && <div class="article-sidebar-restore"');
+    expect(articleDetailSource).toContain('{hasToc && <details class="mobile-toc-panel"');
+    expect(articleDetailSource).toContain('!post.data.series && hasToc');
+    expect(readFileSync('src/styles/site-shell.css', 'utf8')).toContain(".article-shell[data-has-toc='false'] { grid-template-columns: minmax(0, 1fr); }");
+    const story = readFileSync('src/components/ReviewAnalysisStory.astro', 'utf8');
+    expect(story).toContain('技术实践 / 文章');
+    expect(story).toContain("href={withBase('/articles/')}");
+    expect(story.match(/<h1>/g)).toHaveLength(1);
+  });
+
+  it('renders recommendations as article links only when matches exist', () => {
+    expect(articleDetailSource).toContain('{relatedPosts.length > 0 && (');
+    expect(articleDetailSource).toContain('aria-label="继续阅读"');
+    expect(articleDetailSource).toContain('href={withBase(`/articles/${related.slug}/`)}');
+    expect(articleDetailSource).toContain('/scripts/article-overflow.js');
+  });
 });

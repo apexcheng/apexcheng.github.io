@@ -1,4 +1,12 @@
+---
+import { withBase } from '../utils/paths';
+---
+
 <section class="review-story" data-review-story>
+  <div class="story-context">
+    <span>技术实践 / 文章</span>
+    <a href={withBase('/articles/')}>返回全部文章 <span aria-hidden="true">↗</span></a>
+  </div>
   <nav class="story-rail" aria-label="文章章节">
     <a class="rail-brand" href="#review-overview" aria-label="返回文章开头">
       <span>REVIEW</span>
@@ -329,6 +337,10 @@
   .review-story * { box-sizing: border-box; }
   .review-story h1, .review-story h2, .review-story h3, .review-story p { margin-top: 0; }
   .review-story a { background: none; text-decoration: none; }
+
+  .story-context { align-items: center; background: var(--story-paper); border-bottom: 1px solid var(--story-line); color: #475569; display: flex; flex-wrap: wrap; font-size: 12px; gap: 8px 20px; justify-content: space-between; padding: 10px clamp(20px, 5vw, 84px); }
+  .story-context a { color: var(--story-ink); font-weight: 500; padding-block: 4px; }
+  .story-context a:focus-visible { outline: 2px solid var(--story-blue); outline-offset: 4px; }
 
   .story-rail {
     align-items: center;

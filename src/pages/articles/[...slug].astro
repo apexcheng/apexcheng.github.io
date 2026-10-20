@@ -5,6 +5,7 @@ import { getSeriesMeta } from '../../data/series';
 import { siteMeta } from '../../data/site';
 import { formatPostDate } from '../../utils/dates';
 import { withBase } from '../../utils/paths';
+import { getRelatedPosts, groupTocHeadings } from '../../utils/article-reading';
 
 export async function getStaticPaths() {
   const posts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private);
@@ -17,6 +18,12 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
 const tocHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const hasToc = tocHeadings.length > 0;
+const mobileTocGroups = tocHeadings.length >= 12 ? groupTocHeadings(tocHeadings) : null;
+// Component-led articles without Markdown headings keep their own ending/layout.
+const relatedPosts = !post.data.series && hasToc
+  ? getRelatedPosts(post, await getCollection('posts'))
+  : [];
 const seriesMeta = post.data.series ? getSeriesMeta(post.data.series) : undefined;
 const seriesPosts = post.data.series
   ? (await getCollection('posts'))
@@ -29,8 +36,8 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
 ---
 
 <SiteLayout title={post.data.title} active={post.data.series ? 'series' : 'articles'} description={post.data.description}>
-  <main class="page-content article-shell" data-article-shell data-series-id={post.data.series}>
-    <div class="article-sidebar" id="article-sidebar">
+  <main class="page-content article-shell" data-article-shell data-series-id={post.data.series} data-has-toc={hasToc ? 'true' : 'false'}>
+    {hasToc && <div class="article-sidebar" id="article-sidebar">
       <aside class="article-info desktop-article-info">
         <h2>文章信息</h2>
         <p>{post.data.category}</p>
@@ -61,9 +68,9 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
           <a class={`toc-link toc-link-depth-${heading.depth}`} href={`#${heading.slug}`}>{heading.text}</a>
         ))}
       </aside>
-    </div>
+    </div>}
     <article class="article-content">
-      <div class="article-sidebar-restore" data-article-sidebar-restore-wrap hidden>
+      {hasToc && <div class="article-sidebar-restore" data-article-sidebar-restore-wrap hidden>
         <button
           class="article-sidebar-restore-button"
           type="button"
@@ -77,7 +84,7 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
           </svg>
           <span>展开目录</span>
         </button>
-      </div>
+      </div>}
       {post.data.series && seriesMeta && seriesIndex >= 0 && (
         <a class="article-series-kicker" href={withBase(`/series/${post.data.series}/`)}>
           <span>系列 · {seriesMeta.title}</span>
@@ -91,17 +98,36 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
         <span>作者：{siteMeta.authorName}</span>
         <span>更新于 {formatPostDate(post.data.updated ?? post.data.date)}</span>
       </div>
-      <details class="mobile-toc-panel">
+      {hasToc && <details class="mobile-toc-panel">
         <summary>
           <strong>本文目录</strong>
-          <span>{tocHeadings.length} 节 · 点击展开</span>
+          <span>{tocHeadings.length} 节 · <span class="toc-when-closed">展开</span><span class="toc-when-open">收起</span></span>
         </summary>
         <nav aria-label="本文目录">
-          {tocHeadings.map((heading) => (
+          {mobileTocGroups ? mobileTocGroups.map((group, index) => (
+            group.children.length ? (
+              <details class="mobile-toc-group" data-toc-group open={index === 0}>
+                <summary>
+                  <span class="toc-group-title">{group.heading?.text ?? '开篇'}</span>
+                  <span class="toc-group-toggle">{group.children.length} 节 <span aria-hidden="true">⌄</span></span>
+                </summary>
+                {group.heading && (
+                  <a class="toc-link toc-link-depth-2 toc-group-overview" href={`#${group.heading.slug}`} aria-label={`跳转至：${group.heading.text}`}>跳到本章开头 ↗</a>
+                )}
+                {group.children.map((heading) => (
+                  <a class="toc-link toc-link-depth-3" href={`#${heading.slug}`}>{heading.text}</a>
+                ))}
+              </details>
+            ) : (
+              <div data-toc-group>
+                <a class="toc-link toc-link-depth-2" href={`#${group.heading!.slug}`}>{group.heading!.text}</a>
+              </div>
+            )
+          )) : tocHeadings.map((heading) => (
             <a class={`toc-link toc-link-depth-${heading.depth}`} href={`#${heading.slug}`}>{heading.text}</a>
           ))}
         </nav>
-      </details>
+      </details>}
       <Content />
       {post.data.series && seriesMeta && seriesIndex >= 0 && (
         <nav class="series-pagination" aria-label={`${seriesMeta.title} 系列导航`}>
@@ -130,9 +156,23 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
           </div>
         </nav>
       )}
+      {relatedPosts.length > 0 && (
+        <nav class="related-reading" aria-label="继续阅读">
+          <div class="related-reading-head">
+            <h2>继续阅读</h2>
+            <a href={withBase('/articles/')}>全部文章 <span aria-hidden="true">→</span></a>
+          </div>
+          <ul>
+            {relatedPosts.map((related) => (
+              <li><a href={withBase(`/articles/${related.slug}/`)}>{related.data.title}<span aria-hidden="true">↗</span></a></li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </article>
   </main>
   <script src="/scripts/active-toc.js" defer></script>
+  <script src="/scripts/article-overflow.js" defer></script>
   <script is:inline>
     (function () {
       var shell = document.querySelector('[data-article-shell]');
