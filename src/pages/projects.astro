@@ -1,27 +1,51 @@
 ---
 import ProjectCard from '../components/ProjectCard.astro';
+import ProjectVisual from '../components/ProjectVisual.astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
-import { projects } from '../data/projects';
+import { getProject, portfolioMainId, portfolioSpotlightIds, projectPath, projects } from '../data/projects';
+import { withBase } from '../utils/paths';
+import '../styles/projects.css';
+
+const mainProject = getProject(portfolioMainId)!;
+const spotlights = portfolioSpotlightIds.map((id) => getProject(id)!);
+const featuredIds = new Set([mainProject.id, ...spotlights.map((project) => project.id)]);
+const moreProjects = projects.filter((project) => !featuredIds.has(project.id));
 ---
 
-<SiteLayout title="项目记录" active="projects">
-  <main class="page-content">
-    <section class="project-hero">
-      <div>
-        <p class="eyebrow">项目记录</p>
-        <h1 class="page-title">项目记录</h1>
-        <p class="page-lead">
-          这里展示的不是夸张作品集，而是可复盘的实践记录：背景、方案、实现、图表和踩坑。适合放 AI/RPA/编程相关的小项目和长期维护项目。
-        </p>
+<SiteLayout title="项目实践" active="projects" description="真实的系统建设、跨平台自动化与 AI 工程实践；以脱敏案例和公开资料说明项目价值、实现方式与边界。">
+  <main class="page-content portfolio-directory">
+    <header class="portfolio-intro">
+      <div class="case-kicker">SELECTED WORK / 项目实践</div>
+      <h1>把真实问题，<br /><em>做成可以运行的系统。</em></h1>
+      <p>从电商运营到跨平台自动化，记录项目为什么被做出来、如何解决问题，以及背后的技术选择。企业项目只展示脱敏案例。</p>
+      <div class="portfolio-intro-meta"><span>真实项目 · 工程实践</span><span>不含未经批准的生产截图</span></div>
+    </header>
+
+    <section class="portfolio-feature-grid" aria-label="精选项目">
+      <article class="portfolio-main-project">
+        <div class="case-kicker">01 / BUSINESS PLATFORM</div>
+        <div class="portfolio-main-project-copy">
+          <p>{mainProject.category}</p>
+          <h2><a href={withBase(projectPath(mainProject))}>{mainProject.title}</a></h2>
+          <p>{mainProject.description}</p>
+        </div>
+        <ProjectVisual project={mainProject} compact />
+        <a class="case-link-primary" href={withBase(projectPath(mainProject))}>查看项目案例 <span aria-hidden="true">↗</span></a>
+      </article>
+      <div class="portfolio-feature-side">
+        {spotlights.map((project, index) => <ProjectCard project={project} index={index + 1} variant="spotlight" />)}
       </div>
-      <aside class="project-summary">
-        <b>{projects.length}</b>
-        <h2>项目复盘</h2>
-        <p>每个项目建议包含：目标、输入输出、关键流程图、技术选择、结果和后续改进。</p>
-      </aside>
     </section>
-    <section class="project-grid project-page-grid">
-      {projects.map((project, index) => <ProjectCard project={project} index={index} />)}
+
+    <section class="portfolio-more" aria-labelledby="portfolio-more-title">
+      <header class="portfolio-section-heading">
+        <div><span class="case-kicker">MORE SELECTED WORK</span><h2 id="portfolio-more-title">更多实际项目</h2></div>
+        <p>可公开的技术成果、子系统与内容工程。</p>
+      </header>
+      <div class="portfolio-more-list">
+        {moreProjects.map((project) => <ProjectCard project={project} index={projects.indexOf(project)} />)}
+      </div>
     </section>
+    <p class="portfolio-endnote">部分项目来自内部业务环境。图解只说明技术原理，不提供生产系统访问入口，不以演示数据冒充运行成果。</p>
   </main>
 </SiteLayout>

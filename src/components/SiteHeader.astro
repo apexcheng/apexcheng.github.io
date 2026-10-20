@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import { Search, Menu, X, Sun, Moon, ArrowUpRight, Sparkles, Check } from '@lucide/astro';
-import { projects } from '../data/projects';
+import { projects, projectPath } from '../data/projects';
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
 
@@ -24,7 +24,7 @@ const searchItems = [
   })),
   ...projects.map((project) => ({
     type: '项目', title: project.title, description: project.description,
-    href: project.url ?? withBase('/projects/'), category: '', keywords: [project.type, ...project.tags],
+    href: withBase(projectPath(project)), category: '', keywords: [project.type, project.id, ...project.tags, ...(project.searchKeywords ?? [])],
   })),
 ];
 const returnPath = encodeURIComponent(Astro.url.pathname + Astro.url.search);

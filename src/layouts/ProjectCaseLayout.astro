@@ -1,0 +1,111 @@
+---
+import SiteLayout from './SiteLayout.astro';
+import ProjectVisual from '../components/ProjectVisual.astro';
+import { getProject, projectPath, type Project } from '../data/projects';
+import { withBase } from '../utils/paths';
+import '../styles/projects.css';
+
+interface Props { project: Project }
+const { project } = Astro.props;
+const parent = project.parentId ? getProject(project.parentId) : undefined;
+const isMajor = ['hangqiao', 'inventory-rpa', 'yingdao-agent-development'].includes(project.id);
+const projectNumber = project.id === 'hangqiao' ? '01' : project.id === 'inventory-rpa' ? '02' : project.id === 'yingdao-agent-development' ? '03' : String(4 + ['review-analysis-agent', 'hangqiao/ai-table', 'blog-content-engineering'].indexOf(project.id)).padStart(2, '0');
+const linked = project.links.map((link) => ({
+  ...link,
+  url: /^https?:\/\//.test(link.href) ? link.href : withBase(link.href),
+  external: /^https?:\/\//.test(link.href),
+}));
+---
+
+<SiteLayout title={project.title} active="projects" description={project.description}>
+  <main class:list={['page-content', 'case-detail', isMajor && 'case-detail--major']} data-project-id={project.id}>
+    <nav class="case-breadcrumb" aria-label="当前位置">
+      <a href={withBase('/projects/')}>所有项目</a>
+      {parent && <><span aria-hidden="true">/</span><a href={withBase(projectPath(parent))}>{parent.title}</a></>}
+      <span aria-hidden="true">/</span><span aria-current="page">{project.title}</span>
+    </nav>
+
+    <header class="case-detail-hero">
+      <div class="case-detail-hero-copy">
+        <span class="case-kicker">CASE {projectNumber} / {project.type}</span>
+        <h1>{project.title}</h1>
+        <p class="case-detail-lead">{project.lead}</p>
+        <div class="case-identity">
+          <span>{project.category}</span>
+          {project.tags.map((tag) => <span>{tag}</span>)}
+        </div>
+      </div>
+      <aside class="case-hero-margin">
+        <span class="case-kicker">IN CONTEXT</span>
+        <p>{project.description}</p>
+        <a href="#case-process">了解实现路径 <span aria-hidden="true">↓</span></a>
+      </aside>
+    </header>
+
+    <div class="case-overview" aria-label="问题背景与解决思路">
+      <section>
+        <span class="case-kicker">01 / THE PROBLEM</span>
+        <h2>为什么需要这个项目</h2>
+        <p>{project.challenge}</p>
+      </section>
+      <section>
+        <span class="case-kicker">02 / THE APPROACH</span>
+        <h2>解决思路</h2>
+        <p>{project.approach}</p>
+      </section>
+    </div>
+
+    <section class="case-process" id="case-process" aria-labelledby="case-process-title">
+      <div class="case-section-title">
+        <div><span class="case-kicker">03 / SYSTEM & PROCESS</span><h2 id="case-process-title">{project.id === 'hangqiao' ? '系统职责，先于组件细节。' : project.id === 'inventory-rpa' ? '从卖空预警，到平台库存回写。' : project.id === 'yingdao-agent-development' ? '从查到依据，到验证业务。' : '关键流程，如何衔接。'}</h2></div>
+        <p>所有图解均由已确认的项目功能整理，不是生产系统截图或实时监控。</p>
+      </div>
+      <ProjectVisual project={project} />
+    </section>
+
+    <section class="case-decisions" aria-labelledby="case-decisions-title">
+      <div class="case-section-title">
+        <div><span class="case-kicker">04 / ENGINEERING DECISIONS</span><h2 id="case-decisions-title">真正需要处理的细节</h2></div>
+        <p>不只记录功能，也记录影响维护和业务可靠性的取舍。</p>
+      </div>
+      <div class="case-decision-list">
+        {project.decisions.map((decision, index) => (
+          <article>
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            <div><h3>{decision.title}</h3><p>{decision.description}</p></div>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="case-summary" aria-labelledby="case-summary-title">
+      <div>
+        <span class="case-kicker">05 / WHAT EXISTS</span>
+        <h2 id="case-summary-title">已有成果与现状</h2>
+        <ul>{project.outcomes.map((item) => <li>{item}</li>)}</ul>
+      </div>
+      <aside class="case-boundary">
+        <span class="case-kicker">SCOPE & LIMITS</span>
+        <h3>公开与技术边界</h3>
+        <ul>{project.boundaries.map((item) => <li>{item}</li>)}</ul>
+      </aside>
+    </section>
+
+    <section class="case-resources" aria-labelledby="case-resources-title">
+      <div class="case-section-title">
+        <div><span class="case-kicker">06 / READ FURTHER</span><h2 id="case-resources-title">继续了解这个项目</h2></div>
+        <p>这里提供案例、公开文章或源码资料，不包含内部生产系统地址。</p>
+      </div>
+      <div class="case-resource-list">
+        {linked.map((link) => (
+          <a href={link.url} target={link.external ? '_blank' : undefined} rel={link.external ? 'noopener noreferrer' : undefined}>
+            <div><strong>{link.title}</strong><span>{link.description}</span></div><span aria-hidden="true">↗</span>
+          </a>
+        ))}
+        {linked.length === 0 && <p>当前案例仅提供已核实的项目原理说明，暂无公开源码或演示地址。</p>}
+      </div>
+    </section>
+
+    <footer class="case-detail-footer"><a href={withBase('/projects/')}>← 返回全部项目</a><span>CASE {projectNumber} / PROJECT NOTES</span></footer>
+  </main>
+</SiteLayout>

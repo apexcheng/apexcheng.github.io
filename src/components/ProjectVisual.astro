@@ -1,0 +1,52 @@
+---
+import type { Project } from '../data/projects';
+
+interface Props { project: Project; compact?: boolean }
+const { project, compact = false } = Astro.props;
+const isPlatform = project.id === 'hangqiao';
+const isInventory = project.id === 'inventory-rpa';
+const isKnowledge = project.id === 'yingdao-agent-development';
+---
+
+<figure class:list={['case-visual', compact && 'case-visual--compact', isPlatform && 'case-visual--system', isInventory && 'case-visual--execution', isKnowledge && 'case-visual--knowledge']}>
+  <div class="case-visual-heading">
+    <span>{isPlatform ? 'BUSINESS CAPABILITIES' : isInventory ? 'EXECUTION TRACK' : isKnowledge ? 'DEVELOPMENT & VALIDATION' : 'PROJECT WORKFLOW'}</span>
+    <span>{compact ? 'OVERVIEW' : '01 / HOW IT WORKS'}</span>
+  </div>
+  {isPlatform ? (
+    <div class="case-system-map" role="img" aria-label="航桥系统职责示意：运营入口统领 ERP 数据、业务处理、AI 表格与自动化协同">
+      <div class="case-system-core"><span>统一业务入口</span><strong>航桥</strong><small>运营工作台</small></div>
+      <div class="case-system-capabilities">
+        {project.flow.slice(1).map((step) => (
+          <div class="case-system-node"><span>{step.layer}</span><strong>{step.label}</strong></div>
+        ))}
+      </div>
+    </div>
+  ) : isInventory ? (
+    <ol class="case-execution-track" aria-label="平台库存处理步骤">
+      {project.flow.map((step, index) => (
+        <li>
+          <span class="case-track-number">{String(index + 1).padStart(2, '0')}</span>
+          <div class="case-track-content"><small>{step.layer}</small><strong>{step.label}</strong>{!compact && <p>{step.detail}</p>}</div>
+        </li>
+      ))}
+    </ol>
+  ) : isKnowledge ? (
+    <div class="case-knowledge-track">
+      {project.flow.map((step, index) => (
+        <div class="case-knowledge-step">
+          <span>{String(index + 1).padStart(2, '0')} / {step.layer}</span>
+          <strong>{step.label}</strong>{!compact && <small>{step.detail}</small>}
+        </div>
+      ))}
+      <div class="case-knowledge-verify"><span>网页与元素验证</span><span>≠</span><span>实际业务运行验证</span></div>
+    </div>
+  ) : (
+    <ol class="case-generic-track">
+      {project.flow.map((step, index) => (
+        <li><small>{String(index + 1).padStart(2, '0')} / {step.layer}</small><strong>{step.label}</strong>{!compact && <p>{step.detail}</p>}</li>
+      ))}
+    </ol>
+  )}
+  <figcaption>基于已确认功能整理的原理示意 · 非真实系统截图或运行监控数据</figcaption>
+</figure>

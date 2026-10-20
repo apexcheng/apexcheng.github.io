@@ -31,8 +31,11 @@ describe('front page structure', () => {
   it('keeps home project entry aligned with the projects page', () => {
     expect(homeSource).toContain("withBase('/projects/')");
     expect(homeSource).toContain('查看项目');
-    expect(projectsSource).toContain('项目记录');
-    expect(projectsSource).toContain('projects.map');
+    expect(projectsSource).toContain('项目实践');
+    expect(projectsSource).toContain('moreProjects.map');
+    expect(projectsSource).toContain('ProjectVisual project={mainProject} compact');
+    expect(homeSource).toContain('getProject(featuredProjectId)');
+    expect(homeSource).toContain('withBase(projectPath(featuredProject))');
   });
 
   it('keeps homepage intro returns and internal home navigation state consistent', () => {

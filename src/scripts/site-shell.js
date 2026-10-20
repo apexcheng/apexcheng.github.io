@@ -127,7 +127,7 @@ function renderSearch() {
   if (!matches.length) {
     const empty = document.createElement('p');
     empty.className = 'search-empty';
-    empty.textContent = '还没有找到这篇笔记。试试更短的关键词，或从分类开始。';
+    empty.textContent = '没有找到相关内容。试试更短的关键词，或从分类开始。';
     results.append(empty);
   }
   matches.forEach((item) => {
