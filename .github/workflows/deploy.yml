@@ -24,6 +24,10 @@ jobs:
         uses: withastro/action@v6
         with:
           package-manager: npm
+      - name: Test and verify generated links
+        run: |
+          npm test
+          npm run check:links
 
   deploy:
     needs: build

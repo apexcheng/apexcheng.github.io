@@ -33,7 +33,7 @@ import { withBase } from '../utils/paths';
       </p>
       <div class="hero-actions">
         <a class="primary-action" href="#review-problem">从系统问题开始</a>
-        <a class="text-action" href="https://github.com/apexcheng/review-analysis-reporter-skill" target="_blank" rel="noreferrer">查看 GitHub 项目 ↗</a>
+        <a class="text-action" href={withBase('/projects/review-analysis-agent/')}>查看项目案例 ↗</a>
       </div>
     </div>
 
@@ -70,7 +70,7 @@ import { withBase } from '../utils/paths';
     <p class="privacy-note">公开版本已去掉真实店铺、订单号、评价原文、手机号、Webhook、表格地址和内部配置。</p>
   </header>
 
-  <main>
+  <div class="story-main">
     <section class="story-chapter problem-chapter" id="review-problem" data-story-section>
       <div class="chapter-index" aria-hidden="true">01</div>
       <div class="chapter-intro">
@@ -274,9 +274,9 @@ import { withBase } from '../utils/paths';
       <h2>评价分析 Agent 的价值，<br /><em>不是会写报告。</em></h2>
       <p>真正困难的是数据口径、事实边界、发送结果、状态回写和失败兜底。只有这些环节连起来，评价分析才从一次性的 AI 总结，变成可以长期运行的业务系统。</p>
       <div class="closing-pipeline"><span>评价进入</span><i>→</i><span>稳定送达</span><i>→</i><span>状态可追踪</span><i>→</i><strong>下一次只处理新数据</strong></div>
-      <a href="https://github.com/apexcheng/review-analysis-reporter-skill" target="_blank" rel="noreferrer">查看 review-analysis-reporter-skill 项目 <span>↗</span></a>
+      <a href={withBase('/projects/review-analysis-agent/')}>查看评价分析项目案例 <span>↗</span></a>
     </footer>
-  </main>
+  </div>
 </section>
 
 <script is:inline>
@@ -352,9 +352,10 @@ import { withBase } from '../utils/paths';
     min-height: 58px;
     padding: 0 clamp(20px, 5vw, 84px);
     position: sticky;
-    top: 0;
+    top: 86px;
     z-index: 20;
   }
+  .review-story [data-story-section] { scroll-margin-top: 160px; }
 
   .rail-brand { color: var(--story-ink); display: flex; flex-direction: column; font-family: ui-monospace, monospace; line-height: 1; }
   .rail-brand span { color: var(--story-blue-bright); font-size: 9px; letter-spacing: .18em; }
@@ -420,7 +421,7 @@ import { withBase } from '../utils/paths';
   .three-layer { display: grid; gap: 1px; grid-template-columns: repeat(3, 1fr); margin-top: 92px; background: #94a3b8; border: 1px solid #94a3b8; }
   .three-layer article { background: white; min-height: 300px; padding: 34px; }
   .three-layer span, .source-card > span, .fact-guards span, .run-track b, .gate-flow span, .mode-head span, .boundary-title span { color: var(--story-blue); font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: .12em; }
-  .three-layer h3 { font-size: 32px; margin: 42px 0 14px; }
+  .three-layer h3 { color: var(--story-ink); font-size: 32px; margin: 42px 0 14px; }
   .three-layer p { color: #64748b; line-height: 1.7; }
   .three-layer b { display: block; margin-top: 48px; }
 
@@ -428,7 +429,7 @@ import { withBase } from '../utils/paths';
   .source-merge { align-items: stretch; display: grid; gap: 18px; grid-template-columns: 1fr 120px 1fr; margin-top: 72px; }
   .source-card { background: white; border-top: 5px solid var(--story-blue-bright); padding: 32px; }
   .append-source { border-color: var(--story-amber); }
-  .source-card h3 { font-size: clamp(25px, 3vw, 38px); margin: 24px 0 32px; }
+  .source-card h3 { color: var(--story-ink); font-size: clamp(25px, 3vw, 38px); margin: 24px 0 32px; }
   .source-card dl { margin: 0; }
   .source-card dl div { border-top: 1px solid #dbe3ef; display: flex; justify-content: space-between; padding: 13px 0; }
   .source-card dt { color: #64748b; }
@@ -546,6 +547,10 @@ import { withBase } from '../utils/paths';
     .merge-core b { margin: 0; transform: rotate(90deg); }
     .run-track article { grid-template-columns: 70px 1fr; }
     .run-track em { grid-column: 2; justify-self: start; }
+  }
+  @media (max-width: 1059px) {
+    .story-rail { top: 74px; }
+    .review-story [data-story-section] { scroll-margin-top: 146px; }
   }
 
   @media (max-width: 640px) {

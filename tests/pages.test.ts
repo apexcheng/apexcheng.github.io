@@ -77,8 +77,9 @@ describe('front page structure', () => {
     expect(aboutSource).toContain('核心技能');
     expect(aboutSource).toContain('BrianBlog 博客系统');
     expect(aboutSource).toContain('微信二维码');
-    expect(aboutSource).toContain("withBase('/about-assets/user.png')");
+    expect(aboutSource).toContain("withBase('/about-assets/user-520.jpg')");
     expect(aboutSource).toContain("withBase('/about-assets/wx.png')");
+    expect(aboutSource).toContain('loading="lazy" decoding="async"');
     expect(aboutSource).toContain("withBase('/about-assets/resume.docx')");
   });
 

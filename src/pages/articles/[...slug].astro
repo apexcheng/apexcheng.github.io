@@ -16,6 +16,8 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
+// This component-led story provides its own visible H1.
+const hasStoryHeading = post.slug === 'ecommerce-review-analysis-agent-workflow';
 const { Content, headings } = await render(post);
 const tocHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const hasToc = tocHeadings.length > 0;
@@ -35,7 +37,7 @@ const previousSeriesPost = seriesIndex > 0 ? seriesPosts[seriesIndex - 1] : unde
 const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 ? seriesPosts[seriesIndex + 1] : undefined;
 ---
 
-<SiteLayout title={post.data.title} active={post.data.series ? 'series' : 'articles'} description={post.data.description}>
+<SiteLayout title={post.data.title} active={post.data.series ? 'series' : 'articles'} description={post.data.description} socialType="article" published={post.data.date} updated={post.data.updated}>
   <main class="page-content article-shell" data-article-shell data-series-id={post.data.series} data-has-toc={hasToc ? 'true' : 'false'}>
     {hasToc && <div class="article-sidebar" id="article-sidebar">
       <aside class="article-info desktop-article-info">
@@ -92,7 +94,7 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
         </a>
       )}
       <span class="pill">{post.data.category}</span>
-      <h1>{post.data.title}</h1>
+      {!hasStoryHeading && <h1>{post.data.title}</h1>}
       <p class="article-description">{post.data.description}</p>
       <div class="meta-row">
         <span>作者：{siteMeta.authorName}</span>
@@ -188,6 +190,8 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
         collapseButton.setAttribute('aria-expanded', isFocusMode ? 'false' : 'true');
         restoreButton.setAttribute('aria-expanded', isFocusMode ? 'false' : 'true');
         restoreWrap.hidden = !isFocusMode;
+        // The clicked control becomes hidden: hand keyboard focus to its visible counterpart.
+        (isFocusMode ? restoreButton : collapseButton).focus({ preventScroll: true });
       }
 
       collapseButton.addEventListener('click', function () {

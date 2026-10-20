@@ -136,7 +136,6 @@ export const projects: Project[] = [
     ],
     links: [
       { title: '阅读可视化技术案例', href: '/articles/ecommerce-review-analysis-agent-workflow/', description: '查看评价分析到交付的完整过程' },
-      { title: '访问公开 GitHub 仓库', href: 'https://github.com/apexcheng/review-analysis-reporter-skill', description: '查看已公开的相关代码资料' },
     ],
   },
   {
