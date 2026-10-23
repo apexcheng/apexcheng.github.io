@@ -11,12 +11,9 @@ description: Project-adapted Taste Skill for new pages, new visual concepts, or 
 
 ## 使用边界
 
-1. 先遵守项目根目录 `AGENTS.md` 和其路由到的视觉、写作、开发规则。
-2. 高视觉文章先按 `docs/ARTICLE_VISUAL_SYSTEM.md` 判断内容关系、整页视觉概念和移动端转换，再使用本 Skill 优化表现。
-3. 不把文章自动改造成 Landing Page、SaaS 官网、Bento 页面或固定卡片模板。
-4. 不因为本 Skill 的通用推荐迁移框架、替换 Astro / MDX、改用 React / Next.js / Tailwind，或安装新的设计系统。
-5. 已有主题、字体、组件、颜色语义和文章专属视觉语言优先。
-6. 普通改字、事实修正、链接、frontmatter、小范围样式修复不使用本 Skill。
+1. 任务触发和优先级遵循 `AGENTS.md`；文章内容关系、排版和响应式标准统一以 `docs/ARTICLE_VISUAL_SYSTEM.md` 为准。
+2. 本 Skill 只补充新的视觉方向和表现手法，不把文章自动改成 Landing Page、SaaS 官网或固定卡片模板。
+3. 沿用已有 Astro / MDX、字体、组件和主题；不因通用设计建议迁移框架或新装设计系统。
 
 ## 先读设计语境
 
@@ -96,9 +93,6 @@ description: Project-adapted Taste Skill for new pages, new visual concepts, or 
 
 ## 完成前检查
 
-- 视觉是否真的帮助读者理解，而不是只变漂亮。
-- 是否出现重复模板感或典型 AI 网页套路。
-- 页面层级、正文阅读、桌面端和移动端是否都成立。
-- 动效是否有信息意义，并提供 reduced-motion 退化。
-- 是否保持当前文章自己的视觉概念，而不是被本 Skill 改成统一 Taste 风格。
+- 按 `docs/ARTICLE_VISUAL_SYSTEM.md` 的视觉审查标准验收理解效率、可读性及移动端表现，不在此重复列出通用清单。
+- 额外确认视觉概念没有被套成统一的 Taste 风格，设计旋钮和动效选择符合当前文章。
 

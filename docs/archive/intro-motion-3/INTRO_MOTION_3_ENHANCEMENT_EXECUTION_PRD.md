@@ -6,7 +6,7 @@
 
 目标是在不破坏现有自动镜头、自由探索、手势、返回落版和博客入口逻辑的前提下，通过最小范围修改增加空间密度、经过事件和知识宇宙内容映射。
 
-产品方向以 `docs/INTRO_MOTION_3_ENHANCEMENT_PRD.md` 为准。
+产品方向以 `docs/archive/intro-motion-3/INTRO_MOTION_3_ENHANCEMENT_PRD.md` 为准。
 
 ## 2. 修改范围
 

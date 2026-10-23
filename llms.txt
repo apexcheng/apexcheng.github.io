@@ -1,10 +1,5 @@
-# Agent 快速入口
+# 仓库内 Agent 快速入口
 
-先读 `AGENTS.md`，再按其中的任务路由只读取当前任务需要的文件。
+本文件只用于本地仓库导航，不是独立规则，也不会作为网站的 `/llms.txt` 自动发布。
 
-- 代码任务：`docs/DEV_RULES.md`
-- 普通文章：`docs/writing/BLOG_AGENT.md` + 目标文章
-- 新文章或结构性重写：增加 `docs/ARTICLE_VISUAL_SYSTEM.md`；涉及 MDX 自定义实现时再读 `docs/MDX_WRITING_GUIDE.md`
-- 组件、模式、Demo、内容索引和 `TODO.md`：仅在对应需求出现时读取
-
-不要默认通读 `docs/`、全部文章或视觉实验室。
+统一读取 `AGENTS.md`，再按其中的任务路由按需加载 `docs/`、Skill、索引和目标文件；不要在这里另行维护规则副本。
