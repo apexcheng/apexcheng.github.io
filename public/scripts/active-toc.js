@@ -59,7 +59,7 @@ const updateTocActiveState = () => {
     const visiblePadding = 12;
     const linkRect = activeLink.getBoundingClientRect();
     const panelRect = desktopToc.getBoundingClientRect();
-    const headingHeight = desktopToc.querySelector?.('.toc-panel-head')?.getBoundingClientRect().height || 0;
+    const headingHeight = desktopToc.querySelector('summary')?.getBoundingClientRect().height || 0;
     if (linkRect.top < panelRect.top + headingHeight + visiblePadding) {
       desktopToc.scrollTop += linkRect.top - panelRect.top - headingHeight - visiblePadding;
     } else if (linkRect.bottom > panelRect.bottom - visiblePadding) {

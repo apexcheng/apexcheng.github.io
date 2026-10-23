@@ -40,27 +40,6 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
 <SiteLayout title={post.data.title} active={post.data.series ? 'series' : 'articles'} description={post.data.description} socialType="article" published={post.data.date} updated={post.data.updated}>
   <main class="page-content article-shell" data-article-shell data-series-id={post.data.series} data-has-toc={hasToc ? 'true' : 'false'}>
     {hasToc && <div class="article-sidebar" id="article-sidebar">
-      <aside class="toc-panel">
-        <div class="toc-panel-head">
-          <h2>本文目录</h2>
-          <button
-            class="toc-collapse-button"
-            type="button"
-            aria-controls="article-sidebar"
-            aria-expanded="true"
-            title="收起左侧栏，进入专注阅读"
-            data-article-sidebar-collapse
-          >
-            <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m12 5-5 5 5 5"></path>
-            </svg>
-            <span>收起</span>
-          </button>
-        </div>
-        {tocHeadings.map((heading) => (
-          <a class={`toc-link toc-link-depth-${heading.depth}`} href={`#${heading.slug}`}>{heading.text}</a>
-        ))}
-      </aside>
       <details class="article-info desktop-article-info">
         <summary>文章信息</summary>
         <div class="article-info-body">
@@ -72,6 +51,27 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
           </div>
         </div>
       </details>
+      <details class="toc-panel" open>
+        <summary>文章目录</summary>
+        <nav class="toc-panel-links" aria-label="文章目录">
+          {tocHeadings.map((heading) => (
+            <a class={`toc-link toc-link-depth-${heading.depth}`} href={`#${heading.slug}`}>{heading.text}</a>
+          ))}
+        </nav>
+      </details>
+      <button
+        class="toc-collapse-button"
+        type="button"
+        aria-controls="article-sidebar"
+        aria-expanded="true"
+        aria-label="收起左侧栏，进入专注阅读"
+        title="收起左侧栏，进入专注阅读"
+        data-article-sidebar-collapse
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m12 5-5 5 5 5"></path>
+        </svg>
+      </button>
     </div>}
     <article class="article-content">
       {hasToc && <div class="article-sidebar-restore" data-article-sidebar-restore-wrap hidden>

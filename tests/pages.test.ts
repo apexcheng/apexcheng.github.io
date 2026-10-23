@@ -120,17 +120,18 @@ describe('front page structure', () => {
     expect(articleDetailSource).toContain('class="article-sidebar"');
     expect(articleDetailSource).toContain('<details class="article-info desktop-article-info">');
     expect(articleDetailSource).toContain('<summary>文章信息</summary>');
-    expect(articleDetailSource.indexOf('<aside class="toc-panel">')).toBeLessThan(
-      articleDetailSource.indexOf('<details class="article-info desktop-article-info">'),
+    expect(articleDetailSource.indexOf('<details class="article-info desktop-article-info">')).toBeLessThan(
+      articleDetailSource.indexOf('<details class="toc-panel" open>'),
     );
+    expect(articleDetailSource).toContain('<summary>文章目录</summary>');
     expect(articleDetailSource).toContain('文章信息');
     expect(articleDetailSource).toContain('{post.data.category}');
     expect(articleDetailSource).toContain('post.data.tags.map');
     expect(articleDetailSource).toContain('class="article-content"');
     expect(articleDetailSource).toContain('<h1>{post.data.title}</h1>');
     expect(articleDetailSource).toContain('作者：{siteMeta.authorName}');
-    expect(articleDetailSource).toContain('class="toc-panel"');
-    expect(articleDetailSource).toContain('本文目录');
+    expect(articleDetailSource).toContain('<details class="toc-panel" open>');
+    expect(articleDetailSource).toContain('class="toc-panel-links"');
     expect(articleDetailSource).toContain('heading.depth === 2 || heading.depth === 3');
   });
 

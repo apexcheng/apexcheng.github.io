@@ -32,6 +32,7 @@ function setup({ hash = '', observer = true, empty = false } = {}) {
   const mobile = { ...node(), querySelector: () => summary };
   const desktop = {
     style: { maxHeight: '' }, scrollTop: 0, clientHeight: 100, scrollHeight: 600,
+    querySelector: () => ({ getBoundingClientRect: () => ({ height: 36 }) }),
     getClientRects: () => [{}], getBoundingClientRect: () => ({ top: 100, bottom: 200 }),
   };
   const groups = [0, 1].map(() => ({ ...node(), contains: (_element: any) => false }));
