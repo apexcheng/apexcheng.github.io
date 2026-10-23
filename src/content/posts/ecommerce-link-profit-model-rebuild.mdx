@@ -19,7 +19,8 @@ private: false
 <div class="profit-hero" aria-label="事实核算和预测核算的核心区别">
   <div class="profit-hero__copy">
     <span class="profit-eyebrow">电商利润模型 · 数据建模</span>
-    <div class="profit-hero__title">过去负责被记录，<br />未来负责被计算</div>
+    <div class="profit-hero__title">过去负责被记录，<br />未来负责被计算。</div>
+    <div class="profit-hero__subtitle">事实不可改写，预测随时更新。</div>
     <p>近 7 天已经发生的销售、采购、投流、物流和退款，不需要再用历史利润率去猜。事实直接核算；真正需要预测的，只剩尚未发生、但仍可能发生的退款风险。</p>
   </div>
   <div class="profit-hero__verdict">
@@ -401,11 +402,19 @@ private: false
 
   .profit-hero__title {
     max-width: 14ch;
-    margin: 0.65rem 0 0.85rem;
+    margin: 0.65rem 0 0.45rem;
     font-size: clamp(2rem, 4.7vw, 3.8rem);
     font-weight: 900;
     line-height: 1.04;
     letter-spacing: -0.05em;
+  }
+
+  .profit-hero__subtitle {
+    margin-bottom: 1rem;
+    color: var(--pr-blue);
+    font-size: clamp(1rem, 1.7vw, 1.25rem);
+    font-weight: 700;
+    line-height: 1.5;
   }
 
   .profit-hero__copy > p {
