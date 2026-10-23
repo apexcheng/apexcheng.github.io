@@ -16,6 +16,7 @@ const { posts, hideVisualLab = false, hideSeries = false, showPinned = false } =
       data-pinned={post.data.pinned ? 'true' : 'false'}
       data-published-at={post.data.date.valueOf()}
       data-updated-at={(post.data.updated ?? post.data.date).valueOf()}
+      data-search-text={[post.data.title, post.data.description, post.data.category, ...post.data.tags, post.data.series ? getSeriesMeta(post.data.series)?.title ?? '' : ''].join(' ').toLocaleLowerCase()}
       hidden={(hideVisualLab && post.data.category === '视觉实验室') || (hideSeries && post.data.series)}
     >
       <div>

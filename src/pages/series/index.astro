@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import { seriesMetaList } from '../../data/series';
+import ContentViewTabs from '../../components/ContentViewTabs.astro';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { withBase } from '../../utils/paths';
 
@@ -27,9 +28,10 @@ const seriesList = seriesMetaList
     <div class="series-workspace">
       <div class="series-main">
         <section class="series-hero">
-          <p class="eyebrow">系列</p>
-          <h1 class="page-title">按一条路线，把一个主题读完整</h1>
-          <p class="page-lead">有些内容不适合拆成互不相关的单篇文章。这里把连续主题整理成清晰的阅读路线。</p>
+          <p class="eyebrow">内容索引</p>
+          <h1 class="page-title">文章与系列</h1>
+          <ContentViewTabs active="series" />
+          <p class="page-lead">按主题整理的完整阅读路线。</p>
         </section>
 
         <section class="series-library" aria-label="系列列表">
@@ -123,14 +125,14 @@ const seriesList = seriesMetaList
 <style>
   .series-page {
     max-width: none;
-    padding-top: 54px;
+    padding-top: 44px;
   }
 
   .series-workspace {
     align-items: start;
     display: grid;
-    gap: clamp(30px, 3vw, 54px);
-    grid-template-columns: minmax(500px, 0.86fr) minmax(620px, 1.14fr);
+    gap: clamp(24px, 2.5vw, 42px);
+    grid-template-columns: minmax(430px, 0.86fr) minmax(540px, 1.14fr);
     margin: 0 auto;
     max-width: 1660px;
   }
@@ -141,22 +143,22 @@ const seriesList = seriesMetaList
   }
 
   .series-hero {
-    margin-bottom: 34px;
+    margin-bottom: 20px;
     max-width: 720px;
   }
 
   .series-library {
     display: grid;
-    gap: 16px;
+    gap: 12px;
   }
 
   .series-card {
     align-items: center;
     cursor: pointer;
-    gap: 20px;
-    grid-template-columns: 58px minmax(0, 1fr) auto;
-    min-height: 164px;
-    padding: 26px 28px;
+    gap: 16px;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    min-height: 132px;
+    padding: 19px 21px;
   }
 
   .series-card.is-active {
@@ -175,11 +177,11 @@ const seriesList = seriesMetaList
   }
 
   .series-card-index {
-    font-size: 38px;
+    font-size: 30px;
   }
 
   .series-card-body h2 {
-    font-size: 24px;
+    font-size: 20px;
     line-height: 1.28;
     margin: 5px 0 8px;
   }
@@ -206,9 +208,9 @@ const seriesList = seriesMetaList
     border: 1px solid color-mix(in srgb, var(--blue) 22%, var(--line));
     border-radius: 30px;
     box-shadow: 0 28px 80px rgba(40, 64, 112, 0.12);
-    min-height: calc(100vh - 126px);
+    min-height: 0;
     overflow: hidden;
-    padding: clamp(30px, 2.5vw, 42px);
+    padding: clamp(22px, 2vw, 32px);
     position: sticky;
     top: 96px;
   }
@@ -228,7 +230,7 @@ const seriesList = seriesMetaList
   .series-map-view {
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 210px);
+    min-height: 550px;
     position: relative;
     z-index: 1;
   }
@@ -263,7 +265,7 @@ const seriesList = seriesMetaList
 
   .series-map-header {
     max-width: 680px;
-    padding-top: clamp(30px, 4vh, 42px);
+    padding-top: 22px;
   }
 
   .series-map-kicker {
@@ -275,7 +277,7 @@ const seriesList = seriesMetaList
   }
 
   .series-map-header h2 {
-    font-size: clamp(30px, 2.7vw, 44px);
+    font-size: clamp(27px, 2.35vw, 38px);
     letter-spacing: -0.04em;
     line-height: 1.12;
     margin: 0;
@@ -482,13 +484,13 @@ const seriesList = seriesMetaList
     }
 
     .series-map-view {
-      min-height: 660px;
+      min-height: 530px;
     }
   }
 
   @media (max-width: 680px) {
     .series-page {
-      padding-top: 34px;
+      padding-top: 26px;
     }
 
     .series-card {
@@ -516,7 +518,7 @@ const seriesList = seriesMetaList
     }
 
     .series-map-view {
-      min-height: 620px;
+      min-height: 540px;
     }
 
     .series-map-header h2 {

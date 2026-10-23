@@ -2,12 +2,12 @@
 .journal-home :is(h1, h2, h3, p) { margin-top: 0; }
 .journal-home :is(h1, h2, h3) { font-weight: 500; }
 .journal-eyebrow { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 10px; letter-spacing: .12em; line-height: 1.5; margin-bottom: 18px; }
-.journal-hero { display: grid; grid-template-columns: 1.03fr 1fr; gap: clamp(36px, 6.5vw, 104px); padding: 68px 0 60px; align-items: center; }
+.journal-hero { display: grid; grid-template-columns: 1.03fr 1fr; gap: clamp(28px, 4vw, 60px); padding: 44px 0 40px; align-items: center; }
 .small-rule { width: 25px; height: 1px; background: var(--accent); }
-.hero-copy > .journal-eyebrow { font-size: 13px; letter-spacing: .08em; margin-bottom: 30px; }
-.journal-home h1 { font-size: clamp(44px, 4.9vw, 70px); line-height: 1.35; margin-bottom: 28px; font-weight: 500; }
+.hero-copy > .journal-eyebrow { font-size: 13px; letter-spacing: .08em; margin-bottom: 20px; }
+.journal-home h1 { font-size: clamp(34px, 3.6vw, 52px); line-height: 1.25; margin-bottom: 22px; font-weight: 500; }
 .journal-home h1 > span { color: var(--blue); }
-.journal-lead { font-size: 15px; line-height: 2; margin-bottom: 28px; }
+.journal-lead { font-size: 15px; line-height: 1.85; margin-bottom: 22px; }
 .journal-hero-links { display: flex; align-items: center; gap: 26px; }
 .ink-link { display: inline-flex; align-items: center; gap: 30px; min-height: 50px; padding: 0 22px; background: var(--ink); color: var(--bg); border-radius: 2px; font-size: 13px; transition: background .2s; }
 .quiet-link { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: var(--muted); font-size: 12px; }
@@ -44,15 +44,15 @@
 .topic-label { font-family: var(--mono-font); font-size: 9px; color: var(--soft); letter-spacing: .08em; }
 .topic-name { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 20px; margin: 12px 0 8px; }
 .topic-note { font-size: 12px; color: var(--muted); }
-.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 28px; margin-bottom: 35px; }
+.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 28px; margin-bottom: 24px; }
 .section-heading .journal-eyebrow { margin-bottom: 13px; }
-.section-heading h2 { font-size: 32px; line-height: 1.4; margin-bottom: 0; }
+.section-heading h2 { font-size: 26px; line-height: 1.4; margin-bottom: 0; }
 .text-link { display: inline-flex; align-items: center; gap: 14px; font-size: 12px; line-height: 1.6; min-height: 44px; white-space: nowrap; }
-.recent-section { padding: 88px 0 96px; scroll-margin-top: 112px; }
-.notebook-layout { display: grid; grid-template-columns: minmax(0, 1fr) 238px; gap: 64px; align-items: start; }
+.recent-section { padding: 56px 0 64px; scroll-margin-top: 90px; }
+.notebook-layout { display: grid; grid-template-columns: minmax(0, 1fr) 238px; gap: 44px; align-items: start; }
 .note-list { border-top: 1px solid var(--ink); }
 .note-row { border-bottom: 1px solid var(--line); }
-.note-row > a { display: grid; grid-template-columns: 88px minmax(0, 1fr) 21px; gap: 24px; padding: 28px 0; }
+.note-row > a { display: grid; grid-template-columns: 88px minmax(0, 1fr) 21px; gap: 24px; padding: 20px 0; }
 .note-row-date { display: grid; align-content: start; gap: 10px; padding-top: 5px; color: var(--muted); font-size: 10px; }
 .note-row-date time { font-family: var(--mono-font); font-size: 9px; }
 .note-row-date > span { color: var(--accent); }
@@ -68,7 +68,7 @@
 .letter-signature > span:first-child { font-size: 15px; }
 .letter-signature > span:last-child { color: var(--soft); font-size: 10px; }
 .margin-letter > a { display: flex; align-items: center; gap: 12px; margin-top: 34px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--blue); font-size: 11px; min-height: 44px; }
-.reading-room { display: grid; grid-template-columns: .85fr 1.5fr; gap: 66px; background: #243c2f; color: #ebeddf; padding: 50px 48px; border-radius: 2px; }
+.reading-room { display: grid; grid-template-columns: .85fr 1.5fr; gap: 44px; background: #243c2f; color: #ebeddf; padding: 36px 38px; border-radius: 2px; }
 .reading-room-intro { display: flex; flex-direction: column; align-items: flex-start; }
 .reading-room .journal-eyebrow { color: #b4c3ae; font-size: 9px; }
 .reading-room h2 { color: inherit; font-size: 34px; line-height: 1.6; margin-bottom: 18px; }
@@ -83,9 +83,9 @@
 .series-entry p { color: #bec9b9; font-size: 13px; line-height: 1.9; margin-bottom: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .series-count { display: flex; flex-direction: column; align-items: end; justify-content: space-between; gap: 20px; color: #bec9b9; font-size: 10px; padding-top: 6px; }
 .series-count svg { color: #e4d1ad; }
-.project-section { padding: 96px 0 88px; }
-.home-projects { display: grid; grid-template-columns: 1fr 1.2fr; gap: 60px; }
-.featured-project { background: var(--paper-soft); padding: 32px; display: flex; flex-direction: column; border-radius: 2px; }
+.project-section { padding: 56px 0; }
+.home-projects { display: grid; grid-template-columns: 1fr 1.2fr; gap: 40px; }
+.featured-project { background: var(--paper-soft); padding: 24px; display: flex; flex-direction: column; border-radius: 2px; }
 .project-schematic { padding: 9px 0 34px; }
 .process-heading { display: block; color: var(--muted); font-size: 10px; letter-spacing: .08em; }
 .project-process { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; list-style: none; padding: 0; margin: 20px 0 0; }
@@ -104,7 +104,7 @@
 .project-index h3 { font-size: 18px; line-height: 1.6; margin: 7px 0; }
 .project-index p { font-size: 13px; line-height: 1.9; margin-bottom: 0; }
 .project-index svg { position: absolute; right: 0; top: 47px; color: var(--muted); }
-.lab-section { display: grid; grid-template-columns: 1fr 1.2fr; gap: 60px; border-top: 1px solid var(--line); padding: 50px 0 75px; }
+.lab-section { display: grid; grid-template-columns: 1fr 1.2fr; gap: 40px; border-top: 1px solid var(--line); padding: 40px 0 56px; }
 .lab-intro h2 { font-size: 26px; line-height: 1.6; margin-bottom: 12px; }
 .lab-intro > p:not(.journal-eyebrow) { font-size: 14px; }
 .lab-index > a { display: grid; grid-template-columns: 24px minmax(0, 1fr) 18px; gap: 16px; align-items: center; padding: 22px 0; border-bottom: 1px solid var(--line); }

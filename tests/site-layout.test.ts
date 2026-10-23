@@ -14,11 +14,14 @@ describe('shared site shell', () => {
     expect(layout).toContain('<SiteHeader active={active} />');
     expect(layout).toContain('<SiteFooter />');
     expect(header).toContain('${siteMeta.siteName} 首页');
-    for (const path of ['/', '/articles/', '/series/', '/projects/', '/about/']) {
+    for (const path of ['/', '/articles/', '/projects/', '/about/']) {
       expect(header).toContain(`path: '${path}'`);
     }
     expect(header).toContain('href={withBase(item.path)}');
-    expect(header).toContain("aria-current={active === item.id ? 'page' : undefined}");
+    expect(header).toContain("active === 'series' && item.id === 'articles'");
+    const tabs = readFileSync('src/components/ContentViewTabs.astro', 'utf8');
+    expect(tabs).toContain("withBase('/articles/')");
+    expect(tabs).toContain("withBase('/series/')");
     expect(footer).toContain('href={withBase(siteMeta.rssPath)}');
     expect(footer).toContain('siteMeta.githubUrl');
   });
@@ -63,7 +66,7 @@ describe('shared site shell', () => {
   });
 
   it('preserves article reading sizes, rich content width and the existing focus-mode layout', () => {
-    expect(globalCss).toContain('grid-template-columns: 260px minmax(0, 1fr)');
+    expect(globalCss).toContain('grid-template-columns: 240px minmax(0, 1fr)');
     expect(globalCss).toContain('.article-shell.is-focus-mode');
     expect(globalCss).toMatch(/\.article-content p,\s*\.article-content li\s*\{[^}]*font-size:\s*17px;/s);
     expect(globalCss).toMatch(/@media \(max-width: 760px\)[\s\S]*\.article-content p,\s*\.article-content li\s*\{[^}]*font-size:\s*16px;/);

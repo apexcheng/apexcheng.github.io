@@ -20,7 +20,11 @@ describe('articles page category filter', () => {
     expect(articleListSource).toContain('data-category={post.data.category}');
     expect(categorySource).toContain('getStaticPaths');
     expect(articlesSource).toContain('!post.data.draft && !post.data.private');
-    expect(articlesSource).toContain('var isVisible = !category || itemCategory === category;');
+    expect(articlesSource).toContain('(!category || itemCategory === category) && terms.every');
+    expect(articlesSource).toContain('data-articles-search');
+    expect(articlesSource).toContain("searchInput.addEventListener('input'");
+    expect(articlesSource).toContain("url.searchParams.set('q', query)");
+    expect(articleListSource).toContain('data-search-text=');
     expect(articlesSource).not.toContain("post.data.category !== '视觉实验室'");
     expect(articlesSource).not.toContain('!post.data.series');
     expect(articlesSource).toContain('<ArticleList posts={posts} showPinned />');

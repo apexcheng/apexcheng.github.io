@@ -1,0 +1,11 @@
+---
+import { withBase } from '../utils/paths';
+
+interface Props { active: 'articles' | 'series' }
+const { active } = Astro.props;
+---
+
+<nav class="content-view-tabs" aria-label="内容浏览方式">
+  <a href={withBase('/articles/')} aria-current={active === 'articles' ? 'page' : undefined}>全部文章</a>
+  <a href={withBase('/series/')} aria-current={active === 'series' ? 'page' : undefined}>专题系列</a>
+</nav>

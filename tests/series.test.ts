@@ -29,7 +29,10 @@ describe('series feature', () => {
 
   it('connects series navigation with article reading', () => {
     expect(layoutSource).toContain("active?: 'home' | 'articles' | 'series' | 'projects' | 'about'");
-    expect(headerSource).toContain("{ id: 'series', label: '系列', path: '/series/' }");
+    expect(headerSource).toContain("{ id: 'articles', label: '文章', path: '/articles/' }");
+    expect(headerSource).not.toContain("{ id: 'series', label: '系列', path: '/series/' }");
+    expect(headerSource).toContain("active === 'series' && item.id === 'articles'");
+    expect(seriesIndexSource).toContain('<ContentViewTabs active="series" />');
     expect(articleDetailSource).toContain("active={post.data.series ? 'series' : 'articles'}");
     expect(articleDetailSource).toContain('previousSeriesPost');
     expect(articleDetailSource).toContain('nextSeriesPost');
