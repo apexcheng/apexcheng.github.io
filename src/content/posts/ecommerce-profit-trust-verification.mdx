@@ -1,0 +1,399 @@
+---
+title: "利润表算得出结果，为什么仍然可能算错？"
+description: "从真实电商利润模型出发，拆解商品归属、成本遗漏、退款预测和数据验收，再谈技术焦虑：不理解不等于不可靠，质疑也不能代替验证。"
+date: 2026-10-23T09:32:00+08:00
+category: "实践"
+tags:
+  - "利润核算"
+  - "数据验证"
+  - "电商运营"
+  - "技术焦虑"
+  - "独立判断"
+minutes: 17
+featured: false
+pinned: false
+draft: false
+private: false
+---
+
+<div class="trust-hero" aria-label="利润数字与可信结果的区别">
+  <div class="trust-hero__header">
+    <span>数据建模 / 经营判断 / 技术认知</span>
+    <strong>一个数字算得出来，<br />不代表它就值得相信。</strong>
+    <p>公式可能完全正确，却匹配了错误的商品；系统可能正常运行，却遗漏了真实成本。对结果有怀疑很正常，关键是把怀疑变成能够验证的问题。</p>
+  </div>
+  <div class="trust-hero__comparison">
+    <section>
+      <small>表面上的完成</small>
+      <b>¥ 1,987</b>
+      <span>公式没报错 · 报表能打开</span>
+    </section>
+    <div aria-hidden="true" class="trust-hero__arrow">≠</div>
+    <section class="is-proof">
+      <small>真正的可信</small>
+      <b>有据可查</b>
+      <span>来源可追溯 · 口径可解释 · 结果可复算</span>
+    </section>
+  </div>
+</div>
+
+整理一套天猫商品链接利润模型时，我越来越清楚地意识到：**一张利润表能算出结果，和这张利润表值得信任，是两回事。**
+
+最开始，利润似乎只是几项加减法：销售额减去采购、广告、物流和平台费用，再考虑退款。但随着报表从简单汇总变成真正用于经营决策的模型，问题也跟着暴露出来。
+
+有些成本已经发生，却找不到商品链接；有些退货能匹配出商品ID，匹配到的却未必是正确链接；有些采购成本显示为 0，原因不是免费，而是数据缺失。更麻烦的是，这些问题**不一定产生任何公式错误**。
+
+这类问题还引出了另一种常见争论：看不懂技术实现的人，对自动化、数据系统、甚至 AI 给出的结果感到不安。质疑本来很有价值，可如果讨论始终停留在“我不知道它怎么来的，所以我不信”，就很难找到真正的错误。
+
+这篇文章想把两个问题放在一起讲清楚：**怎样建立可信的经营数据模型，以及怎样以事实验证代替无效的技术争论。**
+
+*说明：案例金额与订单号均为构造示例；现实项目中已确认的规则、已知风险和待解决问题会明确区分。本文不是税务或财务会计意见。*
+
+## 一、利润不是一道减法题，而是一组业务判断
+
+假设某条商品链接最近七天卖了 10,000 元，采购成本 5,000 元，广告费 1,500 元，物流费 500 元，按这四项简化计算，利润是 3,000 元。
+
+数字看起来很清楚，但每个数字背后都藏着问题。
+
+| 看见的数字 | 需要先回答的业务问题 |
+| --- | --- |
+| 销售额 10,000 元 | 按付款还是发货统计？包含哪些订单类型？是否包含商家承担的补贴？ |
+| 采购成本 5,000 元 | 单位成本从哪来？对应哪个规格？缺失成本如何处理？ |
+| 广告费 1,500 元 | 是真实扣费还是推算？按什么标识归到链接？ |
+| 物流费 500 元 | 是按包裹还是按商品行？补发换货算在哪里？ |
+| 退款影响 | 真实退货、未来预测与可退回费用有没有重复计算？ |
+
+因此，从原始报表到最终利润，至少有四个彼此不同的责任层次。
+
+<div class="trust-pipeline" role="group" aria-label="利润模型的四层责任">
+  <section><small>01 / 输入</small><strong>事实层</strong><span>订单、发货、退货、扣费及成本来源</span></section>
+  <section><small>02 / 解释</small><strong>计算层</strong><span>主键关联、业务筛选、归属、税额与退款处理</span></section>
+  <section><small>03 / 结果</small><strong>汇总层</strong><span>按商品链接、店铺和周期形成利润</span></section>
+  <section><small>04 / 使用</small><strong>展示层</strong><span>利润、趋势、异常、经营决策</span></section>
+</div>
+
+真正容易出错的，往往不是最右边那个利润率，而是中间的**业务判断与数据归属**。
+
+## 二、公式匹配成功，不等于匹配到了正确商品
+
+电商里，一个实际规格可以出现在多个商品链接中。比如两个链接 A、B 销售同一款键盘，它们使用相同的 ERP 69 码，但价格、广告投放、优惠和退款情况都可能不同。
+
+69 码适合用来确认实物规格，并关联对应采购成本；**但不能直接把它当作商品链接唯一身份**。
+
+再看一个订单：
+
+| 平台订单号 | 商品ID | ERP 69码 |
+| --- | --- | --- |
+| 10001 | 链接 A | KB-001 |
+| 10001 | 链接 B | KB-001 |
+
+后来退了一件商品。退货数据只有订单号和 69 码，没有直接给出可靠的原商品行标识。
+
+如果用 `订单号 + 69码` 进行 `XLOOKUP`，公式能够返回一个商品ID；但两个候选行都符合条件，第一条匹配未必就是实际发生退货的链接。
+
+实际模型审查中，已经发现过同订单、同规格对应多个商品链接的歧义，也发现过只按订单号回查时命中多商品订单的情况。**这种风险不只是理论推测。**
+
+这里最值得警惕的是：
+
+> **店铺总额对得上，不代表每个商品链接的利润都算对了。**
+
+因为退货金额没有消失，它只是可能分错了对象。最终表现为 A 链接利润偏低，B 链接利润偏高，而店铺总数仍然正常。
+
+可行的处理顺序不是先写一套复杂的“智能推断”：先检查有没有更可靠的原始关联键；确实无法唯一判断时，记录歧义数量与影响金额；再根据风险规模决定是否增加分摊或人工核对机制。
+
+**不可靠的第一条匹配，不应该被包装成确定的业务归属。**
+
+## 三、钱已经花了，找不到归属也不能让它消失
+
+### 一个包裹，不能重复产生三次运费
+
+假设三个商品放在同一个包裹里，物流与后勤成本合计 13 元。ERP 发货明细有三行，但真实成本只发生了一次。
+
+<div class="trust-ledger" aria-label="包裹真实成本与错误分摊对比">
+  <section>
+    <small>原始事实</small>
+    <strong>1 个包裹</strong>
+    <b>¥ 13</b>
+    <p>真实运费与后勤成本合计</p>
+  </section>
+  <div class="trust-ledger__paths">
+    <div class="trust-ledger__wrong"><span>错误：每个商品行都扣一次</span><strong>13 × 3 = <em>39 元</em></strong><small>多扣 26 元</small></div>
+    <div class="trust-ledger__right"><span>正确：先确定包裹费用，再按规则分摊</span><strong>4.33 + 4.33 + 4.34 = <em>13 元</em></strong><small>分摊总额与真实费用守恒</small></div>
+  </div>
+</div>
+
+实际业务中可以按数量、重量或已确认的商品 KEY 规则分摊，规则未必只有一种。但**所有分摊金额加起来，必须仍然等于真实发生的包裹成本**。
+
+这是成本守恒，不是公式技巧。
+
+### 没有销售收入，仍然可能有真实费用
+
+比如补发、换货。它们可能不产生一笔新的正常销售收入，但重新寄出的快递和后勤费用仍然发生。
+
+在现有天猫模型里，正常销售订单的正向发货成本与补发、换货产生的正向履约损耗来自同一套包裹成本事实，再按订单性质互斥归类。这样既避免漏算，也避免同一笔费用扣两遍。
+
+而当某些补发记录无法可靠关联到原商品链接时，我不赞成随便把费用塞给同订单第一个商品，更不能因为商品ID为空就把费用过滤掉。
+
+<div class="trust-unassigned" aria-label="示例：链接利润与门店无归属成本的关系">
+  <div><span>链接 A 利润</span><strong>1,000</strong></div>
+  <div><span>链接 B 利润</span><strong>600</strong></div>
+  <div><span>链接 C 利润</span><strong>400</strong></div>
+  <div class="is-minus"><span>无法归属的真实成本</span><strong>−13</strong></div>
+  <div class="is-total"><span>店铺利润</span><strong>1,987 元</strong></div>
+</div>
+
+这种情况下，更稳妥的办法是把真实费用保留在“门店无归属成本”中，待以后获得可靠的原始关联信息，再决定是否分配到商品。
+
+当前 PRD 已经采用这类门店承接方式，但仍存在部分退货回查完全失败时，记录可能在进入无归属成本前被过滤的风险。**已经设计了兜底机制，不代表所有遗漏路径都已完全修好。**
+
+这件事值得留下一句话：
+
+> **不知道成本属于谁，不代表成本没有发生。**
+
+## 四、真实为零、暂时未知和需要预测，是三回事
+
+一个商品卖出 100 件，但采购成本表没有匹配到对应的 69 码。
+
+如果写了 `IFERROR(成本匹配, 0)`，利润表可能不会再报错。但这个 0 究竟代表什么？
+
+<div class="trust-states" role="group" aria-label="真实零值、未知值与预测值的区别">
+  <section><small>已确认</small><strong>真实为零</strong><p>有可靠来源证明此项不收费，可以正常按 0 计算。</p></section>
+  <section class="is-unknown"><small>需核实</small><strong>金额未知</strong><p>缺少采购成本或无法确认来源；应暴露异常，必要时阻断正式结果。</p></section>
+  <section><small>明确标记</small><strong>预测金额</strong><p>有业务依据的假设可以用于预估，但不能冒充已经发生的成本。</p></section>
+</div>
+
+同样，“金额已知但归属未知”也不是零成本：那是上一节讨论的无归属成本，需要保留原始费用事实。
+
+隐藏异常最容易制造一种假象：**报表看起来越来越干净，利润却越来越不真实。**
+
+尤其是自动化执行时，不该把一切缺失和异常统一转换成 0。数据不存在、下载失败、无法解析、订单确实没有费用，是完全不同的状态。
+
+## 五、退款预测不是把所有费用乘同一个百分比
+
+一笔订单退款后，收入可能退回，采购成本在特定业务口径下可以回转，部分平台费用可能返还；但已经投放的广告、实际发生的正向物流、后勤费用，不会因为退款就自动全部退回来。
+
+因此，退款影响必须根据费用性质分别计算。
+
+当前天猫模型把成熟历史的退款率拆成两种：**金额退款率 R** 用来预测金额相关的退款影响，**件数退款率 S** 用来处理按件产生的百亿补贴让利等项目。按金额收费和按件让利不能混用一个比例。
+
+这套模型的正式利润周期为最近七个完整自然日，退款率则采用更早的成熟发货窗口。退款预测按已确认的整批最终净额口径进行，不能又额外把同一批已经发生的退款重复扣减一次。
+
+另一种模型也可以先记录已发生退款，再只预测未来增量；两种做法需要各自保持完整、一致，**不能把两套扣减逻辑直接叠加**。
+
+关于“事实与预测为什么必须分开”，我曾在《[电商利润模型重构：事实只记录，预测只留给尚未发生的退款](/articles/ecommerce-link-profit-model-rebuild/)》中专门讨论。这里想进一步强调的是：**正确的预测对象，还要匹配正确的成本性质和业务周期。**
+
+实际经营还可能有额外的风险保留，例如模型中的 5% 经营保留。它属于预测利润的调整项目，不是已经发生的真实支出，更不应同时在“总支出”与最终利润中扣两遍。
+
+## 六、有数据，也要确认它完整、及时、真正参与了计算
+
+最近七天的利润，不一定只需要七天的数据。
+
+这个星期发生的售后退货，可能对应数月前的发货订单；计算成熟发货群体的退款率，也必须同时取得该群体的发货事实与后来发生的相关退货记录。
+
+现行天猫 Excel 要求保留至少近 60 天 ERP 发货历史以供关联，但这只是性能与覆盖范围之间的折中，并不等于能够覆盖所有售后或质保周期。
+
+还存在一个很实际的问题：工作簿可以成功保存，但由于手动计算设置，公式结果可能仍是上一次保存的缓存。自动化程序报告“更新完成”，不等于利润已经完整重算。
+
+因此，一份正式结果至少需要过四道关：
+
+<div class="trust-checks" role="group" aria-label="利润结果从数据刷新到可信验收的四道关口">
+  <section><small>01</small><strong>来源完整</strong><span>日期范围、必填字段、记录数、业务键</span></section>
+  <section><small>02</small><strong>规则正确</strong><span>发货与退款口径、费用归属、异常分类</span></section>
+  <section><small>03</small><strong>计算完成</strong><span>实际重算、无旧缓存、关键公式无阻断错误</span></section>
+  <section><small>04</small><strong>结果可核</strong><span>包裹成本守恒、链接与门店对账、订单抽样</span></section>
+</div>
+
+这里还有一个经常被忽略的区别：**“该日期没有业务”与“该日期没有采集到数据”不是同一个意思。**
+
+如果把后者解释成前者，一张没有任何红色报错的报表，也可能根本不值得拿去判断利润。
+
+## 七、与其争论公式，不如顺着证据把问题查清楚
+
+假设运营看到某条链接显示最近七天发货 238 件，但另一份报表只有 210 多件。
+
+最容易产生的反应是：“这个系统怎么算的？我不信。”
+
+可这时真正有用的不是讨论这条公式包含多少层 `LET`、`FILTER`、`GROUPBY`，而是先把问题描述清楚：
+
+1. 两份数据统计的是同一个商品ID，还是相同商品编码下的多个链接？
+2. 都按发货日期吗？起止日期是否包含当天？
+3. 统计的是订单行数、包裹数，还是商品件数？
+4. 筛选条件是否一致，例如销售订单、赠品或特定仓库？
+5. 如果仍有差异，能否导出原始明细，用订单号和规格逐项对比？
+
+当这些问题被回答以后，通常就能判断差异属于**统计口径、数据覆盖、关联归属，还是程序错误**。
+
+这是一次有方向的核验，而不是重复表达不信任。
+
+<div class="trust-contrast" role="group" aria-label="情绪化质疑与证据驱动核验的区别">
+  <section>
+    <small>讨论停在这里</small>
+    <strong>“我看不懂，所以不信。”</strong>
+    <p>反复要求解释每段代码、每条公式，却没有统一核对对象、统计周期和差异样本。</p>
+    <span>疑问不断重复，结论没有前进</span>
+  </section>
+  <section class="is-better">
+    <small>讨论向前推进</small>
+    <strong>“这 5 笔订单为什么不同？”</strong>
+    <p>明确口径，拿原始事实复核，隔离差异，再判断该修改业务规则、数据采集还是代码。</p>
+    <span>差异变成证据，证据变成行动</span>
+  </section>
+</div>
+
+**技术实现值得检查，但检查什么、为何检查，应该由具体问题驱动。** 如果账不平，回到业务事实和数据血缘，往往比无边界地解释所有公式更有效率。
+
+## 八、技术焦虑：既依赖效率，又害怕自己理解不了的过程
+
+这种矛盾不只发生在利润表里。自动化采集、RPA、编程、AI Agent、系统报表，都可能遇到类似情况。
+
+有一类人非常希望技术提高效率，但因为不熟悉数据从哪里来、程序怎样运行、结果如何生成，对自己无法直接观察的过程持续感到不安。
+
+可以把这种行为倾向描述为**“技术焦虑”**或**“技术依赖型不信任”**。这只是便于讨论的描述性说法，并不是正式的心理学诊断或固定人格分类；也不能凭几次质疑就给一个人贴标签。
+
+在这种状态里，常见的错位有三种。
+
+### 不理解，不等于不可靠
+
+一个人不知道网页里的数字如何来自数据库，不能直接证明这个数字是错的。
+
+反过来，开发者能够把每一步代码解释得很清楚，也不能直接证明最终业务结果就是正确的。
+
+**理解技术过程与验证技术结果，既有联系，也不能互相替代。**
+
+### 质疑，不等于验证
+
+质疑是提出“这里可能有问题”；验证是指出检查对象、证据来源和判断标准，并得到可以复查的结论。
+
+只有前者而没有后者，讨论很容易陷入循环。今天怀疑这个公式，明天怀疑那个接口，后天怀疑自动化执行顺序，却始终没有给出一个能够证伪或证实的样本。
+
+但合理的质疑不能被贬低。尤其当系统没有清晰的数据来源、规则说明、操作日志或异常提示时，使用者的不信任可能完全有道理。**技术提供方同样有责任让结果具备可检查性。**
+
+### 技术问题与认知问题，首先要分开
+
+利润怎么算，是业务问题；公式如何表达，是技术实现问题；算出来是否准确，是验证问题。
+
+如果业务还没明确“按付款还是发货”“哪些费用能随退款减少”，一遍遍检查公式并不能替业务自动做出正确选择。
+
+如果业务已经定义清楚，但程序漏采数据、关联错误、没有重算，那就确实是技术需要修复。
+
+这两种情况并不矛盾，也不该互相甩锅。
+
+## 九、不必人人会编程，但应该知道怎样独立判断
+
+真正实用的技术素养，不是要求每个运营人员都懂 SQL、Python、浏览器网络请求和复杂 Excel 函数。
+
+而是知道在面对一个自己不熟悉的系统时，应该怎样提出问题。
+
+<div class="trust-questions" aria-label="检验系统结果的四个问题">
+  <div><b>01</b><strong>它在回答什么问题？</strong><span>先说清楚业务定义和指标口径。</span></div>
+  <div><b>02</b><strong>事实从哪里来？</strong><span>找到原始订单、平台账单或数据源。</span></div>
+  <div><b>03</b><strong>差异具体在哪里？</strong><span>用相同时间、相同对象、相同条件进行复核。</span></div>
+  <div><b>04</b><strong>证据支持什么结论？</strong><span>区分程序 Bug、数据不足、业务规则和正常变化。</span></div>
+</div>
+
+对于开发者，责任也很具体：重要计算留下数据血缘，关键输入标记更新时间，缺失与未知不能静默归零，重要异常能被看见，必要时能从汇总结果追溯到原始明细。
+
+对于业务人员，最有效的质疑则应该尽量具体：“这五个订单的发货件数为什么不同？”“这个退货为什么归到另一条链接？”“采购成本缺失时模型按什么处理？”
+
+这种问题比一句“技术太复杂，我不相信”更容易让所有人走向答案。
+
+**独立判断不是拒绝信任别人，而是不把信任或怀疑建立在自己的熟悉程度上。**
+
+## 十、真正该升级的，不只是 Excel 或代码
+
+随着模型越来越复杂，把长期订单事实放在稳定的数据底座、把业务计算集中管理、让报表只展示已核对的结果，通常会比继续在工作簿里增加层层互相依赖的公式更易于维护。
+
+但这不意味着一定要把 Excel 全部迁移到新系统。Excel 仍适合灵活调整和人工检查，数据平台也不能凭空补齐源端缺失的事实。
+
+实际优先级应该由问题决定：先修复会影响经营判断的成本遗漏、错误归属和旧数据；再根据数据量、维护成本和长期追溯需求，决定是否升级架构。
+
+与之对应的认知也需要升级：
+
+**不要求技术永远没有错误，但要求它允许错误被发现。**
+
+**不要求使用者理解每一行代码，但要求质疑能落到事实。**
+
+最终，技术值得信任的基础，不是盲目相信；质疑有价值的标准，也不是提出了多少次疑问。两者都应该落在同一件事上：**能否用可复核的证据，发现真实问题并推动解决。**
+
+<div class="trust-ending" aria-label="本篇文章的最终原则">
+  <span>最后，留给自己的一段话</span>
+  <strong>不懂可以学习，怀疑可以求证。</strong>
+  <p>别用认知盲区否定技术，也别用反复质疑代替独立判断。</p>
+  <strong>技术解决效率问题，认知决定效率上限。</strong>
+  <div>以事实验证代替情绪质疑，<br />以独立判断代替认知焦虑。</div>
+</div>
+
+延伸阅读：[电商利润模型重构：事实只记录，预测只留给尚未发生的退款](/articles/ecommerce-link-profit-model-rebuild/) · [学不会、看不懂、无法评价：为什么人会开始否定复杂系统？](/articles/when-people-dismiss-complex-systems/)
+
+<style>{`
+  .trust-hero, .trust-pipeline, .trust-ledger, .trust-unassigned, .trust-states, .trust-checks, .trust-contrast, .trust-questions, .trust-ending { margin: 1.8rem 0 2.2rem; }
+  .trust-hero { padding: clamp(1.25rem, 4vw, 2.6rem); border: 1px solid var(--line); border-radius: 24px; background: linear-gradient(145deg, color-mix(in srgb, var(--blue) 7%, var(--paper)), var(--paper-soft)); }
+  .trust-hero__header > span, .trust-ending > span { font-size: .72rem; letter-spacing: .13em; color: var(--muted); font-weight: 700; }
+  .trust-hero__header > strong { display: block; margin: .9rem 0; font-size: clamp(1.7rem, 4.2vw, 3.1rem); line-height: 1.35; letter-spacing: 0; color: var(--ink); font-weight: 700; }
+  .trust-hero__header > p { max-width: 56rem; font-size: 1rem; color: var(--soft); line-height: 1.85; margin: 0 0 1.4rem; }
+  .trust-hero__comparison { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 1rem; }
+  .trust-hero__comparison section { padding: 1.15rem; border-radius: 14px; background: var(--paper); border: 1px solid var(--line); min-width: 0; display: flex; flex-direction: column; gap: .3rem; }
+  .trust-hero__comparison small { font-size: .75rem; color: var(--muted); }
+  .trust-hero__comparison b { font-size: clamp(1.25rem, 3vw, 1.9rem); color: var(--ink); }
+  .trust-hero__comparison span { font-size: .82rem; color: var(--soft); }
+  .trust-hero__comparison .is-proof { border-color: color-mix(in srgb, var(--green) 40%, var(--line)); }
+  .trust-hero__comparison .is-proof b { color: var(--green); }
+  .trust-hero__arrow { color: var(--muted); font-size: 1.6rem; font-weight: 700; }
+  .trust-pipeline, .trust-checks { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .7rem; }
+  .trust-pipeline section, .trust-checks section { position: relative; padding: 1.1rem .95rem; background: var(--paper-soft); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
+  .trust-pipeline small, .trust-checks small { color: var(--muted); font-size: .73rem; }
+  .trust-pipeline strong, .trust-checks strong { color: var(--ink); font-size: 1rem; }
+  .trust-pipeline span, .trust-checks span { color: var(--soft); font-size: .82rem; line-height: 1.65; }
+  .trust-ledger { display: grid; grid-template-columns: 1fr 2fr; gap: .8rem; }
+  .trust-ledger > section { background: color-mix(in srgb, var(--blue) 6%, var(--paper)); border: 1px solid var(--line); border-radius: 15px; padding: 1.3rem; display: flex; flex-direction: column; gap: .5rem; }
+  .trust-ledger > section small, .trust-ledger > section p { color: var(--soft); font-size: .86rem; margin: 0; }
+  .trust-ledger > section strong { color: var(--ink); }
+  .trust-ledger > section b { color: var(--ink); font-size: 2.2rem; }
+  .trust-ledger__paths { display: grid; gap: .8rem; }
+  .trust-ledger__paths > div { display: flex; flex-direction: column; gap: .4rem; border-radius: 15px; padding: .8rem 1.15rem; border: 1px solid var(--line); }
+  .trust-ledger__paths span, .trust-ledger__paths small { color: var(--soft); font-size: .82rem; }
+  .trust-ledger__paths strong { color: var(--ink); font-size: 1.08rem; font-variant-numeric: tabular-nums; }
+  .trust-ledger__paths em { font-style: normal; }
+  .trust-ledger__wrong { background: color-mix(in srgb, #d9482f 6%, var(--paper)); }
+  .trust-ledger__wrong em { color: #c95a41; }
+  .trust-ledger__right { background: color-mix(in srgb, var(--green) 6%, var(--paper)); }
+  .trust-ledger__right em { color: var(--green); }
+  .trust-unassigned { max-width: 40rem; border: 1px solid var(--line); border-radius: 14px; background: var(--paper-soft); padding: .35rem 1.2rem; }
+  .trust-unassigned > div { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: .65rem .2rem; color: var(--soft); font-size: .91rem; border-bottom: 1px solid var(--line); }
+  .trust-unassigned strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .trust-unassigned .is-minus strong { color: #c95a41; }
+  .trust-unassigned .is-total { color: var(--ink); font-weight: 700; border-bottom: none; font-size: 1.06rem; }
+  .trust-states { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .75rem; }
+  .trust-states section { background: var(--paper-soft); border: 1px solid var(--line); padding: 1.05rem; border-radius: 13px; }
+  .trust-states small { display: block; color: var(--muted); font-size: .72rem; margin-bottom: .5rem; }
+  .trust-states strong { color: var(--ink); }
+  .trust-states p { color: var(--soft); font-size: .86rem; line-height: 1.7; margin: .6rem 0 0; }
+  .trust-states .is-unknown { border-color: color-mix(in srgb, #d48f35 50%, var(--line)); }
+  .trust-contrast { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .9rem; }
+  .trust-contrast section { padding: 1.35rem; background: var(--paper-soft); border: 1px solid var(--line); border-radius: 16px; min-width: 0; }
+  .trust-contrast small, .trust-contrast span { display: block; font-size: .79rem; color: var(--muted); }
+  .trust-contrast strong { color: var(--ink); display: block; font-size: 1.2rem; margin: .5rem 0 .7rem; }
+  .trust-contrast p { color: var(--soft); line-height: 1.8; font-size: .92rem; }
+  .trust-contrast .is-better { border-color: color-mix(in srgb, var(--green) 40%, var(--line)); background: color-mix(in srgb, var(--green) 5%, var(--paper)); }
+  .trust-contrast .is-better > span { color: var(--green); }
+  .trust-questions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .8rem; }
+  .trust-questions > div { border-left: 3px solid color-mix(in srgb, var(--blue) 55%, var(--line)); padding: .5rem .9rem; background: var(--paper-soft); display: grid; gap: .25rem; }
+  .trust-questions b { font-size: .78rem; color: var(--muted); }
+  .trust-questions strong { color: var(--ink); }
+  .trust-questions span { color: var(--soft); font-size: .85rem; }
+  .trust-ending { padding: clamp(1.4rem, 4vw, 2.6rem); background: linear-gradient(155deg, color-mix(in srgb, var(--blue) 7%, var(--paper)), color-mix(in srgb, var(--green) 5%, var(--paper-soft))); border: 1px solid var(--line); border-radius: 22px; }
+  .trust-ending > strong { display: block; margin-top: 1.1rem; color: var(--ink); font-size: clamp(1.3rem, 3vw, 1.7rem); line-height: 1.55; }
+  .trust-ending > p { color: var(--soft); margin: .8rem 0; }
+  .trust-ending > div { border-top: 1px solid var(--line); padding-top: 1.2rem; margin-top: 1.5rem; color: var(--blue); font-weight: 700; font-size: clamp(1.2rem, 2.6vw, 1.6rem); line-height: 1.65; }
+  @media(max-width: 760px) {
+    .trust-hero__comparison, .trust-ledger, .trust-contrast { grid-template-columns: 1fr; }
+    .trust-hero__arrow { text-align: center; }
+    .trust-pipeline, .trust-checks, .trust-states, .trust-questions { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .trust-ledger__paths strong { overflow-wrap: anywhere; }
+  }
+  @media(max-width: 480px) {
+    .trust-pipeline, .trust-checks, .trust-states, .trust-questions { grid-template-columns: 1fr; }
+    .trust-hero__header > strong { font-size: 1.8rem; }
+    .trust-hero, .trust-ending { border-radius: 16px; }
+  }
+`}</style>

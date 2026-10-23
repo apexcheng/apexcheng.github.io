@@ -8,6 +8,7 @@
 
 | 文件 | 分类 | 主题概览 | 适合什么时候参考 |
 | --- | --- | --- | --- |
+| `src/content/posts/ecommerce-profit-trust-verification.mdx` | `实践` | 从天猫链接利润模型中的商品归属歧义、包裹成本守恒、无归属成本、真实零与未知值、退款预测和刷新验收展开，进一步讨论技术焦虑、合理质疑与证据驱动的独立判断 | 写数据可信度、利润模型核验、技术焦虑、业务规则与技术责任边界、经营报表审查时参考 |
 | `src/content/posts/review-feedback-improvement-ownership.mdx` | `实践` | 从“塑料感”差评推导改善归口思想，完整展开 20 类问题、F01–F20 基准事实、8 类改善归口、分类规则，并用脱敏的现有 AI 表格记录跑通三层模型 | 写评价分析、产品体验、设计与质量责任边界、客户反馈、AI 业务分类和改善机制时参考 |
 | `src/content/posts/code-tech-weird-issues.mdx` | `实践` | 长期维护的编程、API、数据同步、自动化等技术踩坑记录；首条说明动态数据下页码分页 `total` 波动与实际漏单不能画等号，区分已观察事实和潜在 OFFSET 漏读风险，并给出回查与校验建议 | 写 API 分页、动态查询结果、`total` 变化、OFFSET 漏读风险、增量同步与一致性校验时参考 |
 | `src/content/posts/java-jvm-python-bytecode-runtime.mdx` | `教程` | 从源码、字节码、运行时到 CPU 对照 Java 与 Python，讲清 JVM、.class、Python bytecode、.pyc、CPython 的层级关系，以及两者都能跨平台但 JVM 通常能让 Java 热点代码更快的原因 | 写 JVM、Java/Python 运行机制、字节码、跨平台、解释器、JIT、CPython 性能和 NumPy 底层加速时参考 |
