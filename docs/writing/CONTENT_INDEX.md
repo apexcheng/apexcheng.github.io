@@ -20,8 +20,6 @@
 | `src/content/posts/how-to-use-yingdao-rpa-correctly.mdx` | `实践` | 从 40+ 个影刀小应用出发，复盘影刀正确用法、人机协作、经营看板、供应链预警和企业版判断，并用深色决策树风展示新需求是否值得做影刀 | 写影刀RPA复盘、正确使用影刀、日报升级经营看板、自动化治理、需求判断决策树时参考 |
 | `src/content/posts/yingdao-daily-report-to-business-dashboard.mdx` | `实践` | 从 40+ 个零散影刀应用复盘人机协作、维护责任、日报边界和经营看板升级方向 | 写影刀应用治理、日报自动化、经营看板、人机协作和维护责任文章时参考 |
 | `src/content/posts/yingdao-agent-development-knowledge-base.mdx` | `教程` | 影刀 × Agent 开发总览，覆盖开发知识库、问题查询、真实项目规则、浏览器元素探索、代码同步和知识库更新闭环 | 写影刀编码版、Agent 辅助开发、影刀知识库、浏览器元素探索和外部代码同步时参考 |
-| `src/content/posts/yingdao-market-extension-source-debugging.mdx` | `实践` | 通过 `inspect` 定位影刀已安装 `xbot_extensions` 市场指令，区分包装层与实现层，确认真实枚举、默认值和分支逻辑 | 写影刀市场指令、编码版参数排查、`inspect`、内部实现边界和静默失败问题时参考 |
-| `src/content/posts/playwright-yingdao-web-migration-guide.mdx` | `教程` | 面向影刀 Web 使用者的 Playwright 迁移对照手册，覆盖 Locator、表格行、等待、iframe、下载、网络监听和登录态 | 写 Playwright 入门、影刀转编码版网页自动化、后台列表和 RPA 迁移教程时参考 |
 | `src/content/posts/automation-agent-workflow.mdx` | `实践` | Agent 执行系统图解手册，统一任务分流、状态管理、权限边界、执行循环和失败恢复 | 写 Agent 流程、自动化协作、任务拆解决策、大任务阶段管理和失败恢复文章时参考 |
 | `src/content/posts/hermes-agent-guide-for-openclaw-users.mdx` | `教程` | 面向 OpenClaw 用户的 Hermes Agent 入门图解，覆盖当前运行结构、OpenClaw 概念映射、安装与官方迁移、模型/OAuth、Tools/Skills/MCP、Session/Memory、Gateway 和使用场景判断 | 写 Hermes Agent、OpenClaw 迁移、多 Agent 运行环境、模型认证、Skills/MCP、消息网关和工具生态文章时参考 |
 | `src/content/posts/browser-agent-shared-chrome-runtime.mdx` | `实践` | 共享 Chrome 运行时架构手册，覆盖固定 Profile、CDP、ensure 状态机、接入顺序、页面隔离、操作清单和故障分流 | 写浏览器自动化基础设施、Playwright CDP、共享登录状态、Chrome 生命周期和多 Agent 复用时参考 |
@@ -54,7 +52,6 @@
 | `src/content/posts/excel-wps-weird-issues.mdx` | `教程` | 持续记录 Excel、WPS 和影刀表格自动化中的少见问题；当前收录 WPS `set_range()` 写入以等号开头文本时触发 COM 异常的原因与修复方式 | 写 Excel/WPS 踩坑记录、影刀表格自动化异常、`set_range()` COM 错误和文本公式识别问题时参考 |
 | `src/content/posts/excel-groupby-xlookup-high-performance-summary.mdx` | `教程` | 从大量 SUMIFS 重复汇总同一源表的性能问题出发，讲清 GROUPBY 一次汇总、XLOOKUP 批量查回、组合 Key、TAKE 拆列和 FILTER 日期范围汇总 | 写 Excel 大数据公式优化、GROUPBY、XLOOKUP、组合 Key、SUMIFS 重构和动态数组性能文章时参考 |
 | `src/content/posts/spreadsheet-fact-calculation-presentation-layers.mdx` | `实践` | 用预测销量、综合成本和可售库存三个例子讲清事实层、计算层、展示层，重点解释为什么固化的计算结果仍然不是事实，以及混层后如何造成重复计算、无法重算和对账困难 | 写 Excel 报表分层、数据建模、事实与计算边界、指标口径和报表维护文章时参考 |
-| `src/content/posts/excel-wps-large-workbook-performance-guide.mdx` | `教程` | 把 Excel/WPS 大表卡顿拆成文件负担、计算负担和结构负担，按格式清理、公式范围、重复计算、分层汇总顺序排查 | 写 Excel/WPS 卡顿、大工作簿性能、格式污染、整列引用、计算链和数据结构优化时参考 |
 | `src/content/posts/qianniu-ecommerce-operation-learning-map.mdx` | `教程` | 从一条商品链接出发，把 SKU、价格体系、营销推广、订单 ERP、物流售后、评价与运营优化串成完整电商经营链路，并补充面对陌生后台功能的学习方法 | 写千牛工作台、电商运营入门、新人培训、商品从上架到售后的全链路教学文章时参考 |
 | `src/content/posts/ecommerce-price-hierarchy-target-price-planning.mdx` | `教程` | 先解释单品宝、活动和营销工具让利（非活动让利），再讲当前标价如何生效、活动如何校验、覆盖叠加与活动优先级、消费端到手价检查、价盘补差，以及平时价与活动价一致时的标价反推方法 | 写电商价格体系、优惠叠加优先级、营销工具让利、活动卡控价、普惠卷后价、活动标价反推和价盘目标到手价教程时参考 |
 | `src/content/posts/tmall-billion-subsidy-cashflow-tax.mdx` | `实践` | 用商品原价100、消费者实付90、百补优惠10的单笔订单，拆解平台先垫资、确认收货后划回、最终结算合作费用的现金流，并按商品13%与合作费用6%的当前核算口径推导未税收入公式 | 写天猫百亿补贴、平台垫资、合作费用、价税分离和利润模型税务口径时参考 |
@@ -65,7 +62,6 @@
 | `src/content/posts/shopee-profit-model-settlement-to-link-profit.mdx` | `实践` | Shopee 跨境链接利润模型重构：妙手 ERP 直接提供 RMB 订单与平台实际结算，以平台回款闭环承接未单列费用，再叠加成熟退款率、退款物流损耗、采购与推广成本得到链接利润，并明确物流扣费与回扣不等额时的模型边界 | 写 Shopee 利润核算、妙手 ERP、平台回款、物流回扣、退款成熟窗口、其它费用残差和跨境链接利润模型时参考 |
 | `src/content/posts/ecommerce-review-analysis-agent-workflow.mdx` | `实践` | 电商评价分析 Agent 整页视觉案例，以滚动叙事方式展示两张评价表统一、Python 事实包、日报与周期对比、钉钉交付闸门和发送成功后的分表状态回写 | 写电商评价分析、钉钉 AI 表格、事实包、Agent 报告、Webhook 交付闭环、状态回写和整页数据故事时参考 |
 | `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `实践` | 东南亚仓网与发货决策信息图，覆盖三国雅仓、同国双平台共享、跨国隔离、本地优先、深圳兜底和后台核对口径 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
-| `src/content/posts/cross-border-inventory-allocation-by-sales.mdx` | `实践` | 多平台共享海外仓库存的分配模型，覆盖站点 + SKU 库存池、店铺比例、销量权重、零销量兜底、官方仓排除和超分风险 | 写 Shopee/Lazada 库存同步、多店铺库存池、销量分配、新链接兜底和超卖风险时参考 |
 | `src/content/posts/ai-product-image-agent-workflow.mdx` | `实践` | AI 商品图工作流重构复盘，覆盖从逐张临场决策到规划前移、Art Direction、同组差异化、纯执行生成、人工审查和规则单一来源 | 写商品图生成、Agent 工作流重构、视觉规划、Prompt 设计和执行边界时参考 |
 | `src/content/posts/ai-product-image-workflow-in-practice.mdx` | `实践` | 以一次脱敏后的真实新品项目为背景，讲清输入资料、四个 Skill 分工、竞品链接抓取、可选评价分析、Art Direction 前移、真实产品图边界、纯执行生成和定向整改 | 写 AI 商品图真实使用流程、Skill 协作、竞品分析、视觉规划、补拍边界和单图执行时参考 |
 | `src/content/posts/github-pages-deployment-guide.mdx` | `实践` | GitHub Pages 部署原理图解手册，覆盖访问链路、Astro 构建、Actions artifact、站点路径映射、发布检查和分层排障 | 写部署说明、构建发布、静态站点原理和 Pages 故障排查时参考 |

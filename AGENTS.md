@@ -24,14 +24,11 @@
 
 ## 文章硬规则
 
-1. 写作、审查或发布文章时，先读 `docs/writing/BLOG_AGENT.md`。
-2. 新文章或结构性重写保持视觉优先，并按需读取 `docs/ARTICLE_VISUAL_SYSTEM.md` 和 `docs/MDX_WRITING_GUIDE.md`。
-3. 写作前只需判断核心信息关系、整页视觉概念和移动端转换方式，不要求输出长篇视觉方案。
-4. 改字、事实修正、链接、frontmatter 和局部小改直接执行，不重新规划全文，不读取 Demo。
-5. 正式文章放在 `src/content/posts/`；Demo 放在 `src/content/posts/visual-lab/`。
-6. 新文章默认 `draft: false`、`private: false`；只有用户明确要求草稿或私密时才改为 `true`。
-7. 分类只使用 `生活`、`实践`、`教程`、`视觉实验室`。
-8. 新增公开正式文章后更新 `docs/writing/CONTENT_INDEX.md`；新增 Demo 后更新 `docs/writing/VISUAL_LAB.md`。
+1. 改字、事实修正、链接、frontmatter 和局部小改直接执行，不重新规划全文，不读取 Demo。
+2. 正式文章放在 `src/content/posts/`；Demo 放在 `src/content/posts/visual-lab/`。
+3. 新文章默认 `draft: false`、`private: false`；只有用户明确要求草稿或私密时才改为 `true`。
+4. 分类只使用 `生活`、`实践`、`教程`、`视觉实验室`。
+5. 新增公开正式文章后更新 `docs/writing/CONTENT_INDEX.md`；新增 Demo 后更新 `docs/writing/VISUAL_LAB.md`。
 
 ## 按需路由
 
@@ -45,10 +42,7 @@
 
 ### 新文章、结构性重写或复杂视觉改造
 
-额外读取：
-
-- `docs/ARTICLE_VISUAL_SYSTEM.md`
-- `docs/MDX_WRITING_GUIDE.md`
+额外读取 `docs/ARTICLE_VISUAL_SYSTEM.md`，按其中三个轻量判断确定内容关系、整页视觉方向和移动端转换方式；不要求长篇视觉方案。涉及 MDX 自定义结构、组件或文章专属样式时，再读取 `docs/MDX_WRITING_GUIDE.md`。
 
 视觉 Skill 只作为审美与实现辅助，不替代博客自身的文章视觉系统。高视觉文章仍先根据内容关系确定视觉概念，再按需使用：
 

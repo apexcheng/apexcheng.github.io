@@ -32,7 +32,7 @@
 2. 同一组卡片只放同一种信息关系。
 3. `MetricCard.value` 保持简短，完整解释放在 `detail` 或正文。
 4. `FeatureCard` 插槽只放短列表或必要补充，不放复杂嵌套正文。
-5. 普通线性步骤使用 `DecisionFlow`；存在分支、回路、依赖或时序时使用 `Mermaid`。
+5. 普通线性步骤使用 `DecisionFlow`；简单分支、回路、依赖或时序可使用 `Mermaid`。复杂架构、数据流或时序按 `AGENTS.md` 选用 Archify，并以静态资源用于正式文章。
 6. 不连续堆叠多个 `HighlightBox`，也不为单篇文章新增通用组件。
 
 需要实际示例时，从 `docs/writing/VISUAL_LAB.md` 选择 1 篇相关 Demo。

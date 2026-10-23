@@ -1,6 +1,6 @@
 ---
 name: archify
-description: Create polished, validated architecture, workflow, sequence, data-flow, and lifecycle/state diagrams as explorable standalone HTML with inline SVG, dark/light themes, optional trace motion, and PNG/JPEG/WebP/SVG/WebM export. Accept plain-language requirements or pasted Mermaid flowchart, sequenceDiagram, and stateDiagram input; inspect repository evidence when the diagram must reflect real code. Use when the user asks to visualize system architecture, infrastructure, cloud/security/network topology, technical workflows, API call sequences, request lifecycles, data pipelines, ETL/ELT, data lineage, state machines, or to convert/beautify Mermaid.
+description: Create validated architecture, workflow, sequence, data-flow, and lifecycle diagrams from text or Mermaid, with standalone HTML and static exports. In this blog, prefer it for complex system structures, multi-stage data/tool flows, or intricate sequences; use Mermaid for simple diagrams and export static SVG for published articles without a runtime dependency.
 license: MIT
 metadata:
   version: "2.17"
@@ -11,6 +11,8 @@ metadata:
 # Archify
 
 Create a self-contained, interactive HTML diagram from a small typed JSON specification. Static output is the default; enable motion only when the user asks for a demo or presentation.
+
+For this blog, follow `AGENTS.md` when choosing between Mermaid and Archify: simple relationships use Mermaid; complex architecture, tool chains, data flows, and sequences may use Archify. In formal articles, prefer exported SVG assets rather than embedding Archify as a site runtime dependency.
 
 ## Fast authoring path
 

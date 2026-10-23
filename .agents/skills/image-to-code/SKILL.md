@@ -15,7 +15,6 @@ description: Project-adapted Taste image-to-code skill. Use only when the user p
 
 1. 用户提供截图、设计稿、参考图，并要求实现或复现。
 2. 用户明确指定先生成设计图，再按图开发。
-3. 已经确定视觉方向，需要通过图像参考提高实现一致性。
 
 以下情况不要使用：
 
