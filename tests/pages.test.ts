@@ -84,8 +84,8 @@ describe('front page structure', () => {
   });
 
   it('filters categories in place while keeping static category and tag archives', () => {
-    expect(articlesSource).toContain('<ArticleList posts={posts} showPinned />');
-    expect(articlesSource).toContain('(!category || itemCategory === category) && terms.every');
+    expect(articlesSource).toContain('<ArticleList posts={posts} hideSeries showPinned />');
+    expect(articlesSource).toContain('(!category || itemCategory === category)');
     expect(articlesSource).toContain('?category=${encodeURIComponent(category.name)}');
     expect(articlesSource).toContain('/articles/tag/${encodeURIComponent(tag)}/');
     expect(categorySource).toContain('getStaticPaths');
@@ -118,7 +118,11 @@ describe('front page structure', () => {
 
   it('renders article detail metadata, tags, and table of contents structure', () => {
     expect(articleDetailSource).toContain('class="article-sidebar"');
-    expect(articleDetailSource).toContain('class="article-info desktop-article-info"');
+    expect(articleDetailSource).toContain('<details class="article-info desktop-article-info">');
+    expect(articleDetailSource).toContain('<summary>文章信息</summary>');
+    expect(articleDetailSource.indexOf('<aside class="toc-panel">')).toBeLessThan(
+      articleDetailSource.indexOf('<details class="article-info desktop-article-info">'),
+    );
     expect(articleDetailSource).toContain('文章信息');
     expect(articleDetailSource).toContain('{post.data.category}');
     expect(articleDetailSource).toContain('post.data.tags.map');

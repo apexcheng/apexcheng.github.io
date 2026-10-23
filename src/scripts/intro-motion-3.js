@@ -359,8 +359,7 @@ export function startCosmicOpening(root) {
     state = root.dataset.state = 'leaving';
     try {
       const dark = localStorage.getItem('theme') === 'dark';
-      const warm = localStorage.getItem('styleTheme') === 'index-gradient';
-      document.body.style.setProperty('--destination-color', dark ? '#0b1120' : warm ? '#f6efe2' : '#eef5fb');
+      document.body.style.setProperty('--destination-color', dark ? '#0b1120' : '#eef5fb');
     } catch { /* Match the site's default light theme. */ }
     document.body.classList.add('is-leaving');
     navigationTimer = window.setTimeout(() => { window.location.assign(returnUrl); }, 220);

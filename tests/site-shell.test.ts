@@ -75,9 +75,9 @@ function setup({ mobile = false, blockedStorage = false } = {}) {
   const themeMenu = new Element('details', { utilityMenu: 'theme' });
   const themeSummary = new Element('summary');
   themeMenu.append(themeSummary);
-  const themeOptions = ['visual-system', 'clarity', 'index-gradient', 'classic'].map((style, i) => {
-    const option = new Element('button', { themeOption: '', styleThemeValue: style, themeValue: i === 3 ? 'dark' : 'light' });
-    const label = new Element('span'); label.textContent = ['素纸', '清晰经典', '晨曦', '玄墨'][i]; option.append(label); themeMenu.append(option); return option;
+  const themeOptions = ['visual-system', 'clarity', 'classic'].map((style, i) => {
+    const option = new Element('button', { themeOption: '', styleThemeValue: style, themeValue: i === 2 ? 'dark' : 'light' });
+    const label = new Element('span'); label.textContent = ['素纸', '清晰经典', '玄墨'][i]; option.append(label); themeMenu.append(option); return option;
   });
   const introMenu = new Element('details', { utilityMenu: 'intro' });
   const introSummary = new Element('summary');
@@ -207,9 +207,9 @@ describe('production shared-shell interactions', () => {
   it('persists the selected theme and returns focus even with blocked storage', () => {
     for (const blockedStorage of [false, true]) {
       const s = setup({ blockedStorage });
-      s.themeMenu.open = true; s.themeOptions[3].click();
+      s.themeMenu.open = true; s.themeOptions[2].click();
       expect(s.root.dataset).toEqual({ theme: 'dark', styleTheme: 'classic' });
-      expect(s.themeOptions[3].attributes['aria-pressed']).toBe('true');
+      expect(s.themeOptions[2].attributes['aria-pressed']).toBe('true');
       expect(s.themeOptions[0].attributes['aria-pressed']).toBe('false');
       expect(s.meta.content).toBe('#18201e');
       expect(s.themeMenu.open).toBe(false);
@@ -250,7 +250,7 @@ describe('production shared-shell interactions', () => {
   it('opens the last theme with ArrowUp and wraps through the options', () => {
     const s = setup(); s.themeSummary.focus();
     s.themeMenu.dispatch('keydown', { key: 'ArrowUp' });
-    expect(s.focused()).toBe(s.themeOptions[3]);
+    expect(s.focused()).toBe(s.themeOptions[2]);
     s.themeMenu.dispatch('keydown', { key: 'ArrowDown' });
     expect(s.focused()).toBe(s.themeOptions[0]);
   });

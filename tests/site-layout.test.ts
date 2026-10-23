@@ -94,10 +94,10 @@ describe('pre-paint theme preference', () => {
     expect(initialize({ 'home-redesign-1-theme': 'dark' }).theme).toBe('dark');
     expect(initialize({ theme: 'light', 'home-redesign-1-theme': 'dark' }).theme).toBe('light');
   });
-  it('normalizes incompatible themes and retains the warm reading mode', () => {
+  it('normalizes incompatible themes and falls back from removed themes to paper', () => {
     expect(initialize({ theme: 'dark', styleTheme: 'index-gradient' })).toEqual({ theme: 'dark', styleTheme: 'classic', color: '#18201e' });
     expect(initialize({ theme: 'light', styleTheme: 'classic' }).styleTheme).toBe('visual-system');
-    expect(initialize({ theme: 'light', styleTheme: 'index-gradient' }).color).toBe('#f5eee2');
+    expect(initialize({ theme: 'light', styleTheme: 'index-gradient' })).toEqual({ theme: 'light', styleTheme: 'visual-system', color: '#f5f4ef' });
     expect(initialize({ theme: 'light', styleTheme: 'clarity' })).toEqual({ theme: 'light', styleTheme: 'clarity', color: '#f6f8fc' });
   });
 });

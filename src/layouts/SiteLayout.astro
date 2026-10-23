@@ -66,13 +66,13 @@ const shareImage = new URL(withBase('/favicon.png'), Astro.site);
           if (!saved) saved = localStorage.getItem('home-redesign-1-theme');
           theme = saved === 'dark' ? 'dark' : 'light';
           var savedStyle = localStorage.getItem('styleTheme');
-          if (['classic', 'index-gradient', 'visual-system', 'clarity'].includes(savedStyle)) style = savedStyle;
+          if (['classic', 'visual-system', 'clarity'].includes(savedStyle)) style = savedStyle;
           if (theme === 'dark') style = 'classic';
           else if (style === 'classic') style = 'visual-system';
         } catch (error) {}
         document.documentElement.dataset.theme = theme;
         document.documentElement.dataset.styleTheme = style;
-        document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#18201e' : style === 'index-gradient' ? '#f5eee2' : style === 'clarity' ? '#f6f8fc' : '#f5f4ef';
+        document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#18201e' : style === 'clarity' ? '#f6f8fc' : '#f5f4ef';
       })();
     </script>
     <HomeIntroState pageKind={pageKind} />

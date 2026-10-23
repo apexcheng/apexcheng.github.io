@@ -20,16 +20,28 @@ describe('articles page category filter', () => {
     expect(articleListSource).toContain('data-category={post.data.category}');
     expect(categorySource).toContain('getStaticPaths');
     expect(articlesSource).toContain('!post.data.draft && !post.data.private');
-    expect(articlesSource).toContain('(!category || itemCategory === category) && terms.every');
+    expect(articlesSource).toContain("includeSeries || !item.getAttribute('data-series')");
+    expect(articlesSource).toContain('(!category || itemCategory === category)');
+    expect(articlesSource).toContain('terms.every');
     expect(articlesSource).toContain('data-articles-search');
     expect(articlesSource).toContain("searchInput.addEventListener('input'");
     expect(articlesSource).toContain("url.searchParams.set('q', query)");
     expect(articleListSource).toContain('data-search-text=');
     expect(articlesSource).not.toContain("post.data.category !== '视觉实验室'");
-    expect(articlesSource).not.toContain('!post.data.series');
-    expect(articlesSource).toContain('<ArticleList posts={posts} showPinned />');
+    expect(articlesSource).toContain('posts.filter((post) => !post.data.series)');
+    expect(articlesSource).toContain('<ArticleList posts={posts} hideSeries showPinned />');
     expect(articleListSource).toContain("data-series={post.data.series ?? ''}");
     expect(articleListSource).toContain('(hideSeries && post.data.series)');
+  });
+
+  it('defaults to independent articles while allowing series articles with consistent counts and URL state', () => {
+    expect(articlesSource).toContain('data-include-series');
+    expect(articlesSource).toContain('data-count-standalone');
+    expect(articlesSource).toContain('data-count-all');
+    expect(articlesSource).toContain("includeSeriesInput.addEventListener('change'");
+    expect(articlesSource).toContain("url.searchParams.set('series', '1')");
+    expect(articlesSource).toContain("get('series') === '1'");
+    expect(articlesSource).toContain('item.hidden = !isVisible');
   });
 
   it('sorts visible articles by publish date or update date in place', () => {

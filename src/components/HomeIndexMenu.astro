@@ -28,7 +28,7 @@ const homeOptions = [
     title: '纸张手记',
     note: '温和的纸张与手记感',
     href: withBase('/home-redesign-2/'),
-    styleTheme: 'index-gradient',
+    styleTheme: 'visual-system',
     theme: 'light',
   },
   {
@@ -80,10 +80,6 @@ const homeOptions = [
       var savedHomeIndex = '';
       try {
         savedHomeIndex = localStorage.getItem('homeIndex') || '';
-        if (!savedHomeIndex && localStorage.getItem('styleTheme') === 'index-gradient') {
-          savedHomeIndex = 'home-redesign-2';
-          localStorage.setItem('homeIndex', savedHomeIndex);
-        }
       } catch (error) {}
 
       return options.find(function (option) {

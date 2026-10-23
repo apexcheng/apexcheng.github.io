@@ -10,9 +10,10 @@ import { withBase } from '../../utils/paths';
 const posts = (await getCollection('posts'))
   .filter((post) => !post.data.draft && !post.data.private)
   .sort((a, b) => Number(b.data.pinned) - Number(a.data.pinned) || b.data.date.valueOf() - a.data.date.valueOf());
+const standalonePosts = posts.filter((post) => !post.data.series);
 const articlesPageUrl = withBase('/articles/');
 const categoryCounts = Object.fromEntries(
-  categoryMetaList.map((category) => [category.name, posts.filter((post) => post.data.category === category.name).length]),
+  categoryMetaList.map((category) => [category.name, standalonePosts.filter((post) => post.data.category === category.name).length]),
 );
 const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags))).sort((a, b) => a.localeCompare(b));
 const tagCounts = Object.fromEntries(tags.map((tag) => [tag, posts.filter((post) => post.data.tags.includes(tag)).length]));
@@ -32,7 +33,7 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
     <aside class="filter-panel" id="article-filters">
       <h2>内容分类</h2>
       <a class="active" href={articlesPageUrl} data-category-filter data-category-value="" aria-current="page">
-        全部文章 <span>{posts.length}</span>
+        全部文章 <span data-count-all={posts.length} data-count-standalone={standalonePosts.length}>{standalonePosts.length}</span>
       </a>
       {categoryMetaList.map((category) => (
         <a
@@ -40,7 +41,7 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
           data-category-filter
           data-category-value={category.name}
         >
-          {category.name} <span>{categoryCounts[category.name]}</span>
+          {category.name} <span data-count-all={posts.filter((post) => post.data.category === category.name).length} data-count-standalone={categoryCounts[category.name]}>{categoryCounts[category.name]}</span>
         </a>
       ))}
       <h2 class="filter-subtitle">常用标签</h2>
@@ -70,14 +71,18 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></svg>
           <input type="search" data-articles-search placeholder="搜索标题、摘要或标签" aria-label="搜索文章标题、摘要或标签" autocomplete="off" />
         </label>
+        <label class="article-series-toggle">
+          <input type="checkbox" data-include-series />
+          <span>包含系列文章</span>
+        </label>
         <div class="article-sort" aria-label="文章排序">
           <span>排序</span>
           <button class="active" type="button" data-sort-option data-sort-value="date" aria-pressed="true">发布时间</button>
           <button type="button" data-sort-option data-sort-value="updated" aria-pressed="false">修改时间</button>
         </div>
       </div>
-      <p class="articles-results-summary" role="status" aria-live="polite" data-articles-summary>共 {posts.length} 篇文章</p>
-      <ArticleList posts={posts} showPinned />
+      <p class="articles-results-summary" role="status" aria-live="polite" data-articles-summary>共 {standalonePosts.length} 篇文章</p>
+      <ArticleList posts={posts} hideSeries showPinned />
       <p class="article-filter-empty" data-empty-state hidden>没有匹配的文章，请尝试其他关键词或分类。</p>
       <RelatedSeries posts={posts} heading="按完整学习路线阅读" />
     </section>
@@ -99,6 +104,8 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
       var relatedSeriesWrap = page.querySelector('[data-related-series]');
       var summary = page.querySelector('[data-articles-summary]');
       var searchInput = page.querySelector('[data-articles-search]');
+      var includeSeriesInput = page.querySelector('[data-include-series]');
+      var categoryCounts = Array.prototype.slice.call(page.querySelectorAll('[data-category-filter] span[data-count-all]'));
       var currentSort = 'date';
 
       if (tagsToggle) {
@@ -187,15 +194,21 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
         var visibleCount = 0;
         var query = searchInput ? searchInput.value.trim().toLocaleLowerCase() : '';
         var terms = query.split(/\s+/).filter(Boolean);
+        var includeSeries = includeSeriesInput && includeSeriesInput.checked;
 
         items.forEach(function (item) {
           var itemCategory = item.getAttribute('data-category') || '';
           var searchable = item.getAttribute('data-search-text') || '';
-          var isVisible = (!category || itemCategory === category) && terms.every(function (term) { return searchable.includes(term); });
+          var isVisible = (includeSeries || !item.getAttribute('data-series')) &&
+            (!category || itemCategory === category) &&
+            terms.every(function (term) { return searchable.includes(term); });
           item.hidden = !isVisible;
           if (isVisible) visibleCount += 1;
         });
 
+        categoryCounts.forEach(function (count) {
+          count.textContent = count.getAttribute(includeSeries ? 'data-count-all' : 'data-count-standalone');
+        });
         updateLastVisibleItem();
 
         if (list) list.hidden = visibleCount === 0;
@@ -220,6 +233,8 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
           else url.searchParams.delete('category');
           if (query) url.searchParams.set('q', query);
           else url.searchParams.delete('q');
+          if (includeSeries) url.searchParams.set('series', '1');
+          else url.searchParams.delete('series');
           history.replaceState(null, '', url.pathname + url.search);
         }
 
@@ -246,12 +261,19 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
           applyFilter(category, true);
         });
       }
+      if (includeSeriesInput) {
+        includeSeriesInput.addEventListener('change', function () {
+          var category = (filters.find(function (filter) { return filter.classList.contains('active'); }) || filters[0]).getAttribute('data-category-value') || '';
+          applyFilter(category, true);
+        });
+      }
 
       var initialCategory = '';
 
       try {
         var requestedCategory = new URLSearchParams(window.location.search).get('category') || '';
         if (searchInput) searchInput.value = new URLSearchParams(window.location.search).get('q') || '';
+        if (includeSeriesInput) includeSeriesInput.checked = new URLSearchParams(window.location.search).get('series') === '1';
         var matchedFilter = filters.some(function (filter) {
           return (filter.getAttribute('data-category-value') || '') === requestedCategory;
         });
