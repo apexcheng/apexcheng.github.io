@@ -1,8 +1,8 @@
 ---
-title: "电商利润模型重构：事实只记录，预测只留给尚未发生的退款"
-description: "旧模型用上月利润率推上周、再用上周利润率推近 7 天，最大的问题不是公式，而是拿预测覆盖已经发生的事实。本文把电商利润拆成事实、指标、预测三层：订单、成本、投流和已退款只记事实，只有尚未发生的退款风险才预测。"
+title: "电商利润模型重构：事实直接核算，退款风险单独预测"
+description: "用历史利润率替代本期核算，会让事实与预测混在一起。本文通过工资类比和完整退款算例，说明统计口径、事实补录、退款净影响与预测快照如何分开。"
 date: 2026-08-10T16:47:00+08:00
-updated: 2026-09-12T20:10:00+08:00
+updated: 2026-10-23T10:30:00+08:00
 category: "实践"
 tags:
   - "数据处理"
@@ -21,13 +21,13 @@ private: false
     <span class="profit-eyebrow">电商利润模型 · 数据建模</span>
     <div class="profit-hero__title">过去负责被记录，<br />未来负责被计算。</div>
     <div class="profit-hero__subtitle">事实不可改写，预测随时更新。</div>
-    <p>近 7 天已经发生的销售、采购、投流、物流和退款，不需要再用历史利润率去猜。事实直接核算；真正需要预测的，只剩尚未发生、但仍可能发生的退款风险。</p>
+    <p>能取得的本期销售、成本、投流、物流和退款，直接按事实核算。在其它数据已完整取得的前提下，再单独估计这批订单未来的退款风险。</p>
   </div>
   <div class="profit-hero__verdict">
     <section class="is-old">
       <small>旧模型 · 预测覆盖事实</small>
       <code>上月利润率 → 上周利润率 → 近 7 天利润</code>
-      <strong>越算越远</strong>
+      <strong>旧偏差继续沿用</strong>
       <span>明明已经发生，还在拿历史比例往前推</span>
     </section>
     <div class="profit-hero__flip"><span>同样是利润表</span><b>数据哲学完全不同</b></div>
@@ -44,14 +44,16 @@ private: false
 
 旧方法最让我无法接受的一点，是先用上月利润率去估上周利润，再由上周的估算结果形成一个新的利润率，继续去估最近 7 天利润。
 
-把话说直白一点：**最近 7 天已经发生了，还预测什么？**
+问题在于：**本期已经有真实数据，为什么仍然用历史比例代替核算？**
 
-订单卖了多少、ERP 发了多少、采购成本多少、广告实际花了多少、物流实际花了多少、已经退了多少，这些都有真实数据。能拿到事实，就应该直接用事实核算。历史利润率最多用来做比较、预警和解释，不应该反过来替代本期事实。
+订单卖了多少、ERP 发了多少、广告和物流实际花了多少，应该优先读取对应记录。历史利润率可以用来比较、预警，也能在缺少数据时辅助暂估，但暂估不能冒充已经核实的本期结果。
 
 <div class="profit-thesis">
   <span>这次重构真正留下的原则</span>
-  <strong>数据库保存世界发生过什么，而不是保存我们当时觉得世界会变成什么。事实不可改写；预测可以每天重算。</strong>
+  <strong>事实记录不能被预测覆盖。事实可以补录和纠错，预测可以更新，两者都应保留来源与时间。</strong>
 </div>
+
+题记中的“事实不可改写”，指的是不能用预测篡改已经核实的业务记录，不是把错误数据锁死。账单晚到、退款补录、成本纠错，都可能改变同一周期的最新核算结果；这与调整预测参数是两回事。
 
 ## 先把三层数据分开：事实、指标、预测
 
@@ -77,85 +79,118 @@ private: false
 
 事实和指标也不是一回事。比如“这周广告实际花了 10 万”是事实，“广告费用率 12%”是指标；“这批订单最终可能再退 3 万”才是预测。
 
-指标可以重算。预测更应该重算。**只有事实应该作为可追溯的历史底座稳定保存。**
+指标按明确口径计算，预测按当时的信息估计。**事实记录是可追溯的底座，指标与预测都不能反过来覆盖它。**
 
-## 旧模型最大的问题：一层预测继续喂给下一层预测
+“已经发生”也不等于“数据已经齐全”。实际核算时，要分清三个状态：
+
+| 数据状态 | 如何处理 |
+| --- | --- |
+| 已发生，且已取得可靠记录 | 按事实核算，保留来源 |
+| 已发生，但数据缺失或尚未核实 | 标注缺失；需要暂估时，将暂估值与事实分开 |
+| 尚未发生，结果仍不确定 | 按需要预测，并说明假设 |
+
+本文下面的算例假设其它收入和费用已完整取得，因此只预测退款及其关联影响。真实业务若还有待结算费用，也要单独披露，不能把它们省略后称为完整利润。
+
+## 旧模型最大的问题：用层层估算代替本期核算
 
 旧模型大概是这样的：
 
 <div class="profit-old-model" aria-label="旧模型从上月利润率一路预测到最近七天利润">
   <div class="profit-old-model__flow">
-    <span>上月真实 / 半真实数据</span><i>→</i><strong>上月利润率</strong><i>→</i><span>估上周利润</span><i>→</i><strong>上周利润率</strong><i>→</i><span>估最近 7 天利润</span>
+    <span>上月已知数据与暂估</span><i>→</i><strong>上月利润率</strong><i>→</i><span>估上周利润</span><i>→</i><strong>上周估算利润率</strong><i>→</i><span>估最近 7 天利润</span>
   </div>
   <div class="profit-old-model__risks">
-    <section><b>01 · 事实丢失</b><p>最近 7 天明明已经发生，却不再读取本期真实销售和真实成本。</p></section>
-    <section><b>02 · 误差传递</b><p>上月利润率只要偏一点，偏差会继续进入上周，再进入最近 7 天。</p></section>
-    <section><b>03 · 无法回溯</b><p>几年后只剩一个估出来的利润，看不到当时真实发生了什么。</p></section>
+    <section><b>01 · 本期事实被绕过</b><p>已有本期销售和成本，却仍用历史利润率替代核算。</p></section>
+    <section><b>02 · 旧偏差被沿用</b><p>没有用本期事实校正，旧偏差会继续保留；引入新假设时还可能扩大。</p></section>
+    <section><b>03 · 回溯依赖底层记录</b><p>如果只存估算结果，没有保存原始事实，事后就无法重新核算。</p></section>
     <section><b>04 · 决策失真</b><p>SKU、价格、投流、采购和退款结构已经变化，历史平均数却还在替现在做决定。</p></section>
   </div>
 </div>
 
-这不是“预测模型做得不够准”，而是预测对象本身就错了。
+问题不在于“预测不能接着预测”。多阶段预测可以有用途，但输出应始终标为预测。这里的错误是：已有本期事实可用，却把沿用历史比例的估算当成本期核算结果。
 
-**预测应该解决未知问题。已经发生的事情，不属于未知。**
+### 一个最简单的例子：为什么不能把预计存款当成实际存款？
 
-### 一个最简单的例子：工资为什么不能只记 70 元
+先看 8 月真正发生了什么：假设我领到 **5,000 元工资**，交完房租、付完生活费等，一共花了 **3,000 元**，月底实际存下 **2,000 元**。
 
-假设我想预测 9 月能存多少钱。8 月存款率是 30%，9 月 1 日实际工资是 100 元。
-
-如果为了方便，直接在笔记里记：
-
-```text
-9 月 1 日：70 元
-9 月 2 日：65 元
-9 月 3 日：66 元
-```
-
-当下看，好像直接得到了“预计能存多少钱”。但一年以后回头看，我已经不知道 9 月 1 日的真实工资到底是 100、95 还是别的数字。
-
-正确的做法应该是：
-
-```text
-事实：9 月 1 日工资 = 100 元
-参数：参考存款率 = 30%
-预测：预计可存 = 70 元
-```
-
-以后存款率变成 25% 或 35%，预测随时可以重新算；事实里的 100 元永远不需要改。
-
-<div class="profit-proof-grid" aria-label="事实和预测混写的四个例子">
-  <section><span>工资</span><code>工资 100 → 预计存 70</code><p>100 是事实，70 是预测。不能为了预测存款，把真实工资覆盖成 70。</p></section>
-  <section><span>库存</span><code>现货 100 → 预计 7 天后剩 40</code><p>100 是当前库存事实，40 是未来库存预测。销量预期变了，40 可以变，100 不能被改写。</p></section>
-  <section><span>投流</span><code>实付 GMV 30 万 → 预计退款后 25 万</code><p>30 万仍然是支付事实。25 万只能叫预计最终有效销售，不能反过来当原始成交额。</p></section>
-  <section><span>利润</span><code>当前事实利润 8 万 → 预计最终利润 6.5 万</code><p>差额来自未来可能退款。要同时保留“截至现在发生了什么”和“最终可能变成什么”。</p></section>
+<div class="profit-savings" aria-label="八月工资五千元，支出三千元，存款两千元，实际存款率百分之四十">
+  <div class="profit-savings__figures">
+    <div><span>8 月工资收入</span><strong>5,000 <small>元</small></strong></div>
+    <div><span>房租、生活费等支出</span><strong>3,000 <small>元</small></strong></div>
+    <div><span>8 月实际存款</span><strong>2,000 <small>元</small></strong></div>
+  </div>
+  <div class="profit-savings__summary"><span>实际存款率 = 2,000 ÷ 5,000</span><strong>40%</strong></div>
+  <div class="profit-savings__bar" aria-hidden="true"><span></span></div>
+  <div class="profit-savings__legend"><span>支出 60%</span><span>存款 40%</span></div>
 </div>
+
+这个历史存款率，可以作为下个月预测的参考。
+
+假设 **9 月 1 日实际收到 6,000 元工资**。如果暂时沿用 8 月的 40% 存款率，那么 9 月**预计能存 2,400 元**（6,000 × 40%）。但 9 月的实际开销还没全部发生，2,400 元只是预测，不是已经存下的钱。
+
+后来房租和生活费增加，预计总支出从 **3,600 元**变成 **4,000 元**，预计存款也应更新为 **2,000 元**。月底核对账单，实际支出确实为 4,000 元，实际存款就是 6,000 − 4,000 = **2,000 元**。
+
+这时如果报表仍把月初预计的 2,400 元写成“实际存款”，就犯了与旧利润模型相同的错误：有了事实，却还在用旧预测代替核算。
+
+<div class="profit-ledger-compare" aria-label="月底仍沿用月初预测与按实际收支核算存款的对比">
+  <section class="is-wrong">
+    <div class="profit-ledger-compare__heading"><span>错误记录</span><strong>把预测当成事实</strong></div>
+    <div class="profit-ledger-compare__amount"><small>9 月“实际存款”仍沿用月初预测</small><strong>2,400 元</strong></div>
+    <p>已经知道实际支出为 4,000 元，却没有核算。报表把实际存款高估了 400 元。</p>
+  </section>
+  <section class="is-right">
+    <div class="profit-ledger-compare__heading"><span>正确记录</span><strong>按事实核算，保留原预测</strong></div>
+    <dl>
+      <div><dt>事实 · 9 月实际工资</dt><dd>6,000 元</dd></div>
+      <div><dt>事实 · 9 月实际支出</dt><dd>4,000 元</dd></div>
+      <div><dt>核算 · 9 月实际存款</dt><dd>2,000 元</dd></div>
+      <div><dt>快照 · 月初预计存款</dt><dd>2,400 元</dd></div>
+    </dl>
+    <p>既能看清真正存了多少，也能复盘月初预测为什么多了 400 元。</p>
+  </section>
+</div>
+
+这个例子中，工资和支出对应经营事实，实际存款对应核算利润，预计存款对应预计利润。**预测可以随新信息更新，但不能占据实际结果的位置。**
 
 ## 近 7 天利润应该怎么做：发生的按事实，没发生的才预测
 
-电商利润的正确边界其实很简单。
+先说明“近 7 天”统计的是哪一批业务，再讨论怎么计算。下面统一采用一个教学口径，并不表示所有平台都必须这样做：
+
+| 项目 | 本文算例采用的口径 |
+| --- | --- |
+| 统计对象 | 9 月 1 日至 7 日发货的销售订单，以发货日期选定订单范围 |
+| 数据截至时间 | 9 月 8 日 00:00，之后发生的事项暂不计入当前事实 |
+| 销售额 | 这批已发货订单对应的销售金额，扣退款前统计；不混入未发货订单的支付金额 |
+| 已退款 | 截至该时间点，能够关联到这批订单的累计退款 |
+| 成本与费用 | 对应已发货商品的成本，扣除已确认的退回成本冲回，再加本例已确认归属的推广、物流等费用 |
+| 无法关联的记录 | 单独列为待归属，不凭猜测塞入某个链接或发货周期 |
+
+例如，9 月 8 日发生了一笔 8 月订单的退款：在本文的“按发货订单归属”口径下，它应更新对应的 8 月订单结果，不能因为今天收到了退款记录，就扣进 9 月 1 日至 7 日这批订单。
+
+也可以另做按退款发生日期统计的售后报表，但不能把两种口径混在同一公式里。采购付款也不等于本期商品成本：尚未售出的库存采购，不应全部扣进这批订单。
 
 <div class="profit-cost-lanes" aria-label="利润核算中的事实和预测边界">
   <section class="is-variable">
     <small>轨道 A · 收入事实</small>
     <strong>已经发生多少，就记录多少</strong>
-    <span>支付 / 发货销售额</span>
+    <span>同一批发货订单的销售额</span>
     <span>已经发生的退款</span>
-    <span>已经确认的取消 / 关闭</span>
+    <span>明确销售范围与订单状态</span>
     <code>不使用历史利润率改写本期销售额</code>
   </section>
   <section class="is-sunk">
     <small>轨道 B · 成本事实</small>
-    <strong>已经真实花掉的钱直接进入核算</strong>
-    <span>采购与履约</span>
+    <strong>按同一业务范围确认成本与费用</strong>
+    <span>已发货商品成本与履约</span>
     <span>广告 / 投流</span>
     <span>物流 / 后勤</span>
     <span>售后与其它实际费用</span>
-    <code>已发生支出不因为预计退款而凭空消失</code>
+    <code>已确认成本保留；实际冲回另行记录</code>
   </section>
   <section class="is-reserve">
     <small>轨道 C · 退款预测</small>
     <strong>只补还没有发生的那部分</strong>
-    <span>未成熟订单未来退款</span>
+    <span>售后尚未充分结束的订单未来退款</span>
     <span>未来退货带来的成本冲回</span>
     <span>退款关联费用的未来变化</span>
     <code>预测的是退款净影响，不是整张利润表</code>
@@ -165,41 +200,74 @@ private: false
 因此利润表最好同时给出两个结果：
 
 <div class="profit-equation-stack profit-equation-stack--formula">
-  <section><small>截至当前事实利润</small><code>当前已实现收入 − 当前已发生成本</code></section>
-  <section><small>未来退款净影响</small><code>预计未来退款损失 − 可冲回采购 / 费用 + 不可回收售后成本</code></section>
+  <section><small>截至当前事实利润</small><code>选定订单销售额 − 已发生退款 − 已确认净成本与费用</code></section>
+  <section><small>未来退款净影响</small><code>预计未来新增退款 − 预计未来成本与费用冲回 + 预计未来新增售后费用</code></section>
   <section><small>预计最终利润</small><code>截至当前事实利润 − 未来退款净影响</code></section>
 </div>
 
-这样一来，预测参数每天变化没有任何问题。变化的是“预计最终利润”，不是昨天真实发生的销售额、广告费和采购成本。
+这里的“事实利润”是按选定口径、截至当前已取得事实计算出的结果，不代表售后已全部结束，也不等于企业净利润。仅改变预测参数时，事实核算结果不变；新增退款、晚到费用或事实纠错，则应更新事实核算。
 
-## 退款率可以预测，但它只能待在预测层
+## 历史退款率可以参考，但不能当成本期事实
 
-退款是这个模型里真正具有时间滞后的部分。今天下的订单，未来几天仍可能退款；最近 7 天的订单还没有完全成熟，所以最终退款金额确实未知。
+退款往往晚于成交或发货发生。这批订单中，有些售后尚未充分结束，最终退款金额仍然未知；本文把这类订单称为“未成熟订单”。
 
-这时候可以用更成熟的一批历史订单估计风险。例如某个业务可以用 `T−21 ～ T−8` 的订单作为成熟样本，再把得到的金额退款率用于评估最近 7 天仍未成熟订单的未来退款风险。
+可以用售后已较充分发生的历史订单估计风险。设 `T` 是统计日，例如 9 月 8 日；`T−7 ～ T−1` 就是 9 月 1 日至 7 日。某个业务也许会选 `T−21 ～ T−8` 作为历史样本，但必须先确认这批订单的售后是否已足够稳定，不能仅凭日期更早就认定“成熟”。
 
-<div class="profit-window" aria-label="成熟退款样本与最近七天事实窗口">
-  <div class="profit-window__ticks"><span>T−21</span><span>T−8</span><span>T−7</span><span>T−1</span><span>今天</span></div>
+<div class="profit-window" aria-label="历史样本估计参数，当前订单保留事实，再预测当前订单未来的退款">
   <div class="profit-window__bands">
-    <section class="is-mature"><small>成熟样本</small><strong>估计退款风险 R</strong><span>回答：类似订单最终通常会退多少</span></section>
-    <section class="is-current"><small>最近 7 天</small><strong>记录真实经营事实</strong><span>销售、成本、投流、已发生退款都直接取事实</span></section>
-    <section class="is-today"><small>未决部分</small><strong>只预测未来退款</strong><span>不覆盖事实</span></section>
+    <section class="is-mature"><small>历史样本 · T−21 至 T−8</small><strong>估计最终金额退款率 R</strong><span>售后已较充分发生，口径与当前订单一致</span></section>
+    <section class="is-current"><small>当前订单 · T−7 至 T−1</small><strong>截至 T 的销售、成本与已退款</strong><span>选定同一批订单，保留已取得的事实</span></section>
+    <section class="is-today"><small>这批当前订单 · T 之后</small><strong>估计未来还会新增的退款</strong><span>预测对象仍是前一栏的订单，不是“今天的订单”</span></section>
   </div>
 </div>
 
 这里有一个非常重要的区别：**成熟退款率是风险参数，不是最近 7 天的“真实退款率”。**
 
-成熟窗口每天向前滚动，`R` 会变化，这是正常的；因此“预计最终利润”每天也可能变化。但是近 7 天每天的销售额、已发生退款、实际广告花费、真实采购和物流成本，不应该因为 `R` 变化而跟着被改写。
+历史样本更新时，`R` 可以变化；后续实际退款到来时，已退款事实也会增加。需要分别记录两种变化的原因。每天滚动查看“近 7 天”时，订单范围本身也在变；要跟踪同一批订单，应固定订单范围，并标明每次的数据截至时间。若只比较预测参数的影响，还应保持事实输入不变。
 
-如果进度表需要每天展示预测，就每天重新计算预测层；事实层不动。
+### 完整算一遍：已经退了的，不能再扣一次
 
-同样，不能把已经发生的退款和“完整退款率 × 全部销售额”再扣一遍。更合理的表达是：
+以下全部是**用于解释计算关系的假设数据，并非真实经营数据**。继续使用 9 月 1 日至 7 日发货的订单，截至 9 月 8 日 00:00 核算。为集中解释退款，本例不含税费、公司固定费用等；结果仅代表示例所列项目下的经营贡献。
 
-```text
-预计最终退款 = 已发生退款 + 对仍未成熟 / 未决订单的未来退款估计
-```
+**第一步：先核算已经取得的事实。**
 
-历史样本具体取多少天、退款成熟需要多久，可以根据平台和品类调整。`T−21 ～ T−8` 只是一个业务实现示例，不是电商行业的固定常数。
+| 项目 | 金额 | 含义 |
+| --- | --- | --- |
+| 发货订单销售额 | 10,000 元 | 这批订单的退款前销售额 |
+| 已发生退款 | −1,000 元 | 已关联到这批订单，不能重复扣减 |
+| 已确认净商品成本 | −4,500 元 | 已扣除当前已确认的退回商品成本冲回 |
+| 已确认推广费用 | −1,500 元 | 假设本例已准确归属到这批订单 |
+| 已确认物流等费用 | −500 元 | 已发生费用，未来退款不会让它自动消失 |
+| **截至当前事实利润** | **2,500 元** | **10,000 − 1,000 − 4,500 − 1,500 − 500** |
+
+**第二步：估计最终退款，再减去已经发生的部分。**
+
+假设一个足够成熟、结构相近且使用相同销售额口径的历史样本，销售额为 **100,000 元**，累计退款 **20,000 元**，得到最终金额退款率 `R = 20%`。
+
+为了演示，本例暂用这个比例估计当前整批订单的最终退款：10,000 × 20% = **2,000 元**。其中已经退了 1,000 元，所以还需预测的是 **1,000 元**，而不是再扣一次 2,000 元。
+
+<div class="profit-refund-calc" aria-label="预计最终退款两千元，减已退款一千元，等于预计未来新增退款一千元">
+  <section><span>预计最终退款</span><strong>2,000 元</strong><p>10,000 × 20%</p></section>
+  <section><span>减去已发生退款</span><strong>−1,000 元</strong><p>已进入事实利润</p></section>
+  <section class="is-result"><span>预计未来新增退款</span><strong>1,000 元</strong><p>只将剩余部分纳入预测</p></section>
+</div>
+
+这是整批订单的简化演示，不是通用预测算法。实际应用还要检查商品、渠道和订单距发货天数是否可比；不同订单已度过的售后时间不同，剩余风险也不同。不能把“最终退款率”直接当作“剩余金额的未来退款概率”。
+
+在这种简化算法下，未来新增退款写作 `max(0，销售额 × R − 已退款)`。如果实际已退款超过预计最终值，应提示参数失配并重新评估；取零只是防止算出负退款，不代表以后一定不会再退。
+
+**第三步：把退款金额转换成利润净影响。**
+
+假设未来新增的 1,000 元退款中，预计退回商品能够冲回成本 **400 元**，还会新增售后物流等费用 **100 元**。400 元只针对未来可能退回的商品，不包含第一步已经确认过的冲回；也不能假定每笔退款都会退货或都能恢复全部成本。
+
+| 计算 | 结果 |
+| --- | --- |
+| 未来退款净影响 = 新增退款 1,000 − 未来成本冲回 400 + 新增售后费用 100 | **700 元** |
+| 预计最终利润 = 当前事实利润 2,500 − 未来退款净影响 700 | **1,800 元** |
+
+如果错误地再扣完整的 2,000 元退款，预计最终利润就会变成 800 元，比上述结果少 1,000 元，恰好重复扣掉了已经进入事实核算的退款。
+
+历史样本取多少天、退款多久趋于稳定，都应根据平台和品类验证。`T−21 ～ T−8` 只是示意窗口，不是固定标准；没有可比样本时，应明确“暂无可靠预测”，不能悄悄把风险填成零。
 
 ## 抖音只是一个案例，这套原则适用于所有平台
 
@@ -222,7 +290,7 @@ private: false
   </div>
 </div>
 
-平台不同，只是“事实从哪里来”和“用什么 Key 归属”不同，不应该因此每个平台再发明一套“历史利润率乘当前销售额”的代理模型。
+共同原则可以复用，但平台之间不只是字段名不同：收入确认、费用结算、退款和补贴等规则也可能不同，必须分别说明。数据关联键（例如订单号、SKU、链接 ID）用于连接记录，也不能代替业务口径。
 
 ### 事实也必须按真实发生单位归属
 
@@ -232,7 +300,9 @@ private: false
 
 拍单、补发、换货也是一样。可能没有正常销售收入，但采购、物流、后勤确实发生了：**假的收入要拿掉，真的成本要留下。**
 
-这些问题看起来和“事实 / 预测”是两回事，其实本质完全一样：先尊重真实发生的业务对象，再做计算。
+还有一个现实边界：**有真实退货记录，不代表能准确知道它属于哪个原始链接、哪一天的发货。** 如果 ERP 缺少可靠关联，就应保留退货事实，并列出待归属金额和受影响范围。若业务采用分摊规则，展示的是分摊结果，不能声称是逐单精确匹配。
+
+统计颗粒度解决“一笔费用算几次”，归属规则解决“算给谁”，事实与预测分层解决“这个数是什么性质”。三件事都要明确，才能从可靠的原始数据得到可靠的结果。
 
 ## 历史利润率不是没用，只是别拿它代替现在
 
@@ -244,15 +314,7 @@ private: false
   <section><small>用途 03</small><strong>原因解释</strong><p>继续拆价格、SKU、退款、广告、采购和履约，解释为什么发生变化。</p></section>
 </div>
 
-最不应该做的是：
-
-```text
-因为上个月利润率是 18%
-所以先假设上周也差不多
-再用“估出来的上周利润率”去估最近 7 天
-```
-
-这等于用过去的解释，替换现在的事实。
+比较前也要保证订单范围、成本口径和退款观察时间相近。售后已较充分发生的上月利润率，与刚发货几天的本周事实利润率，直接比较可能主要反映退款进度差异。
 
 ## 利润表最好把“事实结果”和“预测结果”同时摆出来
 
@@ -267,37 +329,37 @@ private: false
   <section>
     <small>02 · 预测区</small>
     <strong>只放未来尚未确定的退款风险</strong>
-    <span>成熟退款率</span><span>未成熟订单暴露</span><span>预计未来退款</span><span>退款净影响</span>
+    <span>历史最终金额退款率</span><span>仍可能退款的订单及金额</span><span>预计未来新增退款</span><span>未来退款净影响</span>
   </section>
   <section class="is-quality">
     <small>03 · 结果与质量</small>
     <strong>把“现在”和“最终可能怎样”明确区分</strong>
-    <span>截至当前事实利润</span><span>预计最终利润</span><span>缺失成本</span><span>无成熟退款样本</span><span>归属异常</span>
+    <span>订单范围与数据截至时间</span><span>截至当前事实利润</span><span>预计最终利润</span><span>缺失成本与暂估</span><span>无可靠退款样本</span><span>待归属金额</span>
   </section>
 </div>
 
-这样看表的人能马上知道：哪一部分是已经发生的，哪一部分还会继续变化。
+这样看表的人能知道：哪些是当前已取得的事实，哪些是计算结果，哪些来自假设，还有哪些缺口未解决。
 
-如果几个月后回来复盘，也可以重新计算当时的利润，而不是面对一堆已经被预测覆盖过的历史数字。
+保留底层记录后，可以按最新事实重新核算该批订单；如果还要重现“当时看到的结果”，则需要下面的快照和当时使用的数据版本。
 
 ## 如果业务真的需要保存预测，就保存“预测快照”
 
-“数据只存事实”并不意味着预测结果永远不能落库。
+预测可以保存，用来复盘判断，也可以继续作为预测计算的输入；关键是保留它的性质、来源和时间，不能冒充事实。
 
 如果业务要研究：
 
 > 9 月 1 日的时候，我们当时预测月底会赚多少？
 
-那么预测当然可以保存，但应该和事实彻底分开，至少带上：
+预测快照与原始事实应分开记录。一次可解释、可复现的快照，至少要说明：
 
-```text
-预测时间 forecast_at
-预测对象 target_period / target_key
-当时使用的退款率 refund_rate
-预计未来退款 expected_future_refund
-预计最终利润 expected_final_profit
-模型版本 model_version
-```
+| 信息 | 保存目的 |
+| --- | --- |
+| 预测生成时间、数据截至时间 | 区分何时计算、当时看到了哪些数据 |
+| 固定的订单范围、链接或其它预测对象 | 避免把每天滚动变化的范围当作同一对象 |
+| 当时事实输入的快照或可重建版本 | 后续补录和纠错后，仍能还原当时结果 |
+| 使用的退款率、样本及其它假设 | 解释参数从哪里来 |
+| 预计未来新增退款、退款净影响、预计最终利润 | 保留当时的判断结果 |
+| 口径与模型版本 | 解释计算规则变化 |
 
 第二天参数变了，就新增第二天的预测快照，而不是修改 9 月 1 日的订单事实。
 
@@ -306,29 +368,25 @@ private: false
 - **真实历史**：最后到底发生了什么。
 - **认知历史**：在当时已知信息下，我们曾经怎样判断未来。
 
-两者都有价值，但绝不能混成同一个字段。
+两者都有价值，但绝不能混成同一个字段。晚到的账单或纠错记录更新最新事实视图；9 月 1 日保存的预测快照仍保留当时的信息。这样才能区分“后来发生了什么”和“当时为什么这样判断”。
 
 ## 怎么证明模型没有再次走回老路
 
 <div class="profit-proof-grid" aria-label="利润模型的验证规则">
   <section><span>事实可重放</span><code>原始订单 + 成本 + 已退款 → 截至当前事实利润</code><p>不依赖上月或上周利润率，也能重新算出当前结果。</p></section>
-  <section><span>预测可替换</span><code>事实不变，只替换退款预测参数</code><p>变化的只能是预计未来退款和预计最终利润。</p></section>
+  <section><span>预测可替换</span><code>固定事实输入，只替换预测参数</code><p>事实核算不变，预计新增退款、成本冲回和预计最终利润可以变化。</p></section>
   <section><span>历史不改写</span><code>今天 R 变化 ≠ 昨天销售额变化</code><p>任何预测参数都不能回写覆盖订单、成本和已退款事实。</p></section>
-  <section><span>误差不递归</span><code>预测结果不能再作为下一期事实输入</code><p>下一期继续读取下一期真实数据，而不是拿上一期预测利润率继续推。</p></section>
+  <section><span>变化可解释</span><code>新增事实 / 数据纠错 / 参数更新分别记录</code><p>预测可用于后续预测，但必须保持预测标识；旧快照不能被最新结果覆盖。</p></section>
 </div>
 
 <div class="profit-boundaries">
-  <header><span>最终原则</span><strong>能拿到事实，就不要预测；只有未来的不确定性，才需要模型。</strong></header>
+  <header><span>最终原则</span><strong>有事实就核算，有缺口就披露，有未来风险再单独预测。</strong></header>
   <div><b>事实</b><p>订单、发货、采购、广告、物流、已经发生的退款和售后。过去负责被记录。</p></div>
   <div><b>指标</b><p>利润率、退款率、ROI 等，是对事实的解释，可以随口径重新计算。</p></div>
   <div><b>预测</b><p>当前订单未来还可能发生多少退款，以及这些退款最终会让利润变化多少。未来负责被计算。</p></div>
 </div>
 
-利润模型最重要的不是公式有多复杂，而是**不让模型篡改历史**。
-
-近 7 天已经发生，就按近 7 天真实数据核算；未来还可能退款，才对那部分做预测。
-
-**事实不可改写，预测随时更新。**
+利润模型的价值，是让读者分得清：这批订单截至现在确认了多少利润，还有多少退款风险，以及结果为什么会随着新信息变化。
 
 <style>{`
   :root {
@@ -368,6 +426,8 @@ private: false
   .profit-thesis,
   .profit-equation-stack,
   .profit-old-model,
+  .profit-savings,
+  .profit-ledger-compare,
   .profit-proof-grid,
   .profit-cost-lanes,
   .profit-window,
@@ -640,6 +700,194 @@ private: false
     line-height: 1.55;
   }
 
+  .profit-savings {
+    margin: 1.1rem 0 1.65rem;
+    padding: clamp(0.9rem, 2vw, 1.25rem);
+    border: 1px solid var(--pr-border);
+    border-radius: 0.95rem;
+    background: var(--pr-panel);
+  }
+
+  .profit-savings__figures {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .profit-savings__figures > div {
+    min-width: 0;
+    padding: 0.8rem;
+    border: 1px solid var(--pr-border);
+    border-radius: 0.6rem;
+    background: var(--pr-bg);
+  }
+
+  .profit-savings__figures span,
+  .profit-savings__figures strong,
+  .profit-savings__summary span,
+  .profit-savings__summary strong {
+    display: block;
+  }
+
+  .profit-savings__figures span {
+    margin-bottom: 0.35rem;
+    color: var(--pr-muted);
+    font-size: 0.76rem;
+  }
+
+  .profit-savings__figures strong {
+    font-size: clamp(1.05rem, 2.2vw, 1.65rem);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .profit-savings__figures strong small {
+    font-size: 0.65em;
+  }
+
+  .profit-savings__figures > div:last-child strong {
+    color: var(--pr-green);
+  }
+
+  .profit-savings__summary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.8rem;
+    margin: 1rem 0 0.45rem;
+    font-size: 0.83rem;
+  }
+
+  .profit-savings__summary strong {
+    color: var(--pr-green);
+    font-size: 1.45rem;
+  }
+
+  .profit-savings__bar {
+    height: 0.7rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--pr-border);
+  }
+
+  .profit-savings__bar span {
+    display: block;
+    width: 40%;
+    height: 100%;
+    margin-left: 60%;
+    background: var(--pr-green);
+  }
+
+  .profit-savings__legend {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.4rem;
+    color: var(--pr-muted);
+    font-size: 0.73rem;
+  }
+
+  .profit-savings__legend span:last-child {
+    color: var(--pr-green);
+    font-weight: 800;
+  }
+
+  .profit-ledger-compare {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin: 1.15rem 0 1.5rem;
+  }
+
+  .profit-ledger-compare section {
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--pr-border);
+    border-radius: 0.9rem;
+  }
+
+  .profit-ledger-compare .is-wrong {
+    border-color: var(--pr-coral);
+    background: var(--pr-coral-soft);
+  }
+
+  .profit-ledger-compare .is-right {
+    border-color: var(--pr-green);
+    background: var(--pr-green-soft);
+  }
+
+  .profit-ledger-compare__heading span,
+  .profit-ledger-compare__heading strong {
+    display: block;
+  }
+
+  .profit-ledger-compare__heading span {
+    margin-bottom: 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .profit-ledger-compare .is-wrong .profit-ledger-compare__heading span {
+    color: var(--pr-coral);
+  }
+
+  .profit-ledger-compare .is-right .profit-ledger-compare__heading span {
+    color: var(--pr-green);
+  }
+
+  .profit-ledger-compare__heading strong {
+    font-size: 0.95rem;
+  }
+
+  .profit-ledger-compare__amount,
+  .profit-ledger-compare dl {
+    min-height: 8rem;
+    margin: 0.8rem 0 0;
+    padding: 0.8rem;
+    border: 1px solid var(--pr-border);
+    border-radius: 0.6rem;
+    background: var(--pr-bg);
+  }
+
+  .profit-ledger-compare__amount small,
+  .profit-ledger-compare__amount strong {
+    display: block;
+  }
+
+  .profit-ledger-compare__amount small {
+    color: var(--pr-muted);
+  }
+
+  .profit-ledger-compare__amount strong {
+    margin-top: 0.5rem;
+    color: var(--pr-coral);
+    font-size: 1.6rem;
+  }
+
+  .profit-ledger-compare dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.24rem 0;
+    font-size: 0.77rem;
+  }
+
+  .profit-ledger-compare dt {
+    color: var(--pr-text);
+  }
+
+  .profit-ledger-compare dd {
+    margin: 0;
+    flex-shrink: 0;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .profit-ledger-compare p {
+    margin: 0.8rem 0 0;
+    color: var(--pr-text);
+    font-size: 0.77rem;
+    line-height: 1.65;
+  }
+
   .profit-proof-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -764,17 +1012,9 @@ private: false
     background: var(--pr-panel);
   }
 
-  .profit-window__ticks {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    color: var(--pr-muted);
-    font-size: 0.67rem;
-    text-align: center;
-  }
-
   .profit-window__bands {
     display: grid;
-    grid-template-columns: 2fr 2fr 0.9fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.45rem;
     margin-top: 0.42rem;
   }
@@ -820,6 +1060,43 @@ private: false
   .profit-window__bands span {
     color: var(--pr-text);
     font-size: 0.66rem;
+  }
+
+  .profit-refund-calc {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+    margin: 1.25rem 0;
+    color: var(--pr-ink);
+  }
+
+  .profit-refund-calc section {
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--pr-border);
+    border-radius: 0.8rem;
+    background: var(--pr-panel);
+  }
+
+  .profit-refund-calc .is-result {
+    border-color: var(--pr-green);
+    background: var(--pr-green-soft);
+  }
+
+  .profit-refund-calc span,
+  .profit-refund-calc strong {
+    display: block;
+  }
+
+  .profit-refund-calc strong {
+    margin: 0.45rem 0;
+    font-size: 1.4rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .profit-refund-calc p {
+    margin: 0;
+    color: var(--pr-text);
   }
 
   .profit-data-map {
@@ -1080,12 +1357,9 @@ private: false
     .profit-hero,
     .profit-equation-stack,
     .profit-cost-lanes,
+    .profit-refund-calc,
     .profit-decision-path {
       grid-template-columns: 1fr;
-    }
-
-    .profit-window__ticks {
-      display: none;
     }
 
     .profit-window__bands {
@@ -1100,6 +1374,26 @@ private: false
 
     .profit-hero__title {
       font-size: clamp(2rem, 11vw, 3rem);
+    }
+
+    .profit-savings__figures {
+      gap: 0.4rem;
+    }
+
+    .profit-savings__figures > div {
+      padding: 0.55rem 0.45rem;
+    }
+
+    .profit-savings__figures span {
+      font-size: 0.66rem;
+    }
+
+    .profit-savings__figures strong {
+      font-size: 1.06rem;
+    }
+
+    .profit-ledger-compare {
+      grid-template-columns: 1fr;
     }
 
     .profit-data-map__sources,
