@@ -1,0 +1,318 @@
+---
+title: "从会回答到会做事：认识 Transformer、LLM 与 AI Agent"
+description: "从机器学习、Transformer 和大语言模型出发，沿着一个评价分析案例看懂检索、工具调用、固定工作流与 AI Agent 的真实关系。"
+date: 2026-10-24T09:00:00+08:00
+category: "教程"
+tags:
+  - "人工智能"
+  - "Transformer"
+  - "LLM"
+  - "AI Agent"
+minutes: 15
+featured: false
+pinned: false
+archived: false
+draft: false
+private: false
+---
+
+import '../../styles/ai-agent-intro.css';
+
+<div class="ai-primer">
+  <div class="ai-primer-lead">
+    <p class="ai-primer-kicker">AI / LANGUAGE MODEL / AGENT · 一份技术图解入门</p>
+    <p class="ai-primer-opening">同样一句“帮我分析这些商品评价”，有的 AI 只会告诉你怎么做；有的系统却能读取评价、整理问题、核对资料，再把结果保存成报告。</p>
+    <div class="ai-primer-leadline" aria-label="本文关注的三个层面">
+      <span><b>模型</b> 如何生成回答</span>
+      <span><b>工具</b> 如何连接外部世界</span>
+      <span><b>系统</b> 如何组织执行</span>
+    </div>
+  </div>
+</div>
+
+这并不是因为后一种 AI 突然“拥有了手脚”。更准确地说，它是把模型的语言能力接到了外部资料、程序工具和任务控制机制上。
+
+要理解这件事，需要分清三个层次：**模型为什么能产生有用的输出、应用怎样让它接触外部世界，以及谁来决定下一步要做什么。** 我们沿着同一个假设案例，从早期 AI 讲到今天的 Agent。
+
+> **贯穿全文的案例（教学假设）**：一家电商企业每天收到大量键盘评价，希望识别主要问题、核对售后规则，并形成可追溯的运营报告。下文用于说明技术机制，不代表某套真实系统已经实现这些功能，也不宣称任何实际准确率。
+
+## 一、从写规则到让机器学习：AI 最早在解决什么？
+
+如果要找出商品评价里的质量问题，最容易想到的方法是写规则：出现“坏了”就标记故障；出现“没反应”就标记连接异常。
+
+这种方法的优点非常直接：判断条件清楚、执行稳定、容易核查。但用户可能写“连接总是断断续续”“用了三天就连不上”，也可能写“不是说它坏了，只是不会配对”。关键词一多，规则就容易漏掉变化、误判否定句，维护也会越来越困难。
+
+**机器学习（Machine Learning）**提供了另一条路：收集已有标签的评价，让算法从例子中学习文本特征与问题类别之间的关系，再尝试分类新评价。这里的“学习”不是程序获得了人类经验，而是训练过程调整了模型内部的参数，使预测更符合训练目标。
+
+**深度学习（Deep Learning）**通常指使用多层神经网络学习数据表示的方法。它属于机器学习的重要分支；机器学习又属于更广泛的人工智能（AI）研究与实践。AI 还包含推理、搜索、规划等不必都依赖深度学习的技术路线。
+
+这个区别也解释了一个常见误解：**人工智能不等于 ChatGPT，也不是直到大语言模型出现才开始研究。** 1955 年的达特茅斯研究计划已明确讨论让机器使用语言、形成抽象概念和解决问题；1956 年夏季项目常被视为 AI 学科历史上的重要节点。[来源：达特茅斯原始研究计划](https://www-formal.stanford.edu/jmc/history/dartmouth.pdf)。
+
+<figure class="ai-primer-figure ai-primer-map" aria-label="人工智能技术关系与历史里程碑">
+  <div class="ai-primer-figure-head">
+    <span>图解 01 / 两张地图，回答两个问题</span>
+    <strong>时间先后 ≠ 技术的包含或替代关系</strong>
+  </div>
+  <div class="ai-primer-map-part">
+    <p class="ai-primer-minihead">概念关系 · 谁属于哪一层？</p>
+    <div class="ai-primer-nesting">
+      <div class="ai-primer-nest ai-primer-nest-ai"><span>AI 人工智能</span><div class="ai-primer-nest ai-primer-nest-ml"><span>机器学习 ML</span><div class="ai-primer-nest ai-primer-nest-dl"><span>深度学习 DL</span><div class="ai-primer-nest-core">Transformer · 常用于现代 LLM 的一种架构家族</div></div></div></div>
+      <div class="ai-primer-nest-side">
+        <b>Agent 是什么位置？</b>
+        <p>Agent 属于<strong>系统/行为层面的概念</strong>：可以使用模型，也可以组合规则、工具与其他算法，并不被画进“深度学习的下一层”。</p>
+      </div>
+    </div>
+  </div>
+  <div class="ai-primer-map-part">
+    <p class="ai-primer-minihead">代表性节点 · 发生了什么？</p>
+    <ol class="ai-primer-history">
+      <li><b>1955–56</b><span>达特茅斯 AI 研究计划与夏季项目</span></li>
+      <li><b>1995</b><span>智能 Agent 已有系统性的理论与架构研究</span></li>
+      <li><b>2012</b><span>深度学习在图像识别取得代表性进展</span></li>
+      <li><b>2017</b><span>Transformer 论文发表</span></li>
+      <li><b>2018–20</b><span>生成式预训练语言模型持续发展</span></li>
+      <li><b>2020–22</b><span>RAG、ReAct 等研究扩展检索与行动能力</span></li>
+      <li><b>近年</b><span>LLM 与工具、工作流和 Agent 系统加速结合</span></li>
+    </ol>
+  </div>
+  <figcaption>上方是概念关系，下方是代表性时间节点。它们不是一条单向的“技术升级树”；时间间隔也未按比例绘制。历史资料见文末。</figcaption>
+</figure>
+
+理解了“从规则到学习”，还没有回答语言里最棘手的问题：**同一个词放在不同上下文里，意思可能完全不同。**
+
+## 二、Transformer：为什么模型需要关注上下文？
+
+想象两条评价：
+
+“这个键盘很轻，出差携带方便。”和“这个键盘的按键很轻，容易误触。”
+
+同样出现“轻”，第一条更接近便携性的优点，第二条可能在描述按键触发力度的问题。只抓取单个词，很难理解它在句子中的作用。
+
+神经网络处理文字，需要先将输入切分成 **Token**，再映射为数值表示。Token 是模型分词器使用的单位，可能是字符、字词片段或其他片段，并不等于汉语的一个字或英语的一个词。
+
+2017 年发表的 [《Attention Is All You Need》](https://arxiv.org/abs/1706.03762) 提出 Transformer 架构。它的重要机制之一是 **Self-Attention（自注意力）**：计算一个位置的表示时，让网络依据当前内容，综合序列中其他可访问位置的信息。模型借此学习上下文相关的表示，而不只是给一个词查固定词典。
+
+<figure class="ai-primer-figure ai-primer-attention" aria-label="Transformer 自注意力概念简图">
+  <div class="ai-primer-figure-head">
+    <span>图解 02 / 上下文关联</span>
+    <strong>理解“轻”，还要看它修饰的是什么</strong>
+  </div>
+  <div class="ai-primer-phrase-row" aria-label="示意输入片段">
+    <span>这个键盘</span>
+    <span class="ai-primer-token-focus">很轻</span>
+    <span>，出差携带</span>
+    <span class="ai-primer-token-signal">方便</span>
+  </div>
+  <div class="ai-primer-logic-line">
+    <span>当前位置</span><i aria-hidden="true">↕</i><span>结合上下文关系</span><i aria-hidden="true">↕</i><span>更新表示</span>
+  </div>
+  <div class="ai-primer-attention-compare">
+    <div><small>语境 A</small><strong>键盘很轻 · 携带方便</strong><p>可能指重量轻、便于外出</p></div>
+    <div><small>语境 B</small><strong>按键很轻 · 容易误触</strong><p>可能指触发力度小</p></div>
+  </div>
+  <figcaption>教学示意：框内使用中文短语方便阅读，不代表真实模型的 Token 划分、注意力权重或可解释的内部因果路径；自注意力也不是 Transformer 的全部。</figcaption>
+</figure>
+
+原始 Transformer 还包含位置信息、前馈网络等组成部分，并使用编码器—解码器结构。今天常见的自回归文本生成模型多采用 **仅解码器（decoder-only）** 等架构变体，不能把所有 Transformer 模型画成同一套固定结构。
+
+相比当时广泛采用的循环式序列建模方法，Transformer 允许在许多训练计算中更充分地并行处理序列位置，这是它获得广泛应用的重要原因之一；但注意力机制并不是在 2017 年才第一次出现。2012 年以 AlexNet 为代表的视觉深度学习进展，也说明现代 AI 的发展有多条并行研究线索，而不是 Transformer 单独开启了一切。
+
+那么，这种能够处理上下文的网络，怎样变成一个会写回答的语言模型？
+
+## 三、LLM：一句回答究竟是怎样生成的？
+
+**大语言模型（Large Language Model，LLM）**是在大量数据上训练、能够处理和生成语言等内容的模型。许多现代 LLM 使用 Transformer 变体，但“LLM”描述的是模型的规模与语言能力范畴，“Transformer”描述的是架构，两者不是同义词。
+
+对常见的自回归语言模型来说，基础训练目标之一是：**根据已有上下文，预测下一个 Token。** 训练会调整海量参数，让模型逐渐学到语法、表达、文本中的模式与大量统计关联。之后的指令微调、偏好优化等后训练方法，又会改变它响应任务和对话的方式。
+
+当你输入“请总结这批评价的主要问题”，模型在一次推断过程中，根据输入上下文与已有参数，计算下一 Token 的候选分布，再按照解码策略选出一个；把它接到已有内容后继续生成，直到达到结束条件。
+
+<figure class="ai-primer-figure ai-primer-generation" aria-label="自回归语言模型逐步生成文字">
+  <div class="ai-primer-figure-head">
+    <span>图解 03 / 一步一步生成</span>
+    <strong>不是先有整篇答案，再逐字显示出来</strong>
+  </div>
+  <div class="ai-primer-gen-track">
+    <div class="ai-primer-gen-input"><small>已有上下文</small><strong>评价主要反映按键</strong></div>
+    <div class="ai-primer-gen-candidates"><small>示意候选</small><span>偏</span><span>很</span><span>有</span></div>
+    <div class="ai-primer-gen-next"><small>选择并接续</small><strong>评价主要反映按键<span>偏</span>…</strong></div>
+  </div>
+  <div class="ai-primer-gen-loop"><span>新的上下文</span><span aria-hidden="true">→</span><span>再预测下一 Token</span><span aria-hidden="true">→</span><span>重复直到结束</span></div>
+  <figcaption>仅为生成机制示意：候选字符不是来自某次模型运行，也不代表真实分词结果和概率。实际模型可以使用采样等不同解码策略，不一定每步都选概率最大的 Token。</figcaption>
+</figure>
+
+这里有两个容易混淆的阶段：
+
+- **训练**：通过数据和计算修改模型参数，通常是事先完成的过程。
+- **推断**：使用已经训练好的参数处理当前输入、计算并输出结果。你在聊天框里提供新信息，通常不会因此直接改写模型参数。
+
+2018 年的 [GPT 早期研究](https://openai.com/index/language-unsupervised/)展示了生成式预训练与语言任务相结合的潜力；2020 年 [GPT-3 研究](https://openai.com/index/language-models-are-few-shot-learners/)展示了扩大语言模型规模与少样本任务表现之间的重要联系。2022 年 ChatGPT 的发布，则让对话式使用方式得到更广泛的公众关注。这些是代表性节点，不是说语言模型到这些年份才诞生。
+
+既然模型能够根据海量文本形成有用的表示，它也可能生成看似合理却不符合事实的内容。**“生成了一个答案”与“答案经过核实”是两件事。** 参数里的知识并不是实时数据库，模型也不天然知道企业今天更新了哪些规则。
+
+## 四、Prompt、RAG 和工具调用：模型怎样接触外部世界？
+
+假设电商公司刚修改售后规则，而我们要求 AI：“按最新规定检查昨天的评价，并把需要处理的问题整理成报告。”
+
+只靠模型已有参数不够。要区分三种能力：
+
+### Prompt：把任务说明白
+
+Prompt 是交给模型的输入，包括任务目标、背景、约束和示例。“按最新规则判断”是一项要求，但仅仅写下这句话，并不会自动让模型拥有最新规则。
+
+### RAG：先找资料，再辅助生成
+
+**RAG（Retrieval-Augmented Generation，检索增强生成）**把检索到的外部材料提供给模型，帮助它基于相关资料回答问题。例如先找到现行售后政策，再让模型对照评价判断。2020 年的 [RAG 代表性论文](https://arxiv.org/abs/2005.11401)系统研究了结合预训练模型与外部检索信息生成文本的方法。
+
+检索增强的是信息来源与可追溯性，不是事实正确性的保证：找错文件、材料过期、解读错误，结果仍可能出错。
+
+### Tool Calling：请求程序执行一个动作
+
+如果模型需要“打开评价表、读取数据、计算数量、保存文件”，就不能只停留在文字回答。
+
+使用工具调用（Tool Calling）时，应用可以提供有名称、参数和权限边界的工具。例如模型产生一个“读取指定评价表”的调用请求，**由外部程序或受管理的工具环境真正执行**，再把执行结果交回模型。对于一些托管工具，平台会负责执行；但模型生成调用内容本身仍不等于动作完成。[参考：OpenAI 工具调用文档](https://developers.openai.com/api/docs/guides/function-calling)。
+
+这三者不是谁取代谁：
+
+| 机制 | 主要回答的问题 | 单独使用时的边界 |
+| --- | --- | --- |
+| Prompt | 你希望模型做什么？ | 不会凭空提供模型拿不到的资料 |
+| RAG | 相关外部资料在哪里？ | 找到资料并不等于完成业务动作 |
+| 工具调用 | 怎样读取、计算或执行？ | 请求动作仍需授权、执行和验证 |
+
+一个应用可以同时使用三者；也可以只用 Prompt 或 RAG 完成某类任务，并不一定需要 Agent。
+
+## 五、Workflow 和 Agent：谁来决定下一步？
+
+现在模型会整理文字、检索资料，也能提出工具调用请求。但当任务有多个步骤时，还有一个更关键的问题：**执行路线是事先写好的，还是需要运行时根据结果动态决定？**
+
+### 固定 Workflow：步骤由程序预先安排
+
+例如每天的评价日报始终是：读取数据 → 去重 → 分类 → 汇总 → 生成报告 → 按规则交付。
+
+系统早已定义执行步骤和条件，模型可能在其中负责分类、摘要或写作。这仍然可以是一个使用 AI 的强大工作流，优势在于流程容易控制、测试和重复执行。
+
+### Agent：允许模型动态选择部分行动
+
+另一项任务是：“查出最近‘连接断开’投诉增多的原因。”
+
+事先很难确定完整调查路线。模型可能先检查问题集中在哪些型号，再请求查看固件版本、售后记录或已知故障说明；看见新证据后，决定继续调查哪个方向。如果资料不足，它也应该承认无法下结论。
+
+在本文采用的**工程定义**中，Agent 指能围绕目标、依据执行反馈，由模型动态选择部分后续步骤或工具的系统。这并非全行业唯一的定义；Agent 的概念早在 LLM 出现前就存在。1995 年的 [《Intelligent Agents: Theory and Practice》](https://www.cs.ox.ac.uk/people/michael.wooldridge/pubs/ker95/ker95-html.html)已系统讨论智能 Agent 的理论与架构。
+
+<figure class="ai-primer-figure ai-primer-compare" aria-label="固定工作流与 Agent 执行路径对比">
+  <div class="ai-primer-figure-head">
+    <span>图解 04 / 同一个评价分析场景</span>
+    <strong>区别不在“有没有 AI”，而在谁控制执行路径</strong>
+  </div>
+  <div class="ai-primer-dual">
+    <div class="ai-primer-rail">
+      <div class="ai-primer-rail-title"><b>WORKFLOW</b><span>预设流程 · 适合稳定重复任务</span></div>
+      <ol class="ai-primer-steps">
+        <li>读取昨天的评价</li>
+        <li>按既定规则整理、汇总</li>
+        <li>调用模型撰写日报</li>
+        <li>检查条件并交付</li>
+      </ol>
+      <p class="ai-primer-rail-footer">程序预先定义主要步骤与分支；模型可参与步骤内部的判断。</p>
+    </div>
+    <div class="ai-primer-rail ai-primer-rail-agent">
+      <div class="ai-primer-rail-title"><b>AGENT</b><span>动态决策 · 适合开放式调查</span></div>
+      <ol class="ai-primer-steps">
+        <li>收到“调查连接故障”的目标</li>
+        <li class="ai-primer-decision">依据现有信息选择工具</li>
+        <li>执行查询，观察真实结果</li>
+        <li class="ai-primer-decision">根据反馈决定继续或结束</li>
+      </ol>
+      <p class="ai-primer-rail-footer">在授权范围内动态选择部分行动；反馈可能让计划改变。</p>
+    </div>
+  </div>
+  <figcaption>两侧都是教学简化结构。固定工作流可以嵌入 Agent，Agent 也可能依赖大量确定性的程序逻辑；并非非此即彼。</figcaption>
+</figure>
+
+这一工程区分也见于 Anthropic 的 [《Building Effective Agents》](https://www.anthropic.com/engineering/building-effective-agents)：工作流主要由预设代码路径协调，Agent 则把更多执行控制交给模型。对定义存在差异的现实保持清楚，比争论哪个产品“算不算 Agent”更有帮助。
+
+**Agent 不天然比 Workflow 高级。** 如果每天的评价日报始终遵循相同规则，固定流程可能更便宜、更快、更容易审计；如果下一步取决于未知调查结果，动态决策才可能有价值。真正实用的系统常常把两种方式结合起来。
+
+## 六、一个 Agent 真正做事时，谁负责什么？
+
+把刚才的异常调查放进实际软件系统，过程大致是这样的：
+
+1. 用户设定目标：“调查近七天连接故障评价增加的原因。”
+2. 系统提供允许读取的数据、背景规则和可用工具。
+3. 模型根据上下文选择下一步，提出工具及参数。
+4. 工具执行环境检查权限，再执行真实查询。
+5. 工具返回数据、错误或其他结果。
+6. 模型结合反馈决定继续查询、形成结论、请求人工确认或结束。
+7. 系统核对交付条件，记录实际完成的动作与证据。
+
+<figure class="ai-primer-figure ai-primer-execution" aria-label="Agent 模型、工具执行环境及结果反馈闭环">
+  <div class="ai-primer-figure-head">
+    <span>图解 05 / 从请求到真实结果</span>
+    <strong>模型提议行动，环境执行行动，系统核对结果</strong>
+  </div>
+  <div class="ai-primer-systems">
+    <div class="ai-primer-system"><small>用户和应用</small><b>任务目标、上下文、授权范围</b></div>
+    <div class="ai-primer-system ai-primer-system-model"><small>模型决策层</small><b>选择下一步 · 形成工具调用请求</b></div>
+    <div class="ai-primer-system ai-primer-system-check"><small>执行控制层</small><b>验证参数与权限 · 必要时人工批准</b></div>
+    <div class="ai-primer-system"><small>工具 / 外部系统</small><b>读表、查询 API、运行程序 · 返回实际结果</b></div>
+    <div class="ai-primer-system ai-primer-system-feedback"><small>反馈与验收</small><b>把结果返回模型 · 判断重试、继续或结束</b></div>
+  </div>
+  <div class="ai-primer-loop-note"><b>循环在哪里？</b><span>尚未完成且仍获授权 → 将工具结果作为新上下文交给模型，再决定下一步。</span><span>目标已满足 / 证据不足 / 触及权限边界 → 结束或交给人。</span></div>
+  <figcaption>箭头省略了技术实现细节；图中模型、工具与控制层是职责划分，不要求部署成独立服务。调用成功也不等于业务目标已验证成功。</figcaption>
+</figure>
+
+这里最容易发生的误解，是把“模型说已经保存报告”当成“文件已经保存成功”。真正可靠的执行，需要拿到工具结果，并检查文件、记录或业务状态是否满足目标。工具调用失败、写入权限不足或报告内容缺失，都应该如实反映。
+
+这种“获取反馈后再选择行动”的思路，与 2022 年的 [ReAct 研究](https://arxiv.org/abs/2210.03629)存在明确联系。不过 ReAct 是一项代表性研究，并非所有 Agent 都必须使用相同的推理输出形式或循环实现。
+
+### 多 Agent 是不是下一阶段的必然选择？
+
+不一定。假如一项复杂调查可以拆成互相独立的“型号统计”“售后规则核查”“故障记录调查”，多个 Agent 可以分别处理，再由协调者合并证据。但它们也会带来重复查询、结论冲突、通信成本及协调复杂度。能够由单个 Agent 或确定性程序清楚完成的任务，没有必要为了“更智能”而强行拆分。
+
+多 Agent 只是组织系统的一种方案，**不是比单 Agent 更先进的固定等级**。
+
+## 七、Agent 的能力边界：能行动，不代表应该放手
+
+从回答问题到执行动作，最大的变化不仅是效率，还包括错误可能造成的实际影响。
+
+生成一份报告草稿，即使内容有误，通常还可以在交付前修改；自动向客户发送错误承诺、批量更改库存或删除资料，则可能带来直接损失。
+
+因此需要区分三件事：
+
+| 行动 | 适合的控制方式 | 原因 |
+| --- | --- | --- |
+| 读取非敏感公开资料、生成草稿 | 可以相对自动化，保留必要验证 | 主要风险在信息质量 |
+| 修改内部业务数据、对外发送内容 | 明确权限、对象范围及交付校验 | 会产生真实业务后果 |
+| 大规模删除、资金操作等高风险动作 | 更严格的审批、审计与防误操作机制 | 错误可能难以撤销 |
+
+即使模型表现良好，也会受数据质量、上下文限制、工具故障与任务不确定性影响。**检索到的网页或文档是待判断的信息，不应该因为被模型读到了，就自动变成更高优先级的指令。** 这也是 Agent 系统需要防范提示注入和越权调用的原因之一。
+
+未来，模型、工具和任务执行环境可能在可靠性、长期任务处理、评估和协作方面继续改善；但哪些领域能够实现多高程度的自主化，仍取决于具体系统、成本、权限和现实验证，不能当成已经确定的结论。
+
+## 结语：把三个层次分开，才能真正理解 Agent
+
+我们从一个非常普通的评价分析任务出发，看到三层不同的进展：
+
+**模型层**：从人工规则与机器学习，到能处理上下文并生成内容的语言模型。
+
+**连接层**：通过 Prompt、检索与工具，让模型获得当前任务的资料，并提出外部动作。
+
+**系统层**：用 Workflow 或 Agent 组织步骤、权限、状态和反馈，把“可能正确的回答”变成“经过核对的任务结果”。
+
+AI Agent 的价值不是神秘的自主意识，而是把模型的动态判断嵌入可执行、可验证的系统。**适合固定流程的任务，就用固定流程；确实需要边观察边决定的任务，再考虑 Agent。**
+
+如果想进一步理解怎样设计这样的执行系统，可以继续阅读 [《如何设计一个可维护的自动化 Agent 工作流》](/articles/automation-agent-workflow/)；如果想看它如何与商品评价、真实数据和交付状态结合，可以阅读 [《电商评价分析 Agent》](/articles/ecommerce-review-analysis-agent-workflow/)。
+
+### 资料与进一步阅读
+
+以下优先列出原始研究及官方技术资料。文章中的业务场景与机制图为教学示意，并非对真实模型内部状态的测量。
+
+- [McCarthy 等，《达特茅斯人工智能研究计划》，1955](https://www-formal.stanford.edu/jmc/history/dartmouth.pdf)：AI 早期研究议题。
+- [Wooldridge 与 Jennings，《Intelligent Agents: Theory and Practice》，1995](https://www.cs.ox.ac.uk/people/michael.wooldridge/pubs/ker95/ker95-html.html)：智能 Agent 的早期理论与架构。
+- [Vaswani 等，《Attention Is All You Need》，2017](https://arxiv.org/abs/1706.03762)：Transformer 原始论文。
+- [OpenAI，生成式预训练语言模型研究，2018](https://openai.com/index/language-unsupervised/)；[GPT-3 研究，2020](https://openai.com/index/language-models-are-few-shot-learners/)：语言模型能力发展。
+- [Lewis 等，《Retrieval-Augmented Generation》，2020](https://arxiv.org/abs/2005.11401)：检索增强生成。
+- [Yao 等，《ReAct》，2022](https://arxiv.org/abs/2210.03629)：语言模型与环境行动结合。
+- [OpenAI，Function Calling 官方文档](https://developers.openai.com/api/docs/guides/function-calling)：调用请求、外部执行与结果反馈。
+- [Anthropic，《Building Effective Agents》，2024](https://www.anthropic.com/engineering/building-effective-agents)：Workflow 与 Agent 的工程划分（非唯一学术定义）。
