@@ -14,6 +14,7 @@
   --cyan: #37676b;
   --green: #38674d;
   --violet: #766184;
+  --viewpoint-critical: #a13e2d;
   --code: #17221e;
   --code-line: #354139;
   --radius: 6px;
@@ -64,6 +65,7 @@ html[data-theme='dark'] {
   --cyan: #9cc8c9;
   --green: #a3c8aa;
   --violet: #c4b5cd;
+  --viewpoint-critical: #f0ad8c;
   --accent: #d99c76;
   --code: #101814;
   --code-line: #354139;
@@ -1256,6 +1258,16 @@ h3 {
   overflow-wrap: break-word;
   padding: 48px;
   position: relative;
+}
+
+.article-content .viewpoint-affirm {
+  color: var(--blue);
+  font-weight: 750;
+}
+
+.article-content .viewpoint-critical {
+  color: var(--viewpoint-critical);
+  font-weight: 750;
 }
 
 
