@@ -3,12 +3,13 @@ interface Props {
   title?: string;
   caption?: string;
   chart: string;
+  wide?: boolean;
 }
 
-const { title, caption, chart } = Astro.props;
+const { title, caption, chart, wide = false } = Astro.props;
 ---
 
-<figure class="mermaid-card">
+<figure class:list={['mermaid-card', { 'mermaid-card--wide': wide }]}>
   {title && <figcaption class="mermaid-title">{title}</figcaption>}
   <pre class="mermaid">{chart}</pre>
   {caption && <p class="mermaid-caption">{caption}</p>}

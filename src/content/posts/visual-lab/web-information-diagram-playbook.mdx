@@ -22,33 +22,45 @@ import Mermaid from '../../../components/Mermaid.astro';
 
 ## 01 · 多路径系统地图：先看共同点，再看分歧
 
-<div className="wid-map" role="img" aria-label="ChatGPT 通过三条互斥路径到达同一私有 MCP 服务：Caddy 加 ChmlFrp，Tailscale Funnel，以及 OpenAI Secure MCP Tunnel">
+<div className="wid-map" role="img" aria-label="从 ChatGPT 到本地 MCP 的三条独立备选连接路径：方案 A 经 ChmlFrp 和 Caddy；方案 B 经 Tailscale Funnel；方案 C 通过 OpenAI Tunnel 的本地客户端主动出站连接。三条路径不是顺序执行。">
   <div className="wid-map__cap"><span>CALLER</span><strong>ChatGPT</strong><small>云端工具调用</small></div>
   <div className="wid-map__branches">
-    <div className="wid-map__branch"><span>方案 A</span><strong>ChmlFrp</strong><small>公网入站</small><b>↓</b><strong>Caddy</strong><small>本地反代</small></div>
-    <div className="wid-map__branch"><span>方案 B</span><strong>Tailscale</strong><small>Funnel 公网 HTTPS</small><b>↓</b><strong>本机端口</strong><small>回环代理</small></div>
-    <div className="wid-map__branch"><span>方案 C</span><strong>OpenAI Tunnel</strong><small>托管端点</small><b>⇅</b><strong>tunnel-client</strong><small>主动出站</small></div>
+    <div className="wid-map__branch"><em className="wid-map__mobile-point">ChatGPT ↓</em><span>方案 A</span><strong>ChmlFrp</strong><small>公网入站</small><b>↓</b><strong>Caddy</strong><small>本地反代</small><em className="wid-map__mobile-point">↓ DevSpace / MCP</em></div>
+    <div className="wid-map__branch"><em className="wid-map__mobile-point">ChatGPT ↓</em><span>方案 B</span><strong>Tailscale</strong><small>Funnel 公网 HTTPS</small><b>↓</b><strong>本机端口</strong><small>回环代理</small><em className="wid-map__mobile-point">↓ DevSpace / MCP</em></div>
+    <div className="wid-map__branch"><em className="wid-map__mobile-point">ChatGPT ⇅</em><span>方案 C</span><strong>OpenAI Tunnel</strong><small>托管端点</small><b>⇅</b><strong>tunnel-client</strong><small>主动出站</small><em className="wid-map__mobile-point">⇅ DevSpace / MCP</em></div>
   </div>
   <div className="wid-map__cap wid-map__end"><span>PRIVATE NETWORK</span><strong>DevSpace / MCP</strong><small>localhost:7676</small></div>
 </div>
 
-<p className="wid-lesson"><b>表达原理</b>：首尾固定，分叉表示互斥方案；每条支路拥有自己的技术节点与方向。适合 API 架构、网络隧道、系统集成、部署拓扑。避免把 HTTP 请求、认证握手和部署依赖画成同一种箭头。</p>
+<p className="wid-lesson"><b>表达原理</b>：首尾固定，分叉表示三条备选连接路径，不是先后经过三套方案；本地图中箭头仅辅助阅读连接关系，不统一代表公网入站方向。适合 API 架构、网络隧道、部署拓扑。<b>不宜</b>：把认证握手、部署依赖和请求方向都画成同一种箭头。</p>
 
 ## 02 · 泳道流程：同时回答「谁做」「何时做」
 
-<div className="wid-swim" aria-label="ChatGPT、隧道层与本地 MCP 三条泳道的分阶段协作流程">
-  <div className="wid-swim__row wid-swim__header"><span>参与方 ↓ / 阶段 →</span><b>发起</b><b>转发</b><b>回应</b></div>
-  <div className="wid-swim__row"><strong>ChatGPT</strong><div>选择 MCP 工具<span>① 调用</span></div><div className="wid-empty">等待</div><div>展示工具结果<span>⑥ 返回</span></div></div>
-  <div className="wid-swim__row"><strong>连接层</strong><div>收到工具请求<span>② 接入</span></div><div>转发到本地<span>③ 路由</span></div><div>回传响应<span>⑤ 传回</span></div></div>
-  <div className="wid-swim__row"><strong>本地 MCP</strong><div className="wid-empty">等待</div><div>执行受限操作<span>④ 执行</span></div><div>产出结果<span>⑤ 原始结果</span></div></div>
+<div className="wid-swim" role="group" aria-label="三条泳道，按①至⑥阅读一次工具调用的责任与顺序">
+  <div className="wid-swim__desktop">
+    <div className="wid-swim__row wid-swim__header"><span>参与方 ↓ / 阶段 →</span><b>发起 / 接入</b><b>转发 / 执行</b><b>返回</b></div>
+    <div className="wid-swim__row"><strong>ChatGPT</strong><div>选择并调用 MCP 工具<span>① 发起</span></div><div className="wid-empty">等待</div><div>展示工具结果<span>⑥ 呈现</span></div></div>
+    <div className="wid-swim__row"><strong>连接层</strong><div>收到工具请求<span>② 接入</span></div><div>转发到本地<span>③ 路由</span></div><div>回传执行结果<span>⑤ 回传</span></div></div>
+    <div className="wid-swim__row"><strong>本地 MCP</strong><div className="wid-empty">等待</div><div>执行操作并生成结果<span>④ 执行</span></div><div className="wid-empty">已完成</div></div>
+  </div>
+  <ol className="wid-swim__mobile" aria-label="按事件顺序阅读">
+    <li><span>ChatGPT</span><strong>选择并调用 MCP 工具</strong></li>
+    <li><span>连接层</span><strong>收到工具请求</strong></li>
+    <li><span>连接层</span><strong>转发到本地</strong></li>
+    <li><span>本地 MCP</span><strong>执行操作并生成结果</strong></li>
+    <li><span>连接层</span><strong>回传执行结果</strong></li>
+    <li><span>ChatGPT</span><strong>展示工具结果</strong></li>
+  </ol>
 </div>
 
-<p className="wid-lesson"><b>表达原理</b>：纵向比较参与者，横向呈现阶段。非常适合跨部门审批、订单履约、客服与后台交互、API 请求生命周期。序号解释逻辑顺序，不表示每格耗时相同。</p>
+<p className="wid-lesson"><b>表达原理</b>：桌面纵向比较参与者、横向呈现阶段；手机改为依次列出六个事件。序号是逻辑顺序，不表示每格耗时相同。适合跨部门协作、订单履约、API 生命周期。<b>不宜</b>：把并行任务误画成顺序流程。</p>
 
 ## 03 · 注释型工程图：让结构、边界和接口都可定位
 
 <figure className="wid-blueprint">
-  <svg viewBox="0 0 760 360" role="img" aria-label="MCP 服务工程示意：公网连接区与本地安全边界被标注，云端调用穿过入口后抵达私有服务，旁侧为只读项目目录">
+  <p className="wid-blueprint__hint">← 横向滑动图纸查看完整标注 →</p>
+  <div className="wid-blueprint__sheet">
+  <svg viewBox="0 0 760 360" role="img" aria-label="MCP 服务工程示意：云端 ChatGPT 位于安全边界之外，本地入口和 MCP 位于受控网络边界之内，连接线表示访问路径，黄色标注线用于说明位置">
     <defs><pattern id="wid-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#365064" strokeWidth=".6"/></pattern><marker id="wid-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8cd7e4"/></marker></defs>
     <rect width="760" height="360" rx="16" fill="#0f2738"/>
     <rect width="760" height="360" rx="16" fill="url(#wid-grid)" />
@@ -56,40 +68,49 @@ import Mermaid from '../../../components/Mermaid.astro';
     <text x="311" y="71" fill="#8fdccc" fontSize="15" fontWeight="700">本地受控网络边界</text>
     <rect x="49" y="128" width="155" height="85" rx="10" fill="#203e56" stroke="#8cd7e4"/>
     <text x="126" y="160" textAnchor="middle" fill="#f0fbff" fontSize="18" fontWeight="700">ChatGPT</text>
-    <text x="126" y="182" textAnchor="middle" fill="#b5d9e5" fontSize="12">发起 MCP 请求</text>
+    <text x="126" y="182" textAnchor="middle" fill="#b5d9e5" fontSize="14">发起 MCP 请求</text>
     <rect x="328" y="128" width="160" height="85" rx="10" fill="#185161" stroke="#6ed6c5"/>
     <text x="408" y="158" textAnchor="middle" fill="#f2ffff" fontSize="17" fontWeight="700">本地入口</text>
-    <text x="408" y="181" textAnchor="middle" fill="#b1e6e1" fontSize="12">HTTPS / Tunnel 客户端</text>
+    <text x="408" y="181" textAnchor="middle" fill="#b1e6e1" fontSize="14">HTTPS / Tunnel 客户端</text>
     <rect x="534" y="128" width="130" height="85" rx="10" fill="#185161" stroke="#6ed6c5"/>
     <text x="599" y="158" textAnchor="middle" fill="#f2ffff" fontSize="17" fontWeight="700">MCP</text>
-    <text x="599" y="181" textAnchor="middle" fill="#b1e6e1" fontSize="12">工具 / 权限</text>
+    <text x="599" y="181" textAnchor="middle" fill="#b1e6e1" fontSize="14">工具 / 权限</text>
     <path d="M204 170H328M488 170H534" stroke="#8cd7e4" strokeWidth="2.5" fill="none" markerEnd="url(#wid-arrow)"/>
     <path d="M599 213V259H518" stroke="#8cd7e4" strokeWidth="1.7" fill="none" strokeDasharray="5 4" />
-    <text x="504" y="263" textAnchor="end" fill="#b1e6e1" fontSize="12">受限目录</text>
+    <text x="504" y="263" textAnchor="end" fill="#b1e6e1" fontSize="14">受限目录</text>
     <path d="M213 92V58H150" stroke="#ffd89a" strokeWidth="1.4" fill="none" />
     <circle cx="213" cy="92" r="4" fill="#ffd89a" />
-    <text x="142" y="52" textAnchor="end" fill="#ffe2b2" fontSize="13">云端调用端</text>
+    <text x="142" y="52" textAnchor="end" fill="#ffe2b2" fontSize="15">云端调用端</text>
     <path d="M289 280H208" stroke="#ffd89a" strokeWidth="1.4" fill="none" />
     <circle cx="289" cy="280" r="4" fill="#ffd89a" />
-    <text x="202" y="285" textAnchor="end" fill="#ffe2b2" fontSize="13">安全边界分界线</text>
-    <text x="52" y="327" fill="#8faebf" fontSize="12">NETWORK PLAN · 示意图（并非真实网络拓扑）</text>
+    <text x="202" y="285" textAnchor="end" fill="#ffe2b2" fontSize="15">安全边界分界线</text>
+    <text x="52" y="327" fill="#b7cbd6" fontSize="14">NETWORK PLAN · 示意图（并非真实网络拓扑）</text>
   </svg>
-  <figcaption>工程图表达要点：接口编号、边界线、节点说明使用不同视觉语义，标注线不等于数据流。</figcaption>
+  </div>
+  <figcaption>工程图表达要点：边界线、节点连接线、说明引线使用不同视觉语义，黄色标注线不代表数据流。</figcaption>
+  <p className="wid-blueprint__mobile-summary">图纸路径：安全边界外的 ChatGPT → 本地入口 → 受控边界内的 MCP；MCP 只能访问授权资源。图纸按原始字号横向查看，无需缩小文字。</p>
 </figure>
 
-<p className="wid-lesson"><b>表达原理</b>：借鉴工业图纸、线路图与产品拆解图——结构居中，注释依附对象，明确哪些线是数据连接、哪些只是说明。适合设备原理、网络边界、系统职责和硬件构成。移动端保留可放大的图纸区域，而不是把文字缩到看不清。</p>
+<p className="wid-lesson"><b>表达原理</b>：结构居中，注释依附对象，明确连接线与说明引线。适合设备原理、网络边界和系统职责。移动端保留可横向查看的原尺寸图纸，并提供文字路径。<b>不宜</b>：只有两三个普通概念，却用大量装饰线冒充工程复杂度。</p>
 
 ## 04 · 决策路线图：问题比技术名词更靠前
 
-<div className="wid-decision">
+<div className="wid-decision" role="group" aria-label="先判断是否允许公网入口，再根据是否具备现成公网反代条件选择候选方案">
   <div className="wid-decision__root">你的 MCP 服务允许公网 HTTPS 入口吗？</div>
   <div className="wid-decision__choices">
-    <div><span>不允许 / 不想公开</span><strong>OpenAI Secure MCP Tunnel</strong><small>继续检查 ChatGPT 工作区、Tunnel 权限和 OAuth 可达性</small></div>
-    <div><span>允许公网入口</span><strong>已有域名、反代、FRP？</strong><small>有 → Caddy + ChmlFrp；没有 → 优先评估 Tailscale Funnel</small></div>
+    <div className="wid-decision__branch"><span className="wid-decision__answer">否 · 不想开放公网入口</span><strong>优先评估 OpenAI Secure MCP Tunnel</strong><small>还需确认工作区、Tunnel 权限及 OAuth 条件</small></div>
+    <div className="wid-decision__branch wid-decision__branch--nested">
+      <span className="wid-decision__answer">是 · 允许公网入口</span>
+      <strong className="wid-decision__question">已有域名、反代和 FRP 环境？</strong>
+      <div className="wid-decision__results">
+        <div><span>已有</span><strong>Caddy + ChmlFrp</strong><small>复用自管入口</small></div>
+        <div><span>没有</span><strong>评估 Tailscale Funnel</strong><small>检查公网 HTTPS 前提</small></div>
+      </div>
+    </div>
   </div>
 </div>
 
-<p className="wid-lesson"><b>表达原理</b>：决策树只保留真正能改变结论的问题。适合故障排查、方案选型、权限判断、经营决策。大段背景不要塞进树节点，节点只承担可判断的条件。</p>
+<p className="wid-lesson"><b>表达原理</b>：条件必须真实分叉，分支标签贴近对应结果；这里是教学选型路径，不等于已验证的接入资格。适合故障排查、权限判断、方案选型。<b>不宜</b>：条件多且交叉时硬画巨大树，此时决策表更清楚。</p>
 
 ## 05 · 渐进式图解：先展示一层，允许读者展开证据
 
@@ -105,11 +126,12 @@ import Mermaid from '../../../components/Mermaid.astro';
   </details>
 </div>
 
-<p className="wid-lesson"><b>表达原理</b>：默认阅读层要自洽；需要背景、异常和技术细节的读者再展开。适合复杂教程、数据口径解释、API 文档、审查报告。交互是增强，不应藏起关键结论。</p>
+<p className="wid-lesson"><b>表达原理</b>：默认阅读层要自洽；需要背景、异常和技术细节的读者再展开。适合复杂教程、数据口径解释、API 文档、审查报告。<b>不宜</b>：把关键结论藏在必须点击才能看到的折叠内容中。</p>
 
 ## 06 · 时序图：当顺序与往返比布局更重要
 
 <Mermaid
+  wide
   title="一轮工具调用的往返（简化逻辑）"
   chart={`sequenceDiagram
 participant U as 用户
@@ -125,7 +147,7 @@ C-->>U: 基于工具结果作答`}
   caption="箭头为消息传递，不保证每条链路均有相同实现或相同耗时；OpenAI 私有隧道由本地客户端主动轮询，不是外部主动连入内网。"
 />
 
-<p className="wid-lesson"><b>表达原理</b>：当请求、应答、重试、回调的时间顺序是核心信息时，时序图比组件卡片更清楚。复杂协议建议拆成「一次正常调用」和「认证失败后的分支」两张图，而不是画满一页。</p>
+<p className="wid-lesson"><b>表达原理</b>：当请求、应答、重试、回调的时间顺序是核心信息时，时序图比组件卡片更清楚。复杂协议建议拆成「正常调用」和「异常分支」。<b>不宜</b>：只想展示模块归属，却画成虚构时间顺序的消息图。</p>
 
 ## 哪种视觉适合哪类内容？
 
@@ -156,35 +178,94 @@ C-->>U: 基于工具结果作答`}
 
 <style>{`
 .wid-map, .wid-swim, .wid-blueprint, .wid-decision, .wid-reveal { margin: 1.5rem 0; border-radius: 20px; }
-.wid-map { padding: 1.1rem; background: #eef4f9; border: 1px solid #c8d8e7; color: #20394e; display: grid; gap: 1.1rem; }
-.wid-map__cap { padding: .7rem 1.2rem; background: #fff; border: 1px solid #9db8d0; border-radius: 12px; justify-self: center; text-align: center; display: grid; width: min(100%, 18rem); }
-.wid-map__cap span { font: 700 .68rem var(--mono-font,monospace); color: #3975a5; letter-spacing: .08em; }
-.wid-map__cap strong { font-size: 1.2rem; } .wid-map__cap small { color: #567189; }
-.wid-map__branches { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .75rem; }
-.wid-map__branch { position: relative; min-width: 0; background: #fff; border: 1px solid #b2cedd; border-top: 4px solid #3176b0; border-radius: 12px; padding: .75rem .6rem; display: grid; text-align: center; gap: .1rem; }
-.wid-map__branch:nth-child(2) { border-top-color: #008f85; } .wid-map__branch:nth-child(3) { border-top-color: #945dba; }
-.wid-map__branch::before,.wid-map__branch::after { content: ''; width: 2px; height: 1.1rem; background: #90aabf; position: absolute; left: 50%; } .wid-map__branch::before { top: -1.3rem; } .wid-map__branch::after { bottom: -1.3rem; }
-.wid-map__branch span { font-size: .72rem; color: #52718c; } .wid-map__branch strong { font-size: .96rem; } .wid-map__branch b { font-size: .88rem; color: #6393b5; }
-.wid-map__branch small { font-size: .75rem; color: #66809a; }
 .wid-lesson { margin: 0 0 2rem; padding-left: .9rem; border-left: 3px solid #7393b3; font-size: .93rem; }
-.wid-swim { overflow-x: auto; background: #f1f5f8; border: 1px solid #ccd6e1; padding: .65rem; color: #233e53; }
-.wid-swim__row { min-width: 580px; display: grid; grid-template-columns: 110px repeat(3,minmax(0,1fr)); gap: .4rem; margin-bottom: .4rem; }
-.wid-swim__row > strong { align-self: center; font-size: .86rem; padding: .6rem; } .wid-swim__row > div { border: 1px solid #c6d7e2; border-radius: 10px; padding: .6rem; background: #fff; font-weight: 600; font-size: .81rem; line-height: 1.5; }
-.wid-swim__row > div span { display: block; font-size: .71rem; font-weight: 400; color: #587791; }
-.wid-swim__row > .wid-empty { color: #9cadba; background: transparent; border-style: dashed; font-weight: 400; }
-.wid-swim__header { color: #48647b; font-size: .72rem; align-items: center; text-align: center; } .wid-swim__header b { padding: .35rem; }
-.wid-blueprint { background: #0f2738; padding: .6rem; color: #d8e9f1; border: 1px solid #38586c; overflow-x: auto; }
-.wid-blueprint svg { width: 100%; min-width: 520px; height: auto; display: block; } .wid-blueprint figcaption { color: #d0e1ec; font-size: .78rem; padding: .5rem .65rem; }
+
+.wid-map { padding: 1.1rem; background: #eef4f9; border: 1px solid #c8d8e7; color: #20394e; display: grid; gap: 1.1rem; }
+.wid-map__cap { position: relative; padding: .7rem 1.2rem; background: #fff; border: 1px solid #9db8d0; border-radius: 12px; justify-self: center; text-align: center; display: grid; width: min(100%, 18rem); }
+.wid-map__cap span { font: 700 .73rem var(--mono-font,monospace); color: #306a98; letter-spacing: .08em; }
+.wid-map__cap strong { font-size: 1.2rem; }
+.wid-map__cap small { color: #405f79; }
+.wid-map__cap:first-child::after, .wid-map__end::before { content: ''; position: absolute; left: 50%; width: 2px; height: .6rem; background: #819bad; }
+.wid-map__cap:first-child::after { top: 100%; }
+.wid-map__end::before { bottom: 100%; }
+.wid-map__branches { position: relative; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .75rem; }
+.wid-map__branches::before, .wid-map__branches::after { content: ''; position: absolute; left: 16.666%; right: 16.666%; height: 2px; background: #819bad; }
+.wid-map__branches::before { top: -.55rem; }
+.wid-map__branches::after { bottom: -.55rem; }
+.wid-map__branch { position: relative; min-width: 0; background: #fff; border: 1px solid #b2cedd; border-top: 4px solid #3176b0; border-radius: 12px; padding: .75rem .6rem; display: grid; text-align: center; gap: .15rem; }
+.wid-map__branch:nth-child(2) { border-top-color: #008f85; }
+.wid-map__branch:nth-child(3) { border-top-color: #945dba; }
+.wid-map__branch::before, .wid-map__branch::after { content: ''; width: 2px; height: .6rem; background: #819bad; position: absolute; left: 50%; }
+.wid-map__branch::before { top: -.6rem; }
+.wid-map__branch::after { bottom: -.6rem; }
+.wid-map__branch span { font-size: .78rem; color: #405e77; }
+.wid-map__branch strong { font-size: 1rem; }
+.wid-map__branch b { font-size: .88rem; color: #316d96; }
+.wid-map__branch small { font-size: .81rem; color: #435f78; }
+.wid-map__mobile-point { display: none; font-style: normal; }
+
+.wid-swim { background: #f1f5f8; border: 1px solid #ccd6e1; padding: .65rem; color: #233e53; }
+.wid-swim__row { display: grid; grid-template-columns: 110px repeat(3,minmax(0,1fr)); gap: .4rem; margin-bottom: .4rem; }
+.wid-swim__row:last-child { margin-bottom: 0; }
+.wid-swim__row > strong { align-self: center; font-size: .86rem; padding: .6rem; }
+.wid-swim__row > div { border: 1px solid #c6d7e2; border-radius: 10px; padding: .6rem; background: #fff; font-weight: 600; font-size: .83rem; line-height: 1.5; }
+.wid-swim__row > div span { display: block; font-size: .8rem; font-weight: 400; color: #486c88; }
+.wid-swim__row > .wid-empty { color: #536d7f; background: transparent; border-style: dashed; font-weight: 400; }
+.wid-swim__header { color: #48647b; font-size: .8rem; align-items: center; text-align: center; }
+.wid-swim__header b { padding: .35rem; }
+.wid-swim__mobile { display: none; }
+
+.wid-blueprint { background: #0f2738; padding: .6rem; color: #d8e9f1; border: 1px solid #38586c; }
+.wid-blueprint__sheet { overflow-x: auto; overscroll-behavior-inline: contain; }
+.wid-blueprint svg { width: 100%; min-width: 760px; height: auto; display: block; }
+.wid-blueprint figcaption { color: #d0e1ec; font-size: .87rem; padding: .6rem .65rem; }
+.wid-blueprint__hint, .wid-blueprint__mobile-summary { display: none; }
+
 .wid-decision { background: #edf4ef; border: 1px solid #b3d1be; color: #254833; padding: 1.2rem; }
-.wid-decision__root { width: min(100%, 25rem); margin: 0 auto 1.3rem; border-radius: 12px; background: #215b49; color: #fff; text-align: center; padding: 1rem; font-weight: 700; position: relative; }
-.wid-decision__root::after { content: ''; position: absolute; top: 100%; height: 1.3rem; width: 2px; background: #7aaa8f; left: 50%; }
-.wid-decision__choices { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; } .wid-decision__choices div { background: #fff; border: 1px solid #abd1b6; border-radius: 12px; padding: 1rem; display: grid; gap: .2rem; }
-.wid-decision__choices span { font-size: .73rem; color: #547c64; } .wid-decision__choices strong { font-size: .94rem; } .wid-decision__choices small { font-size: .77rem; color: #4d705b; }
+.wid-decision__root { width: min(100%, 25rem); margin: 0 auto 1.7rem; border-radius: 12px; background: #215b49; color: #fff; text-align: center; padding: 1rem; font-weight: 700; position: relative; }
+.wid-decision__root::after { content: ''; position: absolute; top: 100%; height: .9rem; width: 2px; background: #7aaa8f; left: 50%; }
+.wid-decision__choices { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+.wid-decision__choices::before, .wid-decision__results::before { content: ''; position: absolute; left: 25%; right: 25%; top: -.82rem; height: 2px; background: #7aaa8f; }
+.wid-decision__branch { position: relative; min-width: 0; background: #fff; border: 1px solid #abd1b6; border-radius: 12px; padding: 1rem; display: grid; align-content: start; gap: .4rem; }
+.wid-decision__branch::before, .wid-decision__results > div::before { content: ''; position: absolute; top: -.82rem; left: 50%; height: .82rem; width: 2px; background: #7aaa8f; }
+.wid-decision__answer { display: block; font-size: .84rem; font-weight: 700; color: #316a4d; }
+.wid-decision__branch > strong { font-size: 1rem; }
+.wid-decision__branch small { font-size: .83rem; color: #46634e; }
+.wid-decision__question { position: relative; padding: .7rem; border-radius: 9px; color: #fff; background: #32725a; }
+.wid-decision__question::after { content: ''; position: absolute; left: 50%; top: 100%; height: .82rem; width: 2px; background: #7aaa8f; }
+.wid-decision__results { position: relative; margin-top: .9rem; display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.wid-decision__results > div { position: relative; border: 1px solid #abd1b6; border-radius: 9px; padding: .7rem; display: grid; align-content: start; gap: .2rem; background: #f6fbf7; min-width: 0; }
+.wid-decision__results > div span { font-size: .8rem; color: #316a4d; font-weight: 700; }
+.wid-decision__results > div strong { font-size: .88rem; }
+
 .wid-reveal { background: #f4f1fa; border: 1px solid #d9cdea; padding: 1rem; color: #4e3c67; }
-.wid-reveal__overview { padding: .8rem; background: #fff; border-radius: 12px; } .wid-reveal__overview span { font-size: .71rem; color: #7556a1; display: block; }
-.wid-reveal__overview strong { display: block; font-size: 1.05rem; } .wid-reveal__overview p { margin: .3rem 0; font-size: .87rem; }
-.wid-reveal details { border-bottom: 1px solid #d6c9e7; padding: .7rem .3rem; } .wid-reveal details:last-child { border: 0; }
-.wid-reveal summary { cursor: pointer; color: #503977; font-weight: 700; font-size: .87rem; } .wid-reveal summary:focus-visible { outline: 2px solid #7556a1; outline-offset: 3px; }
-.wid-reveal details p { padding: 0 .5rem; font-size: .87rem; }
-@media (max-width: 650px) { .wid-map__branches, .wid-decision__choices { grid-template-columns: 1fr; } .wid-map__branch::before,.wid-map__branch::after { display: none; } .wid-map { padding: .75rem; } }
+.wid-reveal__overview { padding: .8rem; background: #fff; border-radius: 12px; }
+.wid-reveal__overview span { font-size: .8rem; color: #65438e; display: block; }
+.wid-reveal__overview strong { display: block; font-size: 1.05rem; }
+.wid-reveal__overview p { margin: .3rem 0; font-size: .91rem; }
+.wid-reveal details { border-bottom: 1px solid #d6c9e7; padding: .7rem .3rem; }
+.wid-reveal details:last-child { border: 0; }
+.wid-reveal summary { cursor: pointer; color: #503977; font-weight: 700; font-size: .91rem; }
+.wid-reveal summary:focus-visible { outline: 2px solid #7556a1; outline-offset: 3px; }
+.wid-reveal details p { padding: 0 .5rem; font-size: .91rem; }
+
+@media (max-width: 650px) {
+  .wid-map { padding: .75rem; }
+  .wid-map__cap, .wid-map__branches::before, .wid-map__branches::after, .wid-map__branch::before, .wid-map__branch::after { display: none; }
+  .wid-map__branches { grid-template-columns: 1fr; gap: 1rem; }
+  .wid-map__mobile-point { display: block; color: #405e77; font-size: .85rem; font-weight: 700; padding: .35rem 0; }
+  .wid-swim__desktop { display: none; }
+  .wid-swim__mobile { display: grid; list-style: none; margin: 0; padding: 0; gap: .6rem; counter-reset: wid-steps; }
+  .wid-swim__mobile li { counter-increment: wid-steps; position: relative; padding: .7rem .7rem .7rem 3.3rem; background: #fff; border: 1px solid #c6d7e2; border-radius: 10px; }
+  .wid-swim__mobile li::before { content: counter(wid-steps, decimal-leading-zero); position: absolute; top: .8rem; left: .7rem; font: 700 .94rem var(--mono-font, monospace); color: #316d96; }
+  .wid-swim__mobile li span { display: block; color: #486c88; font-size: .82rem; }
+  .wid-swim__mobile li strong { display: block; font-size: .94rem; }
+  .wid-blueprint__hint, .wid-blueprint__mobile-summary { display: block; margin: .35rem .65rem .65rem; color: #d0e1ec; font-size: .87rem; }
+  .wid-blueprint__mobile-summary { margin-top: .55rem; line-height: 1.65; }
+  .wid-decision__choices, .wid-decision__results { grid-template-columns: 1fr; }
+  .wid-decision__choices::before, .wid-decision__results::before, .wid-decision__branch::before, .wid-decision__results > div::before, .wid-decision__root::after, .wid-decision__question::after { display: none; }
+  .wid-decision__root { margin-bottom: .85rem; }
+  .wid-decision__branch { border-left: 4px solid #7aaa8f; }
+  .wid-decision__results { margin-top: .3rem; }
+}
 `}</style>
