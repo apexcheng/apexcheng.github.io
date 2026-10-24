@@ -1,4 +1,4 @@
-export const seriesIds = ['personal-blog', 'yingdao-agent-development', 'excel-functions', 'ecommerce-operation-learning', 'python-basics'] as const;
+export const seriesIds = ['personal-blog', 'yingdao-agent-development', 'excel-functions', 'ecommerce-operation-learning', 'python-basics', 'spreadsheet-special'] as const;
 
 export type SeriesId = (typeof seriesIds)[number];
 
@@ -79,6 +79,12 @@ export const seriesMetaList = [
         kind: '验收',
       },
     ],
+  },
+  {
+    id: 'spreadsheet-special',
+    title: '表格专项',
+    description: '从事实数据、计算规则到展示结果，整理表格建模、经营报表和数据可信度的实用方法。',
+    order: 6,
   },
 ] as const satisfies readonly {
   id: SeriesId;

@@ -18,24 +18,24 @@ const visualPosts = posts.filter((post) => post.data.category === '视觉实验�
 const categoryDetails = [
   {
     id: 'life',
-    name: '生活',
+    name: '生活与思考',
     accent: 'coral',
     description: '记录生活判断与思考',
     action: '阅读生活笔记',
   },
   {
     id: 'practice',
-    name: '实践',
+    name: '技术',
     accent: 'cyan',
-    description: '真实项目复盘与技术实现',
-    action: '查看实践记录',
+    description: 'AI、编程、工具与技术实现',
+    action: '阅读技术文章',
   },
   {
     id: 'tutorial',
-    name: '教程',
+    name: '经营与数据',
     accent: 'coral',
-    description: '系统化方法与步骤拆解',
-    action: '浏览教程',
+    description: '经营分析、流程与数据方法',
+    action: '阅读经营文章',
   },
   {
     id: 'lab',
@@ -78,7 +78,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="黄撑的技术笔记首页重设计第二套：以纸张、手记和真实工作痕迹组织生活、实践、教程与视觉实验。"
+      content="黄撑的技术笔记首页重设计第二套：以纸张、手记和真实工作痕迹组织技术、经营与数据、生活与思考及视觉实验。"
     />
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#f8f4eb" />
@@ -177,7 +177,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
         <div class="direction-board" data-reveal>
           <article class="direction-card direction-life">
             <div class="direction-heading">
-              <h2>生活 <span>/</span></h2>
+              <h2>生活与思考 <span>/</span></h2>
               <p>记录生活判断与思考</p>
             </div>
             <div class="paper-visual lined-note" aria-hidden="true">
@@ -189,8 +189,8 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
 
           <article class="direction-card direction-practice">
             <div class="direction-heading">
-              <h2>实践 <span>/</span></h2>
-              <p>真实项目复盘与技术实现</p>
+              <h2>技术 <span>/</span></h2>
+              <p>AI、编程、工具与技术实现</p>
             </div>
             <div class="code-sheet" aria-label="Agent 实践代码片段">
               <pre><code><span class="line-no">1</span> <span class="code-blue">from</span> agent <span class="code-blue">import</span> run_agent
@@ -208,8 +208,8 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
 
           <article class="direction-card direction-tutorial">
             <div class="direction-heading">
-              <h2>教程 <span>/</span></h2>
-              <p>系统化方法与步骤拆解</p>
+              <h2>经营与数据 <span>/</span></h2>
+              <p>经营分析、流程与数据方法</p>
             </div>
             <div class="paper-visual grid-note" aria-hidden="true">
               <strong>工作流设计清单</strong>

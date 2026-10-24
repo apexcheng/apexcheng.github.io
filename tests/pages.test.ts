@@ -84,7 +84,7 @@ describe('front page structure', () => {
   });
 
   it('filters categories in place while keeping static category and tag archives', () => {
-    expect(articlesSource).toContain('<ArticleList posts={posts} hideSeries showPinned inlineMeta />');
+    expect(articlesSource).toContain('<ArticleList posts={posts} hideSeries hideVisualLab showPinned inlineMeta />');
     expect(articlesSource).toContain('(!category || itemCategory === category)');
     expect(articlesSource).toContain('?category=${encodeURIComponent(category.name)}');
     expect(articlesSource).toContain('/articles/tag/${encodeURIComponent(tag)}/');

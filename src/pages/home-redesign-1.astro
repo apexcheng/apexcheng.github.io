@@ -19,9 +19,9 @@ const seriesOrder = ['python-basics', 'excel-functions', 'yingdao-agent-developm
 const featuredSeries = seriesOrder.map((id) => seriesMetaList.find((series) => series.id === id)!)
   .map((series) => ({ ...series, count: posts.filter((post) => post.data.series === series.id).length }));
 const topics = [
-  { name: '生活', note: '日常里的观察与判断', label: 'LIFE' },
-  { name: '实践', note: '做过，踩过坑，再记录', label: 'PRACTICE' },
-  { name: '教程', note: '从理解到亲手完成', label: 'GUIDES' },
+  { name: '技术', note: 'AI、编程与工具原理', label: 'TECH' },
+  { name: '经营与数据', note: '经营问题与数据方法', label: 'BUSINESS' },
+  { name: '生活与思考', note: '日常里的观察与判断', label: 'LIFE' },
   { name: '视觉实验室', note: '让知识有另一种形状', label: 'VISUAL LAB' },
 ];
 const featuredProject = getProject(featuredProjectId);

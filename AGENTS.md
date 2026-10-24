@@ -27,7 +27,7 @@
 1. 改字、事实修正、链接、frontmatter 和局部小改直接执行，不重新规划全文，不读取 Demo。
 2. 正式文章放在 `src/content/posts/`；Demo 放在 `src/content/posts/visual-lab/`。
 3. 新文章默认 `draft: false`、`private: false`；只有用户明确要求草稿或私密时才改为 `true`。
-4. 分类只使用 `生活`、`实践`、`教程`、`视觉实验室`。
+4. 分类只使用 `技术`、`经营与数据`、`生活与思考`、`视觉实验室`；按内容领域归类，视觉实验室作为独立实验区，不进入默认文章列表。
 5. 新增公开正式文章后更新 `docs/writing/CONTENT_INDEX.md`；新增 Demo 后更新 `docs/writing/VISUAL_LAB.md`。
 
 ## 按需路由

@@ -8,70 +8,70 @@
 
 | 文件 | 分类 | 主题概览 | 适合什么时候参考 |
 | --- | --- | --- | --- |
-| `src/content/posts/from-llm-to-ai-agent-visual-guide.mdx` | `教程` | 通过电商评价分析连续案例与五张静态机制图，介绍机器学习、Transformer、LLM、RAG、工具调用、Workflow 与 Agent 的历史关系、工作原理和执行权限边界 | 写 AI 入门认知、LLM 与 Agent 区别、工作流选型、模型调用与工具执行基础原理文章时参考 |
-| `src/content/posts/ecommerce-profit-trust-verification.mdx` | `实践` | 从天猫链接利润模型中的商品归属歧义、包裹成本守恒、无归属成本、真实零与未知值、退款预测和刷新验收展开，进一步讨论技术焦虑、从看不懂到否定复杂系统的认知路径、三类复杂度与独立判断 | 写数据可信度、利润模型核验、技术焦虑、复杂系统评价、业务规则与技术责任边界、经营报表审查时参考 |
-| `src/content/posts/review-feedback-improvement-ownership.mdx` | `实践` | 从“塑料感”差评推导改善归口思想，完整展开 20 类问题、F01–F20 基准事实、8 类改善归口、分类规则，并用脱敏的现有 AI 表格记录跑通三层模型 | 写评价分析、产品体验、设计与质量责任边界、客户反馈、AI 业务分类和改善机制时参考 |
-| `src/content/posts/code-tech-weird-issues.mdx` | `实践` | 长期维护的编程、API、数据同步、自动化等技术踩坑记录；首条说明动态数据下页码分页 `total` 波动与实际漏单不能画等号，区分已观察事实和潜在 OFFSET 漏读风险，并给出回查与校验建议 | 写 API 分页、动态查询结果、`total` 变化、OFFSET 漏读风险、增量同步与一致性校验时参考 |
-| `src/content/posts/java-jvm-python-bytecode-runtime.mdx` | `教程` | 从源码、字节码、运行时到 CPU 对照 Java 与 Python，讲清 JVM、.class、Python bytecode、.pyc、CPython 的层级关系，以及两者都能跨平台但 JVM 通常能让 Java 热点代码更快的原因 | 写 JVM、Java/Python 运行机制、字节码、跨平台、解释器、JIT、CPython 性能和 NumPy 底层加速时参考 |
-| `src/content/posts/vibe-coding-ai-table-saas-retrospective.mdx` | `实践` | 复盘数日 AI 表格 SaaS 开发，从无脑 Vibe Coding、钉钉与 Airtable 产品对照、开源表格逆向研究和人工定点精修，逐步升级到 Git Worktree 多 Agent 并行、独立真实浏览器验收、快速失败与 Skill / AGENTS.md 经验固化，并讨论 AI 编码后 Coding 成本下降、Verification 成为新瓶颈 | 写 Vibe Coding、AI 编程方法、多 Agent 协作、SaaS 产品打磨、浏览器验收、Skill 经验沉淀和 AI 软件工程复盘时参考 |
-| `src/content/posts/ai-amplifies-execution-gap.mdx` | `生活` | 用“工具 / 外骨骼 / 电子菩萨”三层模型讨论 AI 的能力边界，并用助理评分、工作日志、成熟绩效制度和电商爆品说明 AI 能提高已有标准的执行效率，却不能凭空创造事实与答案 | 写 AI 使用方式、生产力、执行力、绩效分析、信息差与行动差距、AI 能力边界类文章时参考 |
-| src/content/posts/qmd-common-commands.mdx | 教程 | QMD 本地 Markdown 知识库命令手册，覆盖项目级索引、Collection、update/embed/status、search/vsearch/query、lex/vec/hyde、rerank、get/multi-get 与 MCP 接入 | 写 QMD、Markdown 知识库检索、Agent 知识库工具、Claude/Codex MCP 和本地搜索策略文章时参考 |
-| `src/content/posts/yingdao-enterprise-rpa-flow-notes.mdx` | `实践` | 影刀企业案例、RPA业务流程、普通版与企业版决策、Mermaid流程图 | 写影刀RPA、企业自动化、普通版/企业版选型、流程图笔记时参考 |
-| `src/content/posts/ulike-customer-service-rpa-flow-detail.mdx` | `实践` | Ulike 客服售后自动化细节拆解，覆盖静默单推送、已发货仅退款、赠品发货留言三条 RPA 实操流程 | 写电商客服售后RPA、订单/物流/ERP跨系统流程、客服自动化动作拆解时参考 |
-| `src/content/posts/how-to-use-yingdao-rpa-correctly.mdx` | `实践` | 从 40+ 个影刀小应用出发，复盘影刀正确用法、人机协作、经营看板、供应链预警和企业版判断，并用深色决策树风展示新需求是否值得做影刀 | 写影刀RPA复盘、正确使用影刀、日报升级经营看板、自动化治理、需求判断决策树时参考 |
-| `src/content/posts/yingdao-daily-report-to-business-dashboard.mdx` | `实践` | 从 40+ 个零散影刀应用复盘人机协作、维护责任、日报边界和经营看板升级方向 | 写影刀应用治理、日报自动化、经营看板、人机协作和维护责任文章时参考 |
-| `src/content/posts/yingdao-agent-development-knowledge-base.mdx` | `教程` | 影刀 × Agent 开发总览，覆盖开发知识库、问题查询、真实项目规则、浏览器元素探索、代码同步和知识库更新闭环 | 写影刀编码版、Agent 辅助开发、影刀知识库、浏览器元素探索和外部代码同步时参考 |
-| `src/content/posts/automation-agent-workflow.mdx` | `实践` | Agent 执行系统图解手册，统一任务分流、状态管理、权限边界、执行循环和失败恢复 | 写 Agent 流程、自动化协作、任务拆解决策、大任务阶段管理和失败恢复文章时参考 |
-| `src/content/posts/hermes-agent-guide-for-openclaw-users.mdx` | `教程` | 面向 OpenClaw 用户的 Hermes Agent 入门图解，覆盖当前运行结构、OpenClaw 概念映射、安装与官方迁移、模型/OAuth、Tools/Skills/MCP、Session/Memory、Gateway 和使用场景判断 | 写 Hermes Agent、OpenClaw 迁移、多 Agent 运行环境、模型认证、Skills/MCP、消息网关和工具生态文章时参考 |
-| `src/content/posts/browser-agent-shared-chrome-runtime.mdx` | `实践` | 共享 Chrome 运行时架构手册，覆盖固定 Profile、CDP、ensure 状态机、接入顺序、页面隔离、操作清单和故障分流 | 写浏览器自动化基础设施、Playwright CDP、共享登录状态、Chrome 生命周期和多 Agent 复用时参考 |
-| `src/content/posts/gbrain-openclaw-long-term-brain-setup.mdx` | `实践` | GBrain 接入 OpenClaw 的完整实战，覆盖 Context Engine 自动召回、Signal Detector 后台写入、PostgreSQL 多会话并发、Brain source 路由，以及状态、检索、写入、同步、维护和接入验收命令 | 写 Agent 长期记忆、GBrain CLI、OpenClaw Context Engine、自动记忆闭环、知识库运维和分层排障时参考 |
-| `src/content/posts/blog-project-architecture.mdx` | `实践` | 维护者视角的博客系统蓝图，覆盖仓库职责、内容分区、规则控制面、写作公开流程和静态发布边界 | 写本博客说明、仓库结构、内容维护规则和发布边界时参考 |
-| `src/content/posts/blog-code-structure-runtime.mdx` | `实践` | 开发者视角的博客运行蓝图，覆盖 URL 路由、Content Collection、MDX 渲染栈、静态构建、本地与 Pages 链路和代码定位 | 写本博客代码结构、运行流程、Astro 项目拆解和故障定位时参考 |
-| `src/content/posts/css-selector-for-automation-beginners.mdx` | `教程` | CSS 定位图解手册，覆盖稳定定位层级、属性匹配、关系与伪类、影刀文字定位、唯一性验证、排错路线和坏定位改造 | 写 CSS 选择器教学、网页元素定位、影刀编码版自动化、动态 class 处理和定位排错文章时参考 |
-| `src/content/posts/xpath-practical-guide.mdx` | `教程` | XPath 实战速查，覆盖基础路径、属性和文本定位、ancestor/following-sibling 关系定位、表格定位、动态网页选择器和稳定定位原则 | 写 XPath、浏览器自动化、影刀元素定位和 RPA 新人培训时参考 |
-| `src/content/posts/python-zero-basics-roadmap.mdx` | `教程` | 从一行赋值和 8 行订单脚本出发，用当前行、变量状态、输出与错误路径图解 Python 如何从上到下执行代码 | 写 Python 运行顺序、零基础系列入口、代码执行轨迹和学习路线文章时参考 |
-| `src/content/posts/python-variables-basic-types.mdx` | `教程` | 用库存文本 `"3"` 图解变量绑定、重新绑定、str/int/float/bool/None、类型转换、比较结果与 ValueError 发生位置 | 写 Python 变量、基础类型、类型转换、真假判断和数据状态变化教学时参考 |
-| `src/content/posts/python-containers-practical.mdx` | `教程` | 用 A001/A002/A003 订单图解字符串、列表、字典的形状，沿索引与键进入嵌套字段，并看见别名和浅拷贝怎样共享内层对象 | 写 Python 容器形状、嵌套访问、对象引用和浅拷贝教学时参考 |
-| `src/content/posts/python-conditions-loops.mdx` | `教程` | 用库存判断图解条件求值、True/False 两条去向、if/elif/else 自上而下唯一命中、逻辑组合与条件顺序错误 | 写 Python 条件分支、布尔表达式、逻辑运算和判断顺序教学时参考 |
-| `src/content/posts/python-loops-runtime-visual-guide.mdx` | `教程` | 用三条订单逐轮图解 for 当前项、已支付筛选、计数与金额累计，以及 continue 跳过当前轮和 break 结束整个循环的差异 | 写 Python 循环、逐轮运行轨迹、筛选、累计器、continue 和 break 教学时参考 |
-| `src/content/posts/python-functions-practical.mdx` | `教程` | 用函数调用帧图解实参怎样进入参数、局部变量怎样产生、return 怎样交回结果，并解释 print 与 return、作用域和可变默认参数 | 写 Python 函数、参数、return、局部作用域和默认参数教学时参考 |
-| `src/content/posts/python-files-json-errors.mdx` | `教程` | 沿打开文件、读取文本、解析 JSON、处理数据、写回 JSON 的路径，图解 pathlib、load/loads/dump/dumps 与文件/API 数据边界 | 写 Python 文件处理、JSON、API 数据准备和标准库数据流教学时参考 |
-| `src/content/posts/python-errors-debugging-visual-guide.mdx` | `教程` | 图解正常值与异常对象怎样在当前行分叉、except 怎样匹配或继续传播，以及批量订单怎样记录坏数据后继续 | 写 Python 错误定位、异常传播、try/except 和批处理容错教学时参考 |
-| `src/content/posts/python-order-processing-capstone.mdx` | `教程` | 用可运行的订单脚本串起 JSON 输入、逐条清洗、坏数据记录、已支付汇总与文件输出，并展示每一步的数据形状 | 写 Python 入门综合项目、订单处理、数据管道和完整脚本教学时参考 |
-| `src/content/posts/python-classes-objects-basics.mdx` | `教程` | 作为选修章，用商品库存图解 __init__、self、属性和方法怎样作用于独立实例，并对比字典加函数的适用边界 | 写 Python 类与对象、self、实例状态和基础面向对象边界教学时参考 |
-| `src/content/posts/python-basic-assessment-20-questions.mdx` | `教程` | 用 20 道题检查预测输出、状态追踪、基础编码、具体错误定位和完整订单脚本能力，网页与可下载练习文件保持一致 | 写 Python 入门考核、运行轨迹练习、错误定位和综合脚本测验时参考 |
-| `src/content/posts/programming-terms-for-ai-coding-beginners.mdx` | `教程` | 面向 AI 编程、RPA 和数据处理新手的开发术语翻译手册，沿真实开发流程讲 Bug、异常、测试、重构、API、同步异步、数据库缓存、Git、构建部署与 CI/CD | 写非科班编程入门、AI 编程术语、Git/API/测试/部署基础和新人开发沟通指南时参考 |
-| `src/content/posts/proxmox-ve-9-beginner-guide.mdx` | `教程` | 面向单机 Homelab 的 Proxmox VE 9.2 完整入门，覆盖裸机安装、固定 IP、vmbr0、root 密码恢复、节点层级、Directory / LVM-Thin、Thin Provisioning、VM / LXC、快照备份、NAS、权限、防火墙、模板、磁盘健康、直通和无订阅更新 | 写 PVE、家庭虚拟化、虚拟机宿主机、Linux Bridge、虚拟磁盘和单机存储教学时参考 |
-| `src/content/posts/uu-remote-vm-clone-device-identity-reset.mdx` | `实践` | 记录克隆 Windows 虚拟机后 UU 远程设备身份重复导致互相下线的排查，定位 GameViewer 的 uuid、deviceId、token 配置并通过备份后清理让客户端自行重建，最后给出 Windows system_id 与 VMware UUID/MAC 的分层排障边界 | 写 UU 远程、虚拟机克隆、设备身份冲突、GameViewer 本地配置和 VMware 身份排障时参考 |
-| `src/content/posts/excel-formula-data-types-basics.mdx` | `教程` | Excel 公式基础前置教程，从数值、字符串、布尔值和单元格/区域引用出发，解释日期序列值、时间小数、日期时间组合以及这些类型在公式中的表示方式 | 写 Excel 零基础公式语法、数据类型、日期时间原理、值与引用区别时参考 |
-| `src/content/posts/excel-functions-from-basic-to-intermediate.mdx` | `教程` | Excel 函数知识地图，把 57 个常用函数整理成 9 个函数家族，并说明基础函数、中级函数、综合应用和系列阅读路线 | 写 Excel / WPS 函数学习地图、函数分类、系列入口和表格能力分层文章时参考 |
-| `src/content/posts/excel-basic-functions-case-guide.mdx` | `教程` | Excel 基础函数案例教程，使用订单明细和商品资料两张示例表，逐个演示 49 个统计、条件、查找、文本、逻辑、日期和时间函数的公式、结果与组合练习 | 写 Excel 基础函数实操、函数案例讲解、订单明细统计、日期时间处理和新手练习文章时参考 |
-| `src/content/posts/excel-wildcards-functions-guide.mdx` | `教程` | Excel 通配符专题，讲清 *、?、~ 的匹配规则，整理条件统计、查找匹配和文本搜索函数的支持方式，并用 K161 前缀平均值案例对比复杂数组公式 | 写 Excel 模糊匹配、条件统计、XLOOKUP 通配符模式、编码前缀和文本搜索文章时参考 |
-| `src/content/posts/excel-lookup-functions-visual-guide.mdx` | `教程` | Excel 查找匹配函数专题，用五张内容相同、标注不同的独立案例表，逐个展示 VLOOKUP、XLOOKUP、INDEX、MATCH、XMATCH 的参数、查找过程、位置与返回结果 | 写 Excel 查找函数教学、单函数可视化案例、VLOOKUP 与 XLOOKUP 对比、INDEX + MATCH / XMATCH 组合和位置返回文章时参考 |
-| `src/content/posts/excel-intermediate-functions-case-guide.mdx` | `教程` | Excel 中级函数案例教程，使用编码日期表、运营明细表和七天销量表，讲解 18 个文本日期、动态数组与批量计算函数 | 写 Excel 动态数组、日期周期、LET、BYROW、MAP、REDUCE 和减少下拉公式的教学文章时参考 |
-| `src/content/posts/excel-functions-visual-handbook.mdx` | `教程` | 可持续扩展的 Excel 函数图解手册，当前用六张独立信息图讲清 VALUE 文本转数值、NUMBERVALUE 分隔符解析、TEXT 格式化输出、XLOOKUP 行位置映射、IF 条件分支和 FILTER 动态筛选 | 写 Excel 单函数原理图解、文本与数值转换、格式代码、条件判断、查找映射、动态数组筛选或需要“一章一张信息图”的函数教程时参考 |
-| `src/content/posts/excel-wps-weird-issues.mdx` | `教程` | 持续记录 Excel、WPS 和影刀表格自动化中的少见问题；当前收录 WPS `set_range()` 写入以等号开头文本时触发 COM 异常的原因与修复方式 | 写 Excel/WPS 踩坑记录、影刀表格自动化异常、`set_range()` COM 错误和文本公式识别问题时参考 |
-| `src/content/posts/excel-groupby-xlookup-high-performance-summary.mdx` | `教程` | 从大量 SUMIFS 重复汇总同一源表的性能问题出发，讲清 GROUPBY 一次汇总、XLOOKUP 批量查回、组合 Key、TAKE 拆列和 FILTER 日期范围汇总 | 写 Excel 大数据公式优化、GROUPBY、XLOOKUP、组合 Key、SUMIFS 重构和动态数组性能文章时参考 |
-| `src/content/posts/spreadsheet-fact-calculation-presentation-layers.mdx` | `实践` | 用预测销量、综合成本和可售库存三个例子讲清事实层、计算层、展示层，重点解释为什么固化的计算结果仍然不是事实，以及混层后如何造成重复计算、无法重算和对账困难 | 写 Excel 报表分层、数据建模、事实与计算边界、指标口径和报表维护文章时参考 |
-| `src/content/posts/qianniu-ecommerce-operation-learning-map.mdx` | `教程` | 从一条商品链接出发，把 SKU、价格体系、营销推广、订单 ERP、物流售后、评价与运营优化串成完整电商经营链路，并补充面对陌生后台功能的学习方法 | 写千牛工作台、电商运营入门、新人培训、商品从上架到售后的全链路教学文章时参考 |
-| `src/content/posts/ecommerce-price-hierarchy-target-price-planning.mdx` | `教程` | 先解释单品宝、活动和营销工具让利（非活动让利），再讲当前标价如何生效、活动如何校验、覆盖叠加与活动优先级、消费端到手价检查、价盘补差，以及平时价与活动价一致时的标价反推方法 | 写电商价格体系、优惠叠加优先级、营销工具让利、活动卡控价、普惠卷后价、活动标价反推和价盘目标到手价教程时参考 |
-| `src/content/posts/tmall-billion-subsidy-cashflow-tax.mdx` | `实践` | 用商品原价100、消费者实付90、百补优惠10的单笔订单，拆解平台先垫资、确认收货后划回、最终结算合作费用的现金流，并按商品13%与合作费用6%的当前核算口径推导未税收入公式 | 写天猫百亿补贴、平台垫资、合作费用、价税分离和利润模型税务口径时参考 |
-| `src/content/posts/douyin-qianchuan-traffic-buying-guide.mdx` | `教程` | 用基础层和进阶层两张知识地图解释抖音千川投流：先拆推商品/推直播、全域/乘方及计划、商品、抖音号、素材四个数据维度，再进入成交归因、GMV、ROI、达人佣金、退款与最终结算 | 写巨量千川、抖音投流、达人投流、投放数据维度、广告归因、ROI 和利润核算入门文章时参考 |
-| `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `实践` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
-| `src/content/posts/ecommerce-link-profit-model-rebuild.mdx` | `实践` | 区分事实、指标与预测，以工资类比和完整退款算例解释近 7 天订单口径、退款净影响、事实补录纠错、费用颗粒度、归属边界与预测快照；历史退款窗口和预测算法均明确为示例 | 写电商链接利润、订单级成本、退款率口径和事实与预测分层时参考 |
-| `src/content/posts/jd-pop-profit-model-settlement-facts.mdx` | `实践` | 从“复现京东计费规则”的旧模型切换到事实驱动架构：订单结算负责平台收入与费用，ERP 负责采购及履约成本，推广等账单外费用独立接入，并将事实利润与预测层分开 | 写京东 POP 利润核算、平台结算账单、事实层设计、平台费用治理和利润模型重构时参考 |
-| `src/content/posts/shopee-profit-model-settlement-to-link-profit.mdx` | `实践` | Shopee 跨境链接利润模型重构：妙手 ERP 直接提供 RMB 订单与平台实际结算，以平台回款闭环承接未单列费用，再叠加成熟退款率、退款物流损耗、采购与推广成本得到链接利润，并明确物流扣费与回扣不等额时的模型边界 | 写 Shopee 利润核算、妙手 ERP、平台回款、物流回扣、退款成熟窗口、其它费用残差和跨境链接利润模型时参考 |
-| `src/content/posts/ecommerce-review-analysis-agent-workflow.mdx` | `实践` | 电商评价分析 Agent 整页视觉案例，以滚动叙事方式展示两张评价表统一、Python 事实包、日报与周期对比、钉钉交付闸门和发送成功后的分表状态回写 | 写电商评价分析、钉钉 AI 表格、事实包、Agent 报告、Webhook 交付闭环、状态回写和整页数据故事时参考 |
-| `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `实践` | 东南亚仓网与发货决策信息图，覆盖三国雅仓、同国双平台共享、跨国隔离、本地优先、深圳兜底和后台核对口径 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
-| `src/content/posts/ai-product-image-agent-workflow.mdx` | `实践` | AI 商品图工作流重构复盘，覆盖从逐张临场决策到规划前移、Art Direction、同组差异化、纯执行生成、人工审查和规则单一来源 | 写商品图生成、Agent 工作流重构、视觉规划、Prompt 设计和执行边界时参考 |
-| `src/content/posts/ai-product-image-workflow-in-practice.mdx` | `实践` | 以一次脱敏后的真实新品项目为背景，讲清输入资料、四个 Skill 分工、竞品链接抓取、可选评价分析、Art Direction 前移、真实产品图边界、纯执行生成和定向整改 | 写 AI 商品图真实使用流程、Skill 协作、竞品分析、视觉规划、补拍边界和单图执行时参考 |
-| `src/content/posts/github-pages-deployment-guide.mdx` | `实践` | GitHub Pages 部署原理图解手册，覆盖访问链路、Astro 构建、Actions artifact、站点路径映射、发布检查和分层排障 | 写部署说明、构建发布、静态站点原理和 Pages 故障排查时参考 |
-| `src/content/posts/chatgpt-local-mcp-three-access-methods.mdx` | `实践` | 将 Caddy + ChmlFrp、Tailscale Funnel 与 OpenAI Secure MCP Tunnel 合为一篇 MCP 接入图解手册，区分公开入站和私有出站、账号权限、OAuth、分层验收 | 写 ChatGPT Chat 接入本地 MCP、DevSpace、三类网络隧道和端到端工具验证文章时参考 |
-| `src/content/posts/wsl-devspace-caddy-chmlfrp-chatgpt.mdx` | `实践` | **已归档旧文**：保留 WSL + Caddy + ChmlFrp 原始完整操作与 Windows KeepAlive 实践；新读者优先查看三方案总指南 | 查具体旧环境配置和 ChmlFrp 故障记录时按需参考 |
-| `src/content/posts/wsl-devspace-tailscale-funnel-chatgpt.mdx` | `实践` | **已归档旧文**：保留 Tailscale Funnel 原始跨平台配置与 Windows 代理问题排查；新读者优先查看三方案总指南 | 查 Funnel 旧环境与代理踩坑时按需参考 |
-| `src/content/posts/repetitive-reporting-is-not-execution.mdx` | `实践` | 从全平台商品退款率和抖音每日报表两套制度出发，批评把重复下载、筛选、填写和刷新当作执行力，并提出统一订单数据源、自动日期口径和异常驱动的人机分工 | 写数据报表流程优化、RPA 自动化、重复劳动治理、执行力与人才评价文章时参考 |
-| `src/content/posts/performance-review-should-recognize-talent.mdx` | `生活` | 从运营助理分级考核表出发，批评统一能力清单如何用短板限制长板，并提出共同底线加专项晋升路线 | 写职场观察、绩效考核、人才管理、专人专项和制度批评类文章时参考 |
-| `src/content/posts/everyone-wants-to-be-landlord-at-work.mdx` | `生活` | 用“人人都是农民，人人都想当地主”的隐喻讨论职场权力膨胀，从 A/B/C 任务分派案例拆解权力上收、责任下沉、越级指挥和“你应该懂”的管理逻辑 | 写职场权力、管理责任、上下级协作、任务分派和权责边界类文章时参考 |
-| `src/content/posts/ram-resale-cashflow-profit-assets.mdx` | `生活` | 用 500 元旧内存卖 1500 元、再花 400 元买替代品的真实小案例，拆清 600 元现金余额变化、1000 元交易收益、1100 元净现金流入和最终资产的不同口径 | 写生活账本、现金流与利润区别、资产重新配置和日常财务概念解释类文章时参考 |
-| `src/content/posts/h-pylori-acid-drink-note.mdx` | `生活` | 幽门螺杆菌、胃酸过多和气泡饮料的个人判断笔记 | 写生活判断清单、风险边界提醒、个人健康记录类文章时参考 |
-| `src/content/posts/dupont-c8-pfas-case.mdx` | `生活` | 从 Tennant 农场死牛、PFOA/C8 内部文件、6.9 万人流行病学研究一路拆到旧 TSCA 监管盲区、现代 PFAS 标准与非靶向分析 | 写 PFAS、PFOA、杜邦 C8、环境污染、化学品监管和未知污染物风险类文章时参考 |
+| `src/content/posts/from-llm-to-ai-agent-visual-guide.mdx` | `技术` | 通过电商评价分析连续案例与五张静态机制图，介绍机器学习、Transformer、LLM、RAG、工具调用、Workflow 与 Agent 的历史关系、工作原理和执行权限边界 | 写 AI 入门认知、LLM 与 Agent 区别、工作流选型、模型调用与工具执行基础原理文章时参考 |
+| `src/content/posts/ecommerce-profit-trust-verification.mdx` | `经营与数据` | 从天猫链接利润模型中的商品归属歧义、包裹成本守恒、无归属成本、真实零与未知值、退款预测和刷新验收展开，进一步讨论技术焦虑、从看不懂到否定复杂系统的认知路径、三类复杂度与独立判断 | 写数据可信度、利润模型核验、技术焦虑、复杂系统评价、业务规则与技术责任边界、经营报表审查时参考 |
+| `src/content/posts/review-feedback-improvement-ownership.mdx` | `经营与数据` | 从“塑料感”差评推导改善归口思想，完整展开 20 类问题、F01–F20 基准事实、8 类改善归口、分类规则，并用脱敏的现有 AI 表格记录跑通三层模型 | 写评价分析、产品体验、设计与质量责任边界、客户反馈、AI 业务分类和改善机制时参考 |
+| `src/content/posts/code-tech-weird-issues.mdx` | `技术` | 长期维护的编程、API、数据同步、自动化等技术踩坑记录；首条说明动态数据下页码分页 `total` 波动与实际漏单不能画等号，区分已观察事实和潜在 OFFSET 漏读风险，并给出回查与校验建议 | 写 API 分页、动态查询结果、`total` 变化、OFFSET 漏读风险、增量同步与一致性校验时参考 |
+| `src/content/posts/java-jvm-python-bytecode-runtime.mdx` | `技术` | 从源码、字节码、运行时到 CPU 对照 Java 与 Python，讲清 JVM、.class、Python bytecode、.pyc、CPython 的层级关系，以及两者都能跨平台但 JVM 通常能让 Java 热点代码更快的原因 | 写 JVM、Java/Python 运行机制、字节码、跨平台、解释器、JIT、CPython 性能和 NumPy 底层加速时参考 |
+| `src/content/posts/vibe-coding-ai-table-saas-retrospective.mdx` | `技术` | 复盘数日 AI 表格 SaaS 开发，从无脑 Vibe Coding、钉钉与 Airtable 产品对照、开源表格逆向研究和人工定点精修，逐步升级到 Git Worktree 多 Agent 并行、独立真实浏览器验收、快速失败与 Skill / AGENTS.md 经验固化，并讨论 AI 编码后 Coding 成本下降、Verification 成为新瓶颈 | 写 Vibe Coding、AI 编程方法、多 Agent 协作、SaaS 产品打磨、浏览器验收、Skill 经验沉淀和 AI 软件工程复盘时参考 |
+| `src/content/posts/ai-amplifies-execution-gap.mdx` | `生活与思考` | 用“工具 / 外骨骼 / 电子菩萨”三层模型讨论 AI 的能力边界，并用助理评分、工作日志、成熟绩效制度和电商爆品说明 AI 能提高已有标准的执行效率，却不能凭空创造事实与答案 | 写 AI 使用方式、生产力、执行力、绩效分析、信息差与行动差距、AI 能力边界类文章时参考 |
+| src/content/posts/qmd-common-commands.mdx | 技术 | QMD 本地 Markdown 知识库命令手册，覆盖项目级索引、Collection、update/embed/status、search/vsearch/query、lex/vec/hyde、rerank、get/multi-get 与 MCP 接入 | 写 QMD、Markdown 知识库检索、Agent 知识库工具、Claude/Codex MCP 和本地搜索策略文章时参考 |
+| `src/content/posts/yingdao-enterprise-rpa-flow-notes.mdx` | `经营与数据` | 影刀企业案例、RPA业务流程、普通版与企业版决策、Mermaid流程图 | 写影刀RPA、企业自动化、普通版/企业版选型、流程图笔记时参考 |
+| `src/content/posts/ulike-customer-service-rpa-flow-detail.mdx` | `经营与数据` | Ulike 客服售后自动化细节拆解，覆盖静默单推送、已发货仅退款、赠品发货留言三条 RPA 实操流程 | 写电商客服售后RPA、订单/物流/ERP跨系统流程、客服自动化动作拆解时参考 |
+| `src/content/posts/how-to-use-yingdao-rpa-correctly.mdx` | `技术` | 从 40+ 个影刀小应用出发，复盘影刀正确用法、人机协作、经营看板、供应链预警和企业版判断，并用深色决策树风展示新需求是否值得做影刀 | 写影刀RPA复盘、正确使用影刀、日报升级经营看板、自动化治理、需求判断决策树时参考 |
+| `src/content/posts/yingdao-daily-report-to-business-dashboard.mdx` | `经营与数据` | 从 40+ 个零散影刀应用复盘人机协作、维护责任、日报边界和经营看板升级方向 | 写影刀应用治理、日报自动化、经营看板、人机协作和维护责任文章时参考 |
+| `src/content/posts/yingdao-agent-development-knowledge-base.mdx` | `技术` | 影刀 × Agent 开发总览，覆盖开发知识库、问题查询、真实项目规则、浏览器元素探索、代码同步和知识库更新闭环 | 写影刀编码版、Agent 辅助开发、影刀知识库、浏览器元素探索和外部代码同步时参考 |
+| `src/content/posts/automation-agent-workflow.mdx` | `技术` | Agent 执行系统图解手册，统一任务分流、状态管理、权限边界、执行循环和失败恢复 | 写 Agent 流程、自动化协作、任务拆解决策、大任务阶段管理和失败恢复文章时参考 |
+| `src/content/posts/hermes-agent-guide-for-openclaw-users.mdx` | `技术` | 面向 OpenClaw 用户的 Hermes Agent 入门图解，覆盖当前运行结构、OpenClaw 概念映射、安装与官方迁移、模型/OAuth、Tools/Skills/MCP、Session/Memory、Gateway 和使用场景判断 | 写 Hermes Agent、OpenClaw 迁移、多 Agent 运行环境、模型认证、Skills/MCP、消息网关和工具生态文章时参考 |
+| `src/content/posts/browser-agent-shared-chrome-runtime.mdx` | `技术` | 共享 Chrome 运行时架构手册，覆盖固定 Profile、CDP、ensure 状态机、接入顺序、页面隔离、操作清单和故障分流 | 写浏览器自动化基础设施、Playwright CDP、共享登录状态、Chrome 生命周期和多 Agent 复用时参考 |
+| `src/content/posts/gbrain-openclaw-long-term-brain-setup.mdx` | `技术` | GBrain 接入 OpenClaw 的完整实战，覆盖 Context Engine 自动召回、Signal Detector 后台写入、PostgreSQL 多会话并发、Brain source 路由，以及状态、检索、写入、同步、维护和接入验收命令 | 写 Agent 长期记忆、GBrain CLI、OpenClaw Context Engine、自动记忆闭环、知识库运维和分层排障时参考 |
+| `src/content/posts/blog-project-architecture.mdx` | `技术` | 维护者视角的博客系统蓝图，覆盖仓库职责、内容分区、规则控制面、写作公开流程和静态发布边界 | 写本博客说明、仓库结构、内容维护规则和发布边界时参考 |
+| `src/content/posts/blog-code-structure-runtime.mdx` | `技术` | 开发者视角的博客运行蓝图，覆盖 URL 路由、Content Collection、MDX 渲染栈、静态构建、本地与 Pages 链路和代码定位 | 写本博客代码结构、运行流程、Astro 项目拆解和故障定位时参考 |
+| `src/content/posts/css-selector-for-automation-beginners.mdx` | `技术` | CSS 定位图解手册，覆盖稳定定位层级、属性匹配、关系与伪类、影刀文字定位、唯一性验证、排错路线和坏定位改造 | 写 CSS 选择器教学、网页元素定位、影刀编码版自动化、动态 class 处理和定位排错文章时参考 |
+| `src/content/posts/xpath-practical-guide.mdx` | `技术` | XPath 实战速查，覆盖基础路径、属性和文本定位、ancestor/following-sibling 关系定位、表格定位、动态网页选择器和稳定定位原则 | 写 XPath、浏览器自动化、影刀元素定位和 RPA 新人培训时参考 |
+| `src/content/posts/python-zero-basics-roadmap.mdx` | `技术` | 从一行赋值和 8 行订单脚本出发，用当前行、变量状态、输出与错误路径图解 Python 如何从上到下执行代码 | 写 Python 运行顺序、零基础系列入口、代码执行轨迹和学习路线文章时参考 |
+| `src/content/posts/python-variables-basic-types.mdx` | `技术` | 用库存文本 `"3"` 图解变量绑定、重新绑定、str/int/float/bool/None、类型转换、比较结果与 ValueError 发生位置 | 写 Python 变量、基础类型、类型转换、真假判断和数据状态变化教学时参考 |
+| `src/content/posts/python-containers-practical.mdx` | `技术` | 用 A001/A002/A003 订单图解字符串、列表、字典的形状，沿索引与键进入嵌套字段，并看见别名和浅拷贝怎样共享内层对象 | 写 Python 容器形状、嵌套访问、对象引用和浅拷贝教学时参考 |
+| `src/content/posts/python-conditions-loops.mdx` | `技术` | 用库存判断图解条件求值、True/False 两条去向、if/elif/else 自上而下唯一命中、逻辑组合与条件顺序错误 | 写 Python 条件分支、布尔表达式、逻辑运算和判断顺序教学时参考 |
+| `src/content/posts/python-loops-runtime-visual-guide.mdx` | `技术` | 用三条订单逐轮图解 for 当前项、已支付筛选、计数与金额累计，以及 continue 跳过当前轮和 break 结束整个循环的差异 | 写 Python 循环、逐轮运行轨迹、筛选、累计器、continue 和 break 教学时参考 |
+| `src/content/posts/python-functions-practical.mdx` | `技术` | 用函数调用帧图解实参怎样进入参数、局部变量怎样产生、return 怎样交回结果，并解释 print 与 return、作用域和可变默认参数 | 写 Python 函数、参数、return、局部作用域和默认参数教学时参考 |
+| `src/content/posts/python-files-json-errors.mdx` | `技术` | 沿打开文件、读取文本、解析 JSON、处理数据、写回 JSON 的路径，图解 pathlib、load/loads/dump/dumps 与文件/API 数据边界 | 写 Python 文件处理、JSON、API 数据准备和标准库数据流教学时参考 |
+| `src/content/posts/python-errors-debugging-visual-guide.mdx` | `技术` | 图解正常值与异常对象怎样在当前行分叉、except 怎样匹配或继续传播，以及批量订单怎样记录坏数据后继续 | 写 Python 错误定位、异常传播、try/except 和批处理容错教学时参考 |
+| `src/content/posts/python-order-processing-capstone.mdx` | `技术` | 用可运行的订单脚本串起 JSON 输入、逐条清洗、坏数据记录、已支付汇总与文件输出，并展示每一步的数据形状 | 写 Python 入门综合项目、订单处理、数据管道和完整脚本教学时参考 |
+| `src/content/posts/python-classes-objects-basics.mdx` | `技术` | 作为选修章，用商品库存图解 __init__、self、属性和方法怎样作用于独立实例，并对比字典加函数的适用边界 | 写 Python 类与对象、self、实例状态和基础面向对象边界教学时参考 |
+| `src/content/posts/python-basic-assessment-20-questions.mdx` | `技术` | 用 20 道题检查预测输出、状态追踪、基础编码、具体错误定位和完整订单脚本能力，网页与可下载练习文件保持一致 | 写 Python 入门考核、运行轨迹练习、错误定位和综合脚本测验时参考 |
+| `src/content/posts/programming-terms-for-ai-coding-beginners.mdx` | `技术` | 面向 AI 编程、RPA 和数据处理新手的开发术语翻译手册，沿真实开发流程讲 Bug、异常、测试、重构、API、同步异步、数据库缓存、Git、构建部署与 CI/CD | 写非科班编程入门、AI 编程术语、Git/API/测试/部署基础和新人开发沟通指南时参考 |
+| `src/content/posts/proxmox-ve-9-beginner-guide.mdx` | `技术` | 面向单机 Homelab 的 Proxmox VE 9.2 完整入门，覆盖裸机安装、固定 IP、vmbr0、root 密码恢复、节点层级、Directory / LVM-Thin、Thin Provisioning、VM / LXC、快照备份、NAS、权限、防火墙、模板、磁盘健康、直通和无订阅更新 | 写 PVE、家庭虚拟化、虚拟机宿主机、Linux Bridge、虚拟磁盘和单机存储教学时参考 |
+| `src/content/posts/uu-remote-vm-clone-device-identity-reset.mdx` | `技术` | 记录克隆 Windows 虚拟机后 UU 远程设备身份重复导致互相下线的排查，定位 GameViewer 的 uuid、deviceId、token 配置并通过备份后清理让客户端自行重建，最后给出 Windows system_id 与 VMware UUID/MAC 的分层排障边界 | 写 UU 远程、虚拟机克隆、设备身份冲突、GameViewer 本地配置和 VMware 身份排障时参考 |
+| `src/content/posts/excel-formula-data-types-basics.mdx` | `技术` | Excel 公式基础前置教程，从数值、字符串、布尔值和单元格/区域引用出发，解释日期序列值、时间小数、日期时间组合以及这些类型在公式中的表示方式 | 写 Excel 零基础公式语法、数据类型、日期时间原理、值与引用区别时参考 |
+| `src/content/posts/excel-functions-from-basic-to-intermediate.mdx` | `技术` | Excel 函数知识地图，把 57 个常用函数整理成 9 个函数家族，并说明基础函数、中级函数、综合应用和系列阅读路线 | 写 Excel / WPS 函数学习地图、函数分类、系列入口和表格能力分层文章时参考 |
+| `src/content/posts/excel-basic-functions-case-guide.mdx` | `技术` | Excel 基础函数案例教程，使用订单明细和商品资料两张示例表，逐个演示 49 个统计、条件、查找、文本、逻辑、日期和时间函数的公式、结果与组合练习 | 写 Excel 基础函数实操、函数案例讲解、订单明细统计、日期时间处理和新手练习文章时参考 |
+| `src/content/posts/excel-wildcards-functions-guide.mdx` | `技术` | Excel 通配符专题，讲清 *、?、~ 的匹配规则，整理条件统计、查找匹配和文本搜索函数的支持方式，并用 K161 前缀平均值案例对比复杂数组公式 | 写 Excel 模糊匹配、条件统计、XLOOKUP 通配符模式、编码前缀和文本搜索文章时参考 |
+| `src/content/posts/excel-lookup-functions-visual-guide.mdx` | `技术` | Excel 查找匹配函数专题，用五张内容相同、标注不同的独立案例表，逐个展示 VLOOKUP、XLOOKUP、INDEX、MATCH、XMATCH 的参数、查找过程、位置与返回结果 | 写 Excel 查找函数教学、单函数可视化案例、VLOOKUP 与 XLOOKUP 对比、INDEX + MATCH / XMATCH 组合和位置返回文章时参考 |
+| `src/content/posts/excel-intermediate-functions-case-guide.mdx` | `技术` | Excel 中级函数案例教程，使用编码日期表、运营明细表和七天销量表，讲解 18 个文本日期、动态数组与批量计算函数 | 写 Excel 动态数组、日期周期、LET、BYROW、MAP、REDUCE 和减少下拉公式的教学文章时参考 |
+| `src/content/posts/excel-functions-visual-handbook.mdx` | `技术` | 可持续扩展的 Excel 函数图解手册，当前用六张独立信息图讲清 VALUE 文本转数值、NUMBERVALUE 分隔符解析、TEXT 格式化输出、XLOOKUP 行位置映射、IF 条件分支和 FILTER 动态筛选 | 写 Excel 单函数原理图解、文本与数值转换、格式代码、条件判断、查找映射、动态数组筛选或需要“一章一张信息图”的函数教程时参考 |
+| `src/content/posts/excel-wps-weird-issues.mdx` | `技术` | 持续记录 Excel、WPS 和影刀表格自动化中的少见问题；当前收录 WPS `set_range()` 写入以等号开头文本时触发 COM 异常的原因与修复方式 | 写 Excel/WPS 踩坑记录、影刀表格自动化异常、`set_range()` COM 错误和文本公式识别问题时参考 |
+| `src/content/posts/excel-groupby-xlookup-high-performance-summary.mdx` | `技术` | 从大量 SUMIFS 重复汇总同一源表的性能问题出发，讲清 GROUPBY 一次汇总、XLOOKUP 批量查回、组合 Key、TAKE 拆列和 FILTER 日期范围汇总 | 写 Excel 大数据公式优化、GROUPBY、XLOOKUP、组合 Key、SUMIFS 重构和动态数组性能文章时参考 |
+| `src/content/posts/spreadsheet-fact-calculation-presentation-layers.mdx` | `经营与数据` | 用预测销量、综合成本和可售库存三个例子讲清事实层、计算层、展示层，重点解释为什么固化的计算结果仍然不是事实，以及混层后如何造成重复计算、无法重算和对账困难 | 写 Excel 报表分层、数据建模、事实与计算边界、指标口径和报表维护文章时参考 |
+| `src/content/posts/qianniu-ecommerce-operation-learning-map.mdx` | `经营与数据` | 从一条商品链接出发，把 SKU、价格体系、营销推广、订单 ERP、物流售后、评价与运营优化串成完整电商经营链路，并补充面对陌生后台功能的学习方法 | 写千牛工作台、电商运营入门、新人培训、商品从上架到售后的全链路教学文章时参考 |
+| `src/content/posts/ecommerce-price-hierarchy-target-price-planning.mdx` | `经营与数据` | 先解释单品宝、活动和营销工具让利（非活动让利），再讲当前标价如何生效、活动如何校验、覆盖叠加与活动优先级、消费端到手价检查、价盘补差，以及平时价与活动价一致时的标价反推方法 | 写电商价格体系、优惠叠加优先级、营销工具让利、活动卡控价、普惠卷后价、活动标价反推和价盘目标到手价教程时参考 |
+| `src/content/posts/tmall-billion-subsidy-cashflow-tax.mdx` | `经营与数据` | 用商品原价100、消费者实付90、百补优惠10的单笔订单，拆解平台先垫资、确认收货后划回、最终结算合作费用的现金流，并按商品13%与合作费用6%的当前核算口径推导未税收入公式 | 写天猫百亿补贴、平台垫资、合作费用、价税分离和利润模型税务口径时参考 |
+| `src/content/posts/douyin-qianchuan-traffic-buying-guide.mdx` | `经营与数据` | 用基础层和进阶层两张知识地图解释抖音千川投流：先拆推商品/推直播、全域/乘方及计划、商品、抖音号、素材四个数据维度，再进入成交归因、GMV、ROI、达人佣金、退款与最终结算 | 写巨量千川、抖音投流、达人投流、投放数据维度、广告归因、ROI 和利润核算入门文章时参考 |
+| `src/content/posts/ecommerce-dashboard-from-daily-report-to-management-board.mdx` | `经营与数据` | 多店铺电商经营看板设计，覆盖店铺对比、型号退款率、链接退款率、推广分析、库存周转和保护套专题 | 写电商数据看板、影刀RPA经营分析、日报升级方案时参考 |
+| `src/content/posts/ecommerce-link-profit-model-rebuild.mdx` | `经营与数据` | 区分事实、指标与预测，以工资类比和完整退款算例解释近 7 天订单口径、退款净影响、事实补录纠错、费用颗粒度、归属边界与预测快照；历史退款窗口和预测算法均明确为示例 | 写电商链接利润、订单级成本、退款率口径和事实与预测分层时参考 |
+| `src/content/posts/jd-pop-profit-model-settlement-facts.mdx` | `经营与数据` | 从“复现京东计费规则”的旧模型切换到事实驱动架构：订单结算负责平台收入与费用，ERP 负责采购及履约成本，推广等账单外费用独立接入，并将事实利润与预测层分开 | 写京东 POP 利润核算、平台结算账单、事实层设计、平台费用治理和利润模型重构时参考 |
+| `src/content/posts/shopee-profit-model-settlement-to-link-profit.mdx` | `经营与数据` | Shopee 跨境链接利润模型重构：妙手 ERP 直接提供 RMB 订单与平台实际结算，以平台回款闭环承接未单列费用，再叠加成熟退款率、退款物流损耗、采购与推广成本得到链接利润，并明确物流扣费与回扣不等额时的模型边界 | 写 Shopee 利润核算、妙手 ERP、平台回款、物流回扣、退款成熟窗口、其它费用残差和跨境链接利润模型时参考 |
+| `src/content/posts/ecommerce-review-analysis-agent-workflow.mdx` | `经营与数据` | 电商评价分析 Agent 整页视觉案例，以滚动叙事方式展示两张评价表统一、Python 事实包、日报与周期对比、钉钉交付闸门和发送成功后的分表状态回写 | 写电商评价分析、钉钉 AI 表格、事实包、Agent 报告、Webhook 交付闭环、状态回写和整页数据故事时参考 |
+| `src/content/posts/southeast-asia-warehouse-shipping-rules.mdx` | `经营与数据` | 东南亚仓网与发货决策信息图，覆盖三国雅仓、同国双平台共享、跨国隔离、本地优先、深圳兜底和后台核对口径 | 写东南亚海外仓、双平台库存共用、跨境兜底和仓储发货规则时参考 |
+| `src/content/posts/ai-product-image-agent-workflow.mdx` | `技术` | AI 商品图工作流重构复盘，覆盖从逐张临场决策到规划前移、Art Direction、同组差异化、纯执行生成、人工审查和规则单一来源 | 写商品图生成、Agent 工作流重构、视觉规划、Prompt 设计和执行边界时参考 |
+| `src/content/posts/ai-product-image-workflow-in-practice.mdx` | `技术` | 以一次脱敏后的真实新品项目为背景，讲清输入资料、四个 Skill 分工、竞品链接抓取、可选评价分析、Art Direction 前移、真实产品图边界、纯执行生成和定向整改 | 写 AI 商品图真实使用流程、Skill 协作、竞品分析、视觉规划、补拍边界和单图执行时参考 |
+| `src/content/posts/github-pages-deployment-guide.mdx` | `技术` | GitHub Pages 部署原理图解手册，覆盖访问链路、Astro 构建、Actions artifact、站点路径映射、发布检查和分层排障 | 写部署说明、构建发布、静态站点原理和 Pages 故障排查时参考 |
+| `src/content/posts/chatgpt-local-mcp-three-access-methods.mdx` | `技术` | 将 Caddy + ChmlFrp、Tailscale Funnel 与 OpenAI Secure MCP Tunnel 合为一篇 MCP 接入图解手册，区分公开入站和私有出站、账号权限、OAuth、分层验收 | 写 ChatGPT Chat 接入本地 MCP、DevSpace、三类网络隧道和端到端工具验证文章时参考 |
+| `src/content/posts/wsl-devspace-caddy-chmlfrp-chatgpt.mdx` | `技术` | **已归档旧文**：保留 WSL + Caddy + ChmlFrp 原始完整操作与 Windows KeepAlive 实践；新读者优先查看三方案总指南 | 查具体旧环境配置和 ChmlFrp 故障记录时按需参考 |
+| `src/content/posts/wsl-devspace-tailscale-funnel-chatgpt.mdx` | `技术` | **已归档旧文**：保留 Tailscale Funnel 原始跨平台配置与 Windows 代理问题排查；新读者优先查看三方案总指南 | 查 Funnel 旧环境与代理踩坑时按需参考 |
+| `src/content/posts/repetitive-reporting-is-not-execution.mdx` | `经营与数据` | 从全平台商品退款率和抖音每日报表两套制度出发，批评把重复下载、筛选、填写和刷新当作执行力，并提出统一订单数据源、自动日期口径和异常驱动的人机分工 | 写数据报表流程优化、RPA 自动化、重复劳动治理、执行力与人才评价文章时参考 |
+| `src/content/posts/performance-review-should-recognize-talent.mdx` | `生活与思考` | 从运营助理分级考核表出发，批评统一能力清单如何用短板限制长板，并提出共同底线加专项晋升路线 | 写职场观察、绩效考核、人才管理、专人专项和制度批评类文章时参考 |
+| `src/content/posts/everyone-wants-to-be-landlord-at-work.mdx` | `生活与思考` | 用“人人都是农民，人人都想当地主”的隐喻讨论职场权力膨胀，从 A/B/C 任务分派案例拆解权力上收、责任下沉、越级指挥和“你应该懂”的管理逻辑 | 写职场权力、管理责任、上下级协作、任务分派和权责边界类文章时参考 |
+| `src/content/posts/ram-resale-cashflow-profit-assets.mdx` | `生活与思考` | 用 500 元旧内存卖 1500 元、再花 400 元买替代品的真实小案例，拆清 600 元现金余额变化、1000 元交易收益、1100 元净现金流入和最终资产的不同口径 | 写生活账本、现金流与利润区别、资产重新配置和日常财务概念解释类文章时参考 |
+| `src/content/posts/h-pylori-acid-drink-note.mdx` | `生活与思考` | 幽门螺杆菌、胃酸过多和气泡饮料的个人判断笔记 | 写生活判断清单、风险边界提醒、个人健康记录类文章时参考 |
+| `src/content/posts/dupont-c8-pfas-case.mdx` | `生活与思考` | 从 Tennant 农场死牛、PFOA/C8 内部文件、6.9 万人流行病学研究一路拆到旧 TSCA 监管盲区、现代 PFAS 标准与非靶向分析 | 写 PFAS、PFOA、杜邦 C8、环境污染、化学品监管和未知污染物风险类文章时参考 |

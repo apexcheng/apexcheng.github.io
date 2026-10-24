@@ -11,8 +11,12 @@ const posts = (await getCollection('posts'))
   .filter((post) => !post.data.draft && !post.data.private)
   .sort((a, b) => Number(b.data.pinned) - Number(a.data.pinned) || b.data.date.valueOf() - a.data.date.valueOf());
 const activePosts = posts.filter((post) => !post.data.archived);
+const officialPosts = posts.filter((post) => post.data.category !== '视觉实验室');
+const activeOfficialPosts = officialPosts.filter((post) => !post.data.archived);
 const standalonePosts = activePosts.filter((post) => !post.data.series);
 const standaloneAllPosts = posts.filter((post) => !post.data.series);
+const standaloneOfficialPosts = activeOfficialPosts.filter((post) => !post.data.series);
+const standaloneAllOfficialPosts = officialPosts.filter((post) => !post.data.series);
 const articlesPageUrl = withBase('/articles/');
 const categoryCounts = Object.fromEntries(
   categoryMetaList.map((category) => [category.name, {
@@ -22,8 +26,8 @@ const categoryCounts = Object.fromEntries(
     allArchived: posts.filter((post) => post.data.category === category.name).length,
   }]),
 );
-const tags = Array.from(new Set(activePosts.flatMap((post) => post.data.tags))).sort((a, b) => a.localeCompare(b));
-const tagCounts = Object.fromEntries(tags.map((tag) => [tag, activePosts.filter((post) => post.data.tags.includes(tag)).length]));
+const tags = Array.from(new Set(activeOfficialPosts.flatMap((post) => post.data.tags))).sort((a, b) => a.localeCompare(b));
+const tagCounts = Object.fromEntries(tags.map((tag) => [tag, activeOfficialPosts.filter((post) => post.data.tags.includes(tag)).length]));
 const commonTags = [...tags]
   .sort((a, b) => tagCounts[b] - tagCounts[a] || a.localeCompare(b))
   .slice(0, 10);
@@ -39,7 +43,7 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
     <aside class="filter-panel" id="article-filters">
       <h2>内容分类</h2>
       <a class="active" href={articlesPageUrl} data-category-filter data-category-value="" aria-current="page">
-        全部分类 <span data-count-all={activePosts.length} data-count-standalone={standalonePosts.length} data-count-all-archived={posts.length} data-count-standalone-archived={standaloneAllPosts.length}>{standalonePosts.length}</span>
+        全部分类 <span data-count-all={activeOfficialPosts.length} data-count-standalone={standaloneOfficialPosts.length} data-count-all-archived={officialPosts.length} data-count-standalone-archived={standaloneAllOfficialPosts.length}>{standaloneOfficialPosts.length}</span>
       </a>
       {categoryMetaList.map((category) => (
         <a
@@ -108,10 +112,10 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
         </div>
       </div>
       <div class="articles-results-meta">
-        <p class="articles-results-summary" role="status" aria-live="polite" data-articles-summary>共 {standalonePosts.length} 篇独立文章</p>
+        <p class="articles-results-summary" role="status" aria-live="polite" data-articles-summary>共 {standaloneOfficialPosts.length} 篇独立文章</p>
         <button type="button" class="article-filter-clear" data-clear-article-filters hidden>清除筛选</button>
       </div>
-      <ArticleList posts={posts} hideSeries showPinned inlineMeta />
+      <ArticleList posts={posts} hideSeries hideVisualLab showPinned inlineMeta />
       <p class="article-filter-empty" data-empty-state hidden>没有匹配的文章，请尝试其他关键词或分类。</p>
       <RelatedSeries posts={posts} heading="按完整学习路线阅读" />
     </section>
@@ -233,6 +237,7 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
           var itemCategory = item.getAttribute('data-category') || '';
           var searchable = item.getAttribute('data-search-text') || '';
           var isVisible = (includeSeries || !item.getAttribute('data-series')) &&
+            (category === '视觉实验室' || itemCategory !== '视觉实验室') &&
             (!featuredOnly || item.getAttribute('data-featured') === 'true') &&
             (includeArchived || item.getAttribute('data-archived') !== 'true') &&
             (!category || itemCategory === category) &&

@@ -4,30 +4,42 @@ import ArticleList from '../../../components/ArticleList.astro';
 import RelatedSeries from '../../../components/RelatedSeries.astro';
 import SiteLayout from '../../../layouts/SiteLayout.astro';
 import { withBase } from '../../../utils/paths';
+import { legacyTagAliases, legacyKeywordArticles } from '../../../data/tags';
 
 export async function getStaticPaths() {
   const allPosts = (await getCollection('posts'))
     .filter((post) => !post.data.draft && !post.data.private && !post.data.archived)
     .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
   const tags = Array.from(new Set(allPosts.flatMap((post) => post.data.tags)));
-  return tags.map((tag) => ({
+  const current = tags.map((tag) => ({
     params: { tag },
     props: { tag, posts: allPosts.filter((post) => post.data.tags.includes(tag)) },
   }));
+  const aliases = Object.entries(legacyTagAliases).filter(([tag]) => !tags.includes(tag)).map(([tag, canonical]) => ({
+    params: { tag },
+    props: { tag, posts: allPosts.filter((post) => post.data.tags.includes(canonical)), canonical },
+  }));
+  const keywords = Object.entries(legacyKeywordArticles).filter(([tag]) => !tags.includes(tag)).map(([tag, slug]) => ({
+    params: { tag },
+    props: { tag, posts: [], articleSlug: slug },
+  }));
+  return [...current, ...aliases, ...keywords];
 }
 
-const { tag, posts } = Astro.props;
+const { tag, posts, canonical, articleSlug } = Astro.props;
 ---
 
 <SiteLayout title={`标签：${tag}`} active="articles">
   <main class="page-content">
     <p class="eyebrow">标签</p>
     <h1 class="page-title">{tag}</h1>
-    <p class="page-lead">共 {posts.length} 篇公开文章。</p>
+    {canonical && <p class="page-lead">原「{tag}」标签已合并至「{canonical}」。<a href={withBase(`/articles/tag/${encodeURIComponent(canonical)}/`)}>查看新标签</a></p>}
+    {articleSlug && <p class="page-lead">原「{tag}」已不再单独作为标签，仍可<a href={withBase(`/articles/${articleSlug}/`)}>阅读原文章</a>。</p>}
+    {!articleSlug && <p class="page-lead">共 {posts.length} 篇公开文章。</p>}
     <div class="filter-actions">
       <a href={withBase('/articles/')}>返回全部文章</a>
     </div>
-    <RelatedSeries posts={posts} heading="从这一主题开始系统学习" />
-    <ArticleList posts={posts} />
+    {!articleSlug && <RelatedSeries posts={posts} heading="从这一主题开始系统学习" />}
+    {!articleSlug && <ArticleList posts={posts} />}
   </main>
 </SiteLayout>

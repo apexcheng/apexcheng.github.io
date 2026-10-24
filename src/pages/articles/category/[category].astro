@@ -10,13 +10,18 @@ export async function getStaticPaths() {
   const allPosts = (await getCollection('posts'))
     .filter((post) => !post.data.draft && !post.data.private && !post.data.archived)
     .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-  return categoryMetaList.map((category) => ({
+  const current = categoryMetaList.map((category) => ({
     params: { category: category.name },
     props: { category: category.name, posts: allPosts.filter((post) => post.data.category === category.name) },
   }));
+  // Old content-form categories split across domains; preserve their URLs as navigation pages.
+  return [...current, ...['生活', '实践', '教程'].map((category) => ({
+    params: { category },
+    props: { category, posts: [], legacy: true },
+  }))];
 }
 
-const { category, posts } = Astro.props;
+const { category, posts, legacy } = Astro.props;
 const categoryMeta = getCategoryMeta(category as CategoryName);
 const categoryDescriptionLines = categoryMeta?.description.split('\n') ?? [];
 ---
@@ -25,7 +30,17 @@ const categoryDescriptionLines = categoryMeta?.description.split('\n') ?? [];
   <main class="page-content">
     <p class="eyebrow">分类</p>
     <h1 class="page-title">{category}</h1>
-    {categoryDescriptionLines.length > 0 && (
+    {legacy && (
+      <>
+        <p class="page-lead">原「{category}」分类已调整为按内容领域浏览。文章原链接不变，请选择对应的新分类。</p>
+        <div class="filter-actions">
+          {categoryMetaList.filter((item) => item.name !== '视觉实验室').map((item) => (
+            <a href={withBase(`/articles/category/${encodeURIComponent(item.name)}/`)}>{item.name}</a>
+          ))}
+        </div>
+      </>
+    )}
+    {!legacy && categoryDescriptionLines.length > 0 && (
       <p class="page-lead">
         {categoryDescriptionLines.map((line, index) => (
           <>
@@ -35,11 +50,11 @@ const categoryDescriptionLines = categoryMeta?.description.split('\n') ?? [];
         ))}
       </p>
     )}
-    <p class="page-lead">共 {posts.length} 篇公开文章。</p>
+    {!legacy && <p class="page-lead">共 {posts.length} 篇公开文章。</p>}
     <div class="filter-actions">
       <a href={withBase('/articles/')}>返回全部文章</a>
     </div>
-    <RelatedSeries posts={posts} heading="本分类的系统学习路线" />
-    <ArticleList posts={posts} />
+    {!legacy && <RelatedSeries posts={posts} heading="本分类的系统学习路线" />}
+    {!legacy && <ArticleList posts={posts} />}
   </main>
 </SiteLayout>

@@ -4,6 +4,7 @@ import { Search, Menu, X, Sun, Moon, ArrowUpRight, Sparkles, Check } from '@luci
 import { projects, projectPath } from '../data/projects';
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
+import { categories } from '../data/categories';
 
 interface Props { active: 'home' | 'articles' | 'series' | 'projects' | 'about' }
 const { active } = Astro.props;
@@ -87,7 +88,7 @@ const returnPath = encodeURIComponent(Astro.url.pathname + Astro.url.search);
   <div class="search-heading"><h2 id="search-title">寻找一篇笔记</h2><button type="button" data-search-close aria-label="关闭搜索"><X size={20} /></button></div>
   <div class="search-field"><Search size={22} /><input data-search-input type="search" placeholder="文章、项目，或一个关键词…" autocomplete="off" aria-label="搜索文章和项目" /></div>
   <div class="search-filters" aria-label="按文章分类筛选">
-    {['生活', '实践', '教程', '视觉实验室'].map((label) => <button type="button" data-search-filter={label}>{label}</button>)}
+    {categories.map((label) => <button type="button" data-search-filter={label}>{label}</button>)}
   </div>
   <p class="search-status" role="status" aria-live="polite" data-search-status></p>
   <div class="search-results" data-search-results></div>

@@ -118,9 +118,10 @@ function renderSearch() {
   const query = input.value.trim().toLocaleLowerCase();
   const terms = query.split(/\s+/).filter(Boolean);
   const matches = terms.length || selectedCategory
-    ? items.filter((item) => (!selectedCategory || item.category === selectedCategory)
+    ? items.filter((item) => (selectedCategory === '视觉实验室' || item.category !== '视觉实验室')
+      && (!selectedCategory || item.category === selectedCategory)
       && terms.every((term) => [item.title, item.description, ...item.keywords].join(' ').toLocaleLowerCase().includes(term)))
-    : items.filter((item) => item.type === '文章').slice(0, 6);
+    : items.filter((item) => item.type === '文章' && item.category !== '视觉实验室').slice(0, 6);
   status.textContent = terms.length || selectedCategory ? `找到 ${matches.length} 条相关内容` : '最近更新';
   results.replaceChildren();
   search.querySelectorAll('[data-search-filter]').forEach((filter) => filter.setAttribute('aria-pressed', String(filter.dataset.searchFilter === selectedCategory)));

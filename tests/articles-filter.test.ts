@@ -28,9 +28,11 @@ describe('articles page category filter', () => {
     expect(articlesSource).toContain("searchInput.addEventListener('input'");
     expect(articlesSource).toContain("url.searchParams.set('q', query)");
     expect(articleListSource).toContain('data-search-text=');
-    expect(articlesSource).not.toContain("post.data.category !== '视觉实验室'");
+    expect(articlesSource).toContain("post.data.category !== '视觉实验室'");
+    expect(articlesSource).toContain("(category === '视觉实验室' || itemCategory !== '视觉实验室')");
+    expect(articlesSource).toContain('standaloneOfficialPosts.length');
     expect(articlesSource).toContain('activePosts.filter((post) => !post.data.series)');
-    expect(articlesSource).toContain('<ArticleList posts={posts} hideSeries showPinned inlineMeta />');
+    expect(articlesSource).toContain('<ArticleList posts={posts} hideSeries hideVisualLab showPinned inlineMeta />');
     expect(articleListSource).toContain("data-series={post.data.series ?? ''}");
     expect(articleListSource).toContain('(hideSeries && post.data.series)');
   });
