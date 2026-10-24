@@ -14,6 +14,7 @@ const posts = defineCollection({
     minutes: z.number(),
     featured: z.boolean().default(false),
     pinned: z.boolean().default(false),
+    archived: z.boolean().default(false),
     series: z.enum(seriesIds).optional(),
     seriesOrder: z.number().int().positive().optional(),
     draft: z.boolean().default(false),

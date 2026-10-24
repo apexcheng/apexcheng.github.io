@@ -6,7 +6,7 @@ import { withBase } from '../../utils/paths';
 import { parseStageRange } from '../../utils/series-learning';
 
 export async function getStaticPaths() {
-  const allPosts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private);
+  const allPosts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private && !post.data.archived);
 
   return seriesMetaList
     .map((series) => ({

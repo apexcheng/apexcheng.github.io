@@ -5,7 +5,7 @@ import ContentViewTabs from '../../components/ContentViewTabs.astro';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { withBase } from '../../utils/paths';
 
-const posts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private);
+const posts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private && !post.data.archived);
 const seriesList = seriesMetaList
   .map((series) => {
     const seriesPosts = posts

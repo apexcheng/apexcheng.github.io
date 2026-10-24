@@ -30,7 +30,7 @@ describe('continued reading selection', () => {
   });
   it('excludes current, draft, private and unrelated articles', () => {
     const current = post('current');
-    expect(getRelatedPosts(current, [current, post('draft', { draft: true }), post('private', { private: true }), post('unrelated', { category: '生活', tags: [] })])).toEqual([]);
+    expect(getRelatedPosts(current, [current, post('draft', { draft: true }), post('private', { private: true }), post('archived', { archived: true }), post('unrelated', { category: '生活', tags: [] })])).toEqual([]);
   });
   it('breaks ties by publication date and then stable ID, independent of input order', () => {
     const posts = [post('z'), post('b', { date: new Date('2026-02-01') }), post('a', { date: new Date('2026-02-01') })];

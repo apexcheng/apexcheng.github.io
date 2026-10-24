@@ -9,7 +9,7 @@ import { withBase } from '../utils/paths';
 import '../styles/home.css';
 
 const posts = (await getCollection('posts'))
-  .filter((post) => !post.data.draft && !post.data.private)
+  .filter((post) => !post.data.draft && !post.data.private && !post.data.archived)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const notes = posts.filter((post) => post.data.category !== '视觉实验室');
 const latestPost = notes[0];

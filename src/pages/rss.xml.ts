@@ -5,7 +5,7 @@ import { withBase } from '../utils/paths';
 
 export async function GET(context) {
   const posts = (await getCollection('posts'))
-    .filter((post) => !post.data.draft && !post.data.private)
+    .filter((post) => !post.data.draft && !post.data.private && !post.data.archived)
     .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
   const siteUrl = new URL(import.meta.env.BASE_URL, context.site);
 

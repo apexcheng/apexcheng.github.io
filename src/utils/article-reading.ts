@@ -22,6 +22,7 @@ type ReadingPost = {
     date: Date;
     draft?: boolean;
     private?: boolean;
+    archived?: boolean;
     series?: string;
   };
 };
@@ -30,7 +31,7 @@ export function getRelatedPosts<T extends ReadingPost>(current: T, posts: T[]): 
   if (current.data.series) return [];
   const tags = new Set(current.data.tags);
   return posts
-    .filter((post) => post.id !== current.id && !post.data.draft && !post.data.private)
+    .filter((post) => post.id !== current.id && !post.data.draft && !post.data.private && !post.data.archived)
     .map((post) => ({
       post,
       // A shared topic is more specific than a shared category.

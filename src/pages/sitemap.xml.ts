@@ -6,7 +6,7 @@ import { seriesMetaList } from '../data/series';
 
 export const GET: APIRoute = async ({ site }) => {
   if (!site) throw new Error('Missing Astro site configuration for sitemap');
-  const posts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private);
+  const posts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private && !post.data.archived);
   const tags = [...new Set(posts.flatMap((post) => post.data.tags))];
   const paths = [
     '/', '/articles/', '/series/', '/projects/', '/about/',

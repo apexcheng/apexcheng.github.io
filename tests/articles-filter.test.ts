@@ -28,7 +28,7 @@ describe('articles page category filter', () => {
     expect(articlesSource).toContain("url.searchParams.set('q', query)");
     expect(articleListSource).toContain('data-search-text=');
     expect(articlesSource).not.toContain("post.data.category !== '视觉实验室'");
-    expect(articlesSource).toContain('posts.filter((post) => !post.data.series)');
+    expect(articlesSource).toContain('activePosts.filter((post) => !post.data.series)');
     expect(articlesSource).toContain('<ArticleList posts={posts} hideSeries showPinned />');
     expect(articleListSource).toContain("data-series={post.data.series ?? ''}");
     expect(articleListSource).toContain('(hideSeries && post.data.series)');
@@ -42,6 +42,36 @@ describe('articles page category filter', () => {
     expect(articlesSource).toContain("url.searchParams.set('series', '1')");
     expect(articlesSource).toContain("get('series') === '1'");
     expect(articlesSource).toContain('item.hidden = !isVisible');
+  });
+
+  it('filters featured articles using the existing metadata and composes with other filters', () => {
+    expect(contentConfigSource).toContain('featured: z.boolean().default(false)');
+    expect(articleListSource).toContain("data-featured={post.data.featured ? 'true' : 'false'}");
+    expect(articlesSource).toContain('data-featured-only');
+    expect(articlesSource).toContain('只看精选');
+    expect(articlesSource).toContain("(!featuredOnly || item.getAttribute('data-featured') === 'true')");
+    expect(articlesSource).toContain("(!category || itemCategory === category)");
+    expect(articlesSource).toContain('terms.every');
+    expect(articlesSource).toContain("featuredOnlyInput.addEventListener('change'");
+    expect(articlesSource).toContain("url.searchParams.set('featured', '1')");
+    expect(articlesSource).toContain("url.searchParams.delete('featured')");
+    expect(articlesSource).toContain("get('featured') === '1'");
+    expect(articlesSource).toContain('applySort(currentSort)');
+  });
+
+  it('hides archived posts by default but includes them on demand without losing filter state', () => {
+    expect(contentConfigSource).toContain('archived: z.boolean().default(false)');
+    expect(articleListSource).toContain("data-archived={post.data.archived ? 'true' : 'false'}");
+    expect(articlesSource).toContain('data-include-archived');
+    expect(articlesSource).toContain('包含已归档');
+    expect(articlesSource).toContain("(includeArchived || item.getAttribute('data-archived') !== 'true')");
+    expect(articlesSource).toContain("get('archived') === '1'");
+    expect(articlesSource).toContain("url.searchParams.set('archived', '1')");
+    expect(articlesSource).toContain("url.searchParams.delete('archived')");
+    expect(articlesSource).toContain("includeArchivedInput.addEventListener('change'");
+    expect(articlesSource).toContain('data-count-all-archived');
+    expect(articlesSource).toContain('data-count-standalone-archived');
+    expect(articleListSource).toContain('已归档');
   });
 
   it('sorts visible articles by publish date or update date in place', () => {

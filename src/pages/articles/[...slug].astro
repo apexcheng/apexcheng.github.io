@@ -29,7 +29,7 @@ const relatedPosts = !post.data.series && hasToc
 const seriesMeta = post.data.series ? getSeriesMeta(post.data.series) : undefined;
 const seriesPosts = post.data.series
   ? (await getCollection('posts'))
-      .filter((item) => !item.data.draft && !item.data.private && item.data.series === post.data.series)
+      .filter((item) => !item.data.draft && !item.data.private && !item.data.archived && item.data.series === post.data.series)
       .sort((a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0))
   : [];
 const seriesIndex = seriesPosts.findIndex((item) => item.id === post.id);
@@ -96,8 +96,10 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
         </a>
       )}
       <span class="pill">{post.data.category}</span>
+      {post.data.archived && <span class="article-pin-badge">已归档</span>}
       {!hasStoryHeading && <h1>{post.data.title}</h1>}
       <p class="article-description">{post.data.description}</p>
+      {post.data.archived && <p class="article-archive-note">这篇文章已归档，保留原链接供历史查阅。</p>}
       <div class="meta-row">
         <span>作者：{siteMeta.authorName}</span>
         <span>更新于 {formatPostDate(post.data.updated ?? post.data.date)}</span>
