@@ -8,6 +8,7 @@ tags:
   - "DevSpace"
 minutes: 15
 featured: false
+archived: true
 draft: false
 private: false
 ---
@@ -17,6 +18,10 @@ import FeatureCard from '../../components/FeatureCard.astro';
 import VisualGrid from '../../components/VisualGrid.astro';
 import HighlightBox from '../../components/HighlightBox.astro';
 import DevSpaceFunnelVerification from '../../components/DevSpaceFunnelVerification.astro';
+
+<Callout title="本文已整合入三方案总指南">
+  本文保留为历史实践记录。最新的跨方案比较、通用验收及 OpenAI Secure MCP Tunnel 配置请阅读 [《让 ChatGPT 连接本地 MCP：三种接入方案与完整实践》](/articles/chatgpt-local-mcp-three-access-methods/)。
+</Callout>
 
 这篇教程解决一个很具体的问题：**DevSpace 已经能在自己的电脑或服务器上运行，怎么给它一个 ChatGPT 能访问的公网 HTTPS MCP 地址。**
 

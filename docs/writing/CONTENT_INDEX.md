@@ -66,8 +66,9 @@
 | `src/content/posts/ai-product-image-agent-workflow.mdx` | `实践` | AI 商品图工作流重构复盘，覆盖从逐张临场决策到规划前移、Art Direction、同组差异化、纯执行生成、人工审查和规则单一来源 | 写商品图生成、Agent 工作流重构、视觉规划、Prompt 设计和执行边界时参考 |
 | `src/content/posts/ai-product-image-workflow-in-practice.mdx` | `实践` | 以一次脱敏后的真实新品项目为背景，讲清输入资料、四个 Skill 分工、竞品链接抓取、可选评价分析、Art Direction 前移、真实产品图边界、纯执行生成和定向整改 | 写 AI 商品图真实使用流程、Skill 协作、竞品分析、视觉规划、补拍边界和单图执行时参考 |
 | `src/content/posts/github-pages-deployment-guide.mdx` | `实践` | GitHub Pages 部署原理图解手册，覆盖访问链路、Astro 构建、Actions artifact、站点路径映射、发布检查和分层排障 | 写部署说明、构建发布、静态站点原理和 Pages 故障排查时参考 |
-| `src/content/posts/wsl-devspace-caddy-chmlfrp-chatgpt.mdx` | `实践` | 在 WSL 中用 DevSpace、Caddy 和 ChmlFrp 暴露公网 HTTPS MCP 地址，包含完整配置、systemd 常驻、Windows KeepAlive、验证命令和常见配置坑 | 写 WSL 本地 MCP 公网接入、DevSpace、Caddy、ChmlFrp、ChatGPT 连接教程时参考 |
-| `src/content/posts/wsl-devspace-tailscale-funnel-chatgpt.mdx` | `实践` | 通用 DevSpace + Tailscale Funnel 教程，覆盖 Linux、WSL、Windows 和 macOS 的环境选择，并按本地 401、OAuth metadata、Funnel 和 ChatGPT 真实调用逐层验收 | 写本地 MCP 公网接入、跨平台 DevSpace 启动方式、Tailscale Funnel、ChatGPT OAuth 连接和分层排查时参考 |
+| `src/content/posts/chatgpt-local-mcp-three-access-methods.mdx` | `实践` | 将 Caddy + ChmlFrp、Tailscale Funnel 与 OpenAI Secure MCP Tunnel 合为一篇 MCP 接入图解手册，区分公开入站和私有出站、账号权限、OAuth、分层验收 | 写 ChatGPT Chat 接入本地 MCP、DevSpace、三类网络隧道和端到端工具验证文章时参考 |
+| `src/content/posts/wsl-devspace-caddy-chmlfrp-chatgpt.mdx` | `实践` | **已归档旧文**：保留 WSL + Caddy + ChmlFrp 原始完整操作与 Windows KeepAlive 实践；新读者优先查看三方案总指南 | 查具体旧环境配置和 ChmlFrp 故障记录时按需参考 |
+| `src/content/posts/wsl-devspace-tailscale-funnel-chatgpt.mdx` | `实践` | **已归档旧文**：保留 Tailscale Funnel 原始跨平台配置与 Windows 代理问题排查；新读者优先查看三方案总指南 | 查 Funnel 旧环境与代理踩坑时按需参考 |
 | `src/content/posts/repetitive-reporting-is-not-execution.mdx` | `实践` | 从全平台商品退款率和抖音每日报表两套制度出发，批评把重复下载、筛选、填写和刷新当作执行力，并提出统一订单数据源、自动日期口径和异常驱动的人机分工 | 写数据报表流程优化、RPA 自动化、重复劳动治理、执行力与人才评价文章时参考 |
 | `src/content/posts/performance-review-should-recognize-talent.mdx` | `生活` | 从运营助理分级考核表出发，批评统一能力清单如何用短板限制长板，并提出共同底线加专项晋升路线 | 写职场观察、绩效考核、人才管理、专人专项和制度批评类文章时参考 |
 | `src/content/posts/everyone-wants-to-be-landlord-at-work.mdx` | `生活` | 用“人人都是农民，人人都想当地主”的隐喻讨论职场权力膨胀，从 A/B/C 任务分派案例拆解权力上收、责任下沉、越级指挥和“你应该懂”的管理逻辑 | 写职场权力、管理责任、上下级协作、任务分派和权责边界类文章时参考 |

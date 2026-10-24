@@ -1,0 +1,391 @@
+---
+title: "让 ChatGPT 连接本地 MCP：三种接入方案与完整实践"
+description: "从本机 DevSpace 到 ChatGPT Chat：比较 Caddy + ChmlFrp、Tailscale Funnel 与 OpenAI Secure MCP Tunnel，按网络、认证和实际调用逐层验收。"
+date: 2026-10-24T17:30:00+08:00
+category: "实践"
+tags:
+  - "MCP"
+  - "ChatGPT"
+  - "DevSpace"
+minutes: 19
+featured: false
+draft: false
+private: false
+---
+
+import Callout from '../../components/Callout.astro';
+import HighlightBox from '../../components/HighlightBox.astro';
+
+本地的 MCP 服务能读代码、查文件、调用工具，但 ChatGPT Chat 运行在云端，不能直接连接你电脑的 `127.0.0.1`。真正需要解决的是：**让 ChatGPT 找得到 MCP 服务、能通过认证、并实际执行一次工具调用。**
+
+以下以 **DevSpace** 作为 MCP 服务示例，比较三条连接路径。前两条整合自此前的 [Caddy + ChmlFrp 实践](/articles/wsl-devspace-caddy-chmlfrp-chatgpt/) 与 [Tailscale Funnel 实践](/articles/wsl-devspace-tailscale-funnel-chatgpt/)；第三条参考 OpenAI 官方 Secure MCP Tunnel 文档。两条旧链接保留作为历史入口，新读者以本文为准。
+
+<Callout title="实践证据与适用边界">
+  Caddy + ChmlFrp 与 Tailscale Funnel 的关键配置和故障经验来自此前已记录的本地实践；OpenAI Secure MCP Tunnel 部分是依据官方文档整理的配置路线，**尚未在相同 DevSpace / OAuth 组合上完成真实连通验收**。下文区分「官方支持的能力」和「本机实测通过」，不把示例命令当作已验证结果。
+</Callout>
+
+## 一张图看清三种接入
+
+<div className="mcp-network" aria-label="三种连接路线：公网隧道、Tailscale Funnel 和 OpenAI 私有隧道都把 ChatGPT 连接到本地 DevSpace">
+  <div className="mcp-network__endpoint mcp-network__entry">
+    <small>云端调用方</small>
+    <strong>ChatGPT Chat</strong>
+    <span>自定义 MCP 插件</span>
+  </div>
+  <div className="mcp-network__routes">
+    <div className="mcp-network__route route-public">
+      <span className="route-badge">A · 自建公网链路</span>
+      <strong>ChmlFrp</strong><i aria-hidden="true">→</i><strong>Caddy</strong>
+      <span className="route-note">公网 HTTPS → 本地 HTTPS → MCP HTTP</span>
+    </div>
+    <div className="mcp-network__route route-funnel">
+      <span className="route-badge">B · 托管公网入口</span>
+      <strong>Tailscale Funnel</strong><i aria-hidden="true">→</i><strong>本机端口</strong>
+      <span className="route-note">公网 HTTPS → 本地 MCP HTTP</span>
+    </div>
+    <div className="mcp-network__route route-private">
+      <span className="route-badge">C · 私有出站隧道</span>
+      <strong>OpenAI Tunnel</strong><i aria-hidden="true">⇄</i><strong>tunnel-client</strong>
+      <span className="route-note">本机主动出站 HTTPS；不公开 MCP 监听地址</span>
+    </div>
+  </div>
+  <div className="mcp-network__endpoint mcp-network__exit">
+    <small>本机 / WSL / 服务器</small>
+    <strong>DevSpace MCP</strong>
+    <span>127.0.0.1:7676/mcp</span>
+  </div>
+</div>
+
+三条路径**不会同时使用**。挑选其中一条即可；它们共用同一个本地服务和最终工具调用验收方法。
+
+| 选择依据 | A · Caddy + ChmlFrp | B · Tailscale Funnel | C · Secure MCP Tunnel |
+| --- | --- | --- | --- |
+| 外部连接方式 | 自有域名 + 公网 HTTPS | `*.ts.net` 公网 HTTPS | OpenAI 托管隧道标识 |
+| 本地组成 | DevSpace、Caddy、frpc | DevSpace、Tailscale | DevSpace、tunnel-client |
+| 需对公网开放 MCP 入口 | 是 | 是，Funnel 是公网功能 | **否**，从本机主动连接 OpenAI |
+| 最适合 | 已有域名、反代与 FRP 的环境 | 需要快速建立公网 MCP URL | 希望保留私有网络边界的环境 |
+| 主要注意 | 域名/TLS/多级反代/OAuth | Funnel 授权、设备环境、OAuth | 组织与工作区关联、权限、上游认证可达性 |
+
+<HighlightBox eyebrow="选择建议" title="先决定是否允许公网入口，再决定工具">
+  不想对公网公开 MCP 入口，优先研究 OpenAI Secure MCP Tunnel；可以公开 MCP HTTPS 且想少维护中间层，选 Tailscale Funnel；已有域名与 FRP 基础设施，再选 Caddy + ChmlFrp。
+</HighlightBox>
+
+## 通用准备：本机的 MCP 必须先正常
+
+**环境并不限于 WSL。** Windows、macOS、Linux、WSL 和远程服务器都能作为 MCP 宿主。只要网络中间层或 `tunnel-client` 能访问 MCP 服务即可；不同系统的 `127.0.0.1` 不是自动互通的。
+
+1. 安装并初始化当前版本的 DevSpace，确认真实 Node 与 DevSpace 路径。
+2. 确认当前版本支持的启动方式，不能默认所有安装都能执行 `devspace serve`。
+3. 限制 DevSpace 允许访问的项目目录；开启认证，不把服务直接无鉴权暴露给公网。
+4. 根据选择的公网入口配置 `publicBaseUrl`、允许的 Host 和 OAuth。**官方 Tunnel 不应直接复用公网 URL 配置，需按所选认证方式重新确认。**
+
+Linux / WSL / macOS 检查：
+
+```bash
+command -v node
+command -v devspace
+devspace --help
+```
+
+Windows PowerShell 检查：
+
+```powershell
+Get-Command node
+Get-Command devspace
+devspace --help
+```
+
+若当前 DevSpace CLI 支持，可先在终端启动：
+
+```bash
+devspace init       # 首次初始化；已有配置先核对，不要覆盖
+devspace serve      # 仅限当前 --help 确认此命令有效
+```
+
+下面是 **A / B 公网 URL 方案**的配置形状；把占位符替换成真实域名与项目路径。只使用本地测试时不必照抄公网参数。
+
+```json
+{
+  "host": "127.0.0.1",
+  "port": 7676,
+  "allowedRoots": ["/absolute/path/to/project"],
+  "publicBaseUrl": "https://YOUR_PUBLIC_HOST",
+  "allowedHosts": ["localhost", "127.0.0.1", "::1", "YOUR_PUBLIC_HOST"]
+}
+```
+
+`publicBaseUrl` 是公网 **Origin**，不包含 `/mcp`；`allowedRoots` 是 DevSpace 可以操作的真实绝对目录。示例里的路径不是所有系统通用路径。DevSpace 初始化产生的认证文件与密钥不应提交到仓库。
+
+### 先检查本地协议与认证
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  http://127.0.0.1:7676/mcp
+
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  http://127.0.0.1:7676/.well-known/oauth-protected-resource/mcp
+
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  http://127.0.0.1:7676/.well-known/oauth-authorization-server/mcp
+```
+
+对于此前采用 OAuth 的 DevSpace 配置，常见预期依次为 `401 / 200 / 200`：无凭据访问 MCP 被拒绝，OAuth 发现文档可以读取。**这不是所有 MCP 服务都必须返回的固定状态码**；应以当前 MCP 服务的认证设计为准。若授权服务器 metadata 缺失，先检查 DevSpace 版本与实现，再考虑兼容适配，不要为了接入随意关闭认证。
+
+## A · Caddy + ChmlFrp：自己管理公网入口
+
+<p className="mcp-caption">链路：ChatGPT → ChmlFrp 公网节点 → Caddy :7677 HTTPS → DevSpace :7676 HTTP。</p>
+
+适合已经使用 ChmlFrp、自有域名与 DNS 的 WSL / Linux 环境。多了一层 Caddy，但可以独立检查本地 HTTPS 与公网转发。
+
+### 1. 在 WSL 配置服务与本地 TLS
+
+WSL 需要 systemd 时，在 `/etc/wsl.conf` 中配置：
+
+```ini
+[boot]
+systemd=true
+
+[interop]
+appendWindowsPath=true
+```
+
+从 Windows 执行 `wsl --shutdown`，再启动 WSL；`systemctl is-system-running` 检查是否可用。
+
+例如，Caddy 配置 `/etc/caddy/Caddyfile`：
+
+```caddyfile
+{
+    https_port 7677
+}
+
+https://your-domain.example.com {
+    bind 127.0.0.1
+    reverse_proxy 127.0.0.1:7676
+}
+```
+
+需要事先准备这条链路可用的证书与域名解析；Caddy 的具体证书签发/信任取决于网络环境。不要把示例域名当作已经签发的真实域名。
+
+```bash
+sudo systemctl restart caddy
+curl -sk --resolve your-domain.example.com:7677:127.0.0.1 \
+  -o /dev/null -w '%{http_code}\n' \
+  https://your-domain.example.com:7677/mcp
+```
+
+此前 OAuth 方案中，目标是无凭据返回 `401`。本地验证用 `-k` 仅用于诊断证书，**不是让 ChatGPT 忽略公网 TLS 校验**。
+
+### 2. 让 ChmlFrp 转发到 Caddy，而不是 DevSpace
+
+示例 `frpc.ini`：
+
+```ini
+[common]
+server_addr = YOUR_CHMLFRP_NODE_IP
+server_port = YOUR_CHMLFRP_SERVER_PORT
+tls_enable = false
+login_fail_exit = false
+user = YOUR_CHMLFRP_USER
+token = YOUR_CHMLFRP_TOKEN
+
+[YOUR_TUNNEL_NAME]
+type = https
+local_ip = 127.0.0.1
+local_port = 7677
+custom_domains = your-domain.example.com
+```
+
+节点、端口、隧道名必须按 ChmlFrp 面板的当前配置填写；运行 `frpc -c /path/to/frpc.ini` 或交给 systemd 管理。`local_port` 是 **7677**，因为上游需要 Caddy 的 HTTPS，而不是 DevSpace 的 HTTP。
+
+### 3. 验收公网
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  https://your-domain.example.com/mcp
+curl -sS https://your-domain.example.com/.well-known/oauth-protected-resource/mcp
+```
+
+ChatGPT 添加自定义 MCP 服务时填写 `https://your-domain.example.com/mcp`，**不要加本地端口 `:7677`**。ChmlFrp、Caddy、DevSpace 各自日志与状态独立检查，定位故障时从本地到公网逐层推进。
+
+### 4. 长期运行时再配置常驻
+
+Linux / WSL 可使用三个 systemd 服务分别管理 DevSpace、Caddy 和 frpc；Windows 登录启动 WSL 时再确保发行版持续运行。先让命令行手动链路成功，再配置服务管理器，不要把某台机器的 Node 绝对路径、Windows 启动脚本或鉴权文件原样迁移到其他环境。
+
+## B · Tailscale Funnel：少一层公网代理
+
+<p className="mcp-caption">链路：ChatGPT → Tailscale Funnel 公网 HTTPS → DevSpace :7676 HTTP。</p>
+
+把 Tailscale 放在 **能通过本地回环访问 DevSpace 的同一运行环境**：DevSpace 运行在 WSL 内，就优先让 Tailscale 也运行在该 WSL 中。只装在 Windows 宿主机上的 Tailscale，不会自动访问 WSL 的 `127.0.0.1`。
+
+### 1. 安装、登录并确认设备名
+
+Linux / WSL 可按 Tailscale 官方方法安装；在支持 systemd 的环境里：
+
+```bash
+sudo systemctl enable --now tailscaled
+tailscale up --hostname=devspace-device
+tailscale status
+```
+
+Windows / macOS 安装与当前系统匹配的客户端并确认 CLI 可用。macOS 不同客户端变体对 Funnel CLI 的支持可能不同，以 Tailscale 官方文档为准。
+
+确认自己的完整域名，例如：
+
+```text
+devspace-device.your-tailnet.ts.net
+```
+
+将 DevSpace `publicBaseUrl` 设为 `https://devspace-device.your-tailnet.ts.net`，并把完整域名加入 `allowedHosts`。普通 Tailscale `100.x.x.x` 是 Tailnet 内部地址，**不能作为 ChatGPT 云端公网 MCP URL**。
+
+### 2. 开启 Funnel，直接指向 7676
+
+```bash
+tailscale funnel --bg --yes 7676
+tailscale funnel status
+```
+
+这条命令应以当前 Tailscale CLI 的 `funnel --help` 为准。若提示需要在 Tailnet 控制台授权 Funnel，先按提示启用，再重新检查状态。
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  https://devspace-device.your-tailnet.ts.net/mcp
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  https://devspace-device.your-tailnet.ts.net/.well-known/oauth-protected-resource/mcp
+```
+
+在此前 OAuth 配置中，预期分别为 `401 / 200`；ChatGPT 使用 `https://devspace-device.your-tailnet.ts.net/mcp` 创建自定义 MCP 连接并完成授权。
+
+### 3. Windows 上「curl 通，浏览器不通」
+
+这类现象可能是本机代理接管了 `*.ts.net` 的流量，而非 Funnel 服务故障。按顺序检查：
+
+```powershell
+Resolve-DnsName devspace-device.your-tailnet.ts.net
+curl.exe -I https://devspace-device.your-tailnet.ts.net/mcp
+```
+
+如确认是系统代理错误代理了 Tailnet 地址，可只针对自己的 Tailnet 域名配置直连 / bypass；不要全局关闭代理或为排查而修改无关网络配置。`NO_PROXY` 影响相应进程的出站流量，**不能代替浏览器的系统代理设置**。
+
+## C · OpenAI Secure MCP Tunnel：本机主动出站连接
+
+<p className="mcp-caption">链路：ChatGPT → OpenAI 托管 Tunnel →（本地主动轮询）tunnel-client → 私有 MCP。</p>
+
+这条线路与前两种**结构不同**：不用建立向公网开放的 DevSpace HTTPS 地址。`tunnel-client` 部署在能够访问私有 MCP 的设备上，主动访问 OpenAI，接收待处理的 MCP 请求并在本地转发。它不是通用 TCP VPN，也不是拿到一个随便向公众开放的 `/mcp` URL。参考 [OpenAI 官方配置文档](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels)。
+
+<div className="mcp-private-path">
+  <div><b>ChatGPT 插件</b><span>选择 Tunnel / tunnel_id</span></div>
+  <span aria-hidden="true">↓</span>
+  <div><b>OpenAI 托管端点</b><span>保存与转发 MCP 请求</span></div>
+  <span aria-hidden="true">⇅</span>
+  <div><b>本机 tunnel-client</b><span>主动出站 HTTPS · 轮询请求</span></div>
+  <span aria-hidden="true">↓</span>
+  <div><b>DevSpace / 私有 MCP</b><span>本地可达，服务端口不对公网公开</span></div>
+</div>
+
+### 1. 检查账号、权限和认证前提
+
+需要在 [OpenAI Platform Tunnel 设置](https://platform.openai.com/settings/organization/tunnels) 中创建或选取隧道，并关联目标 **Platform 组织与 ChatGPT 工作区**。创建/管理隧道需要 `Tunnels Read + Manage`；运行客户端或连接隧道需要 `Tunnels Read + Use`。ChatGPT 还必须允许该用户创建和使用自定义 MCP 插件，这两套权限互不替代。
+
+还需要单独准备一个用于运行客户端的 API key，以及 `tunnel_id`。不要把管理用途的 Admin key 放进长期运行的客户端。账号、工作区和工具权限会随政策变化，不能依据隧道存在就推定当前 ChatGPT 计划可读写所有工具。
+
+<Callout title="DevSpace OAuth 的特殊注意事项">
+  OpenAI Tunnel 只负责私有 MCP 请求的传输，**不会自动使浏览器可访问的 OAuth 授权服务器也成为公网服务**。如果 DevSpace 使用需要浏览器跳转的 OAuth，必须确认授权服务器与相关回调地址的可达性；也可以在明确支持的前提下采用不同的 MCP 认证方式。这里不能直接声称把现成 DevSpace HTTP URL 填进 tunnel-client 就一定能在 ChatGPT 授权成功。
+</Callout>
+
+### 2. 下载并配置官方 tunnel-client
+
+从 [openai/tunnel-client Releases](https://github.com/openai/tunnel-client/releases/latest) 或 Platform Tunnel 设置页获取适合系统的客户端。先检查实际版本的命令帮助：
+
+```bash
+tunnel-client help quickstart
+tunnel-client help samples
+```
+
+下面演示本机有 HTTP MCP 服务时的**配置方向**；选项与示例 Profile 名称应以当前客户端 `init --help` 为准：
+
+```bash
+# 在安全的本地环境里提供 CONTROL_PLANE_API_KEY，不将密钥写进正文或仓库
+tunnel-client init \
+  --profile devspace-http \
+  --tunnel-id tunnel_YOUR_TUNNEL_ID \
+  --mcp-server-url http://127.0.0.1:7676/mcp
+
+tunnel-client doctor --profile devspace-http --explain
+tunnel-client run --profile devspace-http
+```
+
+本地服务不在同一个系统网络空间时，`--mcp-server-url` 必须换成客户端**实际可以访问**的内网地址，不能假设跨 WSL/宿主机的 `127.0.0.1` 可共用。`doctor` 成功只说明客户端配置和连通检查通过；客户端仍需保持运行才能接收请求。
+
+### 3. ChatGPT 添加 Tunnel 连接
+
+在 ChatGPT 网页端打开 **Plugins → + → Add custom MCP server**；在 Connection 下选择 **Tunnel**，选择有权限的隧道或输入 `tunnel_id`，按你的 MCP 服务配置认证并确认风险提示。然后检查被发现的工具，再做安全的只读调用。
+
+不要在此步骤填此前 A / B 的公网 URL：**Tunnel 模式选择的是隧道身份，不是公网 URL 输入框。**
+
+对于 HTTP 服务，上游 OAuth 若尚未打通，应明确记录为认证未完成，而不是认为 Secure MCP Tunnel 整体已通过。官方排障起点是 `tunnel-client doctor --profile devspace-http --explain`、运行中的健康 / 就绪状态与实际插件调用结果。
+
+## 共用验收：从网络通，到真的能用
+
+<div className="mcp-checks">
+  <div><span>01</span><strong>本地 MCP 健康</strong><p>服务进程存在；协议与鉴权行为符合当前实现。</p></div>
+  <div><span>02</span><strong>连接层可达</strong><p>A/B 测公网 HTTPS；C 测客户端 ready 与 Tunnel 关联。</p></div>
+  <div><span>03</span><strong>身份认证完成</strong><p>OAuth 或其他支持的认证在 ChatGPT 插件中实际通过。</p></div>
+  <div><span>04</span><strong>真实工具调用</strong><p>能从限定的项目目录读取预设测试文件，才是端到端成功。</p></div>
+</div>
+
+准备一个只含测试内容的文件（按自己系统的可访问路径创建），例如：
+
+```bash
+printf 'devspace-ok\n' > /absolute/path/to/project/DEVSPACE_VERIFY.txt
+```
+
+随后在 ChatGPT 中选择已连接的自定义 MCP 插件，请它通过 DevSpace **只读**打开 `DEVSPACE_VERIFY.txt`。返回 `devspace-ok`，并能确认调用来自实际 MCP 工具而不是模型猜测，才算完成端到端验证。
+
+### 最常见的混淆
+
+| 症状 | 优先定位 |
+| --- | --- |
+| 公网地址不能访问 | A 查 Caddy、frpc、域名与 TLS；B 查 Funnel 状态、DNS 与代理 |
+| `/mcp` 返回 401 | 对 OAuth 保护的 DevSpace 可能是预期，不等于 ChatGPT 已授权 |
+| 授权页面不出现 / 登录失败 | OAuth metadata、公开的授权服务器地址、工作区政策 |
+| Tunnel 在 ChatGPT 中找不到 | `tunnel_id` 所属组织与 ChatGPT 工作区关联、Tunnels Read + Use |
+| Tunnel 已连接，但无法调用工具 | 客户端是否运行、MCP 上游认证、允许的工具与项目根目录 |
+| WSL 重启后失联 | 是否启用 systemd 常驻、Windows 是否仍运行该发行版 |
+
+## 安全边界与延伸阅读
+
+只有对当前任务必要的目录才应加入 `allowedRoots`；默认先用只读工具验证，再考虑写入和命令执行。不要公开 DevSpace 密钥、Token、私有域名、账号信息和机器绝对路径；配置文件中的示例占位符必须替换。第三方公网转发与 OpenAI 私有隧道都不是「授予 ChatGPT 无限系统权限」的理由，工具能做什么仍由本机 MCP 权限决定。
+
+官方依据：[OpenAI Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels) · [Add custom MCP server](https://developers.openai.com/api/docs/guides/custom-mcp-server) · [tunnel-client Onboarding](https://github.com/openai/tunnel-client/blob/master/docs/onboarding.md) · [Tailscale Funnel](https://tailscale.com/kb/1223/funnel)。
+
+本文的网络地图、分层流程与安全边界还可以用其他视觉语言表达。查看 [《网页信息设计实验：架构图、流程图与交互图解的六种表达》](/articles/visual-lab/web-information-diagram-playbook/)，对比工程图、泳道图、决策树与渐进式说明的适用场景。
+
+这三条路解决的是同一个问题，但**公网连接成功、认证成功、工具调用成功，是三个不同的验收结果**。先建立边界，再选择链路，最后用真实工具调用验证。
+
+<style>{`
+.mcp-network { margin: 1.8rem 0; padding: 1.45rem; border: 1px solid #cbd5e1; border-radius: 22px; background: #f4f7fb; color: #15283b; display: grid; gap: 1rem; }
+.mcp-network__endpoint { text-align: center; justify-self: center; width: min(100%, 23rem); padding: .8rem 1rem; border: 1px solid #94a3b8; border-radius: 14px; background: white; display: grid; gap: .1rem; }
+.mcp-network__endpoint small { font-size: .76rem; color: #64748b; }
+.mcp-network__endpoint strong { font-size: 1.2rem; }
+.mcp-network__endpoint span { font-family: var(--mono-font, monospace); font-size: .76rem; color: #475569; }
+.mcp-network__routes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; }
+.mcp-network__route { min-width: 0; border: 1px solid #bdcddc; border-top: 4px solid #2669a9; border-radius: 14px; background: #fff; padding: 1rem .7rem; display: flex; flex-wrap: wrap; gap: .2rem .4rem; align-items: center; justify-content: center; text-align: center; position: relative; }
+.mcp-network__route::before,.mcp-network__route::after { content: ''; position: absolute; width: 2px; height: 1rem; background: #94a3b8; left: 50%; }
+.mcp-network__route::before { top: -1.05rem; } .mcp-network__route::after { bottom: -1.05rem; }
+.mcp-network__route strong { font-size: .9rem; }
+.mcp-network__route i { font-style: normal; color: #64748b; }
+.mcp-network__route .route-badge,.mcp-network__route .route-note { display: block; width: 100%; }
+.mcp-network__route .route-badge { font-size: .71rem; font-weight: 700; color: #46617a; margin-bottom: .5rem; }
+.mcp-network__route .route-note { color: #53677d; line-height: 1.5; font-size: .75rem; margin-top: .45rem; }
+.mcp-network__route.route-funnel { border-top-color: #0b8a86; } .mcp-network__route.route-private { border-top-color: #8859aa; }
+.mcp-caption { border-left: 3px solid #527aa0; padding: .4rem 0 .4rem .85rem; background: rgba(83,122,160,.08); }
+.mcp-private-path { display: grid; justify-items: center; gap: .25rem; border: 1px solid #d2c5e5; border-radius: 20px; padding: 1.2rem; background: #f7f3fb; color: #493268; }
+.mcp-private-path > div { width: min(100%, 23rem); text-align: center; background: white; border: 1px solid #d9cce7; border-radius: 12px; padding: .6rem; display: grid; }
+.mcp-private-path > div span { font-size: .78rem; color: #6e5b82; }
+.mcp-checks { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .55rem; margin: 1.4rem 0; }
+.mcp-checks > div { border-left: 3px solid #4a7faa; padding: .45rem .7rem; background: #f2f6fa; color: #243a50; }
+.mcp-checks span { font: 700 .78rem var(--mono-font,monospace); color: #517ea4; display: block; }
+.mcp-checks strong { font-size: .91rem; } .mcp-checks p { font-size: .8rem; line-height: 1.6; margin: .3rem 0 0; }
+@media (max-width: 740px) { .mcp-network { padding: .85rem; } .mcp-network__routes { grid-template-columns: 1fr; gap: .6rem; } .mcp-network__route { padding: .65rem; } .mcp-network__route::before,.mcp-network__route::after { display: none; } .mcp-checks { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 420px) { .mcp-checks { grid-template-columns: 1fr; } }
+`}</style>

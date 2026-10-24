@@ -16,6 +16,7 @@
 
 | 文件 | 用途 |
 | --- | --- |
+| `src/content/posts/visual-lab/web-information-diagram-playbook.mdx` | 六种网页信息表达实景实验：多路径架构、泳道、注释型工程图、决策树、渐进披露和时序图；附数据新闻、交互教学与架构设计外部参考 |
 | `src/content/posts/visual-lab/user-backend-journey-map.mdx` | 用户动作与后台系统的双层流程 |
 | `src/content/posts/visual-lab/excel-formula-visual-patterns.mdx` | 公式参数映射、单函数案例和教学字号 |
 | `src/content/posts/visual-lab/article-visual-system-demo.mdx` | 从信息关系到整页视觉结构的示例 |

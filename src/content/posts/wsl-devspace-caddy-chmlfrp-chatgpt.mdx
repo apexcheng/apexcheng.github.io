@@ -7,6 +7,7 @@ tags:
   - "DevSpace"
 minutes: 16
 featured: false
+archived: true
 draft: false
 private: false
 ---
@@ -17,6 +18,10 @@ import VisualGrid from '../../components/VisualGrid.astro';
 import HighlightBox from '../../components/HighlightBox.astro';
 import DecisionFlow from '../../components/DecisionFlow.astro';
 import DevSpaceConnectionArchitecture from '../../components/DevSpaceConnectionArchitecture.astro';
+
+<Callout title="本文已整合入三方案总指南">
+  本文保留为历史实践记录。最新的跨方案比较、通用验收及 OpenAI Secure MCP Tunnel 配置请阅读 [《让 ChatGPT 连接本地 MCP：三种接入方案与完整实践》](/articles/chatgpt-local-mcp-three-access-methods/)。
+</Callout>
 
 这篇文章只做一件事：把 WSL 里的 DevSpace 通过 Caddy 和 ChmlFrp 暴露成公网 HTTPS 地址，然后接入 ChatGPT。
 
