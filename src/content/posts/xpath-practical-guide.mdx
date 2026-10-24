@@ -161,13 +161,13 @@ import {
 
 最常见的候选搜索很简单：
 
-```xpath
+```text
 //button
 ```
 
 它会找到当前文档中的所有按钮。若已经拿到某个容器元素，则用 `.//` 从当前容器继续搜索，避免重新扫整个页面：
 
-```xpath
+```text
 .//input
 ```
 
@@ -209,7 +209,7 @@ import {
 
 多个条件只有在确实需要消除歧义时再组合：
 
-```xpath
+```text
 //input[@type='text' and @name='username']
 ```
 

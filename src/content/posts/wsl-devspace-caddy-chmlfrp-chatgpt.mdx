@@ -337,7 +337,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' \
 
 写入：
 
-```caddyfile
+```text
 {
     https_port 7677
 }
@@ -572,7 +572,7 @@ WSL 退出后，里面的 DevSpace、Caddy 和 frpc 都会停止。
 
 文件内容：
 
-```vbscript
+```vb
 Set shell = CreateObject("WScript.Shell")
 shell.Run """C:\Windows\System32\wsl.exe"" -d Ubuntu --exec sleep infinity", 0, False
 ```

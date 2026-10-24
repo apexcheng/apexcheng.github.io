@@ -267,7 +267,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 条件来自单元格时，不要把单元格引用放进引号：
 
-```text
+```excel
 =AVERAGEIF(C8:C17,F2&"*",D8:D17)
 ```
 
@@ -300,17 +300,17 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 `XMATCH` 同样需要把第三个参数设为 `2`：
 
-```text
+```excel
 =XMATCH("K161*",C8:C17,2)
 ```
 
 传统查找函数使用精确匹配参数时，也能识别通配符：
 
-```text
+```excel
 =VLOOKUP("K161*",C8:D17,2,FALSE)
 ```
 
-```text
+```excel
 =MATCH("K161*",C8:C17,0)
 ```
 
@@ -322,7 +322,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 `SEARCH` 返回的是匹配内容在文本中的起始位置。比如编码中间有一个字符不确定：
 
-```text
+```excel
 =SEARCH("K?61",C8)
 ```
 
@@ -330,7 +330,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 实际判断时，通常会和 `ISNUMBER` 组合：
 
-```text
+```excel
 =ISNUMBER(SEARCH("K?61",C8))
 ```
 
@@ -340,7 +340,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 原来的公式是：
 
-```text
+```excel
 =AVERAGEIF(MAP(LEFT(C8:C17,4),LAMBDA(r,LEFT(r,4))),"K161",D8:D17)
 ```
 
@@ -348,7 +348,7 @@ import DecisionFlow from '../../components/DecisionFlow.astro';
 
 因此可以直接改成：
 
-```text
+```excel
 =AVERAGEIF(C8:C17,"K161*",D8:D17)
 ```
 
