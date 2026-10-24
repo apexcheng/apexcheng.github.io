@@ -2,7 +2,7 @@
 title: "差评究竟是谁的责任？从一款塑料键盘说起"
 description: "一款键盘按设计使用塑料外壳、品控验收合格，用户却嫌它没有质感。这条差评究竟该交给谁改进？"
 date: 2026-10-21T20:10:00+08:00
-updated: 2026-10-24T10:04:00+08:00
+updated: 2026-10-24T10:46:00+08:00
 category: "实践"
 tags:
   - "电商运营"
@@ -19,13 +19,39 @@ private: false
 
 <div className="kr-hero" aria-label="一条塑料感差评与三个并存的事实">
   <div className="kr-hero-copy">
-    <span className="kr-eyebrow">一条差评，三个同时成立的事实</span>
-    <p className="kr-hero-question">“质感太差了，<em>像塑料一样。</em>”</p>
+    <span className="kr-eyebrow">FIELD NOTES / 评价分析实战</span>
+    <p className="kr-hero-question">产品没有做错，<br /><em>用户为什么仍然失望？</em></p>
+    <p className="kr-hero-quote">“质感太差了，像塑料一样。”</p>
+  </div>
+  <div className="kr-hero-visual" aria-hidden="true">
+    <div className="kr-hero-visual-label">DESIGN INTENT <span>≠</span> USER EXPECTATION</div>
+    <svg viewBox="0 0 620 350" focusable="false">
+      <defs>
+        <linearGradient id="kr-shell" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#526864"/><stop offset=".55" stopColor="#263e3e"/><stop offset="1" stopColor="#12272a"/></linearGradient>
+        <linearGradient id="kr-key" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#d4d8ce"/><stop offset="1" stopColor="#8d9e98"/></linearGradient>
+        <pattern id="kr-keys" width="44" height="43" patternUnits="userSpaceOnUse"><rect x="3" y="2" width="37" height="35" rx="6" fill="#091c21" opacity=".65" transform="translate(0 3)"/><rect x="3" y="2" width="37" height="33" rx="6" fill="url(#kr-key)"/></pattern>
+        <filter id="kr-shadow" x="-25%" y="-40%" width="150%" height="200%"><feGaussianBlur stdDeviation="17"/></filter>
+      </defs>
+      <ellipse cx="313" cy="282" rx="255" ry="42" fill="#030b0c" opacity=".72" filter="url(#kr-shadow)"/>
+      <g transform="rotate(-9 310 169)">
+        <rect x="47" y="51" width="536" height="254" rx="25" fill="#0d2126" transform="translate(0 10)"/>
+        <rect x="47" y="51" width="536" height="254" rx="25" fill="url(#kr-shell)" stroke="#8aa39a" strokeOpacity=".65" strokeWidth="2"/>
+        <rect x="65" y="70" width="502" height="203" rx="14" fill="#162b2f"/>
+        <rect x="70" y="78" width="492" height="172" rx="9" fill="url(#kr-keys)"/>
+        <rect x="193" y="258" width="230" height="29" rx="6" fill="#b9c8b9" opacity=".9"/>
+        <rect x="80" y="258" width="101" height="29" rx="6" fill="#91ada2"/>
+        <rect x="435" y="258" width="116" height="29" rx="6" fill="#91ada2"/>
+        <circle cx="549" cy="64" r="3" fill="#b9dfb4"/>
+      </g>
+      <path d="M85 306h129m195-268h125" fill="none" stroke="#9bbaaa" strokeOpacity=".6" strokeWidth="1.5"/>
+      <circle cx="84" cy="306" r="4" fill="#bfd8a8"/><circle cx="537" cy="38" r="4" fill="#bfd8a8"/>
+    </svg>
+    <div className="kr-hero-material"><span>01 / MATERIAL</span><strong>塑料外壳</strong><small>既定设计，不是制造偏差</small></div>
   </div>
   <div className="kr-hero-facts" role="group" aria-label="设计选择塑料、验收合格、用户不满意">
-    <div><span>设计选择</span><strong>塑料外壳</strong></div>
-    <div><span>品质验收</span><strong>符合标准</strong></div>
-    <div><span>使用感受</span><strong>不满意</strong></div>
+    <div><span>01 / 设计选择</span><strong>塑料外壳</strong></div>
+    <div><span>02 / 品质验收</span><strong>符合标准</strong></div>
+    <div><span>03 / 使用感受</span><strong>仍然不满意</strong></div>
   </div>
 </div>
 
@@ -91,28 +117,33 @@ private: false
 
 假如我们只按评价中的几个关键词分类，看到“塑料”“质感差”，就统一归为“质量问题”，看似省事，实际上可能把三个本质不同的情况混到一起。
 
-<div className="kr-forks" aria-label="相同的塑料感评价在不同事实前提下的三个改善方向">
+<div className="kr-decision" aria-label="根据证据决定塑料感差评的初始改善方向">
+  <div className="kr-decision-root"><span>用户原声 / 不变</span><strong>“质感差，像塑料一样。”</strong><small>改变结论的不是差评措辞，而是后续核对到的事实</small></div>
+  <div className="kr-decision-connector" aria-hidden="true"><span>核对实物、商品承诺与验收要求</span></div>
+  <div className="kr-forks">
   <article>
-    <span>情境 A / 符合既定设计</span>
+    <span>路径 A · 设计符合预期</span>
     <h3>本来就选择了塑料</h3>
     <p>商品材质与宣传一致，实物达到设计和验收标准，但用户不喜欢这种手感。</p>
     <div><small>优先接收</small><strong>产品设计</strong></div>
     <p className="kr-forks-note">这是市场对产品取舍和体验的反馈。</p>
   </article>
   <article>
-    <span>情境 B / 宣传与实物不符</span>
+    <span>路径 B · 承诺存在偏差</span>
     <h3>页面却写着“金属”</h3>
     <p>实物是塑料，商品页面却让消费者相信自己买到的是金属材质。</p>
     <div><small>优先接收</small><strong>商品信息与宣传</strong></div>
     <p className="kr-forks-note">先纠正承诺与实际交付之间的信息偏差。</p>
   </article>
   <article>
-    <span>情境 C / 存在交付异常</span>
+    <span>路径 C · 出现交付异常</span>
     <h3>表面出现异常毛刺</h3>
     <p>设计和验收要求表面光滑，实际产品却出现可感知的异常粗糙、毛刺。</p>
     <div><small>优先接收</small><strong>产品质量调查</strong></div>
     <p className="kr-forks-note">先核对实物、批次和检验记录，再确定根因。</p>
   </article>
+  </div>
+  <div className="kr-decision-unknown"><b>证据不足？</b><span>只知道“不喜欢”，但没有材质、承诺或异常信息，就记录体验不满并保留待核实，不强行分派根因。</span></div>
 </div>
 
 注意，三个情境里的用户都可以说同一句“质感差”。改变判断的，不是评价文案变了，而是**我们掌握的事实发生了变化**。
@@ -213,16 +244,20 @@ private: false
 
 而且这三个层次也提醒我：**分类是一种面向改善的工作安排，不是一份司法判决书。** 它必须允许证据不足、允许后续修正，也必须保留真实用户体验，即便短期还找不到具体动作。
 
-<h3 className="kr-model-heading">把三层模型完整摊开</h3>
+<h3 className="kr-model-heading">先看全貌，再按需查规则</h3>
 
 前面的三个层次不是概念示意。我后来真的把它们整理成了一套固定业务模型：先统一分类语言，再用基准事实约束判断，最后用规则把一个独立问题送到最合适的改善环节。
 
-<div className="kr-model-overview" aria-label="评价分析三层模型">
-  <div><span>第一层</span><strong>分类词典</strong><p>20 种问题类型 + 8 个改善归口，先统一“发生了什么”和“谁来接收”。</p></div>
-  <div><span>第二层</span><strong>F01–F20 基准事实</strong><p>规定哪些事实可以直接采用，哪些原因仍然不能靠评价文本猜出来。</p></div>
-  <div><span>第三层</span><strong>分类与分派规则</strong><p>拆分独立问题、核对事实，再决定问题类型和主要改善归口。</p></div>
+<div className="kr-model-primary">
+  <div><span>01 / 分类词典 · 20 类问题、8 种归口</span><strong>先识别现象，不认定原因</strong><small>一条评价可以包含多个独立问题</small></div>
+  <div><span>02 / F01–F20 通用判断基准</span><strong>核对哪些已知、哪些待核实</strong><small>不是某个具体型号的已验证参数</small></div>
+  <div><span>03 / 分类与分派规则</span><strong>选择最合理的初始改善方向</strong><small>当前 AI 表格只存储一个主归口</small></div>
 </div>
 
+<p>下面保留完整的 20 种问题类型、8 个改善归口、F01–F20 判断基准和分类映射，供需要落地实施的读者按需展开；第一次阅读，可以直接跳到后面的真实评价演示。</p>
+
+<details className="kr-reference">
+  <summary><span><b>参考资料 01</b><strong>分类词典：20 种问题类型与 8 个归口</strong><small>完整分类定义、特殊结果与责任边界</small></span><span className="kr-reference-action"><span>展开查阅</span><span>收起资料</span></span></summary>
 <section className="kr-model-section" aria-labelledby="kr-layer-one">
   <div className="kr-model-section-head">
     <span>第一层 · 分类词典</span>
@@ -289,12 +324,15 @@ private: false
 
   <p className="kr-model-note">另外保留两个特殊归口：<strong>待分派</strong>用于确有问题但暂时没有合理牵头环节；<strong>无需分派</strong>用于没有需要改善的事项。“用户原因”不再是正式改善归口。</p>
 </section>
+</details>
 
+<details className="kr-reference">
+  <summary><span><b>参考资料 02</b><strong>F01–F20：通用判断基准</strong><small>区分合理预期、已知事实与待验证原因</small></span><span className="kr-reference-action"><span>展开查阅</span><span>收起资料</span></span></summary>
 <section className="kr-model-section" aria-labelledby="kr-layer-two">
   <div className="kr-model-section-head">
     <span>第二层 · F01–F20</span>
     <h4 id="kr-layer-two">给判断加上一层“不能乱猜”的事实基准</h4>
-    <p>这些不是某个具体型号的参数，而是一组通用判断前提。没有出现在这里、商品页面或订单事实里的信息，就不能因为一句评价听起来“很像”而自动补出来。</p>
+    <p>这些是通用判断基准，不是某个具体型号已经核实的事实，也不替代商品参数、测试和订单记录。没有可核对来源的信息，不能因为一句评价听起来“很像”而自动补出来。</p>
   </div>
 
   <ol className="kr-fact-list">
@@ -325,7 +363,10 @@ private: false
     <p>用户描述的体验和症状原则上应该被采纳；用户对“主板坏了”“偷工减料”“运输摔坏”“某个人操作失误”的猜测，则不能直接升级为已查证事实。</p>
   </div>
 </section>
+</details>
 
+<details className="kr-reference">
+  <summary><span><b>参考资料 03</b><strong>分类与分派规则：默认归口及例外</strong><small>判断顺序、反例与完整映射表</small></span><span className="kr-reference-action"><span>展开查阅</span><span>收起资料</span></span></summary>
 <section className="kr-model-section" aria-labelledby="kr-layer-three">
   <div className="kr-model-section-head">
     <span>第三层 · 判断规则</span>
@@ -369,6 +410,7 @@ private: false
     <div><strong>售后处理</strong><b>售后服务</b><p>只是不满客服表达、答复或态度 → 客服沟通。</p></div>
   </div>
 </section>
+</details>
 
 <h3 className="kr-model-heading">让一条现有 AI 表格里的评价跑完整个模型</h3>
 
@@ -376,9 +418,15 @@ private: false
 
 <div className="kr-live-demo">
   <div className="kr-live-source">
-    <span>脱敏后的原评价</span>
+    <span>INPUT / 脱敏后的原评价</span>
     <blockquote>“握持手感很好，不过颜色没有想象中鲜亮，而且刚买完就降价了。”</blockquote>
   </div>
+  <div className="kr-demo-analysis">
+    <div className="kr-demo-positive"><small>无需生成问题</small><strong>握持手感很好</strong><span>正面体验，保留但不误报</span></div>
+    <div className="kr-demo-issue"><small>问题 01 / 体验偏好</small><strong>颜色没有想象中鲜亮</strong><span>外观与颜色 · 产品设计方向</span></div>
+    <div className="kr-demo-issue"><small>问题 02 / 交易体验</small><strong>刚买完就降价</strong><span>价格与活动 · 店铺运营方向</span></div>
+  </div>
+  <div className="kr-demo-divider"><span>问题拆分与事实核对</span><span aria-hidden="true">↓</span></div>
   <div className="kr-live-steps">
     <section><span>01 · 先识别真正的问题</span><p><b>“握持手感很好”</b>是正面表达，不生成问题。<b>“颜色没有想象中鲜亮”</b>和<b>“刚买完就降价”</b>才是两个独立的不满。</p></section>
     <section><span>02 · 选择问题类型</span><p>分别落到 <strong>外观与颜色</strong>、<strong>价格与活动</strong>。一条评价因此可以同时拥有两个问题标签。</p></section>
@@ -386,6 +434,7 @@ private: false
     <section><span>04 · 判断改善方向</span><p>颜色偏好如果没有证据表明实物与页面不符，通常由<strong>产品设计</strong>接收；买后降价的不满则由<strong>店铺运营</strong>接收。</p></section>
   </div>
   <div className="kr-live-result" aria-label="当前 AI 表格中的实际输出">
+    <div className="kr-demo-output-label"><span>OUTPUT / 正式 AI 表格当前保存的字段</span></div>
     <div><span>情绪倾向</span><strong>中性</strong></div>
     <div><span>问题类型 · 多选</span><strong>外观与颜色<br />价格与活动</strong></div>
     <div><span>责任归因 · 单选</span><strong>店铺运营</strong></div>
@@ -421,6 +470,21 @@ private: false
 
 规则能否产生价值，最终要看它能否帮助我们从大量评价中找到值得调查的线索。以评价分析系统 **2026 年 10 月 21—23 日的三份日报**为例：这些报告分析了不同时段的原始评价，除了好评占主体，也反复出现一些有业务意义的观察。
 
+<div className="kr-report-panel" role="group" aria-label="2026 年 10 月 23 日评价日报样本说明">
+  <div className="kr-report-heading"><span>DATA SNAPSHOT · 2026.10.23</span><strong>先看样本，再看结论</strong><p>当天日报口径：186 条原始评价，其中 185 条已有单条 AI 分类结果；下方情绪分布仅以已分类的 185 条为分母。</p></div>
+  <div className="kr-report-numbers">
+    <div><strong>186<small>条</small></strong><span>纳入日报的原始评价</span></div>
+    <div><strong>185<small>条</small></strong><span>完成单条 AI 分类</span></div>
+    <div><strong>1<small>条</small></strong><span>缺少 AI 分类字段</span></div>
+  </div>
+  <div className="kr-report-distribution">
+    <div className="kr-report-distribution-head"><strong>已分类评价的情绪分布</strong><span>n = 185 · 非故障率</span></div>
+    <div className="kr-report-bar" role="img" aria-label="已分类185条：正面165条约89.2%，中性11条约5.9%，负面9条约4.9%"><span style={{flexGrow:165}}/><span style={{flexGrow:11}}/><span style={{flexGrow:9}}/></div>
+    <div className="kr-report-legend"><span><i/>正面 165（89.2%）</span><span><i/>中性 11（5.9%）</span><span><i/>负面 9（4.9%）</span></div>
+  </div>
+  <p className="kr-report-footnote">如果改用全部 186 条为分母，正面占比是约 88.7%，而不是 89.2%。日报样本不代表产品整体故障率，也不能用这一天推断长期趋势。</p>
+</div>
+
 <div className="kr-three-layer" aria-label="近期评价日报反复出现的三类经营信号">
   <section><span>需要排查的异常</span><h3>无线连接、延迟和重连</h3><p>几份日报都提到了蓝牙断连、输入延迟、重新连接不顺畅等反馈。这说明值得按型号、设备与使用场景持续核查；但多日出现类似描述，仍不等于已经证实它们由同一芯片或固件问题引起。</p></section>
   <section><span>设计取舍的反馈</span><h3>折叠便携，与键距和布局的不满</h3><p>折叠键盘一方面因轻便受到肯定，另一方面有用户不适应折叠区的键距、按键位置或触控操作。正常布局带来的不适更适合交由设计评估；若是铰链异常松动、按键失灵，则仍需质量调查。</p></section>
@@ -433,8 +497,17 @@ private: false
 
 实际运行中，单条 AI 只是第一层：它读取首评与追评，输出情绪、问题类型和主要改善归口。系统再按确定的日期与字段口径计算数量、分布和覆盖率；**报告 Agent** 结合这些统计事实与原始评价，寻找重复信号、整理证据并提出行动建议。最终是否排查、是否改款，以及改善有没有效果，仍需要人和后续事实来回答。
 
-<div className="kr-rule-flow" aria-label="从评价采集到改善效果验证的完整链路">
-  <span>原始评价</span><i>→</i><span>单条 AI 分类</span><i>→</i><span>程序统计事实</span><i>→</i><span>报告洞察</span><i>→</i><span>人工核实与行动</span><i>→</i><span>后续效果验证</span>
+<div className="kr-improvement-loop" aria-label="原始评价到改善效果验证的六个阶段">
+  <div className="kr-loop-caption"><span>FROM FEEDBACK TO CHANGE</span><strong>一条评价，怎样真正推动下一次改进？</strong><small>前四步把反馈变成线索，后两步才证明改善真的发生。</small></div>
+  <div className="kr-loop-grid">
+    <div><span>01 / 输入</span><strong>原始评价</strong><small>保留用户原声、首评和追评</small></div>
+    <div><span>02 / 识别</span><strong>AI 分类</strong><small>拆分问题、标注初始归口</small></div>
+    <div><span>03 / 统计</span><strong>程序计算</strong><small>按一致口径汇总，检查缺失</small></div>
+    <div><span>04 / 发现</span><strong>报告洞察</strong><small>找重复信号，提出待验证假设</small></div>
+    <div className="kr-loop-action"><span>05 / 落地</span><strong>人工核实与行动</strong><small>评估原因、成本、责任与方案</small></div>
+    <div className="kr-loop-verify"><span>06 / 验证</span><strong>观察后续效果</strong><small>对照新反馈，而不是把建议当结果</small></div>
+  </div>
+  <div className="kr-loop-return"><span aria-hidden="true">↶</span> 新证据与改善结果，继续回到下一轮判断</div>
 </div>
 
 以折叠键盘的键位不适为例：系统先保留“便携好用”与“打字容易误触”这两种并存的体验；报告发现相似反馈后，由产品设计评估具体键位、目标人群、使用频率和改动成本。可能的行动是优化详情页的键位展示，也可能是下一代产品调整布局。只有行动实际落地，再观察对应型号的新反馈，才能讨论改善是否奏效。**报告里写了“建议改进”，不等于改进已经实施。**
@@ -459,12 +532,13 @@ private: false
 
 这些问题未必都有一个“必须整改”的答案。却只有在反馈被送到正确的地方时，才有机会被认真讨论。
 
-我现在更愿意用另一句话概括评价分析的意义：
+评价分类真正有价值的地方，不是形成了多少标签，而是让下一次产品与业务决策有迹可循：
 
 <div className="kr-conclusion">
-  <span>从归责到改善</span>
-  <p>不要急着回答<strong>“这是谁的错？”</strong><br />先弄清楚<strong>“用户遇到了什么，我们下一次能做得更好吗？”</strong></p>
-  <small>评价不是处罚名单，而是从真实使用现场送回来的产品和业务信号。</small>
+  <span>THE SHIFT / 从归责到改善</span>
+  <div className="kr-conclusion-contrast"><div><small>旧问题</small><strong>“这是谁的错？”</strong></div><span aria-hidden="true">→</span><div><small>更值得回答的问题</small><strong>“下次能做得更好吗？”</strong></div></div>
+  <p>分类不是终点。先辨认体验，再核实原因，把需要改善的信号送往能行动的地方。</p>
+  <small>评价不是处罚名单，而是从真实使用现场送回来的产品和业务信号。根因需要证据，行动需要判断，效果需要验证。</small>
 </div>
 
 产品做对了，不代表市场一定喜欢；用户不喜欢，也不代表谁做错了。能把两者放在一起看，才是我希望一套评价分析体系真正做到的事。
@@ -617,7 +691,141 @@ private: false
   .article-content .kr-conclusion>p{font-size:clamp(20px,3vw,30px);font-weight:500;line-height:1.7;margin:17px 0!important}
   .kr-conclusion strong{color:#c5e9ab}
   .kr-conclusion>small{display:block;color:#c5d0c7;font-size:13px;line-height:1.85}
+  /* 专属视觉语言：产品现场、证据决策、AI 分类和改善闭环 */
+  .kr-hero{grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);align-items:center;gap:0 22px;margin:1.3rem 0 2rem;padding:clamp(24px,3vw,42px);border-color:#36554e;border-radius:20px;background:radial-gradient(ellipse at 82% 38%,#36584b 0,transparent 55%),linear-gradient(125deg,#102126,#192d30 72%,#243b32)}
+  .kr-hero-copy{position:relative;z-index:1;padding:24px 0}
+  .kr-eyebrow{display:block;letter-spacing:.14em;font-size:11px;color:#bad5c2}
+  .kr-hero .kr-hero-question{font-size:clamp(29px,3.3vw,43px);line-height:1.42;margin:24px 0 0!important;max-width:15em}
+  .kr-hero-quote{font-size:18px!important;font-weight:500;line-height:1.65!important;color:#d1e1da!important;margin:24px 0 0!important;padding-left:14px;border-left:2px solid #bdceaa}
+  .kr-hero-visual{position:relative;align-self:stretch;display:flex;align-items:center;justify-content:center;min-height:300px;isolation:isolate}
+  .kr-hero-visual::before{content:"";position:absolute;inset:15% 2%;border:1px solid #7b9a8560;border-radius:50%;transform:rotate(-16deg);z-index:-1}
+  .kr-hero-visual svg{display:block;width:100%;max-width:570px;height:auto;overflow:visible}
+  .kr-hero-visual-label{position:absolute;top:4%;right:0;color:#a8c2b3;font-family:var(--mono-font,monospace);font-size:10px;letter-spacing:.07em;white-space:nowrap}
+  .kr-hero-visual-label span{color:#f1c8a3}
+  .kr-hero-material{position:absolute;left:0;bottom:0;display:flex;flex-direction:column;padding:11px 14px;background:#14282be6;border:1px solid #748f8270;border-radius:9px;box-shadow:0 10px 25px #03131544}
+  .kr-hero-material span{font-size:10px;color:#a6c3ad;letter-spacing:.08em}
+  .kr-hero-material strong{font-size:17px;color:#fff;line-height:1.6}
+  .kr-hero-material small{font-size:11px;color:#a6bbb0}
+  .kr-hero-facts{grid-column:1/-1;margin-top:13px;padding-top:19px;border-top-color:#607969}
+  .kr-hero-facts>div{padding:0 22px}
+  .kr-hero-facts strong{font-size:19px}
+  .kr-timeline{position:relative;margin-top:2rem;border-bottom:0}
+  .kr-timeline>div{position:relative;padding-top:30px}
+  .kr-timeline>div::before{content:"";position:absolute;top:-5px;left:0;width:9px;height:9px;border-radius:50%;background:var(--blue);outline:5px solid var(--paper)}
+  .kr-timeline .kr-timeline-final::before{background:#b59667}
+  .kr-decision{margin:2rem 0 2.2rem}
+  .kr-decision-root{display:flex;flex-direction:column;align-items:center;gap:6px;max-width:650px;margin:auto;border-radius:16px;background:#1a2d30;padding:25px 28px;color:#eef4ed;text-align:center}
+  .kr-decision-root>span{font-size:12px;letter-spacing:.07em;color:#bcd2bf}
+  .kr-decision-root strong{font-size:clamp(21px,2.2vw,28px);line-height:1.4}
+  .kr-decision-root small{font-size:13px;line-height:1.6;color:#bacfc6}
+  .kr-decision-connector{position:relative;display:grid;place-items:center;min-height:82px;color:var(--muted);font-size:13px;text-align:center}
+  .kr-decision-connector::before{content:"";width:1px;background:var(--line);position:absolute;top:0;height:22px}
+  .kr-decision-connector span{border:1px solid var(--line);border-radius:100px;padding:7px 17px;background:var(--paper);z-index:1}
+  .kr-decision-connector::after{content:"";width:65%;height:19px;position:absolute;bottom:0;border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0}
+  .kr-decision .kr-forks{margin:0;gap:12px}
+  .kr-decision .kr-forks article{position:relative;border-top:0;border-radius:0 0 12px 12px;padding:25px 21px 20px;background:color-mix(in srgb,var(--paper-soft) 44%,var(--paper))}
+  .kr-decision .kr-forks article::before{content:"";height:5px;position:absolute;top:0;left:0;right:0;background:#88aa92}
+  .kr-decision .kr-forks article:nth-child(2)::before{background:#bb9a67}
+  .kr-decision .kr-forks article:nth-child(3)::before{background:#9d7e83}
+  .kr-decision-unknown{display:grid;grid-template-columns:90px 1fr;gap:12px;align-items:baseline;margin-top:14px;padding:15px 20px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:15px;line-height:1.7}
+  .kr-decision-unknown b{color:var(--ink)}
+  .kr-model-primary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin:24px 0 27px;padding:1px;background:#4c6b62;border-radius:15px;overflow:hidden}
+  .kr-model-primary>div{min-width:0;display:flex;flex-direction:column;gap:13px;padding:28px 23px;background:#1c3033;color:#eef5ed;position:relative}
+  .kr-model-primary>div:not(:last-child)::after{content:"→";position:absolute;right:-9px;top:40%;z-index:1;border:1px solid #59766c;border-radius:50%;background:#253f3d;width:25px;height:25px;display:grid;place-items:center;color:#c8e1bf;font-size:17px}
+  .kr-model-primary span{font-size:12px;line-height:1.5;color:#bad1c1}
+  .kr-model-primary strong{font-size:21px;line-height:1.55;font-weight:650}
+  .kr-model-primary small{font-size:13px;line-height:1.75;color:#b2c7bf}
+  .kr-reference{margin:12px 0;border:1px solid var(--line);border-radius:13px;background:var(--paper);overflow:hidden}
+  .kr-reference>summary{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:21px 25px;list-style:none;cursor:pointer}
+  .kr-reference>summary::-webkit-details-marker{display:none}
+  .kr-reference>summary>span:first-child{display:flex;flex-direction:column;gap:4px}
+  .kr-reference>summary b{font-size:12px;letter-spacing:.05em;color:var(--blue)}
+  .kr-reference>summary strong{font-size:18px;line-height:1.5;color:var(--ink)}
+  .kr-reference>summary small{font-size:14px;line-height:1.6;color:var(--muted)}
+  .kr-reference-action{flex-shrink:0;display:flex;gap:9px;align-items:center;font-size:13px;font-weight:650;color:var(--blue)}
+  .kr-reference-action::after{content:"＋";font-size:19px;font-weight:400}
+  .kr-reference-action span:nth-child(2),.kr-reference[open] .kr-reference-action span:first-child{display:none}
+  .kr-reference[open] .kr-reference-action span:nth-child(2){display:inline}
+  .kr-reference[open] .kr-reference-action::after{content:"−"}
+  .kr-reference>summary:hover{background:color-mix(in srgb,var(--paper-soft) 75%,var(--paper))}
+  .kr-reference>summary:focus-visible{outline:3px solid var(--blue);outline-offset:-4px}
+  .kr-reference[open] .kr-model-section{border-top:1px solid var(--line);margin:0;padding:25px}
+  .kr-demo-analysis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:18px 22px 16px}
+  .kr-demo-analysis>div{display:flex;flex-direction:column;gap:10px;padding:18px;border:1px solid var(--line);border-radius:10px;min-width:0;background:var(--paper)}
+  .kr-demo-analysis>div.kr-demo-positive{background:color-mix(in srgb,var(--paper-soft) 68%,var(--paper))}
+  .kr-demo-analysis small{font-size:12px;color:var(--blue);font-weight:700}
+  .kr-demo-analysis strong{font-size:17px;line-height:1.5}
+  .kr-demo-analysis span{font-size:13px;line-height:1.65;color:var(--muted)}
+  .kr-demo-divider{display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 0;color:var(--muted);font-size:13px;border-bottom:1px solid var(--line)}
+  .kr-demo-divider span:last-child{font-size:23px;color:var(--blue)}
+  .kr-live-result{padding-top:0}
+  .kr-live-result>div.kr-demo-output-label{grid-column:1/-1;padding:15px 0!important;border:0!important;border-bottom:1px solid #40564d!important;margin:0 0 19px}
+  .kr-live-result>div.kr-demo-output-label span{font-size:12px;color:#c5ddc4;letter-spacing:.04em;margin:0}
+  .kr-live-result>div:nth-child(2){padding-left:0}
+  .kr-improvement-loop{border:1px solid #4e6b61;border-radius:17px;overflow:hidden;margin:28px 0;background:#1a3031;color:#f1f4ed}
+  .kr-loop-caption{padding:27px 28px 21px;display:flex;flex-direction:column;gap:7px}
+  .kr-loop-caption span{font-size:11px;letter-spacing:.13em;color:#bdd2b5}
+  .kr-loop-caption strong{font-size:25px;line-height:1.45}
+  .kr-loop-caption small{font-size:14px;line-height:1.7;color:#bbcfc6}
+  .kr-loop-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin:0 18px;background:#526e65}
+  .kr-loop-grid>div{position:relative;display:flex;flex-direction:column;gap:8px;padding:25px 23px;background:#213b3b}
+  .kr-loop-grid>div:not(:nth-child(3n))::after{content:"→";position:absolute;right:6px;top:24px;color:#afc6ac}
+  .kr-loop-grid span{font-size:11px;letter-spacing:.05em;color:#b0cbb7}
+  .kr-loop-grid strong{font-size:19px;line-height:1.45}
+  .kr-loop-grid small{font-size:13px;line-height:1.7;color:#c1d0c7}
+  .kr-loop-grid .kr-loop-action{background:#365148}
+  .kr-loop-grid .kr-loop-verify{background:#456045}
+  .kr-loop-return{display:flex;align-items:center;justify-content:center;gap:12px;padding:19px 22px;color:#cce0cc;font-size:13px;line-height:1.65}
+  .kr-loop-return span{font-size:27px;color:#cce3bb}
+  .kr-report-panel{margin:29px 0 30px;padding:clamp(21px,3vw,32px);border-radius:17px;border:1px solid var(--line);background:color-mix(in srgb,var(--paper-soft) 62%,var(--paper))}
+  .kr-report-heading{display:flex;flex-direction:column;gap:6px;margin-bottom:22px}
+  .kr-report-heading>span{font-size:12px;font-weight:700;letter-spacing:.09em;color:var(--blue)}
+  .kr-report-heading strong{font-size:25px}
+  .kr-report-heading p,.kr-report-footnote{font-size:14px!important;line-height:1.8!important;color:var(--muted)!important;margin:0!important}
+  .kr-report-numbers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .kr-report-numbers>div{display:flex;flex-direction:column;gap:6px;padding:18px 20px;border:1px solid var(--line);background:var(--paper);border-radius:10px}
+  .kr-report-numbers strong{font-size:clamp(29px,3vw,40px);line-height:1.2;font-variant-numeric:tabular-nums}
+  .kr-report-numbers strong small{font-size:15px;margin-left:3px;font-weight:500}
+  .kr-report-numbers span{font-size:13px;line-height:1.6;color:var(--muted)}
+  .kr-report-distribution{margin:23px 0 18px}
+  .kr-report-distribution-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:13px}
+  .kr-report-distribution-head strong{font-size:16px}
+  .kr-report-distribution-head span{font-size:12px;color:var(--muted)}
+  .kr-report-bar{display:flex;width:100%;height:24px;gap:3px;border-radius:7px;overflow:hidden}
+  .kr-report-bar span{flex-basis:0;min-width:0}
+  .kr-report-bar span:nth-child(1){background:#608d77}
+  .kr-report-bar span:nth-child(2){background:#bb9963}
+  .kr-report-bar span:nth-child(3){background:#aa7577}
+  .kr-report-legend{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:13px;font-size:13px;color:var(--muted)}
+  .kr-report-legend span{display:flex;align-items:center;gap:7px}
+  .kr-report-legend i{display:inline-block;width:9px;height:9px;border-radius:3px;background:#608d77}
+  .kr-report-legend span:nth-child(2) i{background:#bb9963}
+  .kr-report-legend span:nth-child(3) i{background:#aa7577}
+  .kr-report-footnote{border-top:1px solid var(--line);padding-top:14px}
+  .kr-conclusion{position:relative;overflow:hidden}
+  .kr-conclusion::after{content:"";position:absolute;right:-9%;top:-60%;width:45%;height:160%;border:1px solid #597867;border-radius:50%;transform:rotate(26deg);pointer-events:none}
+  .kr-conclusion-contrast{display:grid;grid-template-columns:minmax(0,1fr) 30px minmax(0,1.35fr);gap:15px;align-items:center;margin-top:22px;position:relative;z-index:1}
+  .kr-conclusion-contrast>div{display:flex;flex-direction:column;gap:11px}
+  .kr-conclusion-contrast small{font-size:12px;color:#afc5b4}
+  .kr-conclusion-contrast strong{font-size:clamp(20px,2.6vw,30px);line-height:1.5}
+  .kr-conclusion-contrast>span{font-size:24px;color:#abc6a2}
+  .article-content .kr-conclusion>p{font-size:16px;font-weight:400;line-height:1.8;color:#dbe8dc;margin:28px 0 14px!important;max-width:46em}
+  @media(max-width:880px){
+    .kr-hero{grid-template-columns:1fr;gap:0}
+    .kr-hero-copy{padding:8px 0 0}
+    .kr-hero .kr-hero-question{max-width:none}
+    .kr-hero-visual{min-height:0;max-width:540px;margin:0 auto 15px;width:100%}
+    .kr-model-primary{grid-template-columns:1fr}
+    .kr-model-primary>div:not(:last-child)::after{content:"↓";top:auto;right:calc(50% - 13px);bottom:-14px}
+  }
   @media(max-width:760px){
+    .kr-decision-connector::after{display:none}
+    .kr-decision .kr-forks{grid-template-columns:1fr}
+    .kr-decision .kr-forks article{border-radius:10px}
+    .kr-demo-analysis{grid-template-columns:1fr}
+    .kr-loop-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .kr-loop-grid>div:not(:nth-child(3n))::after{content:none}
+    .kr-loop-grid>div:nth-child(odd)::after{content:"→";position:absolute;right:5px;top:24px;color:#b2c9b0}
     .kr-hero{gap:21px;border-radius:15px;padding:25px 22px}
     .kr-hero .kr-hero-question{font-size:clamp(30px,8vw,41px)}
     .kr-forks{grid-template-columns:1fr}
@@ -674,5 +882,33 @@ private: false
     .kr-boundary>div{grid-template-columns:1fr;gap:3px}
     .kr-split-list>div{grid-template-columns:76px 1fr}
     .kr-split-source strong{font-size:21px}
+    .kr-hero{padding:23px 20px}
+    .kr-hero .kr-hero-question{font-size:30px}
+    .kr-hero-quote{font-size:16px!important;margin-top:19px!important}
+    .kr-hero-visual-label{top:0;font-size:9px}
+    .kr-hero-material{left:0;bottom:0;padding:8px 10px}
+    .kr-hero-material strong{font-size:14px}
+    .kr-hero-material small{font-size:10px}
+    .kr-decision-root{padding:21px 18px}
+    .kr-decision-unknown{grid-template-columns:1fr;gap:3px}
+    .kr-reference>summary{padding:17px;align-items:flex-start}
+    .kr-reference>summary strong{font-size:16px}
+    .kr-reference-action{font-size:0}
+    .kr-reference-action::after{font-size:23px}
+    .kr-reference[open] .kr-model-section{padding:18px 14px}
+    .kr-demo-analysis{padding:14px}
+    .kr-loop-caption{padding:22px 19px}
+    .kr-loop-caption strong{font-size:21px}
+    .kr-loop-grid{grid-template-columns:1fr;margin:0 12px}
+    .kr-loop-grid>div{padding:19px 20px}
+    .kr-loop-grid>div:nth-child(odd)::after{content:none}
+    .kr-loop-grid>div:not(:last-child)::after{content:"↓";position:absolute;top:auto;bottom:-12px;left:calc(50% - 12px);right:auto;z-index:1;color:#d2e0c8;background:#35514b;border-radius:50%;width:24px;text-align:center}
+    .kr-report-numbers{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .kr-report-numbers>div{padding:14px}
+    .kr-report-numbers>div:first-child{grid-column:1/-1}
+    .kr-report-distribution-head{align-items:flex-start;flex-direction:column;gap:3px}
+    .kr-conclusion-contrast{grid-template-columns:1fr;gap:8px}
+    .kr-conclusion-contrast>span{transform:rotate(90deg);width:25px}
+    .kr-conclusion-contrast strong{font-size:22px}
   }
 `}</style>
