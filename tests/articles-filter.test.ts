@@ -79,11 +79,15 @@ describe('articles page category filter', () => {
   });
 
   it('sorts visible articles by publish date or update date in place', () => {
-    expect(articlesSource).toContain('data-sort-select');
-    expect(articlesSource).toContain('<option value="date">最新发布</option>');
-    expect(articlesSource).toContain('<option value="updated">最近更新</option>');
+    expect(articlesSource).toContain('data-sort-menu');
+    expect(articlesSource).toContain('data-sort-label');
+    expect(articlesSource).toContain('data-sort-option data-sort-value="date"');
+    expect(articlesSource).toContain('data-sort-option data-sort-value="updated"');
+    expect(articlesSource).not.toContain('<select');
     expect(articlesSource).toContain('applySort(currentSort)');
-    expect(articlesSource).toContain('currentSort = sortSelect.value');
+    expect(articlesSource).toContain("currentSort = option.getAttribute('data-sort-value')");
+    expect(articlesSource).toContain("sortMenu.addEventListener('keydown'");
+    expect(articlesSource).toContain("event.key === 'Escape'");
     expect(articlesSource).toContain('list.appendChild(item)');
     expect(articlesSource).toContain("list.querySelectorAll('[data-article-item]')");
     expect(articleListSource).toContain('data-published-at={post.data.date.valueOf()}');

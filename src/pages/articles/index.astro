@@ -95,13 +95,16 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
               <p>默认不显示归档文章。</p>
             </div>
           </details>
-          <label class="article-sort">
-            <span class="sr-only">文章排序</span>
-            <select data-sort-select aria-label="文章排序">
-              <option value="date">最新发布</option>
-              <option value="updated">最近更新</option>
-            </select>
-          </label>
+          <details class="article-sort" data-sort-menu>
+            <summary class="article-toolbar-button article-sort-trigger" aria-label="文章排序">
+              <span data-sort-label>最新发布</span>
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <div class="article-sort-popover" aria-label="排序方式">
+              <button type="button" data-sort-option data-sort-value="date" aria-pressed="true">最新发布 <span aria-hidden="true">✓</span></button>
+              <button type="button" data-sort-option data-sort-value="updated" aria-pressed="false">最近更新 <span aria-hidden="true">✓</span></button>
+            </div>
+          </details>
         </div>
       </div>
       <div class="articles-results-meta">
@@ -120,7 +123,9 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
 
       var filters = Array.prototype.slice.call(page.querySelectorAll('[data-category-filter]'));
       var items = Array.prototype.slice.call(page.querySelectorAll('[data-article-item]'));
-      var sortSelect = page.querySelector('[data-sort-select]');
+      var sortMenu = page.querySelector('[data-sort-menu]');
+      var sortOptions = Array.prototype.slice.call(page.querySelectorAll('[data-sort-option]'));
+      var sortLabel = page.querySelector('[data-sort-label]');
       var list = page.querySelector('[data-article-list]');
       var emptyState = page.querySelector('[data-empty-state]');
       var tagsToggle = page.querySelector('[data-tags-toggle]');
@@ -190,7 +195,10 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
       function applySort(sortValue) {
         if (!list) return;
 
-        if (sortSelect) sortSelect.value = sortValue;
+        if (sortLabel) sortLabel.textContent = sortValue === 'updated' ? '最近更新' : '最新发布';
+        sortOptions.forEach(function (option) {
+          option.setAttribute('aria-pressed', option.getAttribute('data-sort-value') === sortValue ? 'true' : 'false');
+        });
         items.forEach(function (item) {
           item.querySelectorAll('[data-date-kind]').forEach(function (time) {
             time.hidden = time.getAttribute('data-date-kind') !== sortValue;
@@ -282,10 +290,31 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
         });
       });
 
-      if (sortSelect) {
-        sortSelect.addEventListener('change', function () {
-          currentSort = sortSelect.value || 'date';
+      sortOptions.forEach(function (option) {
+        option.addEventListener('click', function () {
+          currentSort = option.getAttribute('data-sort-value') || 'date';
           applySort(currentSort);
+          sortMenu.open = false;
+          sortMenu.querySelector('summary').focus();
+        });
+      });
+      if (sortMenu) {
+        var sortTrigger = sortMenu.querySelector('summary');
+        document.addEventListener('click', function (event) {
+          if (!sortMenu.contains(event.target)) sortMenu.open = false;
+        });
+        sortMenu.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && sortMenu.open) {
+            sortMenu.open = false;
+            sortTrigger.focus();
+          } else if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && (event.target === sortTrigger || sortOptions.includes(event.target))) {
+            event.preventDefault();
+            if (!sortMenu.open) sortMenu.open = true;
+            var index = sortOptions.indexOf(event.target);
+            if (index === -1) index = sortOptions.findIndex(function (option) { return option.getAttribute('aria-pressed') === 'true'; });
+            var next = (index + (event.key === 'ArrowDown' ? 1 : -1) + sortOptions.length) % sortOptions.length;
+            sortOptions[next].focus();
+          }
         });
       }
 

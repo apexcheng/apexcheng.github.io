@@ -873,63 +873,53 @@ h3 {
 }
 
 .article-sort {
-  align-items: center;
-  display: inline-flex;
   position: relative;
 }
 
-.article-sort::after {
-  border-bottom: 1.5px solid currentColor;
-  border-right: 1.5px solid currentColor;
-  color: var(--muted);
-  content: '';
-  height: 6px;
-  pointer-events: none;
-  position: absolute;
-  right: 14px;
-  top: calc(50% - 5px);
-  transform: rotate(45deg);
-  width: 6px;
+.article-sort > summary {
+  list-style: none;
 }
-
-.article-sort > .sr-only {
-  clip-path: inset(50%);
-  height: 1px;
-  overflow: hidden;
-  position: absolute;
-  white-space: nowrap;
-  width: 1px;
-}
-
-.article-sort select {
-  appearance: none;
+.article-sort > summary::-webkit-details-marker { display: none; }
+.article-sort-trigger svg { transition: transform .16s ease; }
+.article-sort[open] > summary { border-color: var(--blue); color: var(--blue); }
+.article-sort[open] .article-sort-trigger svg { transform: rotate(180deg); }
+.article-sort-popover {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 9px;
+  box-shadow: 0 12px 26px rgba(30, 40, 34, .11);
+  min-width: 144px;
+  padding: 5px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 15;
+}
+.article-sort-popover button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
   color: var(--muted);
   cursor: pointer;
+  display: flex;
   font: inherit;
   font-size: 13px;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 36px;
+  padding: 8px 10px;
+  text-align: left;
+  width: 100%;
+}
+.article-sort-popover button[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--blue) 8%, var(--paper));
+  color: var(--blue);
   font-weight: 650;
-  height: 42px;
-  line-height: 1.4;
-  padding: 0 34px 0 13px;
 }
-
-@media (hover: hover) {
-  .article-sort select:hover {
-    border-color: var(--blue);
-    color: var(--blue);
-  }
-  .article-sort:hover::after { color: var(--blue); }
-}
-
-.article-sort select:focus-visible {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--blue) 13%, transparent);
-  outline: none;
-}
-.article-sort:has(select:focus-visible)::after { color: var(--blue); }
+.article-sort-popover button[aria-pressed='false'] span { visibility: hidden; }
+.article-sort-popover button:hover { background: color-mix(in srgb, var(--blue) 6%, var(--paper)); color: var(--blue); }
+.article-sort-popover button:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
 
 .content-note {
   font-size: 14px;
