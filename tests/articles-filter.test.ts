@@ -6,6 +6,7 @@ const articlesSource = readFileSync('src/pages/articles/index.astro', 'utf8');
 const articleListSource = readFileSync('src/components/ArticleList.astro', 'utf8');
 const articlePageSource = readFileSync('src/pages/articles/[...slug].astro', 'utf8');
 const categorySource = readFileSync('src/pages/articles/category/[category].astro', 'utf8');
+const tabsSource = readFileSync('src/components/ContentViewTabs.astro', 'utf8');
 const contentConfigSource = readFileSync('src/content.config.ts', 'utf8');
 
 describe('articles page category filter', () => {
@@ -29,18 +30,20 @@ describe('articles page category filter', () => {
     expect(articleListSource).toContain('data-search-text=');
     expect(articlesSource).not.toContain("post.data.category !== '视觉实验室'");
     expect(articlesSource).toContain('activePosts.filter((post) => !post.data.series)');
-    expect(articlesSource).toContain('<ArticleList posts={posts} hideSeries showPinned />');
+    expect(articlesSource).toContain('<ArticleList posts={posts} hideSeries showPinned inlineMeta />');
     expect(articleListSource).toContain("data-series={post.data.series ?? ''}");
     expect(articleListSource).toContain('(hideSeries && post.data.series)');
   });
 
-  it('defaults to independent articles while allowing series articles with consistent counts and URL state', () => {
-    expect(articlesSource).toContain('data-include-series');
+  it('defaults to independent articles with a separate series tab and supports legacy series links', () => {
+    expect(tabsSource).toContain('独立文章');
+    expect(tabsSource).toContain('专题系列');
+    expect(articlesSource).not.toContain('data-include-series');
     expect(articlesSource).toContain('data-count-standalone');
     expect(articlesSource).toContain('data-count-all');
-    expect(articlesSource).toContain("includeSeriesInput.addEventListener('change'");
+    expect(articlesSource).toContain("includeSeries = new URLSearchParams(window.location.search).get('series') === '1'");
     expect(articlesSource).toContain("url.searchParams.set('series', '1')");
-    expect(articlesSource).toContain("get('series') === '1'");
+    expect(articlesSource).toContain("includeSeries = false;");
     expect(articlesSource).toContain('item.hidden = !isVisible');
   });
 
@@ -52,7 +55,8 @@ describe('articles page category filter', () => {
     expect(articlesSource).toContain("(!featuredOnly || item.getAttribute('data-featured') === 'true')");
     expect(articlesSource).toContain("(!category || itemCategory === category)");
     expect(articlesSource).toContain('terms.every');
-    expect(articlesSource).toContain("featuredOnlyInput.addEventListener('change'");
+    expect(articlesSource).toContain("featuredOnlyButton.addEventListener('click'");
+    expect(articlesSource).toContain("featuredOnlyButton.setAttribute('aria-pressed'");
     expect(articlesSource).toContain("url.searchParams.set('featured', '1')");
     expect(articlesSource).toContain("url.searchParams.delete('featured')");
     expect(articlesSource).toContain("get('featured') === '1'");
@@ -75,11 +79,11 @@ describe('articles page category filter', () => {
   });
 
   it('sorts visible articles by publish date or update date in place', () => {
-    expect(articlesSource).toContain('data-sort-option');
-    expect(articlesSource).toContain("data-sort-value=\"date\"");
-    expect(articlesSource).toContain("data-sort-value=\"updated\"");
+    expect(articlesSource).toContain('data-sort-select');
+    expect(articlesSource).toContain('<option value="date">最新发布</option>');
+    expect(articlesSource).toContain('<option value="updated">最近更新</option>');
     expect(articlesSource).toContain('applySort(currentSort)');
-    expect(articlesSource).toContain('currentSort = sortOption.getAttribute');
+    expect(articlesSource).toContain('currentSort = sortSelect.value');
     expect(articlesSource).toContain('list.appendChild(item)');
     expect(articlesSource).toContain("list.querySelectorAll('[data-article-item]')");
     expect(articleListSource).toContain('data-published-at={post.data.date.valueOf()}');
@@ -102,5 +106,13 @@ describe('articles page category filter', () => {
     expect(articlePageSource).toContain('formatPostDate(post.data.date)');
     expect(articlePageSource).toContain('formatPostDate(post.data.updated ?? post.data.date)');
     expect(formatPostDate(new Date('2026-07-09T00:30:00+08:00'))).toBe('2026-07-09');
+  });
+
+  it('keeps article metadata in reading order and a clear reset action', () => {
+    expect(articleListSource).toContain('inlineMeta &&');
+    expect(articleListSource).toContain('article-list-heading-meta');
+    expect(articlesSource).toContain('data-clear-article-filters');
+    expect(articlesSource).toContain("clearFiltersButton.addEventListener('click'");
+    expect(articlesSource).toContain('data-more-filters');
   });
 });
