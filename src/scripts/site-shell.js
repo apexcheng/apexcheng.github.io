@@ -112,7 +112,7 @@ let previousFocus;
 let composing = false;
 let selectedCategory = '';
 const shortcut = document.querySelector('[data-search-shortcut]');
-shortcut.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
+shortcut.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K / ⌘ F' : 'Ctrl K / Ctrl F';
 
 function renderSearch() {
   const query = input.value.trim().toLocaleLowerCase();
@@ -204,6 +204,12 @@ search.addEventListener('keydown', (event) => {
   }
 });
 document.addEventListener('keydown', (event) => {
+  if (!event.isComposing && !event.altKey && !event.shiftKey && (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'f') {
+    event.preventDefault();
+    openSearch();
+    input.focus();
+    return;
+  }
   if (!event.isComposing && (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
     event.preventDefault();
     if (search.open) search.close(); else openSearch();
