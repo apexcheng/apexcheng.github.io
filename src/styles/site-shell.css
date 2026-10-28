@@ -43,7 +43,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
 .theme-panel button[aria-pressed='true'] { background: var(--paper-soft); }
 .theme-swatch { height: 28px; width: 28px; border-radius: 50%; border: 1px solid #9a9e96; flex: none; }
 .swatch-paper { background: #f5f4ef; }
-.swatch-clarity { background: linear-gradient(135deg, #ffffff 50%, #2b6bd4 50%); border-color: #aac2e7; }
+.swatch-visual-blue { background: linear-gradient(135deg, #2563eb, #06b6d4 55%, #8b5cf6); border-color: #93c5fd; }
 .swatch-ink { background: #263630; }
 .dark-icon, html[data-theme='dark'] .light-icon { display: none; }
 html[data-theme='dark'] .dark-icon { display: block; }
@@ -120,13 +120,19 @@ kbd { font-family: var(--body-font); font-size: 10px; font-weight: 400; color: v
 .article-sidebar-restore { top: 90px; }
 .article-content :is(h2, h3, h4)[id] { scroll-margin-top: 106px; }
 
-html[data-style-theme='clarity'] .site-header { background: rgb(255 255 255 / .96); border-bottom-color: #d5dfed; }
+html[data-style-theme='clarity'] .site-header { background: rgb(255 255 255 / .7); border-bottom-color: var(--line); backdrop-filter: blur(18px); }
+html[data-style-theme='clarity'] .brand-mark { color: #fff; background: linear-gradient(135deg, #2563eb, #06b6d4 55%, #8b5cf6); border-radius: 12px; box-shadow: 0 14px 32px rgb(37 99 235 / .24); }
 html[data-style-theme='clarity'] .site-nav a[aria-current='page'] { color: var(--blue); }
 html[data-style-theme='clarity'] .utility-panel,
-html[data-style-theme='clarity'] .site-search { border-radius: 9px; }
-html[data-style-theme='clarity'] .article-content { background: var(--paper); border: 1px solid var(--line-soft); border-radius: 10px; }
+html[data-style-theme='clarity'] .site-search { border-radius: var(--radius); }
+html[data-style-theme='clarity'] .article-content { background: var(--paper); border: 1px solid var(--line-soft); border-radius: var(--radius); }
 html[data-style-theme='clarity'] .article-info,
 html[data-style-theme='clarity'] .toc-panel { border-color: var(--line); }
+html[data-style-theme='clarity'] :is(.topic-card span, .pill, .chips span, .chips a) {
+  background: linear-gradient(135deg, rgb(219 234 254 / .88), rgb(237 233 254 / .84));
+  border-color: rgb(147 197 253 / .58);
+  color: #1d4ed8;
+}
 @media (hover: hover) {
   .site-nav a:hover::after { transform: scaleX(1); }
   .utility-panel button:hover, .utility-panel > a:hover, .search-result:hover { background: var(--paper-soft); }

@@ -9,8 +9,16 @@ const { current } = Astro.props;
 const homeOptions = [
   {
     id: 'home-redesign-1',
-    title: '轻晶蓝',
-    note: '当前正式首页',
+    title: '视觉晶蓝',
+    note: 'V1 原版首页',
+    href: withBase('/home-v1/'),
+    styleTheme: 'clarity',
+    theme: 'light',
+  },
+  {
+    id: 'current-home',
+    title: '当前首页',
+    note: '期刊式首页',
     href: withBase('/'),
     styleTheme: 'visual-system',
     theme: 'light',

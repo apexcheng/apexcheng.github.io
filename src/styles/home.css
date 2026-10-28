@@ -132,25 +132,6 @@
 @keyframes page-arrive { from { opacity: .3; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes atlas-emerge { from { opacity: .3; transform: translate(-50%, -50%) scale(.85); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
-/* The cool classic mode deliberately restores the old site's clean blue-white
-   separation instead of tinting the paper-themed presentation. */
-html[data-style-theme='clarity'] .journal-home h1 { font-weight: 600; }
-html[data-style-theme='clarity'] .cover-art { background: linear-gradient(145deg, #152a4e, #21558e); }
-html[data-style-theme='clarity'] .atlas-node { background: rgb(19 43 83 / .87); border-color: rgb(195 219 255 / .3); }
-html[data-style-theme='clarity'] .cover-note-body,
-html[data-style-theme='clarity'] .margin-letter,
-html[data-style-theme='clarity'] .featured-project { border-radius: 9px; }
-html[data-style-theme='clarity'] .reading-room { background: #16335f; border-radius: 10px; }
-html[data-style-theme='clarity'] .reading-room .journal-eyebrow,
-html[data-style-theme='clarity'] .reading-room-intro > p:not(.journal-eyebrow),
-html[data-style-theme='clarity'] .series-entry p,
-html[data-style-theme='clarity'] .series-number,
-html[data-style-theme='clarity'] .series-count { color: #c7d9f2; }
-html[data-style-theme='clarity'] .reading-room .text-link,
-html[data-style-theme='clarity'] .series-count svg { color: #f1f7ff; }
-html[data-style-theme='clarity'] .series-shelf { border-color: #47709e; }
-html[data-style-theme='clarity'] .featured-project { background: #edf3fc; border: 1px solid #d8e5f7; }
-
 @media (hover: hover) {
   .ink-link:hover { background: var(--blue); }
   .cover-note:hover .atlas-core { border-color: rgb(234 246 211 / .8); }

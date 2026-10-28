@@ -10,6 +10,7 @@ interface Props { active: 'home' | 'articles' | 'series' | 'projects' | 'about' 
 const { active } = Astro.props;
 const navigation = [
   { id: 'home', label: '首页', path: '/' },
+  { id: 'home-v1', label: '视觉晶蓝首页', path: '/home-v1/' },
   { id: 'articles', label: '文章', path: '/articles/' },
   { id: 'projects', label: '项目', path: '/projects/' },
   { id: 'about', label: '关于', path: '/about/' },
@@ -55,7 +56,7 @@ const returnPath = encodeURIComponent(Astro.url.pathname + Astro.url.search);
             <div class="utility-panel theme-panel">
               <p class="utility-label">阅读的光线</p>
               <button type="button" data-theme-option data-style-theme-value="visual-system" data-theme-value="light"><i class="theme-swatch swatch-paper"></i><span>素纸<small>安静、清晰的日间阅读</small></span><Check size={16} /></button>
-              <button type="button" data-theme-option data-style-theme-value="clarity" data-theme-value="light"><i class="theme-swatch swatch-clarity"></i><span>清晰经典<small>蓝白分明，清爽高效的阅读</small></span><Check size={16} /></button>
+              <button type="button" data-theme-option data-style-theme-value="clarity" data-theme-value="light"><i class="theme-swatch swatch-visual-blue"></i><span>视觉晶蓝<small>蓝青紫渐变，清透明亮</small></span><Check size={16} /></button>
               <button type="button" data-theme-option data-style-theme-value="classic" data-theme-value="dark"><i class="theme-swatch swatch-ink"></i><span>玄墨<small>留一盏夜读的灯</small></span><Check size={16} /></button>
             </div>
           </details>
