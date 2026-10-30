@@ -1,0 +1,148 @@
+---
+// 教学示意：所有身份标识、凭证与域名都是虚构数据，不会发起真实授权请求。
+const lanes = [
+  { x: 115, name: '用户浏览器', hint: '保存 Cookie、执行跳转' },
+  { x: 345, name: '航桥 Django', hint: '维护员工账号与 Session' },
+  { x: 575, name: 'QQ 平台', hint: '验证授权、签发 Token' },
+];
+const steps = [
+  { from: 0, to: 1, kind: 'browser', label: '请求 QQ 登录', title: '01 · 浏览器发起登录', summary: '用户点击航桥的「QQ 登录」。这是向 Django 请求开始第三方登录，而不是把 QQ 密码交给航桥。', request: 'GET /auth/qq/login/', takeaway: '航桥此时还不知道用户的 QQ 身份。' },
+  { from: 1, to: 0, kind: 'browser', label: '返回 QQ 授权跳转地址', title: '02 · Django 准备授权请求', summary: 'Django 生成带 App ID、回调地址和 state 的 QQ 授权 URL；state 用来关联这一次请求与浏览器。', request: '302 Location: https://graph.qq.com/oauth2.0/authorize\n  ?response_type=code\n  &client_id=DEMO_APP_ID\n  &redirect_uri=https%3A%2F%2Fdemo.example.com%2Fauth%2Fqq%2Fcallback\n  &state=DEMO_RANDOM_STATE', takeaway: 'redirect_uri 是返回航桥的目的地，不是 QQ 服务器向航桥推送 Token 的地址。' },
+  { from: 0, to: 2, kind: 'browser', label: '浏览器访问 QQ、用户授权', title: '03 · 浏览器进入 QQ', summary: '浏览器跟随跳转，用户在 QQ 页面完成自己的身份验证并同意授权。QQ 同时检查该应用请求的回调地址。', request: 'GET https://graph.qq.com/oauth2.0/authorize?…', takeaway: 'QQ 验证用户身份，不需要将 QQ 密码交给航桥。' },
+  { from: 2, to: 0, kind: 'browser', label: '302：回调地址 + Code', title: '04 · QQ 发出回调跳转指令', summary: '授权成功后，QQ 回复浏览器一个 302 跳转，目标是事先允许的回调地址，附带短期授权码 Code 与原 state。', request: '302 Location: https://demo.example.com/auth/qq/callback\n  ?code=DEMO_ONE_TIME_CODE\n  &state=DEMO_RANDOM_STATE', takeaway: '注意箭头指向浏览器：不是 QQ 服务器主动连接内网 Django。' },
+  { from: 0, to: 1, kind: 'browser', label: '浏览器携带 Code 返回航桥', title: '05 · Django 收到 Code', summary: '浏览器访问回调地址；Django 先核对 state 是否与这次登录的浏览器会话一致，再准备交换 Token。', request: 'GET /auth/qq/callback\n  ?code=DEMO_ONE_TIME_CODE\n  &state=DEMO_RANDOM_STATE', takeaway: '即使 Code 暴露，也不能把它当作可以直接读取 QQ 资料的 Access Token。' },
+  { from: 1, to: 2, kind: 'server', label: 'Django 用 Code 换 Token', title: '06 · Django 服务端交换令牌', summary: 'Django 主动访问 QQ 的 Token 端点，提交 Code、应用身份凭证以及与授权时对应的 redirect_uri。PKCE 是现代标准建议的进一步保护，接入时需核对 QQ 是否支持。', request: 'QQ Token 接口：https://graph.qq.com/oauth2.0/token\ngrant_type=authorization_code\nclient_id=DEMO_APP_ID\nclient_secret=[仅保留在后端]\ncode=DEMO_ONE_TIME_CODE\nredirect_uri=[与授权请求一致]', takeaway: 'QQ 互联公开文档展示 GET 参数；此处列出字段而不是可直接执行的真实请求。' },
+  { from: 2, to: 1, kind: 'server', label: 'QQ 返回 Access Token', title: '07 · QQ 签发访问令牌', summary: 'QQ 验证授权码、应用身份、回调地址等约束后，将 Access Token 返回 Django。Token 允许访问 QQ 已授权的资源，不是航桥登录 Cookie。', request: 'access_token=DEMO_ACCESS_TOKEN\nexpires_in=5184000\nrefresh_token=DEMO_REFRESH_TOKEN', takeaway: 'Token 的权限和过期时间由 QQ 控制；示例值均为虚构。' },
+  { from: 1, to: 2, kind: 'server', label: '携带 Token 查询 OpenID', title: '08 · Django 查询 QQ 用户身份', summary: 'QQ 登录还需要确认是哪一个 QQ 用户。Django 使用 Access Token 调用 QQ 的 OpenID 接口。', request: 'GET https://graph.qq.com/oauth2.0/me\n  ?access_token=DEMO_ACCESS_TOKEN', takeaway: 'OAuth 授权成功不等于自动识别出航桥员工账号。' },
+  { from: 2, to: 1, kind: 'server', label: 'QQ 返回用户 OpenID', title: '09 · 返回可绑定的用户标识', summary: 'QQ 返回这个用户对该应用的唯一标识。Django 查找航桥数据库中的绑定关系，确认对应哪位员工；没有绑定时应进入受保护的绑定流程。', request: '{ "client_id": "DEMO_APP_ID",\n  "openid": "DEMO_OPENID_123" }\n\n航桥绑定表：DEMO_OPENID_123 → 员工张三', takeaway: '不能依靠 QQ 昵称或头像自动匹配内部员工；绑定关系才是关键。' },
+  { from: 1, to: 0, kind: 'session', label: '建立 Session、返回 Cookie', title: '10 · 航桥建立自己的登录状态', summary: '确认员工身份后，Django 在服务端创建 Session，并通过响应头通知浏览器保存会话编号。之后访问航桥 App 不需要每次询问 QQ。', request: 'Set-Cookie: sessionid=DEMO_SESSION_ID;\n  HttpOnly; Secure; SameSite=Lax\nLocation: /', takeaway: 'QQ Token 与 Django Session 是两套凭证；Session Cookie 被盗同样危险。' },
+  { from: 0, to: 1, kind: 'session', label: '后续业务请求仅带航桥 Cookie', title: '11 · 后续业务操作', summary: '浏览器自动携带航桥 Cookie。Django 验证 Session 和员工权限；不需要再次拿 QQ Token 进行登录校验。', request: 'GET /work-records/\nCookie: sessionid=DEMO_SESSION_ID', takeaway: 'QQ 改密码或 Token 过期，不会天然让已有的航桥 Session 立即失效。' },
+];
+const yOf = (i: number) => 150 + i * 82;
+---
+
+<section class="oauth-lab" data-oauth-sequence aria-label="OAuth 浏览器、Django 与 QQ 三方交互时序图">
+  <div class="oauth-lab__head">
+    <div><span class="oauth-lab__overline">INTERACTIVE SEQUENCE · 11 MESSAGES</span><h3>跟着箭头，看每一次消息由谁发出</h3><p>点击任意箭头，右侧显示它对应的实际请求与安全含义。蓝色是浏览器通信，青色是服务器间请求，绿色是航桥会话。</p></div>
+    <div class="oauth-legend"><span><i class="browser"></i>浏览器</span><span><i class="server"></i>后端直连</span><span><i class="session"></i>Session</span></div>
+  </div>
+  <div class="oauth-lab__workspace">
+    <div class="oauth-lab__timeline">
+      <svg class="oauth-lab__svg" viewBox="0 0 690 1050" role="group" aria-label="三列分别为用户浏览器、航桥 Django、QQ 平台，向下按时间排列的 11 次通信">
+        {lanes.map((lane) => <g><rect x={lane.x - 105} y="7" width="210" height="66" rx="11" class="oauth-lane-header"/><text x={lane.x} y="32" text-anchor="middle" class="oauth-lane-name">{lane.name}</text><text x={lane.x} y="53" text-anchor="middle" class="oauth-lane-hint">{lane.hint}</text><line x1={lane.x} x2={lane.x} y1="73" y2="1040" class="oauth-lifeline"/></g>)}
+        {steps.map((step, i) => {
+          const y = yOf(i);
+          const x1 = lanes[step.from].x;
+          const x2 = lanes[step.to].x;
+          const dir = x2 > x1 ? 1 : -1;
+          return <g class:list={['oauth-sequence-step',step.kind,{ 'is-active': i === 0 }]} data-step={i} role="button" tabindex="0" aria-label={`${i + 1}. ${step.label}`} aria-pressed={i===0 ? 'true' : 'false'}>
+            <rect x="0" y={y-32} width="690" height="65" rx="9" class="oauth-step-background"/>
+            <text x={(x1+x2)/2} y={y-12} text-anchor="middle" class="oauth-step-label">{String(i+1).padStart(2,'0')}  {step.label}</text>
+            <line x1={x1} x2={x2-dir*5} y1={y+5} y2={y+5} class="oauth-step-arrow"/>
+            <path d={`M ${x2-dir*12} ${y-1} L ${x2} ${y+5} L ${x2-dir*12} ${y+11}`} class="oauth-step-arrowhead"/>
+            <circle cx={x1} cy={y+5} r="3" class="oauth-step-dot"/>
+          </g>;
+        })}
+      </svg>
+      <nav class="oauth-lab__mobile-steps" aria-label="选择流程步骤">
+        {steps.map((step, i) => <button type="button" data-step={i} class:list={['oauth-mobile-step',step.kind,{ 'is-active': i===0 }]} aria-pressed={i===0 ? 'true' : 'false'}><span>{String(i+1).padStart(2,'0')}</span><b>{step.label}</b><small>{lanes[step.from].name} → {lanes[step.to].name}</small></button>)}
+      </nav>
+    </div>
+    <aside class="oauth-lab__details" aria-live="polite">
+      <span class="oauth-lab__detail-overline">STEP DETAIL / 请求解剖</span>
+      {steps.map((step,i) => <div data-step-panel={i} hidden={i!==0} class="oauth-detail-panel">
+        <span class="oauth-detail-counter">{String(i+1).padStart(2,'0')} / {steps.length}</span>
+        <h4>{step.title}</h4>
+        <p>{step.summary}</p>
+        <div class="oauth-detail-route"><span>{lanes[step.from].name}</span><span aria-hidden="true">→</span><span>{lanes[step.to].name}</span></div>
+        <span class="oauth-detail-label">请求 / 响应示意</span><pre><code>{step.request}</code></pre>
+        <div class="oauth-detail-takeaway"><b>这一环节要理解</b><p>{step.takeaway}</p></div>
+      </div>)}
+      <div class="oauth-lab__actions"><button type="button" data-prev disabled>← 上一步</button><button type="button" data-next>下一步 →</button></div>
+    </aside>
+  </div>
+  <p class="oauth-lab__footnote">全部为虚构教学数据；请求字段参考 QQ 互联网站授权码文档，安全机制参考 OAuth 2.0 规范。未向 QQ 或航桥发出真实请求。</p>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-oauth-sequence]').forEach((root) => {
+    let current = 0;
+    const elements = [...root.querySelectorAll<HTMLElement>('[data-step]')];
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-step-panel]')];
+    const prev = root.querySelector<HTMLButtonElement>('[data-prev]');
+    const next = root.querySelector<HTMLButtonElement>('[data-next]');
+    const activate = (index: number) => {
+      if (index < 0 || index >= panels.length) return;
+      current = index;
+      elements.forEach((element) => {
+        const selected = Number(element.dataset.step) === current;
+        element.classList.toggle('is-active', selected);
+        element.setAttribute('aria-pressed', String(selected));
+      });
+      panels.forEach((panel, i) => { panel.hidden = i !== current; });
+      if (prev) prev.disabled = current === 0;
+      if (next) next.disabled = current === panels.length - 1;
+    };
+    elements.forEach((element) => {
+      const index = Number(element.dataset.step);
+      element.addEventListener('click', () => activate(index));
+      if (element.tagName.toLowerCase() === 'g') element.addEventListener('keydown', (event) => {
+        const key = (event as KeyboardEvent).key;
+        if (key === 'Enter' || key === ' ') { event.preventDefault(); activate(index); }
+      });
+    });
+    prev?.addEventListener('click', () => activate(current - 1));
+    next?.addEventListener('click', () => activate(current + 1));
+  });
+</script>
+
+<style>
+  .oauth-lab { margin: 2rem 0 2.6rem; border: 1px solid var(--line-soft,#ccd5df); border-radius: 22px; background: var(--paper-soft,#f7f9fb); overflow: visible; color: var(--ink,#162334); }
+  .oauth-lab__head { padding: clamp(20px,3vw,32px); display:flex; align-items:end; justify-content:space-between; gap:25px; border-bottom:1px solid var(--line-soft,#d9e0e8); }
+  .oauth-lab__head > div:first-child { max-width:670px; }
+  .oauth-lab__overline, .oauth-lab__detail-overline {font:700 11px/1.5 var(--mono-font,monospace);letter-spacing:.13em;color:#277b95;}
+  .oauth-lab h3 {font-size:clamp(21px,2.8vw,28px);line-height:1.35;margin:9px 0;color:var(--ink,#162334);}
+  .oauth-lab__head p {font-size:14px;line-height:1.7;margin:0;color:var(--muted,#697589);}
+  .oauth-legend {display:flex;gap:12px;flex-wrap:wrap;font-size:11px;white-space:nowrap;color:var(--muted,#697589);}
+  .oauth-legend span {display:flex;align-items:center;gap:6px;}
+  .oauth-legend i {width:14px;height:3px;border-radius:2px;background:#417ac1;}
+  .oauth-legend i.server {background:#118b89;}.oauth-legend i.session {background:#279567;}
+  .oauth-lab__workspace {display:grid;grid-template-columns:minmax(0,1.45fr) minmax(260px,1fr);gap:0;}
+  .oauth-lab__timeline {padding:17px 8px 12px;min-width:0;}
+  .oauth-lab__svg {display:block;width:100%;height:auto;overflow:visible;}
+  .oauth-lane-header {fill:var(--paper,#fff);stroke:var(--line-soft,#d7dee7);}
+  .oauth-lane-name {fill:var(--ink,#162334);font-size:18px;font-weight:700;}
+  .oauth-lane-hint {fill:var(--muted,#697589);font-size:12px;}
+  .oauth-lifeline {stroke:#9aabba;stroke-dasharray:6 7;stroke-width:1.5;opacity:.7;}
+  .oauth-sequence-step {cursor:pointer;outline:none;}
+  .oauth-step-background {fill:transparent;stroke:transparent;}
+  .oauth-sequence-step:hover .oauth-step-background,.oauth-sequence-step:focus-visible .oauth-step-background {fill:#417ac1;fill-opacity:.075;stroke:#417ac1;stroke-opacity:.25;}
+  .oauth-sequence-step.is-active .oauth-step-background {fill:#417ac1;fill-opacity:.12;stroke:#417ac1;stroke-opacity:.35;}
+  .oauth-sequence-step.server.is-active .oauth-step-background {fill:#118b89;fill-opacity:.11;stroke:#118b89;stroke-opacity:.35;}
+  .oauth-sequence-step.session.is-active .oauth-step-background {fill:#279567;fill-opacity:.10;stroke:#279567;stroke-opacity:.35;}
+  .oauth-step-label {fill:var(--ink,#182332);font-size:15px;font-weight:570;}
+  .oauth-step-arrow,.oauth-step-arrowhead {stroke:#417ac1;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+  .oauth-sequence-step.server .oauth-step-arrow,.oauth-sequence-step.server .oauth-step-arrowhead {stroke:#118b89;}
+  .oauth-sequence-step.session .oauth-step-arrow,.oauth-sequence-step.session .oauth-step-arrowhead {stroke:#279567;}
+  .oauth-step-dot {fill:#417ac1;}.oauth-sequence-step.server .oauth-step-dot {fill:#118b89;}.oauth-sequence-step.session .oauth-step-dot {fill:#279567;}
+  .oauth-lab__details {border-left:1px solid var(--line-soft,#d7dee7);padding:26px 22px;min-width:0;display:flex;flex-direction:column;position:sticky;top:84px;align-self:start;max-height:calc(100vh - 100px);overflow-y:auto;background:var(--paper-soft,#f7f9fb);}
+  .oauth-detail-panel[hidden] {display:none!important;}
+  .oauth-detail-counter {display:block;margin-top:24px;color:#317da2;font:700 13px var(--mono-font,monospace);}
+  .oauth-detail-panel h4 {font-size:clamp(19px,2vw,23px);line-height:1.4;margin:10px 0;color:var(--ink,#162334);}
+  .oauth-detail-panel > p {font-size:15px;line-height:1.84;color:var(--muted,#697589);margin:0 0 17px;}
+  .oauth-detail-route {display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:12px;font-weight:650;padding:12px 0;margin-bottom:14px;border-top:1px solid var(--line-soft,#d7dee7);border-bottom:1px solid var(--line-soft,#d7dee7);}
+  .oauth-detail-route span:nth-child(2) {color:#118b89;}
+  .oauth-detail-label {display:block;font-size:12px;font-weight:650;color:var(--muted,#697589);margin-bottom:9px;}
+  .oauth-detail-panel pre {background:#162436;color:#dce8f5;padding:15px;border-radius:9px;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font-size:12px;margin:0 0 18px;}
+  .oauth-detail-panel code {color:inherit;background:none;padding:0;font-size:inherit;font-family:var(--mono-font,monospace);}
+  .oauth-detail-takeaway {border-left:3px solid #118b89;padding:8px 0 8px 12px;background:rgba(17,139,137,.055);}
+  .oauth-detail-takeaway b {display:block;font-size:12px;margin:0 0 4px;color:var(--ink,#162334);}
+  .oauth-detail-takeaway p {font-size:13px;line-height:1.75;color:var(--muted,#697589);margin:0;}
+  .oauth-lab__actions {display:flex;gap:10px;justify-content:space-between;margin-top:24px;}
+  .oauth-lab__actions button {cursor:pointer;padding:9px 12px;border:1px solid var(--line-soft,#d7dee7);background:var(--paper,#fff);color:var(--ink,#162334);border-radius:8px;font-size:12px;font-weight:600;}
+  .oauth-lab__actions button:disabled {opacity:.35;cursor:default;}.oauth-lab__actions button:focus-visible {outline:2px solid #118b89;outline-offset:2px;}
+  .oauth-lab__mobile-steps {display:none;}.oauth-lab__footnote {margin:0;padding:14px 25px;border-top:1px solid var(--line-soft,#d7dee7);color:var(--muted,#697589);font-size:12px;line-height:1.65;}
+  @media(min-width:1200px){.oauth-lab__workspace {grid-template-columns:minmax(0,1.48fr) minmax(320px,1fr);}}
+  @media(max-width:850px){.oauth-lab__head {display:block;}.oauth-legend {margin-top:14px;}.oauth-lab__workspace {grid-template-columns:1fr;}.oauth-lab__svg {display:none;}.oauth-lab__mobile-steps {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}.oauth-lab__timeline {padding:15px;}.oauth-mobile-step {appearance:none;text-align:left;display:grid;grid-template-columns:28px 1fr;column-gap:7px;row-gap:3px;padding:11px;border:1px solid var(--line-soft,#d7dee7);background:var(--paper,#fff);border-radius:9px;color:var(--ink,#162334);cursor:pointer;font-size:12px;}.oauth-mobile-step span{grid-row:span 2;font:700 12px var(--mono-font,monospace);color:#317da2;}.oauth-mobile-step b {font-weight:650;line-height:1.5;}.oauth-mobile-step small {font-size:10px;line-height:1.4;color:var(--muted,#697589);}.oauth-mobile-step.is-active{border-color:#118b89;background:rgba(17,139,137,.09);}.oauth-mobile-step:focus-visible{outline:2px solid #118b89;outline-offset:2px;}.oauth-lab__details {border-left:0;border-top:1px solid var(--line-soft,#d7dee7);padding:20px;position:static;max-height:none;overflow:visible;}.oauth-detail-counter {margin-top:12px;}}
+  @media(max-width:480px){.oauth-lab__mobile-steps {grid-template-columns:1fr;}.oauth-lab__head {padding:19px;}.oauth-lab__timeline {padding:12px;}.oauth-lab__details {padding:18px;}}
+</style>

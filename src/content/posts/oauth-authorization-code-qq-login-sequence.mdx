@@ -1,0 +1,183 @@
+---
+title: "OAuth 登录到底是怎么实现的？从 QQ 登录看懂 Code、Token 与回调地址"
+description: "用可交互的浏览器—Django—QQ 三方时序图，拆解授权码登录、Token 交换、Session 建立、回调地址攻击，以及 OAuth 协议与平台准入限制的真正区别。"
+date: 2026-10-30T15:02:00+08:00
+category: "技术"
+tags:
+  - "技术排障"
+minutes: 13
+featured: false
+pinned: false
+archived: false
+draft: false
+private: false
+---
+
+import OAuthSequenceExplorer from '../../components/OAuthSequenceExplorer.astro';
+import OAuthRedirectThreat from '../../components/OAuthRedirectThreat.astro';
+
+很多网站提供「使用 QQ 登录」「微信授权登录」「钉钉授权登录」，点一下就能进入另一个系统。表面上只是跳转两次，背后却有一个容易混淆的问题：
+
+**QQ 从没把密码交给网站，网站凭什么相信这个人已经登录？**
+
+更进一步：授权完成后，QQ 还需要检查这个人在网站里的每一次操作吗？网站部署在内网，又能不能接收 QQ 的授权结果？
+
+答案藏在三个不同的凭证里：**Code、Access Token、Session**。下面用一个虚构的「航桥 Django 网站接入 QQ 登录」案例，把三方之间的消息从头到尾拆开。
+
+> 本文是 OAuth 2.0 授权码模式的原理教学，不代表航桥已经接入 QQ 登录。示意域名、账号、Token 都是虚构数据。QQ 具体接口细节以其官方文档为准。
+
+## 先认清三方分别干什么
+
+**用户浏览器**负责展示页面、执行跳转、携带 Cookie；**航桥 Django**负责管理本站员工账号和权限；**QQ 平台**负责验证 QQ 用户身份、确认授权并签发访问令牌。
+
+严格说，QQ 内部又分为处理授权的服务器和提供用户资料的资源接口。为了让主线更容易阅读，时序图把它们合并为「QQ 平台」，不会因此改变消息的方向。
+
+这里最重要的前提是：**浏览器能去 QQ，也能回到航桥；但 QQ 的服务器并不需要主动连进航桥，才能完成浏览器回调。**
+
+## 一张交互时序图，看懂完整授权链路
+
+在下图中，三列分别是浏览器、Django、QQ。时间由上向下；箭头从谁指向谁，就表示谁向谁发送消息。**点击箭头可以查看这一步的请求参数、返回结果与解释。**
+
+<OAuthSequenceExplorer />
+
+这张图可以概括为四段，连续理解即可：
+
+**首先是发起授权（01–03）。** 浏览器向 Django 请求 QQ 登录，Django 生成 QQ 授权地址，浏览器跟着地址进入 QQ。授权请求中除了应用编号 `client_id`，还包含返回航桥的 `redirect_uri` 和用于关联本次请求的 `state`。
+
+**然后是浏览器带 Code 回来（04–05）。** QQ 登录、授权成功后，向浏览器回复带有 `Location` 的跳转指令。浏览器访问航桥的回调接口，并在地址里带上临时 Code。注意这里不是「QQ 服务器主动向航桥发送 Token」。
+
+**接着是 Django 私下交换令牌与查询身份（06–09）。** Django 拿 Code 主动请求 QQ；QQ 校验必要条件后返回 Access Token。Django 再使用 Token 查询 QQ 用户的 OpenID（一种在该应用范围内标识用户的编号），并在自己的数据库里找到已经绑定的员工账号。
+
+**最后是航桥自己管理登录（10–11）。** Django 建立自己的 Session，通过 Cookie 把会话编号交给浏览器。此后用户访问工作记录等业务功能，Django 验证自己的 Session 和操作权限，**不必每次再访问 QQ**。
+
+## Code、Token、Session 不是同一个东西
+
+| 凭证 | 谁发放 | 谁持有 | 实际用途 |
+| --- | --- | --- | --- |
+| **Code**（授权码） | QQ | 经浏览器带回 Django | 短期、一次性地交换 Token |
+| **Access Token**（访问令牌） | QQ | Django 服务端 | 访问 QQ 允许的资源接口 |
+| **Session ID**（会话编号） | Django | 浏览器 Cookie | 让 Django 识别当前已登录员工 |
+
+这里还有个经常被误解的词：**Client Secret 与 Access Token 不是一回事**。前者是 QQ 分配给航桥的应用级机密，用于证明申请换 Token 的是合法客户端；后者则是 QQ 在用户授权后签发的、有范围和期限的访问凭证。
+
+所以不能说「Token 是 QQ 和航桥约定好的固定密钥」。更准确的说法是：**航桥使用自己的应用凭证与一次性 Code，向 QQ 换来一个被授权的 Token。**
+
+为什么不直接让浏览器拿到 Token？因为浏览器里暴露的内容更容易被恶意脚本、浏览器扩展或其他攻击者窃取。如果盗取了有效的 Access Token，攻击者可能在 Token 允许的权限范围内读取 QQ 资料，或调用已获授权的其他接口；**但这不等于拿到了 QQ 密码，也不等于能操作 QQ 的所有功能**。
+
+而 Code 虽然不能直接访问 QQ 资源，却也并非「泄露了无所谓」：它如果被成功冒用，仍可能换出 Token。这就是后面各种安全机制存在的原因。
+
+## 为什么要注册回调地址？攻击者能不能偷偷改掉？
+
+`redirect_uri` 是一个**返回地址**：QQ 验证用户身份与授权后，让**浏览器**回到哪个网站接口。
+
+应用开发者需要事先在 QQ 平台登记这个地址。浏览器发起的授权请求里也要携带对应的 `redirect_uri`；QQ 必须检查请求地址与允许的地址是否匹配，而不是听任浏览器指定任意网站。
+
+<OAuthRedirectThreat />
+
+上面的场景演示了**第一道保护：防止授权请求把 Code 发往未经登记的第三方网站**。
+
+但它不是万能的：如果浏览器已经收到了合法回调 URL，随后 Code 被恶意软件截获、复制给别人，或者合法回调接口本身存在任意跳转漏洞，就会进入另一类风险。
+
+现代 OAuth 2.0 安全最佳实践对此有更完整的要求：
+
+| 机制 | 用来防什么 | 直观理解 |
+| --- | --- | --- |
+| **回调地址精确匹配** | 随意换成攻击者的网址 | QQ 只接受注册过的返回目的地 |
+| **State** | 让别人的授权结果混进当前登录 | 这次回调是不是刚才那个浏览器发起的 |
+| **Client Secret** | 冒充航桥服务端 | 交换令牌时需要应用身份证明 |
+| **PKCE** | Code 被窃取后冒用 | 还需要证明自己是最初发起授权的一方 |
+| **Code 一次性、短期有效** | 被长期、重复交换 | 用过即失效，过期不能再兑换 |
+| **HTTPS** | 网络中窃听或篡改敏感凭证 | 保护浏览器与服务器之间的传输 |
+
+其中 PKCE 不只是一个缩写：Django 在发起授权时生成随机验证信息，先提供其变换后的挑战值，交换 Token 时再提交原始验证信息。QQ 若支持并执行 PKCE 检查，即使攻击者只拿到 Code，也缺少另一半证明。**这是现代 OAuth 标准建议的措施；不能未经核实就断言 QQ 当前网站登录接口已经支持同样的 PKCE 参数。**
+
+详细安全约束可参考 [IETF OAuth 2.0 Security Best Current Practice（RFC 9700）](https://www.rfc-editor.org/rfc/rfc9700.html)。
+
+## QQ Token 过期，航桥还会继续登录吗？
+
+通常会，只要航桥自己的 Session 仍然有效。
+
+例如用户上午通过 QQ 完成授权，Django 建立自己的 Session；下午 QQ 的 Token 过期，或用户在 QQ 修改密码。**这些变化并不会天然通知 Django 去销毁已有的航桥 Session。** 航桥可继续依据自己的会话与权限规则提供服务。
+
+只有航桥确实需要再次调用 QQ 用户资源接口时，才需要有效的 QQ Token。若希望 QQ 撤销授权等安全事件立即让航桥下线，必须确认平台是否提供相应通知或核查机制，再由航桥专门实现。
+
+但也别把航桥的 Cookie 当作绝对安全：如果有效 Session ID 被窃取，攻击者同样可能冒用员工身份。因此 Session 需要服务端过期与撤销机制，并使用 HttpOnly、Secure、SameSite 等 Cookie 保护。
+
+## 最容易踩的坑：OAuth 协议要求，不等于 QQ 平台准入限制
+
+**这是两层不同的规则。** 混淆之后，很容易得出「OAuth 必须使用公网服务器」这样并不准确的结论。
+
+<div className="oauth-boundaries">
+  <div className="oauth-boundaries__protocol">
+    <span>01 / PROTOCOL</span>
+    <h3>OAuth 协议与安全规范</h3>
+    <p>规定授权与 Token 怎么传递，如何校验回调地址，如何防止授权码遭到盗用。</p>
+    <b>回答：登录授权的过程怎样安全完成？</b>
+  </div>
+  <div className="oauth-boundaries__platform">
+    <span>02 / PLATFORM</span>
+    <h3>QQ 平台的接入与审核规则</h3>
+    <p>额外规定网站可注册什么地址、是否接受内网 IP、是否要求备案，以及应用怎样通过审核。</p>
+    <b>回答：什么样的网站被允许接入 QQ？</b>
+  </div>
+</div>
+
+例如：现代 OAuth 安全规范要求严格验证注册的回调地址，并对安全传输提出要求。这属于**协议与安全基线**，并不是 QQ 独创的规定。
+
+但 QQ 互联官方的「回调地址相关问题」明确写明，网站回调地址**不能使用端口号和 localhost，必须是外网可以访问的域名**；「应用审核规范」还要求网站地址及回调地址完成工信部备案。这些属于**QQ 平台接入规则**，不能泛化成「所有 OAuth 实现都必须如此」。
+
+同样地，不应反向理解为「OAuth 允许任何纯 HTTP 的内网回调都是安全的」。正式部署仍须满足协议的安全传输要求以及具体平台对回调地址的约束。
+
+相关来源：[QQ 互联：回调地址相关问题](https://wiki.connect.qq.com/回调地址常见问题及修改方法/) · [QQ 互联：应用审核规范](https://wiki.connect.qq.com/网站审核规范/)。
+
+## 航桥在内网，OAuth 技术上能完成吗？
+
+先只看**网络方向**，暂时不考虑 QQ 的额外准入限制：
+
+| 通信方向 | 需要连通吗？ | 原因 |
+| --- | --- | --- |
+| 用户浏览器 → QQ | 需要 | 打开 QQ 的授权页面 |
+| 用户浏览器 → 航桥内网 | 需要 | 携带 Code 回调 Django |
+| 航桥 Django → QQ | 需要 | 交换 Token、查询 QQ 用户身份 |
+| QQ 服务器 → 航桥内网 | **授权码回调不需要** | QQ 给浏览器发跳转指令，而不是主动向 Django 推送 Code |
+
+因此，从**授权码回调的通信机制**看，QQ 不需要直接连进航桥的内网。理论上用户浏览器可以在访问 QQ 公网后，再跟随跳转返回自己能访问的内部服务器。
+
+然而对于真实 QQ 互联接入，官方已经对网站回调地址提出外网域名等限制。以 `192.168.x.x:18888` 为回调地址，**不符合已查到的 QQ 互联网站应用要求**。即使用一个域名在公司内解析为内网地址，也不能直接推断 QQ 的平台审核一定允许。
+
+换句话说：**授权码能不能通过浏览器传回内网，是网络与协议问题；QQ 是否允许你这样注册，是平台问题。**
+
+## OAuth、OIDC 与单点登录，顺便分清楚
+
+严格说，OAuth 2.0 主要用于**授权**，并不单独定义通用的用户登录身份认证协议；OpenID Connect（OIDC）在其基础上加入了标准身份认证能力。QQ 互联的网站登录则通过授权后获取 OpenID，映射站内用户身份。
+
+单点登录（SSO）描述的是**一次登录后可以访问多个受信任系统的效果**，并不是 OAuth 的另一个同义名称。独立系统间可以用 OIDC 实现 SSO，而一个 Django 项目里的多个 App 也可以直接共享 Session，无需引入外部授权平台。
+
+记住三句话就够了：
+
+**Code 是授权交接，Token 是 QQ 资源访问凭证，Session 是航桥自己的登录状态。**
+
+**回调由浏览器完成，不代表 QQ 服务器需要主动访问航桥。**
+
+**OAuth 的协议机制与 QQ 的平台准入条件有关联，但不能混为一谈。**
+
+---
+
+### 参考资料与适用边界
+
+- [RFC 6749 — OAuth 2.0 Authorization Framework](https://www.rfc-editor.org/rfc/rfc6749)：授权码模式及角色定义。
+- [RFC 9700 — OAuth 2.0 Security Best Current Practice](https://www.rfc-editor.org/rfc/rfc9700.html)：回调地址严格校验、PKCE、开放重定向等现代安全要求。
+- [QQ 互联：使用 Authorization Code 获取 Access Token](https://wiki.connect.qq.com/使用authorization_code获取access_token/)：QQ 网站模式的请求字段与授权码交换。
+- [QQ 互联：获取用户 OpenID](https://wiki.connect.qq.com/获取用户openid_oauth2-0/)：如何从 Token 取得身份标识。
+- [QQ 互联：回调地址相关问题](https://wiki.connect.qq.com/回调地址常见问题及修改方法/)；[应用审核规范](https://wiki.connect.qq.com/网站审核规范/)：QQ 平台接入限制，不代表所有 OAuth 提供商。
+
+<style>{`
+  .oauth-boundaries {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:24px 0 28px;}
+  .oauth-boundaries > div {border:1px solid var(--line-soft,#d8e1ea);background:var(--paper-soft,#f8fafc);padding:22px;border-radius:16px;}
+  .oauth-boundaries span {font:700 11px var(--mono-font,monospace);letter-spacing:.12em;color:#267e9e;}
+  .oauth-boundaries h3 {margin:14px 0 8px;font-size:19px;line-height:1.45;color:var(--ink,#172435);}
+  .oauth-boundaries p {font-size:14px;line-height:1.8;color:var(--muted,#687589);margin:0 0 18px;}
+  .oauth-boundaries b {font-size:13px;line-height:1.7;color:var(--ink,#172435);}
+  .oauth-boundaries__platform {border-top:3px solid #118b89!important;}.oauth-boundaries__protocol {border-top:3px solid #427ab5!important;}
+  @media(max-width:640px){.oauth-boundaries{grid-template-columns:1fr;}}
+`}</style>

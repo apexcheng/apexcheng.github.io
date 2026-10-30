@@ -1,0 +1,74 @@
+<section class="oauth-threat" data-oauth-threat aria-label="交互演示：合法和伪造的 OAuth 回调地址">
+  <div class="oauth-threat__intro">
+    <div><span>REDIRECT URI / SECURITY LAB</span><h3>如果有人把回调地址改成自己的呢？</h3><p>切换授权请求，观察 QQ 如何根据事先登记的地址决定是否发放 Code。</p></div>
+    <div class="oauth-threat__tabs" role="group" aria-label="选择回调地址场景">
+      <button type="button" data-scenario-btn="normal" aria-pressed="true" class="is-active">正常回调</button>
+      <button type="button" data-scenario-btn="attack" aria-pressed="false">恶意替换</button>
+    </div>
+  </div>
+  <div class="oauth-threat__registered">
+    <small>QQ 预先登记 / Registration</small>
+    <code>https://demo.example.com/auth/qq/callback</code>
+  </div>
+  <div data-scenario="normal" class="oauth-threat__scenario">
+    <div class="oauth-threat__path">
+      <div><small>浏览器发起请求</small><strong>redirect_uri =</strong><code>https://demo.example.com/auth/qq/callback</code></div>
+      <span aria-hidden="true" class="oauth-threat__connector">→</span>
+      <div><small>QQ 核对</small><strong class="oauth-threat__status success">与登记地址匹配</strong><p>继续验证用户身份及授权，符合条件后才生成 Code 并让浏览器回到航桥。</p></div>
+    </div>
+    <p class="oauth-threat__outcome success"><span>✓</span> 返回浏览器：302 Location → 合法回调地址 + Code</p>
+  </div>
+  <div data-scenario="attack" class="oauth-threat__scenario" hidden>
+    <div class="oauth-threat__path">
+      <div><small>攻击者篡改请求</small><strong>redirect_uri =</strong><code>https://attacker.example/steal</code></div>
+      <span aria-hidden="true" class="oauth-threat__connector">→</span>
+      <div><small>QQ 核对</small><strong class="oauth-threat__status danger">与登记地址不符</strong><p>拒绝这次授权请求，不应把 Code 发送到攻击者指定的网站。</p></div>
+    </div>
+    <p class="oauth-threat__outcome danger"><span>×</span> 请求被拒绝：攻击者不能凭空替换 redirect_uri 来接收 Code</p>
+  </div>
+  <footer>注意：这是<b>授权请求中的回调地址校验</b>。如果浏览器里的 Code 已被窃取，仍需要客户端身份校验、PKCE、Code 单次使用等措施防护；两类风险不能混为一谈。</footer>
+</section>
+<script>
+  document.querySelectorAll<HTMLElement>('[data-oauth-threat]').forEach((root) => {
+    root.querySelectorAll<HTMLButtonElement>('[data-scenario-btn]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.scenarioBtn;
+        root.querySelectorAll<HTMLButtonElement>('[data-scenario-btn]').forEach((item) => {
+          const active = item.dataset.scenarioBtn === target;
+          item.classList.toggle('is-active', active);
+          item.setAttribute('aria-pressed', String(active));
+        });
+        root.querySelectorAll<HTMLElement>('[data-scenario]').forEach((scenario) => { scenario.hidden = scenario.dataset.scenario !== target; });
+      });
+    });
+  });
+</script>
+<style>
+  .oauth-threat {background:var(--paper-soft,#f7f9fb);border:1px solid var(--line-soft,#d7dee7);border-radius:20px;overflow:hidden;margin:30px 0;color:var(--ink,#162334);}
+  .oauth-threat__intro {display:flex;justify-content:space-between;align-items:end;gap:18px;padding:25px 25px 20px;}
+  .oauth-threat__intro > div:first-child {max-width:580px;}
+  .oauth-threat__intro span {font:700 11px var(--mono-font,monospace);letter-spacing:.12em;color:#277b95;}
+  .oauth-threat__intro h3 {margin:10px 0;font-size:clamp(20px,2.7vw,27px);color:var(--ink,#162334);line-height:1.4;}
+  .oauth-threat__intro p {margin:0;font-size:14px;color:var(--muted,#697589);line-height:1.7;}
+  .oauth-threat__tabs {display:flex;flex-shrink:0;border:1px solid var(--line-soft,#d7dee7);padding:3px;border-radius:11px;background:var(--paper,#fff);}
+  .oauth-threat__tabs button {border:0;background:transparent;color:var(--muted,#697589);padding:9px 13px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:650;}
+  .oauth-threat__tabs button.is-active {background:#13536d;color:white;}
+  .oauth-threat__tabs button:focus-visible {outline:2px solid #118b89;outline-offset:2px;}
+  .oauth-threat__registered {padding:15px 24px;background:rgba(22,83,109,.055);border-top:1px solid var(--line-soft,#d7dee7);border-bottom:1px solid var(--line-soft,#d7dee7);}
+  .oauth-threat__registered small,.oauth-threat__path small {display:block;font-size:11px;color:var(--muted,#697589);margin-bottom:8px;}
+  .oauth-threat code {font-family:var(--mono-font,monospace);font-size:12px;overflow-wrap:anywhere;line-height:1.7;}
+  .oauth-threat__registered code {font-weight:650;color:var(--ink,#162334);}
+  .oauth-threat__scenario[hidden] {display:none!important;}
+  .oauth-threat__scenario {padding:22px 24px;}
+  .oauth-threat__path {display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr);align-items:stretch;gap:12px;}
+  .oauth-threat__path > div {padding:16px;border:1px solid var(--line-soft,#d7dee7);border-radius:12px;background:var(--paper,#fff);min-width:0;}
+  .oauth-threat__path strong {display:block;margin-bottom:8px;font-size:13px;}
+  .oauth-threat__path p {font-size:13px;line-height:1.75;margin:8px 0 0;color:var(--muted,#697589);}
+  .oauth-threat__connector {align-self:center;font-size:24px;color:#7d93a3;text-align:center;}
+  .oauth-threat__status.success {color:#148266;}.oauth-threat__status.danger {color:#be4d48;}
+  .oauth-threat__outcome {padding:13px 14px;border-radius:9px;font-size:13px;line-height:1.6;margin:14px 0 0;font-weight:650;display:flex;gap:9px;align-items:start;}
+  .oauth-threat__outcome.success {background:rgba(20,130,102,.09);color:#148266;}.oauth-threat__outcome.danger {background:rgba(190,77,72,.09);color:#be4d48;}
+  .oauth-threat__outcome span {font-weight:800;}
+  .oauth-threat footer {border-top:1px solid var(--line-soft,#d7dee7);font-size:12px;line-height:1.8;color:var(--muted,#697589);padding:15px 24px;}
+  @media(max-width:650px){.oauth-threat__intro{display:block;padding:20px;}.oauth-threat__tabs{margin-top:18px;width:max-content;}.oauth-threat__registered{padding:14px 20px;}.oauth-threat__scenario{padding:18px;}.oauth-threat__path{grid-template-columns:1fr;}.oauth-threat__connector{transform:rotate(90deg);}.oauth-threat footer{padding:15px 20px;}}
+</style>

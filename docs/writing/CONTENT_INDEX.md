@@ -8,6 +8,7 @@
 
 | 文件 | 分类 | 主题概览 | 适合什么时候参考 |
 | --- | --- | --- | --- |
+| `src/content/posts/oauth-authorization-code-qq-login-sequence.mdx` | `技术` | 用浏览器、Django、QQ 三泳道可交互时序图逐步解释 OAuth 授权码、Token、OpenID、Session；另有恶意回调地址切换，区分 OAuth 安全机制和 QQ 平台接入限制及内网回调的网络边界 | 写 OAuth 授权码、第三方登录、回调校验、PKCE、内网网站 OAuth、认证与授权区别等图解教程时参考 |
 | `src/content/posts/ai-work-future-history-distribution.mdx` | `生活与思考` | 从 AI 对客服、运营、销售和工厂的任务重构切入，区分任务与岗位、未来人类劳动与收入分配，借恩格斯停顿、美国工资大压缩、信息革命和工时史解释技术收益如何分配 | 写 AI 与就业、未来劳动、技术革命历史、生产率与工资分配、社会保障和公共政策类观点文章时参考 |
 | `src/content/posts/from-llm-to-ai-agent-visual-guide.mdx` | `技术` | 通过电商评价分析连续案例与五张静态机制图，介绍机器学习、Transformer、LLM、RAG、工具调用、Workflow 与 Agent 的历史关系、工作原理和执行权限边界 | 写 AI 入门认知、LLM 与 Agent 区别、工作流选型、模型调用与工具执行基础原理文章时参考 |
 | `src/content/posts/ecommerce-profit-trust-verification.mdx` | `经营与数据` | 从天猫链接利润模型中的商品归属歧义、包裹成本守恒、无归属成本、真实零与未知值、退款预测和刷新验收展开，进一步讨论技术焦虑、从看不懂到否定复杂系统的认知路径、三类复杂度与独立判断 | 写数据可信度、利润模型核验、技术焦虑、复杂系统评价、业务规则与技术责任边界、经营报表审查时参考 |
