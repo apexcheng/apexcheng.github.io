@@ -28,7 +28,7 @@ describe('series feature', () => {
   });
 
   it('connects series navigation with article reading', () => {
-    expect(layoutSource).toContain("active?: 'home' | 'articles' | 'series' | 'projects' | 'about'");
+    expect(layoutSource).toContain("active?: 'home' | 'articles' | 'series' | 'projects' | 'prompts' | 'about'");
     expect(headerSource).toContain("{ id: 'articles', label: '文章', path: '/articles/' }");
     expect(headerSource).not.toContain("{ id: 'series', label: '系列', path: '/series/' }");
     expect(headerSource).toContain("active === 'series' && item.id === 'articles'");
