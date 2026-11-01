@@ -6,12 +6,13 @@ import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
 import { categories } from '../data/categories';
 
-interface Props { active: 'home' | 'articles' | 'series' | 'projects' | 'about' }
+interface Props { active: 'home' | 'articles' | 'series' | 'projects' | 'prompts' | 'about' }
 const { active } = Astro.props;
 const navigation = [
   { id: 'home', label: '首页', path: '/' },
   { id: 'home-v1', label: '视觉晶蓝首页', path: '/home-v1/' },
   { id: 'articles', label: '文章', path: '/articles/' },
+  { id: 'prompts', label: '提示词库', path: '/prompts/' },
   { id: 'projects', label: '项目', path: '/projects/' },
   { id: 'about', label: '关于', path: '/about/' },
 ];

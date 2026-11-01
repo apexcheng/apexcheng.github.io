@@ -9,7 +9,7 @@ export const GET: APIRoute = async ({ site }) => {
   const posts = (await getCollection('posts')).filter((post) => !post.data.draft && !post.data.private && !post.data.archived);
   const tags = [...new Set(posts.flatMap((post) => post.data.tags))];
   const paths = [
-    '/', '/articles/', '/series/', '/projects/', '/about/',
+    '/', '/articles/', '/series/', '/projects/', '/prompts/', '/about/',
     ...categoryMetaList.map((category) => `/articles/category/${encodeURIComponent(category.name)}/`),
     ...tags.map((tag) => `/articles/tag/${encodeURIComponent(tag)}/`),
     ...posts.map((post) => `/articles/${post.slug}/`),
