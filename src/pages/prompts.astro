@@ -1,5 +1,5 @@
 ---
-import { Check, ClipboardCopy, ChevronDown } from '@lucide/astro';
+import { ClipboardCopy, ChevronDown } from '@lucide/astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import { promptEntries } from '../data/prompts';
 ---
@@ -11,6 +11,38 @@ import { promptEntries } from '../data/prompts';
       <h1>提示词库<span class="prompt-count">{String(promptEntries.length).padStart(2, '0')}</span></h1>
       <p>把反复使用的指令整理成可直接执行的文本。找到需要的提示词，一键复制即可使用。</p>
     </header>
+
+    <div class="prompt-layout">
+      <aside class="prompt-index" aria-label="提示词目录">
+        <nav class="prompt-index-desktop" aria-label="提示词目录">
+          <p class="prompt-index-heading">目录 <span>{promptEntries.length} 条</span></p>
+          <ol class="prompt-index-links">
+            {promptEntries.map((entry, index) => (
+              <li>
+                <a href={`#${entry.id}`} data-prompt-index-link>
+                  <span class="prompt-index-number">{String(index + 1).padStart(2, '0')}</span>
+                  <span>{entry.title}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+        <details class="prompt-index-mobile">
+          <summary>提示词目录 <span>{promptEntries.length} 条</span> <ChevronDown size={16} aria-hidden="true" /></summary>
+          <nav aria-label="提示词目录">
+            <ol class="prompt-index-links">
+              {promptEntries.map((entry, index) => (
+                <li>
+                  <a href={`#${entry.id}`} data-prompt-index-link>
+                    <span class="prompt-index-number">{String(index + 1).padStart(2, '0')}</span>
+                    <span>{entry.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        </details>
+      </aside>
 
     <section class="prompt-list" aria-label="全部提示词">
       {promptEntries.map((entry, index) => (
@@ -33,10 +65,38 @@ import { promptEntries } from '../data/prompts';
         </article>
       ))}
     </section>
+    </div>
   </main>
 </SiteLayout>
 
 <script>
+  const promptSections = Array.from(document.querySelectorAll<HTMLElement>('.prompt-entry'));
+  const indexLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-prompt-index-link]'));
+  let indexUpdateScheduled = false;
+
+  function updateCurrentPrompt() {
+    indexUpdateScheduled = false;
+    const current = [...promptSections].reverse().find((section) => section.getBoundingClientRect().top <= 150) ?? promptSections[0];
+    indexLinks.forEach((link) => {
+      if (link.hash === `#${current?.id}`) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+  }
+
+  window.addEventListener('scroll', () => {
+    if (indexUpdateScheduled) return;
+    indexUpdateScheduled = true;
+    requestAnimationFrame(updateCurrentPrompt);
+  }, { passive: true });
+  window.addEventListener('load', updateCurrentPrompt);
+  updateCurrentPrompt();
+
+  document.querySelectorAll<HTMLAnchorElement>('.prompt-index-mobile a').forEach((link) => {
+    link.addEventListener('click', () => {
+      link.closest('details')?.removeAttribute('open');
+    });
+  });
+
   document.querySelectorAll<HTMLButtonElement>('[data-copy-prompt]').forEach((button) => {
     button.addEventListener('click', async () => {
       const entry = button.closest('.prompt-entry');
@@ -69,7 +129,20 @@ import { promptEntries } from '../data/prompts';
   .prompt-intro h1 { display: flex; align-items: start; gap: 16px; font-size: clamp(42px, 6vw, 72px); font-weight: 600; line-height: 1.13; letter-spacing: -.045em; margin: 0; }
   .prompt-count { margin-top: 7px; font-size: 14px; font-family: var(--mono-font); font-weight: 400; letter-spacing: 0; color: var(--muted); }
   .prompt-intro > p:last-child { max-width: 610px; margin: 24px 0 0; font-size: 16px; line-height: 1.9; }
-  .prompt-entry { padding: 34px 0 25px; border-bottom: 1px solid var(--line); }
+  .prompt-layout { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: clamp(32px, 5vw, 70px); align-items: start; }
+  .prompt-index { grid-column: 2; grid-row: 1; min-width: 0; position: sticky; top: 90px; }
+  .prompt-index-desktop { max-height: calc(100vh - 110px); overflow-y: auto; padding: 32px 0 16px; scrollbar-width: thin; }
+  .prompt-index-heading { display: flex; justify-content: space-between; margin: 0 0 16px; padding-left: 12px; color: var(--ink); font-size: 13px; font-weight: 650; }
+  .prompt-index-heading span { color: var(--soft); font: 11px var(--mono-font); }
+  .prompt-index-links { list-style: none; margin: 0; padding: 0; }
+  .prompt-index-links a { display: flex; align-items: baseline; gap: 12px; padding: 10px 12px; border-left: 2px solid transparent; color: var(--muted); font-size: 12px; line-height: 1.55; text-decoration: none; transition: color .15s, border-color .15s, background .15s; }
+  .prompt-index-links a:hover { color: var(--ink); }
+  .prompt-index-links a[aria-current="location"] { border-left-color: var(--blue); color: var(--blue); background: var(--paper); font-weight: 600; }
+  .prompt-index-number { flex: none; color: var(--soft); font: 11px var(--mono-font); }
+  .prompt-index-links a[aria-current="location"] .prompt-index-number { color: var(--blue); }
+  .prompt-index-mobile { display: none; }
+  .prompt-list { min-width: 0; grid-column: 1; grid-row: 1; }
+  .prompt-entry { padding: 34px 0 25px; border-bottom: 1px solid var(--line); scroll-margin-top: 95px; }
   .prompt-entry-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
   .prompt-heading-copy { min-width: 0; }
   .prompt-entry-meta { display: flex; gap: 16px; align-items: center; margin: 0 0 14px; font-size: 11px; letter-spacing: .06em; }
@@ -87,6 +160,19 @@ import { promptEntries } from '../data/prompts';
   .prompt-details[open] summary { border-bottom: 1px solid var(--line-soft); }
   .prompt-content { display: block; margin: 0; padding: 24px; white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/2 var(--mono-font); color: var(--ink); background: transparent; tab-size: 2; }
   .prompt-copy-feedback { min-height: 20px; margin: 7px 0 0; color: var(--blue); font-size: 12px; }
+  @media (max-width: 850px) {
+    .prompt-layout { display: block; }
+    .prompt-index { position: static; }
+    .prompt-index-desktop { display: none; }
+    .prompt-index-mobile { display: block; margin-top: 25px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+    .prompt-index-mobile summary { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 12px 16px; cursor: pointer; list-style: none; font-size: 14px; font-weight: 600; }
+    .prompt-index-mobile summary::-webkit-details-marker { display: none; }
+    .prompt-index-mobile summary span { margin-left: auto; color: var(--soft); font: 11px var(--mono-font); }
+    .prompt-index-mobile summary svg { transition: transform .2s; }
+    .prompt-index-mobile[open] summary svg { transform: rotate(180deg); }
+    .prompt-index-mobile nav { max-height: 50vh; overflow-y: auto; border-top: 1px solid var(--line-soft); padding: 8px 12px 12px; }
+    .prompt-index-links a { min-height: 42px; align-items: center; font-size: 13px; }
+  }
   @media (max-width: 650px) {
     .prompt-library { padding-top: 42px; padding-bottom: 80px; }
     .prompt-entry-heading { display: block; }
