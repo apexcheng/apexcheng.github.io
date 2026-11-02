@@ -62,7 +62,9 @@ describe('series feature', () => {
     expect(seriesDetailSource).toContain('id={stage.anchor}');
     expect(seriesDetailSource).toContain('href={`#${stage.anchor}`}');
     expect(seriesDetailSource).toContain('id="series-resources"');
-    expect(seriesDetailSource).toContain('posts.find((post) => post.data.seriesOrder === 11)');
+    expect(seriesDetailSource).toContain('href={withBase(series.extraResource.href)}');
+    expect(seriesDetailSource).toContain('href={withBase(series.resource.href)}');
+    expect(seriesDataSource).toContain('Python 正式考核包');
     expect(seriesDetailSource).toContain('/articles/${post.slug}/');
   });
 });

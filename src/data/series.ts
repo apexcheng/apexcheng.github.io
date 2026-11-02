@@ -50,6 +50,18 @@ export const seriesMetaList = [
     title: 'Python 零基础到简单脚本',
     description: '用订单、SKU、文件和 JSON 贯穿 11 篇图解，从看懂代码状态开始，逐步完成读取、校验、筛选、汇总和输出的完整脚本。',
     order: 5,
+    extraResource: {
+      title: 'Python 实操练习包',
+      description: '保留第 11 篇的 20 道入门自测题，包含练习脚本、文本样例和操作说明，适合学完基础章节后巩固。',
+      href: '/files/python-basic-assessment/Python实操练习包.zip',
+      meta: 'ZIP · 20 道练习 + Python 脚本 + 测试文本',
+    },
+    resource: {
+      title: 'Python 正式考核包',
+      description: '9 道实操题，基础能力 60 分、进阶能力 40 分；包含试卷、答题模板、订单数据及 AI 评分规则，不预置成绩汇总。',
+      href: '/files/python-basic-assessment/Python正式考核包.zip',
+      meta: 'ZIP · 100 分 · 90 分钟 · AI 辅助评分',
+    },
     learningStages: [
       {
         range: '01–03',
@@ -74,9 +86,9 @@ export const seriesMetaList = [
       },
       {
         range: '11',
-        title: '综合验收',
-        description: '用 20 道题检查运行追踪、错误定位和完整任务能力。',
-        kind: '验收',
+        title: '综合练习',
+        description: '用 20 道题练习运行追踪、错误定位和完整脚本；正式考核使用独立题包。',
+        kind: '练习',
       },
     ],
   },

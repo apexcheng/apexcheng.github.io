@@ -33,7 +33,7 @@ const stageGroups = learningStages?.map((stage, index) => {
     posts: posts.filter((post) => (post.data.seriesOrder ?? 0) >= start && (post.data.seriesOrder ?? 0) <= end),
   };
 });
-const hasResources = Boolean(('extraResource' in series && series.extraResource) || series.resource || series.id === 'python-basics');
+const hasResources = Boolean(('extraResource' in series && series.extraResource) || series.resource);
 ---
 
 <SiteLayout title={series.title} active="series" description={series.description}>
@@ -173,10 +173,10 @@ const hasResources = Boolean(('extraResource' in series && series.extraResource)
       )}
 
       {'extraResource' in series && series.extraResource && (
-        <section class="series-resource-card" id="series-resources" aria-label="函数实操练习下载">
+        <section class="series-resource-card" id="series-resources" aria-label="实操练习下载">
           <div class="series-resource-content">
-            <p class="eyebrow">函数实操练习</p>
-            <p class="series-resource-timing">适合在基础主线学习过程中动手练习，不含参考答案。</p>
+            <p class="eyebrow">{series.id === 'python-basics' ? 'Python 实操练习' : '函数实操练习'}</p>
+            <p class="series-resource-timing">{series.id === 'python-basics' ? '完成基础章节后用于自测，原有 20 题完整保留。' : '适合在基础主线学习过程中动手练习，不含参考答案。'}</p>
             <h2>{series.extraResource.title}</h2>
             <p>{series.extraResource.description}</p>
             <span>{series.extraResource.meta}</span>
@@ -186,7 +186,7 @@ const hasResources = Boolean(('extraResource' in series && series.extraResource)
             href={withBase(series.extraResource.href)}
             download
           >
-            下载函数实操练习包 <span aria-hidden="true">↓</span>
+            {series.id === 'python-basics' ? '下载 Python 实操练习包' : '下载函数实操练习包'} <span aria-hidden="true">↓</span>
           </a>
         </section>
       )}
@@ -194,7 +194,7 @@ const hasResources = Boolean(('extraResource' in series && series.extraResource)
         <section class="series-resource-card" id={'extraResource' in series ? undefined : 'series-resources'} aria-label="正式考核下载">
           <div class="series-resource-content">
             <p class="eyebrow">正式考核</p>
-            <p class="series-resource-timing">完成 01–06 基础主线后，用于综合检验；包含参考答案与 AI 评分规则。</p>
+            <p class="series-resource-timing">{series.id === 'python-basics' ? '完成基础学习后用于独立考核，AI 评分需面试官提交答卷后执行。' : '完成 01–06 基础主线后，用于综合检验；包含参考答案与 AI 评分规则。'}</p>
             <h2>{series.resource.title}</h2>
             <p>{series.resource.description}</p>
             <span>{series.resource.meta}</span>
@@ -205,18 +205,6 @@ const hasResources = Boolean(('extraResource' in series && series.extraResource)
             download
           >
             下载考核包 <span aria-hidden="true">↓</span>
-          </a>
-        </section>
-      )}
-      {series.id === 'python-basics' && (
-        <section class="series-resource-card" id="series-resources" aria-label="Python 练习与验收">
-          <div class="series-resource-content">
-            <p class="eyebrow">综合验收 · 第 11 篇</p>
-            <h2>检验已经掌握的 Python 基础</h2>
-            <p>完成 01–09 主线后，可以进入综合考核；题目说明中包含练习脚本和配套测试文本的下载入口。第 10 篇类与对象为选修内容。</p>
-          </div>
-          <a class="series-resource-download" href={withBase(`/articles/${posts.find((post) => post.data.seriesOrder === 11)?.slug}/`)}>
-            前往综合考核与配套文件 <span aria-hidden="true">→</span>
           </a>
         </section>
       )}
