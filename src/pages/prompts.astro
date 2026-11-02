@@ -57,7 +57,7 @@ import { promptEntries } from '../data/prompts';
               <ClipboardCopy size={17} aria-hidden="true" /><span data-copy-label>复制提示词</span>
             </button>
           </div>
-          <details class="prompt-details" open={index === 0}>
+          <details class="prompt-details">
             <summary>查看完整提示词 <ChevronDown size={16} aria-hidden="true" /></summary>
             <pre class="prompt-content" data-prompt-content>{entry.content}</pre>
           </details>
@@ -76,12 +76,21 @@ import { promptEntries } from '../data/prompts';
 
   function updateCurrentPrompt() {
     indexUpdateScheduled = false;
-    const current = [...promptSections].reverse().find((section) => section.getBoundingClientRect().top <= 150) ?? promptSections[0];
+    const current = [...promptSections].reverse().find((section) => section.getBoundingClientRect().top <= 160) ?? promptSections[0];
     indexLinks.forEach((link) => {
       if (link.hash === `#${current?.id}`) link.setAttribute('aria-current', 'location');
       else link.removeAttribute('aria-current');
     });
   }
+
+  indexLinks.forEach((link) => {
+    link.addEventListener('click', () => {
+      indexLinks.forEach((item) => {
+        if (item.hash === link.hash) item.setAttribute('aria-current', 'location');
+        else item.removeAttribute('aria-current');
+      });
+    });
+  });
 
   window.addEventListener('scroll', () => {
     if (indexUpdateScheduled) return;
@@ -96,6 +105,17 @@ import { promptEntries } from '../data/prompts';
       link.closest('details')?.removeAttribute('open');
     });
   });
+
+  if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    document.querySelectorAll<HTMLDetailsElement>('.prompt-details').forEach((details) => {
+      details.addEventListener('mouseenter', () => { details.open = true; });
+      details.addEventListener('mouseleave', () => { details.open = false; });
+      // 鼠标以悬停为准，键盘仍保留原生的回车/空格切换。
+      details.querySelector('summary')?.addEventListener('click', (event) => {
+        if ((event as MouseEvent).detail > 0) event.preventDefault();
+      });
+    });
+  }
 
   document.querySelectorAll<HTMLButtonElement>('[data-copy-prompt]').forEach((button) => {
     button.addEventListener('click', async () => {
@@ -123,15 +143,19 @@ import { promptEntries } from '../data/prompts';
 </script>
 
 <style>
-  .prompt-library { max-width: 1100px; padding-top: clamp(45px, 7vw, 90px); padding-bottom: 130px; }
+  .prompt-library { max-width: 1250px; padding-top: clamp(45px, 7vw, 90px); padding-bottom: 130px; }
   .prompt-intro { border-bottom: 1px solid var(--line); padding-bottom: clamp(35px, 5vw, 64px); }
   .prompt-eyebrow { font-size: 11px; color: var(--blue); font-weight: 650; letter-spacing: .16em; margin: 0 0 20px; }
   .prompt-intro h1 { display: flex; align-items: start; gap: 16px; font-size: clamp(42px, 6vw, 72px); font-weight: 600; line-height: 1.13; letter-spacing: -.045em; margin: 0; }
   .prompt-count { margin-top: 7px; font-size: 14px; font-family: var(--mono-font); font-weight: 400; letter-spacing: 0; color: var(--muted); }
   .prompt-intro > p:last-child { max-width: 610px; margin: 24px 0 0; font-size: 16px; line-height: 1.9; }
-  .prompt-layout { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: clamp(32px, 5vw, 70px); align-items: start; }
-  .prompt-index { grid-column: 2; grid-row: 1; min-width: 0; position: sticky; top: 90px; }
-  .prompt-index-desktop { max-height: calc(100vh - 110px); overflow-y: auto; padding: 32px 0 16px; scrollbar-width: thin; }
+  .prompt-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: clamp(56px, 7vw, 110px); align-items: start; }
+  .prompt-index { grid-column: 1; grid-row: 1; min-width: 0; position: sticky; top: 90px; }
+  .prompt-index-desktop { max-height: calc(100dvh - 110px); overflow-y: auto; padding: 32px 10px 48px 0; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--blue) 40%, transparent) transparent; }
+  .prompt-index-desktop::-webkit-scrollbar, .prompt-index-mobile nav::-webkit-scrollbar { width: 6px; }
+  .prompt-index-desktop::-webkit-scrollbar-track, .prompt-index-mobile nav::-webkit-scrollbar-track { background: transparent; }
+  .prompt-index-desktop::-webkit-scrollbar-thumb, .prompt-index-mobile nav::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--blue) 38%, transparent); border-radius: 999px; }
+  .prompt-index-desktop:hover::-webkit-scrollbar-thumb, .prompt-index-mobile nav:hover::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--blue) 65%, transparent); }
   .prompt-index-heading { display: flex; justify-content: space-between; margin: 0 0 16px; padding-left: 12px; color: var(--ink); font-size: 13px; font-weight: 650; }
   .prompt-index-heading span { color: var(--soft); font: 11px var(--mono-font); }
   .prompt-index-links { list-style: none; margin: 0; padding: 0; }
@@ -141,8 +165,8 @@ import { promptEntries } from '../data/prompts';
   .prompt-index-number { flex: none; color: var(--soft); font: 11px var(--mono-font); }
   .prompt-index-links a[aria-current="location"] .prompt-index-number { color: var(--blue); }
   .prompt-index-mobile { display: none; }
-  .prompt-list { min-width: 0; grid-column: 1; grid-row: 1; }
-  .prompt-entry { padding: 34px 0 25px; border-bottom: 1px solid var(--line); scroll-margin-top: 95px; }
+  .prompt-list { min-width: 0; grid-column: 2; grid-row: 1; }
+  .prompt-entry { padding: 34px 0 25px; border-bottom: 1px solid var(--line); }
   .prompt-entry-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
   .prompt-heading-copy { min-width: 0; }
   .prompt-entry-meta { display: flex; gap: 16px; align-items: center; margin: 0 0 14px; font-size: 11px; letter-spacing: .06em; }
@@ -170,7 +194,7 @@ import { promptEntries } from '../data/prompts';
     .prompt-index-mobile summary span { margin-left: auto; color: var(--soft); font: 11px var(--mono-font); }
     .prompt-index-mobile summary svg { transition: transform .2s; }
     .prompt-index-mobile[open] summary svg { transform: rotate(180deg); }
-    .prompt-index-mobile nav { max-height: 50vh; overflow-y: auto; border-top: 1px solid var(--line-soft); padding: 8px 12px 12px; }
+    .prompt-index-mobile nav { max-height: 50vh; overflow-y: auto; border-top: 1px solid var(--line-soft); padding: 8px 12px 12px; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--blue) 40%, transparent) transparent; }
     .prompt-index-links a { min-height: 42px; align-items: center; font-size: 13px; }
   }
   @media (max-width: 650px) {
