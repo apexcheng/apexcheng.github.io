@@ -67,4 +67,13 @@ describe('series feature', () => {
     expect(seriesDataSource).toContain('Python 正式考核包');
     expect(seriesDetailSource).toContain('/articles/${post.slug}/');
   });
+
+  it('shows the interview badge only on the Excel and Python exam resources', () => {
+    for (const id of ['excel-functions', 'python-basics'] as const) {
+      const series = seriesMetaList.find((item) => item.id === id);
+      expect(series?.resource && 'badge' in series.resource && series.resource.badge).toBe('面试适用');
+      expect(series?.extraResource && 'badge' in series.extraResource).toBe(false);
+    }
+    expect(seriesDetailSource).toContain('class="series-resource-badge"');
+  });
 });

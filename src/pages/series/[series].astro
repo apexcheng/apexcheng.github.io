@@ -192,6 +192,9 @@ const hasResources = Boolean(('extraResource' in series && series.extraResource)
       )}
       {series.resource && (
         <section class="series-resource-card" id={'extraResource' in series ? undefined : 'series-resources'} aria-label="正式考核下载">
+          {'badge' in series.resource && series.resource.badge && (
+            <span class="series-resource-badge">{series.resource.badge}</span>
+          )}
           <div class="series-resource-content">
             <p class="eyebrow">正式考核</p>
             <p class="series-resource-timing">{series.id === 'python-basics' ? '完成基础学习后用于独立考核，AI 评分需面试官提交答卷后执行。' : '完成 01–06 基础主线后，用于综合检验；包含参考答案与 AI 评分规则。'}</p>

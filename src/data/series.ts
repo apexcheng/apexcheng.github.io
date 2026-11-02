@@ -22,6 +22,7 @@ export const seriesMetaList = [
     order: 3,
     resource: {
       title: 'Excel 函数正式考核与 AI 评分包',
+      badge: '面试适用',
       description: '30 道正式考核题（满分 100 分）及 2 道选做题，包含考核工作簿、参考答案、AI 评分规则、成绩汇总模板和旧版归档。',
       href: '/files/excel-functions/Excel函数正式考核与AI评分包.zip',
       meta: 'ZIP · 正式考核 + 参考答案 + AI 评分 + 汇总模板',
@@ -58,6 +59,7 @@ export const seriesMetaList = [
     },
     resource: {
       title: 'Python 正式考核包',
+      badge: '面试适用',
       description: '9 道实操题，基础能力 60 分、进阶能力 40 分；包含试卷、答题模板、订单数据及 AI 评分规则，不预置成绩汇总。',
       href: '/files/python-basic-assessment/Python正式考核包.zip',
       meta: 'ZIP · 100 分 · 90 分钟 · AI 辅助评分',
@@ -105,6 +107,7 @@ export const seriesMetaList = [
   order: number;
   resource?: {
     title: string;
+    badge?: string;
     description: string;
     href: string;
     meta: string;

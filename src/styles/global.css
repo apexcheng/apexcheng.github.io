@@ -2393,6 +2393,7 @@ html[data-theme='dark'] .report-dashboard {
 }
 
 .series-resource-card {
+  position: relative;
   background:
     radial-gradient(circle at 92% 12%, rgba(22, 155, 114, 0.16), transparent 220px),
     linear-gradient(145deg, var(--paper), color-mix(in srgb, var(--paper) 88%, #eaf8f2));
@@ -2401,6 +2402,28 @@ html[data-theme='dark'] .report-dashboard {
   display: grid;
   gap: 22px;
   padding: 26px;
+}
+
+.series-resource-badge {
+  position: absolute;
+  top: 20px;
+  right: 22px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1px solid color-mix(in srgb, var(--blue) 26%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--blue) 8%, var(--paper));
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--blue) 9%, transparent);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.series-resource-card:has(.series-resource-badge) .series-resource-content > .eyebrow {
+  padding-right: 98px;
 }
 
 .series-resource-content h2 {
