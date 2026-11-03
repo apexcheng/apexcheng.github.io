@@ -1,41 +1,43 @@
 ---
 import { ClipboardCopy, ChevronDown } from '@lucide/astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
-import { promptEntries } from '../data/prompts';
+import { orderedPromptEntries } from '../data/prompts';
 ---
 
 <SiteLayout title="提示词库" active="prompts" description="常用 AI 提示词集中整理，查看完整内容，一键复制使用。">
   <main class="prompt-library page-content">
     <header class="prompt-intro">
       <p class="prompt-eyebrow">PROMPT LIBRARY / 可复用的工作方法</p>
-      <h1>提示词库<span class="prompt-count">{String(promptEntries.length).padStart(2, '0')}</span></h1>
+      <h1>提示词库<span class="prompt-count">{String(orderedPromptEntries.length).padStart(2, '0')}</span></h1>
       <p>把反复使用的指令整理成可直接执行的文本。找到需要的提示词，一键复制即可使用。</p>
     </header>
 
     <div class="prompt-layout">
       <aside class="prompt-index" aria-label="提示词目录">
         <nav class="prompt-index-desktop" aria-label="提示词目录">
-          <p class="prompt-index-heading">目录 <span>{promptEntries.length} 条</span></p>
+          <p class="prompt-index-heading">目录 <span>{orderedPromptEntries.length} 条</span></p>
           <ol class="prompt-index-links">
-            {promptEntries.map((entry, index) => (
+            {orderedPromptEntries.map((entry, index) => (
               <li>
                 <a href={`#${entry.id}`} data-prompt-index-link>
                   <span class="prompt-index-number">{String(index + 1).padStart(2, '0')}</span>
                   <span>{entry.title}</span>
+                  {entry.pinned && <span class="prompt-index-pin">置顶</span>}
                 </a>
               </li>
             ))}
           </ol>
         </nav>
         <details class="prompt-index-mobile">
-          <summary>提示词目录 <span>{promptEntries.length} 条</span> <ChevronDown size={16} aria-hidden="true" /></summary>
+          <summary>提示词目录 <span>{orderedPromptEntries.length} 条</span> <ChevronDown size={16} aria-hidden="true" /></summary>
           <nav aria-label="提示词目录">
             <ol class="prompt-index-links">
-              {promptEntries.map((entry, index) => (
+              {orderedPromptEntries.map((entry, index) => (
                 <li>
                   <a href={`#${entry.id}`} data-prompt-index-link>
                     <span class="prompt-index-number">{String(index + 1).padStart(2, '0')}</span>
                     <span>{entry.title}</span>
+                    {entry.pinned && <span class="prompt-index-pin">置顶</span>}
                   </a>
                 </li>
               ))}
@@ -45,15 +47,16 @@ import { promptEntries } from '../data/prompts';
       </aside>
 
     <section class="prompt-list" aria-label="全部提示词">
-      {promptEntries.map((entry, index) => (
+      {orderedPromptEntries.map((entry, index) => (
         <article class="prompt-entry" id={entry.id}>
           <div class="prompt-entry-heading">
-            <p class="prompt-entry-meta"><span>{entry.category}</span><span>NO. {String(index + 1).padStart(2, '0')}</span></p>
+            <p class="prompt-entry-meta"><span>{entry.category}</span><span>NO. {String(index + 1).padStart(2, '0')}</span>{entry.pinned && <span class="prompt-pin-tag">置顶</span>}</p>
             <h2>{entry.title}</h2>
             <button class="prompt-copy" type="button" data-copy-prompt aria-label={`复制提示词：${entry.title}`}>
               <ClipboardCopy size={16} aria-hidden="true" /><span data-copy-label>复制</span>
             </button>
             <p class="prompt-description">{entry.description}</p>
+            <p class="prompt-used-case"><strong>已使用案例</strong><span>{entry.usedCase}</span></p>
           </div>
           <details class="prompt-details">
             <summary>展开全文 <ChevronDown size={14} aria-hidden="true" /></summary>
@@ -205,6 +208,7 @@ import { promptEntries } from '../data/prompts';
   .prompt-index-links a[aria-current="location"] { border-left-color: var(--blue); color: var(--blue); background: var(--paper); font-weight: 600; }
   .prompt-index-number { flex: none; color: var(--soft); font: 11px var(--mono-font); }
   .prompt-index-links a[aria-current="location"] .prompt-index-number { color: var(--blue); }
+  .prompt-index-pin { flex: none; margin-left: auto; color: var(--blue); font-size: 10px; font-weight: 650; }
   .prompt-index-mobile { display: none; }
   .prompt-list { min-width: 0; grid-column: 2; grid-row: 1; }
   .prompt-entry { padding: 14px 0 12px; border-bottom: 1px solid var(--line); }
@@ -212,8 +216,12 @@ import { promptEntries } from '../data/prompts';
   .prompt-entry-meta { display: flex; grid-column: 1; grid-row: 1; gap: 6px; align-items: center; margin: 0; font-size: 10px; letter-spacing: .02em; white-space: nowrap; }
   .prompt-entry-meta span:first-child { color: var(--blue); font-weight: 650; }
   .prompt-entry-meta span:last-child { color: var(--soft); font-family: var(--mono-font); }
+  .prompt-entry-meta .prompt-pin-tag { color: var(--blue); font: 650 10px var(--body-font); letter-spacing: 0; }
   .prompt-entry h2 { grid-column: 2; grid-row: 1; font-size: clamp(19px, 2vw, 22px); font-weight: 600; margin: 0; letter-spacing: -.02em; line-height: 1.35; }
   .prompt-description { grid-column: 2 / -1; grid-row: 2; margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+  .prompt-used-case { display: flex; align-items: baseline; gap: 8px; grid-column: 2 / -1; grid-row: 3; margin: 1px 0 0; min-width: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+  .prompt-used-case strong { flex: none; color: var(--blue); font-weight: 600; }
+  .prompt-used-case span { min-width: 0; }
   .prompt-copy { display: inline-flex; grid-column: 3; grid-row: 1; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; transition: background .18s, color .18s; }
   .prompt-copy:hover, .prompt-copy.copied { background: var(--blue); border-color: var(--blue); color: var(--bg); }
   .prompt-details { margin: 0 0 0 132px; }
@@ -235,6 +243,7 @@ import { promptEntries } from '../data/prompts';
     .prompt-entry h2 { grid-column: 1; grid-row: 2; }
     .prompt-copy { grid-column: 2; grid-row: 2; }
     .prompt-description { grid-column: 1 / -1; grid-row: 3; }
+    .prompt-used-case { grid-column: 1 / -1; grid-row: 4; }
     .prompt-details { margin-left: 0; }
   }
   @media (max-width: 850px) {
