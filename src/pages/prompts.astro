@@ -1,7 +1,11 @@
 ---
 import { ClipboardCopy, ChevronDown } from '@lucide/astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
-import { orderedPromptEntries } from '../data/prompts';
+import { orderedPromptEntries, promptCategories } from '../data/prompts';
+const categoryCounts = promptCategories.map((category) => ({
+  category,
+  count: orderedPromptEntries.filter((entry) => entry.category === category).length,
+}));
 ---
 
 <SiteLayout title="提示词库" active="prompts" description="常用 AI 提示词集中整理，查看完整内容，一键复制使用。">
@@ -12,13 +16,20 @@ import { orderedPromptEntries } from '../data/prompts';
       <p>把反复使用的指令整理成可直接执行的文本。找到需要的提示词，一键复制即可使用。</p>
     </header>
 
+    <div class="prompt-filters" role="group" aria-label="按分类筛选提示词">
+      <button type="button" data-prompt-filter="all" aria-pressed="true">全部 <span>{orderedPromptEntries.length}</span></button>
+      {categoryCounts.map(({ category, count }) => (
+        <button type="button" data-prompt-filter={category} aria-pressed="false">{category} <span>{count}</span></button>
+      ))}
+    </div>
+
     <div class="prompt-layout">
       <aside class="prompt-index" aria-label="提示词目录">
         <nav class="prompt-index-desktop" aria-label="提示词目录">
-          <p class="prompt-index-heading">目录 <span>{orderedPromptEntries.length} 条</span></p>
+          <p class="prompt-index-heading">目录 <span data-visible-prompt-count>{orderedPromptEntries.length} 条</span></p>
           <ol class="prompt-index-links">
             {orderedPromptEntries.map((entry, index) => (
-              <li>
+              <li data-prompt-index-item data-category={entry.category}>
                 <a href={`#${entry.id}`} data-prompt-index-link>
                   <span class="prompt-index-number">{String(index + 1).padStart(2, '0')}</span>
                   <span>{entry.title}</span>
@@ -29,11 +40,11 @@ import { orderedPromptEntries } from '../data/prompts';
           </ol>
         </nav>
         <details class="prompt-index-mobile">
-          <summary>提示词目录 <span>{orderedPromptEntries.length} 条</span> <ChevronDown size={16} aria-hidden="true" /></summary>
+          <summary>提示词目录 <span data-visible-prompt-count>{orderedPromptEntries.length} 条</span> <ChevronDown size={16} aria-hidden="true" /></summary>
           <nav aria-label="提示词目录">
             <ol class="prompt-index-links">
               {orderedPromptEntries.map((entry, index) => (
-                <li>
+                <li data-prompt-index-item data-category={entry.category}>
                   <a href={`#${entry.id}`} data-prompt-index-link>
                     <span class="prompt-index-number">{String(index + 1).padStart(2, '0')}</span>
                     <span>{entry.title}</span>
@@ -48,7 +59,7 @@ import { orderedPromptEntries } from '../data/prompts';
 
     <section class="prompt-list" aria-label="全部提示词">
       {orderedPromptEntries.map((entry, index) => (
-        <article class="prompt-entry" id={entry.id}>
+        <article class="prompt-entry" id={entry.id} data-category={entry.category}>
           <div class="prompt-entry-heading">
             <p class="prompt-entry-meta"><span>{entry.category}</span><span>NO. {String(index + 1).padStart(2, '0')}</span>{entry.pinned && <span class="prompt-pin-tag">置顶</span>}</p>
             <h2>{entry.title}</h2>
@@ -73,8 +84,36 @@ import { orderedPromptEntries } from '../data/prompts';
 <script>
   const promptSections = Array.from(document.querySelectorAll<HTMLElement>('.prompt-entry'));
   const indexLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-prompt-index-link]'));
+  const filterButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-prompt-filter]'));
+  const indexItems = Array.from(document.querySelectorAll<HTMLElement>('[data-prompt-index-item]'));
+  const visibleCounts = Array.from(document.querySelectorAll<HTMLElement>('[data-visible-prompt-count]'));
   const desktopIndex = document.querySelector<HTMLElement>('.prompt-index-desktop');
   let indexUpdateScheduled = false;
+  let visibleSections = promptSections;
+
+  function setCategory(category: string) {
+    const selected = filterButtons.some((button) => button.dataset.promptFilter === category) ? category : 'all';
+    filterButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.promptFilter === selected)));
+    promptSections.forEach((section) => { section.hidden = selected !== 'all' && section.dataset.category !== selected; });
+    indexItems.forEach((item) => { item.hidden = selected !== 'all' && item.dataset.category !== selected; });
+    visibleSections = promptSections.filter((section) => !section.hidden);
+    visibleCounts.forEach((count) => { count.textContent = `${visibleSections.length} 条`; });
+    updateCurrentPrompt();
+  }
+
+  filterButtons.forEach((button) => button.addEventListener('click', () => {
+    const category = button.dataset.promptFilter ?? 'all';
+    setCategory(category);
+    const url = new URL(window.location.href);
+    if (category === 'all') url.searchParams.delete('category');
+    else url.searchParams.set('category', category);
+    if (url.hash && document.getElementById(url.hash.slice(1))?.hidden) url.hash = '';
+    window.history.replaceState(null, '', url);
+    document.querySelector('.prompt-filters')?.scrollIntoView({ block: 'start' });
+  }));
+
+  const initialHashEntry = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+  setCategory(initialHashEntry?.dataset.category ?? new URLSearchParams(window.location.search).get('category') ?? 'all');
 
   function updateIndexOverflow() {
     const sidebar = desktopIndex?.closest('.prompt-index');
@@ -106,8 +145,8 @@ import { orderedPromptEntries } from '../data/prompts';
     const atPageEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 12;
     const activationLine = 140;
     const current = atPageEnd
-      ? promptSections[promptSections.length - 1]
-      : [...promptSections].reverse().find((section) => section.getBoundingClientRect().top <= activationLine) ?? promptSections[0];
+      ? visibleSections[visibleSections.length - 1]
+      : [...visibleSections].reverse().find((section) => section.getBoundingClientRect().top <= activationLine) ?? visibleSections[0];
     if (current) highlightPrompt(current.id);
   }
 
@@ -192,6 +231,13 @@ import { orderedPromptEntries } from '../data/prompts';
   .prompt-intro h1 { display: flex; align-items: start; gap: 12px; font-size: clamp(34px, 4vw, 44px); font-weight: 600; line-height: 1.18; letter-spacing: -.04em; margin: 0; }
   .prompt-count { margin-top: 5px; font-size: 12px; font-family: var(--mono-font); font-weight: 400; letter-spacing: 0; color: var(--muted); }
   .prompt-intro > p:last-child { max-width: 650px; margin: 8px 0 0; font-size: 13px; line-height: 1.6; }
+  .prompt-filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 20px 0 12px; scroll-margin-top: 88px; }
+  .prompt-filters button { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--muted); font: 600 12px var(--body-font); cursor: pointer; }
+  .prompt-filters button span { color: var(--soft); font: 11px var(--mono-font); }
+  .prompt-filters button:hover { color: var(--ink); border-color: var(--blue); }
+  .prompt-filters button[aria-pressed='true'] { border-color: var(--blue); color: var(--blue); background: var(--paper); }
+  .prompt-filters button[aria-pressed='true'] span { color: var(--blue); }
+  .prompt-filters button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   .prompt-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: clamp(48px, 5vw, 76px); align-items: start; }
   .prompt-index { grid-column: 1; grid-row: 1; min-width: 0; position: sticky; top: 90px; }
   .prompt-index-desktop { max-height: calc(100dvh - 110px); overflow-y: auto; padding: 12px 10px 40px 0; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--blue) 40%, transparent) transparent; }
