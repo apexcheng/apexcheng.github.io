@@ -16,6 +16,7 @@ export const promptEntries: PromptEntry[] = [
   {
     id: 'system-function-experience-enhancement',
     title: '系统功能与体验机制全面完善',
+    pinned: true,
     category: '业务与数据',
     description: '从业务流程、智能化、自动化、功能完整性及系统稳定性挖掘完善机会。',
     usedCase: '航桥知识中心体验机制设计：从图标选择、AI 自动标题、后台任务到人工修改保护，梳理功能完善机会。',

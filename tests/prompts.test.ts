@@ -24,10 +24,13 @@ describe('prompt library', () => {
     expect(promptEntries.find((entry) => entry.id === 'frontend-visual-restraint-consistency')?.category).toBe('前端');
   });
 
-  it('puts the information hierarchy prompt first while retaining order for other entries', () => {
-    expect(orderedPromptEntries[0].id).toBe('ui-information-hierarchy-redesign');
+  it('puts pinned prompts first while retaining order for other entries', () => {
+    expect(orderedPromptEntries[0].id).toBe('system-function-experience-enhancement');
     expect(orderedPromptEntries[0].pinned).toBe(true);
-    expect(orderedPromptEntries.slice(1).map((entry) => entry.id)).toEqual(
+    expect(orderedPromptEntries.filter((entry) => entry.pinned).map((entry) => entry.id)).toEqual(
+      promptEntries.filter((entry) => entry.pinned).map((entry) => entry.id),
+    );
+    expect(orderedPromptEntries.filter((entry) => !entry.pinned).map((entry) => entry.id)).toEqual(
       promptEntries.filter((entry) => !entry.pinned).map((entry) => entry.id),
     );
   });
