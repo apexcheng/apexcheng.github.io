@@ -18,19 +18,18 @@ const categoryCounts = promptCategories.map((category) => ({
 
     <div class="prompt-layout">
       <aside class="prompt-discovery" aria-label="寻找提示词">
-        <label class="prompt-search-label" for="prompt-search">寻找提示词</label>
         <div class="prompt-search-field">
           <Search size={18} aria-hidden="true" />
-          <input id="prompt-search" type="search" placeholder="搜索标题、用途或案例" autocomplete="off" data-prompt-search />
+          <input id="prompt-search" type="search" aria-label="搜索提示词" placeholder="搜索提示词标题、用途或案例" autocomplete="off" data-prompt-search />
         </div>
-        <div class="prompt-filters" role="group" aria-label="按分类筛选提示词">
-          <button type="button" data-prompt-filter="all" aria-pressed="true">全部 <span>{orderedPromptEntries.length}</span></button>
-          {categoryCounts.map(({ category, count }) => (
-            <button type="button" data-prompt-filter={category} aria-pressed="false">{category} <span>{count}</span></button>
-          ))}
-        </div>
-        <div class="prompt-results-heading">
-          <strong data-results-title>全部提示词</strong>
+        <div class="prompt-filter-row">
+          <label for="prompt-category">分类</label>
+          <select id="prompt-category" data-prompt-category>
+            <option value="all">全部分类（{orderedPromptEntries.length}）</option>
+            {categoryCounts.map(({ category, count }) => (
+              <option value={category}>{category}（{count}）</option>
+            ))}
+          </select>
           <span data-visible-prompt-count>{orderedPromptEntries.length} 条结果</span>
         </div>
         <nav class="prompt-index" aria-label="提示词搜索结果">
@@ -38,10 +37,9 @@ const categoryCounts = promptCategories.map((category) => ({
             {orderedPromptEntries.map((entry) => (
               <li data-prompt-index-item data-category={entry.category} data-prompt-id={entry.id}
                   data-search-text={`${entry.title} ${entry.description} ${entry.usedCase}`}>
-                <a href={`#${entry.id}`} data-prompt-index-link>
+                <a href={`#${entry.id}`} data-prompt-index-link title={entry.title}>
                   <span class="prompt-index-title">{entry.title}</span>
-                  <span class="prompt-index-description">{entry.description}</span>
-                  <span class="prompt-index-meta">{entry.category}{entry.pinned && <span class="prompt-index-pin">置顶</span>}</span>
+                  <span class="prompt-index-meta">{entry.pinned ? '置顶' : entry.category}</span>
                 </a>
               </li>
             ))}
@@ -82,14 +80,13 @@ const categoryCounts = promptCategories.map((category) => ({
 <script>
   const entries = Array.from(document.querySelectorAll<HTMLElement>('[data-prompt-entry]'));
   const resultItems = Array.from(document.querySelectorAll<HTMLElement>('[data-prompt-index-item]'));
-  const filters = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-prompt-filter]'));
+  const categorySelect = document.querySelector<HTMLSelectElement>('[data-prompt-category]');
   const search = document.querySelector<HTMLInputElement>('[data-prompt-search]');
   const resultCount = document.querySelector<HTMLElement>('[data-visible-prompt-count]');
-  const resultTitle = document.querySelector<HTMLElement>('[data-results-title]');
   const emptyResults = document.querySelector<HTMLElement>('[data-no-results]');
   const emptyDetail = document.querySelector<HTMLElement>('[data-detail-empty]');
   const detail = document.querySelector<HTMLElement>('.prompt-detail');
-  const validCategories = filters.map((filter) => filter.dataset.promptFilter);
+  const validCategories = Array.from(categorySelect?.options ?? [], (option) => option.value);
   let category = 'all';
   let selectedId = entries[0]?.id ?? '';
 
@@ -116,11 +113,8 @@ const categoryCounts = promptCategories.map((category) => ({
       if (item.dataset.promptId === selectedId && !item.hidden) link.setAttribute('aria-current', 'true');
       else link.removeAttribute('aria-current');
     });
-    filters.forEach((filter) => {
-      filter.setAttribute('aria-pressed', String(filter.dataset.promptFilter === category));
-    });
+    if (categorySelect) categorySelect.value = category;
     if (resultCount) resultCount.textContent = `${visible.length} 条结果`;
-    if (resultTitle) resultTitle.textContent = category === 'all' ? '全部提示词' : category;
     if (emptyResults) emptyResults.hidden = visible.length > 0;
     if (emptyDetail) emptyDetail.hidden = visible.length > 0;
   }
@@ -129,7 +123,7 @@ const categoryCounts = promptCategories.map((category) => ({
     const url = new URL(window.location.href);
     if (category === 'all') url.searchParams.delete('category');
     else url.searchParams.set('category', category);
-    if (selectedId) url.hash = selectedId;
+    url.hash = selectedId;
     window.history[mode](null, '', url);
   }
 
@@ -148,17 +142,17 @@ const categoryCounts = promptCategories.map((category) => ({
     if (target) requestAnimationFrame(showDetail);
   }
 
-  filters.forEach((filter) => filter.addEventListener('click', () => {
-    selectCategory(filter.dataset.promptFilter ?? 'all');
+  categorySelect?.addEventListener('change', () => {
+    selectCategory(categorySelect.value);
     render();
     updateUrl('replaceState');
     showDetail();
-  }));
+  });
 
   search?.addEventListener('input', () => {
     const previousId = selectedId;
     render();
-    if (selectedId) updateUrl('replaceState');
+    updateUrl('replaceState');
     if (previousId !== selectedId) showDetail();
   });
 
@@ -208,32 +202,25 @@ const categoryCounts = promptCategories.map((category) => ({
   .prompt-intro h1 { display: flex; align-items: start; gap: 12px; margin: 0; font-size: clamp(34px, 4vw, 44px); font-weight: 600; line-height: 1.18; letter-spacing: -.04em; }
   .prompt-count { margin-top: 5px; color: var(--muted); font: 12px var(--mono-font); letter-spacing: 0; }
   .prompt-intro > p:last-child { max-width: 650px; margin: 8px 0 0; font-size: 13px; line-height: 1.6; }
-  .prompt-layout { display: grid; grid-template-columns: minmax(285px, 330px) minmax(0, 1fr); gap: 36px; align-items: start; }
-  .prompt-discovery { position: sticky; top: 90px; display: flex; flex-direction: column; min-width: 0; max-height: calc(100dvh - 110px); padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
-  .prompt-search-label { margin: 0 0 9px; color: var(--ink); font-size: 15px; font-weight: 650; }
-  .prompt-search-field { display: flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--muted); }
+  .prompt-layout { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 32px; align-items: start; }
+  .prompt-discovery { position: sticky; top: 90px; display: flex; flex-direction: column; min-width: 0; max-height: calc(100dvh - 110px); padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+  .prompt-search-field { display: flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 11px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--muted); }
   .prompt-search-field:focus-within { border-color: var(--blue); outline: 2px solid color-mix(in srgb, var(--blue) 20%, transparent); }
   .prompt-search-field input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: 13px var(--body-font); }
   .prompt-search-field input::placeholder { color: var(--muted); }
-  .prompt-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; padding: 16px 0 18px; }
-  .prompt-filters button { display: inline-flex; align-items: center; justify-content: space-between; gap: 5px; min-height: 34px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 5px; background: transparent; color: var(--muted); font: 500 12px var(--body-font); text-align: left; cursor: pointer; }
-  .prompt-filters button span { color: var(--soft); font: 11px var(--mono-font); }
-  .prompt-filters button:hover { border-color: var(--blue); color: var(--ink); }
-  .prompt-filters button[aria-pressed='true'] { border-color: var(--blue); background: var(--bg); color: var(--blue); font-weight: 650; }
-  .prompt-filters button[aria-pressed='true'] span { color: var(--blue); }
-  .prompt-results-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 10px; border-top: 1px solid var(--line); padding-top: 16px; }
-  .prompt-results-heading strong { font-size: 13px; font-weight: 650; }
-  .prompt-results-heading span { color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .prompt-filter-row { display: flex; align-items: center; gap: 8px; padding: 12px 0 10px; border-bottom: 1px solid var(--line); }
+  .prompt-filter-row label { flex: none; color: var(--muted); font-size: 12px; }
+  .prompt-filter-row select { flex: 1; min-width: 0; height: 32px; padding: 0 7px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--ink); font: 12px var(--body-font); cursor: pointer; }
+  .prompt-filter-row select:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .prompt-filter-row > span { flex: none; color: var(--muted); font-size: 11px; white-space: nowrap; }
   .prompt-index { min-height: 90px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--blue) 40%, transparent) transparent; }
   .prompt-index-links { list-style: none; margin: 0; padding: 0; }
-  .prompt-index-links li + li { margin-top: 4px; }
-  .prompt-index-links a { display: block; padding: 12px 12px 12px 13px; border-left: 2px solid transparent; border-radius: 4px; color: var(--ink); text-decoration: none; transition: background .15s, border-color .15s; }
+  .prompt-index-links a { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 9px; border-left: 2px solid transparent; border-bottom: 1px solid var(--line); border-radius: 3px; color: var(--ink); text-decoration: none; transition: background .15s, border-color .15s; }
   .prompt-index-links a:hover { background: var(--bg); }
   .prompt-index-links a[aria-current='true'] { border-left-color: var(--blue); background: var(--bg); }
-  .prompt-index-title { display: block; font-size: 13px; font-weight: 600; line-height: 1.5; }
-  .prompt-index-description { display: -webkit-box; overflow: hidden; margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.5; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-  .prompt-index-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; color: var(--soft); font-size: 10px; }
-  .prompt-index-pin { color: var(--blue); font-weight: 650; }
+  .prompt-index-title { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; font-weight: 500; line-height: 1.5; }
+  .prompt-index-links a[aria-current='true'] .prompt-index-title { font-weight: 650; }
+  .prompt-index-meta { flex: none; color: var(--soft); font-size: 10px; }
   .prompt-no-results { color: var(--muted); font-size: 13px; line-height: 1.8; }
   .prompt-detail { min-width: 0; padding-top: 4px; scroll-margin-top: 100px; }
   .prompt-entry { scroll-margin-top: 100px; }
@@ -255,7 +242,7 @@ const categoryCounts = promptCategories.map((category) => ({
   .prompt-copy-feedback:empty { display: none; }
   .prompt-detail-empty { margin-top: 20px; padding: 24px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 14px; }
   .prompt-entry[hidden], .prompt-index-links li[hidden], .prompt-no-results[hidden], .prompt-detail-empty[hidden] { display: none !important; }
-  .prompt-index-links a:focus-visible, .prompt-filters button:focus-visible, .prompt-copy:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .prompt-index-links a:focus-visible, .prompt-copy:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   @media (max-width: 850px) {
     .prompt-layout { display: block; }
     .prompt-discovery { position: static; max-height: none; }
@@ -265,7 +252,7 @@ const categoryCounts = promptCategories.map((category) => ({
   @media (max-width: 650px) {
     .prompt-library { padding-top: 20px; padding-bottom: 60px; }
     .prompt-intro { margin-bottom: 20px; }
-    .prompt-discovery { padding: 14px; }
+    .prompt-discovery { padding: 12px; }
     .prompt-entry h2 { font-size: 25px; }
     .prompt-content { padding: 16px; font-size: 14px; }
     .prompt-content-heading { align-items: flex-start; flex-direction: column; }
