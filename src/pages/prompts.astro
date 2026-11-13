@@ -1,5 +1,5 @@
 ---
-import { ClipboardCopy, ChevronDown } from '@lucide/astro';
+import { ClipboardCopy, Search } from '@lucide/astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import { orderedPromptEntries, promptCategories } from '../data/prompts';
 const categoryCounts = promptCategories.map((category) => ({
@@ -16,188 +16,165 @@ const categoryCounts = promptCategories.map((category) => ({
       <p>把反复使用的指令整理成可直接执行的文本。找到需要的提示词，一键复制即可使用。</p>
     </header>
 
-    <div class="prompt-filters" role="group" aria-label="按分类筛选提示词">
-      <button type="button" data-prompt-filter="all" aria-pressed="true">全部 <span>{orderedPromptEntries.length}</span></button>
-      {categoryCounts.map(({ category, count }) => (
-        <button type="button" data-prompt-filter={category} aria-pressed="false">{category} <span>{count}</span></button>
-      ))}
-    </div>
-
     <div class="prompt-layout">
-      <aside class="prompt-index" aria-label="提示词目录">
-        <nav class="prompt-index-desktop" aria-label="提示词目录">
-          <p class="prompt-index-heading">目录 <span data-visible-prompt-count>{orderedPromptEntries.length} 条</span></p>
+      <aside class="prompt-discovery" aria-label="寻找提示词">
+        <label class="prompt-search-label" for="prompt-search">寻找提示词</label>
+        <div class="prompt-search-field">
+          <Search size={18} aria-hidden="true" />
+          <input id="prompt-search" type="search" placeholder="搜索标题、用途或案例" autocomplete="off" data-prompt-search />
+        </div>
+        <div class="prompt-filters" role="group" aria-label="按分类筛选提示词">
+          <button type="button" data-prompt-filter="all" aria-pressed="true">全部 <span>{orderedPromptEntries.length}</span></button>
+          {categoryCounts.map(({ category, count }) => (
+            <button type="button" data-prompt-filter={category} aria-pressed="false">{category} <span>{count}</span></button>
+          ))}
+        </div>
+        <div class="prompt-results-heading">
+          <strong data-results-title>全部提示词</strong>
+          <span data-visible-prompt-count>{orderedPromptEntries.length} 条结果</span>
+        </div>
+        <nav class="prompt-index" aria-label="提示词搜索结果">
           <ol class="prompt-index-links">
-            {orderedPromptEntries.map((entry, index) => (
-              <li data-prompt-index-item data-category={entry.category}>
+            {orderedPromptEntries.map((entry) => (
+              <li data-prompt-index-item data-category={entry.category} data-prompt-id={entry.id}
+                  data-search-text={`${entry.title} ${entry.description} ${entry.usedCase}`}>
                 <a href={`#${entry.id}`} data-prompt-index-link>
-                  <span class="prompt-index-number">{String(index + 1).padStart(2, '0')}</span>
-                  <span>{entry.title}</span>
-                  {entry.pinned && <span class="prompt-index-pin">置顶</span>}
+                  <span class="prompt-index-title">{entry.title}</span>
+                  <span class="prompt-index-description">{entry.description}</span>
+                  <span class="prompt-index-meta">{entry.category}{entry.pinned && <span class="prompt-index-pin">置顶</span>}</span>
                 </a>
               </li>
             ))}
           </ol>
+          <p class="prompt-no-results" data-no-results hidden>没有符合条件的提示词，请调整关键词或分类。</p>
         </nav>
-        <details class="prompt-index-mobile">
-          <summary>提示词目录 <span data-visible-prompt-count>{orderedPromptEntries.length} 条</span> <ChevronDown size={16} aria-hidden="true" /></summary>
-          <nav aria-label="提示词目录">
-            <ol class="prompt-index-links">
-              {orderedPromptEntries.map((entry, index) => (
-                <li data-prompt-index-item data-category={entry.category}>
-                  <a href={`#${entry.id}`} data-prompt-index-link>
-                    <span class="prompt-index-number">{String(index + 1).padStart(2, '0')}</span>
-                    <span>{entry.title}</span>
-                    {entry.pinned && <span class="prompt-index-pin">置顶</span>}
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </nav>
-        </details>
       </aside>
 
-    <section class="prompt-list" aria-label="全部提示词">
-      {orderedPromptEntries.map((entry, index) => (
-        <article class="prompt-entry" id={entry.id} data-category={entry.category}>
-          <div class="prompt-entry-heading">
-            <p class="prompt-entry-meta"><span>{entry.category}</span><span>NO. {String(index + 1).padStart(2, '0')}</span>{entry.pinned && <span class="prompt-pin-tag">置顶</span>}</p>
-            <h2>{entry.title}</h2>
-            <button class="prompt-copy" type="button" data-copy-prompt aria-label={`复制提示词：${entry.title}`}>
-              <ClipboardCopy size={16} aria-hidden="true" /><span data-copy-label>复制</span>
-            </button>
+      <section class="prompt-detail" aria-label="当前提示词详情">
+        {orderedPromptEntries.map((entry, index) => (
+          <article class="prompt-entry" id={entry.id} data-category={entry.category} data-prompt-entry hidden={index !== 0}>
+            <div class="prompt-detail-topline">
+              <span>{entry.category}</span>
+              {entry.pinned && <span class="prompt-pin-tag">置顶</span>}
+            </div>
+            <h2 tabindex="-1">{entry.title}</h2>
             <p class="prompt-description">{entry.description}</p>
-            <p class="prompt-used-case"><strong>已使用案例</strong><span>{entry.usedCase}</span></p>
-          </div>
-          <details class="prompt-details">
-            <summary>展开全文 <ChevronDown size={14} aria-hidden="true" /></summary>
+            <div class="prompt-used-case">
+              <strong>已使用案例</strong>
+              <p>{entry.usedCase}</p>
+            </div>
+            <div class="prompt-content-heading">
+              <h3>完整提示词</h3>
+              <button class="prompt-copy" type="button" data-copy-prompt aria-label={`复制提示词：${entry.title}`}>
+                <ClipboardCopy size={16} aria-hidden="true" /><span data-copy-label>复制完整提示词</span>
+              </button>
+            </div>
+            <p class="prompt-copy-feedback" role="status" aria-live="polite" data-copy-status></p>
             <pre class="prompt-content" data-prompt-content>{entry.content}</pre>
-          </details>
-          <p class="prompt-copy-feedback" role="status" aria-live="polite" data-copy-status></p>
-        </article>
-      ))}
-    </section>
+          </article>
+        ))}
+        <div class="prompt-detail-empty" data-detail-empty hidden>没有匹配的提示词。请调整左侧搜索或分类。</div>
+      </section>
     </div>
   </main>
 </SiteLayout>
 
 <script>
-  const promptSections = Array.from(document.querySelectorAll<HTMLElement>('.prompt-entry'));
-  const indexLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-prompt-index-link]'));
-  const filterButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-prompt-filter]'));
-  const indexItems = Array.from(document.querySelectorAll<HTMLElement>('[data-prompt-index-item]'));
-  const visibleCounts = Array.from(document.querySelectorAll<HTMLElement>('[data-visible-prompt-count]'));
-  const desktopIndex = document.querySelector<HTMLElement>('.prompt-index-desktop');
-  let indexUpdateScheduled = false;
-  let visibleSections = promptSections;
+  const entries = Array.from(document.querySelectorAll<HTMLElement>('[data-prompt-entry]'));
+  const resultItems = Array.from(document.querySelectorAll<HTMLElement>('[data-prompt-index-item]'));
+  const filters = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-prompt-filter]'));
+  const search = document.querySelector<HTMLInputElement>('[data-prompt-search]');
+  const resultCount = document.querySelector<HTMLElement>('[data-visible-prompt-count]');
+  const resultTitle = document.querySelector<HTMLElement>('[data-results-title]');
+  const emptyResults = document.querySelector<HTMLElement>('[data-no-results]');
+  const emptyDetail = document.querySelector<HTMLElement>('[data-detail-empty]');
+  const detail = document.querySelector<HTMLElement>('.prompt-detail');
+  const validCategories = filters.map((filter) => filter.dataset.promptFilter);
+  let category = 'all';
+  let selectedId = entries[0]?.id ?? '';
 
-  function setCategory(category: string) {
-    const selected = filterButtons.some((button) => button.dataset.promptFilter === category) ? category : 'all';
-    filterButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.promptFilter === selected)));
-    promptSections.forEach((section) => { section.hidden = selected !== 'all' && section.dataset.category !== selected; });
-    indexItems.forEach((item) => { item.hidden = selected !== 'all' && item.dataset.category !== selected; });
-    visibleSections = promptSections.filter((section) => !section.hidden);
-    visibleCounts.forEach((count) => { count.textContent = `${visibleSections.length} 条`; });
-    updateCurrentPrompt();
+  function selectCategory(value: string) {
+    category = validCategories.includes(value) ? value : 'all';
   }
 
-  filterButtons.forEach((button) => button.addEventListener('click', () => {
-    const category = button.dataset.promptFilter ?? 'all';
-    setCategory(category);
+  function render() {
+    const words = (search?.value.trim().toLocaleLowerCase() ?? '').split(/\s+/).filter(Boolean);
+    const visible = resultItems.filter((item) => {
+      const inCategory = category === 'all' || item.dataset.category === category;
+      const text = item.dataset.searchText?.toLocaleLowerCase() ?? '';
+      const match = inCategory && words.every((word) => text.includes(word));
+      item.hidden = !match;
+      return match;
+    });
+    const visibleIds = new Set(visible.map((item) => item.dataset.promptId));
+    if (!visibleIds.has(selectedId)) selectedId = visible[0]?.dataset.promptId ?? '';
+
+    entries.forEach((entry) => { entry.hidden = entry.id !== selectedId; });
+    resultItems.forEach((item) => {
+      const link = item.querySelector<HTMLAnchorElement>('[data-prompt-index-link]');
+      if (!link) return;
+      if (item.dataset.promptId === selectedId && !item.hidden) link.setAttribute('aria-current', 'true');
+      else link.removeAttribute('aria-current');
+    });
+    filters.forEach((filter) => {
+      filter.setAttribute('aria-pressed', String(filter.dataset.promptFilter === category));
+    });
+    if (resultCount) resultCount.textContent = `${visible.length} 条结果`;
+    if (resultTitle) resultTitle.textContent = category === 'all' ? '全部提示词' : category;
+    if (emptyResults) emptyResults.hidden = visible.length > 0;
+    if (emptyDetail) emptyDetail.hidden = visible.length > 0;
+  }
+
+  function updateUrl(mode: 'pushState' | 'replaceState') {
     const url = new URL(window.location.href);
     if (category === 'all') url.searchParams.delete('category');
     else url.searchParams.set('category', category);
-    if (url.hash && document.getElementById(url.hash.slice(1))?.hidden) url.hash = '';
-    window.history.replaceState(null, '', url);
-    document.querySelector('.prompt-filters')?.scrollIntoView({ block: 'start' });
+    if (selectedId) url.hash = selectedId;
+    window.history[mode](null, '', url);
+  }
+
+  function showDetail() {
+    detail?.scrollIntoView({ block: 'start' });
+  }
+
+  function restoreFromUrl() {
+    const id = decodeURIComponent(window.location.hash.slice(1));
+    const target = entries.find((entry) => entry.id === id);
+    const requestedCategory = new URLSearchParams(window.location.search).get('category') ?? 'all';
+    selectCategory(target?.dataset.category ?? requestedCategory);
+    selectedId = target?.id ?? '';
+    if (search) search.value = '';
+    render();
+    if (target) requestAnimationFrame(showDetail);
+  }
+
+  filters.forEach((filter) => filter.addEventListener('click', () => {
+    selectCategory(filter.dataset.promptFilter ?? 'all');
+    render();
+    updateUrl('replaceState');
+    showDetail();
   }));
 
-  const initialHashEntry = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
-  setCategory(initialHashEntry?.dataset.category ?? new URLSearchParams(window.location.search).get('category') ?? 'all');
+  search?.addEventListener('input', () => {
+    const previousId = selectedId;
+    render();
+    if (selectedId) updateUrl('replaceState');
+    if (previousId !== selectedId) showDetail();
+  });
 
-  function updateIndexOverflow() {
-    const sidebar = desktopIndex?.closest('.prompt-index');
-    if (!desktopIndex || !sidebar) return;
-    sidebar.toggleAttribute('data-has-more', desktopIndex.scrollTop + desktopIndex.clientHeight < desktopIndex.scrollHeight - 6);
-  }
-
-  function highlightPrompt(id: string) {
-    let activeDesktopLink: HTMLAnchorElement | undefined;
-    indexLinks.forEach((link) => {
-      if (link.hash === `#${id}`) {
-        link.setAttribute('aria-current', 'location');
-        if (desktopIndex?.contains(link)) activeDesktopLink = link;
-      } else link.removeAttribute('aria-current');
-    });
-    if (!desktopIndex || !activeDesktopLink) return;
-    const viewport = desktopIndex.getBoundingClientRect();
-    const item = activeDesktopLink.getBoundingClientRect();
-    if (item.bottom > viewport.bottom - 36) {
-      desktopIndex.scrollTop += item.bottom - viewport.bottom + 48;
-    } else if (item.top < viewport.top + 28) {
-      desktopIndex.scrollTop += item.top - viewport.top - 36;
-    }
-    updateIndexOverflow();
-  }
-
-  function updateCurrentPrompt() {
-    indexUpdateScheduled = false;
-    const atPageEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 12;
-    const activationLine = 140;
-    const current = atPageEnd
-      ? visibleSections[visibleSections.length - 1]
-      : [...visibleSections].reverse().find((section) => section.getBoundingClientRect().top <= activationLine) ?? visibleSections[0];
-    if (current) highlightPrompt(current.id);
-  }
-
-  indexLinks.forEach((link) => {
-    link.addEventListener('click', () => {
-      highlightPrompt(link.hash.slice(1));
+  resultItems.forEach((item) => {
+    item.querySelector<HTMLAnchorElement>('[data-prompt-index-link]')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      selectedId = item.dataset.promptId ?? '';
+      render();
+      updateUrl('pushState');
+      showDetail();
     });
   });
 
-  desktopIndex?.addEventListener('scroll', updateIndexOverflow, { passive: true });
-  window.addEventListener('scroll', () => {
-    if (indexUpdateScheduled) return;
-    indexUpdateScheduled = true;
-    requestAnimationFrame(updateCurrentPrompt);
-  }, { passive: true });
-  window.addEventListener('load', updateCurrentPrompt);
-  window.addEventListener('resize', updateCurrentPrompt);
-  updateCurrentPrompt();
-
-  document.querySelectorAll<HTMLAnchorElement>('.prompt-index-mobile a').forEach((link) => {
-    link.addEventListener('click', () => {
-      link.closest('details')?.removeAttribute('open');
-    });
-  });
-
-  const canHover = window.matchMedia('(hover: hover) and (pointer: fine)');
-  document.querySelectorAll<HTMLDetailsElement>('.prompt-details').forEach((details) => {
-    let previewTimer: number | undefined;
-    if (canHover.matches) {
-      details.addEventListener('mouseenter', () => {
-        window.clearTimeout(previewTimer);
-        previewTimer = window.setTimeout(() => { details.open = true; }, 100);
-      });
-      details.addEventListener('mouseleave', () => {
-        window.clearTimeout(previewTimer);
-        if (details.dataset.pinned !== 'true') details.open = false;
-      });
-    }
-    details.querySelector('summary')?.addEventListener('click', (event) => {
-      if (canHover.matches && event instanceof MouseEvent && event.detail > 0) {
-        event.preventDefault();
-        window.clearTimeout(previewTimer);
-        const pin = details.dataset.pinned !== 'true';
-        details.dataset.pinned = String(pin);
-        details.open = pin;
-      } else {
-        // 键盘及触屏仍由原生 details 切换，记录展开状态供桌面悬停使用。
-        details.dataset.pinned = String(!details.open);
-      }
-    });
-  });
+  window.addEventListener('popstate', restoreFromUrl);
+  window.addEventListener('hashchange', restoreFromUrl);
+  restoreFromUrl();
 
   document.querySelectorAll<HTMLButtonElement>('[data-copy-prompt]').forEach((button) => {
     button.addEventListener('click', async () => {
@@ -213,10 +190,10 @@ const categoryCounts = promptCategories.map((category) => ({
         button.classList.add('copied');
       } catch {
         label.textContent = '复制失败';
-        status.textContent = '无法访问剪贴板，请展开内容手动复制';
+        status.textContent = '无法访问剪贴板，请从正文中手动复制';
       }
       window.setTimeout(() => {
-        label.textContent = '复制';
+        label.textContent = '复制完整提示词';
         button.classList.remove('copied');
         status.textContent = '';
       }, 2200);
@@ -226,91 +203,72 @@ const categoryCounts = promptCategories.map((category) => ({
 
 <style>
   .prompt-library { max-width: 1250px; padding-top: 26px; padding-bottom: 80px; }
-  .prompt-intro { border-bottom: 1px solid var(--line); padding-bottom: 18px; }
-  .prompt-eyebrow { font-size: 10px; color: var(--blue); font-weight: 650; letter-spacing: .12em; margin: 0 0 8px; }
-  .prompt-intro h1 { display: flex; align-items: start; gap: 12px; font-size: clamp(34px, 4vw, 44px); font-weight: 600; line-height: 1.18; letter-spacing: -.04em; margin: 0; }
-  .prompt-count { margin-top: 5px; font-size: 12px; font-family: var(--mono-font); font-weight: 400; letter-spacing: 0; color: var(--muted); }
+  .prompt-intro { margin-bottom: 26px; }
+  .prompt-eyebrow { margin: 0 0 8px; color: var(--blue); font-size: 10px; font-weight: 650; letter-spacing: .12em; }
+  .prompt-intro h1 { display: flex; align-items: start; gap: 12px; margin: 0; font-size: clamp(34px, 4vw, 44px); font-weight: 600; line-height: 1.18; letter-spacing: -.04em; }
+  .prompt-count { margin-top: 5px; color: var(--muted); font: 12px var(--mono-font); letter-spacing: 0; }
   .prompt-intro > p:last-child { max-width: 650px; margin: 8px 0 0; font-size: 13px; line-height: 1.6; }
-  .prompt-filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 20px 0 12px; scroll-margin-top: 88px; }
-  .prompt-filters button { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--muted); font: 600 12px var(--body-font); cursor: pointer; }
+  .prompt-layout { display: grid; grid-template-columns: minmax(285px, 330px) minmax(0, 1fr); gap: 36px; align-items: start; }
+  .prompt-discovery { position: sticky; top: 90px; display: flex; flex-direction: column; min-width: 0; max-height: calc(100dvh - 110px); padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+  .prompt-search-label { margin: 0 0 9px; color: var(--ink); font-size: 15px; font-weight: 650; }
+  .prompt-search-field { display: flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--muted); }
+  .prompt-search-field:focus-within { border-color: var(--blue); outline: 2px solid color-mix(in srgb, var(--blue) 20%, transparent); }
+  .prompt-search-field input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: 13px var(--body-font); }
+  .prompt-search-field input::placeholder { color: var(--muted); }
+  .prompt-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; padding: 16px 0 18px; }
+  .prompt-filters button { display: inline-flex; align-items: center; justify-content: space-between; gap: 5px; min-height: 34px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 5px; background: transparent; color: var(--muted); font: 500 12px var(--body-font); text-align: left; cursor: pointer; }
   .prompt-filters button span { color: var(--soft); font: 11px var(--mono-font); }
-  .prompt-filters button:hover { color: var(--ink); border-color: var(--blue); }
-  .prompt-filters button[aria-pressed='true'] { border-color: var(--blue); color: var(--blue); background: var(--paper); }
+  .prompt-filters button:hover { border-color: var(--blue); color: var(--ink); }
+  .prompt-filters button[aria-pressed='true'] { border-color: var(--blue); background: var(--bg); color: var(--blue); font-weight: 650; }
   .prompt-filters button[aria-pressed='true'] span { color: var(--blue); }
-  .prompt-filters button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-  .prompt-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: clamp(48px, 5vw, 76px); align-items: start; }
-  .prompt-index { grid-column: 1; grid-row: 1; min-width: 0; position: sticky; top: 90px; }
-  .prompt-index-desktop { max-height: calc(100dvh - 110px); overflow-y: auto; padding: 12px 10px 40px 0; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--blue) 40%, transparent) transparent; }
-  .prompt-index[data-has-more]::after { content: ''; position: absolute; right: 8px; bottom: 0; left: 0; height: 24px; pointer-events: none; background: linear-gradient(transparent, var(--bg)); }
-  .prompt-index-desktop::-webkit-scrollbar, .prompt-index-mobile nav::-webkit-scrollbar { width: 6px; }
-  .prompt-index-desktop::-webkit-scrollbar-track, .prompt-index-mobile nav::-webkit-scrollbar-track { background: transparent; }
-  .prompt-index-desktop::-webkit-scrollbar-thumb, .prompt-index-mobile nav::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--blue) 38%, transparent); border-radius: 999px; }
-  .prompt-index-desktop:hover::-webkit-scrollbar-thumb, .prompt-index-mobile nav:hover::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--blue) 65%, transparent); }
-  .prompt-index-heading { display: flex; justify-content: space-between; margin: 0 0 16px; padding-left: 12px; color: var(--ink); font-size: 13px; font-weight: 650; }
-  .prompt-index-heading span { color: var(--soft); font: 11px var(--mono-font); }
+  .prompt-results-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 10px; border-top: 1px solid var(--line); padding-top: 16px; }
+  .prompt-results-heading strong { font-size: 13px; font-weight: 650; }
+  .prompt-results-heading span { color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .prompt-index { min-height: 90px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--blue) 40%, transparent) transparent; }
   .prompt-index-links { list-style: none; margin: 0; padding: 0; }
-  .prompt-index-links a { display: flex; align-items: baseline; gap: 12px; padding: 10px 12px; border-left: 2px solid transparent; color: var(--muted); font-size: 13px; line-height: 1.55; text-decoration: none; transition: color .15s, border-color .15s, background .15s; }
-  .prompt-index-links a:hover { color: var(--ink); }
-  .prompt-index-links a[aria-current="location"] { border-left-color: var(--blue); color: var(--blue); background: var(--paper); font-weight: 600; }
-  .prompt-index-number { flex: none; color: var(--soft); font: 11px var(--mono-font); }
-  .prompt-index-links a[aria-current="location"] .prompt-index-number { color: var(--blue); }
-  .prompt-index-pin { flex: none; margin-left: auto; color: var(--blue); font-size: 10px; font-weight: 650; }
-  .prompt-index-mobile { display: none; }
-  .prompt-list { min-width: 0; grid-column: 2; grid-row: 1; }
-  .prompt-entry { padding: 14px 0 12px; border-bottom: 1px solid var(--line); }
-  .prompt-entry-heading { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; align-items: center; column-gap: 12px; row-gap: 4px; }
-  .prompt-entry-meta { display: flex; grid-column: 1; grid-row: 1; gap: 6px; align-items: center; margin: 0; font-size: 10px; letter-spacing: .02em; white-space: nowrap; }
-  .prompt-entry-meta span:first-child { color: var(--blue); font-weight: 650; }
-  .prompt-entry-meta span:last-child { color: var(--soft); font-family: var(--mono-font); }
-  .prompt-entry-meta .prompt-pin-tag { color: var(--blue); font: 650 10px var(--body-font); letter-spacing: 0; }
-  .prompt-entry h2 { grid-column: 2; grid-row: 1; font-size: clamp(19px, 2vw, 22px); font-weight: 600; margin: 0; letter-spacing: -.02em; line-height: 1.35; }
-  .prompt-description { grid-column: 2 / -1; grid-row: 2; margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
-  .prompt-used-case { display: flex; align-items: baseline; gap: 8px; grid-column: 2 / -1; grid-row: 3; margin: 1px 0 0; min-width: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
-  .prompt-used-case strong { flex: none; color: var(--blue); font-weight: 600; }
-  .prompt-used-case span { min-width: 0; }
-  .prompt-copy { display: inline-flex; grid-column: 3; grid-row: 1; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; transition: background .18s, color .18s; }
-  .prompt-copy:hover, .prompt-copy.copied { background: var(--blue); border-color: var(--blue); color: var(--bg); }
-  .prompt-details { margin: 0 0 0 132px; }
-  .prompt-details summary { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 4px 0 0; color: var(--blue); font-size: 12px; cursor: pointer; list-style: none; }
-  .prompt-details summary:hover { color: var(--ink); }
-  .prompt-details summary::-webkit-details-marker { display: none; }
-  .prompt-details summary svg { transition: transform .2s ease; }
-  .prompt-details[open] summary svg { transform: rotate(180deg); }
-  .prompt-details[open] summary { margin-bottom: 8px; }
-  .prompt-content { display: block; margin: 0; padding: 20px; border: 1px solid var(--line); border-radius: var(--radius); white-space: pre-wrap; overflow-wrap: anywhere; font: 14px/1.9 var(--body-font); color: var(--ink); background: var(--paper); tab-size: 2; }
-  @media (hover: hover) and (pointer: fine) {
-    .prompt-details[open]:not([data-pinned='true']) .prompt-content { max-height: min(44vh, 360px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--blue) 35%, transparent) transparent; }
-  }
-  .prompt-copy-feedback { margin: 4px 0 0; color: var(--blue); font-size: 12px; }
+  .prompt-index-links li + li { margin-top: 4px; }
+  .prompt-index-links a { display: block; padding: 12px 12px 12px 13px; border-left: 2px solid transparent; border-radius: 4px; color: var(--ink); text-decoration: none; transition: background .15s, border-color .15s; }
+  .prompt-index-links a:hover { background: var(--bg); }
+  .prompt-index-links a[aria-current='true'] { border-left-color: var(--blue); background: var(--bg); }
+  .prompt-index-title { display: block; font-size: 13px; font-weight: 600; line-height: 1.5; }
+  .prompt-index-description { display: -webkit-box; overflow: hidden; margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.5; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .prompt-index-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; color: var(--soft); font-size: 10px; }
+  .prompt-index-pin { color: var(--blue); font-weight: 650; }
+  .prompt-no-results { color: var(--muted); font-size: 13px; line-height: 1.8; }
+  .prompt-detail { min-width: 0; padding-top: 4px; scroll-margin-top: 100px; }
+  .prompt-entry { scroll-margin-top: 100px; }
+  .prompt-detail-topline { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 12px; }
+  .prompt-pin-tag { color: var(--blue); font-weight: 650; }
+  .prompt-entry h2 { margin: 10px 0 14px; font-size: clamp(26px, 2.6vw, 32px); font-weight: 650; line-height: 1.38; letter-spacing: -.02em; }
+  .prompt-entry h2:focus { outline: none; }
+  .prompt-description { max-width: 730px; margin: 0; color: var(--muted); font-size: 15px; line-height: 1.8; }
+  .prompt-used-case { margin: 22px 0 30px; padding: 14px 18px; border-left: 2px solid var(--blue); border-radius: 0 6px 6px 0; background: var(--paper); }
+  .prompt-used-case strong { color: var(--blue); font-size: 12px; font-weight: 650; }
+  .prompt-used-case p { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+  .prompt-content-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .prompt-content-heading h3 { margin: 0; font-size: 16px; font-weight: 650; }
+  .prompt-copy { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 1px solid var(--blue); border-radius: 6px; background: var(--blue); color: var(--bg); font: 600 13px var(--body-font); cursor: pointer; transition: filter .15s; }
+  .prompt-copy:hover { filter: brightness(.9); }
+  .prompt-copy.copied { filter: brightness(.9); }
+  .prompt-content { display: block; margin: 0; padding: 24px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; font: 14px/1.9 var(--body-font); tab-size: 2; }
+  .prompt-copy-feedback { margin: -4px 0 10px; color: var(--blue); font-size: 12px; }
   .prompt-copy-feedback:empty { display: none; }
-  @media (max-width: 1100px) {
-    .prompt-entry-heading { grid-template-columns: minmax(0, 1fr) auto; }
-    .prompt-entry-meta { grid-column: 1 / -1; grid-row: 1; }
-    .prompt-entry h2 { grid-column: 1; grid-row: 2; }
-    .prompt-copy { grid-column: 2; grid-row: 2; }
-    .prompt-description { grid-column: 1 / -1; grid-row: 3; }
-    .prompt-used-case { grid-column: 1 / -1; grid-row: 4; }
-    .prompt-details { margin-left: 0; }
-  }
+  .prompt-detail-empty { margin-top: 20px; padding: 24px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 14px; }
+  .prompt-entry[hidden], .prompt-index-links li[hidden], .prompt-no-results[hidden], .prompt-detail-empty[hidden] { display: none !important; }
+  .prompt-index-links a:focus-visible, .prompt-filters button:focus-visible, .prompt-copy:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   @media (max-width: 850px) {
     .prompt-layout { display: block; }
-    .prompt-index { position: static; }
-    .prompt-index::after { display: none; }
-    .prompt-index-desktop { display: none; }
-    .prompt-index-mobile { display: block; margin-top: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
-    .prompt-index-mobile summary { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 12px 16px; cursor: pointer; list-style: none; font-size: 14px; font-weight: 600; }
-    .prompt-index-mobile summary::-webkit-details-marker { display: none; }
-    .prompt-index-mobile summary span { margin-left: auto; color: var(--soft); font: 11px var(--mono-font); }
-    .prompt-index-mobile summary svg { transition: transform .2s; }
-    .prompt-index-mobile[open] summary svg { transform: rotate(180deg); }
-    .prompt-index-mobile nav { max-height: 50vh; overflow-y: auto; border-top: 1px solid var(--line-soft); padding: 8px 12px 12px; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--blue) 40%, transparent) transparent; }
-    .prompt-index-links a { min-height: 42px; align-items: center; font-size: 13px; }
+    .prompt-discovery { position: static; max-height: none; }
+    .prompt-index { max-height: 300px; }
+    .prompt-detail { margin-top: 32px; }
   }
   @media (max-width: 650px) {
     .prompt-library { padding-top: 20px; padding-bottom: 60px; }
-    .prompt-entry { padding: 13px 0 10px; }
-    .prompt-entry h2 { font-size: 18px; }
-    .prompt-copy { min-height: 36px; padding: 0 10px; }
-    .prompt-content { padding: 16px; font-size: 14px; line-height: 1.85; }
+    .prompt-intro { margin-bottom: 20px; }
+    .prompt-discovery { padding: 14px; }
+    .prompt-entry h2 { font-size: 25px; }
+    .prompt-content { padding: 16px; font-size: 14px; }
+    .prompt-content-heading { align-items: flex-start; flex-direction: column; }
+    .prompt-copy { width: 100%; }
   }
 </style>
