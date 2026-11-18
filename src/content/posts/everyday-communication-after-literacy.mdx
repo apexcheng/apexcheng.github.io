@@ -59,7 +59,7 @@ import { withBase } from '../../utils/paths';
 
 这两句前后说的都是同一批同事。先交代他们要体检，再交代遇到的困难。「但是」连起的是两件有关联的事，读者很容易跟上。
 
-再读原句。前半句「有需要体检的同事」介绍了一批人。到了「但是」，读者会等着看这批人遇到了什么困难。后半句却用「没带身份证的」另起一个对象，直接交代今天一起体检。一句话里既想缩小通知对象，又想给这批人安排时间，两层意思挤在了同一个「但是」后面。
+再读原句。前半句「有需要体检的同事」介绍了一批人。到了「但是」，读者会等着看这批人遇到了什么困难。后半句却用「没带身份证的」另起一个对象，直接交代今天一起体检。缩小通知对象和交代体检时间这两层意思，都挤在了同一个「但是」后面。
 
 把对象先说完整，句子就顺了。「**需要体检但没带身份证的同事，今天也一起体检。**」这里的「但」连着「需要体检」和「没带身份证」，整段一起限定这次要通知的是哪批人。
 
@@ -77,11 +77,15 @@ import { withBase } from '../../utils/paths';
 
 ## 二、到底要不要带身份证？
 
+<div class="checkup-table checkup-table--requirements">
+
 | 信息 | 字面上能确定什么 | 没带证的同事还需要知道什么 |
 | --- | --- | --- |
 | 第一条 | 通知要求体检同事带好身份证。 | 现场是否接受例外。 |
 | 第二条 | 没带身份证的同事也被安排在今天。 | 这是否意味着当天可以无证办理。 |
 | 两条合起来 | 新的时间安排已经发出，带证要求是否变化未明说。 | 现在下楼能直接办，还是要先联系负责人。 |
+
+</div>
 
 第二条特意点出了没带证的人，还说今天一起体检。读者顺着这句话推断「那今天应该不用带了」，完全可以理解。**这个说法是从上下文推出来的。现场能否无证办理，仍然没有明确答复。**
 
@@ -124,6 +128,8 @@ import { withBase } from '../../utils/paths';
 
 ### 1. 对应的概念
 
+<div class="checkup-table checkup-table--concepts">
+
 | 说法 | 在这个案例里是什么意思 |
 | --- | --- |
 | **语义歧义**（Semantic Ambiguity） | 句子里的对象或关系读起来不够明确，例如「没带身份证的」指哪批人。 |
@@ -132,6 +138,8 @@ import { withBase } from '../../utils/paths';
 | **歧义传播**（Ambiguity Propagation） | 含糊信息被原样转发、摘要或带进下一轮对话，下一个接收者仍得自行理解。 |
 | **推测被固化为事实** | AI 选定了一种读法，把「今天可以无证体检」写成已经确认的办事规则。 |
 | **上下文污染**（Context Pollution） | 当错误或未经确认的信息被当作可靠前提留在对话或记录里，后面的判断跟着受影响。这里把它用作宽泛的描述。 |
+
+</div>
 
 前面几项回答的是「原话这个地方怎么理解」。后面几项回答的是「这句话被转述、记录、复用以后出现了什么影响」。
 
@@ -209,6 +217,31 @@ import { withBase } from '../../utils/paths';
     font-weight: 700;
   }
 
+  .checkup-table {
+    max-width: 800px;
+    margin: 1.15rem 0;
+  }
+
+  .article-content .checkup-table table {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    margin: 0;
+  }
+
+  .article-content .checkup-table :is(th, td) {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .checkup-table--requirements th:first-child {
+    width: 18%;
+  }
+
+  .checkup-table--concepts th:first-child {
+    width: 34%;
+  }
+
   .checkup-rewrites,
   .checkup-stages {
     max-width: 800px;
@@ -253,6 +286,10 @@ import { withBase } from '../../utils/paths';
   }
 
   @media (max-width: 720px) {
+    .article-content .checkup-table :is(th, td) {
+      padding-inline: 0.55rem;
+    }
+
     .checkup-rewrites > div,
     .checkup-stages {
       grid-template-columns: 1fr;
