@@ -55,8 +55,8 @@ const returnPath = encodeURIComponent(Astro.url.pathname + Astro.url.search);
             <summary aria-label="选择主题"><Sun class="light-icon" size={18} /><Moon class="dark-icon" size={18} /><span>主题</span></summary>
             <div class="utility-panel theme-panel">
               <p class="utility-label">选择主题</p>
-              <button type="button" data-theme-option data-home-style-value="paper-notes" data-style-theme-value="visual-system" data-theme-value="light"><i class="theme-swatch swatch-paper"></i><span>纸张手记<small>纸张与手记风格的首页</small></span><Check size={16} /></button>
-              <button type="button" data-theme-option data-home-style-value="visual-blue" data-style-theme-value="clarity" data-theme-value="light"><i class="theme-swatch swatch-visual-blue"></i><span>视觉晶蓝<small>蓝青紫渐变，清透明亮</small></span><Check size={16} /></button>
+              <button type="button" data-theme-option data-home-style-value="paper-notes" data-home-url={withBase('/')} data-style-theme-value="visual-system" data-theme-value="light"><i class="theme-swatch swatch-paper"></i><span>纸张手记<small>纸张与手记风格的首页</small></span><Check size={16} /></button>
+              <button type="button" data-theme-option data-home-style-value="visual-blue" data-home-url={withBase('/home-v1/')} data-style-theme-value="clarity" data-theme-value="light"><i class="theme-swatch swatch-visual-blue"></i><span>视觉晶蓝<small>蓝青紫渐变，清透明亮</small></span><Check size={16} /></button>
               <button type="button" data-theme-option data-style-theme-value="classic" data-theme-value="dark"><i class="theme-swatch swatch-ink"></i><span>玄墨<small>深色阅读，保留当前首页选择</small></span><Check size={16} /></button>
             </div>
           </details>

@@ -86,6 +86,10 @@ themeOptions.forEach((option) => option.addEventListener('click', () => {
   syncTheme();
   option.closest('details').open = false;
   option.closest('details').querySelector('summary').focus();
+  const homeUrl = option.dataset.homeUrl;
+  if (homeStyle && homeUrl && window.location.pathname !== homeUrl) {
+    window.location.assign(homeUrl);
+  }
 }));
 
 document.querySelectorAll('[data-intro-link]').forEach((link) => {

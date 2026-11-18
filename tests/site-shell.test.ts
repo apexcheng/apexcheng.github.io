@@ -80,7 +80,7 @@ function setup({ mobile = false, blockedStorage = false } = {}) {
       themeOption: '',
       styleThemeValue: style,
       themeValue: i === 2 ? 'dark' : 'light',
-      ...(i === 0 ? { homeStyleValue: 'paper-notes' } : i === 1 ? { homeStyleValue: 'visual-blue' } : {}),
+      ...(i === 0 ? { homeStyleValue: 'paper-notes', homeUrl: '/' } : i === 1 ? { homeStyleValue: 'visual-blue', homeUrl: '/home-v1/' } : {}),
     });
     const label = new Element('span'); label.textContent = ['纸张手记', '视觉晶蓝', '玄墨'][i]; option.append(label); themeMenu.append(option); return option;
   });
@@ -123,12 +123,13 @@ function setup({ mobile = false, blockedStorage = false } = {}) {
   };
   let viewportChange: () => void = () => {};
   const viewport = { matches: !mobile, addEventListener: (_type: string, callback: () => void) => { viewportChange = callback; } };
-  const location = { pathname: '/articles/pagination/', search: '?from=home', hash: '#part-2' };
+  const navigations: string[] = [];
+  const location = { pathname: '/articles/pagination/', search: '?from=home', hash: '#part-2', assign: (url: string) => navigations.push(url) };
   vm.runInNewContext(source, {
     document, window: { matchMedia: () => viewport, location },
     navigator: { platform: 'MacIntel' }, localStorage: storage, sessionStorage: storage, URL,
   });
-  return { root, header, navigation, navToggle, themeMenu, themeSummary, themeOptions, introMenu, introSummary, introLink, toggle, search, input, results, status, close, filter, stored, meta, viewport, viewportChange, location, focused: () => active };
+  return { root, header, navigation, navToggle, themeMenu, themeSummary, themeOptions, introMenu, introSummary, introLink, toggle, search, input, results, status, close, filter, stored, meta, viewport, viewportChange, location, navigations, focused: () => active };
 }
 
 describe('production shared-shell interactions', () => {
@@ -234,6 +235,14 @@ describe('production shared-shell interactions', () => {
     expect(s.meta.content).toBe('#f6f8fc');
     expect(s.stored.get('styleTheme')).toBe('clarity');
     expect(s.stored.get('homeStyle')).toBe('visual-blue');
+    expect(s.navigations).toEqual(['/home-v1/']);
+  });
+  it('switches back to the paper notes homepage when that theme is selected', () => {
+    const s = setup();
+    s.themeMenu.open = true;
+    s.themeOptions[0].click();
+    expect(s.stored.get('homeStyle')).toBe('paper-notes');
+    expect(s.navigations).toEqual(['/']);
   });
   it('closes mobile navigation on Escape and search, and resets correctly at the desktop breakpoint', () => {
     const s = setup({ mobile: true });
