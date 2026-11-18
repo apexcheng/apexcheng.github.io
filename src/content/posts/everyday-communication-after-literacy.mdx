@@ -13,6 +13,8 @@ draft: false
 private: false
 ---
 
+import { withBase } from '../../utils/paths';
+
 我们上学时做过很多阅读理解。工作以后，轮到我们天天出题。群里发一句「还是按之前的来」，对方得先想想，之前是哪一次？这次又有哪些地方要照旧？
 
 读书时，题目没看懂，还能回头多读两遍。工作群里的消息多读两遍，缺的那句话还是得找人问。**识字是读懂一条消息的起点。能把事情说到别人知道接下来怎么办，是另一项本事。**
@@ -20,6 +22,18 @@ private: false
 ## 每个字都懂，到底要不要下楼？
 
 下面是同一个工作群里先后发出的两条体检通知。
+
+<figure class="checkup-notice-image">
+  <img
+    src={withBase('/images/everyday-communication/dingtalk-checkup.webp')}
+    alt="两条钉钉群体检通知，正文下方附有原文。"
+    width="690"
+    height="434"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption>钉钉群原截图，姓名已打码。</figcaption>
+</figure>
 
 > @所有人 需要体检的同事可以下去体检了 请带好身份证
 
@@ -48,3 +62,21 @@ private: false
 把这两条原通知交给 AI 总结，它也可能把「没带证的人今天一起体检」写成「今天可以无证体检」。下一位同事如果只看摘要，就会把现场规则当成已经确认。这个麻烦在打开 AI 之前就有了。光是发一条工作群消息，我们已经有理由练习把话说清楚。
 
 下次在群里打完「照旧」或者「一起去」，停一下，想想对方拿着这句话要做什么。要是他还得追问一句「所以我现在能不能去」，那一句就是值得补上的话。
+
+<style>{`
+  .checkup-notice-image {
+    margin: 1rem 0 1.5rem;
+  }
+
+  .checkup-notice-image img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .checkup-notice-image figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+`}</style>
