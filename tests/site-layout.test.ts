@@ -48,10 +48,16 @@ describe('shared site shell', () => {
     }
   });
 
-  it('keeps historical homepage experiments reachable without replacing official home links', () => {
-    for (const path of ['/home-redesign/', '/home-redesign-2/', '/home-redesign-3/']) expect(footer).toContain(`withBase('${path}')`);
+  it('uses the two approved homepage designs as themes instead of exposing old experiments in the footer', () => {
+    expect(header).toContain('纸张手记');
+    expect(header).toContain('视觉晶蓝');
+    expect(header).toContain('玄墨');
+    expect(header).not.toContain('素纸');
+    expect(footer).not.toContain('footer-experiments');
     expect(layout).not.toContain('HomeIndexMenu');
     expect(header).toContain("href={withBase('/')} aria-label");
+    expect(readFileSync('src/pages/index.astro', 'utf8')).toContain("homeStyle === 'visual-blue'");
+    expect(readFileSync('src/pages/home-v1.astro', 'utf8')).toContain('HomeIndexMenu current="visual-blue"');
   });
 
   it('keeps a skip link, mobile navigation and motion fallback', () => {

@@ -76,8 +76,13 @@ function setup({ mobile = false, blockedStorage = false } = {}) {
   const themeSummary = new Element('summary');
   themeMenu.append(themeSummary);
   const themeOptions = ['visual-system', 'clarity', 'classic'].map((style, i) => {
-    const option = new Element('button', { themeOption: '', styleThemeValue: style, themeValue: i === 2 ? 'dark' : 'light' });
-    const label = new Element('span'); label.textContent = ['素纸', '清晰经典', '玄墨'][i]; option.append(label); themeMenu.append(option); return option;
+    const option = new Element('button', {
+      themeOption: '',
+      styleThemeValue: style,
+      themeValue: i === 2 ? 'dark' : 'light',
+      ...(i === 0 ? { homeStyleValue: 'paper-notes' } : i === 1 ? { homeStyleValue: 'visual-blue' } : {}),
+    });
+    const label = new Element('span'); label.textContent = ['纸张手记', '视觉晶蓝', '玄墨'][i]; option.append(label); themeMenu.append(option); return option;
   });
   const introMenu = new Element('details', { utilityMenu: 'intro' });
   const introSummary = new Element('summary');
@@ -112,7 +117,10 @@ function setup({ mobile = false, blockedStorage = false } = {}) {
     addEventListener: root.addEventListener.bind(root),
   };
   const stored = new Map<string, string>();
-  const storage = { setItem: (key: string, value: string) => { if (blockedStorage) throw new Error('Blocked'); stored.set(key, value); } };
+  const storage = {
+    getItem: (key: string) => { if (blockedStorage) throw new Error('Blocked'); return stored.get(key) ?? null; },
+    setItem: (key: string, value: string) => { if (blockedStorage) throw new Error('Blocked'); stored.set(key, value); },
+  };
   let viewportChange: () => void = () => {};
   const viewport = { matches: !mobile, addEventListener: (_type: string, callback: () => void) => { viewportChange = callback; } };
   const location = { pathname: '/articles/pagination/', search: '?from=home', hash: '#part-2' };
@@ -217,7 +225,7 @@ describe('production shared-shell interactions', () => {
       if (!blockedStorage) expect(s.stored.get('theme')).toBe('dark');
     }
   });
-  it('switches to the cool clarity theme, remembers its selection and updates the browser color', () => {
+  it('switches to the visual blue theme, remembers its homepage selection and updates the browser color', () => {
     const s = setup();
     s.themeMenu.open = true;
     s.themeOptions[1].click();
@@ -225,6 +233,7 @@ describe('production shared-shell interactions', () => {
     expect(s.themeOptions[1].attributes['aria-pressed']).toBe('true');
     expect(s.meta.content).toBe('#f6f8fc');
     expect(s.stored.get('styleTheme')).toBe('clarity');
+    expect(s.stored.get('homeStyle')).toBe('visual-blue');
   });
   it('closes mobile navigation on Escape and search, and resets correctly at the desktop breakpoint', () => {
     const s = setup({ mobile: true });

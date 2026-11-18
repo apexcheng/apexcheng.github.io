@@ -65,14 +65,21 @@ function syncTheme() {
   const selected = themeOptions.find((option) => option.dataset.styleThemeValue === style);
   themeOptions.forEach((option) => option.setAttribute('aria-pressed', String(option === selected)));
   const summary = document.querySelector('[data-utility-menu="theme"] > summary');
-  summary.setAttribute('aria-label', `选择主题，当前${selected?.querySelector('span')?.firstChild.textContent || '素纸'}`);
+  summary.setAttribute('aria-label', `选择主题，当前${selected?.querySelector('span')?.firstChild.textContent || '纸张手记'}`);
   document.querySelector('meta[name="theme-color"]').content = style === 'classic' ? '#18201e' : style === 'clarity' ? '#f6f8fc' : '#f5f4ef';
 }
 syncTheme();
 themeOptions.forEach((option) => option.addEventListener('click', () => {
+  const currentStyle = document.documentElement.dataset.styleTheme;
+  const homeStyle = option.dataset.homeStyleValue;
   document.documentElement.dataset.theme = option.dataset.themeValue;
   document.documentElement.dataset.styleTheme = option.dataset.styleThemeValue;
   try {
+    if (homeStyle) {
+      localStorage.setItem('homeStyle', homeStyle);
+    } else if (!localStorage.getItem('homeStyle')) {
+      localStorage.setItem('homeStyle', currentStyle === 'clarity' ? 'visual-blue' : 'paper-notes');
+    }
     localStorage.setItem('theme', option.dataset.themeValue);
     localStorage.setItem('styleTheme', option.dataset.styleThemeValue);
   } catch (error) {}

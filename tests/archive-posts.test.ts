@@ -16,7 +16,8 @@ describe('article archiving', () => {
   it('removes archived articles from normal discovery and feeds', () => {
     const files = [
       'src/pages/home-redesign-1.astro',
-      'src/pages/home-redesign-2.astro',
+      'src/pages/index.astro',
+      'src/pages/home-v1.astro',
       'src/pages/home-redesign-3.astro',
       'src/pages/home-redesign.astro',
       'src/pages/articles/category/[category].astro',

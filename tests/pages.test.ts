@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 const indexSource = readFileSync('src/pages/index.astro', 'utf8');
 const homeSource = readFileSync('src/pages/home-redesign-1.astro', 'utf8');
-const paperHomeSource = readFileSync('src/pages/home-redesign-2.astro', 'utf8');
+const visualBlueHomeSource = readFileSync('src/pages/home-v1.astro', 'utf8');
+const paperHomeSource = indexSource;
 const workbenchHomeSource = readFileSync('src/pages/home-redesign-3.astro', 'utf8');
 const exhibitionHomeSource = readFileSync('src/pages/home-redesign.astro', 'utf8');
 const aboutSource = readFileSync('src/pages/about.astro', 'utf8');
@@ -17,15 +18,18 @@ const headerSource = readFileSync('src/components/SiteHeader.astro', 'utf8');
 const rssSource = readFileSync('src/pages/rss.xml.ts', 'utf8');
 
 describe('front page structure', () => {
-  it('keeps the home hero as the first-page reading entry', () => {
-    expect(indexSource).toContain("import HomeRedesignOne from './home-redesign-1.astro'");
-    expect(indexSource).toContain('<HomeRedesignOne />');
-    expect(homeSource).toContain('<section class="journal-hero" aria-labelledby="home-title">');
-    expect(homeSource).toContain('让经验成章。');
-    expect(homeSource).toContain('把复杂的事弄明白，再把有用的经验留下来。');
-    expect(homeSource).toContain('class="journal-hero-links"');
-    expect(homeSource).toContain("withBase('/articles/')");
-    expect(homeSource).toContain("withBase('/projects/')");
+  it('keeps paper notes as the default homepage and visual blue as the selectable alternative', () => {
+    expect(indexSource).toContain('<html lang="zh-CN" class="paper-page">');
+    expect(indexSource).toContain('<title>纸张手记 | {siteMeta.siteName}</title>');
+    expect(indexSource).toContain('把真实问题，拆成');
+    expect(indexSource).toContain("const introReturn = encodeURIComponent(withBase('/'))");
+    expect(indexSource).toContain("homeStyle === 'visual-blue'");
+    expect(indexSource).toContain("data-visual-blue-home={withBase('/home-v1/')}");
+    expect(visualBlueHomeSource).toContain('<html lang="zh-CN" data-theme="light" class="design-one-page">');
+    expect(visualBlueHomeSource).toContain('视觉晶蓝');
+    expect(visualBlueHomeSource).toContain('HomeIndexMenu current="visual-blue"');
+    expect(visualBlueHomeSource).toContain("withBase('/articles/')");
+    expect(visualBlueHomeSource).toContain("withBase('/projects/')");
   });
 
   it('keeps home project entry aligned with the projects page', () => {
@@ -41,12 +45,14 @@ describe('front page structure', () => {
   it('keeps homepage intro returns and internal home navigation state consistent', () => {
     expect(homeSource).toContain("standalone={!isOfficialHome}");
     expect(layoutSource).toContain("<HomeIntroState pageKind={pageKind} />");
-    expect(paperHomeSource).toContain('<HomeIntroState pageKind="standalone" />');
+    expect(paperHomeSource).toContain('<HomeIntroState pageKind="home" />');
     expect(workbenchHomeSource).toContain('<HomeIntroState pageKind="standalone" />');
     expect(exhibitionHomeSource).toContain('<HomeIntroState pageKind="standalone" />');
-    expect(paperHomeSource).toContain("const introReturn = encodeURIComponent(withBase('/home-redesign-2/'))");
+    expect(paperHomeSource).toContain("const introReturn = encodeURIComponent(withBase('/'))");
     expect(paperHomeSource).toContain('`/intro-motion-2/?return=${introReturn}`');
     expect(paperHomeSource).toContain('`/intro-motion-3/?return=${introReturn}`');
+    expect(visualBlueHomeSource).toContain('<HomeIntroState pageKind="home" />');
+    expect(visualBlueHomeSource).toContain("const introReturn = encodeURIComponent(withBase('/home-v1/'))");
   });
 
   it('shows actual publication dates instead of invented current activity', () => {

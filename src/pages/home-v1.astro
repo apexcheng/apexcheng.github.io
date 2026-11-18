@@ -25,7 +25,7 @@ import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
 
 const posts = (await getCollection('posts'))
-  .filter((post) => !post.data.draft && !post.data.private)
+  .filter((post) => !post.data.draft && !post.data.private && !post.data.archived)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
 const latestPosts = posts.filter((post) => post.data.category !== '视觉实验室').slice(0, 4);
@@ -84,17 +84,19 @@ const introReturn = encodeURIComponent(withBase('/home-v1/'));
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="黄撑的个人博客 V1 首页，恢复视觉晶蓝主题与原版首页布局。"
+      content="黄撑的个人博客视觉晶蓝主题首页，以清透的蓝青紫视觉记录生活思考、技术实践与项目经验。"
     />
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#f6f8fc" />
     <link rel="icon" type="image/png" sizes="256x256" href={withBase('/favicon.png?v=5')} />
     <link rel="stylesheet" href={withBase('/fonts/typography.css')} />
-    <title>{`视觉晶蓝首页 V1 | ${siteMeta.siteName}`}</title>
+    <title>{`视觉晶蓝 | ${siteMeta.siteName}`}</title>
     <script is:inline>
       try {
-        document.documentElement.dataset.theme =
-          localStorage.getItem('home-redesign-1-theme') === 'dark' ? 'dark' : 'light';
+        var savedTheme = localStorage.getItem('theme');
+        var isDark = savedTheme === 'dark'
+          || (!savedTheme && localStorage.getItem('home-redesign-1-theme') === 'dark');
+        document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
       } catch (error) {
         document.documentElement.dataset.theme = 'light';
       }
@@ -114,8 +116,7 @@ const introReturn = encodeURIComponent(withBase('/home-v1/'));
       </button>
 
       <nav class="site-nav" aria-label="主导航" data-site-nav>
-        <a href={withBase('/')} data-home-link>首页</a>
-        <a class="active" href={withBase('/home-v1/')}>视觉晶蓝首页</a>
+        <a class="active" href={withBase('/')} data-home-link>首页</a>
         <a href={withBase('/articles/')}>文章</a>
         <a href={withBase('/series/')}>系列</a>
         <a href={withBase('/projects/')}>项目</a>
@@ -150,9 +151,9 @@ const introReturn = encodeURIComponent(withBase('/home-v1/'));
       </nav>
 
       <div class="header-controls">
-        <button type="button" data-theme-toggle aria-label="切换浅色或深色主题">
+        <button type="button" data-theme-toggle aria-label="切换明暗模式">
           <Sun size={16} stroke-width={1.9} />
-          主题
+          明暗
         </button>
         <div class="intro-control" data-intro-control>
           <button type="button" aria-expanded="false" data-intro-toggle>
@@ -170,7 +171,7 @@ const introReturn = encodeURIComponent(withBase('/home-v1/'));
             </a>
           </div>
         </div>
-        <HomeIndexMenu current="home-redesign-1" />
+        <HomeIndexMenu current="visual-blue" />
       </div>
 
     </header>
@@ -479,7 +480,11 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
           themeToggle.addEventListener('click', function () {
             var nextTheme = root.dataset.theme === 'dark' ? 'light' : 'dark';
             root.dataset.theme = nextTheme;
-            try { localStorage.setItem('home-redesign-1-theme', nextTheme); } catch (error) {}
+            try {
+              localStorage.setItem('theme', nextTheme);
+              localStorage.setItem('styleTheme', nextTheme === 'dark' ? 'classic' : 'clarity');
+              localStorage.setItem('home-redesign-1-theme', nextTheme);
+            } catch (error) {}
           });
         }
 

@@ -2,49 +2,27 @@
 import { withBase } from '../utils/paths';
 
 interface Props {
-  current?: 'home-redesign' | 'home-redesign-1' | 'home-redesign-2' | 'home-redesign-3';
+  current?: 'paper-notes' | 'visual-blue' | 'home-redesign' | 'home-redesign-3';
 }
 
 const { current } = Astro.props;
 const homeOptions = [
   {
-    id: 'home-redesign-1',
-    title: '视觉晶蓝',
-    note: 'V1 原版首页',
-    href: withBase('/home-v1/'),
-    styleTheme: 'clarity',
-    theme: 'light',
-  },
-  {
-    id: 'current-home',
-    title: '当前首页',
-    note: '期刊式首页',
+    id: 'paper-notes',
+    homeStyle: 'paper-notes',
+    title: '纸张手记',
+    note: '纸张与手记的阅读体验',
     href: withBase('/'),
     styleTheme: 'visual-system',
     theme: 'light',
   },
   {
-    id: 'home-redesign',
-    title: '数字展厅',
-    note: '沉浸式技术展厅',
-    href: withBase('/home-redesign/'),
-    styleTheme: '',
-    theme: '',
-  },
-  {
-    id: 'home-redesign-2',
-    title: '纸张手记',
-    note: '温和的纸张与手记感',
-    href: withBase('/home-redesign-2/'),
-    styleTheme: 'visual-system',
-    theme: 'light',
-  },
-  {
-    id: 'home-redesign-3',
-    title: '个人工作台',
-    note: '清晰直接的知识工作台',
-    href: withBase('/home-redesign-3/'),
-    styleTheme: 'visual-system',
+    id: 'visual-blue',
+    homeStyle: 'visual-blue',
+    title: '视觉晶蓝',
+    note: '蓝青紫渐变的视觉表达',
+    href: withBase('/home-v1/'),
+    styleTheme: 'clarity',
     theme: 'light',
   },
 ] as const;
@@ -54,17 +32,18 @@ const homeOptions = [
   <button
     class="home-index-button"
     type="button"
-    aria-label="选择首页样式"
+    aria-label="选择主题"
     aria-expanded="false"
     data-home-index-toggle
-  >index</button>
-  <div class="home-index-panel" role="menu" aria-label="首页样式">
+  >主题</button>
+  <div class="home-index-panel" role="menu" aria-label="主题选择">
     {homeOptions.map((option) => (
       <a
         class:list={['home-index-option', current === option.id && 'active']}
         href={option.href}
         role="menuitem"
         data-home-index-value={option.id}
+        data-home-style-value={option.homeStyle}
         data-style-theme={option.styleTheme || undefined}
         data-theme={option.theme || undefined}
       >
@@ -83,29 +62,6 @@ const homeOptions = [
     var toggle = menu.querySelector('[data-home-index-toggle]');
     var options = Array.from(menu.querySelectorAll('.home-index-option'));
     if (!toggle) return;
-
-    function selectedHomeOption() {
-      var savedHomeIndex = '';
-      try {
-        savedHomeIndex = localStorage.getItem('homeIndex') || '';
-      } catch (error) {}
-
-      return options.find(function (option) {
-        return option.getAttribute('data-home-index-value') === savedHomeIndex;
-      });
-    }
-
-    function syncHomeLinks() {
-      var selectedOption = selectedHomeOption();
-      if (!selectedOption) return;
-      var homeHref = selectedOption.getAttribute('href');
-      if (!homeHref) return;
-      document.querySelectorAll('[data-home-link]').forEach(function (link) {
-        link.setAttribute('href', homeHref);
-      });
-    }
-
-    syncHomeLinks();
 
     function setOpen(isOpen, focusFirst) {
       menu.classList.toggle('open', isOpen);
@@ -138,12 +94,12 @@ const homeOptions = [
 
     options.forEach(function (option, index) {
       option.addEventListener('click', function () {
-        var homeIndex = option.getAttribute('data-home-index-value');
+        var homeStyle = option.getAttribute('data-home-style-value');
         var styleTheme = option.getAttribute('data-style-theme');
         var theme = option.getAttribute('data-theme');
 
         try {
-          if (homeIndex) localStorage.setItem('homeIndex', homeIndex);
+          if (homeStyle) localStorage.setItem('homeStyle', homeStyle);
           if (styleTheme && theme) {
             localStorage.setItem('styleTheme', styleTheme);
             localStorage.setItem('theme', theme);
