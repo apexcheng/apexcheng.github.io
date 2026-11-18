@@ -1,104 +1,26 @@
-# MDX 视觉模式库
+# MDX 视觉灵感库
 
-只在文章存在复杂信息关系、现有视觉总则不足以完成设计时读取本文件。这里只提供可选表达模式与参考，不另设内容、排版或发布门槛；相应规则以 `docs/writing/BLOG_AGENT.md` 和 `docs/ARTICLE_VISUAL_SYSTEM.md` 为准。
+这里收集可选的视觉表达思路、参考作品和 Demo。它是灵感来源，不是设计规范、组件白名单、必读清单或验收门槛。
 
-## 快速选择
+## 可探索的表达方式
 
-| 内容关系 | 模式 | 避免 |
-| --- | --- | --- |
-| 文章级判断 | 结论面板 | 把普通引言装进卡片 |
-| 少量并列角度 | Bento / 信息宫格 | 为凑卡片数量拆分内容，或混入流程 |
-| 少量数字和状态 | 指标看板 | 使用没有口径的装饰数字 |
-| 方案取舍 | 对比面板或表格 | 比较维度较多却逐项堆卡片 |
-| 线性演进 | 时间线 / `DecisionFlow` | 没有顺序却强行编号 |
-| 因果排查 | 问题链路 | 一张图塞入全部细节 |
-| 条件选择 | 决策树 / Mermaid | 条件模糊或分支过深 |
-| 具体实践 | 案例拆解板 | 没有动作和结果 |
-| 发布或操作确认 | 检查清单块 | 把完整手册压成清单 |
-| 公式与数据关系 | 参数映射板 | 只解释参数名、不展示结果 |
-| 多层系统或数据血缘 | 分层架构图、带注释的数据流图 | 一张图堆满细节与交叉箭头 |
-| 多阶段概念讲解 | 演示稿式连续章节、分步图解 | 每节都重复同一张卡片 |
-| 数量比较、分布或趋势 | 条形 / 点图、直方图、折线等，按阅读任务选择 | 为炫技使用复杂图形，或用趋势图暗示因果 |
+- 结论面板、Bento、指标看板、功能矩阵和报告面板
+- 对比面板、时间线、流程图、决策树和问题链路
+- 案例拆解、公式参数映射、交互模拟和分步演示
+- 多层架构图、数据血缘图、注释型信息图和时序图
+- 连续章节、滚动叙事、杂志排版、海报式视觉和数据故事
 
-复杂模式须有明确的解释收益，选型标准见视觉系统“核心原则”；组件 API 按 `AGENTS.md` 路由查阅。
+这些名称只是帮助描述设计方向。可以自由混合、改造或创造其他形式，不要求按内容类型匹配某个固定组件，也不必遵循“避免”列表。
 
-## 专业视觉参考（按需选择）
+## 外部参考
 
-是否查阅及如何借鉴外部范例，按视觉系统执行；以下是可选入口，不是必读清单：
+- **演示稿结构**：[Duarte 的结构与故事方法](https://www.duarte.com/blog/move-presentation-audience-with-story-techniques-in-presentations/)
+- **连续信息图与滚动叙事**：[The Pudding](https://pudding.cool/)、[Shorthand 案例](https://shorthand.com/the-craft/scrollytelling-examples/index.html)
+- **数据图表选择**：[Financial Times Visual Vocabulary](https://github.com/Financial-Times/chart-doctor/blob/main/visual-vocabulary/README.md)
+- **技术与工程示意**：[Google Technical Writing 插图指南](https://developers.google.com/tech-writing/two/illustrations)
 
-- **演示稿结构**：[Duarte 的结构与故事方法](https://www.duarte.com/blog/move-presentation-audience-with-story-techniques-in-presentations/)；借鉴围绕读者认知变化组织叙事和对比推进。
-- **连续信息图与滚动叙事**：[The Pudding](https://pudding.cool/)、[Shorthand 案例](https://shorthand.com/the-craft/scrollytelling-examples/index.html)；借鉴逐步揭示、上下文衔接和阅读节奏。
-- **数据图表选择**：[Financial Times Visual Vocabulary](https://github.com/Financial-Times/chart-doctor/blob/main/visual-vocabulary/README.md)；先判断是比较、分布、时间变化还是关联，再选择图形。
-- **技术与工程示意**：[Google Technical Writing 插图指南](https://developers.google.com/tech-writing/two/illustrations)；借鉴概念标注、信息压缩和复杂图拆层。
+参考这些作品时，借鉴对当前文章有价值的叙事、布局、标注或交互方式即可，不必复刻其形式。引用具体观点或素材时标明出处，使用素材须遵守其授权。
 
-复杂架构按 `AGENTS.md` 的工具路由处理，不从参考网站引入运行时依赖。
+## 现有 Demo
 
-## 完整视觉章节
-
-当一个主要问题需要图文协作才能讲清时，可组合定义、关系图、解析、案例与边界，形成连续章节。“完整”指读者能理解问题与结果，不指固定容器、部件数量或每章配图；只补足当前问题所缺的信息。
-
-## 高信息密度模式
-
-### 功能矩阵
-
-用于并列能力、模块地图和系统职责。每项保留一个标题、一句说明和少量标签；有先后顺序时改用流程。
-
-### 报告面板
-
-用于验收结果、风险分层和稳定性复盘。顶部只放与结论有关的少量指标，下方按风险或保障层组织；没有指标或分层需求时用简表即可。
-
-### 决策地图
-
-用于工具选型和需求分流。只保留会改变选择、且读者能明确回答的判断，每条路径落到具体动作；线性步骤不用决策树。
-
-## 公式参数映射板
-
-适用于 Excel、WPS、SQL、正则表达式、查询条件和数据筛选教程。
-
-核心关系（按实际操作取舍）：
-
-```text
-输入样本
-  ↓
-参数对应的数据区域、字段或规则片段
-  ↓
-必要的匹配、定位、转换或计算过程
-  ↓
-可核对的输出
-```
-
-规则：
-
-1. 使用少量可核对的样本，不只展示抽象列名；来源标注和示例自洽性遵循写作规则，允许明确标注的教学构造数据。
-2. 将参数对应到具体数据区域、字段或规则片段，用标签或编号建立对应，颜色可辅助。
-3. 涉及筛选或查找时，区分完整检查范围和实际命中记录；涉及文本转换时，展示转换前后。
-4. 展示可核对的最终结果；只在关键步骤容易误解时展开中间状态。
-5. 错误案例使用“公式 → 实际结果 → 原因 → 正确写法”。
-6. 箭头尽量短且不交叉，移动端改为纵向。
-
-字体、字号、颜色语义和窄屏处理遵循视觉系统，不为映射板另设一套更小的教学正文字号。
-
-### 多函数教程
-
-逐个教授多个函数时，在出现新机制或易错边界处展开独立案例；相似变化可复用同一组数据对照，不必每个函数重复整套案例板。同一函数家族保持稳定的视觉关系。
-
-常用映射：
-
-| 关系 | 适用函数 |
-| --- | --- |
-| 条件命中与汇总 | `COUNTIF(S)`、`SUMIF(S)`、`AVERAGEIF` |
-| 文本切片与长度 | `LEFT`、`RIGHT`、`MID`、`LEN` |
-| 文本清洗与替换 | `TRIM`、`SUBSTITUTE` |
-| 多值拼接 | `TEXTJOIN` |
-| 文字位置 | `FIND`、`SEARCH` |
-| 查找行映射 | `VLOOKUP`、`XLOOKUP` |
-| 位置和坐标 | `INDEX`、`MATCH`、`XMATCH` |
-
-## Demo 路由
-
-需要实际效果时，按 `AGENTS.md` 的路由从 `docs/writing/VISUAL_LAB.md` 选择相关 Demo，可优先定位：
-
-- 公式运行、数据处理或多阶段逻辑：`src/content/posts/visual-lab/runtime-mechanism-visual-pattern.mdx`。
-- 功能矩阵、报告面板或决策地图：`src/content/posts/visual-lab/screenshot-mdx-replica-demo.mdx`。
-
-只参考信息组织与交互方式，不直接复用 Demo 的硬编码组件和文案。
+需要查看已有实现时，可从 `docs/writing/VISUAL_LAB.md` 选择相关 Demo。Demo 仅展示某种实现，不意味着正式文章必须采用相同结构或组件。

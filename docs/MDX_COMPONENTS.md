@@ -1,18 +1,18 @@
-# MDX 通用组件
+# MDX 组件参考
 
-本文件只记录可在多篇文章中复用的基础组件。文章专属或带硬编码文案的组件通过 `docs/writing/VISUAL_LAB.md` 查找，不作为通用 API。
+本文件记录项目已有的通用 MDX 组件及其 API，方便按需复用。组件清单不是文章可用设计的白名单；正式文章可以组合 HTML、MDX、Markdown、文章专属组件和样式，也可以创建新的表达方式。
 
-## 组件清单
+## 现有组件
 
 | 组件 | 主要用途 | 属性 |
 | --- | --- | --- |
-| `Callout` | 简短提示和补充说明 | `title?` |
+| `Callout` | 提示和补充说明 | `title?` |
 | `MetricCard` | 数字、状态、耗时和风险 | `label`、`value`、`detail?`、`tone?` |
-| `FeatureCard` | 模块、角色、场景和能力边界 | `title`、`description`、`meta?` |
-| `VisualGrid` | 组织 2 到 4 个同类信息块 | `columns?: 2 \| 3 \| 4` |
-| `HighlightBox` | 关键结论、风险和收束 | `title`、`eyebrow?` |
-| `DecisionFlow` | 3 到 5 个线性步骤 | `title?`、`items` |
-| `Mermaid` | 分支、架构、依赖和时序 | `chart`、`title?`、`caption?` |
+| `FeatureCard` | 模块、角色、场景和能力介绍 | `title`、`description`、`meta?` |
+| `VisualGrid` | 网格布局 | `columns?: 2 \| 3 \| 4` |
+| `HighlightBox` | 重点内容 | `title`、`eyebrow?` |
+| `DecisionFlow` | 线性步骤 | `title?`、`items` |
+| `Mermaid` | 图表、流程和关系图 | `chart`、`title?`、`caption?` |
 
 `MetricCard.tone` 可使用 `blue`、`cyan`、`violet`、`green`。
 
@@ -26,13 +26,8 @@
 }
 ```
 
-## 使用边界
+## 使用说明
 
-1. 组件是文章视觉结构中的子模式，不是文章模板。
-2. 同一组卡片只放同一种信息关系。
-3. `MetricCard.value` 保持简短，完整解释放在 `detail` 或正文。
-4. `FeatureCard` 插槽只放短列表或必要补充，不放复杂嵌套正文。
-5. 普通线性步骤使用 `DecisionFlow`；简单分支、回路、依赖或时序可使用 `Mermaid`。复杂架构、数据流或时序按 `AGENTS.md` 选用 Archify，并以静态资源用于正式文章。
-6. 不连续堆叠多个 `HighlightBox`，也不为单篇文章新增通用组件。
+以上组件只是现有工具。可以按实际内容自由组合，也可以不使用。组件当前 API 的参数范围属于实现事实，不代表文章设计必须遵循某种布局、数量或内容形式。
 
-需要实际示例时，从 `docs/writing/VISUAL_LAB.md` 选择 1 篇相关 Demo。
+文章专属或带有特定文案的组件可参考 `docs/writing/VISUAL_LAB.md`；需要时也可以直接编写文章专属实现。多篇文章确实复用后，再考虑提取为通用组件。

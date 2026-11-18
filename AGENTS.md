@@ -11,7 +11,7 @@
 - Agent 规则和索引：`docs/`
 - 文章模板：`templates/post.mdx`
 
-正式文章默认是经过信息设计的网页作品。视觉表达优先于个人博客口吻，但必须服务内容，不机械套用旧文章或 Demo。
+正式文章可以采用适合主题的任意表达方式：普通长文、教程、杂志式排版、数据故事、图解、交互网页或实验作品等。博客不设统一文章模板；内容与视觉由具体文章决定。
 
 ## 通用硬规则
 
@@ -42,9 +42,9 @@
 
 ### 新文章、结构性重写或复杂视觉改造
 
-额外读取 `docs/ARTICLE_VISUAL_SYSTEM.md`，按其中三个轻量判断确定内容关系、整页视觉方向和移动端转换方式；不要求长篇视觉方案。涉及 MDX 自定义结构、组件或文章专属样式时，再读取 `docs/MDX_WRITING_GUIDE.md`。
+视觉系统和模式库是可选参考，不是必须执行的设计流程。只有在确实有帮助时才读取 `docs/ARTICLE_VISUAL_SYSTEM.md`、`docs/MDX_PATTERN_LIBRARY.md` 或 Demo。涉及 MDX 自定义结构、组件或文章专属样式时，再读取 `docs/MDX_WRITING_GUIDE.md`。
 
-视觉 Skill 只作为审美与实现辅助，不替代博客自身的文章视觉系统。高视觉文章仍先根据内容关系确定视觉概念，再按需使用：
+视觉 Skill 作为审美与实现辅助，可按任务需要自由选择，不受固定文章视觉系统限制：
 
 - `design-taste-frontend`：新页面、新视觉概念，或现有页面需要重新探索明显不同的视觉方向时使用；项目现有 Astro / MDX 技术栈、组件和视觉规则优先于 Skill 的通用建议。
 - `redesign-existing-projects`：已有文章或页面的视觉审查、重设计默认优先使用；只有需要重新探索新的视觉方向时，再补充 `design-taste-frontend`。普通内容修改不触发。
@@ -56,18 +56,18 @@
 
 仅在需要组件时读取 `docs/MDX_COMPONENTS.md`。
 
-### 选择复杂视觉模式或参考 Demo
+### 视觉灵感与 Demo
 
-仅在现有规则不足以完成设计时读取：
+以下资料仅供寻找灵感、了解已有实现，不构成模式白名单或设计限制：
 
 - `docs/MDX_PATTERN_LIBRARY.md`
 - `docs/writing/VISUAL_LAB.md`
 
-从视觉实验室最多选择 1 篇最相关 Demo，不默认通读。
+按需选择任意数量的相关资料，不要求复用现有 Demo。
 
 ### 参考旧文章
 
-读取 `docs/writing/CONTENT_INDEX.md`，再选择 1 到 3 篇最相关正文。
+读取 `docs/writing/CONTENT_INDEX.md`，按需参考相关正文；不限制参考数量。
 
 ### 规划后续任务
 
