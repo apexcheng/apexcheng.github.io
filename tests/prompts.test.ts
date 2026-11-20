@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { orderedPromptEntries, promptCategories, promptEntries } from '../src/data/prompts';
 
 describe('prompt library', () => {
-  it('contains 22 reusable prompts with unique identifiers, practice cases and complete text', () => {
-    expect(promptEntries).toHaveLength(22);
-    expect(new Set(promptEntries.map((entry) => entry.id)).size).toBe(22);
+  it('contains 21 reusable prompts with unique identifiers, practice cases and complete text', () => {
+    expect(promptEntries).toHaveLength(21);
+    expect(new Set(promptEntries.map((entry) => entry.id)).size).toBe(21);
     for (const entry of promptEntries) {
       expect(entry.title.length).toBeGreaterThan(5);
       expect(entry.description.length).toBeGreaterThan(10);
