@@ -1,5 +1,5 @@
 // 每条提示词记录实际使用背景；pinned 用于网站全局置顶，而非访问者本地偏好。
-export const promptCategories = ['前端', '代码与架构', '性能与运维', 'AI Agent', '业务与数据', '安全与权限'] as const;
+export const promptCategories = ['业务与架构', '代码与质量', '产品与体验'] as const;
 export type PromptCategory = (typeof promptCategories)[number];
 
 export interface PromptEntry {
@@ -17,7 +17,7 @@ export const promptEntries: PromptEntry[] = [
     id: 'product-structure-information-architecture-redesign',
     title: '航桥｜产品结构与信息架构重新设计',
     pinned: true,
-    category: '前端',
+    category: '产品与体验',
     description: '先重组页面功能、操作入口与信息层级，再考虑视觉细节，提供三套有实质区别的设计方案。',
     usedCase: '航桥前端布局问题梳理：针对操作入口混杂、功能分组不清、重复信息和页面引导不足，整理产品结构重新设计流程。',
     content: `使用 @Product Design，对航桥当前页面进行产品结构重新设计。
@@ -48,7 +48,7 @@ export const promptEntries: PromptEntry[] = [
     id: 'system-function-experience-enhancement',
     title: '系统功能与体验完善机会审查',
     pinned: true,
-    category: '业务与数据',
+    category: '业务与架构',
     description: '适用于项目、APP、模块或业务流程，发现功能、体验、效率与可靠性方面的改进机会。',
     usedCase: '航桥知识中心体验机制设计：从图标选择、AI 自动标题、后台任务到人工修改保护，梳理功能完善机会。',
     content: `# 系统功能与体验完善机会审查
@@ -106,7 +106,7 @@ export const promptEntries: PromptEntry[] = [
   {
     id: 'performance-bottleneck-review',
     title: '全项目性能与瓶颈审查',
-    category: '性能与运维',
+    category: '代码与质量',
     description: '找出异常耗时、重复处理和不合理的数据读取方式，区分业务逻辑与技术瓶颈。',
     usedCase: 'ERP 库存同步曾出现单次耗时超过 30 分钟，围绕真实耗时、查询和同步链路开展排查。',
     content: `请对当前项目开展性能与瓶颈专项审查，重点发现实际影响运行效率、用户体验或资源成本的问题，而不是追求理论上的极限优化。
@@ -127,7 +127,7 @@ export const promptEntries: PromptEntry[] = [
   {
     id: 'logging-diagnostics-review',
     title: '日志与故障排查能力审查',
-    category: '性能与运维',
+    category: '代码与质量',
     description: '检查故障发生时能否通过日志定位步骤、耗时、数据量和失败原因。',
     usedCase: '航桥日志覆盖 L01～L10 审查：核对故障阶段、运行耗时和失败原因能否留痕。',
     content: `请专项审查当前项目的日志与故障排查能力。目标是让人或 AI Agent 在发生错误、超时、任务堵塞时，通过现有证据快速判断问题在哪里，不是让日志越多越好。
@@ -149,7 +149,7 @@ export const promptEntries: PromptEntry[] = [
   {
     id: 'motion-interaction-review',
     title: 'UI 动效与交互体验审查',
-    category: '前端',
+    category: '产品与体验',
     description: '筛选真正有助于状态反馈和操作理解的动效，避免无意义动画。',
     usedCase: '航桥 Dock V2：检查悬浮放大、拖动和交互反馈，判断哪些动效真正帮助操作。',
     content: `请审查项目的 UI 动效和交互反馈，目标是提高状态可理解性与操作连贯性，而不是单纯增加动画数量。
@@ -170,7 +170,7 @@ export const promptEntries: PromptEntry[] = [
   {
     id: 'static-code-quality-review',
     title: '代码改动静态质量审查',
-    category: '代码与架构',
+    category: '代码与质量',
     description: '独立审查本次改动的真实缺陷、边界遗漏和不必要复杂度。',
     usedCase: '航桥知识中心、AI 表格等功能改造后，进行独立静态审查，再针对确认的问题修复。',
     content: `请对当前项目最近一批代码改动进行独立静态审查。目标是发现真正可能导致错误的缺陷，不进行大范围重构，也不把代码风格偏好当成问题。
@@ -192,7 +192,7 @@ export const promptEntries: PromptEntry[] = [
   {
     id: 'business-simplification-review',
     title: '业务复杂度与过度设计审查',
-    category: '业务与数据',
+    category: '业务与架构',
     description: '识别投入高但价值低的流程、计算、字段和历史包袱，提出极简方案。',
     usedCase: '供销库存监控：将提醒范围收敛到近 7 个完整自然日销量下的缺货与低库存。',
     content: `请对指定业务模块开展“业务复杂度与过度设计”审查。目标是找出低价值却持续增加开发、计算、存储和维护成本的部分，提出满足真实需求的最小方案。
@@ -214,7 +214,7 @@ export const promptEntries: PromptEntry[] = [
   {
     id: 'data-completeness-review',
     title: '数据完整性与业务一致性审查',
-    category: '业务与数据',
+    category: '代码与质量',
     description: '核对数据来源、缺口、重复、周期和业务边界，分清正常例外与采集故障。',
     usedCase: '异常订单采集：核对归档记录、增量写入与断点续采，避免误判遗漏及重复。',
     content: `请对指定数据同步、采集或汇总流程进行数据完整性与业务一致性审查。目标是确认数据是否足以支持实际业务，不把所有缺失都误判为程序错误。
@@ -236,7 +236,7 @@ export const promptEntries: PromptEntry[] = [
   {
     id: 'security-exposure-review',
     title: '安全风险与暴露面审查',
-    category: '安全与权限',
+    category: '代码与质量',
     description: '核实公网入口、远程管理、密钥、权限和传输链路中的实际风险。',
     usedCase: '航桥远程开发入口：核对公网 SSH、HTTPS 与 FRP 中转的访问控制和暴露边界。',
     content: `请对当前系统进行安全风险与暴露面专项审查，重点评估真实可以被利用的风险，不因理论可能性罗列大量低价值项。
@@ -258,7 +258,7 @@ export const promptEntries: PromptEntry[] = [
   {
     id: 'agent-tool-answer-review',
     title: 'AI Agent 真实工具调用与回答准确性审查',
-    category: 'AI Agent',
+    category: '代码与质量',
     description: '逐题核对 Agent 选词、工具调用、来源事实和最终回答，找出错误环节。',
     usedCase: '知识中心 AI 问答：用真实商品、SKU 与库存查询核对工具调用和答案准确性。',
     content: `请对当前 AI Agent 的真实问答链路开展专项审查。目标是判断模型是否正确理解问题、调用恰当工具、使用真实结果并准确回答，而不只看回答是否流畅。
@@ -280,7 +280,7 @@ export const promptEntries: PromptEntry[] = [
   {
     id: 'system-execution-flow-explanation',
     title: '系统执行链路与模块关系解读',
-    category: '代码与架构',
+    category: '业务与架构',
     pinned: true,
     description: '从真实代码还原执行顺序、模块职责、数据流转、成功条件与失败后的处理方式。',
     usedCase: '异常单 RPA：解释逐页采列表、逐条采详情、整页写 AI 表格及断点文件的更新时机。',
@@ -309,7 +309,7 @@ export const promptEntries: PromptEntry[] = [
   {
     id: 'ui-information-hierarchy-redesign',
     title: 'UI/UX 信息架构与视觉层级重构',
-    category: '前端',
+    category: '产品与体验',
     pinned: true,
     description: '解决页面视觉焦点不明确、信息缺少主次与阅读动线混乱的问题，不只做样式美化。',
     usedCase: '航桥直播「场次复盘」：把平级指标和左右跳读，重排为「本场结果→上一场对比→分钟过程」。',
@@ -348,7 +348,7 @@ export const promptEntries: PromptEntry[] = [
   {
     id: 'code-smell-architecture-review',
     title: '代码坏味道与架构合理性审查',
-    category: '代码与架构',
+    category: '代码与质量',
     description: '识别过度设计、冗余逻辑、职责混乱及不必要的技术复杂度，优先降低长期维护成本。',
     usedCase: '航桥系统方案讨论：审查续采判断是否分散在多个状态和模块，评估是否可以简化为单一续采记录。',
     content: `请针对当前项目进行一次全面的代码坏味道（Code Smell）与架构合理性审查，不默认现有代码、架构及技术方案是合理的。
@@ -393,7 +393,7 @@ export const promptEntries: PromptEntry[] = [
   {
     id: 'system-architecture-module-hierarchy-review',
     title: '系统架构与模块层级关系审查',
-    category: '代码与架构',
+    category: '业务与架构',
     description: '独立推导合理的架构结构，审查父子层级、并列关系、功能归属、职责边界与依赖方向。',
     usedCase: 'AI 表格的根容器与 Sheet 侧栏、表格区域的父子和并列关系，以及同类异常事件检测在 Worker 中的功能归属讨论。',
     content: `请针对当前项目或指定模块进行一次系统架构与模块层级关系审查，重点判断系统的结构组织、父子关系、并列关系、功能归属、职责边界及执行关系是否合理。

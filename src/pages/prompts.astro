@@ -23,13 +23,12 @@ const categoryCounts = promptCategories.map((category) => ({
           <input id="prompt-search" type="search" aria-label="搜索提示词" placeholder="搜索提示词标题、用途或案例" autocomplete="off" data-prompt-search />
         </div>
         <div class="prompt-filter-row">
-          <label for="prompt-category">分类</label>
-          <select id="prompt-category" data-prompt-category>
-            <option value="all">全部分类（{orderedPromptEntries.length}）</option>
+          <div class="prompt-category-buttons" role="group" aria-label="提示词分类">
+            <button type="button" data-prompt-category="all" aria-pressed="true">全部 <span>{orderedPromptEntries.length}</span></button>
             {categoryCounts.map(({ category, count }) => (
-              <option value={category}>{category}（{count}）</option>
+              <button type="button" data-prompt-category={category} aria-pressed="false">{category} <span>{count}</span></button>
             ))}
-          </select>
+          </div>
           <span data-visible-prompt-count>{orderedPromptEntries.length} 条结果</span>
         </div>
         <nav class="prompt-index" aria-label="提示词搜索结果">
@@ -80,13 +79,13 @@ const categoryCounts = promptCategories.map((category) => ({
 <script>
   const entries = Array.from(document.querySelectorAll<HTMLElement>('[data-prompt-entry]'));
   const resultItems = Array.from(document.querySelectorAll<HTMLElement>('[data-prompt-index-item]'));
-  const categorySelect = document.querySelector<HTMLSelectElement>('[data-prompt-category]');
+  const categoryButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-prompt-category]'));
   const search = document.querySelector<HTMLInputElement>('[data-prompt-search]');
   const resultCount = document.querySelector<HTMLElement>('[data-visible-prompt-count]');
   const emptyResults = document.querySelector<HTMLElement>('[data-no-results]');
   const emptyDetail = document.querySelector<HTMLElement>('[data-detail-empty]');
   const detail = document.querySelector<HTMLElement>('.prompt-detail');
-  const validCategories = Array.from(categorySelect?.options ?? [], (option) => option.value);
+  const validCategories = categoryButtons.map((button) => button.dataset.promptCategory ?? '');
   let category = 'all';
   let selectedId = entries[0]?.id ?? '';
 
@@ -113,7 +112,9 @@ const categoryCounts = promptCategories.map((category) => ({
       if (item.dataset.promptId === selectedId && !item.hidden) link.setAttribute('aria-current', 'true');
       else link.removeAttribute('aria-current');
     });
-    if (categorySelect) categorySelect.value = category;
+    categoryButtons.forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.promptCategory === category));
+    });
     if (resultCount) resultCount.textContent = `${visible.length} 条结果`;
     if (emptyResults) emptyResults.hidden = visible.length > 0;
     if (emptyDetail) emptyDetail.hidden = visible.length > 0;
@@ -142,11 +143,13 @@ const categoryCounts = promptCategories.map((category) => ({
     if (target) requestAnimationFrame(showDetail);
   }
 
-  categorySelect?.addEventListener('change', () => {
-    selectCategory(categorySelect.value);
-    render();
-    updateUrl('replaceState');
-    showDetail();
+  categoryButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      selectCategory(button.dataset.promptCategory ?? 'all');
+      render();
+      updateUrl('replaceState');
+      showDetail();
+    });
   });
 
   search?.addEventListener('input', () => {
@@ -208,11 +211,15 @@ const categoryCounts = promptCategories.map((category) => ({
   .prompt-search-field:focus-within { border-color: var(--blue); outline: 2px solid color-mix(in srgb, var(--blue) 20%, transparent); }
   .prompt-search-field input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: 13px var(--body-font); }
   .prompt-search-field input::placeholder { color: var(--muted); }
-  .prompt-filter-row { display: flex; align-items: center; gap: 8px; padding: 12px 0 10px; border-bottom: 1px solid var(--line); }
-  .prompt-filter-row label { flex: none; color: var(--muted); font-size: 12px; }
-  .prompt-filter-row select { flex: 1; min-width: 0; height: 32px; padding: 0 7px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--ink); font: 12px var(--body-font); cursor: pointer; }
-  .prompt-filter-row select:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-  .prompt-filter-row > span { flex: none; color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .prompt-filter-row { display: flex; flex-direction: column; gap: 6px; padding: 10px 0 8px; border-bottom: 1px solid var(--line); }
+  .prompt-category-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+  .prompt-category-buttons button { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 30px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--ink); font: 12px var(--body-font); cursor: pointer; text-align: left; }
+  .prompt-category-buttons button span { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .prompt-category-buttons button:hover { border-color: var(--blue); }
+  .prompt-category-buttons button[aria-pressed='true'] { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 9%, var(--paper)); color: var(--blue); font-weight: 650; }
+  .prompt-category-buttons button[aria-pressed='true'] span { color: inherit; }
+  .prompt-category-buttons button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .prompt-filter-row > span { align-self: flex-end; color: var(--muted); font-size: 11px; white-space: nowrap; }
   .prompt-index { min-height: 90px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--blue) 40%, transparent) transparent; }
   .prompt-index-links { list-style: none; margin: 0; padding: 0; }
   .prompt-index-links a { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 9px; border-left: 2px solid transparent; border-bottom: 1px solid var(--line); border-radius: 3px; color: var(--ink); text-decoration: none; transition: background .15s, border-color .15s; }

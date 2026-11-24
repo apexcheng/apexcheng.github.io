@@ -16,12 +16,13 @@ describe('prompt library', () => {
 
   it('assigns every prompt to an available category', () => {
     expect(new Set(promptCategories).size).toBe(promptCategories.length);
-    expect(promptCategories).toContain('前端');
+    expect(promptCategories).toEqual(['业务与架构', '代码与质量', '产品与体验']);
+    expect(promptCategories.map((category) => promptEntries.filter((entry) => entry.category === category).length)).toEqual([4, 7, 3]);
     for (const entry of promptEntries) expect(promptCategories).toContain(entry.category);
     for (const category of promptCategories) {
       expect(promptEntries.some((entry) => entry.category === category)).toBe(true);
     }
-    expect(promptEntries.find((entry) => entry.id === 'product-structure-information-architecture-redesign')?.category).toBe('前端');
+    expect(promptEntries.find((entry) => entry.id === 'product-structure-information-architecture-redesign')?.category).toBe('产品与体验');
   });
 
   it('puts pinned prompts first while retaining order for other entries', () => {
