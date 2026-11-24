@@ -155,7 +155,8 @@ describe('front page structure', () => {
     expect(articleDetailSource).toContain('post.data.tags.map');
     expect(articleDetailSource).toContain('class="article-content"');
     expect(articleDetailSource).toContain('<h1>{post.data.title}</h1>');
-    expect(articleDetailSource).toContain('作者：{siteMeta.authorName}');
+    expect(articleDetailSource).toContain('<span>{siteMeta.authorName}</span>');
+    expect(articleDetailSource).toContain('data-article-resume');
     expect(articleDetailSource).toContain('<details class="toc-panel" open>');
     expect(articleDetailSource).toContain('class="toc-panel-links"');
     expect(articleDetailSource).toContain('heading.depth === 2 || heading.depth === 3');
@@ -182,7 +183,7 @@ describe('front page structure', () => {
     expect(articleDetailSource).toContain('{hasToc && <div class="article-sidebar"');
     expect(articleDetailSource).toContain('{hasToc && <div class="article-sidebar-restore"');
     expect(articleDetailSource).toContain('{hasToc && <details class="mobile-toc-panel"');
-    expect(articleDetailSource).toContain('!post.data.series && hasToc');
+    expect(articleDetailSource).toContain('!post.data.series && !hasStoryHeading');
     expect(readFileSync('src/styles/site-shell.css', 'utf8')).toContain(".article-shell[data-has-toc='false'] { grid-template-columns: minmax(0, 1fr); }");
     const story = readFileSync('src/components/ReviewAnalysisStory.astro', 'utf8');
     expect(story).toContain('技术实践 / 文章');
@@ -190,10 +191,11 @@ describe('front page structure', () => {
     expect(story.match(/<h1>/g)).toHaveLength(1);
   });
 
-  it('renders recommendations as article links only when matches exist', () => {
-    expect(articleDetailSource).toContain('{relatedPosts.length > 0 && (');
+  it('renders recommendations or a category link when there is no series route', () => {
+    expect(articleDetailSource).toContain('{(!seriesMeta || seriesIndex < 0) && !hasStoryHeading && (');
     expect(articleDetailSource).toContain('aria-label="继续阅读"');
     expect(articleDetailSource).toContain('href={withBase(`/articles/${related.slug}/`)}');
+    expect(articleDetailSource).toContain('href={categoryPath}>浏览「{post.data.category}」');
     expect(articleDetailSource).toContain('/scripts/article-overflow.js');
   });
 });
