@@ -14,11 +14,11 @@ const isKnowledge = project.id === 'yingdao-agent-development';
     <span>{compact ? 'OVERVIEW' : '01 / HOW IT WORKS'}</span>
   </div>
   {isPlatform ? (
-    <div class="case-system-map" role="img" aria-label="航桥系统职责示意：运营入口统领 ERP 数据、业务处理、AI 表格与自动化协同">
+    <div class="case-system-map">
       <div class="case-system-core"><span>统一业务入口</span><strong>航桥</strong><small>运营工作台</small></div>
       <div class="case-system-capabilities">
         {project.flow.slice(1).map((step) => (
-          <div class="case-system-node"><span>{step.layer}</span><strong>{step.label}</strong></div>
+          <div class="case-system-node"><span>{step.layer}</span><strong>{step.label}</strong>{!compact && <p>{step.detail}</p>}</div>
         ))}
       </div>
     </div>

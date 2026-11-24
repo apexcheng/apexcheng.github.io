@@ -30,7 +30,7 @@ const categoryCounts = promptCategories.map((category) => ({
               <button type="button" data-prompt-category={category} aria-pressed="false">{category} <span>{count}</span></button>
             ))}
           </div>
-          <span data-visible-prompt-count>{orderedPromptEntries.length} 条结果</span>
+          <span role="status" data-visible-prompt-count>{orderedPromptEntries.length} 条结果</span>
         </div>
         <nav class="prompt-index" aria-label="提示词搜索结果">
           <ol class="prompt-index-links">
@@ -100,16 +100,24 @@ const categoryCounts = promptCategories.map((category) => ({
     category = validCategories.includes(value) ? value : 'all';
   }
 
-  function render(keepLinkedEntry = false) {
-    const words = (search?.value.trim().toLocaleLowerCase() ?? '').split(/\s+/).filter(Boolean);
+  function searchWords() {
+    return (search?.value.trim().toLocaleLowerCase() ?? '').split(/\s+/).filter(Boolean);
+  }
+
+  function matchesSearch(item: HTMLElement, words: string[]) {
+    const text = item.dataset.searchText?.toLocaleLowerCase() ?? '';
+    return words.every((word) => text.includes(word));
+  }
+
+  function render() {
+    const words = searchWords();
     const visible = resultItems.filter((item) => {
       const inCategory = category === 'all' || item.dataset.category === category;
-      const text = item.dataset.searchText?.toLocaleLowerCase() ?? '';
-      const match = inCategory && words.every((word) => text.includes(word));
+      const match = inCategory && matchesSearch(item, words);
       item.hidden = !match;
       return match;
     });
-    if (!unavailable && !keepLinkedEntry && !visible.some((item) => item.dataset.promptId === selectedId)) {
+    if (!unavailable && !visible.some((item) => item.dataset.promptId === selectedId)) {
       selectedId = visible[0]?.dataset.promptId ?? '';
     }
 
@@ -148,14 +156,27 @@ const categoryCounts = promptCategories.map((category) => ({
     const hash = window.location.hash.slice(1);
     let id = hash;
     try { id = decodeURIComponent(hash); } catch { /* Malformed links use the unavailable state. */ }
-    const target = entries.find((entry) => entry.id === id);
+    const target = resultItems.find((item) => item.dataset.promptId === id);
+    const pageAnchor = !target && Boolean(id && document.getElementById(id));
     const params = new URLSearchParams(window.location.search);
     selectCategory(params.get('category') ?? 'all');
-    selectedId = target?.id ?? '';
-    unavailable = Boolean(hash && !target);
     if (search) search.value = params.get('q') ?? '';
-    render(Boolean(target));
-    if (target) requestAnimationFrame(showDetail);
+    if (pageAnchor) selectedId = window.history.state?.promptId ?? selectedId;
+    else selectedId = target ? id : '';
+    unavailable = Boolean(hash && !target && !pageAnchor);
+    if (target) {
+      if (category !== 'all' && category !== target.dataset.category) selectCategory('all');
+      if (search && !matchesSearch(target, searchWords())) search.value = '';
+    }
+    render();
+    if (pageAnchor) window.history.replaceState({ ...window.history.state, promptId: selectedId }, '');
+    if (target) {
+      updateUrl('replaceState');
+      requestAnimationFrame(() => {
+        target.scrollIntoView({ block: 'nearest' });
+        showDetail();
+      });
+    }
   }
 
   categoryButtons.forEach((button) => {
@@ -164,16 +185,13 @@ const categoryCounts = promptCategories.map((category) => ({
       selectCategory(button.dataset.promptCategory ?? 'all');
       render();
       updateUrl('replaceState');
-      showDetail();
     });
   });
 
   search?.addEventListener('input', () => {
-    const previousId = selectedId;
     unavailable = false;
     render();
     updateUrl('replaceState');
-    if (previousId !== selectedId) showDetail();
   });
 
   resultItems.forEach((item) => {
@@ -184,6 +202,9 @@ const categoryCounts = promptCategories.map((category) => ({
       selectedId = item.dataset.promptId ?? '';
       render();
       updateUrl('pushState');
+      if (event.detail === 0) {
+        document.getElementById(selectedId)?.querySelector('h2')?.focus({ preventScroll: true });
+      }
       showDetail();
     });
   });
@@ -248,12 +269,11 @@ const categoryCounts = promptCategories.map((category) => ({
   .prompt-index-links a[aria-current='true'] .prompt-index-title { font-weight: 650; }
   .prompt-index-meta { flex: none; color: var(--soft); font-size: 10px; }
   .prompt-no-results { color: var(--muted); font-size: 13px; line-height: 1.8; }
-  .prompt-detail { min-width: 0; padding-top: 4px; scroll-margin-top: 100px; }
-  .prompt-entry { scroll-margin-top: 100px; }
+  .prompt-detail { min-width: 0; padding-top: 4px; }
   .prompt-detail-topline { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 12px; }
   .prompt-pin-tag { color: var(--blue); font-weight: 650; }
   .prompt-entry h2 { margin: 10px 0 14px; font-size: clamp(26px, 2.6vw, 32px); font-weight: 650; line-height: 1.38; letter-spacing: -.02em; }
-  .prompt-entry h2:focus { outline: none; }
+  .prompt-entry h2:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
   .prompt-description { max-width: 730px; margin: 0; color: var(--muted); font-size: 15px; line-height: 1.8; }
   .prompt-used-case { margin: 22px 0 30px; padding: 14px 18px; border-left: 2px solid var(--blue); border-radius: 0 6px 6px 0; background: var(--paper); }
   .prompt-used-case strong { color: var(--blue); font-size: 12px; font-weight: 650; }

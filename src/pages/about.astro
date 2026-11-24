@@ -9,30 +9,29 @@ import { withBase } from '../utils/paths';
     <section class="about-hero-grid">
       <div class="about-hero-copy">
         <p class="eyebrow">Automation Builder · Python / Agent / Practice</p>
-        <h1>把个人经历、项目积累和表达欲，整理成一个可以长期生长的主页。</h1>
+        <h1>你好，我是黄撑。</h1>
         <p class="page-lead">
-          我是黄撑，来自贵州黔西南，主攻 Python 与自动化流程，也持续做 Web 项目实践。
-          这个页面基于原始个人简介仓库重构为纯静态版本，可直接部署在 GitHub Pages。
+          我来自贵州黔西南，喜欢用 Python 和自动化工具解决工作里反复遇到的问题。这里记录我做过的项目，以及实现过程里的取舍。
         </p>
         <div class="hero-actions">
-          <a class="button" href={siteMeta.githubUrl}>GitHub</a>
-          <a class="button" href={siteMeta.projectUrl}>项目仓库</a>
-          <a class="button" href={withBase(siteMeta.rssPath)}>RSS 订阅</a>
-          <a class="button" href="https://apexcheng.github.io/gallery/">访问图床</a>
-          <a class="button" href={withBase('/projects/')}>项目记录</a>
+          <a class="button primary" href={withBase('/projects/')}>查看项目记录</a>
+          <a class="button" href="#contact">联系我</a>
         </div>
         <ul class="about-meta-list">
           <li>常用技术：Python / 自动化工具 / 智能体应用 / Linux / Java</li>
           <li>方向：业务自动化、后端设计、个人产品实践</li>
-          <li>GitHub：<a href={siteMeta.githubUrl}>github.com/apexcheng</a></li>
         </ul>
+        <nav class="about-resource-links" aria-label="公开资源">
+          <a href={siteMeta.githubUrl}>GitHub 主页</a>
+          <a href={siteMeta.projectUrl}>博客项目仓库</a>
+          <a href={withBase(siteMeta.rssPath)}>RSS 订阅</a>
+        </nav>
       </div>
 
       <aside class="about-profile-card">
         <img class="about-avatar" src={withBase('/about-assets/user-520.jpg')} alt="黄撑头像" width="520" height="520" decoding="async" />
         <div>
-          <h2>黄撑</h2>
-          <p>嗨，我是一个正在持续迭代中的开发者。</p>
+          <h2>个人资料</h2>
           <dl class="about-profile-list">
             <div>
               <dt>邮箱</dt>
@@ -74,7 +73,7 @@ import { withBase } from '../utils/paths';
         </article>
         <article class="about-panel about-quote-card">
           <p class="about-quote">“Follow your heart, then build the system that supports it.”</p>
-          <p>这句英文灵感来自原站首页文案，我把它改写成更适合现在这个版本的表达。</p>
+          <p>先弄清自己想做什么，再搭出能把它做成的系统。</p>
         </article>
       </div>
     </section>
@@ -144,6 +143,7 @@ import { withBase } from '../utils/paths';
           <p class="about-card-meta">2022.12 - 2023.01</p>
           <h3>Gallery 在线图床</h3>
           <p>围绕图片上传与展示设计的轻量产品，使用 Pillow 做压缩与缩略图处理，降低带宽开销并优化浏览体验。</p>
+          <a class="about-project-link" href="https://apexcheng.github.io/gallery/">访问图床 →</a>
           <ul class="about-tag-row">
             <li>Python</li>
             <li>Pillow</li>

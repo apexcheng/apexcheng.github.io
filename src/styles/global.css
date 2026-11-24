@@ -196,7 +196,7 @@ h3 {
   background: var(--ink);
   border-color: var(--ink);
   box-shadow: 0 14px 28px rgba(15, 23, 42, 0.15);
-  color: #fff;
+  color: var(--bg);
 }
 
 @media (hover: hover) {
@@ -208,7 +208,7 @@ h3 {
 
   .button.primary:hover {
     box-shadow: 0 18px 34px rgba(15, 23, 42, 0.22);
-    color: #fff;
+    color: var(--bg);
   }
 }
 
@@ -1791,6 +1791,26 @@ html[data-theme='dark'] .report-dashboard {
   margin-top: 28px;
 }
 
+.about-resource-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin-top: 18px;
+}
+
+.about-resource-links a,
+.about-project-link {
+  color: var(--blue);
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.about-project-link {
+  display: inline-block;
+  margin-top: 12px;
+}
+
 .about-meta-list li::before,
 .about-contact-list li::before {
   color: var(--cyan);
@@ -1809,8 +1829,11 @@ html[data-theme='dark'] .report-dashboard {
 }
 
 .about-profile-card {
+  align-content: start;
+  align-items: start;
   display: grid;
   gap: 18px;
+  grid-template-columns: clamp(58px, 6vw, 82px) minmax(0, 1fr);
   padding: 20px;
 }
 
