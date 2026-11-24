@@ -89,14 +89,6 @@ const chapterGroups = stageGroups ?? [{ anchor: undefined, posts }];
 
       {(hasResources || stageGroups) && (
         <aside class="reading-series-sidebar" aria-label="阶段与配套资源">
-          {stageGroups && (
-            <nav aria-labelledby="series-stages-heading">
-              <h2 id="series-stages-heading">按阶段跳转</h2>
-              {stageGroups.map((stage) => (
-                <a href={`#${stage.anchor}`}><span>{stage.range}</span>{stage.title}<span aria-hidden="true">↓</span></a>
-              ))}
-            </nav>
-          )}
           {hasResources && (
             <section id="series-resources" class="reading-series-resources" aria-labelledby="series-resources-heading">
               <h2 id="series-resources-heading">练习与考核资源</h2>
@@ -104,6 +96,7 @@ const chapterGroups = stageGroups ?? [{ anchor: undefined, posts }];
                 <article>
                   <h3>{extraResource.title}</h3>
                   <p>{extraResource.description}</p>
+                  <p class="reading-series-resource-format">{extraResource.meta}</p>
                   <a href={withBase(extraResource.href)} download>下载实操练习包 <span aria-hidden="true">↓</span></a>
                 </article>
               )}
@@ -112,10 +105,20 @@ const chapterGroups = stageGroups ?? [{ anchor: undefined, posts }];
                   <h3>{series.resource.title}</h3>
                   {'badge' in series.resource && series.resource.badge && <span class="series-resource-badge">{series.resource.badge}</span>}
                   <p>{series.resource.description}</p>
+                  <p class="reading-series-resource-format">{series.resource.meta}</p>
+                  {series.id === 'python-basics' && <p>由面试官提交答卷后，再执行 AI 评分。</p>}
                   <a href={withBase(series.resource.href)} download>下载正式考核包 <span aria-hidden="true">↓</span></a>
                 </article>
               )}
             </section>
+          )}
+          {stageGroups && (
+            <nav aria-labelledby="series-stages-heading">
+              <h2 id="series-stages-heading">按阶段跳转</h2>
+              {stageGroups.map((stage) => (
+                <a href={`#${stage.anchor}`}><span>{stage.range}</span>{stage.title}<span aria-hidden="true">↓</span></a>
+              ))}
+            </nav>
           )}
         </aside>
       )}
@@ -160,6 +163,7 @@ const chapterGroups = stageGroups ?? [{ anchor: undefined, posts }];
   .reading-series-resources article + article { margin-top: 8px; }
   .reading-series-resources h3 { margin: 0; font-size: 15px; }
   .reading-series-resources p { margin: 5px 0 8px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .reading-series-resources .reading-series-resource-format { font-size: 12px; }
   .reading-series-resources a { display: inline-block; padding-block: 3px; font-weight: 700; color: var(--blue); font-size: 13px; }
   .reading-series-resources .series-resource-badge { display: inline-block; position: static; margin: 5px 0 0; }
   @media (max-width: 1050px) {
