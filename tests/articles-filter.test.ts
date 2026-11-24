@@ -63,6 +63,8 @@ describe('articles page category filter', () => {
     expect(articlesSource).toContain("url.searchParams.delete('featured')");
     expect(articlesSource).toContain("get('featured') === '1'");
     expect(articlesSource).toContain('applySort(currentSort)');
+    expect(articlesSource).toContain("get('sort') === 'updated'");
+    expect(articlesSource).toContain("url.searchParams.set('sort', currentSort)");
   });
 
   it('hides archived posts by default but includes them on demand without losing filter state', () => {
@@ -96,6 +98,14 @@ describe('articles page category filter', () => {
     expect(articleListSource).toContain('data-published-at={post.data.date.valueOf()}');
     expect(articleListSource).toContain('data-updated-at={(post.data.updated ?? post.data.date).valueOf()}');
     expect(contentConfigSource).toContain('updated: z.coerce.date().optional()');
+  });
+
+  it('offers exact tag filtering in the directory and restores tags from URLs', () => {
+    expect(articlesSource).toContain('data-catalog-tag={tag}');
+    expect(articlesSource).toContain(".includes(selectedTag)");
+    expect(articlesSource).toContain("get('tag')");
+    expect(articlesSource).toContain("url.searchParams.set('tag', selectedTag)");
+    expect(articleListSource).toContain('JSON.stringify(post.data.tags)');
   });
 
   it('keeps pinned articles ahead of the selected time sort', () => {

@@ -26,7 +26,7 @@ const categoryCounts = Object.fromEntries(
     allArchived: posts.filter((post) => post.data.category === category.name).length,
   }]),
 );
-const tags = Array.from(new Set(activeOfficialPosts.flatMap((post) => post.data.tags))).sort((a, b) => a.localeCompare(b));
+const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags))).sort((a, b) => a.localeCompare(b));
 const tagCounts = Object.fromEntries(tags.map((tag) => [tag, activeOfficialPosts.filter((post) => post.data.tags.includes(tag)).length]));
 const commonTags = [...tags]
   .sort((a, b) => tagCounts[b] - tagCounts[a] || a.localeCompare(b))
@@ -35,47 +35,13 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
 ---
 
 <SiteLayout title="文章列表" active="articles">
-  <main class="page-content two-column-page" data-articles-page>
+  <main class="page-content article-catalog" data-articles-page>
     <header class="articles-page-intro">
       <h1 class="page-title">文章与系列</h1>
       <ContentViewTabs active="articles" />
     </header>
-    <aside class="filter-panel" id="article-filters">
-      <h2>内容分类</h2>
-      <a class="active" href={articlesPageUrl} data-category-filter data-category-value="" aria-current="page">
-        全部分类 <span data-count-all={activeOfficialPosts.length} data-count-standalone={standaloneOfficialPosts.length} data-count-all-archived={officialPosts.length} data-count-standalone-archived={standaloneAllOfficialPosts.length}>{standaloneOfficialPosts.length}</span>
-      </a>
-      {categoryMetaList.map((category) => (
-        <a
-          href={`${articlesPageUrl}?category=${encodeURIComponent(category.name)}`}
-          data-category-filter
-          data-category-value={category.name}
-        >
-          {category.name} <span data-count-all={categoryCounts[category.name].all} data-count-standalone={categoryCounts[category.name].standalone} data-count-all-archived={categoryCounts[category.name].allArchived} data-count-standalone-archived={categoryCounts[category.name].standaloneArchived}>{categoryCounts[category.name].standalone}</span>
-        </a>
-      ))}
-      <h2 class="filter-subtitle">常用标签</h2>
-      <div class="chips filter-tags" id="article-filter-tags">
-        {commonTags.map((tag) => (
-          <a href={withBase(`/articles/tag/${encodeURIComponent(tag)}/`)}>{tag}</a>
-        ))}
-        {otherTags.map((tag) => (
-          <a href={withBase(`/articles/tag/${encodeURIComponent(tag)}/`)} data-extra-tag hidden>{tag}</a>
-        ))}
-      </div>
-      {otherTags.length > 0 && (
-        <button
-          class="filter-tags-toggle"
-          type="button"
-          data-tags-toggle
-          aria-controls="article-filter-tags"
-          aria-expanded="false"
-        >
-          查看全部标签 <span aria-hidden="true">→</span>
-        </button>
-      )}
-    </aside>
-    <section class="articles-main-content">
+    <section class="articles-main-content" aria-label="独立文章目录">
+      <div class="catalog-tools" id="article-filters">
       <div class="article-list-toolbar">
         <label class="article-inline-search">
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></svg>
@@ -111,6 +77,37 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
           </details>
         </div>
       </div>
+      <div class="catalog-categories">
+        <nav aria-label="内容分类">
+          <a class="active" href={articlesPageUrl} data-category-filter data-category-value="" aria-current="page">
+            全部分类 <span data-count-all={activeOfficialPosts.length} data-count-standalone={standaloneOfficialPosts.length} data-count-all-archived={officialPosts.length} data-count-standalone-archived={standaloneAllOfficialPosts.length}>{standaloneOfficialPosts.length}</span>
+          </a>
+          {categoryMetaList.map((category) => (
+            <a
+              href={`${articlesPageUrl}?category=${encodeURIComponent(category.name)}`}
+              data-category-filter
+              data-category-value={category.name}
+            >
+              {category.name} <span data-count-all={categoryCounts[category.name].all} data-count-standalone={categoryCounts[category.name].standalone} data-count-all-archived={categoryCounts[category.name].allArchived} data-count-standalone-archived={categoryCounts[category.name].standaloneArchived}>{categoryCounts[category.name].standalone}</span>
+            </a>
+          ))}
+        </nav>
+        <details class="catalog-tags" data-tag-picker>
+          <summary class="article-toolbar-button">
+            <span data-tag-label>全部标签</span>
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="catalog-tag-options">
+            <button type="button" data-clear-tag hidden>清除当前标签</button>
+            <div class="chips" aria-label="标签列表">
+              {[...commonTags, ...otherTags].map((tag) => (
+                <a href={withBase(`/articles/tag/${encodeURIComponent(tag)}/`)} data-catalog-tag={tag}>{tag}</a>
+              ))}
+            </div>
+          </div>
+        </details>
+      </div>
+      </div>
       <div class="articles-results-meta">
         <p class="articles-results-summary" role="status" aria-live="polite" data-articles-summary>共 {standaloneOfficialPosts.length} 篇独立文章</p>
         <button type="button" class="article-filter-clear" data-clear-article-filters hidden>清除筛选</button>
@@ -134,9 +131,56 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
     </section>
   </main>
   <style>
+    .article-catalog { max-width: 1480px; }
+    .article-catalog > .articles-page-intro {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 6px 24px;
+      margin-bottom: 20px;
+    }
+    .articles-page-intro h1 { margin: 0; }
+    .catalog-tools { border-block: 1px solid var(--line); padding: 14px 0; }
+    .catalog-tools .article-inline-search { max-width: none; }
+    .catalog-categories { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin-top: 13px; }
+    .catalog-categories nav { display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: center; gap: 5px; }
+    .catalog-categories nav a {
+      display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 12px;
+      color: var(--muted); border: 1px solid transparent; border-radius: 7px; font-size: 14px;
+    }
+    .catalog-categories nav a:hover,
+    .catalog-categories nav a.active { color: var(--blue); background: var(--paper-soft); border-color: var(--line); }
+    .catalog-categories nav a.active { font-weight: 700; }
+    .catalog-categories nav span { font-size: 11px; font-variant-numeric: tabular-nums; }
+    .catalog-tags { position: relative; }
+    .catalog-tags summary { list-style: none; min-height: 36px; }
+    .catalog-tags summary::-webkit-details-marker { display: none; }
+    .catalog-tags[open] summary { color: var(--blue); border-color: var(--blue); }
+    .catalog-tag-options {
+      position: absolute; right: 0; z-index: 15; top: calc(100% + 8px);
+      width: min(420px, calc(100vw - 44px)); max-height: min(45vh, 310px); overflow: auto;
+      padding: 13px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+    }
+    .catalog-tag-options .chips { margin-top: 0; }
+    .catalog-tag-options [aria-current="true"] { border-color: var(--blue); color: var(--blue); font-weight: 700; }
+    .catalog-tag-options button { background: none; border: 0; color: var(--blue); text-decoration: underline; padding: 8px 3px; cursor: pointer; font: inherit; font-size: 13px; }
+    .articles-results-meta { margin-block: 3px 6px; }
+    .article-catalog :global(.article-list:not([hidden])) {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px;
+      background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: clip;
+    }
+    .article-catalog :global(.article-list-item) { border: 0; background: var(--paper); min-width: 0; padding: 16px 20px; }
+    .article-catalog :global(.article-list-item:hover) { background: color-mix(in srgb, var(--paper) 70%, var(--paper-soft)); }
+    .article-catalog :global(.article-list-item h2) { font-size: 19px; overflow-wrap: anywhere; }
+    .article-catalog :global(.article-list-item .chips a) { padding: 2px 7px; font-size: 11px; }
     .articles-main-content > .series-search-results { margin: 0 0 16px; }
     .series-search-results .related-series-links[hidden] { display: none; }
     .series-search-results .related-series-links + .related-series-links { margin-top: 8px; }
+    @media (max-width: 800px) {
+      .article-catalog :global(.article-list:not([hidden])) { grid-template-columns: minmax(0, 1fr); }
+      .catalog-tag-options { left: 0; right: auto; }
+    }
   </style>
   <script is:inline>
     (function () {
@@ -150,9 +194,11 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
       var sortLabel = page.querySelector('[data-sort-label]');
       var list = page.querySelector('[data-article-list]');
       var emptyState = page.querySelector('[data-empty-state]');
-      var tagsToggle = page.querySelector('[data-tags-toggle]');
-      var extraTags = Array.prototype.slice.call(page.querySelectorAll('[data-extra-tag]'));
-      var tagPanel = page.querySelector('#article-filter-tags');
+      var tagPicker = page.querySelector('[data-tag-picker]');
+      var tagLabel = page.querySelector('[data-tag-label]');
+      var clearTag = page.querySelector('[data-clear-tag]');
+      var tagChoices = Array.prototype.slice.call(page.querySelectorAll('[data-catalog-tag]'));
+      var selectedTag = '';
       var relatedSeriesGroups = Array.prototype.slice.call(page.querySelectorAll('[data-related-series-id]'));
       var relatedSeriesWrap = page.querySelector('[data-related-series]');
       var seriesSearchHeading = page.querySelector('#series-search-heading');
@@ -168,21 +214,29 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
       // Keep existing ?series=1 links working, but guide new browsing through the series tab.
       var includeSeries = false;
 
-      if (tagsToggle) {
-        tagsToggle.addEventListener('click', function () {
-          var isExpanded = tagsToggle.getAttribute('aria-expanded') === 'true';
-
-          extraTags.forEach(function (tag) {
-            tag.hidden = isExpanded;
-          });
-          if (tagPanel) tagPanel.classList.toggle('is-mobile-open', !isExpanded);
-
-          tagsToggle.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
-          tagsToggle.innerHTML = isExpanded
-            ? '查看全部标签 <span aria-hidden="true">→</span>'
-            : '收起标签 <span aria-hidden="true">↑</span>';
-        });
+      function currentCategory() {
+        return filters.find(function (filter) { return filter.classList.contains('active'); })?.getAttribute('data-category-value') || '';
       }
+
+      tagPicker.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && tagPicker.open) {
+          tagPicker.open = false;
+          tagPicker.querySelector('summary').focus();
+        }
+      });
+      document.addEventListener('click', function (event) {
+        if (!tagPicker.contains(event.target)) tagPicker.open = false;
+      });
+      tagPicker.addEventListener('click', function (event) {
+        if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        var tag = event.target.closest('[data-catalog-tag]');
+        if (!tag && event.target !== clearTag) return;
+        event.preventDefault();
+        selectedTag = tag ? tag.getAttribute('data-catalog-tag') : '';
+        applyFilter(currentCategory(), true);
+        tagPicker.open = false;
+        tagPicker.querySelector('summary').focus();
+      });
 
       function setActiveFilter(category) {
         var activeFilter = null;
@@ -251,6 +305,12 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
         var terms = query.split(/\s+/).filter(Boolean);
         var featuredOnly = featuredOnlyButton && featuredOnlyButton.getAttribute('aria-pressed') === 'true';
         var includeArchived = includeArchivedInput && includeArchivedInput.checked;
+        tagLabel.textContent = selectedTag || '全部标签';
+        clearTag.hidden = !selectedTag;
+        tagChoices.forEach(function (option) {
+          if (option.getAttribute('data-catalog-tag') === selectedTag) option.setAttribute('aria-current', 'true');
+          else option.removeAttribute('aria-current');
+        });
         var eligibleSeries = new Set();
         var matchingChapters = new Map();
 
@@ -261,7 +321,8 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
           var searchable = item.getAttribute('data-search-text') || '';
           var inScope = (category === '视觉实验室' || itemCategory !== '视觉实验室') &&
             (!featuredOnly || item.getAttribute('data-featured') === 'true') &&
-            (!category || itemCategory === category);
+            (!category || itemCategory === category) &&
+            (!selectedTag || JSON.parse(item.getAttribute('data-article-tags') || '[]').includes(selectedTag));
           var matchesQuery = terms.every(function (term) { return searchable.includes(term); });
           var isVisible = (includeSeries || !item.getAttribute('data-series')) &&
             inScope &&
@@ -272,7 +333,7 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
 
           if (!seriesId || archived || !inScope) return;
           eligibleSeries.add(seriesId);
-          if (!query || !matchesQuery) return;
+          if ((!query && !selectedTag) || !matchesQuery) return;
           var link = item.querySelector('h2 a');
           var title = link.textContent.trim().toLocaleLowerCase();
           var titleScore = title.includes(query)
@@ -292,18 +353,18 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
         updateLastVisibleItem();
 
         if (list) list.hidden = visibleCount === 0;
-        if (summary) summary.textContent = '共 ' + visibleCount + (includeSeries ? ' 篇文章 · 包含系列文章' : ' 篇独立文章') + (featuredOnly ? ' · 只看精选' : '') + (includeArchived ? ' · 包含已归档' : '') + (category ? ' · ' + category : '') + (query ? ' · “' + query + '”' : '');
+        if (summary) summary.textContent = '共 ' + visibleCount + (includeSeries ? ' 篇文章 · 包含系列文章' : ' 篇独立文章') + (featuredOnly ? ' · 只看精选' : '') + (includeArchived ? ' · 包含已归档' : '') + (category ? ' · ' + category : '') + (selectedTag ? ' · #' + selectedTag : '') + (query ? ' · “' + query + '”' : '');
         if (filterIndicator) filterIndicator.hidden = !includeArchived;
-        if (clearFiltersButton) clearFiltersButton.hidden = !includeSeries && !featuredOnly && !includeArchived && !category && !query;
+        if (clearFiltersButton) clearFiltersButton.hidden = !includeSeries && !featuredOnly && !includeArchived && !category && !query && !selectedTag && currentSort === 'date';
         var shownSeries = 0;
         if (relatedSeriesWrap) {
-          seriesSearchHeading.textContent = query ? '匹配的专题' : '按完整学习路线阅读';
+          seriesSearchHeading.textContent = query || selectedTag ? '匹配的专题' : '按完整学习路线阅读';
           relatedSeriesGroups.forEach(function (group) {
             var seriesId = group.getAttribute('data-related-series-id');
             var chapter = matchingChapters.get(seriesId);
             var searchText = group.getAttribute('data-series-search-text');
             var matchesSeries = terms.every(function (term) { return searchText.includes(term); });
-            var available = eligibleSeries.has(seriesId) && (query ? Boolean(chapter) || matchesSeries : includeSeries);
+            var available = eligibleSeries.has(seriesId) && (query || selectedTag ? Boolean(chapter) || matchesSeries : includeSeries);
             group.hidden = !available;
             if (available) shownSeries += 1;
             var chapterLink = group.querySelector('[data-series-match-chapter]');
@@ -334,7 +395,11 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
           else url.searchParams.delete('featured');
           if (includeArchived) url.searchParams.set('archived', '1');
           else url.searchParams.delete('archived');
-          history.replaceState(null, '', url.pathname + url.search);
+          if (selectedTag) url.searchParams.set('tag', selectedTag);
+          else url.searchParams.delete('tag');
+          if (currentSort === 'updated') url.searchParams.set('sort', currentSort);
+          else url.searchParams.delete('sort');
+          history.replaceState(history.state, '', url.pathname + url.search + url.hash);
         }
 
       }
@@ -351,6 +416,7 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
         option.addEventListener('click', function () {
           currentSort = option.getAttribute('data-sort-value') || 'date';
           applySort(currentSort);
+          applyFilter(currentCategory(), true);
           sortMenu.open = false;
           sortMenu.querySelector('summary').focus();
         });
@@ -377,26 +443,26 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
 
       if (searchInput) {
         searchInput.addEventListener('input', function () {
-          var category = (filters.find(function (filter) { return filter.classList.contains('active'); }) || filters[0]).getAttribute('data-category-value') || '';
-          applyFilter(category, true);
+          applyFilter(currentCategory(), true);
         });
       }
       if (featuredOnlyButton) {
         featuredOnlyButton.addEventListener('click', function () {
           featuredOnlyButton.setAttribute('aria-pressed', featuredOnlyButton.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
-          var category = (filters.find(function (filter) { return filter.classList.contains('active'); }) || filters[0]).getAttribute('data-category-value') || '';
-          applyFilter(category, true);
+          applyFilter(currentCategory(), true);
         });
       }
       if (includeArchivedInput) {
         includeArchivedInput.addEventListener('change', function () {
-          var category = (filters.find(function (filter) { return filter.classList.contains('active'); }) || filters[0]).getAttribute('data-category-value') || '';
-          applyFilter(category, true);
+          applyFilter(currentCategory(), true);
         });
       }
       if (clearFiltersButton) {
         clearFiltersButton.addEventListener('click', function () {
           includeSeries = false;
+          selectedTag = '';
+          currentSort = 'date';
+          applySort(currentSort);
           if (searchInput) searchInput.value = '';
           if (featuredOnlyButton) featuredOnlyButton.setAttribute('aria-pressed', 'false');
           if (includeArchivedInput) includeArchivedInput.checked = false;
@@ -420,6 +486,12 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
 
       try {
         var requestedCategory = new URLSearchParams(window.location.search).get('category') || '';
+        var requestedTag = new URLSearchParams(window.location.search).get('tag');
+        if (tagChoices.some(function (option) { return option.getAttribute('data-catalog-tag') === requestedTag; })) selectedTag = requestedTag;
+        if (new URLSearchParams(window.location.search).get('sort') === 'updated') {
+          currentSort = 'updated';
+          applySort(currentSort);
+        }
         if (searchInput) searchInput.value = new URLSearchParams(window.location.search).get('q') || '';
         includeSeries = new URLSearchParams(window.location.search).get('series') === '1';
         if (featuredOnlyButton) featuredOnlyButton.setAttribute('aria-pressed', new URLSearchParams(window.location.search).get('featured') === '1' ? 'true' : 'false');

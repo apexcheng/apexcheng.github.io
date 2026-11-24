@@ -12,6 +12,7 @@ const { posts, hideVisualLab = false, hideSeries = false, showPinned = false, in
       class:list={['article-list-item', inlineMeta && 'article-list-item--inline']}
       data-article-item
       data-category={post.data.category}
+      data-article-tags={inlineMeta ? JSON.stringify(post.data.tags) : undefined}
       data-series={post.data.series ?? ''}
       data-series-order={post.data.seriesOrder}
       data-pinned={post.data.pinned ? 'true' : 'false'}

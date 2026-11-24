@@ -33,184 +33,141 @@ const stageGroups = learningStages?.map((stage, index) => {
     posts: posts.filter((post) => (post.data.seriesOrder ?? 0) >= start && (post.data.seriesOrder ?? 0) <= end),
   };
 });
-const hasResources = Boolean(('extraResource' in series && series.extraResource) || series.resource);
+const extraResource = 'extraResource' in series ? series.extraResource : undefined;
+const hasResources = Boolean(extraResource || series.resource);
+const chapterGroups = stageGroups ?? [{ anchor: undefined, posts }];
 ---
 
 <SiteLayout title={series.title} active="series" description={series.description}>
-  <main class="page-content series-detail-page" data-series-id={series.id}>
-    <header class="series-detail-hero">
-      <a class="series-back-link" href={withBase('/series/')}>← 全部系列</a>
-      <p class="eyebrow">系列阅读</p>
-      <h1 class="page-title">{series.title}</h1>
-      <p class="page-lead">{series.description}</p>
-      <div class="series-hero-footer">
-        <div class="series-summary" aria-label="系列信息">
-          <span>{posts.length} 篇文章</span>
-          <span>阅读约 {totalMinutes} 分钟</span>
+  <main class="page-content reading-series" data-series-id={series.id}>
+    <header class="reading-series-header">
+      <a class="reading-series-back" href={withBase(`/series/?series=${series.id}`)}>← 全部系列</a>
+      <div class="reading-series-heading">
+        <div>
+          <p class="reading-series-meta">{posts.length} 篇文章 · 阅读约 {totalMinutes} 分钟</p>
+          <h1 class="page-title">{series.title}</h1>
+          <p class="reading-series-description">{series.description}</p>
         </div>
-        <a class="series-start-link" href={withBase(`/articles/${posts[0].slug}/`)}>
-          从第 1 篇开始 <span aria-hidden="true">→</span>
-        </a>
+        <div class="reading-series-actions">
+          <a class="reading-series-start" href={withBase(`/articles/${posts[0].slug}/`)}>从第 1 篇开始 <span aria-hidden="true">→</span></a>
+          {hasResources && <a href="#series-resources">练习与考核资源 <span aria-hidden="true">↓</span></a>}
+        </div>
       </div>
-      {stageGroups && (
-        <nav class="series-quick-path" aria-label="按学习阶段阅读">
-          <p>选择学习阶段</p>
-          <div>
-            {stageGroups.map((stage) => (
-              <a href={`#${stage.anchor}`}><span>{stage.range}</span> {stage.title} <span aria-hidden="true">↘</span></a>
-            ))}
-          </div>
-        </nav>
-      )}
-      {hasResources && <a class="series-resource-shortcut" href="#series-resources">查看练习与验收资源 <span aria-hidden="true">↘</span></a>}
     </header>
 
-    <section class="series-route-section" aria-labelledby="series-route-title">
-      <div class="series-route-heading">
-        <p class="eyebrow">阅读路线</p>
-        <h2 id="series-route-title">从第一篇开始，也可以直接进入你关心的位置</h2>
-      </div>
-      {stageGroups ? (
-        <div class="series-stage-route">
-          {stageGroups.map((stage) => (
-            <section id={stage.anchor} class="series-stage-section" aria-label={stage.title}>
-              <div class="series-stage-header">
+    <div class:list={['reading-series-layout', !hasResources && !stageGroups && 'reading-series-no-sidebar']}>
+      <section class="reading-series-route" aria-labelledby="series-route-title">
+        <h2 id="series-route-title">章节目录</h2>
+        {chapterGroups.map((stage) => (
+          <section id={stage.anchor} class="reading-series-stage" aria-label={'title' in stage ? stage.title : '系列章节'}>
+            {'title' in stage && (
+              <header class="reading-series-stage-heading">
                 <div>
-                  <span class="series-stage-range">{stage.range} · {'kind' in stage ? stage.kind : '学习阶段'}</span>
                   <h3>{stage.title}</h3>
                   <p>{stage.description}</p>
                 </div>
-                <span class="series-stage-count">{stage.posts.length} 篇</span>
-              </div>
-              <ol class="series-route">
-                {stage.posts.map((post) => (
-                  <li class="series-route-item">
-                    <a class="series-route-link" href={withBase(`/articles/${post.slug}/`)}>
-                      <span class="series-route-index">{String(post.data.seriesOrder).padStart(2, '0')}</span>
-                      <div class="series-route-content">
-                        <div class="series-route-meta">
-                          <span>{post.data.category}</span>
-                          <span>阅读约 {post.data.minutes} 分钟</span>
-                        </div>
-                        <h4>{post.data.title}</h4>
-                        <p>{post.data.description}</p>
-                      </div>
-                      <span class="series-route-arrow" aria-hidden="true">→</span>
-                    </a>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          ))}
-        </div>
-      ) : (
-        <ol class="series-route">
-          {posts.map((post, index) => (
-            <li class="series-route-item">
-              <a class="series-route-link" href={withBase(`/articles/${post.slug}/`)}>
-                <span class="series-route-index">{String(index + 1).padStart(2, '0')}</span>
-                <div class="series-route-content">
-                  <div class="series-route-meta">
-                    <span>{post.data.category}</span>
-                    <span>阅读约 {post.data.minutes} 分钟</span>
-                  </div>
-                  <h3>{post.data.title}</h3>
-                  <p>{post.data.description}</p>
-                </div>
-                <span class="series-route-arrow" aria-hidden="true">→</span>
-              </a>
-            </li>
-          ))}
-        </ol>
-      )}
-    </section>
+                <span>{stage.range} · {'kind' in stage ? stage.kind : '学习阶段'}</span>
+              </header>
+            )}
+            <ol class="reading-series-chapters">
+              {stage.posts.map((post) => (
+                <li>
+                  <a href={withBase(`/articles/${post.slug}/`)}>
+                    <span class="reading-series-order" aria-hidden="true">{String(post.data.seriesOrder).padStart(2, '0')}</span>
+                    <div>
+                      {'title' in stage ? <h4>{post.data.title}</h4> : <h3>{post.data.title}</h3>}
+                      <p>{post.data.description}</p>
+                    </div>
+                    <small>{post.data.minutes} 分钟</small>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ))}
+      </section>
 
-    <aside class:list={['series-detail-sidebar', !hasResources && 'series-no-resources']} aria-label="系列导览与配套资源">
-      {learningStages ? (
-        <section class="series-overview-card series-learning-card">
-          <div class="series-overview-heading">
-            <div>
-              <p class="eyebrow">系列导览</p>
-              <h2>阶段速览</h2>
-            </div>
-            <span>{posts.length} 篇</span>
-          </div>
-          <p class="series-overview-tip">按顺序走一遍，也可以直接进入当前最需要的一段。</p>
-          <ol class="series-learning-list">
-            {stageGroups?.map((stage) => (
-              <li>
-                <span>{stage.range}</span>
-                <div>
-                  <strong><a href={`#${stage.anchor}`}>{stage.title} ↘</a></strong>
-                  <p>{stage.description}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-      ) : (
-        <section class="series-overview-card">
-          <div class="series-overview-heading">
-            <div>
-              <p class="eyebrow">系列导览</p>
-              <h2>文章快速目录</h2>
-            </div>
-            <span>{posts.length} 篇</span>
-          </div>
-          <p class="series-overview-tip">建议按顺序阅读，也可以从当前最需要的主题开始。</p>
-          <ol class="series-overview-list">
-            {posts.map((post, index) => (
-              <li>
-                <a href={withBase(`/articles/${post.slug}/`)}>
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                  <strong>{post.data.title}</strong>
-                  <span aria-hidden="true">→</span>
-                </a>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
-
-      {'extraResource' in series && series.extraResource && (
-        <section class="series-resource-card" id="series-resources" aria-label="实操练习下载">
-          <div class="series-resource-content">
-            <p class="eyebrow">{series.id === 'python-basics' ? 'Python 实操练习' : '函数实操练习'}</p>
-            <p class="series-resource-timing">{series.id === 'python-basics' ? '完成基础章节后用于自测，原有 20 题完整保留。' : '适合在基础主线学习过程中动手练习，不含参考答案。'}</p>
-            <h2>{series.extraResource.title}</h2>
-            <p>{series.extraResource.description}</p>
-            <span>{series.extraResource.meta}</span>
-          </div>
-          <a
-            class="series-resource-download"
-            href={withBase(series.extraResource.href)}
-            download
-          >
-            {series.id === 'python-basics' ? '下载 Python 实操练习包' : '下载函数实操练习包'} <span aria-hidden="true">↓</span>
-          </a>
-        </section>
-      )}
-      {series.resource && (
-        <section class="series-resource-card" id={'extraResource' in series ? undefined : 'series-resources'} aria-label="正式考核下载">
-          {'badge' in series.resource && series.resource.badge && (
-            <span class="series-resource-badge">{series.resource.badge}</span>
+      {(hasResources || stageGroups) && (
+        <aside class="reading-series-sidebar" aria-label="阶段与配套资源">
+          {stageGroups && (
+            <nav aria-labelledby="series-stages-heading">
+              <h2 id="series-stages-heading">按阶段跳转</h2>
+              {stageGroups.map((stage) => (
+                <a href={`#${stage.anchor}`}><span>{stage.range}</span>{stage.title}<span aria-hidden="true">↓</span></a>
+              ))}
+            </nav>
           )}
-          <div class="series-resource-content">
-            <p class="eyebrow">正式考核</p>
-            <p class="series-resource-timing">{series.id === 'python-basics' ? '完成基础学习后用于独立考核，AI 评分需面试官提交答卷后执行。' : '完成 01–06 基础主线后，用于综合检验；包含参考答案与 AI 评分规则。'}</p>
-            <h2>{series.resource.title}</h2>
-            <p>{series.resource.description}</p>
-            <span>{series.resource.meta}</span>
-          </div>
-          <a
-            class="series-resource-download"
-            href={withBase(series.resource.href)}
-            download
-          >
-            下载考核包 <span aria-hidden="true">↓</span>
-          </a>
-        </section>
+          {hasResources && (
+            <section id="series-resources" class="reading-series-resources" aria-labelledby="series-resources-heading">
+              <h2 id="series-resources-heading">练习与考核资源</h2>
+              {extraResource && (
+                <article>
+                  <h3>{extraResource.title}</h3>
+                  <p>{extraResource.description}</p>
+                  <a href={withBase(extraResource.href)} download>下载实操练习包 <span aria-hidden="true">↓</span></a>
+                </article>
+              )}
+              {series.resource && (
+                <article>
+                  <h3>{series.resource.title}</h3>
+                  {'badge' in series.resource && series.resource.badge && <span class="series-resource-badge">{series.resource.badge}</span>}
+                  <p>{series.resource.description}</p>
+                  <a href={withBase(series.resource.href)} download>下载正式考核包 <span aria-hidden="true">↓</span></a>
+                </article>
+              )}
+            </section>
+          )}
+        </aside>
       )}
-    </aside>
+    </div>
   </main>
 </SiteLayout>
+
+<style>
+  .reading-series { max-width: 1480px; }
+  .reading-series-header { background: color-mix(in srgb, var(--paper) 88%, var(--blue)); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(19px, 2.6vw, 32px); margin-bottom: 22px; }
+  .reading-series-back { display: inline-block; color: var(--blue); font-size: 13px; font-weight: 650; margin-bottom: 13px; }
+  .reading-series-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px 30px; }
+  .reading-series-meta { font-size: 13px; color: var(--muted); margin: 0 0 5px; }
+  .reading-series-heading h1 { font-size: clamp(29px, 3vw, 47px); margin: 0; line-height: 1.2; text-wrap: balance; }
+  .reading-series-description { max-width: 74ch; margin: 10px 0 0; font-size: 15px; color: var(--muted); line-height: 1.65; }
+  .reading-series-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 18px; flex-shrink: 0; }
+  .reading-series-actions a { min-height: 40px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--blue); }
+  .reading-series-actions .reading-series-start { padding: 0 14px; border-radius: 6px; background: var(--ink); color: var(--paper); }
+  .reading-series a:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .reading-series-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, .45fr); gap: clamp(20px, 3vw, 42px); align-items: start; }
+  .reading-series-no-sidebar { grid-template-columns: minmax(0, 1fr); max-width: 1030px; }
+  .reading-series-route h2, .reading-series-sidebar h2 { font-size: 17px; margin: 0 0 10px; }
+  .reading-series-stage + .reading-series-stage { margin-top: 19px; }
+  .reading-series-stage-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 5px 12px; padding: 12px 15px; border-radius: var(--radius) var(--radius) 0 0; background: var(--paper-soft); border: 1px solid var(--line); border-bottom: 0; }
+  .reading-series-stage-heading h3 { font-size: 16px; line-height: 1.45; margin: 0 0 4px; }
+  .reading-series-stage-heading p, .reading-series-chapters p { font-size: 13px; color: var(--muted); line-height: 1.55; margin: 0; }
+  .reading-series-stage-heading > span { color: var(--blue); font-weight: 650; font-size: 12px; }
+  .reading-series-chapters { border: 1px solid var(--line); border-radius: var(--radius); list-style: none; padding: 0; margin: 0; background: var(--paper); }
+  .reading-series-stage-heading + ol { border-start-start-radius: 0; border-start-end-radius: 0; }
+  .reading-series-chapters li + li { border-top: 1px solid var(--line-soft); }
+  .reading-series-chapters a { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 12px; padding: 12px 15px; align-items: baseline; }
+  .reading-series-chapters a:hover { background: var(--paper-soft); text-decoration: none; }
+  .reading-series-chapters a:hover :is(h3, h4) { color: var(--blue); text-decoration: underline; text-underline-offset: 4px; }
+  .reading-series-chapters :is(h3, h4) { font-size: 15px; font-weight: 700; margin: 0 0 3px; line-height: 1.45; }
+  .reading-series-chapters small, .reading-series-order { font-size: 12px; color: var(--muted); }
+  .reading-series-order { color: var(--blue); font-variant-numeric: tabular-nums; }
+  .reading-series-sidebar { display: grid; gap: 19px; }
+  .reading-series-sidebar nav { border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+  .reading-series-sidebar nav a { display: grid; grid-template-columns: 49px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; font-size: 14px; padding: 7px 3px; }
+  .reading-series-sidebar nav a span { color: var(--blue); font-size: 12px; }
+  .reading-series-resources article { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; background: var(--paper); }
+  .reading-series-resources article + article { margin-top: 8px; }
+  .reading-series-resources h3 { margin: 0; font-size: 15px; }
+  .reading-series-resources p { margin: 5px 0 8px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .reading-series-resources a { display: inline-block; padding-block: 3px; font-weight: 700; color: var(--blue); font-size: 13px; }
+  .reading-series-resources .series-resource-badge { display: inline-block; position: static; margin: 5px 0 0; }
+  @media (max-width: 1050px) {
+    .reading-series-heading { display: block; }
+    .reading-series-actions { margin-top: 12px; }
+  }
+  @media (max-width: 830px) {
+    .reading-series-layout { grid-template-columns: 1fr; }
+    .reading-series-sidebar a, .reading-series-chapters a { min-height: 44px; }
+  }
+</style>

@@ -22,6 +22,9 @@ describe('series feature', () => {
   it('builds a series library and ordered reading route', () => {
     expect(seriesIndexSource).toContain('seriesMetaList');
     expect(seriesIndexSource).toContain('postCount');
+    expect(seriesIndexSource).toContain('data-series-option');
+    expect(seriesIndexSource).toContain("url.searchParams.set('series', id)");
+    expect(seriesIndexSource).toContain("window.addEventListener('popstate', restoreSelection)");
     expect(seriesDetailSource).toContain('getStaticPaths');
     expect(seriesDetailSource).toContain('(a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0)');
     expect(seriesDetailSource).toContain('/articles/${post.slug}/');
@@ -62,7 +65,7 @@ describe('series feature', () => {
     expect(seriesDetailSource).toContain('id={stage.anchor}');
     expect(seriesDetailSource).toContain('href={`#${stage.anchor}`}');
     expect(seriesDetailSource).toContain('id="series-resources"');
-    expect(seriesDetailSource).toContain('href={withBase(series.extraResource.href)}');
+    expect(seriesDetailSource).toContain('href={withBase(extraResource.href)}');
     expect(seriesDetailSource).toContain('href={withBase(series.resource.href)}');
     expect(seriesDataSource).toContain('Python 正式考核包');
     expect(seriesDetailSource).toContain('/articles/${post.slug}/');

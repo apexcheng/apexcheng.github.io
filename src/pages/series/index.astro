@@ -23,553 +23,135 @@ const seriesList = seriesMetaList
   .sort((a, b) => a.order - b.order);
 ---
 
-<SiteLayout title="系列" active="series">
-  <main class="page-content series-page">
-    <div class="series-workspace">
-      <div class="series-main">
-        <section class="series-hero">
-          <h1 class="page-title">文章与系列</h1>
-          <ContentViewTabs active="series" />
-          <p class="page-lead">按主题整理的完整阅读路线。</p>
-        </section>
+<SiteLayout title="专题系列" active="series">
+  <main class="page-content series-directory">
+    <header class="series-directory-heading">
+      <h1 class="page-title">文章与系列</h1>
+      <ContentViewTabs active="series" />
+    </header>
 
-        <section class="series-library" aria-label="系列列表">
-          {seriesList.map((series, index) => (
-            <a
-              class:list={['series-card', index === 0 && 'is-active']}
-              data-series-id={series.id}
-              href={withBase(`/series/${series.id}/`)}
-            >
-              <span class="series-card-index">{String(index + 1).padStart(2, '0')}</span>
-              <div class="series-card-body">
-                <p class="series-card-meta">{series.postCount} 篇文章 · 约 {series.totalMinutes} 分钟</p>
-                <h2>{series.title}</h2>
-                <p>{series.description}</p>
-              </div>
-              <span class="series-card-link">查看路线 <span aria-hidden="true">→</span></span>
-            </a>
-          ))}
-        </section>
-      </div>
+    <div class="series-directory-layout">
+      <nav class="series-directory-index" aria-label="选择专题">
+        {seriesList.map((series, index) => (
+          <a href={withBase(`/series/${series.id}/`)} data-series-option={series.id}
+            aria-current={index === 0 ? 'true' : undefined}
+            aria-controls={`series-preview-${series.id}`}>
+            <span>{series.title}</span>
+            <small>{series.postCount} 篇 · 约 {series.totalMinutes} 分钟</small>
+          </a>
+        ))}
+      </nav>
 
-      <aside class="series-map" aria-label="系列阅读地图" aria-live="polite">
-        <div class="series-map-grid" aria-hidden="true"></div>
-
-        {seriesList.map((series, seriesIndex) => (
-          <article
-            class:list={['series-map-view', seriesIndex === 0 && 'is-active']}
-            data-map-id={series.id}
-            hidden={seriesIndex !== 0}
-          >
-            <div class="series-map-topline">
-              <span>READING MAP</span>
-              <span>{String(seriesIndex + 1).padStart(2, '0')} / {String(seriesList.length).padStart(2, '0')}</span>
-            </div>
-
-            <header class="series-map-header">
-              <p class="series-map-kicker">当前阅读主题</p>
+      <section aria-label="专题预览">
+        {seriesList.map((series, index) => (
+          <article class="series-preview" data-series-preview={series.id} id={`series-preview-${series.id}`} hidden={index !== 0}>
+            <header class="series-preview-heading">
+              <p class="series-preview-meta">{series.postCount} 篇文章 · 约 {series.totalMinutes} 分钟</p>
               <h2>{series.title}</h2>
               <p>{series.description}</p>
+              <div class="series-preview-actions">
+                <a class="series-preview-start" href={withBase(`/articles/${series.posts[0].slug}/`)}>开始阅读 <span aria-hidden="true">→</span></a>
+                <a href={withBase(`/series/${series.id}/`)}>完整路线</a>
+                {('resource' in series || 'extraResource' in series) && <a href={withBase(`/series/${series.id}/#series-resources`)}>练习与考核资源 <span aria-hidden="true">↗</span></a>}
+              </div>
             </header>
-
-            <div class="series-map-stats" aria-label="系列统计">
-              <div>
-                <strong>{series.postCount}</strong>
-                <span>篇文章</span>
-              </div>
-              <div>
-                <strong>{series.totalMinutes}</strong>
-                <span>分钟阅读</span>
-              </div>
-              <div>
-                <strong>{String(seriesIndex + 1).padStart(2, '0')}</strong>
-                <span>推荐路线</span>
-              </div>
-            </div>
-
-            <section class="series-map-route" aria-label={`${series.title} 阅读顺序`}>
-              <div class="series-map-route-head">
-                <span>阅读顺序</span>
-                <span>从理解到实践</span>
-              </div>
-              <ol>
-                {series.posts.map((post, postIndex) => (
-                  <li>
-                    <span class="series-map-node">{String(postIndex + 1).padStart(2, '0')}</span>
-                    <div>
-                      <a class="series-chapter-link" href={withBase(`/articles/${post.slug}/`)}>{post.data.title}</a>
-                      <span>{post.data.category} · {post.data.minutes} 分钟</span>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </section>
-
-            <a class="series-map-action" href={withBase(`/series/${series.id}/`)}>
-              <span>
-                <small>OPEN SERIES</small>
-                打开完整阅读路线
-              </span>
-              <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22">
-                <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
-              </svg>
-            </a>
+            <h3 class="series-preview-chapters-title">章节目录</h3>
+            <ol class="series-preview-chapters">
+              {series.posts.map((post, postIndex) => (
+                <li>
+                  <a href={withBase(`/articles/${post.slug}/`)}>
+                    <span class="series-preview-chapter-order" aria-hidden="true">{String(postIndex + 1).padStart(2, '0')}</span>
+                    <span>{post.data.title}</span>
+                    <small>{post.data.minutes} 分钟</small>
+                  </a>
+                </li>
+              ))}
+            </ol>
           </article>
         ))}
-      </aside>
+      </section>
     </div>
   </main>
 </SiteLayout>
 
 <style>
-  .series-page {
-    max-width: none;
-    padding-top: 44px;
-  }
-
-  .series-workspace {
+  .series-directory { max-width: 1480px; }
+  .series-directory-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; margin-bottom: 20px; }
+  .series-directory-heading h1 { margin: 0; }
+  .series-directory-layout {
+    display: grid;
+    grid-template-columns: minmax(238px, .32fr) minmax(0, 1fr);
     align-items: start;
-    display: grid;
-    gap: clamp(24px, 2.5vw, 42px);
-    grid-template-columns: minmax(430px, 0.86fr) minmax(540px, 1.14fr);
-    margin: 0 auto;
-    max-width: 1660px;
-  }
-
-  .series-main,
-  .series-map {
-    min-width: 0;
-  }
-
-  .series-hero {
-    margin-bottom: 20px;
-    max-width: 720px;
-  }
-
-  .series-library {
-    display: grid;
-    gap: 12px;
-  }
-
-  .series-card {
-    align-items: center;
-    cursor: pointer;
-    gap: 16px;
-    grid-template-columns: 48px minmax(0, 1fr) auto;
-    min-height: 132px;
-    padding: 19px 21px;
-  }
-
-  .series-card.is-active {
-    border-color: color-mix(in srgb, var(--blue) 48%, var(--line));
-    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.1);
-  }
-
-  .series-card.is-active::before {
-    width: 6px;
-  }
-
-  .series-card.is-active .series-card-index,
-  .series-card.is-active .series-card-body h2,
-  .series-card.is-active .series-card-link {
-    color: var(--blue);
-  }
-
-  .series-card-index {
-    font-size: 30px;
-  }
-
-  .series-card-body h2 {
-    font-size: 20px;
-    line-height: 1.28;
-    margin: 5px 0 8px;
-  }
-
-  .series-card-body > p:last-child {
-    display: -webkit-box;
-    font-size: 14px;
-    line-height: 1.72;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
-
-  .series-card-link {
-    font-size: 13px;
-    padding: 10px 14px;
-  }
-
-  .series-map {
-    background:
-      radial-gradient(circle at 85% 12%, color-mix(in srgb, var(--violet) 17%, transparent), transparent 260px),
-      radial-gradient(circle at 12% 88%, color-mix(in srgb, var(--cyan) 15%, transparent), transparent 300px),
-      linear-gradient(145deg, color-mix(in srgb, var(--paper) 92%, var(--blue) 8%), var(--paper));
-    border: 1px solid color-mix(in srgb, var(--blue) 22%, var(--line));
-    border-radius: 30px;
-    box-shadow: 0 28px 80px rgba(40, 64, 112, 0.12);
-    min-height: 0;
-    overflow: hidden;
-    padding: clamp(22px, 2vw, 32px);
-    position: sticky;
-    top: 96px;
-  }
-
-  .series-map-grid {
-    background-image:
-      linear-gradient(color-mix(in srgb, var(--line) 42%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, var(--line) 42%, transparent) 1px, transparent 1px);
-    background-size: 48px 48px;
-    inset: 0;
-    mask-image: linear-gradient(135deg, transparent 4%, rgba(0, 0, 0, 0.62) 48%, transparent 94%);
-    opacity: 0.46;
-    pointer-events: none;
-    position: absolute;
-  }
-
-  .series-map-view {
-    display: flex;
-    flex-direction: column;
-    min-height: 550px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .series-map-view[hidden] {
-    display: none;
-  }
-
-  .series-map-view.is-active {
-    animation: series-map-in 220ms ease-out both;
-  }
-
-  .series-map-topline {
-    align-items: center;
-    color: var(--soft);
-    display: flex;
-    font-size: 11px;
-    font-weight: 800;
-    justify-content: space-between;
-    letter-spacing: 0.18em;
-  }
-
-  .series-map-topline::after {
-    background: linear-gradient(90deg, var(--blue), var(--cyan));
-    content: "";
-    height: 2px;
-    left: 0;
-    position: absolute;
-    top: 28px;
-    width: 72px;
-  }
-
-  .series-map-header {
-    max-width: 680px;
-    padding-top: 22px;
-  }
-
-  .series-map-kicker {
-    color: var(--blue);
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    margin: 0 0 12px;
-  }
-
-  .series-map-header h2 {
-    font-size: clamp(27px, 2.35vw, 38px);
-    letter-spacing: -0.04em;
-    line-height: 1.12;
-    margin: 0;
-    max-width: 620px;
-  }
-
-  .series-map-header > p:last-child {
-    font-size: 15px;
-    line-height: 1.68;
-    margin: 13px 0 0;
-    max-width: 650px;
-  }
-
-  .series-map-stats {
-    border-bottom: 1px solid var(--line);
+    gap: clamp(24px, 3vw, 48px);
     border-top: 1px solid var(--line);
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    margin-top: 24px;
+    padding-top: 19px;
   }
-
-  .series-map-stats > div {
-    display: grid;
-    gap: 3px;
-    padding: 15px 18px 14px 0;
+  .series-directory-index { position: sticky; top: 96px; display: grid; gap: 5px; }
+  .series-directory-index a {
+    display: grid; gap: 3px; min-height: 62px; padding: 11px 14px; border-radius: 6px;
+    border: 1px solid transparent; font-size: 15px; font-weight: 680; color: var(--ink);
   }
-
-  .series-map-stats > div + div {
-    border-left: 1px solid var(--line);
-    padding-left: 24px;
-  }
-
-  .series-map-stats strong {
-    color: var(--ink);
-    font-size: 23px;
-    line-height: 1;
-  }
-
-  .series-map-stats span {
-    color: var(--soft);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-  }
-
-  .series-map-route {
-    margin-top: 22px;
-  }
-
-  .series-map-route-head {
-    align-items: center;
-    color: var(--soft);
-    display: flex;
-    font-size: 12px;
-    font-weight: 720;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
-
-  .series-map-route ol {
-    display: grid;
-    gap: 0;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .series-map-route li {
-    align-items: center;
-    display: grid;
-    gap: 16px;
-    grid-template-columns: 42px minmax(0, 1fr);
-    min-height: 50px;
-    padding: 4px 0;
-    position: relative;
-  }
-
-  .series-map-route li:not(:last-child)::after {
-    background: color-mix(in srgb, var(--blue) 34%, var(--line));
-    bottom: -3px;
-    content: "";
-    left: 20px;
-    position: absolute;
-    top: 37px;
-    width: 1px;
-  }
-
-  .series-map-node {
-    align-items: center;
-    background: color-mix(in srgb, var(--paper) 82%, var(--blue) 18%);
-    border: 1px solid color-mix(in srgb, var(--blue) 36%, var(--line));
-    border-radius: 50%;
-    color: var(--blue);
-    display: inline-flex;
-    font-size: 11px;
-    font-weight: 800;
-    height: 36px;
-    justify-content: center;
-    position: relative;
-    width: 36px;
-    z-index: 1;
-  }
-
-  .series-map-route li > div {
-    align-items: baseline;
-    display: flex;
-    gap: 16px;
-    justify-content: space-between;
-    min-width: 0;
-  }
-
-  .series-chapter-link {
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.45;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .series-chapter-link:is(:hover, :focus-visible) {
-    color: var(--blue);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  .series-map-route li > div > span {
-    color: var(--soft);
-    flex: 0 0 auto;
-    font-size: 11px;
-  }
-
-  .series-map-action {
-    align-items: center;
-    background: var(--ink);
-    border: 1px solid var(--ink);
-    border-radius: 18px;
-    color: var(--paper);
-    cursor: pointer;
-    display: flex;
-    gap: 24px;
-    justify-content: space-between;
-    margin-top: auto;
-    padding: 14px 18px;
-    transition: box-shadow 180ms ease, transform 180ms ease;
-  }
-
-  .series-map-action span {
-    display: grid;
-    font-size: 14px;
-    font-weight: 760;
-    gap: 3px;
-  }
-
-  .series-map-action small {
-    color: color-mix(in srgb, var(--paper) 66%, transparent);
-    font-size: 9px;
-    letter-spacing: 0.16em;
-  }
-
-  .series-map-action:focus-visible {
-    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.2);
-    outline: 3px solid color-mix(in srgb, var(--blue) 28%, transparent);
-    outline-offset: 3px;
-    transform: translateY(-2px);
-  }
-
-  @media (hover: hover) {
-    .series-map-action:hover {
-      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.2);
-      color: var(--paper);
-      transform: translateY(-2px);
-    }
-  }
-
-  @keyframes series-map-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @media (max-width: 1320px) {
-    .series-workspace {
-      grid-template-columns: minmax(450px, 0.88fr) minmax(520px, 1.12fr);
-    }
-
-    .series-map {
-      padding: 34px;
-    }
-
-    .series-card {
-      grid-template-columns: 48px minmax(0, 1fr);
-    }
-
-    .series-card-link {
-      grid-column: 2;
-      justify-self: start;
-    }
-  }
-
-  @media (max-width: 1080px) {
-    .series-page {
-      max-width: 900px;
-    }
-
-    .series-workspace {
-      grid-template-columns: 1fr;
-    }
-
-    .series-map {
-      min-height: auto;
-      position: static;
-    }
-
-    .series-map-view {
-      min-height: 530px;
-    }
-  }
-
-  @media (max-width: 680px) {
-    .series-page {
-      padding-top: 26px;
-    }
-
-    .series-card {
-      gap: 14px;
-      grid-template-columns: 42px minmax(0, 1fr);
-      min-height: 0;
-      padding: 22px 20px;
-    }
-
-    .series-card-index {
-      font-size: 28px;
-    }
-
-    .series-card-body h2 {
-      font-size: 20px;
-    }
-
-    .series-card-link {
-      grid-column: 2;
-    }
-
-    .series-map {
-      border-radius: 22px;
-      padding: 28px 22px;
-    }
-
-    .series-map-view {
-      min-height: 540px;
-    }
-
-    .series-map-header h2 {
-      font-size: 30px;
-    }
-
-    .series-map-stats > div,
-    .series-map-stats > div + div {
-      padding: 16px 10px;
-    }
-
-    .series-map-stats strong {
-      font-size: 21px;
-    }
-
-    .series-map-route li > div {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .series-chapter-link {
-      white-space: normal;
-    }
+  .series-directory-index a:hover { color: var(--blue); background: var(--paper-soft); }
+  .series-directory-index a[aria-current] { color: var(--blue); background: var(--paper); border-color: var(--line); border-inline-start: 3px solid var(--blue); }
+  .series-directory-index small, .series-preview-meta { color: var(--muted); font-size: 12px; font-weight: 500; }
+  .series-preview { border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); overflow: clip; min-height: 485px; }
+  .series-preview[hidden] { display: none; }
+  .series-preview-heading { padding: clamp(22px, 3vw, 36px); background: color-mix(in srgb, var(--paper) 88%, var(--blue)); border-bottom: 1px solid var(--line); }
+  .series-preview-meta { margin: 0 0 6px; }
+  .series-preview-heading h2 { margin: 0; font-size: clamp(25px, 3vw, 38px); line-height: 1.25; font-weight: 720; text-wrap: balance; }
+  .series-preview-heading h2 + p { max-width: 68ch; margin: 10px 0 17px; color: var(--muted); font-size: 15px; line-height: 1.7; }
+  .series-preview-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+  .series-preview-actions a { color: var(--blue); font-size: 14px; font-weight: 690; min-height: 42px; display: inline-flex; align-items: center; gap: 9px; }
+  .series-preview-actions .series-preview-start { background: var(--ink); color: var(--paper); border-radius: 6px; padding: 0 13px; }
+  .series-preview-actions a:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .series-preview-chapters-title { margin: 17px clamp(22px, 3vw, 36px) 4px; font-size: 15px; }
+  .series-preview-chapters { list-style: none; margin: 0; padding: 0 clamp(22px, 3vw, 36px) 20px; }
+  .series-preview-chapters li + li { border-top: 1px solid var(--line-soft); }
+  .series-preview-chapters a { display: grid; align-items: baseline; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 9px; padding: 12px 3px; font-size: 15px; line-height: 1.45; }
+  .series-preview-chapters a:hover { color: var(--blue); text-decoration: underline; text-underline-offset: 5px; }
+  .series-preview-chapters small { font-size: 12px; color: var(--muted); }
+  .series-preview-chapter-order { font-size: 12px; color: var(--blue); font-variant-numeric: tabular-nums; }
+  @media (max-width: 800px) {
+    .series-directory-layout { grid-template-columns: 1fr; gap: 14px; }
+    .series-directory-index { position: static; display: flex; gap: 6px; overflow-x: auto; padding: 4px; }
+    .series-directory-index a { flex: 0 0 auto; max-width: 260px; }
+    .series-preview { min-height: 0; }
   }
 </style>
 
 <script>
-  const cards = Array.from(document.querySelectorAll('.series-card'));
-  const maps = Array.from(document.querySelectorAll('.series-map-view'));
+  const options = [...document.querySelectorAll<HTMLAnchorElement>('[data-series-option]')];
+  const previews = [...document.querySelectorAll<HTMLElement>('[data-series-preview]')];
 
-  function showSeries(seriesId) {
-    cards.forEach((card) => {
-      card.classList.toggle('is-active', card.dataset.seriesId === seriesId);
+  function selectSeries(id: string) {
+    options.forEach(option => {
+      if (option.dataset.seriesOption === id) option.setAttribute('aria-current', 'true');
+      else option.removeAttribute('aria-current');
     });
-
-    maps.forEach((map) => {
-      const isActive = map.dataset.mapId === seriesId;
-      map.hidden = !isActive;
-      map.classList.toggle('is-active', isActive);
-    });
+    previews.forEach(preview => { preview.hidden = preview.dataset.seriesPreview !== id; });
   }
 
-  cards.forEach((card) => {
-    card.addEventListener('mouseenter', () => showSeries(card.dataset.seriesId));
-    card.addEventListener('focus', () => showSeries(card.dataset.seriesId));
+  function restoreSelection() {
+    const id = new URLSearchParams(location.search).get('series');
+    const option = options.find(option => option.dataset.seriesOption === id) ?? options[0];
+    if (option?.dataset.seriesOption) selectSeries(option.dataset.seriesOption);
+  }
+
+  options.forEach(option => {
+    option.addEventListener('click', event => {
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      const id = option.dataset.seriesOption;
+      if (!id || option.hasAttribute('aria-current')) {
+        event.preventDefault();
+        return;
+      }
+      event.preventDefault();
+      const url = new URL(location.href);
+      url.searchParams.set('series', id);
+      history.pushState(history.state, '', url);
+      selectSeries(id);
+    });
   });
+  window.addEventListener('popstate', restoreSelection);
+  restoreSelection();
 </script>
