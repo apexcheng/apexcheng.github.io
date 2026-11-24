@@ -22,10 +22,10 @@ const { Content, headings } = await render(post);
 const tocHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const hasToc = tocHeadings.length > 0;
 const mobileTocGroups = tocHeadings.length >= 12 ? groupTocHeadings(tocHeadings) : null;
-// Component-led articles without Markdown headings keep their own ending/layout.
-const relatedPosts = !post.data.series && hasToc
+const relatedPosts = !post.data.series && !hasStoryHeading
   ? getRelatedPosts(post, await getCollection('posts'))
   : [];
+const categoryPath = withBase(`/articles/category/${encodeURIComponent(post.data.category)}/`);
 const seriesMeta = post.data.series ? getSeriesMeta(post.data.series) : undefined;
 const seriesPosts = post.data.series
   ? (await getCollection('posts'))
@@ -43,11 +43,11 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
       <details class="article-info desktop-article-info">
         <summary>文章信息</summary>
         <div class="article-info-body">
-          <p>{post.data.category}</p>
-          <p>{formatPostDate(post.data.date)}</p>
-          <p>阅读约 {post.data.minutes} 分钟</p>
+          <p>发布于 <time datetime={post.data.date.toISOString()}>{formatPostDate(post.data.date)}</time></p>
           <div class="chips">
-            {post.data.tags.map((tag) => <span>{tag}</span>)}
+            {post.data.tags.map((tag) => post.data.archived
+              ? <span>{tag}</span>
+              : <a href={withBase(`/articles/tag/${encodeURIComponent(tag)}/`)}>{tag}</a>)}
           </div>
         </div>
       </details>
@@ -89,21 +89,28 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
           <span>展开目录</span>
         </button>
       </div>}
-      {post.data.series && seriesMeta && seriesIndex >= 0 && (
-        <a class="article-series-kicker" href={withBase(`/series/${post.data.series}/`)}>
-          <span>系列 · {seriesMeta.title}</span>
-          <strong>第 {seriesIndex + 1} 篇 / 共 {seriesPosts.length} 篇</strong>
-        </a>
-      )}
-      <span class="pill">{post.data.category}</span>
-      {post.data.archived && <span class="article-pin-badge">已归档</span>}
+      {!hasStoryHeading && <nav class="article-trail" aria-label="文章位置">
+        <a href={withBase('/articles/')}>文章</a>
+        <span aria-hidden="true">/</span>
+        {seriesMeta && seriesIndex >= 0 ? (
+          <>
+            <a href={withBase(`/series/${seriesMeta.id}/`)}>{seriesMeta.title}</a>
+            <span class="article-trail-index">第 {seriesIndex + 1} / {seriesPosts.length} 篇</span>
+          </>
+        ) : (
+          <a href={categoryPath}>{post.data.category}</a>
+        )}
+        {post.data.archived && <span class="article-pin-badge">已归档</span>}
+      </nav>}
       {!hasStoryHeading && <h1>{post.data.title}</h1>}
       <p class="article-description">{post.data.description}</p>
       {post.data.archived && <p class="article-archive-note">这篇文章已归档，保留原链接供历史查阅。</p>}
       <div class="meta-row">
-        <span>作者：{siteMeta.authorName}</span>
-        <span>更新于 {formatPostDate(post.data.updated ?? post.data.date)}</span>
+        <span>{siteMeta.authorName}</span>
+        <span>阅读约 {post.data.minutes} 分钟</span>
+        <span>更新于 <time datetime={(post.data.updated ?? post.data.date).toISOString()}>{formatPostDate(post.data.updated ?? post.data.date)}</time></span>
       </div>
+      {hasToc && <a class="article-resume" data-article-resume hidden>继续上次阅读 <span data-article-resume-section></span> <span aria-hidden="true">↓</span></a>}
       {hasToc && <details class="mobile-toc-panel">
         <summary>
           <strong>本文目录</strong>
@@ -162,16 +169,16 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
           </div>
         </nav>
       )}
-      {relatedPosts.length > 0 && (
+      {(!seriesMeta || seriesIndex < 0) && !hasStoryHeading && (
         <nav class="related-reading" aria-label="继续阅读">
           <div class="related-reading-head">
             <h2>继续阅读</h2>
             <a href={withBase('/articles/')}>全部文章 <span aria-hidden="true">→</span></a>
           </div>
           <ul>
-            {relatedPosts.map((related) => (
+            {relatedPosts.length ? relatedPosts.map((related) => (
               <li><a href={withBase(`/articles/${related.slug}/`)}>{related.data.title}<span aria-hidden="true">↗</span></a></li>
-            ))}
+            )) : <li><a href={categoryPath}>浏览「{post.data.category}」<span aria-hidden="true">→</span></a></li>}
           </ul>
         </nav>
       )}
@@ -179,6 +186,37 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
   </main>
   <script src="/scripts/active-toc.js" defer></script>
   <script src="/scripts/article-overflow.js" defer></script>
+  <script>
+    const resume = document.querySelector<HTMLAnchorElement>('[data-article-resume]');
+    const label = resume?.querySelector('[data-article-resume-section]');
+    if (resume && label) {
+      const sections = Array.from(document.querySelectorAll<HTMLElement>('.article-content :is(h2, h3)[id]'));
+      const storageKey = `blog-reading:${window.location.pathname}`;
+      try {
+        const saved = localStorage.getItem(storageKey);
+        const savedSection = sections.find((section) => section.id === saved);
+        if (savedSection && !window.location.hash) {
+          resume.href = `#${encodeURIComponent(savedSection.id)}`;
+          label.textContent = savedSection.textContent?.trim() ?? '';
+          resume.hidden = false;
+        }
+      } catch { /* Storage may be disabled. */ }
+
+      function saveReadingPosition() {
+        const readingLine = (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0) + 12;
+        const current = sections.findLast((section) => section.getBoundingClientRect().top <= readingLine);
+        if (!current) return;
+        try {
+          localStorage.setItem(storageKey, current.id);
+        } catch { /* Reading remains available. */ }
+      }
+
+      window.addEventListener('pagehide', saveReadingPosition);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') saveReadingPosition();
+      });
+    }
+  </script>
   <script is:inline>
     (function () {
       var shell = document.querySelector('[data-article-shell]');
@@ -208,3 +246,43 @@ const nextSeriesPost = seriesIndex >= 0 && seriesIndex < seriesPosts.length - 1 
     })();
   </script>
 </SiteLayout>
+
+<style>
+  .article-trail {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 11px;
+    margin: 0 0 10px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .article-trail a { color: var(--blue); }
+  .article-trail a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .article-trail-index {
+    border-radius: 4px;
+    background: var(--paper-soft);
+    color: var(--ink);
+    padding: 1px 7px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .article-resume {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+    margin: 0 0 22px;
+    padding: 7px 11px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--blue);
+    background: var(--paper-soft);
+    font-size: 13px;
+    font-weight: 650;
+  }
+  .article-resume [data-article-resume-section] { color: var(--muted); font-weight: 400; }
+  .article-resume:hover { border-color: var(--blue); }
+  .article-resume[hidden] { display: none; }
+</style>
