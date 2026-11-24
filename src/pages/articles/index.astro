@@ -337,11 +337,11 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
           history.replaceState(null, '', url.pathname + url.search);
         }
 
-        applySort(currentSort);
       }
 
       filters.forEach(function (filter) {
         filter.addEventListener('click', function (event) {
+          if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
           event.preventDefault();
           applyFilter(filter.getAttribute('data-category-value') || '', true);
         });

@@ -31,7 +31,7 @@ function setup({ hash = '', observer = true, empty = false } = {}) {
   const summary = node();
   const mobile = { ...node(), querySelector: () => summary };
   const desktop = {
-    style: { maxHeight: '' }, scrollTop: 0, clientHeight: 100, scrollHeight: 600,
+    ...node(), style: { maxHeight: '' }, scrollTop: 0, clientHeight: 100, scrollHeight: 600,
     querySelector: () => ({ getBoundingClientRect: () => ({ height: 36 }) }),
     getClientRects: () => [{}], getBoundingClientRect: () => ({ top: 100, bottom: 200 }),
   };
@@ -65,18 +65,19 @@ function setup({ hash = '', observer = true, empty = false } = {}) {
   const frames = new Map<number, () => void>();
   let nextFrame = 0;
   const window = {
-    ...node(), innerHeight: 800, location: { hash },
+    ...node(), innerHeight: 800, scrollY: 0, location: { hash },
     requestAnimationFrame: (callback: () => void) => { frames.set(++nextFrame, callback); return nextFrame; },
     cancelAnimationFrame: (id: number) => frames.delete(id),
     ...(observer ? { IntersectionObserver } : {}),
   };
   const document = {
-    ...node(), get activeElement() { return focused; },
+    ...node(), documentElement: { scrollHeight: 2400 }, get activeElement() { return focused; },
     getElementById: (id: string) => sections.find((section) => section.id === id),
     querySelectorAll: (selector: string) => empty ? [] : selector === '.toc-link' ? [...desktopLinks, ...mobileLinks] : groups,
     querySelector: (selector: string) => selector === '.mobile-toc-panel' ? mobile : desktop,
   };
-  vm.runInNewContext(source, { document, window, IntersectionObserver, AbortController });
+  const getComputedStyle = () => ({ scrollPaddingTop: '100px' });
+  vm.runInNewContext(source, { document, window, getComputedStyle, IntersectionObserver, AbortController });
   document.dispatch('DOMContentLoaded');
   const flush = () => { const callbacks = [...frames.values()]; frames.clear(); callbacks.forEach((callback) => callback()); };
   return { document, window, mobile, summary, desktop, groups, sections, desktopLinks, mobileLinks, observed, disconnect, frames, flush, focused: () => focused };
@@ -95,7 +96,7 @@ describe('active toc script', () => {
   it('changes the current mobile group without opening the outer details', () => {
     const s = setup();
     expect(s.groups.map((group) => group.open)).toEqual([true, false]);
-    s.sections[2].top = 150;
+    s.sections[2].top = 100;
     s.window.dispatch('scroll'); s.window.dispatch('scroll');
     expect(s.frames.size).toBe(1);
     s.flush();
@@ -110,7 +111,7 @@ describe('active toc script', () => {
     s.groups[1].open = true;
     s.window.dispatch('scroll'); s.flush();
     expect(s.groups[1].open).toBe(true);
-    s.mobileLinks[1].focus(); s.sections[2].top = 150;
+    s.mobileLinks[1].focus(); s.sections[2].top = 100;
     s.window.dispatch('scroll'); s.flush();
     expect(s.groups[0].open).toBe(true);
     expect(s.groups[1].open).toBe(true);
@@ -153,6 +154,29 @@ describe('active toc script', () => {
     expect(s.disconnect).toHaveBeenCalledTimes(1);
     s.mobile.dispatch('click', { target: s.mobileLinks[0] });
     expect(s.sections[0].focus).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a tightly followed chapter selected at the native anchor position', () => {
+    const s = setup({ hash: '#%E5%AE%89%E8%A3%85' });
+    s.sections[2].top = 148;
+    s.window.dispatch('scroll'); s.flush();
+    expect(s.desktopLinks[1].attributes['aria-current']).toBe('location');
+    s.sections[2].top = 99;
+    s.window.dispatch('scroll'); s.flush();
+    expect(s.desktopLinks[2].attributes['aria-current']).toBe('location');
+  });
+
+  it('keeps a clamped fragment at the bottom, then follows manual scrolling again', () => {
+    const s = setup();
+    s.sections[2].top = 270; s.sections[3].top = 400; s.window.scrollY = 1600;
+    s.desktop.dispatch('click', { target: s.desktopLinks[2] });
+    s.window.dispatch('scroll'); s.flush();
+    expect(s.desktopLinks[2].attributes['aria-current']).toBe('location');
+    s.window.scrollY -= 100;
+    s.window.dispatch('scroll'); s.flush();
+    s.window.scrollY += 100;
+    s.window.dispatch('scroll'); s.flush();
+    expect(s.desktopLinks[3].attributes['aria-current']).toBe('location');
   });
 
   it('does nothing on an article without a public TOC', () => {

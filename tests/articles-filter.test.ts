@@ -78,6 +78,7 @@ describe('articles page category filter', () => {
     expect(articlesSource).toContain('data-count-all-archived');
     expect(articlesSource).toContain('data-count-standalone-archived');
     expect(articleListSource).toContain('已归档');
+    expect(articleListSource).toContain('hidden={post.data.archived ||');
   });
 
   it('sorts visible articles by publish date or update date in place', () => {

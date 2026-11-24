@@ -21,6 +21,7 @@ const updateTocActiveState = () => {
   const groups = Array.from(document.querySelectorAll('[data-toc-group]'));
   let currentId;
   let currentGroup;
+  let endFragment;
   let frame = 0;
 
   const fitTocToViewport = () => {
@@ -69,7 +70,16 @@ const updateTocActiveState = () => {
 
   const activateByScrollPosition = () => {
     fitTocToViewport();
-    const markerTop = Math.max(120, window.innerHeight * 0.3);
+    // Use the native anchor landing line, including fractional scroll rounding.
+    const markerTop = (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0) + 1;
+    const atEnd = window.scrollY > 0 && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1;
+    if (atEnd) {
+      const fragmentTop = endFragment?.getBoundingClientRect().top;
+      const clamped = fragmentTop >= markerTop - 2 && fragmentTop < window.innerHeight;
+      activate(clamped ? endFragment.id : sections[sections.length - 1].id);
+      return;
+    }
+    endFragment = null;
     let activeSection = sections[0];
     sections.forEach((section) => {
       if (section.getBoundingClientRect().top <= markerTop) activeSection = section;
@@ -87,24 +97,29 @@ const updateTocActiveState = () => {
 
   const activateHash = () => {
     const section = sectionForHash(window.location.hash);
-    if (section && sections.includes(section)) activate(section.id);
+    endFragment = sections.includes(section) ? section : null;
+    if (endFragment) activate(section.id);
     else requestActiveUpdate();
   };
 
-  mobileToc?.addEventListener('click', (event) => {
+  const onTocLinkClick = (event) => {
     const link = event.target.closest('a.toc-link');
     if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const section = sectionForHash(link.getAttribute('href'));
     if (!section) return;
+    endFragment = section;
+    activate(section.id);
+    if (!link.closest('.mobile-toc-panel')) return;
     mobileToc.open = false;
     if (!section.hasAttribute('tabindex')) {
       section.setAttribute('tabindex', '-1');
       section.addEventListener('blur', () => section.removeAttribute('tabindex'), { once: true });
     }
     section.focus({ preventScroll: true });
-    activate(section.id);
     // Leave the native anchor action intact: URL history, back/forward and scroll margins.
-  }, { signal });
+  };
+  desktopToc?.addEventListener('click', onTocLinkClick, { signal });
+  mobileToc?.addEventListener('click', onTocLinkClick, { signal });
 
   mobileToc?.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape' || !mobileToc.open) return;

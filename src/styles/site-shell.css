@@ -93,7 +93,6 @@ kbd { font-family: var(--body-font); font-size: 10px; font-weight: 400; color: v
 .toc-panel::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--muted) 32%, transparent); border-radius: 999px; }
 .article-sidebar > .toc-collapse-button { position: absolute; top: 53px; right: -29px; height: 27px; width: 26px; padding: 5px; justify-content: center; }
 .article-sidebar-restore { top: 90px; }
-.article-content :is(h2, h3, h4)[id] { scroll-margin-top: 106px; }
 
 html[data-style-theme='clarity'] .site-header { background: rgb(255 255 255 / .7); border-bottom-color: var(--line); backdrop-filter: blur(18px); }
 html[data-style-theme='clarity'] .brand-mark { color: #fff; background: linear-gradient(135deg, #2563eb, #06b6d4 55%, #8b5cf6); border-radius: 12px; box-shadow: 0 14px 32px rgb(37 99 235 / .24); }

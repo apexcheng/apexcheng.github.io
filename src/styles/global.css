@@ -1111,7 +1111,7 @@ h3 {
 
 .article-shell.is-focus-mode {
   gap: 0;
-  grid-template-columns: 0 minmax(0, 1fr);
+  grid-template-columns: 42px minmax(0, 1fr);
 }
 
 .article-shell.is-focus-mode .article-sidebar {
@@ -1296,7 +1296,8 @@ h3 {
   background: color-mix(in srgb, var(--paper) 92%, transparent);
   border: 1px solid var(--line);
   box-shadow: 0 8px 24px color-mix(in srgb, var(--ink) 8%, transparent);
-  left: -28px;
+  right: calc(100% + 8px);
+  white-space: nowrap;
   padding: 7px 9px;
   position: absolute;
   top: 0;
@@ -2448,10 +2449,10 @@ html[data-theme='dark'] .report-dashboard {
 
 .series-resource-download {
   align-items: center;
-  background: var(--green);
+  background: color-mix(in srgb, var(--green), var(--ink));
   border: 1px solid var(--green);
   border-radius: 999px;
-  color: #fff;
+  color: var(--paper);
   display: inline-flex;
   font-size: 14px;
   font-weight: 700;
@@ -2464,7 +2465,7 @@ html[data-theme='dark'] .report-dashboard {
 @media (hover: hover) {
   .series-resource-download:hover {
     box-shadow: 0 12px 26px rgba(22, 155, 114, 0.22);
-    color: #fff;
+    color: var(--paper);
     transform: translateY(-2px);
   }
 }

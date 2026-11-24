@@ -97,7 +97,7 @@ const seriesList = seriesMetaList
                   <li>
                     <span class="series-map-node">{String(postIndex + 1).padStart(2, '0')}</span>
                     <div>
-                      <strong>{post.data.title}</strong>
+                      <a class="series-chapter-link" href={withBase(`/articles/${post.slug}/`)}>{post.data.title}</a>
                       <span>{post.data.category} · {post.data.minutes} 分钟</span>
                     </div>
                   </li>
@@ -387,12 +387,19 @@ const seriesList = seriesMetaList
     min-width: 0;
   }
 
-  .series-map-route strong {
+  .series-chapter-link {
     font-size: 14px;
+    font-weight: 700;
     line-height: 1.45;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .series-chapter-link:is(:hover, :focus-visible) {
+    color: var(--blue);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   .series-map-route li > div > span {
@@ -539,7 +546,7 @@ const seriesList = seriesMetaList
       gap: 3px;
     }
 
-    .series-map-route strong {
+    .series-chapter-link {
       white-space: normal;
     }
   }
