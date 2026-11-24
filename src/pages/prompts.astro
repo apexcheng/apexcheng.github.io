@@ -1,5 +1,5 @@
 ---
-import { ClipboardCopy, Search } from '@lucide/astro';
+import { ClipboardCopy, Link2, Search } from '@lucide/astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import { orderedPromptEntries, promptCategories } from '../data/prompts';
 import { withBase } from '../utils/paths';
@@ -12,17 +12,18 @@ const categoryCounts = promptCategories.map((category) => ({
 <SiteLayout title="提示词库" active="prompts" description="常用 AI 提示词集中整理，查看完整内容，一键复制使用。">
   <main class="prompt-library page-content">
     <header class="prompt-intro">
-      <p class="prompt-eyebrow">PROMPT LIBRARY / 可复用的工作方法</p>
-      <h1>提示词库<span class="prompt-count">{String(orderedPromptEntries.length).padStart(2, '0')}</span></h1>
-      <p>把反复使用的指令整理成可直接执行的文本。找到需要的提示词，一键复制即可使用。</p>
+      <div>
+        <h1>提示词库</h1>
+        <p>按任务找到可复用的指令，查看、复制或分享。</p>
+      </div>
+      <label class="prompt-search-field">
+        <Search size={19} aria-hidden="true" />
+        <input id="prompt-search" type="search" aria-label="搜索提示词" placeholder="搜索标题、用途或案例" autocomplete="off" data-prompt-search />
+      </label>
     </header>
 
     <div class="prompt-layout">
       <aside class="prompt-discovery" aria-label="寻找提示词">
-        <div class="prompt-search-field">
-          <Search size={18} aria-hidden="true" />
-          <input id="prompt-search" type="search" aria-label="搜索提示词" placeholder="搜索提示词标题、用途或案例" autocomplete="off" data-prompt-search />
-        </div>
         <div class="prompt-filter-row">
           <div class="prompt-category-buttons" role="group" aria-label="提示词分类">
             <button type="button" data-prompt-category="all" aria-pressed="true">全部 <span>{orderedPromptEntries.length}</span></button>
@@ -32,7 +33,7 @@ const categoryCounts = promptCategories.map((category) => ({
           </div>
           <span role="status" data-visible-prompt-count>{orderedPromptEntries.length} 条结果</span>
         </div>
-        <nav class="prompt-index" aria-label="提示词搜索结果">
+        <nav class="prompt-index" aria-label="提示词搜索结果" data-prompt-index>
           <ol class="prompt-index-links">
             {orderedPromptEntries.map((entry) => (
               <li data-prompt-index-item data-category={entry.category} data-prompt-id={entry.id}
@@ -51,24 +52,34 @@ const categoryCounts = promptCategories.map((category) => ({
       <section class="prompt-detail" aria-label="当前提示词详情">
         {orderedPromptEntries.map((entry, index) => (
           <article class="prompt-entry" id={entry.id} data-category={entry.category} data-prompt-entry hidden={index !== 0}>
-            <div class="prompt-detail-topline">
-              <span>{entry.category}</span>
-              {entry.pinned && <span class="prompt-pin-tag">置顶</span>}
+            <header class="prompt-document-header">
+              <div class="prompt-detail-topline">
+                <span>{entry.category}</span>
+                {entry.pinned && <span class="prompt-pin-tag">置顶</span>}
+              </div>
+              <h2 tabindex="-1">{entry.title}</h2>
+              <div class="prompt-actions">
+                <button class="prompt-copy" type="button" data-copy-prompt aria-label={`复制提示词：${entry.title}`}>
+                  <ClipboardCopy size={16} aria-hidden="true" />复制提示词
+                </button>
+                <button class="prompt-share" type="button" data-copy-prompt-link>
+                  <Link2 size={16} aria-hidden="true" />复制链接
+                </button>
+                <p class="prompt-copy-feedback" role="status" aria-live="polite" data-copy-status></p>
+              </div>
+              <label class="prompt-share-fallback" hidden>
+                <span>提示词直达链接</span>
+                <input type="url" readonly data-prompt-link-value />
+              </label>
+            </header>
+            <div class="prompt-document" tabindex="0" role="region" aria-label="提示词正文" data-prompt-document>
+              <p class="prompt-description">{entry.description}</p>
+              <details class="prompt-used-case">
+                <summary>已使用案例</summary>
+                <p>{entry.usedCase}</p>
+              </details>
+              <pre class="prompt-content" data-prompt-content>{entry.content}</pre>
             </div>
-            <h2 tabindex="-1">{entry.title}</h2>
-            <p class="prompt-description">{entry.description}</p>
-            <div class="prompt-used-case">
-              <strong>已使用案例</strong>
-              <p>{entry.usedCase}</p>
-            </div>
-            <div class="prompt-content-heading">
-              <h3>完整提示词</h3>
-              <button class="prompt-copy" type="button" data-copy-prompt aria-label={`复制提示词：${entry.title}`}>
-                <ClipboardCopy size={16} aria-hidden="true" /><span data-copy-label>复制完整提示词</span>
-              </button>
-            </div>
-            <p class="prompt-copy-feedback" role="status" aria-live="polite" data-copy-status></p>
-            <pre class="prompt-content" data-prompt-content>{entry.content}</pre>
           </article>
         ))}
         <div class="prompt-detail-empty" data-detail-empty hidden>没有匹配的提示词。请调整左侧搜索或分类。</div>
@@ -91,6 +102,8 @@ const categoryCounts = promptCategories.map((category) => ({
   const emptyDetail = document.querySelector<HTMLElement>('[data-detail-empty]');
   const unavailableDetail = document.querySelector<HTMLElement>('[data-detail-unavailable]');
   const detail = document.querySelector<HTMLElement>('.prompt-detail');
+  const index = document.querySelector<HTMLElement>('[data-prompt-index]');
+  const stacked = window.matchMedia('(max-width: 900px)');
   const validCategories = categoryButtons.map((button) => button.dataset.promptCategory ?? '');
   let category = 'all';
   let selectedId = entries[0]?.id ?? '';
@@ -149,7 +162,18 @@ const categoryCounts = promptCategories.map((category) => ({
   }
 
   function showDetail() {
-    detail?.scrollIntoView({ block: 'start' });
+    const entry = document.getElementById(selectedId);
+    const body = entry?.querySelector<HTMLElement>('[data-prompt-document]');
+    if (body) body.scrollTop = 0;
+    if (stacked.matches) detail?.scrollIntoView({ block: 'start' });
+  }
+
+  function revealIndexItem(item: HTMLElement) {
+    if (!index) return;
+    const row = item.getBoundingClientRect();
+    const viewport = index.getBoundingClientRect();
+    if (row.top < viewport.top) index.scrollTop += row.top - viewport.top;
+    else if (row.bottom > viewport.bottom) index.scrollTop += row.bottom - viewport.bottom;
   }
 
   function restoreFromUrl() {
@@ -173,7 +197,7 @@ const categoryCounts = promptCategories.map((category) => ({
     if (target) {
       updateUrl('replaceState');
       requestAnimationFrame(() => {
-        target.scrollIntoView({ block: 'nearest' });
+        revealIndexItem(target);
         showDetail();
       });
     }
@@ -192,6 +216,12 @@ const categoryCounts = promptCategories.map((category) => ({
     unavailable = false;
     render();
     updateUrl('replaceState');
+  });
+
+  search?.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' || event.isComposing) return;
+    const item = resultItems.find((result) => !result.hidden && result.dataset.promptId === selectedId);
+    item?.querySelector<HTMLAnchorElement>('[data-prompt-index-link]')?.click();
   });
 
   resultItems.forEach((item) => {
@@ -213,97 +243,239 @@ const categoryCounts = promptCategories.map((category) => ({
   window.addEventListener('hashchange', restoreFromUrl);
   restoreFromUrl();
 
-  document.querySelectorAll<HTMLButtonElement>('[data-copy-prompt]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      const entry = button.closest('.prompt-entry');
-      const content = entry?.querySelector('[data-prompt-content]')?.textContent;
-      const label = button.querySelector('[data-copy-label]');
-      const status = entry?.querySelector('[data-copy-status]');
-      if (!content || !label || !status) return;
+  entries.forEach((entry) => {
+    const content = entry.querySelector<HTMLElement>('[data-prompt-content]')!;
+    const status = entry.querySelector<HTMLElement>('[data-copy-status]')!;
+    const fallback = entry.querySelector<HTMLInputElement>('[data-prompt-link-value]')!;
+    const linkField = fallback.closest<HTMLLabelElement>('label')!;
+    let feedbackTimer: number;
+    entry.querySelector('[data-copy-prompt]')?.addEventListener('click', () => copy(false));
+    entry.querySelector('[data-copy-prompt-link]')?.addEventListener('click', () => copy(true));
+
+    async function copy(isLink: boolean) {
+      const url = new URL(window.location.pathname, window.location.origin);
+      url.hash = entry.id;
+      window.clearTimeout(feedbackTimer);
+      linkField.hidden = true;
       try {
-        await navigator.clipboard.writeText(content);
-        label.textContent = '已复制';
-        status.textContent = '完整提示词已复制到剪贴板';
-        button.classList.add('copied');
+        await navigator.clipboard.writeText(isLink ? url.href : content.textContent ?? '');
+        status.textContent = isLink ? '直达链接已复制' : '提示词已复制';
+        feedbackTimer = window.setTimeout(() => { status.textContent = ''; }, 3000);
       } catch {
-        label.textContent = '复制失败';
-        status.textContent = '无法访问剪贴板，请从正文中手动复制';
+        if (isLink) {
+          fallback.value = url.href;
+          linkField.hidden = false;
+          fallback.focus();
+          fallback.select();
+        } else {
+          const selection = window.getSelection();
+          const range = document.createRange();
+          range.selectNodeContents(content);
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+        }
+        status.textContent = '已选中，请手动复制';
       }
-      window.setTimeout(() => {
-        label.textContent = '复制完整提示词';
-        button.classList.remove('copied');
-        status.textContent = '';
-      }, 2200);
-    });
+    }
   });
 </script>
 
 <style>
-  .prompt-library { max-width: 1250px; padding-top: 26px; padding-bottom: 80px; }
-  .prompt-intro { margin-bottom: 26px; }
-  .prompt-eyebrow { margin: 0 0 8px; color: var(--blue); font-size: 10px; font-weight: 650; letter-spacing: .12em; }
-  .prompt-intro h1 { display: flex; align-items: start; gap: 12px; margin: 0; font-size: clamp(34px, 4vw, 44px); font-weight: 600; line-height: 1.18; letter-spacing: -.04em; }
-  .prompt-count { margin-top: 5px; color: var(--muted); font: 12px var(--mono-font); letter-spacing: 0; }
-  .prompt-intro > p:last-child { max-width: 650px; margin: 8px 0 0; font-size: 13px; line-height: 1.6; }
-  .prompt-layout { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 32px; align-items: start; }
-  .prompt-discovery { position: sticky; top: 90px; display: flex; flex-direction: column; min-width: 0; max-height: calc(100dvh - 110px); padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
-  .prompt-search-field { display: flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 11px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--muted); }
+  .prompt-library { max-width: 1550px; padding-top: 30px; padding-bottom: 52px; }
+  .prompt-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
+    align-items: end;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .prompt-intro h1 { margin: 0; font-size: clamp(32px, 3vw, 43px); font-weight: 650; line-height: 1.18; letter-spacing: -.04em; }
+  .prompt-intro p { margin: 5px 0 0; color: var(--muted); font-size: 14px; }
+  .prompt-search-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 45px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper);
+    color: var(--muted);
+  }
   .prompt-search-field:focus-within { border-color: var(--blue); outline: 2px solid color-mix(in srgb, var(--blue) 20%, transparent); }
-  .prompt-search-field input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: 13px var(--body-font); }
+  .prompt-search-field svg { flex: none; }
+  .prompt-search-field input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: 14px var(--body-font); }
   .prompt-search-field input::placeholder { color: var(--muted); }
-  .prompt-filter-row { display: flex; flex-direction: column; gap: 6px; padding: 10px 0 8px; border-bottom: 1px solid var(--line); }
+  .prompt-layout {
+    display: grid;
+    grid-template-columns: minmax(290px, 350px) minmax(0, 1fr);
+    gap: 18px;
+    height: clamp(490px, 100dvh - 222px, 840px);
+  }
+  .prompt-discovery, .prompt-detail {
+    display: grid;
+    min-width: 0;
+    min-height: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper);
+  }
+  .prompt-discovery { grid-template-rows: auto minmax(0, 1fr); }
+  .prompt-filter-row {
+    display: grid;
+    gap: 8px;
+    padding: 13px 14px 10px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper-soft);
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
   .prompt-category-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
-  .prompt-category-buttons button { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 30px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--ink); font: 12px var(--body-font); cursor: pointer; text-align: left; }
+  .prompt-category-buttons button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-height: 32px;
+    padding: 4px 9px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--paper);
+    color: var(--ink);
+    font: 12px var(--body-font);
+    cursor: pointer;
+    text-align: left;
+  }
   .prompt-category-buttons button span { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
   .prompt-category-buttons button:hover { border-color: var(--blue); }
-  .prompt-category-buttons button[aria-pressed='true'] { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 9%, var(--paper)); color: var(--blue); font-weight: 650; }
+  .prompt-category-buttons button[aria-pressed='true'] {
+    border-color: var(--blue);
+    background: color-mix(in srgb, var(--blue) 9%, var(--paper));
+    color: var(--blue);
+    font-weight: 650;
+  }
   .prompt-category-buttons button[aria-pressed='true'] span { color: inherit; }
-  .prompt-category-buttons button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-  .prompt-filter-row > span { align-self: flex-end; color: var(--muted); font-size: 11px; white-space: nowrap; }
-  .prompt-index { min-height: 90px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--blue) 40%, transparent) transparent; }
+  .prompt-filter-row > span { color: var(--muted); font-size: 11px; }
+  .prompt-index, .prompt-document {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--blue) 38%, transparent) transparent;
+  }
+  .prompt-index { padding: 5px 7px; }
   .prompt-index-links { list-style: none; margin: 0; padding: 0; }
-  .prompt-index-links a { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 9px; border-left: 2px solid transparent; border-bottom: 1px solid var(--line); border-radius: 3px; color: var(--ink); text-decoration: none; transition: background .15s, border-color .15s; }
+  .prompt-index-links a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 6px 9px;
+    border-inline-start: 3px solid transparent;
+    border-bottom: 1px solid var(--line-soft);
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .prompt-index-links li:last-child a { border-bottom-color: transparent; }
   .prompt-index-links a:hover { background: var(--bg); }
-  .prompt-index-links a[aria-current='true'] { border-left-color: var(--blue); background: var(--bg); }
-  .prompt-index-title { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; font-weight: 500; line-height: 1.5; }
+  .prompt-index-links a[aria-current='true'] {
+    border-inline-start-color: var(--blue);
+    background: color-mix(in srgb, var(--blue) 10%, var(--paper));
+    color: var(--blue);
+  }
+  .prompt-index-title { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; line-height: 1.45; }
   .prompt-index-links a[aria-current='true'] .prompt-index-title { font-weight: 650; }
-  .prompt-index-meta { flex: none; color: var(--soft); font-size: 10px; }
-  .prompt-no-results { color: var(--muted); font-size: 13px; line-height: 1.8; }
-  .prompt-detail { min-width: 0; padding-top: 4px; }
-  .prompt-detail-topline { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 12px; }
+  .prompt-index-meta { flex: none; color: var(--muted); font-size: 10px; }
+  .prompt-no-results { margin: 10px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+  .prompt-entry { display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
+  .prompt-document-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px 16px;
+    padding: 16px clamp(16px, 2.2vw, 34px);
+    border-bottom: 1px solid var(--line);
+    background: var(--paper-soft);
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .prompt-detail-topline { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; color: var(--muted); font-size: 12px; }
   .prompt-pin-tag { color: var(--blue); font-weight: 650; }
-  .prompt-entry h2 { margin: 10px 0 14px; font-size: clamp(26px, 2.6vw, 32px); font-weight: 650; line-height: 1.38; letter-spacing: -.02em; }
-  .prompt-entry h2:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
-  .prompt-description { max-width: 730px; margin: 0; color: var(--muted); font-size: 15px; line-height: 1.8; }
-  .prompt-used-case { margin: 22px 0 30px; padding: 14px 18px; border-left: 2px solid var(--blue); border-radius: 0 6px 6px 0; background: var(--paper); }
-  .prompt-used-case strong { color: var(--blue); font-size: 12px; font-weight: 650; }
-  .prompt-used-case p { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
-  .prompt-content-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
-  .prompt-content-heading h3 { margin: 0; font-size: 16px; font-weight: 650; }
-  .prompt-copy { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 1px solid var(--blue); border-radius: 6px; background: var(--blue); color: var(--bg); font: 600 13px var(--body-font); cursor: pointer; transition: filter .15s; }
-  .prompt-copy:hover { filter: brightness(.9); }
-  .prompt-copy.copied { filter: brightness(.9); }
-  .prompt-content { display: block; margin: 0; padding: 24px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; font: 14px/1.9 var(--body-font); tab-size: 2; }
-  .prompt-copy-feedback { margin: -4px 0 10px; color: var(--blue); font-size: 12px; }
+  .prompt-entry h2 { margin: 0; font-size: clamp(22px, 2vw, 31px); font-weight: 650; line-height: 1.36; letter-spacing: -.02em; text-wrap: balance; }
+  .prompt-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; position: relative; }
+  .prompt-copy, .prompt-share {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 37px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+    font: 600 13px var(--body-font);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .prompt-copy { border-color: var(--blue); background: var(--blue); color: var(--paper); }
+  .prompt-copy:hover, .prompt-share:hover { filter: brightness(.93); }
+  .prompt-copy-feedback {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 1;
+    margin: 0;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    color: var(--ink);
+    background: var(--paper);
+    box-shadow: var(--shadow);
+    font-size: 12px;
+    white-space: nowrap;
+  }
   .prompt-copy-feedback:empty { display: none; }
-  .prompt-detail-empty { margin-top: 20px; padding: 24px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 14px; }
+  .prompt-share-fallback { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; color: var(--muted); font-size: 12px; }
+  .prompt-share-fallback input { flex: 1; min-width: 160px; padding: 4px 6px; font: inherit; background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; }
+  .prompt-document { padding: 20px clamp(16px, 2.2vw, 34px) 30px; }
+  .prompt-description { max-width: 74ch; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.8; }
+  .prompt-used-case { max-width: 74ch; margin: 8px 0 18px; padding: 6px 0; }
+  .prompt-used-case summary { color: var(--blue); font-size: 13px; font-weight: 600; cursor: pointer; }
+  .prompt-used-case p { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+  .prompt-content {
+    display: block;
+    margin: 0;
+    padding: 18px 20px;
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--ink);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font: 14px/1.83 var(--body-font);
+    tab-size: 2;
+  }
+  .prompt-detail-empty { align-self: start; margin: 22px; padding: 20px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 14px; }
   .prompt-detail-empty p { margin: 0 0 8px; }
   .prompt-detail-empty a { color: var(--blue); text-decoration: underline; }
-  .prompt-entry[hidden], .prompt-index-links li[hidden], .prompt-no-results[hidden], .prompt-detail-empty[hidden] { display: none !important; }
-  .prompt-index-links a:focus-visible, .prompt-copy:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-  @media (max-width: 850px) {
-    .prompt-layout { display: block; }
-    .prompt-discovery { position: static; max-height: none; }
-    .prompt-index { max-height: 300px; }
-    .prompt-detail { margin-top: 32px; }
+  [hidden] { display: none !important; }
+  .prompt-index-links a:focus-visible, .prompt-document:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+  .prompt-category-buttons button:focus-visible, .prompt-copy:focus-visible, .prompt-share:focus-visible, .prompt-entry h2:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
   }
-  @media (max-width: 650px) {
-    .prompt-library { padding-top: 20px; padding-bottom: 60px; }
-    .prompt-intro { margin-bottom: 20px; }
-    .prompt-discovery { padding: 12px; }
-    .prompt-entry h2 { font-size: 25px; }
-    .prompt-content { padding: 16px; font-size: 14px; }
-    .prompt-content-heading { align-items: flex-start; flex-direction: column; }
-    .prompt-copy { width: 100%; }
+  @media (max-width: 1080px) {
+    .prompt-document-header { grid-template-columns: minmax(0, 1fr); row-gap: 8px; }
+    .prompt-actions { justify-self: start; }
+    .prompt-copy-feedback { left: 0; right: auto; }
+  }
+  @media (max-width: 900px) {
+    .prompt-layout { grid-template-columns: minmax(0, 1fr); height: auto; }
+    .prompt-index { max-height: 285px; }
+    .prompt-document { overflow: visible; }
+  }
+  @media (max-width: 620px) {
+    .prompt-library { padding-top: 24px; padding-bottom: 40px; }
+    .prompt-intro { grid-template-columns: minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+    .prompt-content { padding: 14px; }
   }
 </style>
