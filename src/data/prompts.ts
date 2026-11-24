@@ -420,6 +420,7 @@ C：仍有价值，保留并说明必要性。
     id: 'system-execution-flow-explanation',
     title: '系统执行链路与模块关系解读',
     category: '代码与架构',
+    pinned: true,
     description: '从真实代码还原执行顺序、模块职责、数据流转、成功条件与失败后的处理方式。',
     usedCase: '异常单 RPA：解释逐页采列表、逐条采详情、整页写 AI 表格及断点文件的更新时机。',
     content: `请阅读当前项目的真实代码、配置及相关规则，通俗地解释【需要了解的功能或业务】的实际执行流程。

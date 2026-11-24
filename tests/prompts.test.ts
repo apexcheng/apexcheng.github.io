@@ -28,6 +28,7 @@ describe('prompt library', () => {
   it('puts pinned prompts first while retaining order for other entries', () => {
     expect(orderedPromptEntries[0].id).toBe('product-structure-information-architecture-redesign');
     expect(orderedPromptEntries[0].pinned).toBe(true);
+    expect(promptEntries.find((entry) => entry.id === 'system-execution-flow-explanation')?.pinned).toBe(true);
     expect(orderedPromptEntries.filter((entry) => entry.pinned).map((entry) => entry.id)).toEqual(
       promptEntries.filter((entry) => entry.pinned).map((entry) => entry.id),
     );
