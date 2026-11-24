@@ -20,15 +20,14 @@ const rssSource = readFileSync('src/pages/rss.xml.ts', 'utf8');
 
 describe('front page structure', () => {
   it('keeps paper notes as the default homepage and visual blue as the selectable alternative', () => {
-    expect(indexSource).toContain('<html lang="zh-CN" class="paper-page">');
+    expect(indexSource).toContain('data-style-theme="visual-system" class="paper-page"');
     expect(indexSource).toContain('<title>纸张手记 | {siteMeta.siteName}</title>');
     expect(indexSource).toContain('把真实问题，拆成');
-    expect(indexSource).toContain("const introReturn = encodeURIComponent(withBase('/'))");
     expect(indexSource).toContain("homeStyle === 'visual-blue'");
     expect(indexSource).toContain("data-visual-blue-home={withBase('/home-v1/')}");
-    expect(visualBlueHomeSource).toContain('<html lang="zh-CN" data-theme="light" class="design-one-page">');
+    expect(visualBlueHomeSource).toContain('data-style-theme="clarity" class="design-one-page"');
     expect(visualBlueHomeSource).toContain('视觉晶蓝');
-    expect(visualBlueHomeSource).toContain('HomeIndexMenu current="visual-blue"');
+    expect(visualBlueHomeSource).toContain('<SiteHeader active="home" homePath="/home-v1/" />');
     expect(visualBlueHomeSource).toContain("withBase('/articles/')");
     expect(visualBlueHomeSource).toContain("withBase('/projects/')");
   });
@@ -49,12 +48,10 @@ describe('front page structure', () => {
     expect(paperHomeSource).toContain('<HomeIntroState pageKind="home" />');
     expect(workbenchHomeSource).toContain('<HomeIntroState pageKind="standalone" />');
     expect(exhibitionHomeSource).toContain('<HomeIntroState pageKind="standalone" />');
-    expect(paperHomeSource).toContain("const introReturn = encodeURIComponent(withBase('/'))");
-    expect(paperHomeSource).toContain('`/intro-motion-2/?return=${introReturn}`');
-    expect(paperHomeSource).toContain('`/intro-motion-3/?return=${introReturn}&play=1`');
-    expect(visualBlueHomeSource).toContain('`/intro-motion-3/?return=${introReturn}&play=1`');
+    expect(headerSource).toContain('encodeURIComponent(Astro.url.pathname + Astro.url.search)');
+    expect(headerSource).toContain('`/intro-motion-2/?return=${returnPath}`');
+    expect(headerSource).toContain('`/intro-motion-3/?return=${returnPath}&play=1`');
     expect(visualBlueHomeSource).toContain('<HomeIntroState pageKind="home" />');
-    expect(visualBlueHomeSource).toContain("const introReturn = encodeURIComponent(withBase('/home-v1/'))");
   });
 
   it('shows actual publication dates instead of invented current activity', () => {
@@ -110,9 +107,12 @@ describe('front page structure', () => {
   });
 
   it('shares article and project search between both homepages and the site header', () => {
-    for (const page of [headerSource, paperHomeSource, visualBlueHomeSource]) {
-      expect(page).toContain('<SiteSearch />');
-      expect(page).toContain("'/prompts/'");
+    expect(headerSource).toContain('<SiteSearch />');
+    expect(headerSource).toContain("'/prompts/'");
+    for (const page of [paperHomeSource, visualBlueHomeSource]) {
+      expect(page).toContain('import SiteHeader');
+      expect(page).toContain('<SiteHeader active="home"');
+      expect(page).not.toContain('data-search-toggle');
     }
     expect(searchSource).toContain('搜索文章和项目');
     expect(searchSource).toContain("getCollection('posts')");

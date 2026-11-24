@@ -10,14 +10,16 @@ const globalCss = readFileSync('src/styles/global.css', 'utf8');
 const intro = readFileSync('src/components/HomeIntroState.astro', 'utf8');
 
 describe('shared site shell', () => {
-  it('uses the same brand, navigation, search and footer on home and content pages', () => {
+  it('uses one header for the official homepages and content pages', () => {
     expect(layout).toContain('<SiteHeader active={active} />');
+    expect(readFileSync('src/pages/index.astro', 'utf8')).toContain('<SiteHeader active="home" />');
+    expect(readFileSync('src/pages/home-v1.astro', 'utf8')).toContain('<SiteHeader active="home" homePath="/home-v1/" />');
     expect(layout).toContain('<SiteFooter />');
     expect(header).toContain('${siteMeta.siteName} 首页');
     for (const path of ['/', '/articles/', '/projects/', '/about/']) {
       expect(header).toContain(`path: '${path}'`);
     }
-    expect(header).toContain('href={withBase(item.path)}');
+    expect(header).toContain("href={withBase(item.id === 'home' ? homePath : item.path)}");
     expect(header).toContain("active === 'series' && item.id === 'articles'");
     const tabs = readFileSync('src/components/ContentViewTabs.astro', 'utf8');
     expect(tabs).toContain("withBase('/articles/')");
@@ -57,9 +59,8 @@ describe('shared site shell', () => {
     expect(header).not.toContain('素纸');
     expect(footer).not.toContain('footer-experiments');
     expect(layout).not.toContain('HomeIndexMenu');
-    expect(header).toContain("href={withBase('/')} aria-label");
+    expect(header).toContain("const { active, homePath = '/' }");
     expect(readFileSync('src/pages/index.astro', 'utf8')).toContain("homeStyle === 'visual-blue'");
-    expect(readFileSync('src/pages/home-v1.astro', 'utf8')).toContain('HomeIndexMenu current="visual-blue"');
   });
 
   it('keeps a skip link, mobile navigation and motion fallback', () => {

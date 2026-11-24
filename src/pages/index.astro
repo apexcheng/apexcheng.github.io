@@ -1,8 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import HomeIntroState from '../components/HomeIntroState.astro';
-import HomeIndexMenu from '../components/HomeIndexMenu.astro';
-import SiteSearch from '../components/SiteSearch.astro';
+import SiteHeader from '../components/SiteHeader.astro';
 import { seriesMetaList } from '../data/series';
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
@@ -57,14 +56,13 @@ const featuredSeries = seriesMetaList.map((series) => ({
 }));
 
 const formatDate = (date: Date) => date.toISOString().slice(0, 10);
-const introReturn = encodeURIComponent(withBase('/'));
 const paperTexture = withBase('/images/home-redesign-2/paper-texture.webp');
 const linedPaper = withBase('/images/home-redesign-2/lined-paper.webp');
 const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
 ---
 
 <!doctype html>
-<html lang="zh-CN" class="paper-page">
+<html lang="zh-CN" data-theme="light" data-style-theme="visual-system" class="paper-page">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -75,6 +73,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
     <meta name="theme-color" content="#f8f4eb" />
     <link rel="icon" type="image/png" sizes="256x256" href={withBase('/favicon.png?v=5')} />
     <link rel="canonical" href={new URL(withBase('/'), Astro.site)} />
+    <link rel="stylesheet" href={withBase('/fonts/typography.css')} />
     <title>纸张手记 | {siteMeta.siteName}</title>
     <script is:inline data-visual-blue-home={withBase('/home-v1/')}>
       document.documentElement.classList.add('js');
@@ -99,7 +98,8 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
           var sharedTheme = localStorage.getItem('theme');
           var isNight = sharedTheme === 'dark'
             || (!sharedTheme && localStorage.getItem('home-redesign-2-theme') === 'night');
-          document.documentElement.dataset.paperTheme = isNight ? 'night' : 'day';
+          document.documentElement.dataset.theme = isNight ? 'dark' : 'light';
+          document.documentElement.dataset.styleTheme = isNight ? 'classic' : 'visual-system';
         } catch (error) {}
       })();
     </script>
@@ -109,47 +109,11 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
     data-pagefind-ignore
     style={`--paper-texture: url("${paperTexture}"); --lined-paper: url("${linedPaper}"); --grid-paper: url("${gridPaper}");`}
   >
-    <header class="paper-header">
-      <div class="header-inner">
-        <a class="paper-brand" href="#top" aria-label={`${siteMeta.siteName}，返回首页顶部`}>
-          <span class="brand-mark">C</span>
-          <strong>{siteMeta.siteName}</strong>
-        </a>
+    <a class="skip-link" href="#site-content">跳到正文</a>
+    <SiteHeader active="home" />
 
-        <nav class="paper-nav" aria-label="主导航">
-          <a class="active" href={withBase('/')} aria-current="page" data-home-link>首页</a>
-          <a href={withBase('/articles/')}>文章</a>
-          <a href={withBase('/prompts/')}>提示词库</a>
-          <a href={withBase('/projects/')}>项目</a>
-          <button type="button" data-search-toggle aria-haspopup="dialog" aria-controls="site-search" aria-expanded="false">搜索</button>
-          <a href={withBase(siteMeta.rssPath)}>RSS</a>
-          <a href={withBase('/about/')}>关于我</a>
-        </nav>
-
-        <div class="header-actions">
-          <button class="header-button" type="button" data-theme-toggle aria-label="明暗切换，使用深色模式" aria-pressed="false">
-            明暗
-          </button>
-          <div class="intro-picker" data-intro-picker>
-            <button
-              class="header-button"
-              type="button"
-              aria-expanded="false"
-              aria-controls="paper-intro-menu"
-              data-intro-toggle
-            >开屏</button>
-            <div class="intro-menu" id="paper-intro-menu" role="menu">
-              <a role="menuitem" href={withBase(`/intro-motion-2/?return=${introReturn}`)}>液态字场</a>
-              <a role="menuitem" href={withBase(`/intro-motion-3/?return=${introReturn}&play=1`)}>天体序章</a>
-            </div>
-          </div>
-          <HomeIndexMenu current="paper-notes" />
-        </div>
-      </div>
-    </header>
-
-    <main id="top">
-      <section class="paper-hero shell">
+    <main id="site-content" tabindex="-1">
+      <section class="paper-hero shell" id="top">
         <div class="hero-copy">
           <p class="hand-note">记录生活判断，沉淀可复用的方法</p>
           <h1>把真实问题，拆成<br /><span>看得懂、做得到</span>的方法。</h1>
@@ -343,62 +307,15 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
       <div class="shell">
         <span>© 2026 黄撑</span>
         <span>个人记录 · 真实实践 · 持续整理</span>
-        <a href={siteMeta.githubUrl}>GitHub ↗</a>
+        <nav aria-label="页脚导航">
+          <a href={withBase(siteMeta.rssPath)}>RSS 订阅</a>
+          <a href={siteMeta.githubUrl}>GitHub ↗</a>
+        </nav>
       </div>
     </footer>
 
-    <SiteSearch />
-
     <script is:inline>
       (function () {
-        var root = document.documentElement;
-        var themeToggle = document.querySelector('[data-theme-toggle]');
-        var introPicker = document.querySelector('[data-intro-picker]');
-        var introToggle = document.querySelector('[data-intro-toggle]');
-
-        function setNight(isNight) {
-          root.dataset.paperTheme = isNight ? 'night' : 'day';
-          try {
-            localStorage.setItem('theme', isNight ? 'dark' : 'light');
-            localStorage.setItem('styleTheme', isNight ? 'classic' : 'visual-system');
-            localStorage.setItem('home-redesign-2-theme', isNight ? 'night' : 'day');
-          } catch (error) {}
-        }
-
-        if (themeToggle) {
-          themeToggle.setAttribute('aria-pressed', String(root.dataset.paperTheme === 'night'));
-          themeToggle.addEventListener('click', function () {
-            setNight(root.dataset.paperTheme !== 'night');
-            themeToggle.setAttribute('aria-pressed', String(root.dataset.paperTheme === 'night'));
-          });
-        }
-
-        function setIntroOpen(isOpen) {
-          if (!introPicker || !introToggle) return;
-          introPicker.classList.toggle('open', isOpen);
-          introToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        }
-
-        if (introToggle) {
-          introPicker.addEventListener('focusout', function (event) {
-            if (!introPicker.contains(event.relatedTarget)) setIntroOpen(false);
-          });
-          introToggle.addEventListener('click', function () {
-            setIntroOpen(!introPicker.classList.contains('open'));
-          });
-        }
-
-        document.addEventListener('click', function (event) {
-          if (introPicker && !introPicker.contains(event.target)) setIntroOpen(false);
-        });
-
-        document.addEventListener('site-search-open', function () { setIntroOpen(false); });
-        document.addEventListener('keydown', function (event) {
-          if (event.key !== 'Escape' || !introPicker.classList.contains('open')) return;
-          setIntroOpen(false);
-          introToggle.focus();
-        });
-
         var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         var revealItems = document.querySelectorAll('[data-reveal]');
         if (reducedMotion || !('IntersectionObserver' in window)) {
@@ -420,8 +337,16 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
 
 <style>
   :root {
-    color-scheme: light;
-    --paper: #f8f4eb;
+    --home-background: #f8f4eb;
+  }
+
+  :root[data-theme='dark'] {
+    --home-background: #171b22;
+  }
+
+  main,
+  .paper-footer {
+    --paper: var(--home-background);
     --paper-soft: #fcfaf5;
     --paper-card: rgba(255, 253, 248, 0.88);
     --ink: #111c2e;
@@ -439,16 +364,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
     --hand: "Kaiti SC", "STKaiti", KaiTi, var(--serif);
   }
 
-  :global(.paper-page .site-search) {
-    --muted: var(--ink-soft);
-    --soft: var(--ink-soft);
-    --line-soft: var(--line);
-    font-family: var(--sans);
-  }
-
-  :root[data-paper-theme='night'] {
-    color-scheme: dark;
-    --paper: #171b22;
+  :root[data-theme='dark'] :is(main, .paper-footer) {
     --paper-soft: #20252d;
     --paper-card: rgba(35, 40, 48, 0.92);
     --ink: #f3eee3;
@@ -472,18 +388,21 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
   }
 
   body {
-    background-color: var(--paper);
+    background-color: var(--home-background);
     background-image: var(--paper-texture);
     background-repeat: repeat;
     background-size: 900px auto;
-    color: var(--ink);
-    font-family: var(--serif);
     margin: 0;
     min-width: 320px;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  :root[data-paper-theme='night'] body {
+  main {
+    color: var(--ink);
+    font-family: var(--serif);
+  }
+
+  :root[data-theme='dark'] body {
     background-blend-mode: multiply;
     background-image: none;
   }
@@ -508,166 +427,6 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
     padding-left: 44px;
     padding-right: 44px;
     width: 100%;
-  }
-
-  .paper-header {
-    backdrop-filter: blur(14px);
-    background: color-mix(in srgb, var(--paper-soft) 89%, transparent);
-    border-bottom: 1px solid var(--line);
-    position: sticky;
-    top: 0;
-    z-index: 50;
-  }
-
-  .header-inner {
-    align-items: center;
-    display: grid;
-    gap: 28px;
-    grid-template-columns: auto 1fr auto;
-    height: 84px;
-    margin: 0 auto;
-    max-width: 1470px;
-    padding: 0 44px;
-  }
-
-  .paper-brand {
-    align-items: center;
-    display: inline-flex;
-    gap: 16px;
-    white-space: nowrap;
-  }
-
-  .paper-brand strong {
-    font-size: 21px;
-    letter-spacing: 0.01em;
-  }
-
-  .brand-mark {
-    align-items: center;
-    background: linear-gradient(145deg, #1567f2, #10b4b8);
-    border-radius: 11px;
-    box-shadow: 0 8px 18px rgba(20, 103, 232, 0.2);
-    color: #fff;
-    display: inline-flex;
-    font-family: var(--sans);
-    font-size: 22px;
-    font-weight: 700;
-    height: 44px;
-    justify-content: center;
-    width: 44px;
-  }
-
-  .paper-nav {
-    align-items: stretch;
-    display: flex;
-    gap: clamp(22px, 2.7vw, 46px);
-    height: 100%;
-    justify-content: center;
-  }
-
-  .paper-nav a,
-  .paper-nav button {
-    align-items: center;
-    background: none;
-    border: 0;
-    cursor: pointer;
-    display: inline-flex;
-    font-size: 16px;
-    padding: 0;
-    position: relative;
-  }
-
-  .paper-nav a::after,
-  .paper-nav button::after {
-    background: var(--blue);
-    bottom: 18px;
-    content: '';
-    height: 2px;
-    left: 50%;
-    position: absolute;
-    transform: translateX(-50%) scaleX(0);
-    transition: transform 0.24s ease;
-    width: 28px;
-  }
-
-  .paper-nav a:hover::after,
-  .paper-nav button:hover::after,
-  .paper-nav .active::after {
-    transform: translateX(-50%) scaleX(1);
-  }
-
-  .paper-nav .active {
-    color: var(--blue);
-  }
-
-  .header-actions {
-    --home-index-height: 42px;
-    --home-index-radius: 10px;
-    --home-index-padding: 18px;
-    --home-index-font-size: 15px;
-    --home-index-bg: color-mix(in srgb, var(--paper-soft) 86%, transparent);
-    --home-index-border: var(--line-strong);
-    display: flex;
-    gap: 12px;
-  }
-
-  .header-button {
-    background: color-mix(in srgb, var(--paper-soft) 86%, transparent);
-    border: 1px solid var(--line-strong);
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 15px;
-    min-height: 42px;
-    padding: 0 18px;
-    transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-  }
-
-  .header-button:hover {
-    border-color: var(--blue);
-    color: var(--blue);
-    transform: translateY(-1px);
-  }
-
-  .intro-picker {
-    position: relative;
-  }
-
-  .intro-menu {
-    background: var(--paper-soft);
-    border: 1px solid var(--line-strong);
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    display: grid;
-    gap: 3px;
-    min-width: 160px;
-    visibility: hidden;
-    opacity: 0;
-    padding: 7px;
-    pointer-events: none;
-    position: absolute;
-    right: 0;
-    top: calc(100% + 10px);
-    transform: translateY(-5px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
-  }
-
-  .intro-picker.open .intro-menu {
-    visibility: visible;
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
-  }
-
-  .intro-menu a {
-    border-radius: 8px;
-    font-family: var(--sans);
-    font-size: 14px;
-    padding: 11px 12px;
-  }
-
-  .intro-menu a:hover {
-    background: color-mix(in srgb, var(--blue) 9%, transparent);
-    color: var(--blue);
   }
 
   .paper-hero {
@@ -1398,6 +1157,11 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
     min-height: 90px;
   }
 
+  .paper-footer nav {
+    display: flex;
+    gap: 20px;
+  }
+
   .js [data-reveal] {
     opacity: 0;
     transform: translateY(18px);
@@ -1410,20 +1174,6 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
   }
 
   @media (max-width: 1120px) {
-    .header-inner {
-      gap: 18px;
-      grid-template-columns: auto 1fr;
-    }
-
-    .paper-nav {
-      gap: 24px;
-      justify-content: flex-end;
-    }
-
-    .header-actions {
-      display: none;
-    }
-
     .paper-hero {
       gap: 42px;
       grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
@@ -1464,53 +1214,6 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
     .shell {
       padding-left: 24px;
       padding-right: 24px;
-    }
-
-    .paper-header {
-      position: relative;
-    }
-
-    .header-inner {
-      height: auto;
-      padding: 17px 24px 0;
-    }
-
-    .paper-brand strong {
-      font-size: 18px;
-    }
-
-    .brand-mark {
-      border-radius: 9px;
-      font-size: 18px;
-      height: 38px;
-      width: 38px;
-    }
-
-    .paper-nav {
-      border-top: 1px solid var(--line);
-      gap: 25px;
-      grid-column: 1 / -1;
-      justify-content: flex-start;
-      margin-top: 14px;
-      overflow-x: auto;
-      padding: 0 1px;
-      scrollbar-width: none;
-    }
-
-    .paper-nav::-webkit-scrollbar {
-      display: none;
-    }
-
-    .paper-nav a,
-    .paper-nav button {
-      font-size: 14px;
-      min-height: 50px;
-      white-space: nowrap;
-    }
-
-    .paper-nav a::after,
-    .paper-nav button::after {
-      bottom: 7px;
     }
 
     .paper-hero {
@@ -1572,19 +1275,6 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
     .shell {
       padding-left: 18px;
       padding-right: 18px;
-    }
-
-    .header-inner {
-      padding-left: 18px;
-      padding-right: 18px;
-    }
-
-    .paper-brand {
-      gap: 10px;
-    }
-
-    .paper-brand strong {
-      font-size: 16px;
     }
 
     .hand-note {

@@ -3,9 +3,13 @@ import { Search, Menu, X, Sun, Moon, ArrowUpRight, Sparkles, Check } from '@luci
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
 import SiteSearch from './SiteSearch.astro';
+import '../styles/site-shell.css';
 
-interface Props { active: 'home' | 'articles' | 'series' | 'projects' | 'prompts' | 'about' }
-const { active } = Astro.props;
+interface Props {
+  active: 'home' | 'articles' | 'series' | 'projects' | 'prompts' | 'about';
+  homePath?: '/' | '/home-v1/';
+}
+const { active, homePath = '/' } = Astro.props;
 const navigation = [
   { id: 'home', label: '首页', path: '/' },
   { id: 'articles', label: '文章', path: '/articles/' },
@@ -18,7 +22,7 @@ const returnPath = encodeURIComponent(Astro.url.pathname + Astro.url.search);
 
 <header class="site-header" data-site-header>
   <div class="site-header-inner">
-    <a class="brand" href={withBase('/')} aria-label={`${siteMeta.siteName} 首页`} data-home-link>
+    <a class="brand" href={withBase(homePath)} aria-label={`${siteMeta.siteName} 首页`} data-home-link>
       <svg class="brand-mark" viewBox="0 0 36 36" aria-hidden="true" fill="none">
         <path d="M6 6h24v24H6z" stroke="currentColor" stroke-width="1.2" />
         <path d="M12 12h12M12 18h8M12 24h12" stroke="currentColor" stroke-width="1.5" />
@@ -33,7 +37,7 @@ const returnPath = encodeURIComponent(Astro.url.pathname + Astro.url.search);
       </summary>
       <div class="navigation-panel" id="site-navigation-panel">
         <nav class="site-nav" aria-label="主导航">
-          {navigation.map((item) => <a href={withBase(item.path)} aria-current={active === item.id || (active === 'series' && item.id === 'articles') ? 'page' : undefined}>{item.label}<ArrowUpRight size={16} aria-hidden="true" /></a>)}
+          {navigation.map((item) => <a href={withBase(item.id === 'home' ? homePath : item.path)} aria-current={active === item.id || (active === 'series' && item.id === 'articles') ? 'page' : undefined}>{item.label}<ArrowUpRight size={16} aria-hidden="true" /></a>)}
         </nav>
         <div class="header-controls">
           <details class="utility-menu" data-utility-menu="theme">
@@ -46,7 +50,7 @@ const returnPath = encodeURIComponent(Astro.url.pathname + Astro.url.search);
             </div>
           </details>
           <details class="utility-menu" data-utility-menu="intro">
-            <summary><Sparkles size={17} /><span>开屏</span></summary>
+            <summary aria-label="开屏"><Sparkles size={17} /><span>开屏</span></summary>
             <div class="utility-panel intro-panel">
               <p class="utility-label">换一个进入的方式</p>
               <a href={withBase(`/intro-motion-3/?return=${returnPath}&play=1`)} data-intro-link><span>天体序章<small>从地球飞向太阳系</small></span><ArrowUpRight size={18} /></a>
