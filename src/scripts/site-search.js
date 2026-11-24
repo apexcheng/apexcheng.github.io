@@ -7,16 +7,22 @@ const items = JSON.parse(search.dataset.searchItems || '[]');
 let previousFocus;
 let composing = false;
 let selectedCategory = '';
+let selectedType = '';
+const categories = search.querySelector('[data-search-categories]');
+const categoryButtons = Array.from(search.querySelectorAll('[data-search-filter]'));
+const typeButtons = Array.from(search.querySelectorAll('[data-search-type]'));
 const shortcut = document.querySelector('[data-search-shortcut]');
 if (shortcut) shortcut.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
 
 function renderSearch() {
   const query = input.value.trim().toLocaleLowerCase();
   const terms = query.split(/\s+/).filter(Boolean);
-  const matches = terms.length || selectedCategory
+  const filtered = terms.length || selectedType || selectedCategory;
+  const matches = filtered
     ? items.filter((item) => (selectedCategory === '视觉实验室' || item.category !== '视觉实验室')
+      && (!selectedType || item.type === selectedType)
       && (!selectedCategory || item.category === selectedCategory)
-      && terms.every((term) => [item.title, item.description, ...item.keywords].join(' ').toLocaleLowerCase().includes(term)))
+      && terms.every((term) => [item.type, item.title, item.description, ...item.keywords].join(' ').toLocaleLowerCase().includes(term)))
     : items.filter((item) => item.type === '文章' && item.category !== '视觉实验室').slice(0, 6);
   if (terms.length) {
     const titlePriority = (item) => {
@@ -27,13 +33,15 @@ function renderSearch() {
     };
     matches.sort((a, b) => titlePriority(b) - titlePriority(a));
   }
-  status.textContent = terms.length || selectedCategory ? `找到 ${matches.length} 条相关内容` : '最近更新';
+  status.textContent = filtered ? `找到 ${matches.length} 条相关内容` : '最近更新的文章';
   results.replaceChildren();
-  search.querySelectorAll('[data-search-filter]').forEach((filter) => filter.setAttribute('aria-pressed', String(filter.dataset.searchFilter === selectedCategory)));
+  categories.hidden = selectedType !== '文章';
+  typeButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.searchType === selectedType)));
+  categoryButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.searchFilter === selectedCategory)));
   if (!matches.length) {
     const empty = document.createElement('p');
     empty.className = 'search-empty';
-    empty.textContent = '没有找到相关内容。试试更短的关键词，或从分类开始。';
+    empty.textContent = '没有找到相关内容。试试更短的关键词，或切换到「全部」。';
     results.append(empty);
   }
   matches.forEach((item) => {
@@ -82,10 +90,14 @@ search.addEventListener('click', (event) => {
 input.addEventListener('compositionstart', () => { composing = true; });
 input.addEventListener('compositionend', () => { composing = false; renderSearch(); });
 input.addEventListener('input', () => { if (!composing) renderSearch(); });
-search.querySelectorAll('[data-search-filter]').forEach((filter) => filter.addEventListener('click', () => {
+typeButtons.forEach((button) => button.addEventListener('click', () => {
+  selectedType = button.dataset.searchType;
+  selectedCategory = '';
+  renderSearch();
+}));
+categoryButtons.forEach((filter) => filter.addEventListener('click', () => {
   selectedCategory = selectedCategory === filter.dataset.searchFilter ? '' : filter.dataset.searchFilter;
   renderSearch();
-  input.focus();
 }));
 search.addEventListener('keydown', (event) => {
   if (event.isComposing || composing) return;

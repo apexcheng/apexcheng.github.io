@@ -98,13 +98,18 @@ function setup({ mobile = false, blockedStorage = false } = {}) {
     { type: '文章', title: '分页查询的问题', description: '订单处理中的 total 变化', href: '/articles/pagination/', category: '实践', keywords: ['实践', 'API'] },
     { type: '文章', title: '<img src=x onerror=alert(1)>', description: '文本应原样显示', href: '/articles/text/', category: '生活', keywords: ['生活'] },
     { type: '项目', title: '订单处理', description: 'Python 自动化', href: '/projects/', category: '', keywords: ['Excel', 'RPA'] },
+    { type: '系列', title: 'Python 学习路线', description: '自动化入门', href: '/series/python-basics/', category: '', keywords: [] },
+    { type: '提示词', title: 'Python 项目审查', description: '检查代码', href: '/prompts/#code-review', category: '', keywords: ['实践'] },
   ]) });
   const input = new Element('input', { searchInput: '' });
   const results = new Element('div', { searchResults: '' });
   const status = new Element('p', { searchStatus: '' });
   const close = new Element('button', { searchClose: '' });
   const filter = new Element('button', { searchFilter: '生活' });
-  search.append(input, results, status, close, filter);
+  const categoryGroup = new Element('div', { searchCategories: '' });
+  categoryGroup.append(filter);
+  const types = ['', '文章', '系列', '提示词', '项目'].map((searchType) => new Element('button', { searchType }));
+  search.append(input, results, status, close, categoryGroup, ...types);
   const meta = new Element('meta');
   root.append(header, search, meta);
   active = toggle;
@@ -130,7 +135,7 @@ function setup({ mobile = false, blockedStorage = false } = {}) {
     document, window: { matchMedia: () => viewport, location },
     navigator: { platform: 'MacIntel' }, localStorage: storage, sessionStorage: storage, URL, Event,
   });
-  return { root, header, navigation, navToggle, themeMenu, themeSummary, themeOptions, introMenu, introSummary, introLink, toggle, search, input, results, status, close, filter, stored, meta, viewport, viewportChange, location, navigations, focused: () => active };
+  return { root, header, navigation, navToggle, themeMenu, themeSummary, themeOptions, introMenu, introSummary, introLink, toggle, search, input, results, status, close, filter, types, stored, meta, viewport, viewportChange, location, navigations, focused: () => active };
 }
 
 describe('production shared-shell interactions', () => {
@@ -176,6 +181,19 @@ describe('production shared-shell interactions', () => {
     expect(event.preventDefault).toHaveBeenCalled();
     expect(s.search.open).toBe(false);
     expect(s.focused()).toBe(s.toggle);
+  });
+  it('finds series and prompts and keeps the query when switching content type', () => {
+    const s = setup();
+    s.toggle.click();
+    s.input.value = 'Python';
+    s.input.dispatch('input');
+    expect(s.results.children).toHaveLength(3);
+    s.types[2].click();
+    expect(s.results.children.map((link) => link.href)).toEqual(['/series/python-basics/']);
+    s.types[3].click();
+    expect(s.input.value).toBe('Python');
+    expect(s.results.children.map((link) => link.href)).toEqual(['/prompts/#code-review']);
+    expect(s.types[3].attributes['aria-pressed']).toBe('true');
   });
   it('puts a matching title ahead of a newer article mentioning the same words', () => {
     const s = setup();

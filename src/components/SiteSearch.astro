@@ -2,6 +2,8 @@
 import { getCollection } from 'astro:content';
 import { Search, X, ArrowUpRight } from '@lucide/astro';
 import { projects, projectPath } from '../data/projects';
+import { orderedPromptEntries } from '../data/prompts';
+import { seriesMetaList } from '../data/series';
 import { withBase } from '../utils/paths';
 import { categories } from '../data/categories';
 import '../styles/site-search.css';
@@ -9,10 +11,25 @@ import '../styles/site-search.css';
 const posts = (await getCollection('posts'))
   .filter((post) => !post.data.draft && !post.data.private && !post.data.archived)
   .sort((a, b) => (b.data.updated ?? b.data.date).valueOf() - (a.data.updated ?? a.data.date).valueOf());
+const searchTypes = ['全部', '文章', '系列', '提示词', '项目'];
 const searchItems = [
   ...posts.map((post) => ({
     type: '文章', title: post.data.title, description: post.data.description,
     href: withBase(`/articles/${post.slug}/`), category: post.data.category, keywords: [post.data.category, ...post.data.tags],
+  })),
+  ...seriesMetaList.flatMap((series) => {
+    const chapters = posts.filter((post) => post.data.series === series.id);
+    if (!chapters.length) return [];
+    return [{
+      type: '系列', title: series.title, description: series.description,
+      href: withBase(`/series/${series.id}/`), category: '',
+      keywords: chapters.flatMap((post) => [post.data.title, ...post.data.tags]),
+    }];
+  }),
+  ...orderedPromptEntries.map((prompt) => ({
+    type: '提示词', title: prompt.title, description: prompt.description,
+    href: withBase(`/prompts/#${prompt.id}`), category: '',
+    keywords: [prompt.category, prompt.usedCase],
   })),
   ...projects.map((project) => ({
     type: '项目', title: project.title, description: project.description,
@@ -22,14 +39,17 @@ const searchItems = [
 ---
 
 <dialog class="site-search" id="site-search" aria-labelledby="search-title" data-site-search data-search-items={JSON.stringify(searchItems)}>
-  <div class="search-heading"><h2 id="search-title">搜索文章和项目</h2><button type="button" data-search-close aria-label="关闭搜索"><X size={20} /></button></div>
-  <div class="search-field"><Search size={22} /><input data-search-input type="search" placeholder="文章、项目，或一个关键词…" autocomplete="off" aria-label="搜索文章和项目" /></div>
-  <div class="search-filters" aria-label="按文章分类筛选">
-    {categories.map((label) => <button type="button" data-search-filter={label}>{label}</button>)}
+  <div class="search-heading"><h2 id="search-title">站内搜索</h2><button type="button" data-search-close aria-label="关闭搜索"><X size={20} /></button></div>
+  <div class="search-field"><Search size={22} /><input data-search-input type="search" placeholder="搜索文章、系列、提示词和项目" autocomplete="off" aria-label="搜索站内内容" /></div>
+  <div class="search-types" role="group" aria-label="内容类型">
+    {searchTypes.map((label) => <button type="button" data-search-type={label === '全部' ? '' : label} aria-pressed={String(label === '全部')}>{label}</button>)}
+  </div>
+  <div class="search-filters" role="group" aria-label="文章分类" data-search-categories hidden>
+    {categories.map((label) => <button type="button" data-search-filter={label} aria-pressed="false">{label}</button>)}
   </div>
   <p class="search-status" role="status" aria-live="polite" data-search-status></p>
   <div class="search-results" data-search-results></div>
-  <div class="search-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> 移动 · <kbd>Esc</kbd> 关闭</span><a href={withBase('/articles/')}>查看全部文章 <ArrowUpRight size={15} /></a></div>
+  <div class="search-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> 选择 · <kbd>Enter</kbd> 打开</span><a href={withBase('/articles/')}>浏览文章 <ArrowUpRight size={15} /></a></div>
 </dialog>
 
 <script src="../scripts/site-search.js"></script>
