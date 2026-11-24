@@ -13,6 +13,7 @@ const { posts, hideVisualLab = false, hideSeries = false, showPinned = false, in
       data-article-item
       data-category={post.data.category}
       data-series={post.data.series ?? ''}
+      data-series-order={post.data.seriesOrder}
       data-pinned={post.data.pinned ? 'true' : 'false'}
       data-featured={post.data.featured ? 'true' : 'false'}
       data-archived={post.data.archived ? 'true' : 'false'}

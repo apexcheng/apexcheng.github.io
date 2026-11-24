@@ -22,11 +22,19 @@ describe('mobile TOC grouping', () => {
 const post = (id: string, data = {}) => ({ id, data: { category: '实践', tags: ['工具'], date: new Date('2026-01-01'), ...data } });
 
 describe('continued reading selection', () => {
-  it('ranks shared tags above category-only matches and returns at most two posts', () => {
+  it('requires a shared topic and returns at most two posts', () => {
     const current = post('current');
     const posts = [post('category', { tags: [] }), post('both'), post('tag', { category: '教程' })];
     expect(getRelatedPosts(current, posts).map(({ id }) => id)).toEqual(['both', 'tag']);
     expect(posts.map(({ id }) => id)).toEqual(['category', 'both', 'tag']);
+  });
+  it('does not use a broad troubleshooting tag by itself', () => {
+    const oauth = post('oauth', { tags: ['技术排障'] });
+    const troubleshoot = post('remote-desktop', { tags: ['技术排障'] });
+    const related = post('oauth-guide', { tags: ['OAuth', '技术排障'] });
+    expect(getRelatedPosts(oauth, [troubleshoot, related])).toEqual([]);
+    expect(getRelatedPosts(post('oauth', { tags: ['OAuth', '技术排障'] }), [troubleshoot, related]))
+      .toEqual([related]);
   });
   it('excludes current, draft, private and unrelated articles', () => {
     const current = post('current');

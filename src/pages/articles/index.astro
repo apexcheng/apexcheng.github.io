@@ -2,8 +2,8 @@
 import { getCollection } from 'astro:content';
 import ArticleList from '../../components/ArticleList.astro';
 import ContentViewTabs from '../../components/ContentViewTabs.astro';
-import RelatedSeries from '../../components/RelatedSeries.astro';
 import { categoryMetaList } from '../../data/categories';
+import { seriesMetaList } from '../../data/series';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { withBase } from '../../utils/paths';
 
@@ -115,11 +115,29 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
         <p class="articles-results-summary" role="status" aria-live="polite" data-articles-summary>共 {standaloneOfficialPosts.length} 篇独立文章</p>
         <button type="button" class="article-filter-clear" data-clear-article-filters hidden>清除筛选</button>
       </div>
+      <nav class="related-series series-search-results" aria-labelledby="series-search-heading" data-related-series hidden>
+        <h2 class="related-series-heading" id="series-search-heading">匹配的专题</h2>
+        {seriesMetaList.map((series) => (
+          <div
+            class="related-series-links"
+            data-related-series-id={series.id}
+            data-series-search-text={`${series.title} ${series.description}`.toLocaleLowerCase()}
+            hidden
+          >
+            <a href={withBase(`/series/${series.id}/`)}>{series.title} <span aria-hidden="true">↗</span></a>
+            <a data-series-match-chapter hidden></a>
+          </div>
+        ))}
+      </nav>
       <ArticleList posts={posts} hideSeries hideVisualLab showPinned inlineMeta />
       <p class="article-filter-empty" data-empty-state hidden>没有匹配的文章，请尝试其他关键词或分类。</p>
-      <RelatedSeries posts={posts} heading="按完整学习路线阅读" />
     </section>
   </main>
+  <style>
+    .articles-main-content > .series-search-results { margin: 0 0 16px; }
+    .series-search-results .related-series-links[hidden] { display: none; }
+    .series-search-results .related-series-links + .related-series-links { margin-top: 8px; }
+  </style>
   <script is:inline>
     (function () {
       var page = document.querySelector('[data-articles-page]');
@@ -135,8 +153,9 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
       var tagsToggle = page.querySelector('[data-tags-toggle]');
       var extraTags = Array.prototype.slice.call(page.querySelectorAll('[data-extra-tag]'));
       var tagPanel = page.querySelector('#article-filter-tags');
-      var relatedSeriesLinks = Array.prototype.slice.call(page.querySelectorAll('[data-related-series-id]'));
+      var relatedSeriesGroups = Array.prototype.slice.call(page.querySelectorAll('[data-related-series-id]'));
       var relatedSeriesWrap = page.querySelector('[data-related-series]');
+      var seriesSearchHeading = page.querySelector('#series-search-heading');
       var summary = page.querySelector('[data-articles-summary]');
       var searchInput = page.querySelector('[data-articles-search]');
       var featuredOnlyButton = page.querySelector('[data-featured-only]');
@@ -232,18 +251,38 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
         var terms = query.split(/\s+/).filter(Boolean);
         var featuredOnly = featuredOnlyButton && featuredOnlyButton.getAttribute('aria-pressed') === 'true';
         var includeArchived = includeArchivedInput && includeArchivedInput.checked;
+        var eligibleSeries = new Set();
+        var matchingChapters = new Map();
 
         items.forEach(function (item) {
           var itemCategory = item.getAttribute('data-category') || '';
+          var seriesId = item.getAttribute('data-series');
+          var archived = item.getAttribute('data-archived') === 'true';
           var searchable = item.getAttribute('data-search-text') || '';
-          var isVisible = (includeSeries || !item.getAttribute('data-series')) &&
-            (category === '视觉实验室' || itemCategory !== '视觉实验室') &&
+          var inScope = (category === '视觉实验室' || itemCategory !== '视觉实验室') &&
             (!featuredOnly || item.getAttribute('data-featured') === 'true') &&
+            (!category || itemCategory === category);
+          var matchesQuery = terms.every(function (term) { return searchable.includes(term); });
+          var isVisible = (includeSeries || !item.getAttribute('data-series')) &&
+            inScope &&
             (includeArchived || item.getAttribute('data-archived') !== 'true') &&
-            (!category || itemCategory === category) &&
-            terms.every(function (term) { return searchable.includes(term); });
+            matchesQuery;
           item.hidden = !isVisible;
           if (isVisible) visibleCount += 1;
+
+          if (!seriesId || archived || !inScope) return;
+          eligibleSeries.add(seriesId);
+          if (!query || !matchesQuery) return;
+          var link = item.querySelector('h2 a');
+          var title = link.textContent.trim().toLocaleLowerCase();
+          var titleScore = title.includes(query)
+            ? terms.length + 1
+            : terms.filter(function (term) { return title.includes(term); }).length;
+          var order = Number(item.getAttribute('data-series-order')) || Infinity;
+          var currentMatch = matchingChapters.get(seriesId);
+          if (!currentMatch || titleScore > currentMatch.titleScore || (titleScore === currentMatch.titleScore && order < currentMatch.order)) {
+            matchingChapters.set(seriesId, { link: link, titleScore: titleScore, order: order });
+          }
         });
 
         categoryCounts.forEach(function (count) {
@@ -253,21 +292,34 @@ const otherTags = tags.filter((tag) => !commonTags.includes(tag));
         updateLastVisibleItem();
 
         if (list) list.hidden = visibleCount === 0;
-        if (emptyState) emptyState.hidden = visibleCount !== 0;
         if (summary) summary.textContent = '共 ' + visibleCount + (includeSeries ? ' 篇文章 · 包含系列文章' : ' 篇独立文章') + (featuredOnly ? ' · 只看精选' : '') + (includeArchived ? ' · 包含已归档' : '') + (category ? ' · ' + category : '') + (query ? ' · “' + query + '”' : '');
         if (filterIndicator) filterIndicator.hidden = !includeArchived;
         if (clearFiltersButton) clearFiltersButton.hidden = !includeSeries && !featuredOnly && !includeArchived && !category && !query;
+        var shownSeries = 0;
         if (relatedSeriesWrap) {
-          var shownSeries = 0;
-          relatedSeriesLinks.forEach(function (link) {
-            var seriesId = link.getAttribute('data-related-series-id');
-            var available = items.some(function (item) {
-              return !item.hidden && item.getAttribute('data-series') === seriesId;
-            });
-            link.hidden = !available;
+          seriesSearchHeading.textContent = query ? '匹配的专题' : '按完整学习路线阅读';
+          relatedSeriesGroups.forEach(function (group) {
+            var seriesId = group.getAttribute('data-related-series-id');
+            var chapter = matchingChapters.get(seriesId);
+            var searchText = group.getAttribute('data-series-search-text');
+            var matchesSeries = terms.every(function (term) { return searchText.includes(term); });
+            var available = eligibleSeries.has(seriesId) && (query ? Boolean(chapter) || matchesSeries : includeSeries);
+            group.hidden = !available;
             if (available) shownSeries += 1;
+            var chapterLink = group.querySelector('[data-series-match-chapter]');
+            chapterLink.hidden = !chapter;
+            if (chapter) {
+              chapterLink.href = chapter.link.href;
+              chapterLink.textContent = chapter.link.textContent.trim();
+            }
           });
           relatedSeriesWrap.hidden = shownSeries === 0;
+        }
+        if (emptyState) {
+          emptyState.hidden = visibleCount !== 0;
+          emptyState.textContent = shownSeries && !includeSeries
+            ? '没有匹配的独立文章。'
+            : '没有匹配的文章，请尝试其他关键词或分类。';
         }
 
         if (updateUrl && activeFilter) {

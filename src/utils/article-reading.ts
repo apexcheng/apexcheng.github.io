@@ -29,16 +29,17 @@ type ReadingPost = {
 
 export function getRelatedPosts<T extends ReadingPost>(current: T, posts: T[]): T[] {
   if (current.data.series) return [];
-  const tags = new Set(current.data.tags);
+  // 技术排障 describes the type of article, so it does not link unrelated problems.
+  const topicTags = new Set(current.data.tags.filter((tag) => tag !== '技术排障'));
   return posts
     .filter((post) => post.id !== current.id && !post.data.draft && !post.data.private && !post.data.archived)
     .map((post) => ({
       post,
       // A shared topic is more specific than a shared category.
       score: Number(post.data.category === current.data.category)
-        + [...new Set(post.data.tags)].filter((tag) => tags.has(tag)).length * 2,
+        + [...new Set(post.data.tags)].filter((tag) => topicTags.has(tag)).length * 2,
     }))
-    .filter(({ score }) => score > 0)
+    .filter(({ score }) => score >= 2)
     .sort((a, b) => b.score - a.score
       || b.post.data.date.valueOf() - a.post.data.date.valueOf()
       || (a.post.id < b.post.id ? -1 : a.post.id > b.post.id ? 1 : 0))

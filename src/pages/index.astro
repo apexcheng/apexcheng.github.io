@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import HomeIntroState from '../components/HomeIntroState.astro';
 import HomeIndexMenu from '../components/HomeIndexMenu.astro';
+import SiteSearch from '../components/SiteSearch.astro';
 import { categoryMetaList } from '../data/categories';
 import { seriesMetaList } from '../data/series';
 import { siteMeta } from '../data/site';
@@ -54,14 +55,6 @@ const featuredSeries = seriesMetaList.map((series) => ({
   ...series,
   count: posts.filter((post) => post.data.series === series.id).length,
   href: withBase(`/series/${series.id}/`),
-}));
-
-const searchItems = posts.map((post) => ({
-  title: post.data.title,
-  description: post.data.description,
-  category: post.data.category,
-  href: withBase(`/articles/${post.slug}/`),
-  keywords: post.data.tags.join(' '),
 }));
 
 const formatDate = (date: Date) => date.toISOString().slice(0, 10);
@@ -128,8 +121,9 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
           <a class="active" href={withBase('/')} data-home-link>首页</a>
           <a href={withBase('/articles/')}>文章</a>
           <a href={withBase('/series/')}>系列</a>
+          <a href={withBase('/prompts/')}>提示词库</a>
           <a href={withBase('/projects/')}>项目</a>
-          <button type="button" data-search-open>搜索</button>
+          <button type="button" data-search-toggle aria-haspopup="dialog" aria-controls="site-search" aria-expanded="false">搜索</button>
           <a href={withBase(siteMeta.rssPath)}>RSS</a>
           <a href={withBase('/about/')}>关于我</a>
         </nav>
@@ -355,32 +349,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
       </div>
     </footer>
 
-    <div class="search-overlay" data-search-overlay aria-hidden="true">
-      <button class="search-backdrop" type="button" aria-label="关闭搜索" data-search-close></button>
-      <section class="search-sheet" role="dialog" aria-modal="true" aria-labelledby="search-title">
-        <div class="search-head">
-          <div>
-            <p class="hand-note">在手记里找一找</p>
-            <h2 id="search-title">搜索文章</h2>
-          </div>
-          <button type="button" data-search-close>关闭</button>
-        </div>
-        <input
-          type="search"
-          placeholder="输入标题、分类或关键词"
-          autocomplete="off"
-          aria-label="搜索文章"
-          data-search-input
-        />
-        <div
-          class="search-results"
-          data-search-results
-          data-items={JSON.stringify(searchItems)}
-          data-all-articles={withBase('/articles/')}
-          aria-live="polite"
-        ></div>
-      </section>
-    </div>
+    <SiteSearch />
 
     <script is:inline>
       (function () {
@@ -388,11 +357,6 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
         var themeToggle = document.querySelector('[data-theme-toggle]');
         var introPicker = document.querySelector('[data-intro-picker]');
         var introToggle = document.querySelector('[data-intro-toggle]');
-        var searchOverlay = document.querySelector('[data-search-overlay]');
-        var searchInput = document.querySelector('[data-search-input]');
-        var searchResults = document.querySelector('[data-search-results]');
-        var searchOpeners = document.querySelectorAll('[data-search-open]');
-        var searchClosers = document.querySelectorAll('[data-search-close]');
 
         function setNight(isNight) {
           root.dataset.paperTheme = isNight ? 'night' : 'day';
@@ -425,62 +389,9 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
           if (introPicker && !introPicker.contains(event.target)) setIntroOpen(false);
         });
 
-        function renderResults(query) {
-          if (!searchResults) return;
-          var items = [];
-          try {
-            items = JSON.parse(searchResults.dataset.items || '[]');
-          } catch (error) {}
-
-          var keyword = query.trim().toLowerCase();
-          var matches = items.filter(function (item) {
-            if (!keyword) return true;
-            return [item.title, item.description, item.category, item.keywords]
-              .join(' ')
-              .toLowerCase()
-              .includes(keyword);
-          }).slice(0, 6);
-
-          if (!matches.length) {
-            searchResults.innerHTML = '<p class="search-empty">没有找到相关内容，换个关键词试试。</p>';
-            return;
-          }
-
-          searchResults.innerHTML = matches.map(function (item) {
-            return '<a href="' + item.href + '">' +
-              '<span>' + item.category + '</span>' +
-              '<strong>' + item.title + '</strong>' +
-              '<p>' + item.description + '</p>' +
-              '</a>';
-          }).join('') + '<a class="search-all" href="' + searchResults.dataset.allArticles + '">浏览全部文章 →</a>';
-        }
-
-        function setSearchOpen(isOpen) {
-          if (!searchOverlay) return;
-          searchOverlay.classList.toggle('open', isOpen);
-          searchOverlay.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-          document.body.classList.toggle('search-open', isOpen);
-          if (isOpen) {
-            renderResults(searchInput ? searchInput.value : '');
-            window.setTimeout(function () { if (searchInput) searchInput.focus(); }, 120);
-          }
-        }
-
-        searchOpeners.forEach(function (button) {
-          button.addEventListener('click', function () { setSearchOpen(true); });
-        });
-        searchClosers.forEach(function (button) {
-          button.addEventListener('click', function () { setSearchOpen(false); });
-        });
-        if (searchInput) {
-          searchInput.addEventListener('input', function () { renderResults(searchInput.value); });
-        }
-
+        document.addEventListener('site-search-open', function () { setIntroOpen(false); });
         document.addEventListener('keydown', function (event) {
-          if (event.key === 'Escape') {
-            setIntroOpen(false);
-            setSearchOpen(false);
-          }
+          if (event.key === 'Escape') setIntroOpen(false);
         });
 
         var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -522,6 +433,13 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
     --hand: "Kaiti SC", "STKaiti", KaiTi, var(--serif);
   }
 
+  :global(.paper-page .site-search) {
+    --muted: var(--ink-soft);
+    --soft: var(--ink-soft);
+    --line-soft: var(--line);
+    font-family: var(--sans);
+  }
+
   :root[data-paper-theme='night'] {
     color-scheme: dark;
     --paper: #171b22;
@@ -561,10 +479,6 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
   :root[data-paper-theme='night'] body {
     background-blend-mode: multiply;
     background-image: none;
-  }
-
-  body.search-open {
-    overflow: hidden;
   }
 
   a {
@@ -1475,127 +1389,6 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
     min-height: 90px;
   }
 
-  .search-overlay {
-    inset: 0;
-    opacity: 0;
-    pointer-events: none;
-    position: fixed;
-    transition: opacity 0.24s ease;
-    z-index: 100;
-  }
-
-  .search-overlay.open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .search-backdrop {
-    backdrop-filter: blur(7px);
-    background: rgba(25, 28, 34, 0.35);
-    border: 0;
-    inset: 0;
-    position: absolute;
-    width: 100%;
-  }
-
-  .search-sheet {
-    background-color: var(--paper-soft);
-    background-image: var(--paper-texture);
-    border: 1px solid var(--line-strong);
-    box-shadow: 0 28px 90px rgba(32, 24, 14, 0.24);
-    left: 50%;
-    max-height: min(760px, calc(100vh - 80px));
-    max-width: 760px;
-    overflow: auto;
-    padding: 34px;
-    position: absolute;
-    top: 40px;
-    transform: translate(-50%, -14px);
-    transition: transform 0.24s ease;
-    width: calc(100% - 40px);
-  }
-
-  .search-overlay.open .search-sheet {
-    transform: translate(-50%, 0);
-  }
-
-  .search-head {
-    align-items: start;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .search-head .hand-note {
-    font-size: 15px;
-    margin: 0 0 5px;
-  }
-
-  .search-head h2 {
-    font-size: 31px;
-    margin: 0;
-  }
-
-  .search-head button {
-    background: transparent;
-    border: 1px solid var(--line-strong);
-    cursor: pointer;
-    padding: 8px 13px;
-  }
-
-  .search-sheet input {
-    background: color-mix(in srgb, var(--paper-card) 85%, transparent);
-    border: 0;
-    border-bottom: 2px solid var(--ink);
-    color: var(--ink);
-    font-family: var(--serif);
-    font-size: 19px;
-    margin: 28px 0 16px;
-    outline: none;
-    padding: 15px 4px;
-    width: 100%;
-  }
-
-  .search-results {
-    display: grid;
-  }
-
-  .search-results > a:not(.search-all) {
-    border-bottom: 1px solid var(--line);
-    display: grid;
-    gap: 4px;
-    padding: 17px 4px;
-  }
-
-  .search-results > a:not(.search-all):hover strong {
-    color: var(--blue);
-  }
-
-  .search-results span {
-    color: var(--coral);
-    font-family: var(--sans);
-    font-size: 10px;
-  }
-
-  .search-results strong {
-    font-size: 17px;
-  }
-
-  .search-results p {
-    color: var(--ink-soft);
-    font-size: 12px;
-    line-height: 1.55;
-    margin: 0;
-  }
-
-  .search-all {
-    color: var(--blue);
-    padding: 19px 4px 4px;
-  }
-
-  .search-empty {
-    padding: 35px 4px;
-  }
-
   .js [data-reveal] {
     opacity: 0;
     transform: translateY(18px);
@@ -1902,12 +1695,6 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
       min-height: 120px;
     }
 
-    .search-sheet {
-      max-height: calc(100vh - 24px);
-      padding: 24px 19px;
-      top: 12px;
-      width: calc(100% - 24px);
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {

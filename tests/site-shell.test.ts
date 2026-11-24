@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { describe, expect, it, vi } from 'vitest';
 
-const source = readFileSync('src/scripts/site-shell.js', 'utf8');
+const source = readFileSync('src/scripts/site-shell.js', 'utf8') + '\n' + readFileSync('src/scripts/site-search.js', 'utf8');
 
 // A small DOM contract harness runs the production script. Native dialog focus
 // containment and CSS layout still require acceptance in a real browser.
@@ -115,6 +115,7 @@ function setup({ mobile = false, blockedStorage = false } = {}) {
     querySelectorAll: (selector: string) => root.querySelectorAll(selector),
     createElement: (tag: string) => new Element(tag),
     addEventListener: root.addEventListener.bind(root),
+    dispatchEvent: (event: Event) => root.dispatch(event.type),
   };
   const stored = new Map<string, string>();
   const storage = {
@@ -127,7 +128,7 @@ function setup({ mobile = false, blockedStorage = false } = {}) {
   const location = { pathname: '/articles/pagination/', search: '?from=home', hash: '#part-2', assign: (url: string) => navigations.push(url) };
   vm.runInNewContext(source, {
     document, window: { matchMedia: () => viewport, location },
-    navigator: { platform: 'MacIntel' }, localStorage: storage, sessionStorage: storage, URL,
+    navigator: { platform: 'MacIntel' }, localStorage: storage, sessionStorage: storage, URL, Event,
   });
   return { root, header, navigation, navToggle, themeMenu, themeSummary, themeOptions, introMenu, introSummary, introLink, toggle, search, input, results, status, close, filter, stored, meta, viewport, viewportChange, location, navigations, focused: () => active };
 }
@@ -191,6 +192,9 @@ describe('production shared-shell interactions', () => {
   });
   it('moves from the input to results and back, and supports a keyboard shortcut', () => {
     const s = setup();
+    expect(s.root.dispatch('keydown', { key: 'f', metaKey: true }).preventDefault).not.toHaveBeenCalled();
+    expect(s.root.dispatch('keydown', { key: 'f', ctrlKey: true }).preventDefault).not.toHaveBeenCalled();
+    expect(s.search.open).toBe(false);
     s.root.dispatch('keydown', { key: 'k', metaKey: true });
     expect(s.search.open).toBe(true);
     s.search.dispatch('keydown', { key: 'ArrowDown', target: s.input });

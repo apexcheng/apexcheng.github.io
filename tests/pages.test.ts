@@ -15,6 +15,7 @@ const categorySource = readFileSync('src/pages/articles/category/[category].astr
 const tagSource = readFileSync('src/pages/articles/tag/[tag].astro', 'utf8');
 const layoutSource = readFileSync('src/layouts/SiteLayout.astro', 'utf8');
 const headerSource = readFileSync('src/components/SiteHeader.astro', 'utf8');
+const searchSource = readFileSync('src/components/SiteSearch.astro', 'utf8');
 const rssSource = readFileSync('src/pages/rss.xml.ts', 'utf8');
 
 describe('front page structure', () => {
@@ -107,11 +108,14 @@ describe('front page structure', () => {
     expect(tagSource).toContain('<RelatedSeries posts={posts}');
   });
 
-  it('keeps search inside the shared header without a separate search page', () => {
-    expect(headerSource).toContain('data-site-search');
-    expect(headerSource).toContain('搜索文章和项目');
-    expect(headerSource).toContain("getCollection('posts')");
-    expect(headerSource).toContain('projects.map((project)');
+  it('shares article and project search between both homepages and the site header', () => {
+    for (const page of [headerSource, paperHomeSource, visualBlueHomeSource]) {
+      expect(page).toContain('<SiteSearch />');
+      expect(page).toContain("'/prompts/'");
+    }
+    expect(searchSource).toContain('搜索文章和项目');
+    expect(searchSource).toContain("getCollection('posts')");
+    expect(searchSource).toContain('withBase(projectPath(project))');
     expect(layoutSource).not.toContain('/guides/mdx-content/');
     expect(layoutSource).not.toContain('fetch(');
   });

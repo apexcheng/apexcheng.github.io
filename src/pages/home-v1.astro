@@ -18,6 +18,7 @@ import {
 } from '@lucide/astro';
 import HomeIntroState from '../components/HomeIntroState.astro';
 import HomeIndexMenu from '../components/HomeIndexMenu.astro';
+import SiteSearch from '../components/SiteSearch.astro';
 import { categoryMetaList } from '../data/categories';
 import { projects } from '../data/projects';
 import { seriesMetaList } from '../data/series';
@@ -50,23 +51,6 @@ const featuredSeries = seriesOrder
 const categoryCounts = categoryMetaList.map(
   (category) => posts.filter((post) => post.data.category === category.name).length,
 );
-
-const searchItems = [
-  ...posts.map((post) => ({
-    type: '文章',
-    title: post.data.title,
-    description: post.data.description,
-    href: withBase(`/articles/${post.slug}/`),
-    keywords: [post.data.category, ...post.data.tags],
-  })),
-  ...projects.map((project) => ({
-    type: '项目',
-    title: project.title,
-    description: project.description,
-    href: project.url ?? withBase('/projects/'),
-    keywords: [project.type, ...project.tags],
-  })),
-];
 
 const formatDate = (date: Date) =>
   new Intl.DateTimeFormat('zh-CN', {
@@ -119,33 +103,12 @@ const introReturn = encodeURIComponent(withBase('/home-v1/'));
         <a class="active" href={withBase('/')} data-home-link>首页</a>
         <a href={withBase('/articles/')}>文章</a>
         <a href={withBase('/series/')}>系列</a>
+        <a href={withBase('/prompts/')}>提示词库</a>
         <a href={withBase('/projects/')}>项目</a>
-        <div class="nav-search">
-          <button type="button" aria-expanded="false" data-search-toggle>
-            搜索
-            <Search size={16} stroke-width={1.9} />
-          </button>
-          <section
-            class="search-panel"
-            aria-label="搜索文章和项目"
-            data-search-panel
-            data-search-items={JSON.stringify(searchItems)}
-            data-articles-url={withBase('/articles/')}
-          >
-            <div class="search-panel-head">
-              <label for="home-redesign-1-search">搜索文章和项目</label>
-              <button type="button" data-search-close>关闭</button>
-            </div>
-            <input
-              id="home-redesign-1-search"
-              type="search"
-              placeholder="搜索文章 / 项目"
-              autocomplete="off"
-              data-search-input
-            />
-            <div class="search-results" aria-live="polite" data-search-results></div>
-          </section>
-        </div>
+        <button type="button" data-search-toggle aria-haspopup="dialog" aria-controls="site-search" aria-expanded="false">
+          搜索
+          <Search size={16} stroke-width={1.9} />
+        </button>
         <a href={withBase(siteMeta.rssPath)}>RSS</a>
         <a href={withBase('/about/')}>关于我</a>
       </nav>
@@ -435,6 +398,8 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
       </nav>
     </footer>
 
+    <SiteSearch />
+
     <script is:inline>
       (function () {
         var root = document.documentElement;
@@ -443,12 +408,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
         var siteNav = document.querySelector('[data-site-nav]');
         var introControl = document.querySelector('[data-intro-control]');
         var introToggle = document.querySelector('[data-intro-toggle]');
-        var searchToggle = document.querySelector('[data-search-toggle]');
-        var searchPanel = document.querySelector('[data-search-panel]');
-        var searchClose = document.querySelector('[data-search-close]');
-        var searchInput = document.querySelector('[data-search-input]');
-        var searchResults = document.querySelector('[data-search-results]');
-        var articlesUrl = searchPanel ? searchPanel.getAttribute('data-articles-url') || '#' : '#';
 
         document.querySelectorAll('[data-current-date]').forEach(function (item) {
           var date = new Date();
@@ -462,13 +421,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
           item.textContent = value;
           item.setAttribute('datetime', value);
         });
-
-        function setSearchOpen(open) {
-          if (!searchPanel || !searchToggle) return;
-          searchPanel.classList.toggle('open', open);
-          searchToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-          if (open && searchInput) window.setTimeout(function () { searchInput.focus(); }, 80);
-        }
 
         function setIntroOpen(open) {
           if (!introControl || !introToggle) return;
@@ -502,109 +454,9 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
           });
         }
 
-        if (searchToggle) searchToggle.addEventListener('click', function () { setSearchOpen(true); });
-        if (searchClose) searchClose.addEventListener('click', function () { setSearchOpen(false); });
-
-        if (searchPanel && searchInput && searchResults) {
-          var items = [];
-          try { items = JSON.parse(searchPanel.getAttribute('data-search-items') || '[]'); } catch (error) {}
-
-          function itemText(item) {
-            return [item.title, item.description].concat(item.keywords || []).join(' ').toLowerCase();
-          }
-
-          function escapeHtml(value) {
-            return String(value)
-              .replace(/&/g, '&amp;')
-              .replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;')
-              .replace(/"/g, '&quot;')
-              .replace(/'/g, '&#39;');
-          }
-
-          function resultHtml(item) {
-            return [
-              '<a class="search-result" href="' + escapeHtml(item.href) + '">',
-              '<span>' + escapeHtml(item.type) + '</span>',
-              '<strong>' + escapeHtml(item.title) + '</strong>',
-              '<small>' + escapeHtml(item.description) + '</small>',
-              '</a>',
-            ].join('');
-          }
-
-          function renderResults(query) {
-            var normalizedQuery = query.trim().toLowerCase();
-
-            if (!normalizedQuery) {
-              var filters = ['生活', '实践', '教程', '视觉实验室'];
-              var recentItems = items.filter(function (item) {
-                return item.type === '文章';
-              }).slice(0, 6);
-
-              searchResults.innerHTML = [
-                '<section class="search-section">',
-                '<div class="search-section-head"><strong>快速筛选</strong></div>',
-                '<div class="search-filters">',
-                filters.map(function (filter) {
-                  return '<button type="button" data-search-filter="' + escapeHtml(filter) + '">' + escapeHtml(filter) + '</button>';
-                }).join(''),
-                '</div>',
-                '</section>',
-                '<section class="search-section">',
-                '<div class="search-section-head"><strong>最近更新</strong><span>' + recentItems.length + ' 篇</span></div>',
-                recentItems.map(resultHtml).join(''),
-                '</section>',
-                '<a class="search-all" href="' + escapeHtml(articlesUrl) + '">查看全部文章 <span aria-hidden="true">→</span></a>',
-              ].join('');
-              searchResults.scrollTop = 0;
-              return;
-            }
-
-            var matches = items.filter(function (item) {
-              return itemText(item).includes(normalizedQuery);
-            });
-
-            searchResults.innerHTML = [
-              '<div class="search-section-head search-match-head"><strong>搜索结果</strong><span>' + matches.length + ' 条</span></div>',
-              matches.length
-                ? matches.map(resultHtml).join('')
-                : '<p class="search-empty">没有找到匹配内容</p>',
-            ].join('');
-            searchResults.scrollTop = 0;
-          }
-
-          renderResults('');
-          searchInput.addEventListener('input', function () { renderResults(searchInput.value); });
-
-          searchResults.addEventListener('click', function (event) {
-            var filter = event.target.closest('[data-search-filter]');
-            if (!filter) return;
-            searchInput.value = filter.getAttribute('data-search-filter') || '';
-            renderResults(searchInput.value);
-            searchInput.focus();
-          });
-
-          searchPanel.addEventListener('wheel', function (event) {
-            if (event.ctrlKey) return;
-            event.preventDefault();
-            var distance = event.deltaY;
-            if (event.deltaMode === 1) distance *= 18;
-            if (event.deltaMode === 2) distance *= searchResults.clientHeight;
-            searchResults.scrollTop += distance;
-          }, { passive: false });
-        }
-
+        document.addEventListener('site-search-open', function () { setIntroOpen(false); });
         document.addEventListener('keydown', function (event) {
-          if (
-            !event.isComposing && !event.altKey && !event.shiftKey &&
-            (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f'
-          ) {
-            event.preventDefault();
-            setSearchOpen(true);
-            return;
-          }
-          if (event.key !== 'Escape') return;
-          setSearchOpen(false);
+          if (event.key !== 'Escape' || event.defaultPrevented) return;
           setIntroOpen(false);
           if (siteNav && menuToggle) {
             siteNav.classList.remove('open');
@@ -614,12 +466,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
 
         document.addEventListener('click', function (event) {
           if (introControl && !introControl.contains(event.target)) setIntroOpen(false);
-          if (
-            searchPanel &&
-            searchToggle &&
-            !searchPanel.contains(event.target) &&
-            !searchToggle.contains(event.target)
-          ) setSearchOpen(false);
         });
 
         var reveals = document.querySelectorAll('[data-reveal]');
@@ -683,6 +529,15 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     color-scheme: light;
     scroll-behavior: smooth;
     background: var(--page);
+  }
+
+  :global(.design-one-page .site-search) {
+    --paper: var(--surface);
+    --paper-soft: var(--surface-soft);
+    --soft: var(--muted);
+    --line-soft: var(--line);
+    --shadow: 0 20px 54px color-mix(in srgb, var(--ink) 13%, transparent);
+    border-radius: 16px;
   }
 
   :global(html.design-one-page[data-theme='dark']) {
@@ -817,12 +672,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     content: '';
   }
 
-  .nav-search {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-  }
-
   .header-controls {
     --home-index-height: 40px;
     --home-index-radius: 12px;
@@ -909,191 +758,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .intro-panel span {
     color: var(--muted);
     font-size: 12px;
-  }
-
-  .search-panel {
-    position: absolute;
-    top: calc(100% + 10px);
-    left: 50%;
-    display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr);
-    width: min(520px, calc(100vw - 32px));
-    max-height: min(680px, calc(100vh - 110px));
-    padding: 18px;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    background: var(--surface);
-    box-shadow: 0 24px 70px color-mix(in srgb, var(--ink) 14%, transparent);
-    opacity: 0;
-    pointer-events: none;
-    transform: translate(-50%, -10px) scale(0.985);
-    transition: opacity 0.22s ease, transform 0.22s ease;
-  }
-
-  .search-panel.open {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateX(-50%);
-  }
-
-  .search-panel-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-  }
-
-  .search-panel-head label {
-    font-size: 15px;
-    font-weight: 700;
-  }
-
-  .search-panel-head button {
-    border: 0;
-    background: none;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 12px;
-  }
-
-  .search-panel input {
-    width: 100%;
-    height: 46px;
-    padding: 0 14px;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    outline: 0;
-    background: var(--page);
-    color: var(--ink);
-  }
-
-  .search-panel input:focus {
-    border-color: var(--blue);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 14%, transparent);
-  }
-
-  .search-results {
-    display: grid;
-    gap: 4px;
-    min-height: 0;
-    margin-top: 12px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-
-  .search-results :global(.search-section) {
-    display: grid;
-    gap: 4px;
-  }
-
-  .search-results :global(.search-section + .search-section) {
-    margin-top: 8px;
-    padding-top: 12px;
-    border-top: 1px solid var(--line);
-  }
-
-  .search-results :global(.search-section-head) {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 2px 12px 6px;
-    color: var(--muted);
-    font-size: 12px;
-  }
-
-  .search-results :global(.search-section-head strong) {
-    color: var(--ink);
-    font-size: 13px;
-  }
-
-  .search-results :global(.search-match-head) {
-    margin-bottom: 2px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .search-results :global(.search-filters) {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-    padding: 0 12px 6px;
-  }
-
-  .search-results :global(.search-filters button) {
-    padding: 6px 10px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: var(--page);
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 12px;
-  }
-
-  .search-results :global(.search-filters button:hover),
-  .search-results :global(.search-filters button:focus-visible) {
-    border-color: var(--blue);
-    color: var(--blue);
-    outline: 0;
-  }
-
-  .search-results :global(a) {
-    display: grid;
-    gap: 2px;
-    padding: 11px 12px;
-    border-radius: 11px;
-  }
-
-  .search-results :global(a:hover) {
-    background: var(--surface-soft);
-  }
-
-  .search-results :global(span) {
-    color: var(--blue);
-    font-size: 11px;
-    font-weight: 700;
-  }
-
-  .search-results :global(strong) {
-    font-size: 14px;
-  }
-
-  .search-results :global(small) {
-    overflow: hidden;
-    color: var(--muted);
-    font-size: 12px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .search-results :global(.search-section-head span) {
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 400;
-  }
-
-  .search-results :global(.search-all) {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 8px;
-    padding: 12px;
-    border-top: 1px solid var(--line);
-    color: var(--blue);
-    font-size: 13px;
-    font-weight: 700;
-  }
-
-  .search-results :global(.search-all span) {
-    color: inherit;
-    font-size: inherit;
-    font-weight: inherit;
-  }
-
-  .search-results :global(.search-empty) {
-    padding: 22px;
-    color: var(--muted);
-    text-align: center;
   }
 
   main {
@@ -2056,24 +1720,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
       display: flex;
     }
 
-    .nav-search {
-      position: static;
-    }
-
-    .search-panel {
-      position: fixed;
-      top: 86px;
-      right: 16px;
-      left: 16px;
-      width: auto;
-      max-height: calc(100vh - 102px);
-      transform: translateY(-10px) scale(0.985);
-    }
-
-    .search-panel.open {
-      transform: none;
-    }
-
     .menu-toggle {
       display: inline-flex;
       justify-self: end;
@@ -2125,11 +1771,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     .site-header {
       min-height: 66px;
       padding: 0 18px;
-    }
-
-    .search-panel {
-      top: 74px;
-      max-height: calc(100vh - 90px);
     }
 
     .brand {

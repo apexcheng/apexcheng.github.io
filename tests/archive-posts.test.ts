@@ -26,7 +26,7 @@ describe('article archiving', () => {
       'src/pages/series/[series].astro',
       'src/pages/rss.xml.ts',
       'src/pages/sitemap.xml.ts',
-      'src/components/SiteHeader.astro',
+      'src/components/SiteSearch.astro',
     ];
     for (const path of files) {
       expect(read(path), path).toContain('!post.data.draft && !post.data.private && !post.data.archived');

@@ -27,15 +27,17 @@ describe('shared site shell', () => {
   });
 
   it('keeps search data public and static, with a labelled modal and an explicit close control', () => {
-    expect(header).toContain("getCollection('posts')");
-    expect(header).toContain('!post.data.draft && !post.data.private');
-    expect(header).toContain('projects.map((project)');
-    expect(header).toContain('<dialog class="site-search"');
-    expect(header).toContain('aria-labelledby="search-title"');
-    expect(header).toContain('data-search-close');
-    expect(header).toContain('role="status" aria-live="polite"');
-    expect(header).not.toContain('fetch(');
-    expect(shellCss).toContain('overscroll-behavior: contain');
+    const search = readFileSync('src/components/SiteSearch.astro', 'utf8');
+    expect(header).toContain('<SiteSearch />');
+    expect(search).toContain("getCollection('posts')");
+    expect(search).toContain('!post.data.draft && !post.data.private');
+    expect(search).toContain('projects.map((project)');
+    expect(search).toContain('<dialog class="site-search"');
+    expect(search).toContain('aria-labelledby="search-title"');
+    expect(search).toContain('data-search-close');
+    expect(search).toContain('role="status" aria-live="polite"');
+    expect(search).not.toContain('fetch(');
+    expect(readFileSync('src/styles/site-search.css', 'utf8')).toContain('overscroll-behavior: contain');
   });
 
   it('keeps intro entrypoints and the original first-visit policy', () => {

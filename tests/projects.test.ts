@@ -50,10 +50,12 @@ describe('published project case studies', () => {
     expect(home).toContain('throw new Error');
     expect(home).toContain('withBase(projectPath(featuredProject))');
     expect(home).not.toContain('projects[0]');
-    expect(header).toContain('href: withBase(projectPath(project))');
-    expect(header).toContain('...(project.searchKeywords ?? [])');
+    const search = readFileSync('src/components/SiteSearch.astro', 'utf8');
+    expect(header).toContain('<SiteSearch />');
+    expect(search).toContain('href: withBase(projectPath(project))');
+    expect(search).toContain('...(project.searchKeywords ?? [])');
     expect(getProject('inventory-rpa')?.searchKeywords).toContain('库存补货');
-    expect(header).not.toContain("project.url ?? withBase('/projects/')");
+    expect(search).not.toContain("project.url ?? withBase('/projects/')");
   });
 
   it('provides accessible, factual case layouts without internal addresses or invented product screenshots', () => {

@@ -2,6 +2,7 @@
 import { ClipboardCopy, Search } from '@lucide/astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import { orderedPromptEntries, promptCategories } from '../data/prompts';
+import { withBase } from '../utils/paths';
 const categoryCounts = promptCategories.map((category) => ({
   category,
   count: orderedPromptEntries.filter((entry) => entry.category === category).length,
@@ -71,6 +72,10 @@ const categoryCounts = promptCategories.map((category) => ({
           </article>
         ))}
         <div class="prompt-detail-empty" data-detail-empty hidden>没有匹配的提示词。请调整左侧搜索或分类。</div>
+        <div class="prompt-detail-empty" data-detail-unavailable hidden>
+          <p>这条提示词已下架或链接无效。</p>
+          <a href={withBase('/prompts/')}>查看全部提示词</a>
+        </div>
       </section>
     </div>
   </main>
@@ -84,16 +89,18 @@ const categoryCounts = promptCategories.map((category) => ({
   const resultCount = document.querySelector<HTMLElement>('[data-visible-prompt-count]');
   const emptyResults = document.querySelector<HTMLElement>('[data-no-results]');
   const emptyDetail = document.querySelector<HTMLElement>('[data-detail-empty]');
+  const unavailableDetail = document.querySelector<HTMLElement>('[data-detail-unavailable]');
   const detail = document.querySelector<HTMLElement>('.prompt-detail');
   const validCategories = categoryButtons.map((button) => button.dataset.promptCategory ?? '');
   let category = 'all';
   let selectedId = entries[0]?.id ?? '';
+  let unavailable = false;
 
   function selectCategory(value: string) {
     category = validCategories.includes(value) ? value : 'all';
   }
 
-  function render() {
+  function render(keepLinkedEntry = false) {
     const words = (search?.value.trim().toLocaleLowerCase() ?? '').split(/\s+/).filter(Boolean);
     const visible = resultItems.filter((item) => {
       const inCategory = category === 'all' || item.dataset.category === category;
@@ -102,8 +109,9 @@ const categoryCounts = promptCategories.map((category) => ({
       item.hidden = !match;
       return match;
     });
-    const visibleIds = new Set(visible.map((item) => item.dataset.promptId));
-    if (!visibleIds.has(selectedId)) selectedId = visible[0]?.dataset.promptId ?? '';
+    if (!unavailable && !keepLinkedEntry && !visible.some((item) => item.dataset.promptId === selectedId)) {
+      selectedId = visible[0]?.dataset.promptId ?? '';
+    }
 
     entries.forEach((entry) => { entry.hidden = entry.id !== selectedId; });
     resultItems.forEach((item) => {
@@ -117,15 +125,19 @@ const categoryCounts = promptCategories.map((category) => ({
     });
     if (resultCount) resultCount.textContent = `${visible.length} 条结果`;
     if (emptyResults) emptyResults.hidden = visible.length > 0;
-    if (emptyDetail) emptyDetail.hidden = visible.length > 0;
+    if (emptyDetail) emptyDetail.hidden = unavailable || Boolean(selectedId);
+    if (unavailableDetail) unavailableDetail.hidden = !unavailable;
   }
 
   function updateUrl(mode: 'pushState' | 'replaceState') {
     const url = new URL(window.location.href);
     if (category === 'all') url.searchParams.delete('category');
     else url.searchParams.set('category', category);
+    const query = search?.value ?? '';
+    if (query) url.searchParams.set('q', query);
+    else url.searchParams.delete('q');
     url.hash = selectedId;
-    window.history[mode](null, '', url);
+    if (url.href !== window.location.href) window.history[mode](null, '', url);
   }
 
   function showDetail() {
@@ -133,18 +145,22 @@ const categoryCounts = promptCategories.map((category) => ({
   }
 
   function restoreFromUrl() {
-    const id = decodeURIComponent(window.location.hash.slice(1));
+    const hash = window.location.hash.slice(1);
+    let id = hash;
+    try { id = decodeURIComponent(hash); } catch { /* Malformed links use the unavailable state. */ }
     const target = entries.find((entry) => entry.id === id);
-    const requestedCategory = new URLSearchParams(window.location.search).get('category') ?? 'all';
-    selectCategory(target?.dataset.category ?? requestedCategory);
+    const params = new URLSearchParams(window.location.search);
+    selectCategory(params.get('category') ?? 'all');
     selectedId = target?.id ?? '';
-    if (search) search.value = '';
-    render();
+    unavailable = Boolean(hash && !target);
+    if (search) search.value = params.get('q') ?? '';
+    render(Boolean(target));
     if (target) requestAnimationFrame(showDetail);
   }
 
   categoryButtons.forEach((button) => {
     button.addEventListener('click', () => {
+      unavailable = false;
       selectCategory(button.dataset.promptCategory ?? 'all');
       render();
       updateUrl('replaceState');
@@ -154,6 +170,7 @@ const categoryCounts = promptCategories.map((category) => ({
 
   search?.addEventListener('input', () => {
     const previousId = selectedId;
+    unavailable = false;
     render();
     updateUrl('replaceState');
     if (previousId !== selectedId) showDetail();
@@ -161,7 +178,9 @@ const categoryCounts = promptCategories.map((category) => ({
 
   resultItems.forEach((item) => {
     item.querySelector<HTMLAnchorElement>('[data-prompt-index-link]')?.addEventListener('click', (event) => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       event.preventDefault();
+      unavailable = false;
       selectedId = item.dataset.promptId ?? '';
       render();
       updateUrl('pushState');
@@ -248,6 +267,8 @@ const categoryCounts = promptCategories.map((category) => ({
   .prompt-copy-feedback { margin: -4px 0 10px; color: var(--blue); font-size: 12px; }
   .prompt-copy-feedback:empty { display: none; }
   .prompt-detail-empty { margin-top: 20px; padding: 24px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 14px; }
+  .prompt-detail-empty p { margin: 0 0 8px; }
+  .prompt-detail-empty a { color: var(--blue); text-decoration: underline; }
   .prompt-entry[hidden], .prompt-index-links li[hidden], .prompt-no-results[hidden], .prompt-detail-empty[hidden] { display: none !important; }
   .prompt-index-links a:focus-visible, .prompt-copy:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   @media (max-width: 850px) {
