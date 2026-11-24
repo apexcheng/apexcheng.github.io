@@ -42,7 +42,7 @@ describe('shared site shell', () => {
 
   it('keeps intro entrypoints and the original first-visit policy', () => {
     expect(header).toContain('`/intro-motion-2/?return=${returnPath}`');
-    expect(header).toContain('`/intro-motion-3/?return=${returnPath}`');
+    expect(header).toContain('`/intro-motion-3/?return=${returnPath}&play=1`');
     expect(layout).toContain('<HomeIntroState pageKind={pageKind} />');
     expect(layout).toContain("standalone ? 'standalone' : active === 'home' ? 'home' : 'content'");
     for (const condition of ['if (pageKind === \'standalone\') return', 'if (!isHome) return', 'if (isInternalHomeNavigation) return', 'if (hasSeenIntro) return', 'if (returnPath === currentPath) return']) {

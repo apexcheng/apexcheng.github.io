@@ -1,196 +1,391 @@
 ---
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
-import orbitalStudy from '../../public/images/intro-motion-3/orbital-study.svg?raw';
-const artwork = orbitalStudy.replace('__BODY_URL__', withBase('/images/intro-motion-3/orbital-body.webp'));
+
+const scenes = [
+  { id: 'one', name: '地球晨昏线', lines: ['每一次记录，', '都从一束微光开始。'] },
+  { id: 'two', name: '向阳飞行', lines: ['迎着太阳的光，', '穿过昼夜与引力。'] },
+  { id: 'three', name: '内行星轨道', lines: ['行星依次经过，', '轨道在黑暗中显出形状。'] },
+  { id: 'four', name: '太阳系全景', lines: ['抵达之前，', '先看一眼完整的太阳系。'] },
+];
 ---
 <!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="description" content="天体序章 · 微光成章。一束光、一条轨道，和那些值得留下的探索。" />
+    <meta name="description" content="天体序章。从地球的晨昏线出发，穿过行星轨道，抵达黄撑的个人博客。" />
     <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#0b0d10" />
+    <meta name="theme-color" content="#04070e" />
     <link rel="icon" href={withBase('/favicon.png?v=5')} />
-    <link rel="stylesheet" href={withBase('/fonts/typography.css')} />
-    <link rel="preload" as="image" href={withBase('/images/intro-motion-3/orbital-body.webp')} />
     <title>天体序章 | {siteMeta.siteName}</title>
-    <script is:inline>
-      // Keep a usable static entrance even if the animation module never arrives.
-      (() => {
-        try {
-          if (matchMedia('(prefers-reduced-motion: reduce)').matches
-            || sessionStorage.getItem('celestial-prologue-seen-v2') === '1') return;
-          document.documentElement.dataset.introPreparing = '';
-          window.setTimeout(() => { delete document.documentElement.dataset.introPreparing; }, 1800);
-        } catch { /* Unavailable storage keeps the static entrance. */ }
-      })();
-    </script>
   </head>
   <body data-pagefind-ignore>
-    <main class="opening" data-cosmic-opening data-home-url={withBase('/')} data-state="still" aria-label="天体序章">
-      <div class="ambient" aria-hidden="true"></div>
-      <header class="masthead">
-        <a class="signature" href={withBase('/')} data-enter aria-label={`${siteMeta.siteName}，直接进入`}>
-          <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="8" /><ellipse cx="16" cy="16" rx="15" ry="5" transform="rotate(-32 16 16)" /></svg>
-          <span>{siteMeta.authorName}<span class="signature-divider">/</span>天体序章</span>
-        </a>
-        <div class="header-actions">
-          <button class="text-button" type="button" data-pause hidden>暂停</button>
-          <a class="skip" href={withBase('/')} data-enter data-skip><span>跳过序章</span><span aria-hidden="true">↗</span></a>
+    <main class="cosmic-opening" data-cosmic-opening data-home-url={withBase('/')}
+      data-texture-root={withBase('/images/intro-motion-3')} aria-label="天体序章">
+      <img class="scene-poster" src={withBase('/images/intro-motion-3/solar-system-poster.webp')}
+        alt="" width="1600" height="900" fetchpriority="high" />
+      <canvas class="cosmic-canvas" data-cosmic-canvas tabindex="-1" role="group"
+        aria-label="太阳系探索视图" aria-describedby="camera-help"></canvas>
+      <div class="cosmic-veil" aria-hidden="true"></div>
+      <div class="cinematic-frame" aria-hidden="true"></div>
+      <header class="sequence-head">
+        <div class="sequence-mark"><i aria-hidden="true"></i>天体序章</div>
+        <div class="sequence-controls">
+          <button class="quiet-button" type="button" data-reset-explore hidden>重置视角</button>
+          <button class="quiet-button" type="button" data-exit-explore hidden>返回序章</button>
+          <button class="quiet-button" type="button" data-pause hidden>暂停</button>
+          <a class="skip-button" href={withBase('/')} data-skip>进入博客 <span aria-hidden="true">↗</span></a>
         </div>
       </header>
-      <div class="observatory" data-observatory tabindex="-1" role="group" aria-label="星环观测台" aria-describedby="orbit-instructions">
-        <Fragment set:html={artwork} />
-      </div>
-      <div class="narrative" data-narrative>
-        <section class="verse verse-first" data-verse="0" aria-hidden="true">
-          <p class="eyebrow">天体序章 <span lang="en">/ CELESTIAL PROLOGUE</span></p>
-          <p class="verse-title">光，<br />让未知显影。</p>
-          <p class="verse-note">每一次探索，都从一点微光开始。</p>
+
+      {scenes.map((scene) => (
+        <section class={`prologue prologue-${scene.id}`} data-prologue={scene.id} aria-hidden="true">
+          <p class="scene-name">{scene.name}</p>
+          <p class="prologue-line">{scene.lines[0]}<br /><span>{scene.lines[1]}</span></p>
         </section>
-        <section class="verse" data-verse="1" aria-hidden="true">
-          <p class="eyebrow">天体序章 <span lang="en">/ CELESTIAL PROLOGUE</span></p>
-          <p class="verse-title">循着引力，<br />微光有了轨迹。</p>
-          <p class="verse-note">让散落的发现，慢慢连成自己的宇宙。</p>
-        </section>
-        <section class="finale" data-finale aria-labelledby="cosmic-title">
-          <p class="eyebrow">微光成章 <span lang="en">/ A PERSONAL UNIVERSE</span></p>
-          <h1 id="cosmic-title"><span>{siteMeta.authorName}的</span><strong>技术笔记</strong></h1>
-          <p class="finale-note">把探索的微光，留在这里。</p>
-          <a class="enter-button" href={withBase('/')} data-enter data-primary-enter>
-            <span>进入博客</span><svg viewBox="0 0 28 16" aria-hidden="true"><path d="M1 8h24M18 1l7 7-7 7" /></svg>
-          </a>
-          <p class="subjects">生活<span>·</span>实践<span>·</span>教程<span>·</span>视觉实验</p>
-        </section>
-      </div>
-      <div class="orbit-caption" aria-hidden="true"><span class="caption-rule"></span><span>微光成章</span><span lang="en">THE SHAPE OF AN ORBIT</span></div>
-      <section class="explore-panel" data-explore-panel hidden aria-label="星环探索控制">
-        <div><p class="eyebrow">循轨而行</p><p id="orbit-instructions">拖动转动星环 · 滚轮缩放<br /><span>键盘：方向键转动，＋ / − 缩放，Home 复位</span></p></div>
-        <div class="explore-controls">
-          <button class="text-button" type="button" data-zoom-out aria-label="拉远星环">−</button>
-          <button class="text-button" type="button" data-zoom-in aria-label="拉近星环">＋</button>
-          <button class="text-button" type="button" data-reset>复位</button>
-          <button class="return-button" type="button" data-exit-explore>返回序章 <span aria-hidden="true">↗</span></button>
+      ))}
+
+      <section class="finale" data-finale aria-labelledby="cosmic-title">
+        <h1 id="cosmic-title"><span>{siteMeta.authorName}的</span><strong>技术笔记</strong></h1>
+        <p class="finale-note">{siteMeta.siteDescription}。</p>
+        <div class="finale-actions">
+          <a class="enter-button" href={withBase('/')} data-enter>进入博客 <span aria-hidden="true">→</span></a>
+          <button class="explore-button" type="button" data-explore hidden>探索太阳系</button>
+          <button class="quiet-button" type="button" data-replay hidden>重播序章</button>
         </div>
       </section>
-      <footer class="sequence-foot">
-        <div class="chapter-list" aria-hidden="true"><span data-chapter="0">见光</span><i></i><span data-chapter="1">循轨</span><i></i><span data-chapter="2">成章</span></div>
-        <div class="timeline" data-timeline aria-hidden="true"><span data-time>7.6 秒</span><div class="progress-track"><i data-progress></i></div></div>
-        <div class="after-actions" data-after-actions hidden>
-          <button class="text-button" type="button" data-explore>转动星环 <span aria-hidden="true">↗</span></button>
-          <button class="text-button" type="button" data-replay>重播序章</button>
+
+      <div class="knowledge-constellations" data-knowledge-constellations aria-hidden="true">
+        <div class="knowledge-cluster knowledge-cluster-tutorial" data-knowledge-cluster>
+          <span class="knowledge-stars"><i></i><i></i><i></i></span>
+          <span class="knowledge-label">技术</span>
         </div>
-      </footer>
-      <p class="sr-only" data-status role="status" aria-live="polite">天体序章。可以直接进入博客。</p>
+        <div class="knowledge-cluster knowledge-cluster-practice" data-knowledge-cluster>
+          <span class="knowledge-stars"><i></i><i></i><i></i><i></i></span>
+          <span class="knowledge-label">经营与数据</span>
+        </div>
+        <div class="knowledge-cluster knowledge-cluster-life" data-knowledge-cluster>
+          <span class="knowledge-stars"><i></i><i></i><i></i></span>
+          <span class="knowledge-label">生活与思考</span>
+        </div>
+        <div class="knowledge-cluster knowledge-cluster-visual" data-knowledge-cluster>
+          <span class="knowledge-stars"><i></i><i></i><i></i><i></i></span>
+          <span class="knowledge-label">视觉实验室</span>
+        </div>
+      </div>
+
+      <div class="topic-signals" data-topic-signals aria-hidden="true">
+        <span class="topic-signal topic-signal-python" data-topic-signal><i></i>Python</span>
+        <span class="topic-signal topic-signal-agent" data-topic-signal><i></i>Agent</span>
+        <span class="topic-signal topic-signal-automation" data-topic-signal><i></i>自动化</span>
+        <span class="topic-signal topic-signal-data" data-topic-signal><i></i>数据处理</span>
+        <span class="topic-signal topic-signal-ecommerce" data-topic-signal><i></i>电商运营</span>
+        <span class="topic-signal topic-signal-visual" data-topic-signal><i></i>可视化表达</span>
+      </div>
+
+      <p class="loading-note" role="status">正在准备太阳系…</p>
+      <div class="sequence-foot" aria-hidden="true">
+        <span data-chapter>地球微光</span>
+        <div class="progress-track"><i data-progress></i></div>
+        <span class="time-left" data-time>12 秒</span>
+      </div>
+      <p class="interaction-hint" id="camera-help">
+        <span class="hint-watch">拖动可接管镜头</span>
+        <span class="hint-explore"><span class="desktop-help">拖动环视 · 滚轮缩放 · WASD 移动 · Q/E 升降 · Esc 返回</span><span class="touch-help">单指环视 · 双指平移或缩放</span></span>
+      </p>
+      <p class="sr-only" data-status role="status" aria-live="polite">天体序章，可以直接进入博客。</p>
     </main>
-    <div class="departure" aria-hidden="true"></div>
-    <style is:global>
-      :root { color-scheme: dark; font-family: Inter, "Noto Sans SC", "PingFang SC", sans-serif; font-synthesis: none; background: #0b0d10; color: #f0ece3; }
-      * { box-sizing: border-box; }
-      body { margin: 0; }
-      button, a { color: inherit; font: inherit; -webkit-tap-highlight-color: transparent; }
-      a { text-decoration: none; }
-      button { cursor: pointer; }
-      [hidden] { display: none !important; }
-      button:focus-visible, a:focus-visible, .observatory:focus-visible { outline: 2px solid #e6bc83; outline-offset: 6px; }
-      .opening { --edge: clamp(24px, 4.2vw, 72px); position: relative; isolation: isolate; height: 100svh; min-height: 640px; overflow: hidden; background: #0b0d10; }
-      .ambient { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 78% 39%, #b17b3f0c, transparent 48%), radial-gradient(ellipse at 50% 100%, #71889808, transparent 65%); }
-      .masthead { position: absolute; z-index: 5; top: max(26px, env(safe-area-inset-top)); left: max(var(--edge), env(safe-area-inset-left)); right: max(var(--edge), env(safe-area-inset-right)); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-      .signature { display: flex; align-items: center; min-height: 44px; gap: 14px; font-size: 12px; letter-spacing: .12em; color: #c7c2b8; }
-      .signature svg { width: 30px; height: 30px; fill: none; stroke: #d3b386; stroke-width: .8; }
-      .signature-divider { padding: 0 14px; color: #686763; }
-      .header-actions { display: flex; align-items: center; gap: 24px; }
-      .text-button, .skip { display: inline-flex; align-items: center; justify-content: center; gap: 14px; min-height: 44px; padding: 0 2px; border: 0; background: none; color: #b3b1ab; font-size: 12px; letter-spacing: .05em; transition: color .2s; }
-      .text-button:hover, .skip:hover { color: #f0d2a7; }
-      .text-button { min-width: 44px; }
-      .skip > span:last-child { font-size: 21px; line-height: 1; }
-      .observatory { position: absolute; left: 72%; top: 46%; width: min(78vw, 120vh); aspect-ratio: 1.3; transform: translate(-50%, -50%); }
-      .observatory > svg { display: block; width: 100%; height: 100%; overflow: visible; }
-      .narrative { position: absolute; z-index: 2; left: clamp(32px, 8.2vw, 144px); top: 34%; width: min(43%, 610px); }
-      .verse { position: absolute; inset: 0 auto auto 0; width: 100%; visibility: hidden; opacity: 0; }
-      .eyebrow { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; margin: 0 0 28px; color: #d6b788; font-size: 11px; font-weight: 500; letter-spacing: .2em; }
-      .eyebrow [lang] { color: #95938e; font-size: 9px; letter-spacing: .13em; }
-      .verse-title { margin: 0; font-size: clamp(32px, 4vw, 66px); font-weight: 400; letter-spacing: .025em; line-height: 1.4; }
-      .verse-note, .finale-note { margin: 25px 0 0; color: #aaa9a4; font-size: 14px; line-height: 1.8; letter-spacing: .08em; }
-      .finale h1 { margin: 0; font-weight: 400; }
-      .finale h1 > span { display: block; margin-bottom: 8px; font-size: clamp(17px, 1.7vw, 25px); font-weight: 400; letter-spacing: .14em; color: #c2c0b9; }
-      .finale h1 strong { display: block; font-size: clamp(44px, 5.7vw, 88px); line-height: 1.3; font-weight: 500; letter-spacing: .035em; }
-      .finale-note { margin-top: 17px; }
-      .enter-button { display: inline-flex; align-items: center; justify-content: space-between; min-width: 188px; min-height: 55px; margin-top: 32px; padding: 14px 0; border-bottom: 1px solid #bb9462; color: #e9d4b1; font-size: 14px; letter-spacing: .1em; transition: color .2s, border-color .2s; }
-      .enter-button svg { width: 28px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.25; transition: transform .25s; }
-      .enter-button:hover { color: #fff3df; border-color: #fff3df; }
-      .enter-button:hover svg { transform: translateX(5px); }
-      .subjects { display: flex; gap: 11px; margin: 24px 0 0; color: #93938d; font-size: 11px; letter-spacing: .08em; }
-      .subjects > span { color: #706554; }
-      .orbit-caption { position: absolute; right: 10%; top: 77%; display: flex; align-items: center; gap: 12px; color: #b0a392; font-size: 10px; letter-spacing: .2em; }
-      .orbit-caption [lang] { font-size: 8px; letter-spacing: .13em; color: #93918b; }
-      .caption-rule { width: 30px; height: 1px; background: #8b7350; }
-      .sequence-foot { display: flex; align-items: center; justify-content: space-between; gap: 24px; position: absolute; z-index: 4; bottom: max(28px, env(safe-area-inset-bottom)); left: max(var(--edge), env(safe-area-inset-left)); right: max(var(--edge), env(safe-area-inset-right)); min-height: 44px; }
-      .chapter-list { display: flex; gap: 12px; align-items: center; color: #8e8c86; font-size: 10px; letter-spacing: .12em; }
-      .chapter-list i { width: 24px; height: 1px; background: #50483a; }
-      .chapter-list span.is-current { color: #efd0a1; }
-      .timeline { display: flex; align-items: center; gap: 16px; color: #a7a199; font-size: 10px; font-variant-numeric: tabular-nums; }
-      .progress-track { width: 110px; height: 1px; background: #4a4338; }
-      .progress-track i { display: block; height: 100%; background: #e8c58f; transform: scaleX(0); transform-origin: left; }
-      .after-actions { display: flex; gap: 26px; }
-      .explore-panel { position: absolute; left: var(--edge); right: var(--edge); bottom: 115px; z-index: 3; display: flex; justify-content: space-between; align-items: end; gap: 24px; pointer-events: none; }
-      .explore-panel .eyebrow { margin-bottom: 12px; }
-      #orbit-instructions { margin: 0; color: #c2b7a6; font-size: 12px; line-height: 1.9; }
-      #orbit-instructions span { color: #99958d; font-size: 10px; }
-      .explore-controls { display: flex; align-items: center; gap: 18px; pointer-events: auto; }
-      .explore-controls .text-button { min-width: 44px; }
-      .return-button { min-height: 44px; border: 1px solid #7a6549; padding: 0 18px; background: #0b0d10dd; color: #e0c49c; font-size: 12px; }
-      .return-button span { padding-left: 12px; }
-      [data-state='exploring'] .observatory { left: 50%; top: 43%; cursor: grab; touch-action: none; }
-      [data-state='exploring'] .observatory.is-dragging { cursor: grabbing; }
-      [data-state='exploring'] .narrative, [data-state='exploring'] .orbit-caption { display: none; }
-      html[data-intro-preparing] .finale { opacity: 0; visibility: hidden; }
-      html[data-intro-preparing] .verse-first { opacity: 1; visibility: visible; }
-      html[data-intro-preparing] [data-orbit-camera] { transform: scale(1.85) rotate(-9deg); }
-      html[data-intro-preparing] [data-guides], html[data-intro-preparing] [data-trace], html[data-intro-preparing] [data-beacon] { opacity: 0; }
-      .departure { position: fixed; z-index: 20; inset: 0; pointer-events: none; opacity: 0; background: var(--destination-color, #eef5fb); transition: opacity 220ms ease; }
-      body.is-leaving .departure { opacity: 1; }
-      .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-      @media (min-width: 1600px) { .narrative { top: 36%; } }
-      @media (max-width: 720px) {
-        .opening { --edge: 24px; min-height: 720px; }
-        .masthead { top: max(16px, env(safe-area-inset-top)); }
-        .signature { gap: 9px; font-size: 11px; }
-        .signature-divider { padding: 0 9px; }
-        .signature svg { width: 25px; height: 25px; }
-        .header-actions { gap: 15px; }
-        .skip, .text-button { font-size: 11px; }
-        .observatory { width: 145vw; top: 28%; left: 52%; }
-        .narrative { left: 30px; right: 24px; top: 50%; width: auto; }
-        .eyebrow { gap: 8px; margin-bottom: 22px; font-size: 10px; }
-        .eyebrow [lang] { font-size: 8px; letter-spacing: .08em; }
-        .verse-title { font-size: clamp(30px, 8.7vw, 47px); }
-        .verse-note { max-width: 290px; margin-top: 20px; font-size: 12px; letter-spacing: .035em; }
-        .finale h1 > span { font-size: 18px; margin-bottom: 4px; }
-        .finale h1 strong { font-size: clamp(40px, 11vw, 62px); }
-        .finale-note { margin-top: 13px; font-size: 13px; }
-        .enter-button { min-width: 172px; min-height: 48px; margin-top: 15px; font-size: 13px; }
-        .subjects { font-size: 10px; margin-top: 18px; gap: 10px; }
-        .orbit-caption { display: none; }
-        .sequence-foot { bottom: max(17px, env(safe-area-inset-bottom)); gap: 14px; }
-        .chapter-list { font-size: 9px; gap: 8px; }
-        .chapter-list i { width: 12px; }
-        .progress-track { width: 55px; }
-        .after-actions { gap: 16px; }
-        [data-state='exploring'] .observatory { top: 35%; width: 150vw; }
-        .explore-panel { bottom: 105px; flex-direction: column; align-items: start; gap: 20px; }
-        .explore-controls { width: 100%; gap: 10px; }
-        .return-button { margin-left: auto; }
-      }
-      @media (max-width: 360px) { .signature-divider { padding: 0 5px; } .signature { gap: 6px; } .header-actions { gap: 10px; } .narrative { left: 24px; } .eyebrow { letter-spacing: .1em; } .after-actions { gap: 12px; } }
-      @media (min-width: 721px) and (max-height: 700px) { .opening { min-height: 560px; } .narrative { top: 27%; } .finale h1 strong { font-size: 54px; } .eyebrow { margin-bottom: 19px; } .enter-button { margin-top: 18px; } .orbit-caption { top: 81%; } }
-      @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } .enter-button:hover svg { transform: none; } }
-      @media (forced-colors: active) { .enter-button, .return-button { border-color: ButtonText; } .observatory, .ambient, .departure { display: none; } }
-    </style>
     <script>
-      import '../scripts/intro-motion-3.js';
+      import '../scripts/celestial-entry.js';
     </script>
   </body>
 </html>
+
+<style is:global>
+  :root {
+    color-scheme: dark;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #04070e;
+    color: #eff3f6;
+    font-synthesis: none;
+  }
+  * { box-sizing: border-box; }
+  body, p, h1 { margin: 0; }
+  button, a { color: inherit; font: inherit; }
+  button { cursor: pointer; }
+  a { text-decoration: none; }
+  [hidden] { display: none !important; }
+  :is(button, a, canvas):focus-visible { outline: 2px solid #ffd5a6; outline-offset: 4px; }
+  .cosmic-opening {
+    --edge: clamp(20px, 3.4vw, 66px);
+    --finale-shade: 1;
+    --cinema-frame: 0;
+    height: 100svh;
+    min-height: 470px;
+    overflow: hidden;
+    isolation: isolate;
+    position: relative;
+    background: #04070e;
+  }
+  .scene-poster, .cosmic-canvas, .cosmic-veil, .cinematic-frame {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+  }
+  .scene-poster { object-fit: cover; pointer-events: none; }
+  .cosmic-canvas { opacity: 0; touch-action: none; }
+  .is-scene-ready .cosmic-canvas { opacity: 1; cursor: grab; }
+  .is-scene-dragging .cosmic-canvas { cursor: grabbing; }
+  .cosmic-canvas:focus-visible { outline-offset: -4px; }
+  .cosmic-veil, .cinematic-frame { pointer-events: none; }
+  .cosmic-veil {
+    background: linear-gradient(180deg, #02050d55, transparent 18%, transparent 80%, #02050d70);
+    z-index: 2;
+  }
+  .cosmic-veil::after {
+    content: ""; position: absolute; inset: 0; opacity: var(--finale-shade);
+    background: linear-gradient(90deg, #02050edb, #02050ea6 25%, transparent 62%);
+  }
+  .cinematic-frame { z-index: 3; }
+  .cinematic-frame::before, .cinematic-frame::after {
+    content: ""; position: absolute; left: 0; right: 0; height: clamp(24px, 4.5vh, 52px);
+    background: #010207; transform: scaleY(var(--cinema-frame));
+  }
+  .cinematic-frame::before { top: 0; transform-origin: top; }
+  .cinematic-frame::after { bottom: 0; transform-origin: bottom; }
+  .is-exploring { --cinema-frame: 0 !important; --finale-shade: 0 !important; }
+  .sequence-head {
+    position: absolute; z-index: 20;
+    inset: max(16px, env(safe-area-inset-top)) max(var(--edge), env(safe-area-inset-right)) auto max(var(--edge), env(safe-area-inset-left));
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  .sequence-mark, .sequence-controls, .finale-actions { display: flex; align-items: center; }
+  .sequence-mark { gap: 12px; font-size: 14px; letter-spacing: .14em; color: #cfd9df; white-space: nowrap; }
+  .sequence-mark i { position: relative; width: 19px; height: 19px; border: 1px solid #dbb694; border-radius: 50%; }
+  .sequence-mark i::after {
+    content: ""; position: absolute; inset: 5px -5px; border: 1px solid #b89573;
+    border-radius: 50%; transform: rotate(-32deg);
+  }
+  .sequence-controls { gap: clamp(12px, 1.6vw, 28px); }
+  .quiet-button, .skip-button, .explore-button, .enter-button {
+    min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+    font-size: 14px; line-height: 1.4; border-radius: 4px;
+  }
+  .quiet-button { padding: 0 6px; background: transparent; border: 0; color: #bcc8d1; }
+  .quiet-button:hover { color: #fff; text-decoration: underline; text-underline-offset: 5px; }
+  .skip-button { padding: 0 15px; color: #f1f3f5; background: #090f19ba; border: 1px solid #68727f; }
+  .skip-button:hover, .explore-button:hover { background: #24313f; border-color: #ccd5da; }
+  .cosmic-opening:not(.is-playing):not(.is-loading):not(.is-exploring) .skip-button { display: none; }
+
+  .prologue, .finale { z-index: 10; position: absolute; left: clamp(28px, 7.5vw, 150px); }
+  .prologue {
+    top: 49%; opacity: 0; visibility: hidden; pointer-events: none; max-width: 48%;
+    text-shadow: 0 2px 14px #010309, 0 0 32px #010309b0;
+  }
+  .prologue-two, .prologue-four { left: auto; right: clamp(28px, 7.5vw, 150px); text-align: right; }
+  .prologue-three { top: 55%; }
+  .prologue-four { top: 41%; }
+  .scene-name { margin-bottom: 14px; font-size: 13px; font-weight: 500; letter-spacing: .12em; color: #dec4a3; }
+  .scene-name::before {
+    content: ""; display: inline-block; width: 24px; height: 1px; margin-right: 10px;
+    background: currentColor; vertical-align: middle;
+  }
+  .prologue-line { font-size: clamp(28px, 3.2vw, 56px); letter-spacing: -.03em; line-height: 1.4; }
+  .prologue-line span { font-size: .68em; color: #c3cdd6; }
+  .finale {
+    top: 52%; translate: 0 -40%; max-width: min(44vw, 630px);
+    text-shadow: 0 2px 24px #03070e8c;
+  }
+  .finale h1 { font-weight: 500; letter-spacing: -.035em; }
+  .finale h1 span { display: block; font-size: clamp(22px, 2.1vw, 38px); font-weight: 400; color: #c3cdd5; }
+  .finale h1 strong { display: block; font-size: clamp(56px, 5.5vw, 100px); font-weight: 600; line-height: 1.24; }
+  .finale-note { margin-top: 18px; font-size: clamp(15px, 1.1vw, 19px); line-height: 1.75; color: #c4ced7; }
+  .finale-actions { flex-wrap: wrap; gap: 10px 18px; margin-top: 28px; }
+  .enter-button, .explore-button { padding: 0 20px; min-height: 46px; text-shadow: none; }
+  .enter-button { gap: 24px; background: #f1e5d5; color: #1c1714; font-weight: 600; }
+  .enter-button span { font-size: 20px; line-height: 1; }
+  .enter-button:hover { background: #fff2dd; }
+  .explore-button { background: #0c1520b8; border: 1px solid #65747f; color: #e4ecf0; }
+  .is-exploring :is(.finale, .prologue) { visibility: hidden !important; pointer-events: none !important; }
+  .is-loading:not(.is-scene-ready) .finale { visibility: hidden; }
+  .loading-note, .sequence-foot, .interaction-hint {
+    position: absolute; z-index: 15; bottom: max(24px, env(safe-area-inset-bottom)); font-size: 13px;
+    color: #bec8d0; text-shadow: 0 1px 8px #02050d;
+  }
+  .loading-note, .sequence-foot { left: var(--edge); }
+  .loading-note, .sequence-foot, .interaction-hint { display: none; }
+  .is-loading:not(.is-scene-ready) .loading-note { display: block; }
+  .is-playing:not(.is-exploring) .sequence-foot { display: flex; gap: 14px; align-items: center; }
+  .progress-track { height: 2px; width: clamp(80px, 10vw, 180px); background: #53616d; }
+  .progress-track i { display: block; height: 100%; background: #edd1ae; transform: scaleX(0); transform-origin: left; }
+  .time-left { font-variant-numeric: tabular-nums; }
+  .interaction-hint { right: var(--edge); }
+  .is-playing:not(.is-paused) .interaction-hint, .is-exploring .interaction-hint { display: block; }
+  .hint-explore, .touch-help, .is-exploring .hint-watch { display: none; }
+  .is-exploring .hint-explore { display: inline; }
+  .sr-only { position: absolute; height: 1px; width: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .knowledge-constellations {
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: 8;
+  }
+
+  .knowledge-cluster {
+    --cluster-opacity: 0;
+    color: rgba(193, 226, 234, 0.72);
+    opacity: var(--cluster-opacity);
+    position: absolute;
+    transform: translate3d(0, 10px, 0) scale(0.98);
+    transition: color 320ms ease;
+    visibility: hidden;
+  }
+
+  .cosmic-opening.is-exploring .knowledge-cluster {
+    color: rgba(205, 236, 240, 0.84);
+  }
+
+  .knowledge-cluster-tutorial {
+    right: 21%;
+    top: 21%;
+  }
+
+  .knowledge-cluster-practice {
+    right: 8%;
+    top: 43%;
+  }
+
+  .knowledge-cluster-life {
+    bottom: 24%;
+    right: 29%;
+  }
+
+  .knowledge-cluster-visual {
+    bottom: 14%;
+    right: 9%;
+  }
+
+  .knowledge-label {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-shadow: 0 0 18px rgba(119, 213, 220, 0.2);
+    white-space: nowrap;
+  }
+
+  .knowledge-stars {
+    display: block;
+    height: 26px;
+    margin: 0 0 5px -6px;
+    position: relative;
+    width: 54px;
+  }
+
+  .knowledge-stars::before,
+  .knowledge-stars::after {
+    background: linear-gradient(90deg, rgba(128, 219, 220, 0.08), rgba(161, 218, 233, 0.42), rgba(128, 219, 220, 0.05));
+    content: "";
+    height: 1px;
+    left: 5px;
+    position: absolute;
+    transform-origin: left center;
+    width: 42px;
+  }
+
+  .knowledge-stars::before {
+    top: 9px;
+    transform: rotate(12deg);
+  }
+
+  .knowledge-stars::after {
+    top: 18px;
+    transform: rotate(-16deg) scaleX(0.82);
+  }
+
+  .knowledge-stars i {
+    background: #a7e6e2;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(121, 223, 218, 0.7);
+    height: 3px;
+    position: absolute;
+    width: 3px;
+    z-index: 1;
+  }
+
+  .knowledge-stars i:nth-child(1) { left: 3px; top: 7px; }
+  .knowledge-stars i:nth-child(2) { left: 23px; top: 11px; }
+  .knowledge-stars i:nth-child(3) { left: 43px; top: 3px; }
+  .knowledge-stars i:nth-child(4) { left: 35px; top: 22px; }
+
+  .topic-signals {
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: 7;
+  }
+
+  .topic-signal {
+    --signal-opacity: 0;
+    align-items: center;
+    color: rgba(172, 205, 218, 0.62);
+    display: inline-flex;
+    font-size: 8px;
+    font-weight: 500;
+    gap: 7px;
+    letter-spacing: 0.17em;
+    opacity: var(--signal-opacity);
+    position: absolute;
+    text-shadow: 0 0 14px rgba(103, 178, 200, 0.16);
+    transition: color 280ms ease, filter 280ms ease;
+    visibility: hidden;
+    white-space: nowrap;
+  }
+
+  .topic-signal i {
+    background: rgba(134, 214, 225, 0.84);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(97, 199, 213, 0.52);
+    height: 2px;
+    width: 2px;
+  }
+
+  .cosmic-opening.is-exploring .topic-signal {
+    color: rgba(194, 225, 231, 0.78);
+    filter: brightness(1.15);
+  }
+
+  .topic-signal-python { left: 47%; top: 18%; }
+  .topic-signal-agent { left: 60%; top: 30%; }
+  .topic-signal-automation { left: 45%; top: 43%; }
+  .topic-signal-data { left: 67%; top: 56%; }
+  .topic-signal-ecommerce { left: 53%; top: 70%; }
+  .topic-signal-visual { left: 72%; top: 80%; }
+  .topic-signals { display: none; }
+  .is-exploring .topic-signals { display: block; }
+  @media (max-width: 720px) {
+    .sequence-mark { font-size: 12px; gap: 8px; }
+    .sequence-controls { gap: 8px; }
+    .quiet-button, .skip-button { font-size: 13px; }
+    .skip-button { padding: 0 10px; }
+    .scene-poster { object-position: 60% center; }
+    .cosmic-veil::after { background: linear-gradient(0deg, #02050ee6, #02050e80 38%, transparent 69%); }
+    .prologue, .finale { left: var(--edge); right: var(--edge); max-width: none; }
+    .prologue { top: 56%; }
+    .prologue-two, .prologue-four { text-align: right; }
+    .finale { top: auto; bottom: 12%; translate: 0 0; }
+    .finale-actions { margin-top: 20px; gap: 6px 12px; }
+    .enter-button, .explore-button { padding: 0 14px; }
+    .finale h1 strong { font-size: clamp(46px, 11vw, 72px); }
+    .knowledge-constellations, .topic-signals { display: none !important; }
+    .is-playing:not(.is-exploring) .interaction-hint { display: none; }
+    .is-exploring .interaction-hint { left: var(--edge); }
+  }
+  @media (pointer: coarse) {
+    .desktop-help { display: none; }
+    .touch-help { display: inline; }
+  }
+  @media (max-height: 480px) {
+    .cosmic-opening { min-height: 320px; }
+    .finale { top: 34%; bottom: auto; translate: 0 0; max-width: 70%; }
+    .finale h1 strong { font-size: 42px; }
+    .finale-note, .finale-actions { margin-top: 8px; }
+  }
+</style>

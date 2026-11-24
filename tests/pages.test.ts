@@ -51,7 +51,8 @@ describe('front page structure', () => {
     expect(exhibitionHomeSource).toContain('<HomeIntroState pageKind="standalone" />');
     expect(paperHomeSource).toContain("const introReturn = encodeURIComponent(withBase('/'))");
     expect(paperHomeSource).toContain('`/intro-motion-2/?return=${introReturn}`');
-    expect(paperHomeSource).toContain('`/intro-motion-3/?return=${introReturn}`');
+    expect(paperHomeSource).toContain('`/intro-motion-3/?return=${introReturn}&play=1`');
+    expect(visualBlueHomeSource).toContain('`/intro-motion-3/?return=${introReturn}&play=1`');
     expect(visualBlueHomeSource).toContain('<HomeIntroState pageKind="home" />');
     expect(visualBlueHomeSource).toContain("const introReturn = encodeURIComponent(withBase('/home-v1/'))");
   });
