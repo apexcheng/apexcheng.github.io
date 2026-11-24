@@ -3,7 +3,6 @@ import { getCollection } from 'astro:content';
 import HomeIntroState from '../components/HomeIntroState.astro';
 import HomeIndexMenu from '../components/HomeIndexMenu.astro';
 import SiteSearch from '../components/SiteSearch.astro';
-import { categoryMetaList } from '../data/categories';
 import { seriesMetaList } from '../data/series';
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
@@ -12,8 +11,8 @@ const posts = (await getCollection('posts'))
   .filter((post) => !post.data.draft && !post.data.private && !post.data.archived)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-const latestPosts = posts.filter((post) => post.data.category !== '视觉实验室').slice(0, 3);
-const archivePosts = posts.filter((post) => post.data.category !== '视觉实验室').slice(0, 6);
+const recentPosts = posts.filter((post) => post.data.category !== '视觉实验室').slice(0, 6);
+const latestPosts = recentPosts.slice(0, 3);
 const visualPosts = posts.filter((post) => post.data.category === '视觉实验室').slice(0, 3);
 
 const categoryDetails = [
@@ -112,15 +111,14 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
   >
     <header class="paper-header">
       <div class="header-inner">
-        <a class="paper-brand" href="#top" aria-label="返回方案二顶部">
+        <a class="paper-brand" href="#top" aria-label={`${siteMeta.siteName}，返回首页顶部`}>
           <span class="brand-mark">C</span>
           <strong>{siteMeta.siteName}</strong>
         </a>
 
         <nav class="paper-nav" aria-label="主导航">
-          <a class="active" href={withBase('/')} data-home-link>首页</a>
+          <a class="active" href={withBase('/')} aria-current="page" data-home-link>首页</a>
           <a href={withBase('/articles/')}>文章</a>
-          <a href={withBase('/series/')}>系列</a>
           <a href={withBase('/prompts/')}>提示词库</a>
           <a href={withBase('/projects/')}>项目</a>
           <button type="button" data-search-toggle aria-haspopup="dialog" aria-controls="site-search" aria-expanded="false">搜索</button>
@@ -129,7 +127,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
         </nav>
 
         <div class="header-actions">
-          <button class="header-button" type="button" data-theme-toggle aria-label="切换明暗模式">
+          <button class="header-button" type="button" data-theme-toggle aria-label="明暗切换，使用深色模式" aria-pressed="false">
             明暗
           </button>
           <div class="intro-picker" data-intro-picker>
@@ -314,13 +312,13 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
         <div class="section-heading" data-reveal>
           <div>
             <p class="hand-note">最近写下来的内容</p>
-            <h2>文章归档</h2>
+            <h2>最近发布</h2>
           </div>
           <a href={withBase('/articles/')}>浏览全部文章 <span aria-hidden="true">→</span></a>
         </div>
 
         <div class="archive-list">
-          {archivePosts.map((post, index) => (
+          {recentPosts.map((post, index) => (
             <a class="archive-row" href={withBase(`/articles/${post.slug}/`)} data-reveal>
               <span class="archive-no">{String(index + 1).padStart(2, '0')}</span>
               <div>
@@ -337,7 +335,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
 
       <section class="closing-section shell" data-reveal>
         <p>持续记录真实问题、判断过程和最后做法。</p>
-        <a href={withBase('/articles/')}>从最新一篇开始 <span aria-hidden="true">→</span></a>
+        {recentPosts[0] && <a href={withBase(`/articles/${recentPosts[0].slug}/`)}>从最新一篇开始 <span aria-hidden="true">→</span></a>}
       </section>
     </main>
 
@@ -368,8 +366,10 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
         }
 
         if (themeToggle) {
+          themeToggle.setAttribute('aria-pressed', String(root.dataset.paperTheme === 'night'));
           themeToggle.addEventListener('click', function () {
             setNight(root.dataset.paperTheme !== 'night');
+            themeToggle.setAttribute('aria-pressed', String(root.dataset.paperTheme === 'night'));
           });
         }
 
@@ -380,6 +380,9 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
         }
 
         if (introToggle) {
+          introPicker.addEventListener('focusout', function (event) {
+            if (!introPicker.contains(event.relatedTarget)) setIntroOpen(false);
+          });
           introToggle.addEventListener('click', function () {
             setIntroOpen(!introPicker.classList.contains('open'));
           });
@@ -391,7 +394,9 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
 
         document.addEventListener('site-search-open', function () { setIntroOpen(false); });
         document.addEventListener('keydown', function (event) {
-          if (event.key === 'Escape') setIntroOpen(false);
+          if (event.key !== 'Escape' || !introPicker.classList.contains('open')) return;
+          setIntroOpen(false);
+          introToggle.focus();
         });
 
         var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -633,6 +638,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
     display: grid;
     gap: 3px;
     min-width: 160px;
+    visibility: hidden;
     opacity: 0;
     padding: 7px;
     pointer-events: none;
@@ -644,6 +650,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
   }
 
   .intro-picker.open .intro-menu {
+    visibility: visible;
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);

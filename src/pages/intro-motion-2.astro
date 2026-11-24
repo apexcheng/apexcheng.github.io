@@ -125,8 +125,13 @@ import { withBase } from '../utils/paths';
 
       <noscript>
         <style>
-          .scene-cover {
-            display: none;
+          .scene-cover, .skip-control, [data-replay] {
+            display: none !important;
+          }
+
+          .end-actions {
+            visibility: visible !important;
+            pointer-events: auto !important;
           }
 
           .wordmark,
@@ -536,9 +541,12 @@ import { withBase } from '../utils/paths';
           background-color 220ms ease;
       }
 
+      .skip-control[hidden] {
+        display: none;
+      }
+
       .skip-control {
         gap: 13px;
-        opacity: 0;
         padding: 12px 0;
         position: absolute;
         right: clamp(24px, 4.8vw, 74px);
@@ -629,6 +637,7 @@ import { withBase } from '../utils/paths';
         bottom: clamp(55px, 7vh, 82px);
         display: flex;
         gap: 10px;
+        visibility: hidden;
         opacity: 0;
         pointer-events: none;
         position: absolute;
@@ -641,6 +650,7 @@ import { withBase } from '../utils/paths';
       }
 
       .end-actions.is-visible {
+        visibility: visible;
         opacity: 1;
         pointer-events: auto;
         transform: none;
@@ -832,6 +842,7 @@ import { withBase } from '../utils/paths';
         }
 
         .title-sheen,
+        .end-actions [data-replay],
         .skip-control {
           display: none;
         }
@@ -953,6 +964,7 @@ import { withBase } from '../utils/paths';
           canvas.height = Math.max(1, Math.round(viewportHeight * pixelRatio));
           canvas.style.width = viewportWidth + 'px';
           canvas.style.height = viewportHeight + 'px';
+          if (!context) return;
           context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
           var count = viewportWidth < 720 ? 48 : 96;
@@ -970,6 +982,7 @@ import { withBase } from '../utils/paths';
         }
 
         function drawFlow(now, visibility, release) {
+          if (!context) return;
           context.clearRect(0, 0, viewportWidth, viewportHeight);
           if (reducedMotion || visibility <= 0) return;
 
@@ -1112,7 +1125,6 @@ import { withBase } from '../utils/paths';
             (0.018 + (1 - settle) * 0.02).toFixed(4)
           );
 
-          skip.style.opacity = String(phase(p, 0.03, 0.13) * (1 - phase(p, 0.9, 1)));
           progress.style.transform = 'scaleX(' + p + ')';
           time.textContent = Math.max(0, Math.ceil((total * (1 - p)) / 1000)) + 's';
 
@@ -1131,8 +1143,10 @@ import { withBase } from '../utils/paths';
           finishing = true;
           window.cancelAnimationFrame(frameId);
           render(1, performance.now());
+          var wasSkipping = document.activeElement === skip;
           skip.hidden = true;
           endActions.classList.add('is-visible');
+          if (wasSkipping) enter.focus();
           setStage('液态字场播放完毕，可以重新播放或进入博客');
         }
 
@@ -1151,7 +1165,9 @@ import { withBase } from '../utils/paths';
         function restart() {
           finishing = false;
           skip.hidden = false;
+          var wasReplaying = endActions.contains(document.activeElement);
           endActions.classList.remove('is-visible');
+          if (wasReplaying) skip.focus();
           pointerX = 0;
           pointerY = 0;
           start = performance.now();
@@ -1172,7 +1188,7 @@ import { withBase } from '../utils/paths';
             restart();
           }
 
-          if (event.key === 'Enter' && finishing) {
+          if (event.key === 'Enter' && finishing && !event.target.closest('button, a')) {
             rememberReturn();
             window.location.href = returnUrl;
           }

@@ -122,6 +122,7 @@ const homeOptions = [
 
     document.addEventListener('keydown', function (event) {
       if (event.key !== 'Escape' || !menu.classList.contains('open')) return;
+      event.preventDefault();
       setOpen(false, false);
       toggle.focus();
     });
@@ -178,6 +179,7 @@ const homeOptions = [
     background: var(--home-index-panel-bg, var(--surface, var(--paper, #fff)));
     box-shadow: 0 22px 60px rgba(15, 23, 42, 0.18);
     color: var(--home-index-text, var(--ink, #172033));
+    visibility: hidden;
     opacity: 0;
     pointer-events: none;
     transform: translateY(-6px) scale(0.98);
@@ -185,6 +187,7 @@ const homeOptions = [
   }
 
   .home-index-menu.open .home-index-panel {
+    visibility: visible;
     opacity: 1;
     pointer-events: auto;
     transform: none;

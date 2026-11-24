@@ -32,6 +32,7 @@ const posts = (await getCollection('posts'))
 const latestPosts = posts.filter((post) => post.data.category !== '视觉实验室').slice(0, 4);
 const visualPosts = posts.filter((post) => post.data.category === '视觉实验室').slice(0, 3);
 
+const publicSeriesCount = new Set(posts.map((post) => post.data.series).filter(Boolean)).size;
 const seriesOrder = ['excel-functions', 'yingdao-agent-development', 'personal-blog'];
 const seriesNotes = {
   'excel-functions': '从函数知识地图到真实表格，把抽象语法变成可以观察的数据路径。',
@@ -90,51 +91,52 @@ const introReturn = encodeURIComponent(withBase('/home-v1/'));
   </head>
   <body data-pagefind-ignore>
     <header class="site-header" data-header>
-      <a class="brand" href={withBase('/')} aria-label={`${siteMeta.siteName} 首页`} data-home-link>
+      <a class="brand" href={withBase('/home-v1/')} aria-label={`${siteMeta.siteName} 首页`} data-home-link>
         <span class="brand-mark">C</span>
         <span>{siteMeta.siteName}</span>
       </a>
 
-      <button class="menu-toggle" type="button" aria-expanded="false" data-menu-toggle>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="blue-header-panel" data-menu-toggle>
         菜单
       </button>
 
-      <nav class="site-nav" aria-label="主导航" data-site-nav>
-        <a class="active" href={withBase('/')} data-home-link>首页</a>
-        <a href={withBase('/articles/')}>文章</a>
-        <a href={withBase('/series/')}>系列</a>
-        <a href={withBase('/prompts/')}>提示词库</a>
-        <a href={withBase('/projects/')}>项目</a>
-        <button type="button" data-search-toggle aria-haspopup="dialog" aria-controls="site-search" aria-expanded="false">
-          搜索
-          <Search size={16} stroke-width={1.9} />
-        </button>
-        <a href={withBase(siteMeta.rssPath)}>RSS</a>
-        <a href={withBase('/about/')}>关于我</a>
-      </nav>
-
-      <div class="header-controls">
-        <button type="button" data-theme-toggle aria-label="切换明暗模式">
-          <Sun size={16} stroke-width={1.9} />
-          明暗
-        </button>
-        <div class="intro-control" data-intro-control>
-          <button type="button" aria-expanded="false" data-intro-toggle>
-            <Workflow size={16} stroke-width={1.9} />
-            开屏
+      <div class="header-panel" id="blue-header-panel" data-header-panel>
+        <nav class="site-nav" aria-label="主导航">
+          <a class="active" href={withBase('/home-v1/')} aria-current="page" data-home-link>首页</a>
+          <a href={withBase('/articles/')}>文章</a>
+          <a href={withBase('/prompts/')}>提示词库</a>
+          <a href={withBase('/projects/')}>项目</a>
+          <button type="button" data-search-toggle aria-haspopup="dialog" aria-controls="site-search" aria-expanded="false">
+            搜索
+            <Search size={16} stroke-width={1.9} />
           </button>
-          <div class="intro-panel" data-intro-panel>
-            <a href={withBase(`/intro-motion-2/?return=${introReturn}`)}>
-              <strong>液态字场</strong>
-              <span>珠光文字与柔性流场</span>
-            </a>
-            <a href={withBase(`/intro-motion-3/?return=${introReturn}&play=1`)}>
-              <strong>天体序章</strong>
-              <span>从地球晨昏线飞向太阳系</span>
-            </a>
+          <a href={withBase(siteMeta.rssPath)}>RSS</a>
+          <a href={withBase('/about/')}>关于我</a>
+        </nav>
+
+        <div class="header-controls">
+          <button type="button" data-theme-toggle aria-label="明暗切换，使用深色模式" aria-pressed="false">
+            <Sun size={16} stroke-width={1.9} />
+            明暗
+          </button>
+          <div class="intro-control" data-intro-control>
+            <button type="button" aria-expanded="false" aria-controls="blue-intro-panel" data-intro-toggle>
+              <Workflow size={16} stroke-width={1.9} />
+              开屏
+            </button>
+            <div class="intro-panel" id="blue-intro-panel" data-intro-panel>
+              <a href={withBase(`/intro-motion-2/?return=${introReturn}`)}>
+                <strong>液态字场</strong>
+                <span>珠光文字与柔性流场</span>
+              </a>
+              <a href={withBase(`/intro-motion-3/?return=${introReturn}&play=1`)}>
+                <strong>天体序章</strong>
+                <span>从地球晨昏线飞向太阳系</span>
+              </a>
+            </div>
           </div>
+          <HomeIndexMenu current="visual-blue" />
         </div>
-        <HomeIndexMenu current="visual-blue" />
       </div>
 
     </header>
@@ -167,8 +169,8 @@ const introReturn = encodeURIComponent(withBase('/home-v1/'));
             </div>
             <div class="hero-stats" aria-label="站点统计">
               <span><strong>{posts.length}</strong>公开文章</span>
-              <span><strong>{featuredSeries.length}</strong>连载系列</span>
-              <span><strong>4</strong>长期主题</span>
+              <span><strong>{publicSeriesCount}</strong>连载系列</span>
+              <span><strong>{categoryMetaList.length}</strong>长期主题</span>
               <span><strong>持续</strong>记录更新</span>
             </div>
           </div>
@@ -199,7 +201,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
               <div class="panel-title">
                 <div class="panel-heading-inline">
                   <ChartNoAxesColumnIncreasing size={15} stroke-width={2} />
-                  <strong>今日数据速览 · Excel</strong>
+                  <strong>Excel 工作表示例</strong>
                 </div>
               </div>
               <table>
@@ -405,7 +407,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
         var root = document.documentElement;
         var themeToggle = document.querySelector('[data-theme-toggle]');
         var menuToggle = document.querySelector('[data-menu-toggle]');
-        var siteNav = document.querySelector('[data-site-nav]');
+        var headerPanel = document.querySelector('[data-header-panel]');
         var introControl = document.querySelector('[data-intro-control]');
         var introToggle = document.querySelector('[data-intro-toggle]');
 
@@ -429,9 +431,11 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
         }
 
         if (themeToggle) {
+          themeToggle.setAttribute('aria-pressed', String(root.dataset.theme === 'dark'));
           themeToggle.addEventListener('click', function () {
             var nextTheme = root.dataset.theme === 'dark' ? 'light' : 'dark';
             root.dataset.theme = nextTheme;
+            themeToggle.setAttribute('aria-pressed', String(nextTheme === 'dark'));
             try {
               localStorage.setItem('theme', nextTheme);
               localStorage.setItem('styleTheme', nextTheme === 'dark' ? 'classic' : 'clarity');
@@ -440,15 +444,19 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
           });
         }
 
-        if (menuToggle && siteNav) {
-          menuToggle.addEventListener('click', function () {
-            var open = !siteNav.classList.contains('open');
-            siteNav.classList.toggle('open', open);
-            menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-          });
+        function setMenuOpen(open) {
+          headerPanel.classList.toggle('open', open);
+          menuToggle.setAttribute('aria-expanded', String(open));
         }
 
+        menuToggle.addEventListener('click', function () {
+          setMenuOpen(!headerPanel.classList.contains('open'));
+        });
+
         if (introToggle) {
+          introControl.addEventListener('focusout', function (event) {
+            if (!introControl.contains(event.relatedTarget)) setIntroOpen(false);
+          });
           introToggle.addEventListener('click', function () {
             setIntroOpen(!introControl.classList.contains('open'));
           });
@@ -457,15 +465,18 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
         document.addEventListener('site-search-open', function () { setIntroOpen(false); });
         document.addEventListener('keydown', function (event) {
           if (event.key !== 'Escape' || event.defaultPrevented) return;
-          setIntroOpen(false);
-          if (siteNav && menuToggle) {
-            siteNav.classList.remove('open');
-            menuToggle.setAttribute('aria-expanded', 'false');
+          if (introControl.classList.contains('open')) {
+            setIntroOpen(false);
+            introToggle.focus();
+          } else if (headerPanel.classList.contains('open') && menuToggle.getClientRects().length) {
+            setMenuOpen(false);
+            menuToggle.focus();
           }
         });
 
         document.addEventListener('click', function (event) {
-          if (introControl && !introControl.contains(event.target)) setIntroOpen(false);
+          if (!introControl.contains(event.target)) setIntroOpen(false);
+          if (!headerPanel.contains(event.target) && !menuToggle.contains(event.target) && !event.target.closest('[data-site-search]')) setMenuOpen(false);
         });
 
         var reveals = document.querySelectorAll('[data-reveal]');
@@ -626,6 +637,10 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     font-weight: 700;
   }
 
+  .header-panel {
+    display: contents;
+  }
+
   .site-nav {
     display: flex;
     align-items: center;
@@ -728,6 +743,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     border-radius: 16px;
     background: var(--surface);
     box-shadow: 0 22px 60px color-mix(in srgb, var(--ink) 12%, transparent);
+    visibility: hidden;
     opacity: 0;
     pointer-events: none;
     transform: translateY(-7px) scale(0.98);
@@ -735,6 +751,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   }
 
   .intro-control.open .intro-panel {
+    visibility: visible;
     opacity: 1;
     pointer-events: auto;
     transform: none;
@@ -1700,15 +1717,13 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
       grid-template-columns: 1fr auto;
     }
 
-    .site-nav {
+    .header-panel {
       position: absolute;
       top: calc(100% + 8px);
       right: 24px;
       left: 24px;
       display: none;
-      flex-wrap: wrap;
-      justify-content: flex-start;
-      gap: 7px 22px;
+      gap: 12px;
       padding: 16px 20px;
       border: 1px solid var(--line);
       border-radius: 16px;
@@ -1716,8 +1731,14 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
       box-shadow: 0 20px 54px color-mix(in srgb, var(--ink) 13%, transparent);
     }
 
-    .site-nav.open {
-      display: flex;
+    .header-panel.open {
+      display: grid;
+    }
+
+    .site-nav {
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      gap: 7px 22px;
     }
 
     .menu-toggle {
@@ -1728,7 +1749,15 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     }
 
     .header-controls {
-      display: none;
+      justify-content: flex-end;
+      justify-self: stretch;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .intro-panel {
+      right: -58px;
+      width: min(260px, calc(100vw - 62px));
     }
 
     .hero-inner {
