@@ -1693,7 +1693,6 @@ html[data-theme='dark'] .report-dashboard {
   border-radius: var(--radius);
   margin: 22px 0;
   max-width: 100%;
-  overflow-x: auto;
   padding: 20px;
   width: fit-content;
 }
@@ -1703,15 +1702,31 @@ html[data-theme='dark'] .report-dashboard {
   margin-bottom: 14px;
 }
 
-.mermaid-card pre {
+.mermaid-scroll {
+  overflow-x: auto;
+}
+
+.mermaid-scroll:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.mermaid-scroll pre.mermaid {
   background: transparent;
   border: 0;
+  color: var(--ink);
   margin: 0;
+  min-width: 100%;
+  overflow: visible;
   padding: 0;
-  width: fit-content;
+  width: max-content;
 }
 
 .mermaid-card svg {
+  background: #f8fafc;
+  border-radius: 4px;
+  display: block;
+  margin-inline: auto;
   max-width: none;
 }
 
@@ -1719,9 +1734,10 @@ html[data-theme='dark'] .report-dashboard {
   width: 100%;
 }
 
-.mermaid-card--wide pre {
-  width: 100%;
-  min-width: 760px;
+.mermaid-card .mermaid-scroll-hint {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 8px 0 0;
 }
 
 .mermaid-caption {

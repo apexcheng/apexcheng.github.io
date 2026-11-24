@@ -11,7 +11,10 @@ const { title, caption, chart, wide = false } = Astro.props;
 
 <figure class:list={['mermaid-card', { 'mermaid-card--wide': wide }]}>
   {title && <figcaption class="mermaid-title">{title}</figcaption>}
-  <pre class="mermaid">{chart}</pre>
+  <div class="mermaid-scroll" role="group" aria-label={title || '图解'}>
+    <pre class="mermaid">{chart}</pre>
+  </div>
+  <p class="mermaid-scroll-hint" hidden>左右滚动查看完整图解</p>
   {caption && <p class="mermaid-caption">{caption}</p>}
 </figure>
 
@@ -21,6 +24,8 @@ const { title, caption, chart, wide = false } = Astro.props;
   mermaid.initialize({
     startOnLoad: true,
     theme: 'base',
+    flowchart: { useMaxWidth: false },
+    sequence: { useMaxWidth: false },
     themeVariables: {
       primaryColor: '#ffffff',
       primaryTextColor: '#111827',
@@ -29,5 +34,18 @@ const { title, caption, chart, wide = false } = Astro.props;
       secondaryColor: '#eef6ff',
       tertiaryColor: '#f8fafc',
     },
+  });
+
+  document.querySelectorAll<HTMLElement>('.mermaid-scroll').forEach((viewport) => {
+    const diagram = viewport.querySelector('pre')!;
+    const hint = viewport.nextElementSibling as HTMLElement;
+    const observer = new ResizeObserver(() => {
+      const overflows = viewport.scrollWidth > viewport.clientWidth + 1;
+      hint.hidden = !overflows;
+      if (overflows) viewport.tabIndex = 0;
+      else viewport.removeAttribute('tabindex');
+    });
+    observer.observe(viewport);
+    observer.observe(diagram);
   });
 </script>

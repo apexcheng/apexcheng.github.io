@@ -104,7 +104,7 @@ const yOf = (i: number) => 150 + i * 82;
     back?.addEventListener('click', () => {
       const mobile = root.querySelector<HTMLElement>(`.oauth-mobile-step[data-step="${current}"]`);
       const diagram = root.querySelector<HTMLElement>(`.oauth-sequence-step[data-step="${current}"]`);
-      const selected = mobile && getComputedStyle(mobile).display !== 'none' ? mobile : diagram;
+      const selected = mobile?.getClientRects().length ? mobile : diagram;
       selected?.focus({ preventScroll: true });
       selected?.scrollIntoView({ behavior: motion(), block: 'center' });
     });
