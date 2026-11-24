@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { orderedPromptEntries, promptCategories, promptEntries } from '../src/data/prompts';
 
 describe('prompt library', () => {
-  it('contains 19 reusable prompts with unique identifiers, practice cases and complete text', () => {
-    expect(promptEntries).toHaveLength(19);
-    expect(new Set(promptEntries.map((entry) => entry.id)).size).toBe(19);
+  it('contains 14 reusable prompts with unique identifiers, practice cases and complete text', () => {
+    expect(promptEntries).toHaveLength(14);
+    expect(new Set(promptEntries.map((entry) => entry.id)).size).toBe(14);
     for (const entry of promptEntries) {
       expect(entry.title.length).toBeGreaterThan(5);
       expect(entry.description.length).toBeGreaterThan(10);
@@ -14,14 +14,13 @@ describe('prompt library', () => {
     }
   });
 
-  it('assigns every prompt to an available category and includes the new frontend prompt', () => {
+  it('assigns every prompt to an available category', () => {
     expect(new Set(promptCategories).size).toBe(promptCategories.length);
     expect(promptCategories).toContain('前端');
     for (const entry of promptEntries) expect(promptCategories).toContain(entry.category);
     for (const category of promptCategories) {
       expect(promptEntries.some((entry) => entry.category === category)).toBe(true);
     }
-    expect(promptEntries.find((entry) => entry.id === 'frontend-visual-restraint-consistency')?.category).toBe('前端');
     expect(promptEntries.find((entry) => entry.id === 'product-structure-information-architecture-redesign')?.category).toBe('前端');
   });
 
