@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 const indexSource = readFileSync('src/pages/index.astro', 'utf8');
 const homeSource = readFileSync('src/pages/home-redesign-1.astro', 'utf8');
 const visualBlueHomeSource = readFileSync('src/pages/home-v1.astro', 'utf8');
+const homeDiscoverySource = readFileSync('src/components/HomeDiscovery.astro', 'utf8');
+const homeReadingSource = readFileSync('src/utils/home-reading.ts', 'utf8');
 const paperHomeSource = indexSource;
 const workbenchHomeSource = readFileSync('src/pages/home-redesign-3.astro', 'utf8');
 const exhibitionHomeSource = readFileSync('src/pages/home-redesign.astro', 'utf8');
@@ -22,22 +24,35 @@ describe('front page structure', () => {
   it('keeps paper notes as the default homepage and visual blue as the selectable alternative', () => {
     expect(indexSource).toContain('data-style-theme="visual-system" class="paper-page"');
     expect(indexSource).toContain('<title>纸张手记 | {siteMeta.siteName}</title>');
-    expect(indexSource).toContain('把真实问题，拆成');
+    expect(indexSource).toContain('把真实问题拆开');
     expect(indexSource).toContain("homeStyle === 'visual-blue'");
     expect(indexSource).toContain("data-visual-blue-home={withBase('/home-v1/')}");
     expect(visualBlueHomeSource).toContain('data-style-theme="clarity" class="design-one-page"');
     expect(visualBlueHomeSource).toContain('视觉晶蓝');
     expect(visualBlueHomeSource).toContain('<SiteHeader active="home" homePath="/home-v1/" />');
     expect(visualBlueHomeSource).toContain("withBase('/articles/')");
-    expect(visualBlueHomeSource).toContain("withBase('/projects/')");
+  });
+
+  it('leads with published reading and working discovery links on both homepages', () => {
+    expect(indexSource).toContain('<HomeDiscovery variant="paper" {recommended} {recent}>');
+    expect(visualBlueHomeSource).toContain('<HomeDiscovery variant="blue" {recommended} {recent}>');
+    expect(visualBlueHomeSource).not.toContain('Excel 工作表示例');
+    for (const path of ['/articles/', '/series/', '/projects/', '/prompts/']) {
+      expect(homeDiscoverySource).toContain(`href: '${path}'`);
+    }
+    expect(homeDiscoverySource).toContain('recent.map');
+    expect(homeDiscoverySource).toContain('formatPostDate(post.data.date)');
+    expect(homeReadingSource).toContain('reading.filter((post) => post.slug !== recommended?.slug)');
+    expect(homeReadingSource).toContain('recent: rest.slice(0, 3)');
+    expect(homeReadingSource).toContain('more: rest.slice(3, 7)');
   });
 
   it('keeps home project entry aligned with the projects page', () => {
     expect(homeSource).toContain("withBase('/projects/')");
     expect(homeSource).toContain('查看项目');
     expect(projectsSource).toContain('项目实践');
-    expect(projectsSource).toContain('moreProjects.map');
-    expect(projectsSource).toContain('ProjectVisual project={mainProject} compact');
+    expect(projectsSource).toContain('projects.map');
+    expect(projectsSource).toContain('data-project-preview');
     expect(homeSource).toContain('getProject(featuredProjectId)');
     expect(homeSource).toContain('withBase(projectPath(featuredProject))');
   });
@@ -114,7 +129,7 @@ describe('front page structure', () => {
       expect(page).toContain('<SiteHeader active="home"');
       expect(page).not.toContain('data-search-toggle');
     }
-    expect(searchSource).toContain('搜索文章和项目');
+    expect(searchSource).toContain('搜索站内内容');
     expect(searchSource).toContain("getCollection('posts')");
     expect(searchSource).toContain('withBase(projectPath(project))');
     expect(layoutSource).not.toContain('/guides/mdx-content/');

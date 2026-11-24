@@ -1,64 +1,42 @@
 ---
 import { getCollection } from 'astro:content';
+import HomeDiscovery from '../components/HomeDiscovery.astro';
 import HomeIntroState from '../components/HomeIntroState.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import { seriesMetaList } from '../data/series';
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
+import { selectHomeReading } from '../utils/home-reading';
 
 const posts = (await getCollection('posts'))
   .filter((post) => !post.data.draft && !post.data.private && !post.data.archived)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-const recentPosts = posts.filter((post) => post.data.category !== '视觉实验室').slice(0, 6);
-const latestPosts = recentPosts.slice(0, 3);
+const { recommended, recent, more } = selectHomeReading(posts);
 const visualPosts = posts.filter((post) => post.data.category === '视觉实验室').slice(0, 3);
 
-const categoryDetails = [
-  {
-    id: 'life',
-    name: '生活与思考',
-    accent: 'coral',
-    description: '记录生活判断与思考',
-    action: '阅读生活笔记',
-  },
-  {
-    id: 'practice',
-    name: '技术',
-    accent: 'cyan',
-    description: 'AI、编程、工具与技术实现',
-    action: '阅读技术文章',
-  },
-  {
-    id: 'tutorial',
-    name: '经营与数据',
-    accent: 'coral',
-    description: '经营分析、流程与数据方法',
-    action: '阅读经营文章',
-  },
-  {
-    id: 'lab',
-    name: '视觉实验室',
-    accent: 'cyan',
-    description: '图表、代码与页面的表达实验',
-    action: '进入实验室',
-  },
-].map((category) => ({
-  ...category,
-  href: withBase(`/articles/category/${encodeURIComponent(category.name)}/`),
-  count: posts.filter((post) => post.data.category === category.name).length,
+const topics = [
+  { name: '生活与思考', description: '日常判断、职场观察和生活实验' },
+  { name: '技术', description: 'AI、自动化、开发工具和系统架构' },
+  { name: '经营与数据', description: '电商经营、利润核算和数据分析' },
+  { name: '视觉实验室', description: '用图解、动效与互动讲清方法' },
+].map((topic) => ({
+  ...topic,
+  href: withBase(`/articles/category/${encodeURIComponent(topic.name)}/`),
+  count: posts.filter((post) => post.data.category === topic.name).length,
 }));
 
-const featuredSeries = seriesMetaList.map((series) => ({
-  ...series,
-  count: posts.filter((post) => post.data.series === series.id).length,
-  href: withBase(`/series/${series.id}/`),
-}));
+const featuredSeries = seriesMetaList
+  .map((series) => ({
+    ...series,
+    count: posts.filter((post) => post.data.series === series.id).length,
+    href: withBase(`/series/${series.id}/`),
+  }))
+  .filter((series) => series.count > 0)
+  .slice(0, 3);
 
 const formatDate = (date: Date) => date.toISOString().slice(0, 10);
 const paperTexture = withBase('/images/home-redesign-2/paper-texture.webp');
-const linedPaper = withBase('/images/home-redesign-2/lined-paper.webp');
-const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
 ---
 
 <!doctype html>
@@ -107,116 +85,34 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
   </head>
   <body
     data-pagefind-ignore
-    style={`--paper-texture: url("${paperTexture}"); --lined-paper: url("${linedPaper}"); --grid-paper: url("${gridPaper}");`}
+    style={`--paper-texture: url("${paperTexture}");`}
   >
     <a class="skip-link" href="#site-content">跳到正文</a>
     <SiteHeader active="home" />
 
     <main id="site-content" tabindex="-1">
       <section class="paper-hero shell" id="top">
-        <div class="hero-copy">
-          <p class="hand-note">记录生活判断，沉淀可复用的方法</p>
-          <h1>把真实问题，拆成<br /><span>看得懂、做得到</span>的方法。</h1>
-          <p class="hero-lead">
-            这里记录生活里的判断、真实项目中的技术实践，<br class="desktop-only" />以及不断整理完善的方法。
-          </p>
-          <div class="hero-actions">
-            <a class="primary-action" href={withBase('/articles/')}>开始阅读</a>
-            <a class="text-action" href={withBase('/series/')}>查看系列 <span aria-hidden="true">→</span></a>
+        <HomeDiscovery variant="paper" {recommended} {recent}>
+          <div class="hero-copy">
+            <p class="hand-note">黄撑的实践手记</p>
+            <h1>把真实问题拆开，<br /><span>把做法写清楚。</span></h1>
+            <p class="hero-lead">写下电商运营中的判断、自动化项目里的取舍，以及可以照着做的方法。</p>
           </div>
-        </div>
-
-        <aside class="recent-board" aria-label="最近在做">
-          <h2>最近在做</h2>
-          <div class="ink-stroke" aria-hidden="true"></div>
-          <div class="recent-list">
-            {latestPosts.map((post, index) => (
-              <a class="recent-item" href={withBase(`/articles/${post.slug}/`)}>
-                <span class:list={['recent-dot', index === 1 ? 'coral' : 'cyan']} aria-hidden="true"></span>
-                <div>
-                  <div class="recent-title-row">
-                    <h3>{post.data.title}</h3>
-                    <time datetime={formatDate(post.data.date)}>{formatDate(post.data.date)}</time>
-                  </div>
-                  <p>{post.data.description}</p>
-                </div>
-              </a>
-            ))}
-          </div>
-          <a class="small-link" href={withBase('/articles/')}>查看全部动态 <span aria-hidden="true">→</span></a>
-        </aside>
+        </HomeDiscovery>
       </section>
 
       <section class="direction-section shell" aria-labelledby="direction-title">
-        <div class="section-hand-label" id="direction-title">正在持续整理</div>
-        <div class="direction-board" data-reveal>
-          <article class="direction-card direction-life">
-            <div class="direction-heading">
-              <h2>生活与思考 <span>/</span></h2>
-              <p>记录生活判断与思考</p>
-            </div>
-            <div class="paper-visual lined-note" aria-hidden="true">
-              <span class="note-date">2026-07-18</span>
-              <p>把一天的注意力，<br />放在最重要的三件事上。</p>
-            </div>
-            <a href={categoryDetails[0].href}>{categoryDetails[0].action} <span aria-hidden="true">→</span></a>
-          </article>
-
-          <article class="direction-card direction-practice">
-            <div class="direction-heading">
-              <h2>技术 <span>/</span></h2>
-              <p>AI、编程、工具与技术实现</p>
-            </div>
-            <div class="code-sheet" aria-label="Agent 实践代码片段">
-              <pre><code><span class="line-no">1</span> <span class="code-blue">from</span> agent <span class="code-blue">import</span> run_agent
-<span class="line-no">2</span> <span class="code-blue">from</span> rpa <span class="code-blue">import</span> run_flow
-<span class="line-no">3</span> <span class="code-blue">from</span> notes <span class="code-blue">import</span> publish
-<span class="line-no">4</span>
-<span class="line-no">5</span> TODAY = [<span class="code-green">"pricing"</span>, <span class="code-green">"stock"</span>]
-<span class="line-no">6</span>
-<span class="line-no">7</span> <span class="code-blue">for</span> task <span class="code-blue">in</span> TODAY:
-<span class="line-no">8</span>     result = run_agent(task)
-<span class="line-no">9</span>     publish(run_flow(result))</code></pre>
-            </div>
-            <a href={categoryDetails[1].href}>{categoryDetails[1].action} <span aria-hidden="true">→</span></a>
-          </article>
-
-          <article class="direction-card direction-tutorial">
-            <div class="direction-heading">
-              <h2>经营与数据 <span>/</span></h2>
-              <p>经营分析、流程与数据方法</p>
-            </div>
-            <div class="paper-visual grid-note" aria-hidden="true">
-              <strong>工作流设计清单</strong>
-              <ol>
-                <li>明确目标与边界</li>
-                <li>输入 / 输出定义</li>
-                <li>分解任务与依赖</li>
-                <li>选择工具与顺序</li>
-                <li>验证与迭代</li>
-              </ol>
-            </div>
-            <a href={categoryDetails[2].href}>{categoryDetails[2].action} <span aria-hidden="true">→</span></a>
-          </article>
-
-          <article class="direction-card direction-lab">
-            <div class="direction-heading">
-              <h2>视觉实验室</h2>
-              <p>图表、代码与页面的表达实验</p>
-            </div>
-            <div class="sheet-preview" aria-label="表格与图表预览">
-              <div class="mini-table">
-                <div class="table-head"><span>主题</span><span>状态</span><span>进度</span></div>
-                <div><span>Agent 工作流</span><span>进行中</span><b>60%</b></div>
-                <div><span>内容自动化</span><span>设计中</span><b>45%</b></div>
-                <div><span>知识图谱卡片</span><span>设计中</span><b>30%</b></div>
-              </div>
-              <div class="mini-chart" aria-hidden="true">
-                <i style="--value: 38%"></i><i style="--value: 62%"></i><i style="--value: 82%"></i><i style="--value: 55%"></i>
-              </div>
-            </div>
-            <a href={categoryDetails[3].href}>{categoryDetails[3].action} <span aria-hidden="true">→</span></a>
-          </article>
+        <div class="section-heading">
+          <h2 id="direction-title">按主题浏览</h2>
+        </div>
+        <div class="direction-board">
+          {topics.map((topic) => (
+            <a class="direction-topic" href={topic.href}>
+              <h3>{topic.name} <span aria-hidden="true">↗</span></h3>
+              <p>{topic.description}</p>
+              <small>{topic.count} 篇</small>
+            </a>
+          ))}
         </div>
       </section>
 
@@ -251,7 +147,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
             <p class="hand-note cyan-note">把复杂关系，画到一眼能懂</p>
             <h2>最近的视觉实验</h2>
           </div>
-          <a href={categoryDetails[3].href}>进入视觉实验室 <span aria-hidden="true">→</span></a>
+          <a href={topics[3].href}>进入视觉实验室 <span aria-hidden="true">→</span></a>
         </div>
 
         <div class="lab-list">
@@ -276,13 +172,13 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
         <div class="section-heading" data-reveal>
           <div>
             <p class="hand-note">最近写下来的内容</p>
-            <h2>最近发布</h2>
+            <h2>更多文章</h2>
           </div>
           <a href={withBase('/articles/')}>浏览全部文章 <span aria-hidden="true">→</span></a>
         </div>
 
         <div class="archive-list">
-          {recentPosts.map((post, index) => (
+          {more.map((post, index) => (
             <a class="archive-row" href={withBase(`/articles/${post.slug}/`)} data-reveal>
               <span class="archive-no">{String(index + 1).padStart(2, '0')}</span>
               <div>
@@ -299,7 +195,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
 
       <section class="closing-section shell" data-reveal>
         <p>持续记录真实问题、判断过程和最后做法。</p>
-        {recentPosts[0] && <a href={withBase(`/articles/${recentPosts[0].slug}/`)}>从最新一篇开始 <span aria-hidden="true">→</span></a>}
+        <a href={withBase('/articles/')}>浏览文章库 <span aria-hidden="true">→</span></a>
       </section>
     </main>
 
@@ -430,15 +326,7 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
   }
 
   .paper-hero {
-    display: grid;
-    gap: clamp(48px, 6vw, 92px);
-    grid-template-columns: minmax(0, 1.62fr) minmax(360px, 0.86fr);
-    padding-bottom: 62px;
-    padding-top: 64px;
-  }
-
-  .hero-copy {
-    padding: 20px 0 0 8px;
+    padding-block: clamp(38px, 4.5vw, 72px);
   }
 
   .hand-note {
@@ -446,12 +334,12 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
     font-family: var(--hand);
     font-size: 20px;
     letter-spacing: 0.11em;
-    margin: 0 0 25px;
+    margin: 0 0 16px;
     transform: rotate(-1.2deg);
   }
 
   .hero-copy h1 {
-    font-size: clamp(55px, 5.25vw, 78px);
+    font-size: clamp(45px, 4.1vw, 68px);
     font-weight: 700;
     letter-spacing: -0.045em;
     line-height: 1.26;
@@ -479,372 +367,57 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
     color: var(--ink-soft);
     font-size: 19px;
     line-height: 1.85;
-    margin: 31px 0 28px;
+    margin: 21px 0 0;
   }
 
-  .hero-actions {
-    align-items: center;
-    display: flex;
-    gap: 34px;
-  }
-
-  .primary-action {
-    background: var(--blue);
-    border: 1px solid var(--blue);
-    border-radius: 6px;
-    box-shadow: 0 11px 25px rgba(6, 103, 232, 0.18);
-    color: var(--on-blue);
-    display: inline-flex;
-    font-size: 17px;
-    justify-content: center;
-    min-width: 146px;
-    padding: 15px 26px;
-    transition: box-shadow 0.24s ease, transform 0.24s ease;
-  }
-
-  .primary-action:hover {
-    box-shadow: 0 15px 30px rgba(6, 103, 232, 0.25);
-    transform: translateY(-2px);
-  }
-
-  .text-action,
-  .small-link,
-  .section-heading > a,
-  .direction-card > a {
+  .section-heading > a {
     color: var(--blue);
-    font-family: var(--serif);
-  }
-
-  .text-action span,
-  .small-link span,
-  .section-heading > a span,
-  .direction-card > a span {
-    display: inline-block;
-    transition: transform 0.2s ease;
-  }
-
-  .text-action:hover span,
-  .small-link:hover span,
-  .section-heading > a:hover span,
-  .direction-card > a:hover span {
-    transform: translateX(4px);
-  }
-
-  .recent-board {
-    border-left: 1px solid var(--line-strong);
-    padding: 8px 0 0 32px;
-  }
-
-  .recent-board h2 {
-    font-family: var(--hand);
-    font-size: 23px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    margin: 0;
-    transform: rotate(-1.1deg);
-  }
-
-  .ink-stroke {
-    background: var(--cyan);
-    height: 2px;
-    margin: 7px 0 11px;
-    opacity: 0.58;
-    transform: rotate(-1.3deg);
-    width: 106px;
-  }
-
-  .recent-item {
-    display: grid;
-    gap: 13px;
-    grid-template-columns: 9px minmax(0, 1fr);
-    padding: 17px 0 20px;
-  }
-
-  .recent-item + .recent-item {
-    border-top: 1px solid var(--line);
-  }
-
-  .recent-dot {
-    background: var(--cyan);
-    border-radius: 50%;
-    height: 8px;
-    margin-top: 9px;
-    width: 8px;
-  }
-
-  .recent-dot.coral {
-    background: var(--coral);
-  }
-
-  .recent-title-row {
-    align-items: start;
-    display: grid;
-    gap: 10px;
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .recent-title-row h3 {
-    font-size: 16px;
-    line-height: 1.55;
-    margin: 0;
-  }
-
-  .recent-title-row time {
-    color: var(--ink-soft);
-    font-family: var(--sans);
-    font-size: 11px;
-    padding-top: 4px;
-  }
-
-  .recent-item p {
-    color: var(--ink-soft);
-    display: -webkit-box;
-    font-size: 13px;
-    line-height: 1.65;
-    margin: 6px 0 0;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
-
-  .small-link {
-    display: inline-flex;
-    font-size: 14px;
-    margin: 4px 0 0 17px;
   }
 
   .direction-section {
-    padding-bottom: 105px;
-    position: relative;
+    padding-bottom: 60px;
   }
 
-  .section-hand-label {
-    display: inline-block;
-    font-family: var(--hand);
-    font-size: 22px;
-    letter-spacing: 0.1em;
-    margin: 0 0 -9px 36px;
-    padding: 0 8px 6px;
-    position: relative;
-    transform: rotate(-1.2deg);
-    z-index: 2;
-  }
-
-  .section-hand-label::after {
-    background: var(--cyan);
-    bottom: 0;
-    content: '';
-    height: 2px;
-    left: 0;
-    opacity: 0.62;
-    position: absolute;
-    transform: rotate(0.8deg);
-    width: 178px;
+  .direction-section .section-heading {
+    margin-bottom: 15px;
   }
 
   .direction-board {
-    background: color-mix(in srgb, var(--paper-soft) 88%, transparent);
-    border: 1px solid var(--line);
-    box-shadow: var(--shadow);
+    background: var(--paper-card);
+    border-block: 1px solid var(--line);
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    padding: 37px 25px 28px;
-    position: relative;
   }
 
-  .direction-board::before,
-  .direction-board::after {
-    background: color-mix(in srgb, var(--paper-soft) 80%, transparent);
-    border: 1px solid var(--line);
-    content: '';
-    inset: 10px -14px -10px 12px;
-    pointer-events: none;
-    position: absolute;
-    transform: rotate(0.35deg);
-    z-index: -1;
+  .direction-topic {
+    padding: 20px 22px;
   }
 
-  .direction-board::after {
-    inset: 18px 10px -16px -8px;
-    transform: rotate(-0.25deg);
-  }
-
-  .direction-card {
-    display: flex;
-    min-height: 380px;
-    flex-direction: column;
-    padding: 0 24px;
-  }
-
-  .direction-card + .direction-card {
+  .direction-topic + .direction-topic {
     border-left: 1px solid var(--line);
   }
 
-  .direction-heading h2 {
-    font-size: 23px;
-    margin: 0 0 5px;
-  }
-
-  .direction-heading h2 span {
-    color: var(--coral);
-    margin-left: 6px;
-  }
-
-  .direction-practice .direction-heading h2 span {
-    color: var(--cyan);
-  }
-
-  .direction-heading p {
-    color: var(--ink-soft);
-    font-size: 13px;
-    margin: 0;
-  }
-
-  .paper-visual,
-  .code-sheet,
-  .sheet-preview {
-    margin: 23px 0 20px;
-  }
-
-  .lined-note {
-    background-image: var(--lined-paper);
-    background-position: center;
-    background-size: cover;
-    color: #1e2734;
-    font-family: var(--hand);
-    min-height: 198px;
-    padding: 42px 34px 30px;
-    transform: rotate(-1.8deg);
-  }
-
-  .note-date {
-    display: block;
-    font-family: var(--sans);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    margin-bottom: 11px;
-  }
-
-  .lined-note p {
-    font-size: 17px;
-    line-height: 2.05;
-    margin: 0;
-  }
-
-  .code-sheet {
-    background: #111d2d;
-    border: 1px solid #273b53;
-    border-radius: 5px;
-    box-shadow: 0 8px 17px rgba(12, 24, 40, 0.18);
-    color: #e2e8f0;
-    min-height: 198px;
-    overflow: hidden;
-    padding: 16px 12px;
-    transform: rotate(0.3deg);
-  }
-
-  .code-sheet pre {
-    font-family: "SFMono-Regular", Consolas, monospace;
-    font-size: 10px;
-    line-height: 1.7;
-    margin: 0;
-    overflow: hidden;
-  }
-
-  .line-no {
-    color: #64748b;
-    display: inline-block;
-    margin-right: 9px;
-    text-align: right;
-    width: 13px;
-  }
-
-  .code-blue {
-    color: #7dd3fc;
-  }
-
-  .code-green {
-    color: #bef264;
-  }
-
-  .grid-note {
-    background-image: var(--grid-paper);
-    background-position: center;
-    background-size: cover;
-    color: #242832;
-    font-family: var(--hand);
-    min-height: 198px;
-    padding: 30px 35px;
-    transform: rotate(1.1deg);
-  }
-
-  .grid-note strong {
-    display: block;
-    font-size: 17px;
-    margin-bottom: 10px;
-  }
-
-  .grid-note ol {
-    font-size: 13px;
-    line-height: 1.75;
-    margin: 0;
-    padding-left: 20px;
-  }
-
-  .sheet-preview {
-    background: #fffdf8;
-    border: 1px solid #d8d4ca;
-    box-shadow: 0 8px 19px rgba(74, 57, 34, 0.08);
-    color: #263144;
-    min-height: 198px;
-    padding: 16px;
-    transform: rotate(-0.5deg);
-  }
-
-  .mini-table {
-    border: 1px solid #cfd5dc;
-    font-family: var(--sans);
-    font-size: 8px;
-  }
-
-  .mini-table > div {
-    display: grid;
-    grid-template-columns: 1.6fr 0.85fr 0.6fr;
-  }
-
-  .mini-table span,
-  .mini-table b {
-    border-right: 1px solid #d9dee4;
-    border-top: 1px solid #d9dee4;
-    font-weight: 500;
-    padding: 5px 4px;
-  }
-
-  .mini-table .table-head span {
-    background: #f1f4f7;
-    border-top: 0;
-    font-weight: 700;
-  }
-
-  .mini-chart {
-    align-items: end;
-    border-bottom: 1px solid #d7dce3;
+  .direction-topic h3 {
     display: flex;
-    gap: 11px;
-    height: 70px;
-    justify-content: center;
-    margin: 13px 8px 0;
+    font-size: 21px;
+    justify-content: space-between;
+    margin: 0 0 6px;
   }
 
-  .mini-chart i {
-    background: var(--cyan);
-    height: var(--value);
-    width: 15px;
+  .direction-topic h3 span,
+  .direction-topic:hover h3,
+  .direction-topic:focus-visible h3 {
+    color: var(--blue);
   }
 
-  .direction-card > a {
-    font-size: 14px;
-    margin-top: auto;
+  .direction-topic p,
+  .direction-topic small {
+    color: var(--ink-soft);
+    font: 400 13px/1.55 var(--sans);
+  }
+
+  .direction-topic p {
+    margin: 0 0 11px;
   }
 
   .series-section,
@@ -1174,35 +747,20 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
   }
 
   @media (max-width: 1120px) {
-    .paper-hero {
-      gap: 42px;
-      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
-    }
-
     .hero-copy h1 {
-      font-size: clamp(48px, 5.5vw, 64px);
+      font-size: clamp(40px, 4.6vw, 58px);
     }
 
     .direction-board {
-      gap: 0;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .direction-card {
-      min-height: 390px;
-      padding: 24px 34px;
-    }
-
-    .direction-card + .direction-card {
-      border-left: 0;
-    }
-
-    .direction-card:nth-child(even) {
-      border-left: 1px solid var(--line);
-    }
-
-    .direction-card:nth-child(n + 3) {
+    .direction-topic:nth-child(n + 3) {
       border-top: 1px solid var(--line);
+    }
+
+    .direction-topic:nth-child(odd) {
+      border-left: 0;
     }
 
     .lab-row {
@@ -1216,24 +774,8 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
       padding-right: 24px;
     }
 
-    .paper-hero {
-      grid-template-columns: 1fr;
-      padding-bottom: 72px;
-      padding-top: 43px;
-    }
-
-    .hero-copy {
-      padding-left: 0;
-    }
-
     .hero-copy h1 {
-      font-size: clamp(43px, 10.5vw, 62px);
-    }
-
-    .recent-board {
-      border-left: 0;
-      border-top: 1px solid var(--line-strong);
-      padding: 28px 0 0;
+      font-size: clamp(38px, 8vw, 60px);
     }
 
     .series-grid {
@@ -1291,44 +833,16 @@ const gridPaper = withBase('/images/home-redesign-2/grid-paper.webp');
       font-size: 16px;
     }
 
-    .desktop-only {
-      display: none;
-    }
-
-    .hero-actions {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .recent-title-row {
-      grid-template-columns: 1fr;
-    }
-
     .direction-section {
-      padding-bottom: 80px;
+      padding-bottom: 40px;
     }
 
-    .section-hand-label {
-      margin-left: 10px;
+    .direction-topic {
+      padding: 16px 12px;
     }
 
-    .direction-board {
-      grid-template-columns: 1fr;
-      padding: 25px 13px 15px;
-    }
-
-    .direction-card {
-      min-height: 370px;
-      padding: 27px 15px;
-    }
-
-    .direction-card:nth-child(even) {
-      border-left: 0;
-    }
-
-    .direction-card + .direction-card {
-      border-top: 1px solid var(--line);
+    .direction-topic h3 {
+      font-size: 18px;
     }
 
     .section-heading {

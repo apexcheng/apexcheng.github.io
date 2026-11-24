@@ -1,0 +1,246 @@
+---
+import { ArrowRight, BookOpen, Folder, Layers, Terminal } from '@lucide/astro';
+import type { CollectionEntry } from 'astro:content';
+import { formatPostDate } from '../utils/dates';
+import { withBase } from '../utils/paths';
+
+interface Props {
+  variant: 'paper' | 'blue';
+  recommended?: CollectionEntry<'posts'>;
+  recent: CollectionEntry<'posts'>[];
+}
+
+const { variant, recommended, recent } = Astro.props;
+const entries = [
+  { label: '浏览文章', href: '/articles/', icon: BookOpen },
+  { label: '专题系列', href: '/series/', icon: Layers },
+  { label: '项目案例', href: '/projects/', icon: Folder },
+  { label: '提示词库', href: '/prompts/', icon: Terminal },
+] as const;
+---
+
+<div class:list={['home-discovery', `home-discovery--${variant}`]} data-home-discovery>
+  <div class="discovery-intro">
+    <slot />
+    <nav class="discovery-nav" aria-label="内容入口">
+      {entries.map(({ label, href, icon: Icon }) => (
+        <a href={withBase(href)}><Icon size={17} aria-hidden="true" />{label}<ArrowRight size={16} aria-hidden="true" /></a>
+      ))}
+    </nav>
+  </div>
+
+  <div class="discovery-board" aria-label="推荐阅读和最近发布">
+    {recommended && (
+      <article class="discovery-feature">
+        <span class="discovery-label">推荐阅读</span>
+        <h2><a href={withBase(`/articles/${recommended.slug}/`)}>{recommended.data.title}</a></h2>
+        <p>{recommended.data.description}</p>
+        <div class="discovery-feature-meta">
+          <span>{recommended.data.category} · {recommended.data.minutes} 分钟</span>
+          <a href={withBase('/articles/?featured=1')}>更多精选 <ArrowRight size={15} aria-hidden="true" /></a>
+        </div>
+      </article>
+    )}
+
+    {recent.length > 0 && (
+      <section class="discovery-recent" aria-labelledby="home-recent-heading">
+        <h2 id="home-recent-heading">最近发布</h2>
+        <ul>
+          {recent.map((post) => (
+            <li>
+              <a href={withBase(`/articles/${post.slug}/`)}>
+                <span>{post.data.title}</span>
+                <time datetime={post.data.date.toISOString()}>{formatPostDate(post.data.date).slice(5)}</time>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </div>
+</div>
+
+<style>
+  .home-discovery {
+    align-items: center;
+    display: grid;
+    gap: clamp(32px, 5vw, 86px);
+    grid-template-columns: minmax(0, 1fr) minmax(406px, 1.03fr);
+  }
+
+  .discovery-intro,
+  .discovery-board {
+    min-width: 0;
+  }
+
+  .discovery-nav {
+    display: grid;
+    gap: 0 22px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 28px;
+    max-width: 400px;
+  }
+
+  .home-discovery a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .discovery-nav a {
+    align-items: center;
+    border-top: 1px solid var(--line);
+    display: flex;
+    font: 600 14px/1.5 var(--body-font);
+    gap: 10px;
+    min-height: 48px;
+  }
+
+  .discovery-nav svg:first-child,
+  .discovery-nav a:hover,
+  .discovery-nav a:focus-visible {
+    color: var(--blue);
+  }
+
+  .discovery-nav svg:last-child {
+    margin-inline-start: auto;
+  }
+
+  .discovery-board {
+    --board-line: var(--line);
+    --board-muted: var(--ink-soft, var(--muted));
+    background: var(--paper-card, var(--surface));
+    border: 1px solid var(--board-line);
+    border-radius: 4px 4px 12px 12px;
+    box-shadow: var(--shadow);
+    color: var(--ink);
+    font: 400 15px/1.55 var(--body-font);
+  }
+
+  .home-discovery--paper .discovery-board {
+    border-top: 3px solid var(--blue);
+  }
+
+  .home-discovery--blue {
+    gap: clamp(32px, 4vw, 64px);
+  }
+
+  .home-discovery--blue .discovery-board {
+    --board-line: rgba(173, 202, 255, .24);
+    --board-muted: #bdcfe9;
+    background: linear-gradient(145deg, #15284b, #0b172c 77%);
+    border-radius: 20px;
+    box-shadow: 0 24px 68px rgb(4 14 41 / .23);
+    color: #f7faff;
+  }
+
+  .discovery-feature,
+  .discovery-recent {
+    padding: 23px clamp(20px, 2.5vw, 38px);
+  }
+
+  .discovery-feature {
+    border-bottom: 1px solid var(--board-line);
+  }
+
+  .discovery-label,
+  .discovery-feature-meta {
+    font-size: 13px;
+  }
+
+  .discovery-label {
+    color: var(--blue);
+    font-weight: 650;
+  }
+
+  .home-discovery--blue .discovery-label {
+    color: #94d9fe;
+  }
+
+  .discovery-feature h2 {
+    font-size: clamp(23px, 1.85vw, 30px);
+    font-weight: 700;
+    line-height: 1.36;
+    margin: 10px 0;
+    text-wrap: pretty;
+  }
+
+  .home-discovery--paper .discovery-feature h2 {
+    font-family: var(--serif);
+  }
+
+  .discovery-feature p {
+    color: var(--board-muted);
+    margin: 0;
+  }
+
+  .discovery-feature-meta,
+  .discovery-feature-meta a,
+  .discovery-recent a {
+    align-items: baseline;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+  }
+
+  .discovery-feature-meta {
+    color: var(--board-muted);
+    margin-top: 16px;
+  }
+
+  .discovery-feature-meta a {
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .discovery-board a:hover,
+  .discovery-board a:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .home-discovery--blue .discovery-board a:focus-visible {
+    outline-color: #94d9fe;
+  }
+
+  .discovery-recent h2 {
+    font-size: 15px;
+    margin: 0 0 8px;
+  }
+
+  .discovery-recent ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .discovery-recent li + li {
+    border-top: 1px solid var(--board-line);
+  }
+
+  .discovery-recent a {
+    font-size: 14px;
+    padding-block: 9px;
+  }
+
+  .discovery-recent time {
+    color: var(--board-muted);
+    flex: none;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 900px) {
+    .home-discovery {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 490px) {
+    .discovery-feature-meta {
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+    }
+  }
+</style>

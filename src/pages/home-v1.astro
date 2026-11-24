@@ -2,18 +2,12 @@
 import { getCollection } from 'astro:content';
 import {
   ArrowRight,
-  Bot,
   BookOpen,
-  BrainCircuit,
-  ChartNoAxesColumnIncreasing,
-  CircleCheck,
   CodeXml,
   Coffee,
-  FileInput,
-  Folder,
   Image,
-  Workflow,
 } from '@lucide/astro';
+import HomeDiscovery from '../components/HomeDiscovery.astro';
 import HomeIntroState from '../components/HomeIntroState.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import { categoryMetaList } from '../data/categories';
@@ -21,15 +15,14 @@ import { projects } from '../data/projects';
 import { seriesMetaList } from '../data/series';
 import { siteMeta } from '../data/site';
 import { withBase } from '../utils/paths';
+import { selectHomeReading } from '../utils/home-reading';
 
 const posts = (await getCollection('posts'))
   .filter((post) => !post.data.draft && !post.data.private && !post.data.archived)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-const latestPosts = posts.filter((post) => post.data.category !== '视觉实验室').slice(0, 4);
+const { recommended, recent, more } = selectHomeReading(posts);
 const visualPosts = posts.filter((post) => post.data.category === '视觉实验室').slice(0, 3);
-
-const publicSeriesCount = new Set(posts.map((post) => post.data.series).filter(Boolean)).size;
 const seriesOrder = ['excel-functions', 'yingdao-agent-development', 'personal-blog'];
 const seriesNotes = {
   'excel-functions': '从函数知识地图到真实表格，把抽象语法变成可以观察的数据路径。',
@@ -92,106 +85,21 @@ const formatDate = (date: Date) =>
     <main id="site-content" tabindex="-1">
       <section class="hero" id="top">
         <div class="hero-inner">
-          <div class="hero-copy">
-            <div class="hero-kicker">
-              <span>你好，我是黄撑</span>
-              <time data-current-date data-date-offset="0">今日</time>
+          <HomeDiscovery variant="blue" {recommended} {recent}>
+            <div class="hero-copy">
+              <p class="hero-kicker">你好，我是黄撑</p>
+              <h1>把复杂技术，<span class="accent-text">做成用得上的方法。</span></h1>
+              <p class="hero-lead">在电商运营中找问题，用数据和自动化解决它，再把过程写下来。</p>
             </div>
-            <h1>
-              <span>把复杂技术，</span>
-              <span>做成看得懂、</span>
-              <span class="accent-text">用得上的体验。</span>
-            </h1>
-            <p class="hero-lead">
-              记录生活判断、项目实践、系统教程和视觉实验。
-            </p>
-            <div class="hero-actions">
-              <a class="button button-primary" href={withBase('/articles/')}>
-                开始阅读
-                <ArrowRight size={17} stroke-width={2} />
-              </a>
-              <a class="button button-secondary" href={withBase('/projects/')}>
-                <Folder size={17} stroke-width={1.9} />
-                查看项目
-              </a>
-            </div>
-            <div class="hero-stats" aria-label="站点统计">
-              <span><strong>{posts.length}</strong>公开文章</span>
-              <span><strong>{publicSeriesCount}</strong>连载系列</span>
-              <span><strong>{categoryMetaList.length}</strong>长期主题</span>
-              <span><strong>持续</strong>记录更新</span>
-            </div>
-          </div>
-
-          <div class="workbench" data-workbench aria-label="个人知识工作台示意">
-            <article class="code-window workbench-panel">
-              <div class="window-bar">
-                <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
-                <span>workbench.py</span>
-              </div>
-              <pre><code><span class="code-comment"># 记录生活判断、工具实践与系统学习</span>
-
-<span class="code-keyword">from</span> agent <span class="code-keyword">import</span> run_agent
-<span class="code-keyword">from</span> rpa <span class="code-keyword">import</span> run_flow
-<span class="code-keyword">from</span> notes <span class="code-keyword">import</span> publish
-
-TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"stock"</span>, <span class="code-string">"rev"</span>]
-
-<span class="code-keyword">def</span> <span class="code-function">workbench</span>():
-    <span class="code-keyword">for</span> task <span class="code-keyword">in</span> TODAY:
-        result = run_agent(task)
-        publish(run_flow(result))
-
-    <span class="code-keyword">return</span> <span class="code-string">"notes synced"</span></code></pre>
-            </article>
-
-            <article class="data-window workbench-panel">
-              <div class="panel-title">
-                <div class="panel-heading-inline">
-                  <ChartNoAxesColumnIncreasing size={15} stroke-width={2} />
-                  <strong>Excel 工作表示例</strong>
-                </div>
-              </div>
-              <table>
-                <thead>
-                  <tr><th>日期</th><th>主题</th><th>进度</th><th>状态</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td><time data-current-date data-date-offset="0">今日</time></td><td>pricing</td><td>80%</td><td>进行中</td></tr>
-                  <tr><td><time data-current-date data-date-offset="0">今日</time></td><td>stock</td><td>65%</td><td>进行中</td></tr>
-                  <tr><td><time data-current-date data-date-offset="-1">昨日</time></td><td>reviews</td><td>100%</td><td>已完成</td></tr>
-                  <tr><td><time data-current-date data-date-offset="-2">前日</time></td><td>tools</td><td>90%</td><td>已完成</td></tr>
-                </tbody>
-              </table>
-            </article>
-
-            <article class="flow-window workbench-panel">
-              <div class="panel-title">
-                <div class="panel-heading-inline">
-                  <Workflow size={15} stroke-width={2} />
-                  <strong>Agent 工作流</strong>
-                </div>
-              </div>
-              <ol>
-                <li><b><FileInput size={13} /></b><span>输入<small>主题 / 数据 / 文档</small></span><ArrowRight class="step-arrow" size={13} /></li>
-                <li><b><BrainCircuit size={13} /></b><span>理解<small>拆解与分析</small></span><ArrowRight class="step-arrow" size={13} /></li>
-                <li><b><Bot size={13} /></b><span>执行<small>Agent / RPA / AI</small></span><ArrowRight class="step-arrow" size={13} /></li>
-                <li><b><CircleCheck size={13} /></b><span>输出<small>记录 / 表格 / 文章</small></span></li>
-              </ol>
-              <p>把想法变成可复用的知识和工具</p>
-            </article>
-          </div>
+          </HomeDiscovery>
         </div>
       </section>
 
       <section class="content-section topics-section" id="topics">
         <div class="topics-heading" data-reveal>
-          <div>
-            <h2>从这些方向开始</h2>
-            <p>按长期内容主题组织，快速找到你关心的内容。</p>
-          </div>
+          <h2>按主题浏览</h2>
           <a href={withBase('/articles/')}>
-            查看全部主题
+            全部文章
             <ArrowRight size={15} stroke-width={2} />
           </a>
         </div>
@@ -303,16 +211,12 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
 
       <section class="content-section latest-section" id="latest">
         <div class="section-head" data-reveal>
-          <div>
-            <p class="section-label">最近更新</p>
-            <h2>近期发布，保持少量而清晰。</h2>
-          </div>
-          <p>优先展示刚刚完成和仍在持续修订的内容。</p>
+          <div><h2>更多文章</h2></div>
           <a href={withBase('/articles/')}>进入文章库</a>
         </div>
 
         <div class="latest-list">
-          {latestPosts.map((post, index) => (
+          {more.map((post, index) => (
             <a href={withBase(`/articles/${post.slug}/`)} data-reveal>
               <span class="latest-number">{String(index + 1).padStart(2, '0')}</span>
               <span class="latest-category">{post.data.category}</span>
@@ -350,19 +254,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
 
     <script is:inline>
       (function () {
-        document.querySelectorAll('[data-current-date]').forEach(function (item) {
-          var date = new Date();
-          var offset = Number(item.getAttribute('data-date-offset') || '0');
-          date.setDate(date.getDate() + offset);
-          var value = [
-            date.getFullYear(),
-            String(date.getMonth() + 1).padStart(2, '0'),
-            String(date.getDate()).padStart(2, '0'),
-          ].join('-');
-          item.textContent = value;
-          item.setAttribute('datetime', value);
-        });
-
         var reveals = document.querySelectorAll('[data-reveal]');
         if ('IntersectionObserver' in window) {
           var observer = new IntersectionObserver(function (entries) {
@@ -377,20 +268,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
           reveals.forEach(function (item) { item.classList.add('revealed'); });
         }
 
-        var workbench = document.querySelector('[data-workbench]');
-        if (workbench && window.matchMedia('(pointer: fine)').matches) {
-          workbench.addEventListener('pointermove', function (event) {
-            var rect = workbench.getBoundingClientRect();
-            var x = (event.clientX - rect.left) / rect.width - 0.5;
-            var y = (event.clientY - rect.top) / rect.height - 0.5;
-            workbench.style.setProperty('--workbench-x', String(x));
-            workbench.style.setProperty('--workbench-y', String(y));
-          });
-          workbench.addEventListener('pointerleave', function () {
-            workbench.style.setProperty('--workbench-x', '0');
-            workbench.style.setProperty('--workbench-y', '0');
-          });
-        }
       })();
     </script>
   </body>
@@ -430,8 +307,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     --cyan: var(--home-cyan);
     --orange: #f29a63;
     --violet: #7c74e8;
-    --code: #111827;
-    --code-muted: #8ca0be;
     color: var(--ink);
   }
 
@@ -447,7 +322,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     --blue-deep: #9ab4ff;
     --orange: #ffad7d;
     --violet: #aaa2ff;
-    --code: #090f1b;
   }
 
   :global(body) {
@@ -484,7 +358,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
 
   .hero {
     position: relative;
-    padding: clamp(46px, 4vw, 60px) clamp(24px, 5vw, 76px) clamp(22px, 2.4vw, 34px);
+    padding: clamp(38px, 4vw, 68px) clamp(24px, 5vw, 76px);
     border-bottom: 1px solid var(--line);
   }
 
@@ -513,41 +387,13 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
 
   .hero-inner {
     position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 0.75fr) minmax(620px, 1.25fr);
-    gap: clamp(30px, 3vw, 44px);
-    align-items: center;
-  }
-
-  .hero-copy {
-    position: relative;
-    z-index: 2;
   }
 
   .hero-kicker {
-    display: flex;
-    justify-content: flex-start;
-    gap: 18px;
-    margin-bottom: 20px;
-    color: var(--cyan);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-  }
-
-  .hero-kicker time:last-child {
-    display: inline-flex;
-    align-items: center;
-    gap: 18px;
-    color: var(--faint);
-    font-weight: 600;
-  }
-
-  .hero-kicker time:last-child::before {
-    width: 1px;
-    height: 14px;
-    background: var(--line-strong);
-    content: '';
+    color: var(--blue-deep);
+    font-size: 14px;
+    font-weight: 650;
+    margin-bottom: 12px;
   }
 
   h1,
@@ -559,10 +405,10 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
 
   h1 {
     margin-bottom: 20px;
-    font-size: clamp(48px, 4.7vw, 68px);
+    font-size: clamp(44px, 3.7vw, 66px);
     font-weight: 700;
     letter-spacing: -0.015em;
-    line-height: 1.09;
+    line-height: 1.16;
   }
 
   h1 span {
@@ -570,7 +416,7 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   }
 
   .accent-text {
-    background: linear-gradient(100deg, var(--cyan), var(--blue) 56%, var(--violet));
+    background: linear-gradient(100deg, var(--blue-deep), var(--blue) 56%, var(--violet));
     background-clip: text;
     color: transparent;
   }
@@ -583,7 +429,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
     line-height: 1.75;
   }
 
-  .hero-actions,
   .closing-actions {
     display: flex;
     flex-wrap: wrap;
@@ -624,263 +469,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   .button-secondary:hover,
   .button-secondary:focus-visible {
     border-color: color-mix(in srgb, var(--blue) 42%, var(--line));
-  }
-
-  .hero-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 25px;
-    margin-top: 24px;
-    padding-top: 18px;
-    border-top: 1px solid var(--line);
-  }
-
-  .hero-stats span {
-    display: grid;
-    gap: 1px;
-    color: var(--faint);
-    font-size: 11px;
-  }
-
-  .hero-stats strong {
-    color: var(--ink);
-    font-size: 17px;
-    font-weight: 700;
-  }
-
-  .workbench {
-    --workbench-x: 0;
-    --workbench-y: 0;
-    position: relative;
-    min-height: 480px;
-    perspective: 1400px;
-  }
-
-  .workbench::before {
-    position: absolute;
-    inset: 4% -4% 2% 8%;
-    border-radius: 46% 54% 48% 52%;
-    background:
-      radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--cyan) 14%, transparent), transparent 40%),
-      radial-gradient(circle at 72% 48%, color-mix(in srgb, var(--violet) 13%, transparent), transparent 44%),
-      color-mix(in srgb, var(--blue) 4%, transparent);
-    content: '';
-    filter: blur(1px);
-  }
-
-  .workbench-panel {
-    position: absolute;
-    margin: 0;
-    transition: transform 0.28s ease, box-shadow 0.28s ease;
-  }
-
-  .code-window {
-    top: 4%;
-    left: 0;
-    width: 47%;
-    overflow: hidden;
-    border: 1px solid #26344b;
-    border-radius: 16px;
-    background: var(--code);
-    box-shadow: 0 30px 70px rgba(15, 23, 42, 0.28);
-    color: #dbe7f8;
-    transform: translate3d(calc(var(--workbench-x) * -7px), calc(var(--workbench-y) * -6px), 0);
-  }
-
-  .window-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    height: 40px;
-    padding: 0 14px;
-    border-bottom: 1px solid #26344b;
-    color: var(--code-muted);
-    font-size: 12px;
-  }
-
-  .window-dots {
-    display: flex;
-    gap: 6px;
-  }
-
-  .window-dots i {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: #ff6b65;
-  }
-
-  .window-dots i:nth-child(2) {
-    background: #f4b94f;
-  }
-
-  .window-dots i:nth-child(3) {
-    background: #3bcf78;
-  }
-
-  .code-window pre {
-    margin: 0;
-    padding: 17px 19px 18px;
-    overflow: hidden;
-    font-family: var(--mono-font);
-    font-size: clamp(10px, 0.9vw, 12.5px);
-    line-height: 1.55;
-    white-space: pre-wrap;
-    font-variant-ligatures: none;
-  }
-
-  .code-window pre code {
-    font-family: inherit;
-    font-size: inherit;
-    line-height: inherit;
-  }
-
-  .code-comment { color: #637794; }
-  .code-keyword { color: #7dd3fc; }
-  .code-string { color: #bef264; }
-  .code-function { color: #fbbf24; }
-
-  .data-window,
-  .flow-window {
-    border: 1px solid color-mix(in srgb, var(--line-strong) 92%, transparent);
-    border-radius: 18px;
-    background: color-mix(in srgb, var(--surface) 94%, transparent);
-    box-shadow: 0 24px 58px color-mix(in srgb, var(--ink) 14%, transparent);
-  }
-
-  .data-window {
-    top: 11%;
-    right: 13%;
-    width: 49%;
-    padding: 12px;
-    transform: translate3d(calc(var(--workbench-x) * 10px), calc(var(--workbench-y) * 7px), 36px);
-  }
-
-  .flow-window {
-    right: -2%;
-    bottom: 7.5%;
-    width: 65%;
-    padding: 16px;
-    transform: translate3d(calc(var(--workbench-x) * 13px), calc(var(--workbench-y) * 10px), 58px);
-  }
-
-  .panel-title {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 8px;
-  }
-
-  .panel-title div {
-    display: grid;
-    gap: 1px;
-  }
-
-  .panel-heading-inline {
-    display: flex !important;
-    min-height: 25px;
-    align-items: center;
-    gap: 7px !important;
-  }
-
-  .panel-heading-inline svg {
-    color: var(--blue);
-  }
-
-  .panel-title span {
-    color: var(--faint);
-    font-size: 10px;
-    font-weight: 600;
-  }
-
-  .panel-title strong {
-    font-size: 14px;
-    font-weight: 700;
-  }
-
-  .data-window table {
-    width: 100%;
-    border-collapse: collapse;
-    color: var(--muted);
-    font-size: 10px;
-    text-align: left;
-  }
-
-  .data-window th,
-  .data-window td {
-    padding: 4px 7px;
-    border: 1px solid var(--line);
-  }
-
-  .data-window th {
-    background: var(--surface-soft);
-    color: var(--ink);
-    font-weight: 700;
-  }
-
-  .flow-window ol {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 9px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .flow-window li {
-    position: relative;
-    display: flex;
-    min-height: 66px;
-    align-items: center;
-    gap: 8px;
-    padding: 8px;
-    border: 1px solid var(--line);
-    border-radius: 11px;
-    background: var(--page);
-  }
-
-  .step-arrow {
-    position: absolute;
-    z-index: 2;
-    right: -12px;
-    color: var(--faint);
-  }
-
-  .flow-window li b {
-    display: grid;
-    width: 27px;
-    height: 27px;
-    flex: 0 0 auto;
-    place-items: center;
-    border-radius: 9px;
-    background: var(--surface-soft);
-    color: var(--blue);
-    font-size: 9px;
-  }
-
-  .flow-window li span {
-    display: grid;
-    font-size: 11px;
-    font-weight: 700;
-  }
-
-  .flow-window li small {
-    color: var(--faint);
-    font-size: 8px;
-    font-weight: 500;
-  }
-
-  .flow-window > p {
-    margin: 10px 0 0;
-    color: var(--blue);
-    font-family: KaiTi, STKaiti, "Kaiti SC", serif;
-    font-size: 12px;
-    text-align: right;
-  }
-
-  .content-section {
-    padding: clamp(78px, 9vw, 126px) clamp(24px, 5vw, 76px);
   }
 
   .section-head {
@@ -1414,19 +1002,6 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
   }
 
   @media (max-width: 1120px) {
-    .hero-inner {
-      grid-template-columns: 1fr;
-    }
-
-    .hero-copy {
-      max-width: 780px;
-    }
-
-    .workbench {
-      width: min(760px, 100%);
-      margin: 0 auto;
-    }
-
     .section-head {
       grid-template-columns: 1fr auto;
     }
@@ -1456,50 +1031,9 @@ TODAY = [<span class="code-string">"pricing"</span>, <span class="code-string">"
       padding-bottom: 68px;
     }
 
-    .hero-kicker {
-      display: grid;
-      gap: 4px;
-    }
-
     h1 {
-      font-size: clamp(41px, 12.5vw, 58px);
-      letter-spacing: -0.05em;
-    }
-
-    .hero-stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
-
-    .workbench {
-      display: grid;
-      min-height: 0;
-      gap: 14px;
-      perspective: none;
-    }
-
-    .workbench::before {
-      display: none;
-    }
-
-    .workbench-panel {
-      position: relative;
-      inset: auto;
-      width: 100%;
-      transform: none !important;
-    }
-
-    .data-window {
-      order: -1;
-    }
-
-    .flow-window ol {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .step-arrow {
-      display: none;
+      font-size: clamp(38px, 8.2vw, 58px);
+      letter-spacing: -0.04em;
     }
 
     .section-head {
