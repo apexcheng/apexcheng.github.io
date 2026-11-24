@@ -95,7 +95,7 @@ function setup({ mobile = false, blockedStorage = false } = {}) {
   toggle.append(shortcut);
   header.append(navigation, toggle);
   const search = new Element('dialog', { siteSearch: '', searchItems: JSON.stringify([
-    { type: '文章', title: '分页查询的问题', description: 'total 变化', href: '/articles/pagination/', category: '实践', keywords: ['实践', 'API'] },
+    { type: '文章', title: '分页查询的问题', description: '订单处理中的 total 变化', href: '/articles/pagination/', category: '实践', keywords: ['实践', 'API'] },
     { type: '文章', title: '<img src=x onerror=alert(1)>', description: '文本应原样显示', href: '/articles/text/', category: '生活', keywords: ['生活'] },
     { type: '项目', title: '订单处理', description: 'Python 自动化', href: '/projects/', category: '', keywords: ['Excel', 'RPA'] },
   ]) });
@@ -176,6 +176,13 @@ describe('production shared-shell interactions', () => {
     expect(event.preventDefault).toHaveBeenCalled();
     expect(s.search.open).toBe(false);
     expect(s.focused()).toBe(s.toggle);
+  });
+  it('puts a matching title ahead of a newer article mentioning the same words', () => {
+    const s = setup();
+    s.toggle.click();
+    s.input.value = '订单处理';
+    s.input.dispatch('input');
+    expect(s.results.children.map((link) => link.href)).toEqual(['/projects/', '/articles/pagination/']);
   });
   it('defers search and Enter navigation until Chinese composition finishes', () => {
     const s = setup(); s.toggle.click();

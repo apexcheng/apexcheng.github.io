@@ -154,6 +154,14 @@ const shareImage = new URL(withBase('/favicon.png'), Astro.site);
         background: rgba(34, 197, 94, 0.12);
         color: #86efac;
       }
+
+      .copy-code-button.copy-manually {
+        width: auto;
+        padding-inline: 10px;
+        background: #253447;
+        color: white;
+        font-size: 12px;
+      }
     </style>
     <script is:inline>
       (function () {
@@ -174,19 +182,33 @@ const shareImage = new URL(withBase('/favicon.png'), Astro.site);
           button.setAttribute('aria-label', '复制代码');
           button.setAttribute('title', '复制代码');
 
-          button.addEventListener('click', function () {
-            navigator.clipboard.writeText(code.innerText).then(function () {
+          var resetTimer;
+          button.addEventListener('click', async function () {
+            window.clearTimeout(resetTimer);
+            button.classList.remove('is-copied', 'copy-manually');
+            try {
+              await navigator.clipboard.writeText(code.innerText);
               button.innerHTML = copiedIcon;
               button.classList.add('is-copied');
               button.setAttribute('aria-label', '已复制');
               button.setAttribute('title', '已复制');
-              window.setTimeout(function () {
-                button.innerHTML = copyIcon;
-                button.classList.remove('is-copied');
-                button.setAttribute('aria-label', '复制代码');
-                button.setAttribute('title', '复制代码');
-              }, 1400);
-            });
+            } catch {
+              var selection = window.getSelection();
+              var range = document.createRange();
+              range.selectNodeContents(code);
+              selection.removeAllRanges();
+              selection.addRange(range);
+              button.textContent = '已选中，请手动复制';
+              button.classList.add('copy-manually');
+              button.setAttribute('aria-label', button.textContent);
+              button.title = button.textContent;
+            }
+            resetTimer = window.setTimeout(function () {
+              button.innerHTML = copyIcon;
+              button.classList.remove('is-copied', 'copy-manually');
+              button.setAttribute('aria-label', '复制代码');
+              button.title = '复制代码';
+            }, button.classList.contains('copy-manually') ? 4000 : 1400);
           });
 
           copyHost.appendChild(button);
