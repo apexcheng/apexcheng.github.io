@@ -115,7 +115,7 @@ const yOf = (i: number) => 150 + i * 82;
   .oauth-lab { margin: 2rem 0 2.6rem; border: 1px solid var(--line-soft,#ccd5df); border-radius: 22px; background: var(--paper-soft,#f7f9fb); overflow: visible; color: var(--ink,#162334); container-type: inline-size; }
   .oauth-lab__head { padding: clamp(20px,3vw,32px); display:flex; align-items:end; justify-content:space-between; gap:25px; border-bottom:1px solid var(--line-soft,#d9e0e8); }
   .oauth-lab__head > div:first-child { max-width:670px; }
-  .oauth-lab__overline, .oauth-lab__detail-overline {font:700 11px/1.5 var(--mono-font,monospace);letter-spacing:.13em;color:#277b95;}
+  .oauth-lab__overline, .oauth-lab__detail-overline {font:700 11px/1.5 var(--mono-font,monospace);letter-spacing:.13em;color:var(--blue);}
   .oauth-lab h3 {font-size:clamp(21px,2.8vw,28px);line-height:1.35;margin:9px 0;color:var(--ink,#162334);}
   .oauth-lab__head p {font-size:14px;line-height:1.7;margin:0;color:var(--muted,#697589);}
   .oauth-legend {display:flex;gap:12px;flex-wrap:wrap;font-size:11px;white-space:nowrap;color:var(--muted,#697589);}
@@ -146,11 +146,11 @@ const yOf = (i: number) => 150 + i * 82;
   .oauth-lab__detail-toolbar button:focus-visible {outline:2px solid #118b89;outline-offset:2px;}
   .oauth-detail-panel h4:focus {outline:none;}
   .oauth-detail-panel[hidden] {display:none!important;}
-  .oauth-detail-counter {display:block;margin-top:24px;color:#317da2;font:700 13px var(--mono-font,monospace);}
+  .oauth-detail-counter {display:block;margin-top:24px;color:var(--blue);font:700 13px var(--mono-font,monospace);}
   .oauth-detail-panel h4 {font-size:clamp(19px,2vw,23px);line-height:1.4;margin:10px 0;color:var(--ink,#162334);}
   .oauth-detail-panel > p {font-size:15px;line-height:1.84;color:var(--muted,#697589);margin:0 0 17px;}
   .oauth-detail-route {display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:12px;font-weight:650;padding:12px 0;margin-bottom:14px;border-top:1px solid var(--line-soft,#d7dee7);border-bottom:1px solid var(--line-soft,#d7dee7);}
-  .oauth-detail-route span:nth-child(2) {color:#118b89;}
+  .oauth-detail-route span:nth-child(2) {color:var(--blue);}
   .oauth-detail-label {display:block;font-size:12px;font-weight:650;color:var(--muted,#697589);margin-bottom:9px;}
   .oauth-detail-panel pre {background:#162436;color:#dce8f5;padding:15px;border-radius:9px;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75;font-size:14px;margin:0 0 18px;}
   .oauth-detail-panel code {color:inherit;background:none;padding:0;font-size:inherit;font-family:var(--mono-font,monospace);}
@@ -166,6 +166,6 @@ const yOf = (i: number) => 150 + i * 82;
     .oauth-lab__details {border-left:0;border-top:1px solid var(--line-soft,#d7dee7);position:static;max-height:none;overflow:visible;scroll-margin-top:84px;}
     .oauth-lab__detail-toolbar button {display:inline-flex;}
   }
-  @container (max-width:760px) {.oauth-lab__head {display:block;}.oauth-legend {margin-top:14px;}.oauth-lab__svg {display:none;}.oauth-lab__mobile-steps {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}.oauth-lab__timeline {padding:15px;}.oauth-mobile-step {appearance:none;text-align:left;display:grid;grid-template-columns:28px 1fr;column-gap:7px;row-gap:3px;padding:11px;border:1px solid var(--line-soft,#d7dee7);background:var(--paper,#fff);border-radius:9px;color:var(--ink,#162334);cursor:pointer;font-size:13px;}.oauth-mobile-step span{grid-row:span 2;font:700 13px var(--mono-font,monospace);color:#317da2;}.oauth-mobile-step b {font-weight:650;line-height:1.5;}.oauth-mobile-step small {font-size:12px;line-height:1.4;color:var(--muted,#697589);}.oauth-mobile-step.is-active{border-color:#118b89;background:rgba(17,139,137,.09);}.oauth-mobile-step:focus-visible{outline:2px solid #118b89;outline-offset:2px;}.oauth-lab__details {padding:20px;}.oauth-detail-counter {margin-top:12px;}}
+  @container (max-width:760px) {.oauth-lab__head {display:block;}.oauth-legend {margin-top:14px;}.oauth-lab__svg {display:none;}.oauth-lab__mobile-steps {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}.oauth-lab__timeline {padding:15px;}.oauth-mobile-step {appearance:none;text-align:left;display:grid;grid-template-columns:28px 1fr;column-gap:7px;row-gap:3px;padding:11px;border:1px solid var(--line-soft,#d7dee7);background:var(--paper,#fff);border-radius:9px;color:var(--ink,#162334);cursor:pointer;font-size:13px;}.oauth-mobile-step span{grid-row:span 2;font:700 13px var(--mono-font,monospace);color:var(--blue);}.oauth-mobile-step b {font-weight:650;line-height:1.5;}.oauth-mobile-step small {font-size:12px;line-height:1.4;color:var(--muted,#697589);}.oauth-mobile-step.is-active{border-color:#118b89;background:rgba(17,139,137,.09);}.oauth-mobile-step:focus-visible{outline:2px solid #118b89;outline-offset:2px;}.oauth-lab__details {padding:20px;}.oauth-detail-counter {margin-top:12px;}}
   @container (max-width:460px) {.oauth-lab__mobile-steps {grid-template-columns:1fr;}.oauth-lab__head {padding:19px;}.oauth-lab__timeline {padding:12px;}.oauth-lab__details {padding:18px;}}
 </style>
